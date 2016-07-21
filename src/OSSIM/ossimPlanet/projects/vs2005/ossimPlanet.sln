@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ossimPlanet", "ossimPlanet.vcproj", "{F042D695-C4DD-4282-B22F-A3041AB93623}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ossimplanetviewer", "..\..\examples\ossimplanetviewer\ossimplanetviewer.vcproj", "{982CDBCD-0217-4E0D-8870-338D101EB982}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F042D695-C4DD-4282-B22F-A3041AB93623} = {F042D695-C4DD-4282-B22F-A3041AB93623}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug using Release|Win32 = Debug using Release|Win32
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F042D695-C4DD-4282-B22F-A3041AB93623}.Debug using Release|Win32.ActiveCfg = Debug using Release|Win32
+		{F042D695-C4DD-4282-B22F-A3041AB93623}.Debug using Release|Win32.Build.0 = Debug using Release|Win32
+		{F042D695-C4DD-4282-B22F-A3041AB93623}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F042D695-C4DD-4282-B22F-A3041AB93623}.Debug|Win32.Build.0 = Debug|Win32
+		{F042D695-C4DD-4282-B22F-A3041AB93623}.Release|Win32.ActiveCfg = Release|Win32
+		{F042D695-C4DD-4282-B22F-A3041AB93623}.Release|Win32.Build.0 = Release|Win32
+		{982CDBCD-0217-4E0D-8870-338D101EB982}.Debug using Release|Win32.ActiveCfg = Release|Win32
+		{982CDBCD-0217-4E0D-8870-338D101EB982}.Debug using Release|Win32.Build.0 = Release|Win32
+		{982CDBCD-0217-4E0D-8870-338D101EB982}.Debug|Win32.ActiveCfg = Debug|Win32
+		{982CDBCD-0217-4E0D-8870-338D101EB982}.Debug|Win32.Build.0 = Debug|Win32
+		{982CDBCD-0217-4E0D-8870-338D101EB982}.Release|Win32.ActiveCfg = Release|Win32
+		{982CDBCD-0217-4E0D-8870-338D101EB982}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

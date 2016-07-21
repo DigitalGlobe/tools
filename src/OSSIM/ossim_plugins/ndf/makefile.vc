@@ -1,0 +1,47 @@
+###
+#
+# Windows nmake make file.  This code should compile with the Microsoft .NET
+# compiler.
+# 
+# Currently for a typical build on windows you would do the following.
+# - cd src packages
+# - untar the gdal package
+# - cd gdal and edit the nmake.opt file appropriately.
+# - cd back to the ossim top and edit its nmake.opt file appropriately.
+# - nmake /f makefile
+# - nmake /f makefile install (if you want the apps in the bin directory.
+#
+# NOTE:  If you make shared apps it's handy to copy the ossim.dll to the bin
+#        directory. 
+###
+
+!INCLUDE ..\nmake.opt
+PLUGIN_ROOT = ossim_ndf_plugin
+
+INC	=	-I.. -I. $(3RD_PARTY_INC) -I$(OSSIM_HOME)\include
+LINK	=	link
+LFLAGS	=	/NOLOGO /SUBSYSTEM:WINDOWS /LIBPATH:"$(OSSIM_HOME)\lib\ossim" $(SHARED_OSSIM_LINK)
+
+LIBS	= "$(OSSIM_LIB)"
+
+OBJ	= ossimNdfPluginInit.obj \
+ossimNdfHeader.obj \
+ossimNdfTileSource.obj \
+ossimNdfReaderFactory.obj 
+
+default:	$(OBJ)
+	link /NOLOGO /SUBSYSTEM:WINDOWS /VERSION:$(VERSION_STRING) /DLL /OUT:"$(PLUGIN_ROOT).dll" /IMPLIB:"$(PLUGIN_ROOT).lib" $(OBJ) $(OSSIM_HOME)\lib\ossim.lib $(KAK_LIB)
+	$(OSSIM_VC_MANIFEST_EMBED_DLL)
+
+
+install:
+	$(CP) $(PLUGIN_ROOT).dll $(INSTALL_DIR)
+
+ndf:	ndf_test.cpp
+	$(CC) $(APP_CFLAGS) ndf_test.cpp $(SHARED_OSSIM_LINK) .\ossim_ndf_plugin.lib
+
+clean:
+	$(RM) *.obj
+	$(RM) $(OSSIM_PLUGIN_LIB_PATH)\$(PLUGIN_ROOT).*
+	$(OSSIM_VC_MANIFEST_CLEAN)
+

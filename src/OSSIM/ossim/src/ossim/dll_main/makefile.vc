@@ -1,0 +1,14 @@
+###
+# $Id: makefile.vc 9230 2006-07-05 21:10:46Z dburken $
+#
+# Windows nmake make file.
+###
+OSSIM_ROOT	=	..\..\..
+!INCLUDE $(OSSIM_ROOT)\nmake.opt
+
+OBJ	= 	ossimDllMain.obj
+
+default:	$(OBJ)
+
+clean:
+	$(RM) *.obj

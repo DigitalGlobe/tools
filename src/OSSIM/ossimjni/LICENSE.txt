@@ -1,0 +1,2 @@
+This code is LGPL. See LGPL.txt for more.
+

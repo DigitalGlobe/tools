@@ -1,0 +1,38 @@
+###
+# $Id: makefile.vc 9232 2006-07-05 21:42:47Z dburken $
+#
+# Windows nmake make file.
+###
+OSSIM_ROOT	=	..\..\..
+!INCLUDE $(OSSIM_ROOT)\nmake.opt
+
+OBJ = \
+bandmat.obj \
+cholesky.obj \
+evalue.obj \
+fft.obj \
+hholder.obj \
+jacobi.obj \
+myexcept.obj \
+newfft.obj \
+newmat1.obj \
+newmat2.obj \
+newmat3.obj \
+newmat4.obj \
+newmat5.obj \
+newmat6.obj \
+newmat7.obj \
+newmat8.obj \
+newmat9.obj \
+newmatex.obj \
+newmatnl.obj \
+newmatrm.obj \
+solution.obj \
+sort.obj \
+submat.obj \
+svd.obj
+
+default:	$(OBJ)
+
+clean:
+	$(RM) *.obj

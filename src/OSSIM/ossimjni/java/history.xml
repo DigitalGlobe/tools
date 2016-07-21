@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<history>
+   <processor signature="gcc -Wall -shared -L../../build/lib -lossimjni -L../../build/lib -lossim">
+      <target file="libossimjni-swig.so" lastModified="12d4bec6278">
+         <source file="../../build/lib/libossimjni.so.1.8.8" lastModified="12d4bc75618"/>
+         <source file="../../build/lib/libossim.so.1.8.8" lastModified="12d42cd2628"/>
+         <source file="swig/ossimjni_wrap.o" lastModified="12d4bec6278"/>
+      </target>
+   </processor>
+</history>

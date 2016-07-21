@@ -1,0 +1,59 @@
+###
+# Makefile options...
+# $Id: make.opt 16826 2010-03-08 18:47:32Z gpotts $
+###
+
+###
+# OSSIM_DEV_HOME
+# This should be the directory where all your workspaces are like ossim,
+# libtiff, geotiff and so on...
+###
+
+#OSSIM_DEV_HOME=/work/drb
+
+# Check for blank OSSIM_DEV_HOME
+ifeq ($(OSSIM_DEV_HOME),)
+$(error Must set OSSIM_DEV_HOME either in this file or in your environment)
+endif
+
+# Check for blank OSSIM_HOME
+ifeq ($(OSSIM_HOME),)
+OSSIM_HOME = $(OSSIM_DEV_HOME)/ossim
+$(warning OSSIM_HOME set to: $(OSSIM_HOME))
+endif
+
+OMS_HOME = $(OSSIM_DEV_HOME)/oms/coms
+OMS_LIB_PATH = $(OMS_HOME)/lib
+OMS_INCLUDE_PATH = $(OMS_HOME)/include/oms
+OMS_INCLUDES=-I$(OMS_HOME)/include
+
+FFMPEG_INSTALL=$(OSSIM_DEV_HOME)/ffmpeg_install
+
+###
+# Defines for windows dll export/import.  Uncomment one for your platform.
+###
+
+# For linux leave blank.
+OMS_DLL_EXPORT_DEFINE=
+OMS_DLL_IMPORT_DEFINE=
+
+# For windows
+# OMS_DLL_EXPORT_DEFINE=-DOMSMAKINGDLL
+# OMS_DLL_IMPORT_DEFINE=-DOMSUSINGDLL
+
+###
+# 
+PREDATOR_LIB=-lossimPredator
+PREDATOR_DEFINE=-DOSSIM_PREDATOR_VIDEO_ENABLED=1
+
+###
+# INSTALL DIRECTORY:
+# Can be overriden at make time like this:
+# make prefix=/usr/local install
+###
+OMS_INSTALL_ROOT=/usr/local
+
+###
+# Where to put the cgi app.
+###
+OSM_CGI_INSTALL_DIR=/var/www/cgi-bin

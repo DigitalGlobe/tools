@@ -1,0 +1,21 @@
+###
+# $Id: make_platform.opt.in 9767 2006-10-20 20:37:20Z dburken $
+#
+# For command line gmake platform specific options.  This file should be
+# include after the Makefile.common from ossim if you are overriding 
+# something from there like the "LD_SHARED" variable.
+###
+
+
+
+# linux stuff #
+ifeq ($(HOST_RESULT),linux)
+# Override for linux to just do a straight link. 
+LD_SHARED=$(CXX) -shared 
+endif
+
+
+# darwin stuff #
+# ifeq ($(HOST_RESULT),darwin)
+# nothing to do here...
+# endif

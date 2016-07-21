@@ -1,0 +1,258 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <link rel="stylesheet" href="openlayers/theme/default/style.css" type="text/css" />
+    <link rel="stylesheet" href="style.css" type="text/css" />
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+        #map {
+            width: 99%;
+            height: 80%;
+        }
+
+        #text {
+            position: absolute;
+            bottom: 1em;
+            left: 1em;
+            width: 512px;
+        }
+        div.olControlMousePosition {
+            font-family: Verdana;
+            font-size: 1.5em;
+            color: red;
+        }
+    </style>
+    <script src="openlayers/lib/OpenLayers.js"></script>
+    <script type="text/javascript">
+        var map, measureControls, running = false , icon_layer , car_layer;
+        OpenLayers.Util.onImageLoadErrorColor = "transparent";
+        function init(){
+            map = new OpenLayers.Map('map');
+            
+            var wmsLayer = new OpenLayers.Layer.WMS( "OpenLayers WMS", 
+                "http://labs.metacarta.com/wms/vmap0?", {layers: 'basic'}); 
+
+            map.addLayers([wmsLayer]);
+            map.addControl(new OpenLayers.Control.LayerSwitcher());
+            map.addControl(new OpenLayers.Control.MousePosition());
+            map.addControl(new OpenLayers.Control.OverviewMap());
+            map.addControl(new OpenLayers.Control.NavToolbar({'div':OpenLayers.Util.getElement('paneldiv')}))
+            map.addControl(new OpenLayers.Control.ScaleLine());
+			icon_layer = new OpenLayers.Layer.GML("Position", "nmea.kml", 
+               {
+                format: OpenLayers.Format.KML, 
+                formatOptions: {
+                  extractStyles: true, 
+                  extractAttributes: true
+                }
+               });
+
+            map.addLayer(icon_layer);
+            selectControl = new OpenLayers.Control.SelectFeature( icon_layer,{onSelect: onFeatureSelect, onUnselect: onFeatureUnselect});
+	        map.addControl(selectControl);
+	        selectControl.activate();
+
+            
+            // style the sketch fancy
+            var sketchSymbolizers = {
+                "Point": {
+                    pointRadius: 4,
+                    graphicName: "square",
+                    fillColor: "white",
+                    fillOpacity: 1,
+                    strokeWidth: 1,
+                    strokeOpacity: 1,
+                    strokeColor: "#333333"
+                },
+                "Line": {
+                    strokeWidth: 3,
+                    strokeOpacity: 1,
+                    strokeColor: "#666666",
+                    strokeDashstyle: "dash"
+                },
+                "Polygon": {
+                    strokeWidth: 2,
+                    strokeOpacity: 1,
+                    strokeColor: "#666666",
+                    fillColor: "white",
+                    fillOpacity: 0.3
+                }
+            };
+            var style = new OpenLayers.Style();
+            style.addRules([
+                new OpenLayers.Rule({symbolizer: sketchSymbolizers})
+            ]);
+            var styleMap = new OpenLayers.StyleMap({"default": style});
+            
+            measureControls = {
+                line: new OpenLayers.Control.Measure(
+                    OpenLayers.Handler.Path, {
+                        persist: true,
+                        handlerOptions: {
+                            layerOptions: {styleMap: styleMap}
+                        }
+                    }
+                ),
+                polygon: new OpenLayers.Control.Measure(
+                    OpenLayers.Handler.Polygon, {
+                        persist: true,
+                        handlerOptions: {
+                            layerOptions: {styleMap: styleMap}
+                        }
+                    }
+                )
+            };
+            
+            var control;
+            for(var key in measureControls) {
+                control = measureControls[key];
+                control.events.on({
+                    "measure": handleMeasurements,
+                    "measurepartial": handleMeasurements
+                });
+                map.addControl(control);
+            }
+            
+            map.setCenter(new OpenLayers.LonLat(0, 0), 3);
+            
+            document.getElementById('noneToggle').checked = true;
+        }
+        
+        function handleMeasurements(event) {
+            var geometry = event.geometry;
+            var units = event.units;
+            var order = event.order;
+            var measure = event.measure;
+            var element = document.getElementById('output');
+            var out = "";
+            if(order == 1) {
+                out += "measure: " + measure.toFixed(3) + " " + units;
+            } else {
+                out += "measure: " + measure.toFixed(3) + " " + units + "<sup>2</" + "sup>";
+            }
+            element.innerHTML = out;
+        }
+
+
+		function placeCar() {
+			icon_layer.destroy();
+		    icon_layer = new OpenLayers.Layer.GML("Car", "nmea.kml", 
+		       {
+		        format: OpenLayers.Format.KML, 
+		        formatOptions: {
+		          extractStyles: true, 
+		          extractAttributes: true
+		        }
+		       });
+		    map.addLayer(icon_layer);
+            map.addLayer(icon_layer);
+			selectControl = new OpenLayers.Control.SelectFeature( icon_layer,{onSelect: onFeatureSelect, onUnselect: onFeatureUnselect});
+	        map.addControl(selectControl);
+	        selectControl.activate();
+
+		}
+
+
+		function setCar() {
+            if (!running) {
+                placeCar();
+                running = setInterval('placeCar()', 1000);
+            } else {
+                clearInterval(running);
+                running = false;
+            }    
+        }
+
+		function readCenter() {
+	        var lat = new XMLHttpRequest();
+	        var lon = new XMLHttpRequest();
+	        lat.open("get","lat.xml", false );
+	        lon.open("get","lon.xml", false );
+	        lat.onreadystatechance = function() {
+	}
+	        lon.onreadystatechance = function() {
+	}
+	        lat.send(null);
+	        lon.send(null);
+	        var lonlat = new OpenLayers.LonLat(lon.responseText, lat.responseText);
+	        map.panTo(lonlat);
+	    }
+	
+	
+		function setCenterInterval() {
+            if (!running) {
+                readCenter();
+                running = setInterval('readCenter()', 500);
+            } else {
+                clearInterval(running);
+                running = false;
+            }    
+        }
+	
+		function onPopupClose(evt) {
+            selectControl.unselect(selectedFeature);
+        }
+
+        function onFeatureSelect(feature) {
+            selectedFeature = feature;
+            popup = new OpenLayers.Popup.FramedCloud("chicken", 
+                                     feature.geometry.getBounds().getCenterLonLat(),
+                                     new OpenLayers.Size(100,100),
+                                     "<h2>"+feature.attributes.name + "</h2>" + feature.attributes.description,
+                                     null, true, onPopupClose);
+            feature.popup = popup;
+            map.addPopup(popup);
+        }
+        function onFeatureUnselect(feature) {
+            map.removePopup(feature.popup);
+            feature.popup.destroy();
+            feature.popup = null;
+        }
+	
+	
+	
+	
+
+        function toggleControl(element) {
+            for(key in measureControls) {
+                var control = measureControls[key];
+                if(element.value == key && element.checked) {
+                    control.activate();
+                } else {
+                    control.deactivate();
+                }
+            }
+        }
+        
+        function toggleGeodesic(element) {
+            for(key in measureControls) {
+                var control = measureControls[key];
+                control.geodesic = element.checked;
+            }
+        }
+    </script>
+  </head>
+  <body onload="init()">
+    <div id="map" class="smallmap"></div>
+    <div id="options">
+        <div id="output">
+        </div>
+        <ul id="controlToggle">
+            <li>
+                <input type="radio" name="type" value="none" id="noneToggle"
+                       onclick="toggleControl(this);" checked="checked" />
+                <label for="noneToggle">navigate</label>
+                <input type="radio" name="type" value="line" id="lineToggle" onclick="toggleControl(this);" />
+                <label for="lineToggle">Distance</label>
+                <input type="radio" name="type" value="polygon" id="polygonToggle" onclick="toggleControl(this);" />
+                <label for="polygonToggle">Area</label>
+                <input type="checkbox" name="geodesic" id="geodesicToggle" onclick="toggleGeodesic(this);" />
+                <label for="geodesicToggle">Geodesic measures</label>
+                <input type="button" value="Start/stop" onclick="setCar()"/>
+                <input type="button" value="Start/stop" onclick="setCenterInterval()"/>
+            </li>
+        </ul>
+    </div>
+  </body>
+</html>

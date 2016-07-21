@@ -1,0 +1,25 @@
+###
+# $Id: makefile.vc 13289 2008-07-25 15:49:55Z dburken $
+#
+# Windows nmake make file.
+###
+OSSIM_ROOT	=	..\..\..
+!INCLUDE $(OSSIM_ROOT)\nmake.opt
+
+OBJ = \
+ossimVpfBoundingRecordTable.obj \
+ossimVpfCoverage.obj \
+ossimVpfDatabase.obj \
+ossimVpfDatabaseHeader.obj \
+ossimVpfDatabaseHeaderTableValidator.obj \
+ossimVpfExtent.obj \
+ossimVpfFeatureClass.obj \
+ossimVpfFeatureClassSchema.obj \
+ossimVpfLibraryAttributeTableValidator.obj \
+ossimVpfLibrary.obj \
+ossimVpfTable.obj
+
+default:	$(OBJ)
+
+clean:
+	$(RM) *.obj

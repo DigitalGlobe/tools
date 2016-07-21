@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    
+    <xs:simpleType name="dateTimeType">
+        <xs:union memberTypes="xs:dateTime xs:date xs:gYearMonth xs:gYear"/>
+    </xs:simpleType>
+    
+    <xs:simpleType name="fileTypeEnumeration">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="unspecified"/>
+            <xs:enumeration value="main"/>
+            <xs:enumeration value="histogram"/>
+            <xs:enumeration value="overview"/>
+            <xs:enumeration value="valid_vertices"/>
+            <xs:enumeration value="geom"/>
+            <xs:enumeration value="omd"/>
+            <xs:enumeration value="kml"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="fileFormatEnumeration">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="unspecified"/>
+            <xs:enumeration value="nitf"/>
+            <xs:enumeration value="tif"/>
+            <xs:enumeration value="png"/>
+            <xs:enumeration value="jpeg"/>
+            <xs:enumeration value="usgs_dem"/>
+            <xs:enumeration value="doqq"/>
+            <xs:enumeration value="aig"/>
+            <xs:enumeration value="aaigrid"/>
+            <xs:enumeration value="j2k"/>
+            <xs:enumeration value="hdf4"/>
+            <xs:enumeration value="hdf5"/>
+            <xs:enumeration value="gif"/>
+            <xs:enumeration value="bmp"/>
+            <xs:enumeration value="nui"/>
+            <xs:enumeration value="imagine_hfa"/>
+            <xs:enumeration value="general_raster"/>
+            <xs:enumeration value="srtm"/>
+            <xs:enumeration value="dted"/>
+            <xs:enumeration value="ffl7"/>
+            <xs:enumeration value="ffl5"/>
+            <xs:enumeration value="mpeg"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:simpleType name="unitEnumeration">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="unspecified"/>
+            <xs:enumeration value="degrees"/>
+            <xs:enumeration value="meters"/>
+        </xs:restriction>
+    </xs:simpleType>
+    
+    
+    <xs:simpleType name="wktAnyGeom">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="POINT\(.*\)|MULTIPOINT\(.*\)|LINESTRING\(.*\)|MULTILINESTRING\(.*\)|POLYGON\(.*\)|MULTIPOLYGON\(.*\)|GEOMETRYCOLLECTION\(.*\)"></xs:pattern>
+        </xs:restriction>
+    </xs:simpleType>   
+    <xs:element name="begin" type="dateTimeType"/>
+    <xs:element name="end" type="dateTimeType"/>   
+    <xs:element name="when" type="dateTimeType"/>   
+    <xs:element name="TimeStamp" type="TimeStampType"
+        substitutionGroup="AbstractTimePrimitiveGroup"/>
+    <xs:complexType name="TimeStampType" final="#all">
+        <xs:complexContent>
+            <xs:extension base="AbstractTimePrimitiveType">
+                <xs:sequence>
+                    <xs:element ref="when" minOccurs="0"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    
+    <xs:element name="TimeSpan" type="TimeSpanType"
+        substitutionGroup="AbstractTimePrimitiveGroup"/>
+    <xs:complexType name="TimeSpanType" final="#all">
+        <xs:complexContent>
+            <xs:extension base="AbstractTimePrimitiveType">
+                <xs:sequence>
+                    <xs:element ref="begin" minOccurs="0"/>
+                    <xs:element ref="end" minOccurs="0"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    
+    <xs:element name="AbstractTimePrimitiveGroup"
+        type="AbstractTimePrimitiveType" abstract="true"
+        substitutionGroup="AbstractObjectGroup"/>
+    <xs:complexType name="AbstractTimePrimitiveType" abstract="true">
+        <xs:complexContent>
+            <xs:extension base="AbstractObjectType"/>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="gsd" type="gsdType"/>
+    <xs:complexType name="gsdType" abstract="false">
+        <xs:attribute name="unit" type="unitEnumeration"/>
+        <xs:attribute name="dx" type="xs:double"/>
+        <xs:attribute name="dy" type="xs:double"/>
+    </xs:complexType>
+    <xs:element name="tag" type="tagType" substitutionGroup="AbstractObjectGroup"/>
+    <xs:complexType name="tagType" abstract="false">
+        <xs:complexContent mixed="true">
+            <xs:extension base="AbstractObjectType">
+                <xs:sequence>
+                    <xs:element ref="tag" minOccurs="0" maxOccurs="unbounded"/>
+                </xs:sequence>
+                <xs:attribute name="name" type="xs:string"></xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="geometry" type="geometryType"/>
+    <xs:complexType name="geometryType" abstract="false">
+        <xs:simpleContent>
+            <xs:extension base="wktAnyGeom">
+                <xs:attribute name="srs" type="xs:string"></xs:attribute>
+            </xs:extension>
+        </xs:simpleContent>
+     </xs:complexType>
+    
+    <xs:simpleType name="dataTypeEnumeration">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="unknown"/>
+            <xs:enumeration value="sint"/>
+            <xs:enumeration value="uint"/>
+            <xs:enumeration value="float"/>
+        </xs:restriction>
+    </xs:simpleType>
+    
+    <xs:element name="AbstractObjectGroup" type="AbstractObjectType" abstract="true"/>
+    <xs:complexType name="AbstractObjectType" abstract="true">
+    </xs:complexType>
+    
+    <xs:element name="dataSets" type="dataSetsType" substitutionGroup="AbstractObjectGroup"/>
+    <xs:complexType name="dataSetsType" abstract="false">
+        <xs:complexContent>
+            <xs:extension base="AbstractObjectType">
+                <xs:sequence>
+                    <xs:element ref="DataSetGroup" minOccurs="0" maxOccurs="unbounded"></xs:element>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="oms" type="omsType"></xs:element>
+    <xs:complexType name="omsType">
+        <xs:complexContent>
+            <xs:extension base="AbstractObjectType">
+                <xs:sequence>
+                    <xs:element ref="dataSets" minOccurs="0" maxOccurs="1"></xs:element>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>    
+     
+    <xs:element name="metadata" type="MetaDataType" substitutionGroup="AbstractObjectGroup"></xs:element>
+    <xs:complexType name="MetaDataType" abstract="false">
+        <xs:complexContent >
+            <xs:extension base="AbstractObjectType"> 
+                <xs:sequence>
+                    <xs:element ref="tag" minOccurs="0" maxOccurs="unbounded"/>
+                 </xs:sequence>
+             </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    
+    <xs:element name="DataSetGroup" abstract="true"/>
+    
+    <xs:complexType name="DataSetContainerType" abstract="true">
+        <xs:complexContent>
+            <xs:extension base="AbstractObjectType">
+                <xs:sequence>
+                    <xs:element ref="DataSetGroup" minOccurs="0" maxOccurs="unbounded"></xs:element>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>   
+    <xs:element name="RasterFile" type="FileObjectType"/>
+    <xs:element name="VideoFile" type="FileObjectType"/>
+    <xs:element name="RasterEntryFile" type="FileObjectType"/>
+    <xs:complexType name="FileObjectType" abstract="false">
+        <xs:complexContent>
+            <xs:extension base="AbstractObjectType"> 
+                <xs:sequence>
+                    <xs:element name="name" type="xs:string"/>
+                </xs:sequence>
+                <xs:attribute name="type" type="fileTypeEnumeration" use="optional"/>
+                <xs:attribute name="format" type="fileFormatEnumeration" use="optional"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    
+    <xs:complexType name="RasterFilesType" abstract="false">
+        <xs:complexContent>
+            <xs:extension base="AbstractObjectType"> 
+                <xs:sequence>
+                    <xs:element ref="RasterFile" minOccurs="0" maxOccurs="unbounded"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:complexType name="VideFilesType" abstract="false">
+        <xs:complexContent>
+            <xs:extension base="AbstractObjectType"> 
+                <xs:sequence>
+                    <xs:element ref="VideoFile" minOccurs="0" maxOccurs="unbounded"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    
+    <xs:complexType name="RasterEntryFilesType" abstract="false">
+        <xs:complexContent>
+            <xs:extension base="AbstractObjectType"> 
+                <xs:sequence>
+                    <xs:element ref="RasterEntryFile" minOccurs="0" maxOccurs="unbounded"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    
+    <xs:element name="RasterEntry" type="RasterEntryType" substitutionGroup="AbstractObjectGroup"/>
+    <xs:complexType name="RasterEntryType" abstract="false">
+        <xs:complexContent>
+            <xs:extension base="AbstractObjectType"> 
+                <xs:sequence>
+                    <xs:element name="fileObjects" type="RasterEntryFilesType" minOccurs="0" maxOccurs="1"></xs:element>
+                    <xs:element name="entryId" type="xs:string" minOccurs="0" maxOccurs="1"/>
+                    <xs:element name="width" type="xs:long" minOccurs="0" maxOccurs="1"/>
+                    <xs:element name="height" type="xs:long" minOccurs="0" maxOccurs="1"/>
+                    <xs:element name="numberOfBands" type="xs:unsignedInt" minOccurs="0" maxOccurs="1"/>
+                    <xs:element name="bitDepth" type="xs:unsignedShort" minOccurs="0" maxOccurs="1"/>
+                    <xs:element name="numberOfResLevels" type="xs:unsignedShort" minOccurs="0" maxOccurs="1"/>
+                    <xs:element name="dataType" type="dataTypeEnumeration" minOccurs="0" maxOccurs="1"/>
+                    <xs:element ref="gsd" minOccurs="0" maxOccurs="1"/>
+                    <xs:element name="groundGeom" type="geometryType" minOccurs="0" maxOccurs="1"></xs:element>
+                    <xs:element name="validGroundGeom" type="geometryType" minOccurs="0" maxOccurs="1"></xs:element>
+                    <xs:element ref="AbstractTimePrimitiveGroup" minOccurs="0" maxOccurs="1"></xs:element>
+                    <xs:element ref="metadata" minOccurs="0" maxOccurs="1"/>
+                </xs:sequence>
+                <xs:attribute name="mainFile" type="xs:boolean" use="optional"/>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    <xs:element name="rasterEntries" type="RasterEntriesType" substitutionGroup="AbstractObjectGroup"></xs:element>
+    <xs:complexType name="RasterEntriesType" abstract="false">
+        <xs:complexContent>
+            <xs:extension base="AbstractObjectType"> 
+                <xs:sequence>
+                    <xs:element ref="RasterEntry" minOccurs="0" maxOccurs="unbounded"/>
+                </xs:sequence>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
+    
+    <xs:element name="RasterDataSet" type="RasterDataSetType" abstract="false" 
+        substitutionGroup="DataSetGroup"/>
+    <xs:complexType name="RasterDataSetType" abstract="false">
+        <xs:sequence>
+            <xs:element name="fileObjects" type="RasterFilesType" minOccurs="0" maxOccurs="1"/>
+            <xs:element ref="rasterEntries" minOccurs="0" maxOccurs="1"/>
+            <xs:element ref="metadata" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>            
+    </xs:complexType>
+    
+    <xs:element name="VideoDataSet" type="VideoDataSetType" abstract="false" 
+        substitutionGroup="DataSetGroup"/>
+    <xs:complexType name="VideoDataSetType" abstract="false">
+        <xs:sequence>
+            <xs:element name="fileObjects" type="VideFilesType" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="width" type="xs:long" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="height" type="xs:long" minOccurs="0" maxOccurs="1"/>
+            <xs:element name="groundGeom" type="geometryType" minOccurs="0" maxOccurs="1"></xs:element>
+            <xs:element ref="AbstractTimePrimitiveGroup" minOccurs="0" maxOccurs="1"></xs:element>
+            <xs:element ref="metadata" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
+</xs:schema>

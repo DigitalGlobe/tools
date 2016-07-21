@@ -1,0 +1,32 @@
+###
+# $Id: makefile.vc 16135 2009-12-18 15:07:01Z dburken $
+#
+# Windows nmake make file.
+###
+OSSIM_ROOT	=	..\..\..
+!INCLUDE $(OSSIM_ROOT)\nmake.opt
+
+OBJ = \
+ossimDtedElevationDatabase.obj \
+ossimDtedFactory.obj \
+ossimDtedHandler.obj \
+ossimElevCellHandler.obj \
+ossimElevCellHandlerFactory.obj \
+ossimElevManager.obj \
+ossimElevSource.obj \
+ossimElevSourceFactory.obj \
+ossimElevationDatabase.obj \
+ossimElevationDatabaseFactory.obj \
+ossimElevationDatabaseRegistry.obj \
+ossimGeneralRasterElevFactory.obj \
+ossimGeneralRasterElevHandler.obj \
+ossimGeneralRasterElevationDatabase.obj \
+ossimHgtRef.obj \
+ossimSrtmElevationDatabase.obj \
+ossimSrtmFactory.obj \
+ossimSrtmHandler.obj
+
+default:	$(OBJ)
+
+clean:
+	$(RM) *.obj

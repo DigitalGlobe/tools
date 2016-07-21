@@ -1,0 +1,59 @@
+###
+# $Id: makefile.vc 12864 2008-05-15 13:13:28Z dburken $
+#
+# Windows nmake make file.  This code should compile with the Microsoft .NET
+# compiler.
+# 
+# Currently for a typical build on windows you would do the following.
+# - cd back to the ossim top and edit its nmake.opt file appropriately.
+# - nmake /f makefile
+#
+# NOTE:  If you make shared apps it's handy to copy the ossim.dll to the bin
+#        directory. 
+###
+
+!INCLUDE ..\nmake.opt
+PLUGIN_ROOT = ossim_png_plugin
+
+###
+# Note: EMBED_MANIFEST variable is set in nmake.opt so make sure it is included
+# before this test.
+###
+!if "$(EMBED_MANIFEST)" == "1"
+!include ..\makefile.inc
+OSSIM_VC_MANIFEST_EMBED_DLL=$(_VC_MANIFEST_EMBED_DLL)
+OSSIM_VC_MANIFEST_CLEAN=$(_VC_MANIFEST_CLEAN)
+!else
+OSSIM_VC_MANIFEST_EMBED_DLL=
+OSSIM_VC_MANIFEST_CLEAN=
+!endif
+
+###
+# PNG includes and libs.
+# WINDOWS : use IntelCompiler7 prebuilt binaries (issues with Visual Studio)
+###
+INC	=	-I.. -I. $(INC) $(PNG_INC)
+LINK	=	link
+
+OBJ = \
+ossimPngPluginInit.obj \
+ossimPngReader.obj \
+ossimPngReaderFactory.obj \
+ossimPngWriter.obj \
+ossimPngWriterFactory.obj
+
+default:	$(OBJ)
+	link /NOLOGO /SUBSYSTEM:WINDOWS /VERSION:$(VERSION_STRING) /DLL /OUT:"$(PLUGIN_ROOT).dll" /IMPLIB:"$(PLUGIN_ROOT).lib" $(OBJ) $(OSSIM_HOME)\lib\ossim.lib $(PNG_LIB) $(ZLIB_LIB)
+	$(OSSIM_VC_MANIFEST_EMBED_DLL)
+
+install:
+	$(CP) $(PLUGIN_ROOT).dll $(INSTALL_DIR)
+
+clean:
+	$(RM) *.obj
+	$(RM) $(OSSIM_PLUGIN_LIB_PATH)\$(PLUGIN_ROOT).*
+	$(OSSIM_VC_MANIFEST_CLEAN)
+
+!if "$(EMBED_MANIFEST)" == "1"
+!include ..\makefile.targ.inc
+!endif

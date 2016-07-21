@@ -1,0 +1,2365 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXAggregateTarget section */
+		43D50344110A04BA00FDB366 /* All */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 43D50352110A04D000FDB366 /* Build configuration list for PBXAggregateTarget "All" */;
+			buildPhases = (
+			);
+			dependencies = (
+				43D5034E110A04C400FDB366 /* PBXTargetDependency */,
+				43D50350110A04C400FDB366 /* PBXTargetDependency */,
+			);
+			name = All;
+			productName = All;
+		};
+		43D50359110A053100FDB366 /* Clean */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 43D50362110A056100FDB366 /* Build configuration list for PBXAggregateTarget "Clean" */;
+			buildPhases = (
+				43D50361110A053F00FDB366 /* clean files */,
+			);
+			dependencies = (
+			);
+			name = Clean;
+			productName = Clean;
+		};
+/* End PBXAggregateTarget section */
+
+/* Begin PBXBuildFile section */
+		186EF5ED0B1DB62E00F7886A /* ossimPlanetQtLayerOperation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 186EF5CE0B1DB62E00F7886A /* ossimPlanetQtLayerOperation.cpp */; };
+		186EF5EE0B1DB62E00F7886A /* ossimPlanetQtWmsDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 186EF5CF0B1DB62E00F7886A /* ossimPlanetQtWmsDialog.cpp */; };
+		186EF5EF0B1DB62E00F7886A /* ossimPlanetQtApplication.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 186EF5D00B1DB62E00F7886A /* ossimPlanetQtApplication.cpp */; };
+		186EF5F00B1DB62E00F7886A /* ossimPlanetQtGlWidget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 186EF5D10B1DB62E00F7886A /* ossimPlanetQtGlWidget.cpp */; };
+		186EF5F10B1DB62E00F7886A /* ossimPlanetQtLegend.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 186EF5D20B1DB62E00F7886A /* ossimPlanetQtLegend.cpp */; };
+		186EF5F20B1DB62E00F7886A /* ossimPlanetQtLegendItem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 186EF5D30B1DB62E00F7886A /* ossimPlanetQtLegendItem.cpp */; };
+		186EF5F30B1DB62E00F7886A /* ossimPlanetQtLegendTextureItem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 186EF5D40B1DB62E00F7886A /* ossimPlanetQtLegendTextureItem.cpp */; };
+		186EF5F40B1DB62E00F7886A /* ossimPlanetQtMainWindow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 186EF5D50B1DB62E00F7886A /* ossimPlanetQtMainWindow.cpp */; };
+		186EF5F50B1DB62E00F7886A /* ossimPlanetQtPreferences.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 186EF5D60B1DB62E00F7886A /* ossimPlanetQtPreferences.cpp */; };
+		186EF6100B1DB66400F7886A /* ossimPlanet.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 186EF60F0B1DB65B00F7886A /* ossimPlanet.framework */; };
+		186EF6F70B1DBB0800F7886A /* ossim.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 186EF6860B1DBB0100F7886A /* ossim.framework */; };
+		4307F53D0BBD90B40079E358 /* ossimPlanetQtLegendKmlItem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4307F53C0BBD90B40079E358 /* ossimPlanetQtLegendKmlItem.cpp */; };
+		430D55190C68AF5900FA8F6C /* ossimPlanetQtDropDownDelegate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 430D55180C68AF5900FA8F6C /* ossimPlanetQtDropDownDelegate.cpp */; };
+		430D551B0C68AF8500FA8F6C /* ossimPlanetQtDropDownDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 430D551A0C68AF8500FA8F6C /* ossimPlanetQtDropDownDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		4317612F0B690A0E008D4A90 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4317612E0B690A0E008D4A90 /* OpenGL.framework */; };
+		43717FCB0BCEF4640002D30E /* osg.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43717FCA0BCEF4640002D30E /* osg.framework */; };
+		437180620BCEF4700002D30E /* Openthreads.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 437180610BCEF4700002D30E /* Openthreads.framework */; };
+		4371806E0BCEF4860002D30E /* osgUtil.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4371806D0BCEF4860002D30E /* osgUtil.framework */; };
+		4371808F0BCEF4940002D30E /* osgGA.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4371808E0BCEF4940002D30E /* osgGA.framework */; };
+		437180A80BCEF4A10002D30E /* osgText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 437180A70BCEF4A10002D30E /* osgText.framework */; };
+		437180B30BCEF4B00002D30E /* osgDB.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 437180B20BCEF4B00002D30E /* osgDB.framework */; };
+		43C8A7A6110A001C0095AEE2 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43C8A7A4110A001C0095AEE2 /* main.cpp */; };
+		43C8A7A7110A001C0095AEE2 /* qrc_ossimPlanetQt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43C8A7A5110A001C0095AEE2 /* qrc_ossimPlanetQt.cpp */; };
+		43C8A7A8110A003E0095AEE2 /* ossimPlanetQt.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8D07F2C80486CC7A007CD1D0 /* ossimPlanetQt.framework */; };
+		43C8A7D1110A004C0095AEE2 /* Openthreads.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 437180610BCEF4700002D30E /* Openthreads.framework */; };
+		43C8A7DF110A00510095AEE2 /* ossimPredator.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EEB5EDBA0D0F2EA5000CF6B2 /* ossimPredator.framework */; };
+		43C8A7E4110A00530095AEE2 /* wms.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EE69A3730B28849E00C91DD1 /* wms.framework */; };
+		43C8A7E5110A00560095AEE2 /* ossimPlanet.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 186EF60F0B1DB65B00F7886A /* ossimPlanet.framework */; };
+		43C8A7FA110A00E40095AEE2 /* ossim.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 186EF6860B1DBB0100F7886A /* ossim.framework */; };
+		43CD236C0D1186C8004CF3EE /* ossimPlanetQtLegendVideoItem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43CD236B0D1186C8004CF3EE /* ossimPlanetQtLegendVideoItem.cpp */; };
+		43CD237E0D1187E1004CF3EE /* ossimPlanetQtLegendVideoItem.h in Headers */ = {isa = PBXBuildFile; fileRef = 43CD237D0D1187E1004CF3EE /* ossimPlanetQtLegendVideoItem.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43FC557C0B7CBD1400B57002 /* ossimPlanetQtAlertLayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43FC557B0B7CBD1400B57002 /* ossimPlanetQtAlertLayer.cpp */; };
+		8D07F2BE0486CC7A007CD1D0 /* ossimPlanetQt_Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 32BAE0B70371A74B00C91783 /* ossimPlanetQt_Prefix.pch */; settings = {ATTRIBUTES = (Public, ); }; };
+		8D07F2C00486CC7A007CD1D0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
+		EE022B850BF8E8C600F55360 /* ossimPlanetQtAboutDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EE022B840BF8E8C600F55360 /* ossimPlanetQtAboutDialog.cpp */; };
+		EE086D990D40D88E0097C6AB /* osgViewer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EE086D980D40D88E0097C6AB /* osgViewer.framework */; };
+		EE69A3740B2884A200C91DD1 /* wms.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EE69A3730B28849E00C91DD1 /* wms.framework */; };
+		EE6F833A0BE77C3B0090E263 /* moc_ossimPlanetQtNewHttpConnection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EE6F83390BE77C3B0090E263 /* moc_ossimPlanetQtNewHttpConnection.cpp */; };
+		EE6F833C0BE77C480090E263 /* ossimPlanetQtNewHttpConnection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EE6F833B0BE77C480090E263 /* ossimPlanetQtNewHttpConnection.cpp */; };
+		EE7958BA0DA6863800155345 /* ossimPlanetQtMessageLog.h in Headers */ = {isa = PBXBuildFile; fileRef = EE7958B90DA6863800155345 /* ossimPlanetQtMessageLog.h */; };
+		EE7958BC0DA687D500155345 /* ossimPlanetQtMessageLog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EE7958BB0DA687D500155345 /* ossimPlanetQtMessageLog.cpp */; };
+		EE7958C90DA688CF00155345 /* moc_ossimPlanetQtMessageLog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EE7958C80DA688CF00155345 /* moc_ossimPlanetQtMessageLog.cpp */; };
+		EE7959390DA6954F00155345 /* ui_ossimPlanetQtMessageLog.h in Headers */ = {isa = PBXBuildFile; fileRef = EE7959380DA6954F00155345 /* ui_ossimPlanetQtMessageLog.h */; };
+		EE9171830D171000006DB941 /* ossimPlanetQtVideoControlWidget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EE9171820D171000006DB941 /* ossimPlanetQtVideoControlWidget.cpp */; };
+		EE9171850D171030006DB941 /* ossimPlanetQtVideoControlWidget.h in Headers */ = {isa = PBXBuildFile; fileRef = EE9171840D171030006DB941 /* ossimPlanetQtVideoControlWidget.h */; };
+		EE91719A0D17119D006DB941 /* moc_ossimPlanetQtVideoControlWidget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EE9171990D17119D006DB941 /* moc_ossimPlanetQtVideoControlWidget.cpp */; };
+		EE9173F90C57A80500B25F44 /* ossimPlanetQtEvent.h in Headers */ = {isa = PBXBuildFile; fileRef = EE9173F80C57A80500B25F44 /* ossimPlanetQtEvent.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EE9B7F6A0C21C2EC002ABF88 /* ossimPlanetQtLegendAnimationPathItem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EE9B7F690C21C2EC002ABF88 /* ossimPlanetQtLegendAnimationPathItem.cpp */; };
+		EE9B7F6C0C21C2F8002ABF88 /* ossimPlanetQtLegendAnimationPathItem.h in Headers */ = {isa = PBXBuildFile; fileRef = EE9B7F6B0C21C2F8002ABF88 /* ossimPlanetQtLegendAnimationPathItem.h */; };
+		EE9D27980DD9C37B005A8951 /* ossimPlanetQtLegendNodeItem.h in Headers */ = {isa = PBXBuildFile; fileRef = EE9D27970DD9C37B005A8951 /* ossimPlanetQtLegendNodeItem.h */; };
+		EE9D279E0DD9C43D005A8951 /* ossimPlanetQtLegendNodeItem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EE9D279C0DD9C43D005A8951 /* ossimPlanetQtLegendNodeItem.cpp */; };
+		EEB5EDBB0D0F2EB5000CF6B2 /* ossimPredator.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EEB5EDBA0D0F2EA5000CF6B2 /* ossimPredator.framework */; };
+		EEBE2C960B4D38A40092FA3F /* ossimPlanetQtActivityWindow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EEBE2C950B4D38A40092FA3F /* ossimPlanetQtActivityWindow.cpp */; };
+		EEBE2C980B4D38AE0092FA3F /* ossimPlanetQtActivityWidget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EEBE2C970B4D38AE0092FA3F /* ossimPlanetQtActivityWidget.cpp */; };
+		EEBE2CBB0B4D52D20092FA3F /* ossimPlanetQtActivityItem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EEBE2CBA0B4D52D20092FA3F /* ossimPlanetQtActivityItem.cpp */; };
+		EEBE2D130B4D5A3B0092FA3F /* ossimPlanetQtActivityThreadQueueItem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EEBE2D120B4D5A3B0092FA3F /* ossimPlanetQtActivityThreadQueueItem.cpp */; };
+		EEBE2D390B4D63770092FA3F /* ossimPlanetQtActivityThread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EEBE2D380B4D63770092FA3F /* ossimPlanetQtActivityThread.cpp */; };
+		EEBE2DAE0B4D8AA10092FA3F /* moc_ossimPlanetQtPreferences.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EEBE2DA40B4D8AA10092FA3F /* moc_ossimPlanetQtPreferences.cpp */; };
+		EEBE2DAF0B4D8AA10092FA3F /* moc_ossimPlanetQtActivityWidget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EEBE2DA50B4D8AA10092FA3F /* moc_ossimPlanetQtActivityWidget.cpp */; };
+		EEBE2DB00B4D8AA10092FA3F /* moc_ossimPlanetQtActivityThreadQueueItem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EEBE2DA60B4D8AA10092FA3F /* moc_ossimPlanetQtActivityThreadQueueItem.cpp */; };
+		EEBE2DB10B4D8AA10092FA3F /* moc_ossimPlanetQtWmsDialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EEBE2DA70B4D8AA10092FA3F /* moc_ossimPlanetQtWmsDialog.cpp */; };
+		EEBE2DB20B4D8AA10092FA3F /* moc_ossimPlanetQtLegend.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EEBE2DA80B4D8AA10092FA3F /* moc_ossimPlanetQtLegend.cpp */; };
+		EEBE2DB30B4D8AA10092FA3F /* moc_ossimPlanetQtActivityWindow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EEBE2DA90B4D8AA10092FA3F /* moc_ossimPlanetQtActivityWindow.cpp */; };
+		EEBE2DB40B4D8AA10092FA3F /* moc_ossimPlanetQtGlWidget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EEBE2DAA0B4D8AA10092FA3F /* moc_ossimPlanetQtGlWidget.cpp */; };
+		EEBE2DB60B4D8AA10092FA3F /* moc_ossimPlanetQtLayerOperation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EEBE2DAC0B4D8AA10092FA3F /* moc_ossimPlanetQtLayerOperation.cpp */; };
+		EEBE2DB70B4D8AA10092FA3F /* moc_ossimPlanetQtMainWindow.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EEBE2DAD0B4D8AA10092FA3F /* moc_ossimPlanetQtMainWindow.cpp */; };
+		EEC4310B0BFB42A4004209D5 /* ossimPlanetQtImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EEC4310A0BFB42A4004209D5 /* ossimPlanetQtImage.cpp */; };
+		EED67AA40B67B69D00C0CE5A /* ossimPlanetQtRuler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EED67AA30B67B69D00C0CE5A /* ossimPlanetQtRuler.cpp */; };
+		EED67AA60B67B6AC00C0CE5A /* moc_ossimPlanetQtRuler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EED67AA50B67B6AC00C0CE5A /* moc_ossimPlanetQtRuler.cpp */; };
+		EEE852660C170E8000ED8550 /* ossimPlanetQtWmsDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE852450C170E8000ED8550 /* ossimPlanetQtWmsDialog.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE852670C170E8000ED8550 /* ossimPlanetQtVersion.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE852460C170E8000ED8550 /* ossimPlanetQtVersion.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE852680C170E8000ED8550 /* ossimPlanetQtRuler.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE852470C170E8000ED8550 /* ossimPlanetQtRuler.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE852690C170E8000ED8550 /* ossimPlanetQtActivityItem.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE852480C170E8000ED8550 /* ossimPlanetQtActivityItem.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE8526A0C170E8000ED8550 /* ui_ossimPlanetQtWmsDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE852490C170E8000ED8550 /* ui_ossimPlanetQtWmsDialog.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE8526B0C170E8000ED8550 /* ossimPlanetQtAboutDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE8524A0C170E8000ED8550 /* ossimPlanetQtAboutDialog.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE8526C0C170E8000ED8550 /* ossimPlanetQtGlWidget.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE8524B0C170E8000ED8550 /* ossimPlanetQtGlWidget.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE8526D0C170E8000ED8550 /* ossimPlanetQtMainWindow.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE8524C0C170E8000ED8550 /* ossimPlanetQtMainWindow.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE8526E0C170E8000ED8550 /* ossimPlanetQtActionAdapter.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE8524D0C170E8000ED8550 /* ossimPlanetQtActionAdapter.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE8526F0C170E8000ED8550 /* ui_ossimPlanetQtLayerOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE8524E0C170E8000ED8550 /* ui_ossimPlanetQtLayerOperation.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE852700C170E8000ED8550 /* ui_ossimPlanetQtActivityWindow.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE8524F0C170E8000ED8550 /* ui_ossimPlanetQtActivityWindow.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE852710C170E8000ED8550 /* ossimPlanetQtLegendTextureItem.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE852500C170E8000ED8550 /* ossimPlanetQtLegendTextureItem.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE852720C170E8000ED8550 /* ossimPlanetQtNewHttpConnection.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE852510C170E8000ED8550 /* ossimPlanetQtNewHttpConnection.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE852730C170E8000ED8550 /* ui_ossimPlanetQtRuler.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE852520C170E8000ED8550 /* ui_ossimPlanetQtRuler.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE852740C170E8000ED8550 /* ui_ossimPlanetQtPreferences.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE852530C170E8000ED8550 /* ui_ossimPlanetQtPreferences.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE852750C170E8000ED8550 /* ossimPlanetQtActivityThreadQueueItem.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE852540C170E8000ED8550 /* ossimPlanetQtActivityThreadQueueItem.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE852760C170E8000ED8550 /* ui_ossimPlanetQtAboutDialog.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE852550C170E8000ED8550 /* ui_ossimPlanetQtAboutDialog.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE852770C170E8000ED8550 /* ossimPlanetQtAlertLayer.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE852560C170E8000ED8550 /* ossimPlanetQtAlertLayer.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE852780C170E8000ED8550 /* ossimPlanetQtActivityWidget.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE852570C170E8000ED8550 /* ossimPlanetQtActivityWidget.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE852790C170E8000ED8550 /* ui_ossimPlanetQtNewHttpConnection.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE852580C170E8000ED8550 /* ui_ossimPlanetQtNewHttpConnection.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE8527A0C170E8000ED8550 /* ui_ossimPlanetQtMainWindow.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE852590C170E8000ED8550 /* ui_ossimPlanetQtMainWindow.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE8527B0C170E8000ED8550 /* ossimPlanetQtActivityWindow.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE8525A0C170E8000ED8550 /* ossimPlanetQtActivityWindow.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE8527C0C170E8000ED8550 /* ossimPlanetQtActivityThread.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE8525B0C170E8000ED8550 /* ossimPlanetQtActivityThread.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE8527D0C170E8000ED8550 /* ossimPlanetQtLegendKmlItem.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE8525C0C170E8000ED8550 /* ossimPlanetQtLegendKmlItem.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE8527E0C170E8000ED8550 /* ossimPlanetQtLegendItem.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE8525D0C170E8000ED8550 /* ossimPlanetQtLegendItem.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE8527F0C170E8000ED8550 /* ossimPlanetQtPreferences.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE8525E0C170E8000ED8550 /* ossimPlanetQtPreferences.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE852800C170E8000ED8550 /* ossimPlanetQtLayerOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE8525F0C170E8000ED8550 /* ossimPlanetQtLayerOperation.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE852810C170E8000ED8550 /* ossimPlanetQtImage.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE852600C170E8000ED8550 /* ossimPlanetQtImage.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE852820C170E8000ED8550 /* ossimPlanetQtLegend.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE852610C170E8000ED8550 /* ossimPlanetQtLegend.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE852830C170E8000ED8550 /* ossimPlanetQtApplication.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE852620C170E8000ED8550 /* ossimPlanetQtApplication.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE852840C170E8000ED8550 /* ossimPlanetQtLegendLocationInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE852630C170E8000ED8550 /* ossimPlanetQtLegendLocationInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE852850C170E8000ED8550 /* ossimPlanetQtLegendLocatioInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE852640C170E8000ED8550 /* ossimPlanetQtLegendLocatioInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEE852860C170E8000ED8550 /* ossimPlanetQtExport.h in Headers */ = {isa = PBXBuildFile; fileRef = EEE852650C170E8000ED8550 /* ossimPlanetQtExport.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEF048BD0D9BEDE600F6897F /* ossimPlanetQtOperation.h in Headers */ = {isa = PBXBuildFile; fileRef = EEF048BC0D9BEDE600F6897F /* ossimPlanetQtOperation.h */; };
+		EEF048C00D9BF9B500F6897F /* ossimPlanetQtOperation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EEF048BF0D9BF9B500F6897F /* ossimPlanetQtOperation.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		186EF60E0B1DB65B00F7886A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF60A0B1DB65B00F7886A /* ossimPlanet.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8D07F2C80486CC7A007CD1D0;
+			remoteInfo = ossimPlanet;
+		};
+		186EF6850B1DBB0100F7886A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8D07F2C80486CC7A007CD1D0;
+			remoteInfo = ossim;
+		};
+		433A4CE1100CEDAC000B969C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF60A0B1DB65B00F7886A /* ossimPlanet.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433A4CD8100CED8D000B969C;
+			remoteInfo = ossimplanettest;
+		};
+		434D0D791019DF9100761D13 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF60A0B1DB65B00F7886A /* ossimPlanet.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 8D07F2BC0486CC7A007CD1D0;
+			remoteInfo = ossimPlanet;
+		};
+		437A56030E789BBE000D89D5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EE69A36E0B28849E00C91DD1 /* libwms.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 1FD5B7C80E75D3DC00FBD730;
+			remoteInfo = wmsurl;
+		};
+		437A56050E789BBE000D89D5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EE69A36E0B28849E00C91DD1 /* libwms.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 1FD5B7EA0E75D46700FBD730;
+			remoteInfo = wmscapabilities.cpp;
+		};
+		437A56070E789BBE000D89D5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EE69A36E0B28849E00C91DD1 /* libwms.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 1FD5B7FE0E75D4C500FBD730;
+			remoteInfo = wmsgetmap;
+		};
+		43C6E5D70FF005CB004B52F7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF60A0B1DB65B00F7886A /* ossimPlanet.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43C6E2910FEFB4D8004B52F7;
+			remoteInfo = ossimplanetklv;
+		};
+		43C6E5D90FF005CB004B52F7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF60A0B1DB65B00F7886A /* ossimPlanet.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43C6E29C0FEFB4E9004B52F7;
+			remoteInfo = ossimplanetviewer;
+		};
+		43C8A7941109FFCB0095AEE2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8D07F2BC0486CC7A007CD1D0;
+			remoteInfo = ossimPlanetQt;
+		};
+		43C8A7961109FFCB0095AEE2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF60A0B1DB65B00F7886A /* ossimPlanet.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 8D07F2BC0486CC7A007CD1D0;
+			remoteInfo = ossimPlanet;
+		};
+		43C8A7981109FFCB0095AEE2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EEB5EDB50D0F2EA5000CF6B2 /* ossimPredator.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 8D07F2BC0486CC7A007CD1D0;
+			remoteInfo = ossimPredator;
+		};
+		43C8A79A1109FFCB0095AEE2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 8D07F2BC0486CC7A007CD1D0;
+			remoteInfo = ossim;
+		};
+		43C8A79C1109FFCB0095AEE2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EE69A36E0B28849E00C91DD1 /* libwms.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 8DC2EF4F0486A6940098B216;
+			remoteInfo = wms;
+		};
+		43C95013104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628031042E368002A87C7;
+			remoteInfo = "template-app";
+		};
+		43C95015104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628151042E3B0002A87C7;
+			remoteInfo = "ossim-adrg-dump";
+		};
+		43C95017104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628371042E3F6002A87C7;
+			remoteInfo = "ossim-applanix2ogeom";
+		};
+		43C95019104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628551042E461002A87C7;
+			remoteInfo = "ossim-band-merge";
+		};
+		43C9501B104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628741042E4AC002A87C7;
+			remoteInfo = "ossim-btoa";
+		};
+		43C9501D104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628861042E4D1002A87C7;
+			remoteInfo = "ossim-chgkwval";
+		};
+		43C9501F104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4336289F1042E52A002A87C7;
+			remoteInfo = "ossim-cmm";
+		};
+		43C95021104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628B91042E560002A87C7;
+			remoteInfo = "ossim-computeSrtmStats";
+		};
+		43C95023104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628D61042E59C002A87C7;
+			remoteInfo = "ossim-correl";
+		};
+		43C95025104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628F11042E5D1002A87C7;
+			remoteInfo = "ossim-create-cg";
+		};
+		43C95027104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4336290B1042E607002A87C7;
+			remoteInfo = "ossim-create-histo";
+		};
+		43C9502F104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433629811042E712002A87C7;
+			remoteInfo = "ossim-dms2deg";
+		};
+		43C95031104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4336299D1042E759002A87C7;
+			remoteInfo = "ossim-dump-ocg";
+		};
+		43C95033104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433629B51042E77C002A87C7;
+			remoteInfo = "ossim-ecg2ocg";
+		};
+		43C95035104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433629D01042E7B1002A87C7;
+			remoteInfo = "ossim-extract-vertices";
+		};
+		43C95037104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433629E41042E807002A87C7;
+			remoteInfo = "ossim-foo";
+		};
+		43C9503B104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362A2D1042E88F002A87C7;
+			remoteInfo = "ossim-height";
+		};
+		43C9503D104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362A4B1042E8BD002A87C7;
+			remoteInfo = "ossim-icp";
+		};
+		43C9503F104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362A631042E8EE002A87C7;
+			remoteInfo = "ossim-igen";
+		};
+		43C95041104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362A7D1042E914002A87C7;
+			remoteInfo = "ossim-img2md";
+		};
+		43C95043104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362A9A1042E955002A87C7;
+			remoteInfo = "ossim-img2rr";
+		};
+		43C95045104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362AB41042E981002A87C7;
+			remoteInfo = "ossim-info";
+		};
+		43C95047104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362AD21042EA43002A87C7;
+			remoteInfo = "ossim-modopt";
+		};
+		43C95049104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362AEF1042EA81002A87C7;
+			remoteInfo = "ossim-mosaic";
+		};
+		43C9504F104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362B471042EB45002A87C7;
+			remoteInfo = "ossim-ogeom2ogeom";
+		};
+		43C95051104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362B641042EB70002A87C7;
+			remoteInfo = "ossim-orthoigen";
+		};
+		43C95053104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362B801042EB9B002A87C7;
+			remoteInfo = "ossim-pixelflip";
+		};
+		43C95055104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362B9B1042EBCE002A87C7;
+			remoteInfo = "ossim-prune";
+		};
+		43C95059104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362BD21042EC26002A87C7;
+			remoteInfo = "ossim-rejout";
+		};
+		43C9505B104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362BEE1042EC50002A87C7;
+			remoteInfo = "ossim-senint";
+		};
+		43C9505D104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362C081042EC80002A87C7;
+			remoteInfo = "ossim-space-imaging";
+		};
+		43C9505F104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362C221042ECAF002A87C7;
+			remoteInfo = "ossim-swapbytes";
+		};
+		43C95061104C34A000145CDF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362C3C1042ECD6002A87C7;
+			remoteInfo = "ossim-tfw2ogeom";
+		};
+		43D5034D110A04C400FDB366 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 8D07F2BC0486CC7A007CD1D0;
+			remoteInfo = ossimPlanetQt;
+		};
+		43D5034F110A04C400FDB366 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0867D690FE84028FC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 43C8A7871109FF750095AEE2;
+			remoteInfo = ossimplanet;
+		};
+		EE69A3720B28849E00C91DD1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EE69A36E0B28849E00C91DD1 /* libwms.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8DC2EF5B0486A6940098B216;
+			remoteInfo = wms;
+		};
+		EEB5EDB90D0F2EA5000CF6B2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = EEB5EDB50D0F2EA5000CF6B2 /* ossimPredator.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = EE3F868B0D0DBB2300DFD3DF;
+			remoteInfo = ossimPredator;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		089C1667FE841158C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		186EF5C80B1DB60E00F7886A /* common_settings.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = common_settings.xcconfig; path = ../../../ossim/xcode/ossim/common_settings.xcconfig; sourceTree = SOURCE_ROOT; };
+		186EF5CE0B1DB62E00F7886A /* ossimPlanetQtLayerOperation.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtLayerOperation.cpp; sourceTree = "<group>"; };
+		186EF5CF0B1DB62E00F7886A /* ossimPlanetQtWmsDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtWmsDialog.cpp; sourceTree = "<group>"; };
+		186EF5D00B1DB62E00F7886A /* ossimPlanetQtApplication.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtApplication.cpp; sourceTree = "<group>"; };
+		186EF5D10B1DB62E00F7886A /* ossimPlanetQtGlWidget.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtGlWidget.cpp; sourceTree = "<group>"; };
+		186EF5D20B1DB62E00F7886A /* ossimPlanetQtLegend.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtLegend.cpp; sourceTree = "<group>"; };
+		186EF5D30B1DB62E00F7886A /* ossimPlanetQtLegendItem.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtLegendItem.cpp; sourceTree = "<group>"; };
+		186EF5D40B1DB62E00F7886A /* ossimPlanetQtLegendTextureItem.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtLegendTextureItem.cpp; sourceTree = "<group>"; };
+		186EF5D50B1DB62E00F7886A /* ossimPlanetQtMainWindow.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtMainWindow.cpp; sourceTree = "<group>"; };
+		186EF5D60B1DB62E00F7886A /* ossimPlanetQtPreferences.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtPreferences.cpp; sourceTree = "<group>"; };
+		186EF60A0B1DB65B00F7886A /* ossimPlanet.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ossimPlanet.xcodeproj; path = ../../../ossimPlanet/xcode/ossimPlanet/ossimPlanet.xcodeproj; sourceTree = SOURCE_ROOT; };
+		186EF6450B1DBB0100F7886A /* ossim.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ossim.xcodeproj; path = ../../../ossim/xcode/ossim/ossim.xcodeproj; sourceTree = SOURCE_ROOT; };
+		32BAE0B70371A74B00C91783 /* ossimPlanetQt_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQt_Prefix.pch; sourceTree = "<group>"; };
+		4307F53C0BBD90B40079E358 /* ossimPlanetQtLegendKmlItem.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtLegendKmlItem.cpp; sourceTree = "<group>"; };
+		430D55180C68AF5900FA8F6C /* ossimPlanetQtDropDownDelegate.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtDropDownDelegate.cpp; sourceTree = "<group>"; };
+		430D551A0C68AF8500FA8F6C /* ossimPlanetQtDropDownDelegate.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtDropDownDelegate.h; sourceTree = "<group>"; };
+		4317612E0B690A0E008D4A90 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = /System/Library/Frameworks/OpenGL.framework; sourceTree = "<absolute>"; };
+		43717FCA0BCEF4640002D30E /* osg.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = osg.framework; path = ../../../ossim_dependencies/Frameworks/osg.framework; sourceTree = SOURCE_ROOT; };
+		437180610BCEF4700002D30E /* Openthreads.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Openthreads.framework; path = ../../../ossim_dependencies/Frameworks/Openthreads.framework; sourceTree = SOURCE_ROOT; };
+		4371806D0BCEF4860002D30E /* osgUtil.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = osgUtil.framework; path = ../../../ossim_dependencies/Frameworks/osgUtil.framework; sourceTree = SOURCE_ROOT; };
+		4371808E0BCEF4940002D30E /* osgGA.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = osgGA.framework; path = ../../../ossim_dependencies/Frameworks/osgGA.framework; sourceTree = SOURCE_ROOT; };
+		437180A70BCEF4A10002D30E /* osgText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = osgText.framework; path = ../../../ossim_dependencies/Frameworks/osgText.framework; sourceTree = SOURCE_ROOT; };
+		437180B20BCEF4B00002D30E /* osgDB.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = osgDB.framework; path = ../../../ossim_dependencies/Frameworks/osgDB.framework; sourceTree = SOURCE_ROOT; };
+		43C8A7881109FF750095AEE2 /* ossimplanet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ossimplanet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		43C8A78A1109FF750095AEE2 /* ossimplanet-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ossimplanet-Info.plist"; sourceTree = "<group>"; };
+		43C8A7A4110A001C0095AEE2 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = ../../apps/ossimplanet/main.cpp; sourceTree = SOURCE_ROOT; };
+		43C8A7A5110A001C0095AEE2 /* qrc_ossimPlanetQt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = qrc_ossimPlanetQt.cpp; path = ../../apps/ossimplanet/qrc_ossimPlanetQt.cpp; sourceTree = SOURCE_ROOT; };
+		43CD236B0D1186C8004CF3EE /* ossimPlanetQtLegendVideoItem.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtLegendVideoItem.cpp; sourceTree = "<group>"; };
+		43CD237D0D1187E1004CF3EE /* ossimPlanetQtLegendVideoItem.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtLegendVideoItem.h; sourceTree = "<group>"; };
+		43FC557B0B7CBD1400B57002 /* ossimPlanetQtAlertLayer.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtAlertLayer.cpp; sourceTree = "<group>"; };
+		8D07F2C70486CC7A007CD1D0 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		8D07F2C80486CC7A007CD1D0 /* ossimPlanetQt.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ossimPlanetQt.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		EE022B840BF8E8C600F55360 /* ossimPlanetQtAboutDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtAboutDialog.cpp; sourceTree = "<group>"; };
+		EE086D980D40D88E0097C6AB /* osgViewer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = osgViewer.framework; path = ../../../ossim_dependencies/Frameworks/osgViewer.framework; sourceTree = SOURCE_ROOT; };
+		EE69A36E0B28849E00C91DD1 /* libwms.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libwms.xcodeproj; path = ../../../libwms/xcode/libwms/libwms.xcodeproj; sourceTree = SOURCE_ROOT; };
+		EE6F83390BE77C3B0090E263 /* moc_ossimPlanetQtNewHttpConnection.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = moc_ossimPlanetQtNewHttpConnection.cpp; sourceTree = "<group>"; };
+		EE6F833B0BE77C480090E263 /* ossimPlanetQtNewHttpConnection.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtNewHttpConnection.cpp; sourceTree = "<group>"; };
+		EE7958B90DA6863800155345 /* ossimPlanetQtMessageLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtMessageLog.h; sourceTree = "<group>"; };
+		EE7958BB0DA687D500155345 /* ossimPlanetQtMessageLog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtMessageLog.cpp; sourceTree = "<group>"; };
+		EE7958C80DA688CF00155345 /* moc_ossimPlanetQtMessageLog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = moc_ossimPlanetQtMessageLog.cpp; sourceTree = "<group>"; };
+		EE7959380DA6954F00155345 /* ui_ossimPlanetQtMessageLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ui_ossimPlanetQtMessageLog.h; sourceTree = "<group>"; };
+		EE9171820D171000006DB941 /* ossimPlanetQtVideoControlWidget.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtVideoControlWidget.cpp; sourceTree = "<group>"; };
+		EE9171840D171030006DB941 /* ossimPlanetQtVideoControlWidget.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtVideoControlWidget.h; sourceTree = "<group>"; };
+		EE9171990D17119D006DB941 /* moc_ossimPlanetQtVideoControlWidget.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = moc_ossimPlanetQtVideoControlWidget.cpp; sourceTree = "<group>"; };
+		EE9173F80C57A80500B25F44 /* ossimPlanetQtEvent.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtEvent.h; sourceTree = "<group>"; };
+		EE9B7F690C21C2EC002ABF88 /* ossimPlanetQtLegendAnimationPathItem.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtLegendAnimationPathItem.cpp; sourceTree = "<group>"; };
+		EE9B7F6B0C21C2F8002ABF88 /* ossimPlanetQtLegendAnimationPathItem.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtLegendAnimationPathItem.h; sourceTree = "<group>"; };
+		EE9D27970DD9C37B005A8951 /* ossimPlanetQtLegendNodeItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtLegendNodeItem.h; sourceTree = "<group>"; };
+		EE9D279C0DD9C43D005A8951 /* ossimPlanetQtLegendNodeItem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtLegendNodeItem.cpp; sourceTree = "<group>"; };
+		EEB5EDB50D0F2EA5000CF6B2 /* ossimPredator.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ossimPredator.xcodeproj; path = ../../../ossimPredator/xcode/ossimPredator/ossimPredator.xcodeproj; sourceTree = SOURCE_ROOT; };
+		EEBE2C950B4D38A40092FA3F /* ossimPlanetQtActivityWindow.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtActivityWindow.cpp; sourceTree = "<group>"; };
+		EEBE2C970B4D38AE0092FA3F /* ossimPlanetQtActivityWidget.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtActivityWidget.cpp; sourceTree = "<group>"; };
+		EEBE2CBA0B4D52D20092FA3F /* ossimPlanetQtActivityItem.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtActivityItem.cpp; sourceTree = "<group>"; };
+		EEBE2D120B4D5A3B0092FA3F /* ossimPlanetQtActivityThreadQueueItem.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtActivityThreadQueueItem.cpp; sourceTree = "<group>"; };
+		EEBE2D380B4D63770092FA3F /* ossimPlanetQtActivityThread.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtActivityThread.cpp; sourceTree = "<group>"; };
+		EEBE2DA40B4D8AA10092FA3F /* moc_ossimPlanetQtPreferences.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = moc_ossimPlanetQtPreferences.cpp; sourceTree = "<group>"; };
+		EEBE2DA50B4D8AA10092FA3F /* moc_ossimPlanetQtActivityWidget.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = moc_ossimPlanetQtActivityWidget.cpp; sourceTree = "<group>"; };
+		EEBE2DA60B4D8AA10092FA3F /* moc_ossimPlanetQtActivityThreadQueueItem.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = moc_ossimPlanetQtActivityThreadQueueItem.cpp; sourceTree = "<group>"; };
+		EEBE2DA70B4D8AA10092FA3F /* moc_ossimPlanetQtWmsDialog.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = moc_ossimPlanetQtWmsDialog.cpp; sourceTree = "<group>"; };
+		EEBE2DA80B4D8AA10092FA3F /* moc_ossimPlanetQtLegend.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = moc_ossimPlanetQtLegend.cpp; sourceTree = "<group>"; };
+		EEBE2DA90B4D8AA10092FA3F /* moc_ossimPlanetQtActivityWindow.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = moc_ossimPlanetQtActivityWindow.cpp; sourceTree = "<group>"; };
+		EEBE2DAA0B4D8AA10092FA3F /* moc_ossimPlanetQtGlWidget.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = moc_ossimPlanetQtGlWidget.cpp; sourceTree = "<group>"; };
+		EEBE2DAC0B4D8AA10092FA3F /* moc_ossimPlanetQtLayerOperation.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = moc_ossimPlanetQtLayerOperation.cpp; sourceTree = "<group>"; };
+		EEBE2DAD0B4D8AA10092FA3F /* moc_ossimPlanetQtMainWindow.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = moc_ossimPlanetQtMainWindow.cpp; sourceTree = "<group>"; };
+		EEC4310A0BFB42A4004209D5 /* ossimPlanetQtImage.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ossimPlanetQtImage.cpp; path = core/ossimPlanetQtImage.cpp; sourceTree = "<group>"; };
+		EED67AA30B67B69D00C0CE5A /* ossimPlanetQtRuler.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtRuler.cpp; sourceTree = "<group>"; };
+		EED67AA50B67B6AC00C0CE5A /* moc_ossimPlanetQtRuler.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = moc_ossimPlanetQtRuler.cpp; sourceTree = "<group>"; };
+		EEE852450C170E8000ED8550 /* ossimPlanetQtWmsDialog.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtWmsDialog.h; sourceTree = "<group>"; };
+		EEE852460C170E8000ED8550 /* ossimPlanetQtVersion.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtVersion.h; sourceTree = "<group>"; };
+		EEE852470C170E8000ED8550 /* ossimPlanetQtRuler.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtRuler.h; sourceTree = "<group>"; };
+		EEE852480C170E8000ED8550 /* ossimPlanetQtActivityItem.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtActivityItem.h; sourceTree = "<group>"; };
+		EEE852490C170E8000ED8550 /* ui_ossimPlanetQtWmsDialog.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ui_ossimPlanetQtWmsDialog.h; sourceTree = "<group>"; };
+		EEE8524A0C170E8000ED8550 /* ossimPlanetQtAboutDialog.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtAboutDialog.h; sourceTree = "<group>"; };
+		EEE8524B0C170E8000ED8550 /* ossimPlanetQtGlWidget.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtGlWidget.h; sourceTree = "<group>"; };
+		EEE8524C0C170E8000ED8550 /* ossimPlanetQtMainWindow.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtMainWindow.h; sourceTree = "<group>"; };
+		EEE8524D0C170E8000ED8550 /* ossimPlanetQtActionAdapter.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtActionAdapter.h; sourceTree = "<group>"; };
+		EEE8524E0C170E8000ED8550 /* ui_ossimPlanetQtLayerOperation.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ui_ossimPlanetQtLayerOperation.h; sourceTree = "<group>"; };
+		EEE8524F0C170E8000ED8550 /* ui_ossimPlanetQtActivityWindow.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ui_ossimPlanetQtActivityWindow.h; sourceTree = "<group>"; };
+		EEE852500C170E8000ED8550 /* ossimPlanetQtLegendTextureItem.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtLegendTextureItem.h; sourceTree = "<group>"; };
+		EEE852510C170E8000ED8550 /* ossimPlanetQtNewHttpConnection.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtNewHttpConnection.h; sourceTree = "<group>"; };
+		EEE852520C170E8000ED8550 /* ui_ossimPlanetQtRuler.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ui_ossimPlanetQtRuler.h; sourceTree = "<group>"; };
+		EEE852530C170E8000ED8550 /* ui_ossimPlanetQtPreferences.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ui_ossimPlanetQtPreferences.h; sourceTree = "<group>"; };
+		EEE852540C170E8000ED8550 /* ossimPlanetQtActivityThreadQueueItem.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtActivityThreadQueueItem.h; sourceTree = "<group>"; };
+		EEE852550C170E8000ED8550 /* ui_ossimPlanetQtAboutDialog.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ui_ossimPlanetQtAboutDialog.h; sourceTree = "<group>"; };
+		EEE852560C170E8000ED8550 /* ossimPlanetQtAlertLayer.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtAlertLayer.h; sourceTree = "<group>"; };
+		EEE852570C170E8000ED8550 /* ossimPlanetQtActivityWidget.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtActivityWidget.h; sourceTree = "<group>"; };
+		EEE852580C170E8000ED8550 /* ui_ossimPlanetQtNewHttpConnection.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ui_ossimPlanetQtNewHttpConnection.h; sourceTree = "<group>"; };
+		EEE852590C170E8000ED8550 /* ui_ossimPlanetQtMainWindow.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ui_ossimPlanetQtMainWindow.h; sourceTree = "<group>"; };
+		EEE8525A0C170E8000ED8550 /* ossimPlanetQtActivityWindow.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtActivityWindow.h; sourceTree = "<group>"; };
+		EEE8525B0C170E8000ED8550 /* ossimPlanetQtActivityThread.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtActivityThread.h; sourceTree = "<group>"; };
+		EEE8525C0C170E8000ED8550 /* ossimPlanetQtLegendKmlItem.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtLegendKmlItem.h; sourceTree = "<group>"; };
+		EEE8525D0C170E8000ED8550 /* ossimPlanetQtLegendItem.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtLegendItem.h; sourceTree = "<group>"; };
+		EEE8525E0C170E8000ED8550 /* ossimPlanetQtPreferences.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtPreferences.h; sourceTree = "<group>"; };
+		EEE8525F0C170E8000ED8550 /* ossimPlanetQtLayerOperation.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtLayerOperation.h; sourceTree = "<group>"; };
+		EEE852600C170E8000ED8550 /* ossimPlanetQtImage.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtImage.h; sourceTree = "<group>"; };
+		EEE852610C170E8000ED8550 /* ossimPlanetQtLegend.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtLegend.h; sourceTree = "<group>"; };
+		EEE852620C170E8000ED8550 /* ossimPlanetQtApplication.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtApplication.h; sourceTree = "<group>"; };
+		EEE852630C170E8000ED8550 /* ossimPlanetQtLegendLocationInfo.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtLegendLocationInfo.h; sourceTree = "<group>"; };
+		EEE852640C170E8000ED8550 /* ossimPlanetQtLegendLocatioInfo.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtLegendLocatioInfo.h; sourceTree = "<group>"; };
+		EEE852650C170E8000ED8550 /* ossimPlanetQtExport.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtExport.h; sourceTree = "<group>"; };
+		EEF048BC0D9BEDE600F6897F /* ossimPlanetQtOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ossimPlanetQtOperation.h; sourceTree = "<group>"; };
+		EEF048BF0D9BF9B500F6897F /* ossimPlanetQtOperation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPlanetQtOperation.cpp; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		43C8A7861109FF750095AEE2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				43C8A7FA110A00E40095AEE2 /* ossim.framework in Frameworks */,
+				43C8A7E5110A00560095AEE2 /* ossimPlanet.framework in Frameworks */,
+				43C8A7E4110A00530095AEE2 /* wms.framework in Frameworks */,
+				43C8A7DF110A00510095AEE2 /* ossimPredator.framework in Frameworks */,
+				43C8A7D1110A004C0095AEE2 /* Openthreads.framework in Frameworks */,
+				43C8A7A8110A003E0095AEE2 /* ossimPlanetQt.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8D07F2C30486CC7A007CD1D0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EEB5EDBB0D0F2EB5000CF6B2 /* ossimPredator.framework in Frameworks */,
+				EE69A3740B2884A200C91DD1 /* wms.framework in Frameworks */,
+				186EF6100B1DB66400F7886A /* ossimPlanet.framework in Frameworks */,
+				186EF6F70B1DBB0800F7886A /* ossim.framework in Frameworks */,
+				4317612F0B690A0E008D4A90 /* OpenGL.framework in Frameworks */,
+				43717FCB0BCEF4640002D30E /* osg.framework in Frameworks */,
+				437180620BCEF4700002D30E /* Openthreads.framework in Frameworks */,
+				4371806E0BCEF4860002D30E /* osgUtil.framework in Frameworks */,
+				4371808F0BCEF4940002D30E /* osgGA.framework in Frameworks */,
+				437180A80BCEF4A10002D30E /* osgText.framework in Frameworks */,
+				437180B30BCEF4B00002D30E /* osgDB.framework in Frameworks */,
+				EE086D990D40D88E0097C6AB /* osgViewer.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		034768DDFF38A45A11DB9C8B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8D07F2C80486CC7A007CD1D0 /* ossimPlanetQt.framework */,
+				43C8A7881109FF750095AEE2 /* ossimplanet.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0867D691FE84028FC02AAC07 /* ossimPlanetQt */ = {
+			isa = PBXGroup;
+			children = (
+				186EF5C80B1DB60E00F7886A /* common_settings.xcconfig */,
+				08FB77ACFE841707C02AAC07 /* Source */,
+				089C1665FE841158C02AAC07 /* Resources */,
+				0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */,
+				034768DDFF38A45A11DB9C8B /* Products */,
+				43C8A78A1109FF750095AEE2 /* ossimplanet-Info.plist */,
+			);
+			name = ossimPlanetQt;
+			sourceTree = "<group>";
+		};
+		0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				EE086D980D40D88E0097C6AB /* osgViewer.framework */,
+				EEB5EDB50D0F2EA5000CF6B2 /* ossimPredator.xcodeproj */,
+				437180B20BCEF4B00002D30E /* osgDB.framework */,
+				437180A70BCEF4A10002D30E /* osgText.framework */,
+				4371808E0BCEF4940002D30E /* osgGA.framework */,
+				4371806D0BCEF4860002D30E /* osgUtil.framework */,
+				437180610BCEF4700002D30E /* Openthreads.framework */,
+				43717FCA0BCEF4640002D30E /* osg.framework */,
+				4317612E0B690A0E008D4A90 /* OpenGL.framework */,
+				EE69A36E0B28849E00C91DD1 /* libwms.xcodeproj */,
+				186EF6450B1DBB0100F7886A /* ossim.xcodeproj */,
+				186EF60A0B1DB65B00F7886A /* ossimPlanet.xcodeproj */,
+			);
+			name = "External Frameworks and Libraries";
+			sourceTree = "<group>";
+		};
+		089C1665FE841158C02AAC07 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				8D07F2C70486CC7A007CD1D0 /* Info.plist */,
+				089C1666FE841158C02AAC07 /* InfoPlist.strings */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		08FB77ACFE841707C02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				43C8A7A2110A00000095AEE2 /* apps */,
+				186EF5CB0B1DB62E00F7886A /* ossimPlanetQt */,
+				32BAE0B70371A74B00C91783 /* ossimPlanetQt_Prefix.pch */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		186EF5CB0B1DB62E00F7886A /* ossimPlanetQt */ = {
+			isa = PBXGroup;
+			children = (
+				186EF5DE0B1DB62E00F7886A /* includes */,
+				186EF5CC0B1DB62E00F7886A /* src */,
+			);
+			name = ossimPlanetQt;
+			sourceTree = "<group>";
+		};
+		186EF5CC0B1DB62E00F7886A /* src */ = {
+			isa = PBXGroup;
+			children = (
+				EEC431070BFB4288004209D5 /* core */,
+				186EF5CD0B1DB62E00F7886A /* gui */,
+				186EF5D70B1DB62E00F7886A /* moc */,
+			);
+			name = src;
+			path = ../../src;
+			sourceTree = SOURCE_ROOT;
+		};
+		186EF5CD0B1DB62E00F7886A /* gui */ = {
+			isa = PBXGroup;
+			children = (
+				EE9171820D171000006DB941 /* ossimPlanetQtVideoControlWidget.cpp */,
+				43CD236B0D1186C8004CF3EE /* ossimPlanetQtLegendVideoItem.cpp */,
+				430D55180C68AF5900FA8F6C /* ossimPlanetQtDropDownDelegate.cpp */,
+				EE9B7F690C21C2EC002ABF88 /* ossimPlanetQtLegendAnimationPathItem.cpp */,
+				EE022B840BF8E8C600F55360 /* ossimPlanetQtAboutDialog.cpp */,
+				EE6F833B0BE77C480090E263 /* ossimPlanetQtNewHttpConnection.cpp */,
+				4307F53C0BBD90B40079E358 /* ossimPlanetQtLegendKmlItem.cpp */,
+				43FC557B0B7CBD1400B57002 /* ossimPlanetQtAlertLayer.cpp */,
+				EED67AA30B67B69D00C0CE5A /* ossimPlanetQtRuler.cpp */,
+				EEBE2D380B4D63770092FA3F /* ossimPlanetQtActivityThread.cpp */,
+				EEBE2D120B4D5A3B0092FA3F /* ossimPlanetQtActivityThreadQueueItem.cpp */,
+				EEBE2CBA0B4D52D20092FA3F /* ossimPlanetQtActivityItem.cpp */,
+				EEBE2C970B4D38AE0092FA3F /* ossimPlanetQtActivityWidget.cpp */,
+				EEBE2C950B4D38A40092FA3F /* ossimPlanetQtActivityWindow.cpp */,
+				186EF5CE0B1DB62E00F7886A /* ossimPlanetQtLayerOperation.cpp */,
+				186EF5CF0B1DB62E00F7886A /* ossimPlanetQtWmsDialog.cpp */,
+				186EF5D00B1DB62E00F7886A /* ossimPlanetQtApplication.cpp */,
+				186EF5D10B1DB62E00F7886A /* ossimPlanetQtGlWidget.cpp */,
+				186EF5D20B1DB62E00F7886A /* ossimPlanetQtLegend.cpp */,
+				186EF5D30B1DB62E00F7886A /* ossimPlanetQtLegendItem.cpp */,
+				186EF5D40B1DB62E00F7886A /* ossimPlanetQtLegendTextureItem.cpp */,
+				186EF5D50B1DB62E00F7886A /* ossimPlanetQtMainWindow.cpp */,
+				186EF5D60B1DB62E00F7886A /* ossimPlanetQtPreferences.cpp */,
+				EEF048BF0D9BF9B500F6897F /* ossimPlanetQtOperation.cpp */,
+				EE7958BB0DA687D500155345 /* ossimPlanetQtMessageLog.cpp */,
+				EE9D279C0DD9C43D005A8951 /* ossimPlanetQtLegendNodeItem.cpp */,
+			);
+			path = gui;
+			sourceTree = "<group>";
+		};
+		186EF5D70B1DB62E00F7886A /* moc */ = {
+			isa = PBXGroup;
+			children = (
+				EE7958C80DA688CF00155345 /* moc_ossimPlanetQtMessageLog.cpp */,
+				EE9171990D17119D006DB941 /* moc_ossimPlanetQtVideoControlWidget.cpp */,
+				EE6F83390BE77C3B0090E263 /* moc_ossimPlanetQtNewHttpConnection.cpp */,
+				EED67AA50B67B6AC00C0CE5A /* moc_ossimPlanetQtRuler.cpp */,
+				EEBE2DA40B4D8AA10092FA3F /* moc_ossimPlanetQtPreferences.cpp */,
+				EEBE2DA50B4D8AA10092FA3F /* moc_ossimPlanetQtActivityWidget.cpp */,
+				EEBE2DA60B4D8AA10092FA3F /* moc_ossimPlanetQtActivityThreadQueueItem.cpp */,
+				EEBE2DA70B4D8AA10092FA3F /* moc_ossimPlanetQtWmsDialog.cpp */,
+				EEBE2DA80B4D8AA10092FA3F /* moc_ossimPlanetQtLegend.cpp */,
+				EEBE2DA90B4D8AA10092FA3F /* moc_ossimPlanetQtActivityWindow.cpp */,
+				EEBE2DAA0B4D8AA10092FA3F /* moc_ossimPlanetQtGlWidget.cpp */,
+				EEBE2DAC0B4D8AA10092FA3F /* moc_ossimPlanetQtLayerOperation.cpp */,
+				EEBE2DAD0B4D8AA10092FA3F /* moc_ossimPlanetQtMainWindow.cpp */,
+			);
+			path = moc;
+			sourceTree = "<group>";
+		};
+		186EF5DE0B1DB62E00F7886A /* includes */ = {
+			isa = PBXGroup;
+			children = (
+				186EF5DF0B1DB62E00F7886A /* ossimPlanetQt */,
+			);
+			name = includes;
+			sourceTree = "<group>";
+		};
+		186EF5DF0B1DB62E00F7886A /* ossimPlanetQt */ = {
+			isa = PBXGroup;
+			children = (
+				EE7959380DA6954F00155345 /* ui_ossimPlanetQtMessageLog.h */,
+				EE9171840D171030006DB941 /* ossimPlanetQtVideoControlWidget.h */,
+				43CD237D0D1187E1004CF3EE /* ossimPlanetQtLegendVideoItem.h */,
+				430D551A0C68AF8500FA8F6C /* ossimPlanetQtDropDownDelegate.h */,
+				EE9173F80C57A80500B25F44 /* ossimPlanetQtEvent.h */,
+				EE9B7F6B0C21C2F8002ABF88 /* ossimPlanetQtLegendAnimationPathItem.h */,
+				EEE852450C170E8000ED8550 /* ossimPlanetQtWmsDialog.h */,
+				EEE852460C170E8000ED8550 /* ossimPlanetQtVersion.h */,
+				EEE852470C170E8000ED8550 /* ossimPlanetQtRuler.h */,
+				EEE852480C170E8000ED8550 /* ossimPlanetQtActivityItem.h */,
+				EEE852490C170E8000ED8550 /* ui_ossimPlanetQtWmsDialog.h */,
+				EEE8524A0C170E8000ED8550 /* ossimPlanetQtAboutDialog.h */,
+				EEE8524B0C170E8000ED8550 /* ossimPlanetQtGlWidget.h */,
+				EEE8524C0C170E8000ED8550 /* ossimPlanetQtMainWindow.h */,
+				EEE8524D0C170E8000ED8550 /* ossimPlanetQtActionAdapter.h */,
+				EEE8524E0C170E8000ED8550 /* ui_ossimPlanetQtLayerOperation.h */,
+				EEE8524F0C170E8000ED8550 /* ui_ossimPlanetQtActivityWindow.h */,
+				EEE852500C170E8000ED8550 /* ossimPlanetQtLegendTextureItem.h */,
+				EEE852510C170E8000ED8550 /* ossimPlanetQtNewHttpConnection.h */,
+				EEE852520C170E8000ED8550 /* ui_ossimPlanetQtRuler.h */,
+				EEE852530C170E8000ED8550 /* ui_ossimPlanetQtPreferences.h */,
+				EEE852540C170E8000ED8550 /* ossimPlanetQtActivityThreadQueueItem.h */,
+				EEE852550C170E8000ED8550 /* ui_ossimPlanetQtAboutDialog.h */,
+				EEE852560C170E8000ED8550 /* ossimPlanetQtAlertLayer.h */,
+				EEE852570C170E8000ED8550 /* ossimPlanetQtActivityWidget.h */,
+				EEE852580C170E8000ED8550 /* ui_ossimPlanetQtNewHttpConnection.h */,
+				EEE852590C170E8000ED8550 /* ui_ossimPlanetQtMainWindow.h */,
+				EEE8525A0C170E8000ED8550 /* ossimPlanetQtActivityWindow.h */,
+				EEE8525B0C170E8000ED8550 /* ossimPlanetQtActivityThread.h */,
+				EEE8525C0C170E8000ED8550 /* ossimPlanetQtLegendKmlItem.h */,
+				EEE8525D0C170E8000ED8550 /* ossimPlanetQtLegendItem.h */,
+				EEE8525E0C170E8000ED8550 /* ossimPlanetQtPreferences.h */,
+				EEE8525F0C170E8000ED8550 /* ossimPlanetQtLayerOperation.h */,
+				EEE852600C170E8000ED8550 /* ossimPlanetQtImage.h */,
+				EEE852610C170E8000ED8550 /* ossimPlanetQtLegend.h */,
+				EEE852620C170E8000ED8550 /* ossimPlanetQtApplication.h */,
+				EEE852630C170E8000ED8550 /* ossimPlanetQtLegendLocationInfo.h */,
+				EEE852640C170E8000ED8550 /* ossimPlanetQtLegendLocatioInfo.h */,
+				EEE852650C170E8000ED8550 /* ossimPlanetQtExport.h */,
+				EEF048BC0D9BEDE600F6897F /* ossimPlanetQtOperation.h */,
+				EE7958B90DA6863800155345 /* ossimPlanetQtMessageLog.h */,
+				EE9D27970DD9C37B005A8951 /* ossimPlanetQtLegendNodeItem.h */,
+			);
+			name = ossimPlanetQt;
+			path = ../../include/ossimPlanetQt;
+			sourceTree = SOURCE_ROOT;
+		};
+		186EF60B0B1DB65B00F7886A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				186EF60F0B1DB65B00F7886A /* ossimPlanet.framework */,
+				43C6E5D80FF005CB004B52F7 /* ossimplanetklv */,
+				43C6E5DA0FF005CB004B52F7 /* ossimplanetviewer */,
+				433A4CE2100CEDAC000B969C /* ossimplanettest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		186EF6460B1DBB0100F7886A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				186EF6860B1DBB0100F7886A /* ossim.framework */,
+				43C95014104C34A000145CDF /* template-app */,
+				43C95016104C34A000145CDF /* ossim-adrg-dump */,
+				43C95018104C34A000145CDF /* ossim-applanix2ogeom */,
+				43C9501A104C34A000145CDF /* ossim-band-merge */,
+				43C9501C104C34A000145CDF /* ossim-btoa */,
+				43C9501E104C34A000145CDF /* template-app */,
+				43C95020104C34A000145CDF /* ossim-cmm */,
+				43C95022104C34A000145CDF /* ossim-computeSrtmStats */,
+				43C95024104C34A000145CDF /* ossim-correl */,
+				43C95026104C34A000145CDF /* ossim-create-cg */,
+				43C95028104C34A000145CDF /* ossim-create-histo */,
+				43C95030104C34A000145CDF /* ossim-dms2deg */,
+				43C95032104C34A000145CDF /* ossim-dump-ocg */,
+				43C95034104C34A000145CDF /* ossim-ecg2ocg */,
+				43C95036104C34A000145CDF /* ossim-extract-vertices */,
+				43C95038104C34A000145CDF /* ossim-foo */,
+				43C9503C104C34A000145CDF /* ossim-height */,
+				43C9503E104C34A000145CDF /* ossim-icp */,
+				43C95040104C34A000145CDF /* ossim-igen */,
+				43C95042104C34A000145CDF /* ossim-img2md */,
+				43C95044104C34A000145CDF /* ossim-img2rr */,
+				43C95046104C34A000145CDF /* ossim-info */,
+				43C95048104C34A000145CDF /* ossim-modopt */,
+				43C9504A104C34A000145CDF /* ossim-mosaic */,
+				43C95050104C34A000145CDF /* ossim-ogeom2ogeom */,
+				43C95052104C34A000145CDF /* ossim-orthoigen */,
+				43C95054104C34A000145CDF /* ossim-pixelflip */,
+				43C95056104C34A000145CDF /* ossim-prune */,
+				43C9505A104C34A000145CDF /* ossim-rejout */,
+				43C9505C104C34A000145CDF /* ossim-senint */,
+				43C9505E104C34A000145CDF /* ossim-space-imaging */,
+				43C95060104C34A000145CDF /* ossim-swapbytes */,
+				43C95062104C34A000145CDF /* ossim-tfw2ogeom */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		43C8A79E1109FFEA0095AEE2 /* ossimplanet */ = {
+			isa = PBXGroup;
+			children = (
+				43C8A7A4110A001C0095AEE2 /* main.cpp */,
+				43C8A7A5110A001C0095AEE2 /* qrc_ossimPlanetQt.cpp */,
+			);
+			name = ossimplanet;
+			sourceTree = "<group>";
+		};
+		43C8A7A2110A00000095AEE2 /* apps */ = {
+			isa = PBXGroup;
+			children = (
+				43C8A79E1109FFEA0095AEE2 /* ossimplanet */,
+			);
+			name = apps;
+			sourceTree = "<group>";
+		};
+		EE69A36F0B28849E00C91DD1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				EE69A3730B28849E00C91DD1 /* wms.framework */,
+				437A56040E789BBE000D89D5 /* wmsurl */,
+				437A56060E789BBE000D89D5 /* wmscapabilities.cpp */,
+				437A56080E789BBE000D89D5 /* wmsgetmap */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		EEB5EDB60D0F2EA5000CF6B2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				EEB5EDBA0D0F2EA5000CF6B2 /* ossimPredator.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		EEC431070BFB4288004209D5 /* core */ = {
+			isa = PBXGroup;
+			children = (
+				EEC4310A0BFB42A4004209D5 /* ossimPlanetQtImage.cpp */,
+			);
+			name = core;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		8D07F2BD0486CC7A007CD1D0 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D07F2BE0486CC7A007CD1D0 /* ossimPlanetQt_Prefix.pch in Headers */,
+				EEE852660C170E8000ED8550 /* ossimPlanetQtWmsDialog.h in Headers */,
+				EEE852670C170E8000ED8550 /* ossimPlanetQtVersion.h in Headers */,
+				EEE852680C170E8000ED8550 /* ossimPlanetQtRuler.h in Headers */,
+				EEE852690C170E8000ED8550 /* ossimPlanetQtActivityItem.h in Headers */,
+				EEE8526A0C170E8000ED8550 /* ui_ossimPlanetQtWmsDialog.h in Headers */,
+				EEE8526B0C170E8000ED8550 /* ossimPlanetQtAboutDialog.h in Headers */,
+				EEE8526C0C170E8000ED8550 /* ossimPlanetQtGlWidget.h in Headers */,
+				EEE8526D0C170E8000ED8550 /* ossimPlanetQtMainWindow.h in Headers */,
+				EEE8526E0C170E8000ED8550 /* ossimPlanetQtActionAdapter.h in Headers */,
+				EEE8526F0C170E8000ED8550 /* ui_ossimPlanetQtLayerOperation.h in Headers */,
+				EEE852700C170E8000ED8550 /* ui_ossimPlanetQtActivityWindow.h in Headers */,
+				EEE852710C170E8000ED8550 /* ossimPlanetQtLegendTextureItem.h in Headers */,
+				EEE852720C170E8000ED8550 /* ossimPlanetQtNewHttpConnection.h in Headers */,
+				EEE852730C170E8000ED8550 /* ui_ossimPlanetQtRuler.h in Headers */,
+				EEE852740C170E8000ED8550 /* ui_ossimPlanetQtPreferences.h in Headers */,
+				EEE852750C170E8000ED8550 /* ossimPlanetQtActivityThreadQueueItem.h in Headers */,
+				EEE852760C170E8000ED8550 /* ui_ossimPlanetQtAboutDialog.h in Headers */,
+				EEE852770C170E8000ED8550 /* ossimPlanetQtAlertLayer.h in Headers */,
+				EEE852780C170E8000ED8550 /* ossimPlanetQtActivityWidget.h in Headers */,
+				EEE852790C170E8000ED8550 /* ui_ossimPlanetQtNewHttpConnection.h in Headers */,
+				EEE8527A0C170E8000ED8550 /* ui_ossimPlanetQtMainWindow.h in Headers */,
+				EEE8527B0C170E8000ED8550 /* ossimPlanetQtActivityWindow.h in Headers */,
+				EEE8527C0C170E8000ED8550 /* ossimPlanetQtActivityThread.h in Headers */,
+				EEE8527D0C170E8000ED8550 /* ossimPlanetQtLegendKmlItem.h in Headers */,
+				EEE8527E0C170E8000ED8550 /* ossimPlanetQtLegendItem.h in Headers */,
+				EEE8527F0C170E8000ED8550 /* ossimPlanetQtPreferences.h in Headers */,
+				EEE852800C170E8000ED8550 /* ossimPlanetQtLayerOperation.h in Headers */,
+				EEE852810C170E8000ED8550 /* ossimPlanetQtImage.h in Headers */,
+				EEE852820C170E8000ED8550 /* ossimPlanetQtLegend.h in Headers */,
+				EEE852830C170E8000ED8550 /* ossimPlanetQtApplication.h in Headers */,
+				EEE852840C170E8000ED8550 /* ossimPlanetQtLegendLocationInfo.h in Headers */,
+				EEE852850C170E8000ED8550 /* ossimPlanetQtLegendLocatioInfo.h in Headers */,
+				EEE852860C170E8000ED8550 /* ossimPlanetQtExport.h in Headers */,
+				EE9B7F6C0C21C2F8002ABF88 /* ossimPlanetQtLegendAnimationPathItem.h in Headers */,
+				EE9173F90C57A80500B25F44 /* ossimPlanetQtEvent.h in Headers */,
+				430D551B0C68AF8500FA8F6C /* ossimPlanetQtDropDownDelegate.h in Headers */,
+				43CD237E0D1187E1004CF3EE /* ossimPlanetQtLegendVideoItem.h in Headers */,
+				EE9171850D171030006DB941 /* ossimPlanetQtVideoControlWidget.h in Headers */,
+				EEF048BD0D9BEDE600F6897F /* ossimPlanetQtOperation.h in Headers */,
+				EE7958BA0DA6863800155345 /* ossimPlanetQtMessageLog.h in Headers */,
+				EE7959390DA6954F00155345 /* ui_ossimPlanetQtMessageLog.h in Headers */,
+				EE9D27980DD9C37B005A8951 /* ossimPlanetQtLegendNodeItem.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		43C8A7871109FF750095AEE2 /* ossimplanet */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 43C8A7931109FF760095AEE2 /* Build configuration list for PBXNativeTarget "ossimplanet" */;
+			buildPhases = (
+				43C8A7841109FF750095AEE2 /* Resources */,
+				43C8A7851109FF750095AEE2 /* Sources */,
+				43C8A7861109FF750095AEE2 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				43C8A7951109FFCB0095AEE2 /* PBXTargetDependency */,
+				43C8A7971109FFCB0095AEE2 /* PBXTargetDependency */,
+				43C8A7991109FFCB0095AEE2 /* PBXTargetDependency */,
+				43C8A79B1109FFCB0095AEE2 /* PBXTargetDependency */,
+				43C8A79D1109FFCB0095AEE2 /* PBXTargetDependency */,
+			);
+			name = ossimplanet;
+			productName = ossimplanet;
+			productReference = 43C8A7881109FF750095AEE2 /* ossimplanet.app */;
+			productType = "com.apple.product-type.application";
+		};
+		8D07F2BC0486CC7A007CD1D0 /* ossimPlanetQt */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4FADC24208B4156D00ABE55E /* Build configuration list for PBXNativeTarget "ossimPlanetQt" */;
+			buildPhases = (
+				4303D1890B227E9600CFC6B3 /* make file generation */,
+				4303D18B0B227ECB00CFC6B3 /* ui, moc and resource file generation */,
+				8D07F2BD0486CC7A007CD1D0 /* Headers */,
+				8D07F2BF0486CC7A007CD1D0 /* Resources */,
+				8D07F2C10486CC7A007CD1D0 /* Sources */,
+				8D07F2C30486CC7A007CD1D0 /* Frameworks */,
+				8D07F2C50486CC7A007CD1D0 /* Rez */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				434D0D7A1019DF9100761D13 /* PBXTargetDependency */,
+			);
+			name = ossimPlanetQt;
+			productInstallPath = "$(HOME)/Library/Frameworks";
+			productName = ossimPlanetQt;
+			productReference = 8D07F2C80486CC7A007CD1D0 /* ossimPlanetQt.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0867D690FE84028FC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 4FADC24608B4156D00ABE55E /* Build configuration list for PBXProject "ossimPlanetQt" */;
+			compatibilityVersion = "Xcode 2.4";
+			hasScannedForEncodings = 1;
+			mainGroup = 0867D691FE84028FC02AAC07 /* ossimPlanetQt */;
+			productRefGroup = 034768DDFF38A45A11DB9C8B /* Products */;
+			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = EE69A36F0B28849E00C91DD1 /* Products */;
+					ProjectRef = EE69A36E0B28849E00C91DD1 /* libwms.xcodeproj */;
+				},
+				{
+					ProductGroup = 186EF6460B1DBB0100F7886A /* Products */;
+					ProjectRef = 186EF6450B1DBB0100F7886A /* ossim.xcodeproj */;
+				},
+				{
+					ProductGroup = 186EF60B0B1DB65B00F7886A /* Products */;
+					ProjectRef = 186EF60A0B1DB65B00F7886A /* ossimPlanet.xcodeproj */;
+				},
+				{
+					ProductGroup = EEB5EDB60D0F2EA5000CF6B2 /* Products */;
+					ProjectRef = EEB5EDB50D0F2EA5000CF6B2 /* ossimPredator.xcodeproj */;
+				},
+			);
+			projectRoot = "";
+			targets = (
+				43D50359110A053100FDB366 /* Clean */,
+				43D50344110A04BA00FDB366 /* All */,
+				8D07F2BC0486CC7A007CD1D0 /* ossimPlanetQt */,
+				43C8A7871109FF750095AEE2 /* ossimplanet */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		186EF60F0B1DB65B00F7886A /* ossimPlanet.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = ossimPlanet.framework;
+			remoteRef = 186EF60E0B1DB65B00F7886A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		186EF6860B1DBB0100F7886A /* ossim.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = ossim.framework;
+			remoteRef = 186EF6850B1DBB0100F7886A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		433A4CE2100CEDAC000B969C /* ossimplanettest */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = ossimplanettest;
+			remoteRef = 433A4CE1100CEDAC000B969C /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		437A56040E789BBE000D89D5 /* wmsurl */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = wmsurl;
+			remoteRef = 437A56030E789BBE000D89D5 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		437A56060E789BBE000D89D5 /* wmscapabilities.cpp */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = wmscapabilities.cpp;
+			remoteRef = 437A56050E789BBE000D89D5 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		437A56080E789BBE000D89D5 /* wmsgetmap */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = wmsgetmap;
+			remoteRef = 437A56070E789BBE000D89D5 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C6E5D80FF005CB004B52F7 /* ossimplanetklv */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = ossimplanetklv;
+			remoteRef = 43C6E5D70FF005CB004B52F7 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C6E5DA0FF005CB004B52F7 /* ossimplanetviewer */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = ossimplanetviewer;
+			remoteRef = 43C6E5D90FF005CB004B52F7 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95014104C34A000145CDF /* template-app */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "template-app";
+			remoteRef = 43C95013104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95016104C34A000145CDF /* ossim-adrg-dump */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-adrg-dump";
+			remoteRef = 43C95015104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95018104C34A000145CDF /* ossim-applanix2ogeom */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-applanix2ogeom";
+			remoteRef = 43C95017104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C9501A104C34A000145CDF /* ossim-band-merge */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-band-merge";
+			remoteRef = 43C95019104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C9501C104C34A000145CDF /* ossim-btoa */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-btoa";
+			remoteRef = 43C9501B104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C9501E104C34A000145CDF /* template-app */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "template-app";
+			remoteRef = 43C9501D104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95020104C34A000145CDF /* ossim-cmm */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-cmm";
+			remoteRef = 43C9501F104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95022104C34A000145CDF /* ossim-computeSrtmStats */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-computeSrtmStats";
+			remoteRef = 43C95021104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95024104C34A000145CDF /* ossim-correl */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-correl";
+			remoteRef = 43C95023104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95026104C34A000145CDF /* ossim-create-cg */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-create-cg";
+			remoteRef = 43C95025104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95028104C34A000145CDF /* ossim-create-histo */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-create-histo";
+			remoteRef = 43C95027104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95030104C34A000145CDF /* ossim-dms2deg */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-dms2deg";
+			remoteRef = 43C9502F104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95032104C34A000145CDF /* ossim-dump-ocg */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-dump-ocg";
+			remoteRef = 43C95031104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95034104C34A000145CDF /* ossim-ecg2ocg */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-ecg2ocg";
+			remoteRef = 43C95033104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95036104C34A000145CDF /* ossim-extract-vertices */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-extract-vertices";
+			remoteRef = 43C95035104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95038104C34A000145CDF /* ossim-foo */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-foo";
+			remoteRef = 43C95037104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C9503C104C34A000145CDF /* ossim-height */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-height";
+			remoteRef = 43C9503B104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C9503E104C34A000145CDF /* ossim-icp */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-icp";
+			remoteRef = 43C9503D104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95040104C34A000145CDF /* ossim-igen */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-igen";
+			remoteRef = 43C9503F104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95042104C34A000145CDF /* ossim-img2md */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-img2md";
+			remoteRef = 43C95041104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95044104C34A000145CDF /* ossim-img2rr */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-img2rr";
+			remoteRef = 43C95043104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95046104C34A000145CDF /* ossim-info */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-info";
+			remoteRef = 43C95045104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95048104C34A000145CDF /* ossim-modopt */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-modopt";
+			remoteRef = 43C95047104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C9504A104C34A000145CDF /* ossim-mosaic */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-mosaic";
+			remoteRef = 43C95049104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95050104C34A000145CDF /* ossim-ogeom2ogeom */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-ogeom2ogeom";
+			remoteRef = 43C9504F104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95052104C34A000145CDF /* ossim-orthoigen */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-orthoigen";
+			remoteRef = 43C95051104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95054104C34A000145CDF /* ossim-pixelflip */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-pixelflip";
+			remoteRef = 43C95053104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95056104C34A000145CDF /* ossim-prune */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-prune";
+			remoteRef = 43C95055104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C9505A104C34A000145CDF /* ossim-rejout */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-rejout";
+			remoteRef = 43C95059104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C9505C104C34A000145CDF /* ossim-senint */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-senint";
+			remoteRef = 43C9505B104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C9505E104C34A000145CDF /* ossim-space-imaging */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-space-imaging";
+			remoteRef = 43C9505D104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95060104C34A000145CDF /* ossim-swapbytes */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-swapbytes";
+			remoteRef = 43C9505F104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43C95062104C34A000145CDF /* ossim-tfw2ogeom */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-tfw2ogeom";
+			remoteRef = 43C95061104C34A000145CDF /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		EE69A3730B28849E00C91DD1 /* wms.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = wms.framework;
+			remoteRef = EE69A3720B28849E00C91DD1 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		EEB5EDBA0D0F2EA5000CF6B2 /* ossimPredator.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = ossimPredator.framework;
+			remoteRef = EEB5EDB90D0F2EA5000CF6B2 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
+/* Begin PBXResourcesBuildPhase section */
+		43C8A7841109FF750095AEE2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8D07F2BF0486CC7A007CD1D0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D07F2C00486CC7A007CD1D0 /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXRezBuildPhase section */
+		8D07F2C50486CC7A007CD1D0 /* Rez */ = {
+			isa = PBXRezBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXRezBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		4303D1890B227E9600CFC6B3 /* make file generation */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "make file generation";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "export PLANET_QT_DIR=$SRCROOT/../..\nexport QTDIR=$QT4DIR\nexport QT_INSTALL_BINS=$QT4DIR/bin\nexport QMAKE_RCC=$QT4DIR/bin/rcc\nexport DYLD_FRAMEWORK_PATH=$UNIV_DEP/Frameworks:DYLD_FRAMEWORK_PATH\nexport QMAKE_MAC_SDK=$SDKROOT\nexport QMAKE_MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET\n\n\necho =================================$QT4DIR==========================\n/bin/rm -f $PLANET_QT_DIR/apps/Makefile\n/bin/rm -f $PLANET_QT_DIR/apps/ossimplanet/Makefile\n/bin/rm -f $PLANET_QT_DIR/src/Makefile\ncd $PLANET_QT_DIR\nqmake -spec macx-g++ -recursive";
+		};
+		4303D18B0B227ECB00CFC6B3 /* ui, moc and resource file generation */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "ui, moc and resource file generation";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "export PLANET_QT_DIR=$SRCROOT/../..\nexport QTDIR=$QT4DIR\nexport QT_INSTALL_BINS=$QT4DIR/bin\nexport DYLD_FRAMEWORK_PATH=$UNIV_DEP/Frameworks:DYLD_FRAMEWORK_PATH\nexport QMAKE_MAC_SDK=$SDKROOT\nexport QMAKE_MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET\nexport PATH=$QT4DIR/bin:$PATH\n\ncd $PLANET_QT_DIR/src\nmake INCPATH=\"$INCLUDE_PATH\" compiler_uic_make_all\nmake INCPATH=\"$INCLUDE_PATH\" compiler_moc_header_make_all\nmake INCPATH=\"$INCLUDE_PATH\" mocables\n\ncd $PLANET_QT_DIR/apps/ossimplanet\nmake INCPATH=\"$INCLUDE_PATH\" compiler_uic_make_all\nmake INCPATH=\"$INCLUDE_PATH\" mocables\nmake INCPATH=\"$INCLUDE_PATH\"  compiler_rcc_make_all\n#make compiler_image_collection_make_all\n";
+		};
+		43D50361110A053F00FDB366 /* clean files */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "clean files";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "export PLANET_QT_DIR=$SRCROOT/../..\nexport QTDIR=$QT4DIR\nexport QMAKESPEC=$QT4DIR/mkspecs/macx-g++\nexport QT_INSTALL_BINS=$QT4DIR/bin\nexport QMAKE_RCC=$QT4DIR/bin/rcc\nexport DYLD_FRAMEWORK_PATH=$UNIV_DEP/Frameworks:DYLD_FRAMEWORK_PATH\nexport QMAKE_MAC_SDK=$SDKROOT\nexport QMAKE_MACOSX_DEPLOYMENT_TARGET=$MACOSX_DEPLOYMENT_TARGET\n\n\necho =================================$QT4DIR==========================\ncd $PLANET_QT_DIR\nmake clean\ncd apps/\nmake clean\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		43C8A7851109FF750095AEE2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				43C8A7A6110A001C0095AEE2 /* main.cpp in Sources */,
+				43C8A7A7110A001C0095AEE2 /* qrc_ossimPlanetQt.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8D07F2C10486CC7A007CD1D0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				186EF5ED0B1DB62E00F7886A /* ossimPlanetQtLayerOperation.cpp in Sources */,
+				186EF5EE0B1DB62E00F7886A /* ossimPlanetQtWmsDialog.cpp in Sources */,
+				186EF5EF0B1DB62E00F7886A /* ossimPlanetQtApplication.cpp in Sources */,
+				186EF5F00B1DB62E00F7886A /* ossimPlanetQtGlWidget.cpp in Sources */,
+				186EF5F10B1DB62E00F7886A /* ossimPlanetQtLegend.cpp in Sources */,
+				186EF5F20B1DB62E00F7886A /* ossimPlanetQtLegendItem.cpp in Sources */,
+				186EF5F30B1DB62E00F7886A /* ossimPlanetQtLegendTextureItem.cpp in Sources */,
+				186EF5F40B1DB62E00F7886A /* ossimPlanetQtMainWindow.cpp in Sources */,
+				186EF5F50B1DB62E00F7886A /* ossimPlanetQtPreferences.cpp in Sources */,
+				EEBE2C960B4D38A40092FA3F /* ossimPlanetQtActivityWindow.cpp in Sources */,
+				EEBE2C980B4D38AE0092FA3F /* ossimPlanetQtActivityWidget.cpp in Sources */,
+				EEBE2CBB0B4D52D20092FA3F /* ossimPlanetQtActivityItem.cpp in Sources */,
+				EEBE2D130B4D5A3B0092FA3F /* ossimPlanetQtActivityThreadQueueItem.cpp in Sources */,
+				EEBE2D390B4D63770092FA3F /* ossimPlanetQtActivityThread.cpp in Sources */,
+				EEBE2DAE0B4D8AA10092FA3F /* moc_ossimPlanetQtPreferences.cpp in Sources */,
+				EEBE2DAF0B4D8AA10092FA3F /* moc_ossimPlanetQtActivityWidget.cpp in Sources */,
+				EEBE2DB00B4D8AA10092FA3F /* moc_ossimPlanetQtActivityThreadQueueItem.cpp in Sources */,
+				EEBE2DB10B4D8AA10092FA3F /* moc_ossimPlanetQtWmsDialog.cpp in Sources */,
+				EEBE2DB20B4D8AA10092FA3F /* moc_ossimPlanetQtLegend.cpp in Sources */,
+				EEBE2DB30B4D8AA10092FA3F /* moc_ossimPlanetQtActivityWindow.cpp in Sources */,
+				EEBE2DB40B4D8AA10092FA3F /* moc_ossimPlanetQtGlWidget.cpp in Sources */,
+				EEBE2DB60B4D8AA10092FA3F /* moc_ossimPlanetQtLayerOperation.cpp in Sources */,
+				EEBE2DB70B4D8AA10092FA3F /* moc_ossimPlanetQtMainWindow.cpp in Sources */,
+				EED67AA40B67B69D00C0CE5A /* ossimPlanetQtRuler.cpp in Sources */,
+				EED67AA60B67B6AC00C0CE5A /* moc_ossimPlanetQtRuler.cpp in Sources */,
+				43FC557C0B7CBD1400B57002 /* ossimPlanetQtAlertLayer.cpp in Sources */,
+				4307F53D0BBD90B40079E358 /* ossimPlanetQtLegendKmlItem.cpp in Sources */,
+				EE6F833A0BE77C3B0090E263 /* moc_ossimPlanetQtNewHttpConnection.cpp in Sources */,
+				EE6F833C0BE77C480090E263 /* ossimPlanetQtNewHttpConnection.cpp in Sources */,
+				EE022B850BF8E8C600F55360 /* ossimPlanetQtAboutDialog.cpp in Sources */,
+				EEC4310B0BFB42A4004209D5 /* ossimPlanetQtImage.cpp in Sources */,
+				EE9B7F6A0C21C2EC002ABF88 /* ossimPlanetQtLegendAnimationPathItem.cpp in Sources */,
+				430D55190C68AF5900FA8F6C /* ossimPlanetQtDropDownDelegate.cpp in Sources */,
+				43CD236C0D1186C8004CF3EE /* ossimPlanetQtLegendVideoItem.cpp in Sources */,
+				EE9171830D171000006DB941 /* ossimPlanetQtVideoControlWidget.cpp in Sources */,
+				EE91719A0D17119D006DB941 /* moc_ossimPlanetQtVideoControlWidget.cpp in Sources */,
+				EEF048C00D9BF9B500F6897F /* ossimPlanetQtOperation.cpp in Sources */,
+				EE7958BC0DA687D500155345 /* ossimPlanetQtMessageLog.cpp in Sources */,
+				EE7958C90DA688CF00155345 /* moc_ossimPlanetQtMessageLog.cpp in Sources */,
+				EE9D279E0DD9C43D005A8951 /* ossimPlanetQtLegendNodeItem.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		434D0D7A1019DF9100761D13 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = ossimPlanet;
+			targetProxy = 434D0D791019DF9100761D13 /* PBXContainerItemProxy */;
+		};
+		43C8A7951109FFCB0095AEE2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8D07F2BC0486CC7A007CD1D0 /* ossimPlanetQt */;
+			targetProxy = 43C8A7941109FFCB0095AEE2 /* PBXContainerItemProxy */;
+		};
+		43C8A7971109FFCB0095AEE2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = ossimPlanet;
+			targetProxy = 43C8A7961109FFCB0095AEE2 /* PBXContainerItemProxy */;
+		};
+		43C8A7991109FFCB0095AEE2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = ossimPredator;
+			targetProxy = 43C8A7981109FFCB0095AEE2 /* PBXContainerItemProxy */;
+		};
+		43C8A79B1109FFCB0095AEE2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = ossim;
+			targetProxy = 43C8A79A1109FFCB0095AEE2 /* PBXContainerItemProxy */;
+		};
+		43C8A79D1109FFCB0095AEE2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = wms;
+			targetProxy = 43C8A79C1109FFCB0095AEE2 /* PBXContainerItemProxy */;
+		};
+		43D5034E110A04C400FDB366 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 8D07F2BC0486CC7A007CD1D0 /* ossimPlanetQt */;
+			targetProxy = 43D5034D110A04C400FDB366 /* PBXContainerItemProxy */;
+		};
+		43D50350110A04C400FDB366 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 43C8A7871109FF750095AEE2 /* ossimplanet */;
+			targetProxy = 43D5034F110A04C400FDB366 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		089C1666FE841158C02AAC07 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				089C1667FE841158C02AAC07 /* English */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		18A9BD020CDA15DF00F4581A /* DebugNativeLeopard */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 186EF5C80B1DB60E00F7886A /* common_settings.xcconfig */;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH)";
+				GCC_MODEL_TUNING = "";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					$DEV_HOME_PATH/ossimPlanetQt/include,
+					$DEV_HOME_PATH/ossim/include,
+					$DEV_HOME_PATH/libwms/include,
+					$DEV_HOME_PATH/ossimPlanet/include,
+					$DEV_HOME_PATH/ossimPlanetQt/include,
+					$UNIV_HEADER_DEP,
+				);
+				LIBRARY_SEARCH_PATHS = "$(QT4_PATH)/lib";
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = "-g";
+				OTHER_CPLUSPLUSFLAGS = "-g";
+				OTHER_LDFLAGS = /usr/lib/libz.dylib;
+				PREBINDING = YES;
+				PRIVATE_HEADERS_FOLDER_PATH = "";
+				PRODUCT_NAME = "";
+				PUBLIC_HEADERS_FOLDER_PATH = "$(CONTENTS_FOLDER_PATH)/Headers";
+				REZ_SEARCH_PATHS = (
+					"$(OSSIM_HOME_PATH)/xcode/ossim/Resources",
+					"$(REZ_SEARCH_PATHS)/**",
+				);
+				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
+				USER_HEADER_SEARCH_PATHS = "$(UNIV_STATICLIB_DEP) /usr/X11R6/lib";
+				WRAPPER_EXTENSION = "";
+			};
+			name = DebugNativeLeopard;
+		};
+		18A9BD030CDA15DF00F4581A /* DebugNativeLeopard */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(inherited)";
+				COPY_PHASE_STRIP = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(UNIV_DEP)/Frameworks",
+					"$(QT4DIR)/lib",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_1 = "\"/usr/local/Trolltech/Qt-4.1.4/lib\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_2 = "\"/usr/local/Trolltech/Qt-4.2.2/lib\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_3 = "\"/usr/local/Trolltech/Qt-4.2.2/lib\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_4 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_5 = "\"$(SRCROOT)/../../../ossim_dependencies/qt4.2/Frameworks\"";
+				FRAMEWORK_VERSION = A;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = "";
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = ossimPlanetQt_Prefix.pch;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					__OSSIM_DARWIN__,
+					__MACOSX__,
+					"_FILE_OFFSET_BITS=64",
+					_LARGE_FILES,
+				);
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_2)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SYSTEM_DEVELOPER_DIR)/qt/lib\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../../ossim_dependencies/lib\"";
+				LIBRARY_STYLE = DYNAMIC;
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = "-Wno-long-double";
+				OTHER_LDFLAGS = (
+					"-framework",
+					QtGui,
+					"-framework",
+					QtCore,
+					"-framework",
+					QtOpenGL,
+					/usr/lib/libz.dylib,
+				);
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = YES;
+				PRODUCT_NAME = ossimPlanetQt;
+				WRAPPER_EXTENSION = framework;
+				ZERO_LINK = NO;
+			};
+			name = DebugNativeLeopard;
+		};
+		18B28C950CD57B08008F45B2 /* ReleaseLeopard */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 186EF5C80B1DB60E00F7886A /* common_settings.xcconfig */;
+			buildSettings = {
+				ARCHS = (
+					i386,
+					ppc,
+				);
+				GCC_MODEL_TUNING = "";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					$DEV_HOME_PATH/ossimPlanetQt/include,
+					$DEV_HOME_PATH/ossim/include,
+					$DEV_HOME_PATH/libwms/include,
+					$DEV_HOME_PATH/ossimPlanet/include,
+					$DEV_HOME_PATH/ossimPlanetQt/include,
+					$UNIV_HEADER_DEP,
+				);
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = "$(QT4_PATH)/lib";
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = "-g";
+				OTHER_CPLUSPLUSFLAGS = "-g";
+				OTHER_LDFLAGS = /usr/lib/libz.dylib;
+				PREBINDING = YES;
+				PRIVATE_HEADERS_FOLDER_PATH = "";
+				PRODUCT_NAME = "";
+				PUBLIC_HEADERS_FOLDER_PATH = "$(CONTENTS_FOLDER_PATH)/Headers";
+				REZ_SEARCH_PATHS = (
+					"$(OSSIM_HOME_PATH)/xcode/ossim/Resources",
+					"$(REZ_SEARCH_PATHS)/**",
+				);
+				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
+				USER_HEADER_SEARCH_PATHS = "";
+				WRAPPER_EXTENSION = "";
+			};
+			name = ReleaseLeopard;
+		};
+		18B28C960CD57B08008F45B2 /* ReleaseLeopard */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(inherited)";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(UNIV_DEP)/Frameworks",
+					"$(QT4DIR)/lib",
+				);
+				FRAMEWORK_VERSION = A;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = "";
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = ossimPlanetQt_Prefix.pch;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					__OSSIM_DARWIN__,
+					__MACOSX__,
+					"_FILE_OFFSET_BITS=64",
+					_LARGE_FILES,
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(QT4DIR)/include",
+					"$(DEV_HOME_PATH)/ossimPlanetQt/include",
+					"$(QT4_PATH)/include",
+					"$(DEV_HOME_PATH)/ossim/include",
+					"$(DEV_HOME_PATH)/libwms/include",
+					"$(DEV_HOME_PATH)/ossimPlanet/include",
+					"$(DEV_HOME_PATH)/ossimPlanetQt/include",
+					"$(UNIV_HEADER_DEP)",
+				);
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../../ossim_dependencies/lib\"";
+				LIBRARY_STYLE = DYNAMIC;
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = "-Wno-long-double";
+				OTHER_LDFLAGS = (
+					"-framework",
+					QtGui,
+					"-framework",
+					QtCore,
+					"-framework",
+					QtOpenGL,
+					/usr/lib/libz.dylib,
+				);
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = YES;
+				PRODUCT_NAME = ossimPlanetQt;
+				STRIP_INSTALLED_PRODUCT = YES;
+				WRAPPER_EXTENSION = framework;
+				ZERO_LINK = NO;
+			};
+			name = ReleaseLeopard;
+		};
+		18E4E59D0BE7805D00C8442B /* DebugNative */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(inherited)";
+				COPY_PHASE_STRIP = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(UNIV_DEP)/Frameworks",
+					"$(QT4DIR)/lib",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_1 = "\"/usr/local/Trolltech/Qt-4.1.4/lib\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_2 = "\"/usr/local/Trolltech/Qt-4.2.2/lib\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_3 = "\"/usr/local/Trolltech/Qt-4.2.2/lib\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_4 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_5 = "\"$(SRCROOT)/../../../ossim_dependencies/qt4.2/Frameworks\"";
+				FRAMEWORK_VERSION = A;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = "";
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = ossimPlanetQt_Prefix.pch;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					__OSSIM_DARWIN__,
+					__MACOSX__,
+					"_FILE_OFFSET_BITS=64",
+					_LARGE_FILES,
+				);
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_2)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SYSTEM_DEVELOPER_DIR)/qt/lib\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../../ossim_dependencies/lib\"";
+				LIBRARY_STYLE = DYNAMIC;
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = "-Wno-long-double";
+				OTHER_LDFLAGS = (
+					"-framework",
+					QtGui,
+					"-framework",
+					QtCore,
+					"-framework",
+					QtOpenGL,
+					/usr/lib/libz.dylib,
+				);
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = YES;
+				PRODUCT_NAME = ossimPlanetQt;
+				WRAPPER_EXTENSION = framework;
+				ZERO_LINK = NO;
+			};
+			name = DebugNative;
+		};
+		18E4E59E0BE7805D00C8442B /* DebugNative */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 186EF5C80B1DB60E00F7886A /* common_settings.xcconfig */;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH)";
+				GCC_MODEL_TUNING = "";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					$DEV_HOME_PATH/ossimPlanetQt/include,
+					$DEV_HOME_PATH/ossim/include,
+					$DEV_HOME_PATH/libwms/include,
+					$DEV_HOME_PATH/ossimPlanet/include,
+					$DEV_HOME_PATH/ossimPlanetQt/include,
+					$UNIV_HEADER_DEP,
+				);
+				LIBRARY_SEARCH_PATHS = "$(QT4_PATH)/lib";
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = "-g";
+				OTHER_CPLUSPLUSFLAGS = "-g";
+				OTHER_LDFLAGS = /usr/lib/libz.dylib;
+				PREBINDING = YES;
+				PRIVATE_HEADERS_FOLDER_PATH = "";
+				PRODUCT_NAME = "";
+				PUBLIC_HEADERS_FOLDER_PATH = "$(CONTENTS_FOLDER_PATH)/Headers";
+				REZ_SEARCH_PATHS = (
+					"$(OSSIM_HOME_PATH)/xcode/ossim/Resources",
+					"$(REZ_SEARCH_PATHS)/**",
+				);
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+				USER_HEADER_SEARCH_PATHS = "$(UNIV_STATICLIB_DEP) /usr/X11R6/lib";
+				WRAPPER_EXTENSION = "";
+			};
+			name = DebugNative;
+		};
+		43C8A78B1109FF750095AEE2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INFOPLIST_FILE = "ossimplanet-Info.plist";
+				INSTALL_PATH = "$(HOME)/Applications";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = ossimplanet;
+			};
+			name = Debug;
+		};
+		43C8A78C1109FF750095AEE2 /* DebugNative */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INFOPLIST_FILE = "ossimplanet-Info.plist";
+				INSTALL_PATH = "$(HOME)/Applications";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = ossimplanet;
+			};
+			name = DebugNative;
+		};
+		43C8A78D1109FF750095AEE2 /* DebugNativeLeopard */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INFOPLIST_FILE = "ossimplanet-Info.plist";
+				INSTALL_PATH = "$(HOME)/Applications";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = ossimplanet;
+			};
+			name = DebugNativeLeopard;
+		};
+		43C8A78E1109FF750095AEE2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(UNIV_DEP)/Frameworks",
+				);
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = G4;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				INFOPLIST_FILE = "Resources/ossimPlanetQtApp-Info.plist";
+				INSTALL_PATH = "$(HOME)/Applications";
+				MACH_O_TYPE = mh_execute;
+				OTHER_CFLAGS = "";
+				OTHER_CPLUSPLUSFLAGS = "";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-framework",
+					OpenGL,
+					"-framework",
+					QtGui,
+					"-framework",
+					QtOpenGL,
+					"-framework",
+					QtCore,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = ossimplanet;
+				WRAPPER_EXTENSION = app;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		43C8A78F1109FF750095AEE2 /* ReleaseLeopard */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INFOPLIST_FILE = "ossimplanet-Info.plist";
+				INSTALL_PATH = "$(HOME)/Applications";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-framework",
+					AppKit,
+				);
+				PREBINDING = NO;
+				PRODUCT_NAME = ossimplanet;
+			};
+			name = ReleaseLeopard;
+		};
+		43D50348110A04BA00FDB366 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				PRODUCT_NAME = All;
+			};
+			name = Debug;
+		};
+		43D50349110A04BA00FDB366 /* DebugNative */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = All;
+			};
+			name = DebugNative;
+		};
+		43D5034A110A04BA00FDB366 /* DebugNativeLeopard */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = All;
+			};
+			name = DebugNativeLeopard;
+		};
+		43D5034B110A04BA00FDB366 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				PRODUCT_NAME = All;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		43D5034C110A04BA00FDB366 /* ReleaseLeopard */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = All;
+			};
+			name = ReleaseLeopard;
+		};
+		43D5035B110A053100FDB366 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				PRODUCT_NAME = Clean;
+			};
+			name = Debug;
+		};
+		43D5035C110A053100FDB366 /* DebugNative */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Clean;
+			};
+			name = DebugNative;
+		};
+		43D5035D110A053100FDB366 /* DebugNativeLeopard */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Clean;
+			};
+			name = DebugNativeLeopard;
+		};
+		43D5035E110A053100FDB366 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				PRODUCT_NAME = Clean;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		43D5035F110A053100FDB366 /* ReleaseLeopard */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = Clean;
+			};
+			name = ReleaseLeopard;
+		};
+		4FADC24308B4156D00ABE55E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(inherited)";
+				COPY_PHASE_STRIP = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(UNIV_DEP)/Frameworks",
+					"$(QT4DIR)/lib",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_1 = "\"/usr/local/Trolltech/Qt-4.1.4/lib\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_2 = "\"/usr/local/Trolltech/Qt-4.2.2/lib\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_3 = "\"/usr/local/Trolltech/Qt-4.2.2/lib\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_4 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_5 = "\"$(SRCROOT)/../../../ossim_dependencies/qt4.2/Frameworks\"";
+				FRAMEWORK_VERSION = A;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_MODEL_TUNING = "";
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = ossimPlanetQt_Prefix.pch;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					__OSSIM_DARWIN__,
+					__MACOSX__,
+					"_FILE_OFFSET_BITS=64",
+					_LARGE_FILES,
+				);
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_2)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SYSTEM_DEVELOPER_DIR)/qt/lib\"";
+				LIBRARY_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../../ossim_dependencies/lib\"";
+				LIBRARY_STYLE = DYNAMIC;
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = "-Wno-long-double";
+				OTHER_LDFLAGS = (
+					"-framework",
+					QtGui,
+					"-framework",
+					QtCore,
+					"-framework",
+					QtOpenGL,
+					/usr/lib/libz.dylib,
+				);
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = YES;
+				PRODUCT_NAME = ossimPlanetQt;
+				WRAPPER_EXTENSION = framework;
+				ZERO_LINK = NO;
+			};
+			name = Debug;
+		};
+		4FADC24408B4156D00ABE55E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(inherited)";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(UNIV_DEP)/Frameworks",
+					"$(QT4DIR)/lib",
+				);
+				FRAMEWORK_VERSION = A;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = "";
+				GCC_OPTIMIZATION_LEVEL = "$(inherited)";
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_PREFIX_HEADER = "";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					__OSSIM_DARWIN__,
+					__MACOSX__,
+					"_FILE_OFFSET_BITS=64",
+					_LARGE_FILES,
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(QT4DIR)/include",
+					"$(DEV_HOME_PATH)/ossimPlanetQt/include",
+					"$(QT4_PATH)/include",
+					"$(DEV_HOME_PATH)/ossim/include",
+					"$(DEV_HOME_PATH)/libwms/include",
+					"$(DEV_HOME_PATH)/ossimPlanet/include",
+					"$(DEV_HOME_PATH)/ossimPlanetQt/include",
+					"$(UNIV_HEADER_DEP)",
+				);
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_1)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../../ossim_dependencies/lib\"";
+				LIBRARY_STYLE = DYNAMIC;
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = "$(inherited)";
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-framework",
+					QtGui,
+					"-framework",
+					QtOpenGL,
+					"-framework",
+					QtCore,
+				);
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = YES;
+				PRODUCT_NAME = ossimPlanetQt;
+				SDKROOT = "$(inherited)";
+				STRIP_INSTALLED_PRODUCT = YES;
+				WRAPPER_EXTENSION = framework;
+				ZERO_LINK = NO;
+			};
+			name = Release;
+		};
+		4FADC24708B4156D00ABE55E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 186EF5C80B1DB60E00F7886A /* common_settings.xcconfig */;
+			buildSettings = {
+				ARCHS = (
+					i386,
+					ppc,
+				);
+				GCC_MODEL_TUNING = "";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					$DEV_HOME_PATH/ossimPlanetQt/include,
+					$DEV_HOME_PATH/ossim/include,
+					$DEV_HOME_PATH/libwms/include,
+					$DEV_HOME_PATH/ossimPlanet/include,
+					$DEV_HOME_PATH/ossimPlanetQt/include,
+					$UNIV_HEADER_DEP,
+				);
+				LIBRARY_SEARCH_PATHS = "$(QT4_PATH)/lib";
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = "-g";
+				OTHER_CPLUSPLUSFLAGS = "-g";
+				OTHER_LDFLAGS = /usr/lib/libz.dylib;
+				PREBINDING = YES;
+				PRIVATE_HEADERS_FOLDER_PATH = "";
+				PRODUCT_NAME = "";
+				PUBLIC_HEADERS_FOLDER_PATH = "$(CONTENTS_FOLDER_PATH)/Headers";
+				REZ_SEARCH_PATHS = (
+					"$(OSSIM_HOME_PATH)/xcode/ossim/Resources",
+					"$(REZ_SEARCH_PATHS)/**",
+				);
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+				USER_HEADER_SEARCH_PATHS = "$(UNIV_STATICLIB_DEP) /usr/X11R6/lib";
+				WRAPPER_EXTENSION = "";
+			};
+			name = Debug;
+		};
+		4FADC24808B4156D00ABE55E /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 186EF5C80B1DB60E00F7886A /* common_settings.xcconfig */;
+			buildSettings = {
+				ARCHS = "$(inherited)";
+				DYLIB_COMPATIBILITY_VERSION = "$(OSSIM_VERSION_COMPATIBILITY_NUMBER)";
+				DYLIB_CURRENT_VERSION = "$(OSSIM_VERSION_NUMBER)";
+				GCC_MODEL_TUNING = "$(inherited)";
+				GCC_OPTIMIZATION_LEVEL = 3;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				GENERATE_PKGINFO_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					$DEV_HOME_PATH/ossimPlanetQt/include,
+					$DEV_HOME_PATH/ossim/include,
+					$DEV_HOME_PATH/libwms/include,
+					$DEV_HOME_PATH/ossimPlanet/include,
+					$DEV_HOME_PATH/ossimPlanetQt/include,
+					$UNIV_HEADER_DEP,
+				);
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					/Library/Frameworks,
+					/System/Library/Frameworks/,
+				);
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = (
+					"-g",
+					"-pipe",
+					"-D__USE_OSX_AGL_IMPLEMENTATION__",
+					"-DQT_NO_DEBUG",
+					"-DQT_OPENGL_LIB",
+					"-DQT_GUI_LIB",
+					"-DQT_CORE_LIB",
+					"-DQT_SHARED",
+				);
+				OTHER_CPLUSPLUSFLAGS = (
+					"-g",
+					"-pipe",
+					"-D__USE_OSX_AGL_IMPLEMENTATION__",
+					"-DQT_NO_DEBUG",
+					"-DQT_OPENGL_LIB",
+					"-DQT_GUI_LIB",
+					"-DQT_CORE_LIB",
+					"-DQT_SHARED",
+				);
+				OTHER_LDFLAGS = "-headerpad_max_install_names";
+				PREBINDING = NO;
+				PRIVATE_HEADERS_FOLDER_PATH = "";
+				PRODUCT_NAME = "";
+				PUBLIC_HEADERS_FOLDER_PATH = "$(CONTENTS_FOLDER_PATH)/Headers";
+				REZ_SEARCH_PATHS = (
+					"$(OSSIM_HOME_PATH)/xcode/ossim/Resources",
+					"$(REZ_SEARCH_PATHS)/**",
+				);
+				SDKROOT = "$(inherited)";
+				SKIP_INSTALL = YES;
+				STRIP_INSTALLED_PRODUCT = NO;
+				USER_HEADER_SEARCH_PATHS = "";
+				WRAPPER_EXTENSION = "";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		43C8A7931109FF760095AEE2 /* Build configuration list for PBXNativeTarget "ossimplanet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				43C8A78B1109FF750095AEE2 /* Debug */,
+				43C8A78C1109FF750095AEE2 /* DebugNative */,
+				43C8A78D1109FF750095AEE2 /* DebugNativeLeopard */,
+				43C8A78E1109FF750095AEE2 /* Release */,
+				43C8A78F1109FF750095AEE2 /* ReleaseLeopard */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		43D50352110A04D000FDB366 /* Build configuration list for PBXAggregateTarget "All" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				43D50348110A04BA00FDB366 /* Debug */,
+				43D50349110A04BA00FDB366 /* DebugNative */,
+				43D5034A110A04BA00FDB366 /* DebugNativeLeopard */,
+				43D5034B110A04BA00FDB366 /* Release */,
+				43D5034C110A04BA00FDB366 /* ReleaseLeopard */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		43D50362110A056100FDB366 /* Build configuration list for PBXAggregateTarget "Clean" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				43D5035B110A053100FDB366 /* Debug */,
+				43D5035C110A053100FDB366 /* DebugNative */,
+				43D5035D110A053100FDB366 /* DebugNativeLeopard */,
+				43D5035E110A053100FDB366 /* Release */,
+				43D5035F110A053100FDB366 /* ReleaseLeopard */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4FADC24208B4156D00ABE55E /* Build configuration list for PBXNativeTarget "ossimPlanetQt" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4FADC24308B4156D00ABE55E /* Debug */,
+				18E4E59D0BE7805D00C8442B /* DebugNative */,
+				18A9BD030CDA15DF00F4581A /* DebugNativeLeopard */,
+				4FADC24408B4156D00ABE55E /* Release */,
+				18B28C960CD57B08008F45B2 /* ReleaseLeopard */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4FADC24608B4156D00ABE55E /* Build configuration list for PBXProject "ossimPlanetQt" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4FADC24708B4156D00ABE55E /* Debug */,
+				18E4E59E0BE7805D00C8442B /* DebugNative */,
+				18A9BD020CDA15DF00F4581A /* DebugNativeLeopard */,
+				4FADC24808B4156D00ABE55E /* Release */,
+				18B28C950CD57B08008F45B2 /* ReleaseLeopard */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 0867D690FE84028FC02AAC07 /* Project object */;
+}

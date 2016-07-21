@@ -1,0 +1,6 @@
+// $Id: AUTHORS.txt 9332 2006-07-31 14:55:34Z gpotts $
+Garrett Potts <gpotts@intelligence-data.com>
+
+Norman Vine
+
+Eric Sokolowski

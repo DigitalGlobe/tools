@@ -1,0 +1,1 @@
+java -cp ../classes/OssimPlanetMessage.jar:. MessageFilePlayback localhost 8000 tcp message.txt

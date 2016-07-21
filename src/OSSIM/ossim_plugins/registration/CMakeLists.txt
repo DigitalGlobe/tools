@@ -1,0 +1,51 @@
+set(LIB_NAME ossimregistration_plugin)
+MESSAGE( "************** LIBRARY SETUP FOR ossimregistration_plugin******************")
+
+# Include ossim cmake stuff:
+include(OssimVersion)
+include(OssimCommonVariables)
+include(OssimUtilities)
+
+find_package(FFTW3)
+#find_package(TIFF)
+#find_package(CURL)
+#find_package(EXPAT)
+#find_library(SQLITE_LIBRARY NAMES sqlite sqlite3)
+#find_library(PROJ4_LIBRARY NAMES proj proj4)
+
+MESSAGE( STATUS "FFTW3_LIBRARY        = ${FFTW3_LIBRARY}" )
+MESSAGE( STATUS "FFTW3_INCLUDE        = ${FFTW3_INCLUDE_DIR}" )
+#MESSAGE( STATUS "TIFF_LIBRARY        = ${TIFF_LIBRARY}" )
+#MESSAGE( STATUS "TIFF_INCLUDE        = ${TIFF_INCLUDE_DIR}" )
+#MESSAGE( STATUS "EXPAT_LIBRARY       = ${EXPAT_LIBRARY}" )
+#MESSAGE( STATUS "SQLITE_LIBRARY      = ${SQLITE_LIBRARY}" )
+#MESSAGE( STATUS "PROJ4_LIBRARY       = ${PROJ4_LIBRARY}" )
+
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
+INCLUDE_DIRECTORIES(${OPENTHREADS_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${FFTW3_INCLUDE_DIR})
+#INCLUDE_DIRECTORIES(${GDAL_INCLUDE_DIR})
+#INCLUDE_DIRECTORIES(${TIFF_INCLUDE_DIR})
+
+FILE(GLOB_RECURSE OSSIMPLUGIN_SRCS *.cpp)
+FILE(GLOB_RECURSE OSSIMPLUGIN_HEADERS *.h)
+
+#---
+# OSSIMPLUGINSMAKINGDLL controls dll linkage on windows.  
+# Adding this sets OSSIM_PLUGINS_DLL #define TO "__declspec(dllexport)".
+#---
+add_definitions("-DOSSIMPLUGINSMAKINGDLL")
+
+# Adjust the install library path:
+if(OSSIM_INSTALL_PLUGINS_WITH_VERSION)
+   set(INSTALL_LIBRARY_DIR   "${INSTALL_LIBRARY_DIR}/ossim-${OSSIM_VERSION}/plugins")
+else(OSSIM_INSTALL_PLUGINS_WITH_VERSION)
+   set(INSTALL_LIBRARY_DIR   "${INSTALL_LIBRARY_DIR}/ossim/plugins")
+endif(OSSIM_INSTALL_PLUGINS_WITH_VERSION)
+
+OSSIM_LINK_LIBRARY(${LIB_NAME}
+                   COMPONENT_NAME ossim TYPE "${OSSIM_PLUGIN_LINK_TYPE}"
+		   LIBRARIES ${OSSIM_LIBRARIES} ${OPENTHREADS_LIBRARY} ${FFTW3_LIBRARY} 
+                   HEADERS "${OSSIMPLUGIN_HEADERS}"
+		   SOURCE_FILES "${OSSIMPLUGIN_SRCS}"
+                   INSTALL_LIB)

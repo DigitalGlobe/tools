@@ -1,0 +1,1 @@
+This directory will contain a modified OssimPlanetSasha version, adapted to runs as qgis plug-in.

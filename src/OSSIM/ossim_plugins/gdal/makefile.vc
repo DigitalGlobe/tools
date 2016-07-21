@@ -1,0 +1,75 @@
+###
+# $Id: makefile.vc 13411 2008-08-08 14:43:52Z dburken $
+#
+# Windows nmake make file.  This code should compile with the Microsoft .NET
+# compiler.
+# 
+# Currently for a typical build on windows you would do the following.
+# - cd src packages
+# - untar the gdal package
+# - cd gdal and edit the nmake.opt file appropriately.
+# - cd back to the ossim top and edit its nmake.opt file appropriately.
+# - nmake /f makefile
+# - nmake /f makefile install (if you want the apps in the bin directory.
+#
+# NOTE:  If you make shared apps it's handy to copy the ossim.dll to the bin
+#        directory. 
+###
+
+!INCLUDE ..\nmake.opt
+PLUGIN_ROOT = ossim_gdal_plugin
+
+###
+# Note: EMBED_MANIFEST variable is set in nmake.opt so make sure it is included
+# before this test.
+###
+!if "$(EMBED_MANIFEST)" == "1"
+!include ..\makefile.inc
+OSSIM_VC_MANIFEST_EMBED_DLL=$(_VC_MANIFEST_EMBED_DLL)
+OSSIM_VC_MANIFEST_CLEAN=$(_VC_MANIFEST_CLEAN)
+!else
+OSSIM_VC_MANIFEST_EMBED_DLL=
+OSSIM_VC_MANIFEST_CLEAN=
+!endif
+
+INC = -I.. -I. $(INC) $(GDAL_INC)
+LINK	=	link
+LFLAGS	=	/NOLOGO /DELAYLOAD:comdlg32.dll /DELAYLOAD:oleaut32.dll /DELAYLOAD:winmm.dll /DELAYLOAD:wsock32.dll /DELAYLOAD:winspool.dll /SUBSYSTEM:WINDOWS /LIBPATH:"$(QTDIR)\lib" /LIBPATH:"$(OSSIM_QT_HOME)\lib" /LIBPATH:"$(OSSIM_HOME)\lib
+
+LIBS	= "$(OSSIM_LIB)
+
+OBJ	= \
+ossimEsriShapeFileFilter.obj \
+ossimGdalDataset.obj \
+ossimGdalFactory.obj \
+ossimGdalImageWriterFactory.obj \
+ossimGdalObjectFactory.obj \
+ossimGdalOgrVectorAnnotation.obj \
+ossimGdalOverviewBuilder.obj \
+ossimGdalOverviewBuilderFactory.obj \
+ossimGdalPluginInit.obj \
+ossimGdalProjectionFactory.obj \
+ossimGdalTiledDataset.obj \
+ossimGdalTileSource.obj \
+ossimGdalType.obj \
+ossimGdalWriter.obj \
+ossimOgcWktTranslator.obj \
+ossimOgrGdalTileSource.obj \
+ossimShapeDatabase.obj \
+ossimShapeFile.obj
+
+
+default:	$(OBJ)
+	link /VERSION:$(VERSION_STRING) /DLL /OUT:"$(PLUGIN_ROOT).dll" /IMPLIB:"$(PLUGIN_ROOT).lib" /NOLOGO $(OBJ) /LIBPATH:$(LIB_DIR) $(GDAL_LIBS) $(JPEG_LIB) $(OSSIM_LIB) $(LINK_EXTERNALS)
+	$(OSSIM_VC_MANIFEST_EMBED_DLL)
+
+install:
+	$(CP) $(PLUGIN_ROOT).dll $(INSTALL_DIR)
+
+clean:
+	$(RM) *.obj $(PLUGIN_ROOT).*
+	$(OSSIM_VC_MANIFEST_CLEAN)
+
+!if "$(EMBED_MANIFEST)" == "1"
+!include ..\makefile.targ.inc
+!endif

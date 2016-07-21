@@ -1,0 +1,44 @@
+###
+# $Id: makefile.vc 6644 2004-08-20 17:42:50Z dburken $
+#
+# Typical usage:  nmake /f makefile.vc
+###
+
+!include ..\makefile.inc
+
+
+MAKE = nmake
+RM   = del /F /Q
+CP   = copy
+CC   = cl
+
+CFLAGS = /DNOMINMAX /DPQEUSINGDLL /nologo /MD /EHsc
+INC = -I..\..\include
+PQE_LINK = ..\..\lib\pqe.lib
+BIN_DIR = ..\..\bin
+
+default:	pqe-test1.exe pqe-test2.exe
+	$(CP) *.exe $(BIN_DIR)
+
+all:	default
+
+pqe-test1.exe:	pqe-test1.cpp
+	$(CC) $(CFLAGS) $(INC) pqe-test1.cpp $(PQE_LINK)
+	$(_VC_MANIFEST_EMBED_EXE)
+
+pqe-test2.exe:	pqe-test2.cpp
+	$(CC) $(CFLAGS) $(INC) pqe-test2.cpp $(PQE_LINK)
+	$(_VC_MANIFEST_EMBED_EXE)
+
+clean:
+	$(RM) *.obj *.exe *~
+	$(_VC_MANIFEST_CLEAN)
+
+clobber:
+	$(RM) *.obj *.exe *~
+
+install:	default
+	$(CP) *.exe $(BIN_DIR)
+
+!include ..\makefile.targ.inc
+

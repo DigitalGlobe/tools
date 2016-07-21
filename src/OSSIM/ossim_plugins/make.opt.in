@@ -1,0 +1,100 @@
+###
+# $Id: make.opt.in 16956 2010-04-02 19:08:37Z gpotts $
+#
+# Edit these as required for your platform and plugins.
+###
+
+# Ossim Plugins Top
+OPT=`pwd`
+
+
+###
+# GDAL plugin specific things...
+#
+# GDAL_HOME can be:
+# - an environment variable
+# - or you can set it here, 
+# - or if your gdal is in standard place just leave this be...
+###
+
+
+# If gdal with MRSID
+# MRSID_LIBS = -L/work/drb/mrsid/Geo_ESDK-4.1.5.964/3rd-party/lib/Release -L/work/drb/mrsid/Geo_ESDK-4.1.5.964/lib/Release -lltiesdk -lltidsdk
+# else 
+MRSID_LIBS=
+
+###
+# KAKADU: Uncomment/edit as needed.
+#
+#KAKADU_VERSION=v6_2-00367C
+#KAKADU_HOME=/your/path/to/kakadu/$(KAKADU_VERSION)
+#KAKADU_INCLUDES=-I$(KAKADU_HOME)/managed/all_includes
+#KAKADU_LIBS=$(KAKADU_HOME)/apps/make/jp2.o $(KAKADU_HOME)/apps/make/kdu_region_decompressor.o $(KAKADU_HOME)/apps/make/kdu_stripe_compressor.o -L$(KAKADU_HOME)/lib/Linux-x86-64-gcc -lkdu_v62R
+###
+
+# GDAL_HOME = 
+ifeq ($(origin GDAL_HOME), undefined)
+  GDAL_INCLUDES =`gdal-config --cflags`
+  GDAL_LIBS = `gdal-config --libs`
+else
+  GDAL_INCLUDES = -I$(GDAL_HOME)/include
+  GDAL_LIBS = -L$(GDAL_HOME)/lib -lgdal
+endif
+###
+# End of gdal plugin specific things.
+###
+
+###
+# FFTW includes and libs.  Found at www.fftw.org.  
+# Should come installed Linux through rpm
+# MAC's you can use darwin ports easily
+###
+
+###
+# For MACs:
+# FFTW_HOME = /opt/local
+# FFTW_LIBS = -L$(FFTW_HOME)/lib -lfftw3
+# FFTW_INCLUDES = -I$(FFTW_HOME)/include
+###
+# OR
+###
+# Linux usually in /usr which is standard place.
+# You can get by doing:
+# sudo yum install fftw fftw-devel
+FFTW_LIBS = -lfftw3
+FFTW_INCLUDES=
+
+###
+# For png:
+###
+PNG_INCLUDES=
+PNG_LIBS=-lpng -lz
+
+###
+# For OpenJpeg:
+###
+OPEN_JPEG_INCLUDES=
+OPEN_JPEG_LIBS=-lopenjpeg
+
+###
+# for NUI Support
+#
+NUI_INCLUDES=-I/home/ldadmin/temp/nuiSDK/include/nuiSDK
+NUI_LIBS=-L/home/ldadmin/temp/nuiSDK/lib -lnuiSDK /home/ldadmin/temp/nuiSDK/lib/libkdu_a52R.a  -lkdu -lgdal
+###
+# After editing this, cd to the plugin directory you want and type "make".
+# See README.txt for more info.
+###
+
+###
+# INSTALL DIRECTORY:
+###
+PREFIX=/usr/local/ossim
+OSSIM_PLUGINS_INSTAL_LIB_DIR=$(PREFIX)/lib
+
+###
+# Nitro setup
+###
+#NITRO_INCLUDES=
+#NITRO_LIBS=
+

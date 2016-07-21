@@ -1,0 +1,41 @@
+###
+# $Id$
+#
+# Windows nmake make file.  This code should compile with the Microsoft .NET
+# compiler using nmake.
+# 
+# Currently for a typical build on windows you would do the following:
+#
+# - In a windows cmd.exe window change directories (cd) to the pqe top.
+# - nmake /f makefile
+# - nmake /f makefile install (if you want the apps in the bin directory.
+#
+###
+
+MAKE = nmake
+RM   = del /F /Q
+CP   = copy
+
+default:
+	cd src
+	$(MAKE) /f makefile.vc
+	cd ..
+	$(CP) lib\pqe.dll bin
+
+test:
+	cd src
+	$(MAKE) /f makefile.vc test
+	cd ..
+
+install:
+
+clean:
+	cd src
+	$(MAKE) /f makefile.vc clean
+	cd ..
+	$(RM) lib\*.*
+	$(RM) bin\*.exe
+	$(RM) bin\pqe.dll
+
+clobber:	clean
+
