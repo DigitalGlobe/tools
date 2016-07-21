@@ -25,7 +25,10 @@ class PathFinder :
         _FILE_NAME_NMAKE = "nmake.exe"
         #----------------------------------------------------------------------
         # the relative Visual Studio bin path
-        _PATH_NAME_BIN = "VC\\BIN\\"
+        _PATH_NAME_BIN = "VC\\bin\\"
+        #----------------------------------------------------------------------
+        # the relative Visual Studio include path
+        _PATH_NAME_INCLUDE = "VC\\include\\"
         #----------------------------------------------------------------------
         # the relative path name of Visual Studio
         _PATH_NAME_VISUAL_STUDIO = "Microsoft Visual Studio 14.0"
@@ -40,6 +43,9 @@ class PathFinder :
         #----------------------------------------------------------------------
         # the error for Visual Studio bin paths
         _ERROR_PATH_BIN = "Could not find Visual Studio \"bin\" path."
+        #----------------------------------------------------------------------
+        # the error for Visual Studio include paths
+        _ERROR_PATH_INCLUDE = "Could not find Visual Studio \"include\" path."
         #----------------------------------------------------------------------
         # the error for Visual Studio paths
         _ERROR_PATH_VISUAL_STUDIO = "Could not find Visual Studio path."
@@ -95,6 +101,22 @@ class PathFinder :
             if ( not os.path.exists(pathName) ) :
             
                 raise Exception(PathFinder._ERROR_PATH_BIN)
+                                     
+            return pathName
+        #----------------------------------------------------------------------
+        # Gets the name of the Visual Studio include path.
+        #
+        # Parameters :
+        #     self: this finder
+        # Returns :
+        #     the name of the Visual Studio include path
+        def getVisualStudioIncludePathName(self) :
+        
+            pathName = os.path.join( self.getVisualStudioPathName() ,
+                                     PathFinder._PATH_NAME_INCLUDE  )
+            if ( not os.path.exists(pathName) ) :
+            
+                raise Exception(PathFinder._ERROR_PATH_INCLUDE)
                                      
             return pathName
         #----------------------------------------------------------------------

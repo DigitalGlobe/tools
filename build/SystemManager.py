@@ -28,7 +28,7 @@ class SystemManager :
         # the name of the path environment variable
         _ENVIRONMENT_VARIABLE_NAME_PATH = "PATH"
         #----------------------------------------------------------------------
-
+        
         #----------------------------------------------------------------------
         # the separator between values in an environment variable
         _VALUE_SEPARATOR = ";"
@@ -124,6 +124,7 @@ class SystemManager :
             childProcess = subprocess.Popen( commandLine , \
                                              shell=True  )
             childProcess.communicate()
+            childProcess.wait()
             
             return childProcess.returncode
         #----------------------------------------------------------------------
@@ -239,7 +240,7 @@ class SystemManager :
             
             else :
             
-                os.environ[pathName] = pathName
+                os.environ[environmentVariableName] = pathName
         #----------------------------------------------------------------------
         # Gets the value of a specified environment variable.
         #

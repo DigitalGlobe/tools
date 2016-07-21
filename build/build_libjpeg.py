@@ -79,6 +79,10 @@ class Program :
             # process command-line arguments
             buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
             
+            # initialize environment variables
+            systemManager.appendToIncludeEnvironmentVariable( pathFinder.getVisualStudioIncludePathName() )
+            systemManager.appendToPathEnvironmentVariable( pathFinder.getVisualStudioBinPathName() )
+            
             # determine path names
             binaryPathName = ( systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X64) \
                                if ( buildSettings.X64Specified() )                                     \
