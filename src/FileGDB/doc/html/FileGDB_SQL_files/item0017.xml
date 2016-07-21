@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?><ct:contentTypeSchema ct:_="" ma:_="" ma:contentTypeName="Document" ma:contentTypeID="0x0101005840C78893E0C44C9848CED5EBAFA734" ma:contentTypeVersion="4" ma:contentTypeDescription="Create a new document." ma:contentTypeScope="" ma:versionID="8ee731d370b1068a68a3e94ade6d6da5" xmlns:ct="http://schemas.microsoft.com/office/2006/metadata/contentType" xmlns:ma="http://schemas.microsoft.com/office/2006/metadata/properties/metaAttributes">
+<xsd:schema targetNamespace="http://schemas.microsoft.com/office/2006/metadata/properties" ma:root="true" ma:fieldsID="eba67a7c0a99fbe6a5020ac0fadafa9a" ns2:_="" ns3:_="" ns4:_="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:p="http://schemas.microsoft.com/office/2006/metadata/properties" xmlns:ns2="4caddbab-3696-4722-8ee4-b1349d15ff36" xmlns:ns3="aaee9ffc-1449-41ec-98ac-5712bedf7682" xmlns:ns4="http://schemas.microsoft.com/sharepoint/v3/fields">
+<xsd:import namespace="4caddbab-3696-4722-8ee4-b1349d15ff36"/>
+<xsd:import namespace="aaee9ffc-1449-41ec-98ac-5712bedf7682"/>
+<xsd:import namespace="http://schemas.microsoft.com/sharepoint/v3/fields"/>
+<xsd:element name="properties">
+<xsd:complexType>
+<xsd:sequence>
+<xsd:element name="documentManagement">
+<xsd:complexType>
+<xsd:all>
+<xsd:element ref="ns2:_x0039_.4_x0020_Phases"/>
+<xsd:element ref="ns3:_x0039__x002e_4_x0020_Teams"/>
+<xsd:element ref="ns2:Poject_x0020_Type"/>
+<xsd:element ref="ns4:_DCDateModified" minOccurs="0"/>
+</xsd:all>
+</xsd:complexType>
+</xsd:element>
+</xsd:sequence>
+</xsd:complexType>
+</xsd:element>
+</xsd:schema>
+<xsd:schema targetNamespace="4caddbab-3696-4722-8ee4-b1349d15ff36" elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:dms="http://schemas.microsoft.com/office/2006/documentManagement/types">
+<xsd:import namespace="http://schemas.microsoft.com/office/2006/documentManagement/types"/>
+<xsd:element name="_x0039_.4_x0020_Phases" ma:index="8" ma:displayName="Phase" ma:default="" ma:format="RadioButtons" ma:internalName="_x0039__x002e_4_x0020_Phases">
+<xsd:simpleType>
+<xsd:union memberTypes="dms:Text">
+<xsd:simpleType>
+<xsd:restriction base="dms:Choice">
+<xsd:enumeration value="1. Envisioning"/>
+<xsd:enumeration value="2. Planning"/>
+<xsd:enumeration value="3. Development"/>
+<xsd:enumeration value="4. Stabilization"/>
+<xsd:enumeration value="5. Deployment"/>
+</xsd:restriction>
+</xsd:simpleType>
+</xsd:union>
+</xsd:simpleType>
+</xsd:element>
+<xsd:element name="Poject_x0020_Type" ma:index="11" ma:displayName="Document Type" ma:default="Project Plan" ma:format="Dropdown" ma:internalName="Poject_x0020_Type">
+<xsd:simpleType>
+<xsd:restriction base="dms:Choice">
+<xsd:enumeration value="Documentation Plan"/>
+<xsd:enumeration value="Project Plan"/>
+<xsd:enumeration value="Scope &amp; Vision"/>
+<xsd:enumeration value="SDK Plan"/>
+<xsd:enumeration value="Test Plan"/>
+<xsd:enumeration value="Other"/>
+</xsd:restriction>
+</xsd:simpleType>
+</xsd:element>
+</xsd:schema>
+<xsd:schema targetNamespace="aaee9ffc-1449-41ec-98ac-5712bedf7682" elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:dms="http://schemas.microsoft.com/office/2006/documentManagement/types">
+<xsd:import namespace="http://schemas.microsoft.com/office/2006/documentManagement/types"/>
+<xsd:element name="_x0039__x002e_4_x0020_Teams" ma:index="9" ma:displayName="Team" ma:default="" ma:format="Dropdown" ma:internalName="_x0039__x002e_4_x0020_Teams">
+<xsd:simpleType>
+<xsd:union memberTypes="dms:Text">
+<xsd:simpleType>
+<xsd:restriction base="dms:Choice">
+<xsd:enumeration value="3D Analyst"/>
+<xsd:enumeration value="ArcGlobe"/>
+<xsd:enumeration value="Architecture"/>
+<xsd:enumeration value="ArcMap"/>
+<xsd:enumeration value="ArcObjects"/>
+<xsd:enumeration value="ArcReader"/>
+<xsd:enumeration value="CAD"/>
+<xsd:enumeration value="Cadastral Analyst"/>
+<xsd:enumeration value="Cartography"/>
+<xsd:enumeration value="Concordia"/>
+<xsd:enumeration value="Controls"/>
+<xsd:enumeration value="Data Interoperability"/>
+<xsd:enumeration value="Desktop SDK"/>
+<xsd:enumeration value="Editing"/>
+<xsd:enumeration value="Engine"/>
+<xsd:enumeration value="Fast Map Server (Mach 5)"/>
+<xsd:enumeration value="Geostatistical Analyst"/>
+<xsd:enumeration value="Publisher"/>
+<xsd:enumeration value="Schematics"/>
+<xsd:enumeration value="Spatial Analyst"/>
+<xsd:enumeration value="Survey"/>
+<xsd:enumeration value="Tracking Analyst"/>
+<xsd:enumeration value="Explorer"/>
+<xsd:enumeration value="Explorer SDK"/>
+<xsd:enumeration value="Explorer UI"/>
+<xsd:enumeration value="Explorer XO"/>
+<xsd:enumeration value="ArcIMS"/>
+<xsd:enumeration value="ArcGIS Server"/>
+<xsd:enumeration value=".NET ADF"/>
+<xsd:enumeration value="Core Server"/>
+<xsd:enumeration value="Java ADF"/>
+<xsd:enumeration value="JavaScript API"/>
+<xsd:enumeration value="Java Engine"/>
+<xsd:enumeration value="Flex API"/>
+<xsd:enumeration value="Image Server"/>
+<xsd:enumeration value="ArcGIS Mobile"/>
+<xsd:enumeration value="ArcPAD"/>
+<xsd:enumeration value="ArcSDE"/>
+<xsd:enumeration value="Geodatabase"/>
+<xsd:enumeration value="GP Tools"/>
+<xsd:enumeration value="Framework"/>
+<xsd:enumeration value="ALR"/>
+<xsd:enumeration value="Geocoding"/>
+<xsd:enumeration value="Logistics"/>
+<xsd:enumeration value="Network Analyst"/>
+<xsd:enumeration value="StreetMap"/>
+<xsd:enumeration value="Documentation"/>
+<xsd:enumeration value="Holistic Testing"/>
+<xsd:enumeration value="Install &amp; Licensing"/>
+<xsd:enumeration value="Internationalization"/>
+<xsd:enumeration value="Localization"/>
+<xsd:enumeration value="QA"/>
+<xsd:enumeration value="Release"/>
+<xsd:enumeration value="UNIX"/>
+<xsd:enumeration value="Content"/>
+<xsd:enumeration value="ArcGIS Online"/>
+<xsd:enumeration value="2D/3D Graphics Engine"/>
+</xsd:restriction>
+</xsd:simpleType>
+</xsd:union>
+</xsd:simpleType>
+</xsd:element>
+</xsd:schema>
+<xsd:schema targetNamespace="http://schemas.microsoft.com/sharepoint/v3/fields" elementFormDefault="qualified" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:dms="http://schemas.microsoft.com/office/2006/documentManagement/types">
+<xsd:import namespace="http://schemas.microsoft.com/office/2006/documentManagement/types"/>
+<xsd:element name="_DCDateModified" ma:index="12" nillable="true" ma:displayName="Date Modified" ma:description="The date on which this resource was last modified" ma:format="DateTime" ma:internalName="_DCDateModified">
+<xsd:simpleType>
+<xsd:restriction base="dms:DateTime"/>
+</xsd:simpleType>
+</xsd:element>
+</xsd:schema>
+<xsd:schema targetNamespace="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" elementFormDefault="qualified" attributeFormDefault="unqualified" blockDefault="#all" xmlns="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:odoc="http://schemas.microsoft.com/office/internal/2005/internalDocumentation">
+<xsd:import namespace="http://purl.org/dc/elements/1.1/" schemaLocation="http://dublincore.org/schemas/xmls/qdc/2003/04/02/dc.xsd"/>
+<xsd:import namespace="http://purl.org/dc/terms/" schemaLocation="http://dublincore.org/schemas/xmls/qdc/2003/04/02/dcterms.xsd"/>
+<xsd:element name="coreProperties" type="CT_coreProperties"/>
+<xsd:complexType name="CT_coreProperties">
+<xsd:all>
+<xsd:element ref="dc:creator" minOccurs="0" maxOccurs="1"/>
+<xsd:element ref="dcterms:created" minOccurs="0" maxOccurs="1"/>
+<xsd:element ref="dc:identifier" minOccurs="0" maxOccurs="1"/>
+<xsd:element name="contentType" minOccurs="0" maxOccurs="1" type="xsd:string" ma:index="0" ma:displayName="Content Type" ma:readOnly="true"/>
+<xsd:element ref="dc:title" minOccurs="0" maxOccurs="1" ma:index="4" ma:displayName="Title"/>
+<xsd:element ref="dc:subject" minOccurs="0" maxOccurs="1"/>
+<xsd:element ref="dc:description" minOccurs="0" maxOccurs="1"/>
+<xsd:element name="keywords" minOccurs="0" maxOccurs="1" type="xsd:string" ma:index="10" ma:displayName="Keywords"/>
+<xsd:element ref="dc:language" minOccurs="0" maxOccurs="1"/>
+<xsd:element name="category" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+<xsd:element name="version" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+<xsd:element name="revision" minOccurs="0" maxOccurs="1" type="xsd:string">
+<xsd:annotation>
+<xsd:documentation>
+                        This value indicates the number of saves or revisions. The application is responsible for updating this value after each revision.
+                    </xsd:documentation>
+</xsd:annotation>
+</xsd:element>
+<xsd:element name="lastModifiedBy" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+<xsd:element ref="dcterms:modified" minOccurs="0" maxOccurs="1"/>
+<xsd:element name="lastPrinted" minOccurs="0" maxOccurs="1" type="xsd:dateTime"/>
+<xsd:element name="contentStatus" minOccurs="0" maxOccurs="1" type="xsd:string"/>
+</xsd:all>
+</xsd:complexType>
+</xsd:schema>
+</ct:contentTypeSchema>
