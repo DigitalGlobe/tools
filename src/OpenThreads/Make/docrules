@@ -1,0 +1,4 @@
+documentation :
+	[ -d doc/Doxygen ] || mkdir doc/Doxygen
+	doxygen doc/doxy.cfg
+	
