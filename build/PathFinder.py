@@ -24,8 +24,11 @@ class PathFinder :
         # the name of the Nmake executable file
         _FILE_NAME_NMAKE = "nmake.exe"
         #----------------------------------------------------------------------
-        # the relative Visual Studio bin path
-        _PATH_NAME_BIN = "VC\\bin\\"
+        # the relative 64-bit Visual Studio bin path
+        _PATH_NAME_BIN_X64 = "VC\\bin\\amd64"
+        #----------------------------------------------------------------------
+        # the relative 32-bit Visual Studio bin path
+        _PATH_NAME_BIN_X86 = "VC\\bin\\"
         #----------------------------------------------------------------------
         # the relative Visual Studio include path
         _PATH_NAME_INCLUDE = "VC\\include\\"
@@ -74,13 +77,16 @@ class PathFinder :
         # Gets the name of the Nmake executable file.
         #
         # Parameters :
-        #     self : this finder
+        #     self         : this finder
+        #     x64Specified : if <code>true</code>, 64-bit is specified; if
+        #                    <code>false</code>, 32-bit is specified
         # Returns :
         #     the name of the Nmake executable file
-        def getNmakeFileName(self) :
+        def getNmakeFileName( self         , \
+                              x64Specified ) :
         
-            fileName = os.path.join( self.getVisualStudioBinPathName() , \
-                                     PathFinder._FILE_NAME_NMAKE       )
+            fileName = os.path.join( self.getVisualStudioBinPathName(x64Specified) , \
+                                     PathFinder._FILE_NAME_NMAKE                   )
                                      
             if ( not os.path.exists(fileName) ) :
             
@@ -91,13 +97,18 @@ class PathFinder :
         # Gets the name of the Visual Studio bin path.
         #
         # Parameters :
-        #     self: this finder
+        #     self         : this finder
+        #     x64Specified : if <code>true</code>, 64-bit is specified; if
+        #                    <code>false</code>, 32-bit is specified
         # Returns :
         #     the name of the Visual Studio bin path
-        def getVisualStudioBinPathName(self) :
+        def getVisualStudioBinPathName( self         , \
+                                        x64Specified ) :
         
-            pathName = os.path.join( self.getVisualStudioPathName() ,
-                                     PathFinder._PATH_NAME_BIN      )
+            pathName = os.path.join( self.getVisualStudioPathName(x64Specified) ,
+                                     ( PathFinder._PATH_NAME_BIN_X64      \
+                                       if (x64Specified)                  \
+                                       else PathFinder._PATH_NAME_BIN_X86 )     )
             if ( not os.path.exists(pathName) ) :
             
                 raise Exception(PathFinder._ERROR_PATH_BIN)
@@ -107,13 +118,16 @@ class PathFinder :
         # Gets the name of the Visual Studio include path.
         #
         # Parameters :
-        #     self: this finder
+        #     self         : this finder
+        #     x64Specified : if <code>true</code>, 64-bit is specified; if
+        #                    <code>false</code>, 32-bit is specified
         # Returns :
         #     the name of the Visual Studio include path
-        def getVisualStudioIncludePathName(self) :
+        def getVisualStudioIncludePathName( self         , \
+                                            x64Specified ) :
         
-            pathName = os.path.join( self.getVisualStudioPathName() ,
-                                     PathFinder._PATH_NAME_INCLUDE  )
+            pathName = os.path.join( self.getVisualStudioPathName(x64Specified) ,
+                                     PathFinder._PATH_NAME_INCLUDE              )
             if ( not os.path.exists(pathName) ) :
             
                 raise Exception(PathFinder._ERROR_PATH_INCLUDE)
@@ -123,12 +137,15 @@ class PathFinder :
         # Gets the name of the Visual Studio path.
         #
         # Parameters :
-        #     self: this finder
+        #     self         : this finder
+        #     x64Specified : if <code>true</code>, 64-bit is specified; if
+        #                    <code>false</code>, 32-bit is specified
         # Returns :
         #     the name of the Visual Studio path
         # Throws :
         #     Exception : if this method failed to find Visual Studio
-        def getVisualStudioPathName(self) :
+        def getVisualStudioPathName( self         , \
+                                     x64Specified ) :
         
             pathName = os.path.join( os.environ.get(PathFinder._ENVIRONMENT_VARIABLE_PROGRAM_FILES_X86) , \
                                      PathFinder._PATH_NAME_VISUAL_STUDIO                                )
@@ -141,10 +158,13 @@ class PathFinder :
         # Gets the name of the Windows SDK path.
         #
         # Parameters :
-        #     self: this finder
+        #     self         : this finder
+        #     x64Specified : if <code>true</code>, 64-bit is specified; if
+        #                    <code>false</code>, 32-bit is specified
         # Returns :
         #     the name of the Windows SDK path
-        def getWindowsSdkPathName(self) :
+        def getWindowsSdkPathName( self         , \
+                                   x64Specified ) :
         
             pathName = os.path.join( os.environ.get(PathFinder._ENVIRONMENT_VARIABLE_PROGRAM_FILES_X86) , \
                                      PathFinder._PATH_NAME_WINDOWS_SDK                                  )

@@ -25,10 +25,28 @@ class SystemManager :
         # the name of the include environment variable
         _ENVIRONMENT_VARIABLE_NAME_INCLUDE = "INCLUDE"
         #----------------------------------------------------------------------
+        # the name of the library environment variable
+        _ENVIRONMENT_VARIABLE_NAME_LIBRARY = "LIB"
+        #----------------------------------------------------------------------
         # the name of the path environment variable
         _ENVIRONMENT_VARIABLE_NAME_PATH = "PATH"
         #----------------------------------------------------------------------
+        # the name of the 32-bit program-files environment variable
+        _ENVIRONMENT_VARIABLE_PROGRAM_FILES_X86 = "ProgramFiles(x86)"
+        #----------------------------------------------------------------------
         
+        #----------------------------------------------------------------------
+        # the default value of the 64-bit include environment value
+        _VALUE_INCLUDE_X64 = "%ProgramFiles(x86)%\\Microsoft Visual Studio 14.0\\VC\\INCLUDE;%ProgramFiles(x86)%\\Microsoft Visual Studio 14.0\\VC\\ATLMFC\\INCLUDE;%ProgramFiles(x86)%\\Windows Kits\\10\\include\\10.0.10586.0\\ucrt;%ProgramFiles(x86)%\\Windows Kits\\NETFXSDK\\4.6.1\\include\\um;%ProgramFiles(x86)%\\Windows Kits\\10\\include\\10.0.10586.0\\shared;%ProgramFiles(x86)%\\Windows Kits\\10\\include\\10.0.10586.0\\um;%ProgramFiles(x86)%\\Windows Kits\\10\\include\\10.0.10586.0\\winrt";
+        #----------------------------------------------------------------------
+        # the default value of the 32-bit include environment value
+        _VALUE_INCLUDE_X86 = "%ProgramFiles(x86)%\\Microsoft Visual Studio 14.0\\VC\\INCLUDE;%ProgramFiles(x86)%\\Microsoft Visual Studio 14.0\\VC\\ATLMFC\\INCLUDE;%ProgramFiles(x86)%\\Windows Kits\\10\\include\\10.0.10586.0\\ucrt;%ProgramFiles(x86)%\\Windows Kits\\NETFXSDK\\4.6.1\\include\\um;%ProgramFiles(x86)%\\Windows Kits\\10\\include\\10.0.10586.0\\shared;%ProgramFiles(x86)%\\Windows Kits\\10\\include\\10.0.10586.0\\um;%ProgramFiles(x86)%\\Windows Kits\\10\\include\\10.0.10586.0\\winrt";
+        #----------------------------------------------------------------------
+        # the default value for the 64-bit library environment variable
+        _VALUE_LIBRARY_X64 = "%ProgramFiles(x86)%\\Microsoft Visual Studio 14.0\\VC\\LIB\\amd64;%ProgramFiles(x86)%\\Microsoft Visual Studio 14.0\\VC\\ATLMFC\\LIB\\amd64;%ProgramFiles(x86)%\\Windows Kits\\10\\lib\\10.0.10586.0\\ucrt\\x64;%ProgramFiles(x86)%\\Windows Kits\\NETFXSDK\\4.6.1\\lib\\um\\x64;%ProgramFiles(x86)%\\Windows Kits\\10\\lib\\10.0.10586.0\\um\\x64"
+        #----------------------------------------------------------------------
+        # the default value for the 32-bit library environment value
+        _VALUE_LIBRARY_X86 = "%ProgramFiles(x86)%\\Microsoft Visual Studio 14.0\\VC\\LIB;%ProgramFiles(x86)%\\Microsoft Visual Studio 14.0\\VC\\ATLMFC\\LIB;%ProgramFiles(x86)%\\Windows Kits\\10\\lib\\10.0.10586.0\\ucrt\\x86;%ProgramFiles(x86)%\\Windows Kits\\NETFXSDK\\4.6.1\\lib\\um\\x86;%ProgramFiles(x86)%\\Windows Kits\\10\\lib\\10.0.10586.0\\um\\x86"
         #----------------------------------------------------------------------
         # the separator between values in an environment variable
         _VALUE_SEPARATOR = ";"
@@ -59,10 +77,8 @@ class SystemManager :
         def appendToIncludeEnvironmentVariable( self     , \
                                                 pathName ) :
                                                 
-            print(self._getEnvironmentVariableName(SystemManager._ENVIRONMENT_VARIABLE_NAME_INCLUDE))
-            self._appendToPathEnvironmentVariable( SystemManager._ENVIRONMENT_VARIABLE_NAME_INCLUDE , \
-                                                   pathName                                         )
-            print(self._getEnvironmentVariableName(SystemManager._ENVIRONMENT_VARIABLE_NAME_INCLUDE))
+            self._appendToIncludeEnvironmentVariable( SystemManager._ENVIRONMENT_VARIABLE_NAME_INCLUDE , \
+                                                      pathName                                         )
         #----------------------------------------------------------------------
         # Appends a specified path to the path environment variable.
         #
@@ -122,7 +138,7 @@ class SystemManager :
                      commandLine ) :
             
             childProcess = subprocess.Popen( commandLine , \
-                                             shell=True  )
+                                             shell=True )
             childProcess.communicate()
             childProcess.wait()
             
@@ -187,6 +203,42 @@ class SystemManager :
         def getPathEnvironmentVariableValue(self) :
         
             return self._getEnvironmentVariableName(SystemManager._ENVIRONMENT_VARIABLE_NAME_PATH)
+        #----------------------------------------------------------------------
+        # Initializes the include environment variable.
+        #
+        # Parameters :
+        #     self         : this manager
+        #     x64Specified : if <code>true</code>, 64-bit is specified; if
+        #                    <code>false</code>, 32-bit is specified
+        def initializeIncludeEnvironmentVariable( self         , \
+                                                  x64Specified ) :
+                                                  
+            value = ( SystemManager._VALUE_INCLUDE_X64 \
+                      if (x64Specified)                \
+                      else SystemManager._VALUE_INCLUDE_X86)
+            value = value.replace( SystemManager._ENVIRONMENT_VARIABLE_PROGRAM_FILES_X86             , \
+                                   os.environ[SystemManager._ENVIRONMENT_VARIABLE_PROGRAM_FILES_X86] )
+            value = value.replace( "%" , \
+                                   ""  )
+            os.environ[SystemManager._ENVIRONMENT_VARIABLE_NAME_INCLUDE] = value
+        #----------------------------------------------------------------------
+        # Initializes the library environment variable.
+        #
+        # Parameters :
+        #     self         : this manager
+        #     x64Specified : if <code>true</code>, 64-bit is specified; if
+        #                    <code>false</code>, 32-bit is specified
+        def initializeLibraryEnvironmentVariable( self         , \
+                                                  x64Specified ) :
+                                                  
+            value = ( SystemManager._VALUE_LIBRARY_X64 \
+                      if (x64Specified)                \
+                      else SystemManager._VALUE_LIBRARY_X86)
+            value = value.replace( SystemManager._ENVIRONMENT_VARIABLE_PROGRAM_FILES_X86             , \
+                                   os.environ[SystemManager._ENVIRONMENT_VARIABLE_PROGRAM_FILES_X86] )
+            value = value.replace( "%" , \
+                                   ""  )
+            os.environ[SystemManager._ENVIRONMENT_VARIABLE_NAME_LIBRARY] = value
         #----------------------------------------------------------------------
         # Makes a specified directory.  This method does nothing if the
         # specified directory already exists.

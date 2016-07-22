@@ -6,6 +6,7 @@
 #
 #------------------------------------------------------------------------------
 
+import glob
 import os
 
 from BuildSettingSet import *
@@ -30,6 +31,9 @@ class Program :
         #----------------------------------------------------------------------
         # the name of the makefile
         _FILE_NAME_MAKEFILE = "makefile.vc"
+        #----------------------------------------------------------------------
+        # the pattern for binary files
+        _FILE_PATTERN_BINARY = "*.exe"
         #----------------------------------------------------------------------
         # the name of the path that will contain built 32-bit binary files
         _PATH_NAME_BINARY_X86 = "..\\sdk\\x86\\bin"
@@ -80,8 +84,9 @@ class Program :
             buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
             
             # initialize environment variables
-            systemManager.appendToIncludeEnvironmentVariable( pathFinder.getVisualStudioIncludePathName() )
-            systemManager.appendToPathEnvironmentVariable( pathFinder.getVisualStudioBinPathName() )
+            systemManager.initializeIncludeEnvironmentVariable( buildSettings.X64Specified() )
+            systemManager.initializeLibraryEnvironmentVariable( buildSettings.X64Specified() )
+            systemManager.appendToPathEnvironmentVariable( pathFinder.getVisualStudioBinPathName( buildSettings.X64Specified() ) )
             
             # determine path names
             binaryPathName = ( systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X64) \
@@ -121,8 +126,8 @@ class Program :
                                
             # execute Nmake
             nmakeCommandLine = ( "\"%s\" /C /f \"%s\"" % \
-                                 ( pathFinder.getNmakeFileName() , \
-                                   Program._FILE_NAME_MAKEFILE   ) )
+                                 ( pathFinder.getNmakeFileName( buildSettings.X64Specified() ) , \
+                                   Program._FILE_NAME_MAKEFILE                                 ) )
             if ( buildSettings.ReleaseSpecified() ) :
             
                  nmakeCommandLine += " nodebug=1"
@@ -130,9 +135,22 @@ class Program :
             systemManager.changeDirectory(buildPathName)
             nmakeResult = systemManager.execute(nmakeCommandLine)
    
-            # copy the library file, if Nmake executed successfully
+            # copy the library and binary files, if Nmake executed successfully
             if (nmakeResult == 0) :
             
+                # copy the binary files
+                buildBinaryFileNames = glob.glob( os.path.join( buildPathName                , \
+                                                                Program._FILE_PATTERN_BINARY ) );
+                for buildBinaryFileName in buildBinaryFileNames :
+                
+                    binaryFileName = os.path.join( binaryPathName , \
+                                                   ( os.path.basename(buildBinaryFileName) \
+                                                     if ( buildSettings.ReleaseSpecified() ) \
+                                                     else systemManager.getDebugFileName( os.path.basename(buildBinaryFileName) ) ) )
+                    systemManager.copyFile( buildBinaryFileName , \
+                                            binaryFileName      )
+                
+                # copy the library file
                 systemManager.copyFile( buildLibraryFileName        , \
                                         distributionLibraryFileName )
         #----------------------------------------------------------------------

@@ -21,10 +21,10 @@ class BuildSettingSet :
         _ARGUMENT_NAME_BITNESS = "bitness"
         #----------------------------------------------------------------------
         # the value of the 32-bit bitness argument
-        _ARGUMENT_VALUE_BITNESS_X86 = "x86"
+        ARGUMENT_VALUE_BITNESS_X86 = "x86"
         #----------------------------------------------------------------------
         # the value of the 64-bit bitness argument
-        _ARGUMENT_VALUE_BITNESS_X64 = "x64"
+        ARGUMENT_VALUE_BITNESS_X64 = "x64"
         #----------------------------------------------------------------------
         
         #----------------------------------------------------------------------
@@ -35,10 +35,10 @@ class BuildSettingSet :
         _ARGUMENT_NAME_CONFIGURATION = "configuration"
         #----------------------------------------------------------------------
         # the value of the debug configuration argument
-        _ARGUMENT_VALUE_CONFIGURATION_DEBUG = "debug"
+        ARGUMENT_VALUE_CONFIGURATION_DEBUG = "debug"
         #----------------------------------------------------------------------
         # the value of the release configuration argument
-        _ARGUMENT_VALUE_CONFIGURATION_RELEASE = "release"
+        ARGUMENT_VALUE_CONFIGURATION_RELEASE = "release"
         #----------------------------------------------------------------------
         
         #----------------------------------------------------------------------
@@ -199,11 +199,11 @@ class BuildSettingSet :
             arguments      = argumentParser.parse_args();
             
             # process the bitness argument
-            if (arguments.bitness == BuildSettingSet._ARGUMENT_VALUE_BITNESS_X86) :
+            if (arguments.bitness == BuildSettingSet.ARGUMENT_VALUE_BITNESS_X86) :
             
                 self._x64Specified = False
             
-            elif (arguments.bitness == BuildSettingSet._ARGUMENT_VALUE_BITNESS_X64) :
+            elif (arguments.bitness == BuildSettingSet.ARGUMENT_VALUE_BITNESS_X64) :
             
                 self._x64Specified = True
             
@@ -212,11 +212,11 @@ class BuildSettingSet :
                 raise Exception(BuildSettingSet._ERROR_BITNESS)
                 
             # process the configuration argument
-            if (arguments.configuration == BuildSettingSet._ARGUMENT_VALUE_CONFIGURATION_DEBUG) :
+            if (arguments.configuration == BuildSettingSet.ARGUMENT_VALUE_CONFIGURATION_DEBUG) :
             
                 self._releaseSpecified = False
             
-            elif (arguments.configuration == BuildSettingSet._ARGUMENT_VALUE_CONFIGURATION_RELEASE) :
+            elif (arguments.configuration == BuildSettingSet.ARGUMENT_VALUE_CONFIGURATION_RELEASE) :
             
                 self._releaseSpecified = True
             
