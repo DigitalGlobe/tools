@@ -21,6 +21,15 @@ class PathFinder :
         #----------------------------------------------------------------------
         
         #----------------------------------------------------------------------
+        # the name of the CMake executable file
+        FILE_NAME_CMAKE = "cmake.exe"
+        #----------------------------------------------------------------------
+        # the name of the 32-bit MSBuild executable file
+        _FILE_NAME_MSBUILD_X86 = "MSBuild\\14.0\\Bin\\MSBuild.exe"
+        #----------------------------------------------------------------------
+        # the name of the 64-bit MSBuild executable file
+        _FILE_NAME_MSBUILD_X64 = "MSBuild\\14.0\\Bin\\amd64\\MSBuild.exe"
+        #----------------------------------------------------------------------
         # the name of the Nmake executable file
         _FILE_NAME_NMAKE = "nmake.exe"
         #----------------------------------------------------------------------
@@ -40,6 +49,9 @@ class PathFinder :
         _PATH_NAME_WINDOWS_SDK = "Microsoft SDKs\\Windows\\v7.1A\\Include\\"
         #----------------------------------------------------------------------
         
+        #----------------------------------------------------------------------
+        # the error for MSBuild files
+        _ERROR_FILE_MSBUILD = "Could not find MSBuild."
         #----------------------------------------------------------------------
         # the error for Nmake files
         _ERROR_FILE_NMAKE = "Could not find Nmake."
@@ -74,6 +86,28 @@ class PathFinder :
     # public methods
 
         #----------------------------------------------------------------------
+        # Gets the name of the MSBuild executable file.
+        #
+        # Parameters :
+        #     self         : this finder
+        #     x64Specified : if <code>true</code>, 64-bit is specified; if
+        #                    <code>false</code>, 32-bit is specified
+        # Returns :
+        #     the name of the MSBuild executable file
+        def getMSBuildFileName( self         , \
+                                x64Specified ) :
+        
+            fileName = os.path.join( os.environ.get(PathFinder._ENVIRONMENT_VARIABLE_PROGRAM_FILES_X86) , \
+                                     ( PathFinder._FILE_NAME_MSBUILD_X64 \
+                                       if (x64Specified)                 \
+                                       else PathFinder._FILE_NAME_MSBUILD_X86 )                         )
+                                     
+            if ( not os.path.exists(fileName) ) :
+            
+                raise Exception(PathFinder._ERROR_FILE_MSBUILD)
+                
+            return fileName
+        #----------------------------------------------------------------------
         # Gets the name of the Nmake executable file.
         #
         # Parameters :
@@ -90,7 +124,7 @@ class PathFinder :
                                      
             if ( not os.path.exists(fileName) ) :
             
-                raise Exception(_ERROR_FILE_NMAKE)
+                raise Exception(PathFinder._ERROR_FILE_NMAKE)
                 
             return fileName
         #----------------------------------------------------------------------

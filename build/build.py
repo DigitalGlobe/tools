@@ -22,6 +22,9 @@ class Program :
         # the name of the build file to build LibJPEG
         _FILE_NAME_BUILD_LIBJPEG = "build_libjpeg.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build ZLib
+        _FILE_NAME_BUILD_ZLIB = "build_zlib.py"
+        #----------------------------------------------------------------------
         # the name of the Python executable file
         _FILE_NAME_PYTHON = "python.exe"
         #----------------------------------------------------------------------
@@ -49,8 +52,11 @@ class Program :
         #     self : this program
         def main(self) :
         
-            pass
-            self._buildLibJPEG()
+            # build libraries that do not depend on other libraries
+#            self._build(Program._FILE_NAME_BUILD_LIBJPEG)
+            
+            # build libraries that depend on other libraries
+            self._build(Program._FILE_NAME_BUILD_ZLIB)
         
         #----------------------------------------------------------------------
         
@@ -99,14 +105,6 @@ class Program :
                                        buildFileName                      )   , \
                          BuildSettingSet.ARGUMENT_VALUE_BITNESS_X64           ,
                          BuildSettingSet.ARGUMENT_VALUE_CONFIGURATION_RELEASE ) ) )
-        #----------------------------------------------------------------------
-        # Builds LibJPEG.
-        #
-        #     self : this program
-        def _buildLibJPEG(self) :
-        
-            self._build(Program._FILE_NAME_BUILD_LIBJPEG)
-        
         #----------------------------------------------------------------------
         
     #--------------------------------------------------------------------------
