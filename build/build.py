@@ -58,26 +58,29 @@ class Program :
     # private methods
     
         #----------------------------------------------------------------------
-        # Builds LibJPEG.
+        # Builds a library using a specified build file.
         #
-        #     self : this program
-        def _buildLibJPEG(self) :
-        
+        # Parameters :
+        #     self          : this program
+        #     buildFileName : the name of the build file to use
+        def _build( self          , \
+                    buildFileName ) :
+                    
             systemManager = SystemManager()
         
             # build 32-bit debug
             os.system( ( "%s \"%s\" \"%s\" \"%s\"" % \
                        ( Program._FILE_NAME_PYTHON                            , \
                          os.path.join( systemManager.getCurrentPathName() , \
-                                       Program._FILE_NAME_BUILD_LIBJPEG   )   , \
+                                       buildFileName                      )   , \
                          BuildSettingSet.ARGUMENT_VALUE_BITNESS_X86           ,
                          BuildSettingSet.ARGUMENT_VALUE_CONFIGURATION_DEBUG   ) ) )
         
-            # build 32-bit relase
+            # build 32-bit release
             os.system( ( "%s \"%s\" \"%s\" \"%s\"" % \
                        ( Program._FILE_NAME_PYTHON                            , \
                          os.path.join( systemManager.getCurrentPathName() , \
-                                       Program._FILE_NAME_BUILD_LIBJPEG   )   , \
+                                       buildFileName                      )   , \
                          BuildSettingSet.ARGUMENT_VALUE_BITNESS_X86           ,
                          BuildSettingSet.ARGUMENT_VALUE_CONFIGURATION_RELEASE ) ) )
         
@@ -85,17 +88,25 @@ class Program :
             os.system( ( "%s \"%s\" \"%s\" \"%s\"" % \
                        ( Program._FILE_NAME_PYTHON                            , \
                          os.path.join( systemManager.getCurrentPathName() , \
-                                       Program._FILE_NAME_BUILD_LIBJPEG   )   , \
+                                       buildFileName                      )   , \
                          BuildSettingSet.ARGUMENT_VALUE_BITNESS_X64           ,
                          BuildSettingSet.ARGUMENT_VALUE_CONFIGURATION_DEBUG   ) ) )
         
-            # build 64-bit relase
+            # build 64-bit release
             os.system( ( "%s \"%s\" \"%s\" \"%s\"" % \
                        ( Program._FILE_NAME_PYTHON                            , \
                          os.path.join( systemManager.getCurrentPathName() , \
-                                       Program._FILE_NAME_BUILD_LIBJPEG   )   , \
+                                       buildFileName                      )   , \
                          BuildSettingSet.ARGUMENT_VALUE_BITNESS_X64           ,
                          BuildSettingSet.ARGUMENT_VALUE_CONFIGURATION_RELEASE ) ) )
+        #----------------------------------------------------------------------
+        # Builds LibJPEG.
+        #
+        #     self : this program
+        def _buildLibJPEG(self) :
+        
+            self._build(Program._FILE_NAME_BUILD_LIBJPEG)
+        
         #----------------------------------------------------------------------
         
     #--------------------------------------------------------------------------
