@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------
 #
-# build_libzlib.py
+# build_zlib.py
 #
 # Summary : Builds the ZLib library.
 #
@@ -27,32 +27,17 @@ class Program :
         #----------------------------------------------------------------------
         
         #----------------------------------------------------------------------
-        # the name of the build debug import file
-        _FILE_NAME_IMPORT_BUILD_DEBUG = "zlibd.lib"
-        #----------------------------------------------------------------------
         # the name of the build debug library file
-        _FILE_NAME_LIBRARY_BUILD_DEBUG = "zlibd.dll"
-        #----------------------------------------------------------------------
-        # the name of the distribution debug import file
-        _FILE_NAME_IMPORT_DISTRIBUTION_DEBUG = "zlib_d.lib"
+        _FILE_NAME_LIBRARY_BUILD_DEBUG = "zlib.lib"
         #----------------------------------------------------------------------
         # the name of the distribution debug library file
-        _FILE_NAME_LIBRARY_DISTRIBUTION_DEBUG = "zlib_d.dll"
-        #----------------------------------------------------------------------
-        # the name of the build release import file
-        _FILE_NAME_IMPORT_BUILD_RELEASE = "zlib.lib"
+        _FILE_NAME_LIBRARY_DISTRIBUTION_DEBUG = "zlib_d.lib"
         #----------------------------------------------------------------------
         # the name of the build release library file
-        _FILE_NAME_LIBRARY_BUILD_RELEASE = "zlib.dll"
-        #----------------------------------------------------------------------
-        # the name of the distribution release import file
-        _FILE_NAME_IMPORT_DISTRIBUTION_RELEASE = "zlib.lib"
+        _FILE_NAME_LIBRARY_BUILD_RELEASE = "zlib.lib"
         #----------------------------------------------------------------------
         # the name of the distribution release library file
-        _FILE_NAME_LIBRARY_DISTRIBUTION_RELEASE = "zlib.dll"
-        #----------------------------------------------------------------------
-        # the name of the solution file
-        _FILE_NAME_SOLUTION = "zlib.sln"
+        _FILE_NAME_LIBRARY_DISTRIBUTION_RELEASE = "zlib.lib"
         #----------------------------------------------------------------------
         # the pattern for binary files
         _FILE_PATTERN_BINARY = "*.exe"
@@ -65,12 +50,6 @@ class Program :
         #----------------------------------------------------------------------
         # the name of the path that will contain intermediary build files
         _PATH_NAME_BUILD = "ZLib"
-        #----------------------------------------------------------------------
-        # the name of the path that will contain debug build files
-        _PATH_NAME_BUILD_DEBUG = "Debug"
-        #----------------------------------------------------------------------
-        # the name of the path that will contain release build files
-        _PATH_NAME_BUILD_RELEASE = "Release"
         #----------------------------------------------------------------------
         # the name of the path that will contain built 32-bit library files
         _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
@@ -111,6 +90,22 @@ class Program :
             # process command-line arguments
             buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
             
+            # initialize environment variables
+            systemManager.initializeIncludeEnvironmentVariable( buildSettings.X64Specified() )
+            systemManager.initializeLibraryEnvironmentVariable( buildSettings.X64Specified() )
+            systemManager.appendToPathEnvironmentVariable( pathFinder.getVisualStudioBinPathName( buildSettings.X64Specified() ) )
+            if ( buildSettings.X64Specified() ) :
+            
+                # append path for 64-bit rc.exe
+                systemManager.appendToPathEnvironmentVariable( os.path.join( systemManager.getProgramFilesPathName(False) , \
+                                                                             "Windows Kits\\10\\bin\\x64"                 ) )
+                
+            else:
+            
+                # append path for 32-bit rc.exe
+                systemManager.appendToPathEnvironmentVariable( os.path.join( systemManager.getProgramFilesPathName(False) , \
+                                                                             "Windows Kits\\10\\bin\\x86"                 ) )
+
             # determine path names
             binaryPathName = ( systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X64) \
                                if ( buildSettings.X64Specified() )                                     \
@@ -122,104 +117,61 @@ class Program :
             if ( buildSettings.ReleaseSpecified() and \
                  buildSettings.X64Specified()       ) :
                  
-                 buildImportFileName         = os.path.join( buildPathName                                                                 , \
-                                                             Program._PATH_NAME_BUILD_RELEASE                                              ,
-                                                             Program._FILE_NAME_IMPORT_BUILD_RELEASE                                       ) 
                  buildLibraryFileName        = os.path.join( buildPathName                                                                 , \
-                                                             Program._PATH_NAME_BUILD_RELEASE                                              ,
                                                              Program._FILE_NAME_LIBRARY_BUILD_RELEASE                                      ) 
-                 distributionImportFileName  = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X64) , \
-                                                             Program._FILE_NAME_IMPORT_DISTRIBUTION_RELEASE                                )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X64) , \
                                                              Program._FILE_NAME_LIBRARY_DISTRIBUTION_RELEASE                               )
                  
             elif ( buildSettings.ReleaseSpecified() ) :
             
-                 buildImportFileName         = os.path.join( buildPathName                                                                 , \
-                                                             Program._PATH_NAME_BUILD_RELEASE                                              ,
-                                                             Program._FILE_NAME_IMPORT_BUILD_RELEASE                                       ) 
                  buildLibraryFileName        = os.path.join( buildPathName                                                                 , \
-                                                             Program._PATH_NAME_BUILD_RELEASE                                              ,
                                                              Program._FILE_NAME_LIBRARY_BUILD_RELEASE                                      ) 
-                 distributionImportFileName  = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X86) , \
-                                                             Program._FILE_NAME_IMPORT_DISTRIBUTION_RELEASE                                )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X86) , \
                                                              Program._FILE_NAME_LIBRARY_DISTRIBUTION_RELEASE                               )
                  
             elif ( buildSettings.X64Specified() ) :
             
-                 buildImportFileName         = os.path.join( buildPathName                                                                 , \
-                                                             Program._PATH_NAME_BUILD_DEBUG                                                ,
-                                                             Program._FILE_NAME_IMPORT_BUILD_DEBUG                                         ) 
                  buildLibraryFileName        = os.path.join( buildPathName                                                                 , \
-                                                             Program._PATH_NAME_BUILD_DEBUG                                                ,
                                                              Program._FILE_NAME_LIBRARY_BUILD_DEBUG                                        ) 
-                 distributionImportFileName  = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X64) , \
-                                                             Program._FILE_NAME_IMPORT_DISTRIBUTION_DEBUG                                  )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X64) , \
                                                              Program._FILE_NAME_LIBRARY_DISTRIBUTION_DEBUG                                 )
                  
             else :
             
-                 buildImportFileName         = os.path.join( buildPathName                                                                 , \
-                                                             Program._PATH_NAME_BUILD_DEBUG                                                ,
-                                                             Program._FILE_NAME_IMPORT_BUILD_DEBUG                                         ) 
                  buildLibraryFileName        = os.path.join( buildPathName                                                                 , \
-                                                             Program._PATH_NAME_BUILD_DEBUG                                                ,
                                                              Program._FILE_NAME_LIBRARY_BUILD_DEBUG                                        ) 
-                 distributionImportFileName  = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X86) , \
-                                                             Program._FILE_NAME_IMPORT_DISTRIBUTION_DEBUG                                  )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X86) , \
                                                              Program._FILE_NAME_LIBRARY_DISTRIBUTION_DEBUG                                 )
             
             # initialize directories
+            systemManager.changeDirectory(sourcePathName)
             systemManager.removeDirectory(buildPathName)
-            systemManager.makeDirectory(buildPathName)
-                               
-            # run CMake
-            cmakeCommandLine = ( "\"%s\" -DCMAKE_BUILD_TYPE=%s \"%s\"" % \
-                                 ( PathFinder.FILE_NAME_CMAKE                , \
-                                   ( "Release"                               \
-                                     if ( buildSettings.ReleaseSpecified() ) \
-                                     else "Debug"                          ) , \
-                                   sourcePathName             ) )
-            systemManager.changeDirectory(buildPathName)
-            print(cmakeCommandLine)
-            cmakeResult = systemManager.execute(cmakeCommandLine)
-            if (cmakeResult != 0) :
+            systemManager.copyDirectory( sourcePathName ,
+                                         buildPathName  )
+                                         
+            # execute Nmake
+            if ( buildSettings.X64Specified() ) :
             
-                sys.exit(-1)
+                nmakeCommandLine = "nmake -f win32/Makefile.msc AS=ml64 LOC=\"-DASMV -DASMINF -I.\" OBJA=\"inffasx64.obj gvmat64.obj inffas8664.obj\""
+            
+            else :
+            
+                nmakeCommandLine = "nmake.exe -f win32/Makefile.msc LOC=\"-DASMV -DASMINF\" OBJA=\"inffas32.obj match686.obj\"";
 
-            # build the solution
-            msBuildCommandLine = ( "\"%s\" /p:Configuration=%s \"%s\"" % \
-                                   ( pathFinder.getMSBuildFileName( buildSettings.X64Specified() ) , \
-                                   ( "Release"                               \
-                                     if ( buildSettings.ReleaseSpecified() ) \
-                                     else "Debug"                          )                       , \
-                                   Program._FILE_NAME_SOLUTION                                     ) )
-            msbuildResult = systemManager.execute(msBuildCommandLine)
-            if (msbuildResult != 0) :
-            
-                sys.exit(-1)
+            systemManager.changeDirectory(buildPathName)
+            nmakeResult = systemManager.execute(nmakeCommandLine)
                 
             # distribute the library files
-            systemManager.copyFile( buildImportFileName         , \
-                                    distributionImportFileName  )
             systemManager.copyFile( buildLibraryFileName        , \
                                     distributionLibraryFileName )
 
             # copy the binary files
-            buildBinaryFileNames = glob.glob( os.path.join( buildPathName                               , \
-                                                            ( Program._PATH_NAME_BUILD_RELEASE        \
-                                                              if ( buildSettings.ReleaseSpecified() ) \
-                                                              else Program._PATH_NAME_BUILD_DEBUG     ) , \
-                                                            Program._FILE_PATTERN_BINARY                ) );
+            buildBinaryFileNames = glob.glob( os.path.join( buildPathName                , \
+                                                            Program._FILE_PATTERN_BINARY ) );
             for buildBinaryFileName in buildBinaryFileNames :
             
                 binaryFileName = os.path.join( binaryPathName , \
-                                               ( os.path.basename(buildBinaryFileName) \
-                                                 if ( buildSettings.ReleaseSpecified() ) \
-                                                 else systemManager.getDebugFileName( os.path.basename(buildBinaryFileName) ) ) )
+                                               os.path.basename(buildBinaryFileName) )
                 systemManager.copyFile( buildBinaryFileName , \
                                         binaryFileName      )
         #----------------------------------------------------------------------
