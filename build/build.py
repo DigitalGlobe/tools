@@ -22,6 +22,12 @@ class Program :
         # the name of the build file to build LibJPEG
         _FILE_NAME_BUILD_LIBJPEG = "build_libjpeg.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build LibPNG
+        _FILE_NAME_BUILD_LIBPNG = "build_libpng.py"
+        #----------------------------------------------------------------------
+        # the name of the build file to build LibTIFF
+        _FILE_NAME_BUILD_LIBTIFF = "build_libtiff.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build ZLib
         _FILE_NAME_BUILD_ZLIB = "build_zlib.py"
         #----------------------------------------------------------------------
@@ -53,11 +59,12 @@ class Program :
         def main(self) :
         
             # build libraries that do not depend on other libraries
-#            self._build(Program._FILE_NAME_BUILD_LIBJPEG)
+            self._build(Program._FILE_NAME_BUILD_LIBJPEG)
+            self._build(Program._FILE_NAME_BUILD_ZLIB   )
             
             # build libraries that depend on other libraries
-            self._build(Program._FILE_NAME_BUILD_ZLIB)
-        
+            self._build(Program._FILE_NAME_BUILD_LIBPNG )
+            self._build(Program._FILE_NAME_BUILD_LIBTIFF)
         #----------------------------------------------------------------------
         
     #--------------------------------------------------------------------------

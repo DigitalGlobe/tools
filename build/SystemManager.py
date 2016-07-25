@@ -34,6 +34,9 @@ class SystemManager :
         # the name of the 32-bit program-files environment variable
         _ENVIRONMENT_VARIABLE_PROGRAM_FILES_X86 = "ProgramFiles(x86)"
         #----------------------------------------------------------------------
+        # the name of the 64-bit program-files environment variable
+        _ENVIRONMENT_VARIABLE_PROGRAM_FILES_X64 = "ProgramFiles"
+        #----------------------------------------------------------------------
         
         #----------------------------------------------------------------------
         # the default value of the 64-bit include environment value
@@ -203,6 +206,19 @@ class SystemManager :
         def getPathEnvironmentVariableValue(self) :
         
             return self._getEnvironmentVariableName(SystemManager._ENVIRONMENT_VARIABLE_NAME_PATH)
+        #----------------------------------------------------------------------
+        # Gets the path name of the program-files directory.
+        #
+        # Parameters :
+        #     self         : this manager
+        #     x64Specified : if <code>true</code>, 64-bit is specified; if
+        #                    <code>false</code>, 32-bit is specified
+        def getProgramFilesPathName( self         , \
+                                     x64Specified ) :
+                                     
+            return ( self._getEnvironmentVariableName(SystemManager._ENVIRONMENT_VARIABLE_PROGRAM_FILES_X64) \
+                     if (x64Specified)                                                                       \
+                     else self._getEnvironmentVariableName(SystemManager._ENVIRONMENT_VARIABLE_PROGRAM_FILES_X86) )
         #----------------------------------------------------------------------
         # Initializes the include environment variable.
         #
