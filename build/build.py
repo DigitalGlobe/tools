@@ -7,6 +7,7 @@
 #------------------------------------------------------------------------------
 
 import os
+import sys
 
 from BuildSettingSet import *
 from SystemManager import *
@@ -61,14 +62,21 @@ class Program :
         #     self : this program
         def main(self) :
         
-            # build libraries that do not depend on other libraries
-            self._build(Program._FILE_NAME_BUILD_LIBJPEG)
-            self._build(Program._FILE_NAME_BUILD_PROJ4  )
-            self._build(Program._FILE_NAME_BUILD_ZLIB   )
+            if ( len(sys.argv) > 1 ) :
             
-            # build libraries that depend on other libraries
-            self._build(Program._FILE_NAME_BUILD_LIBPNG )
-            self._build(Program._FILE_NAME_BUILD_LIBTIFF)
+                # build all configurations of the specified build file
+                self._build(sys.argv[1])
+            
+            else :
+            
+                # build libraries that do not depend on other libraries
+                self._build(Program._FILE_NAME_BUILD_LIBJPEG)
+                self._build(Program._FILE_NAME_BUILD_PROJ4  )
+                self._build(Program._FILE_NAME_BUILD_ZLIB   )
+                
+                # build libraries that depend on other libraries
+                self._build(Program._FILE_NAME_BUILD_LIBPNG )
+                self._build(Program._FILE_NAME_BUILD_LIBTIFF)
         #----------------------------------------------------------------------
         
     #--------------------------------------------------------------------------
