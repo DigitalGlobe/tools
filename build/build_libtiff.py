@@ -26,6 +26,9 @@ class Program :
         #----------------------------------------------------------------------
         
         #----------------------------------------------------------------------
+        # the name of the dynamic file
+        _FILE_NAME_DYNAMIC = "libtiff_i.lib"
+        #----------------------------------------------------------------------
         # the name of the library file
         _FILE_NAME_LIBRARY = "libtiff.lib"
         #----------------------------------------------------------------------
@@ -132,12 +135,17 @@ class Program :
             libJpegIncludePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBJPEG_INCLUDE)
             
             # determine file names
+            buildDynamicFileName = os.path.join( buildPathName              , \
+                                                 "libtiff"                  , \
+                                                 Program._FILE_NAME_DYNAMIC )
             buildLibraryFileName = os.path.join( buildPathName              , \
                                                  "libtiff"                  , \
                                                  Program._FILE_NAME_LIBRARY )
             if ( buildSettings.ReleaseSpecified() and \
                  buildSettings.X64Specified()       ) :
                  
+                 distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
+                                                             Program._FILE_NAME_DYNAMIC                                               )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
                                                              Program._FILE_NAME_LIBRARY                                               )
                  zLibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X64_RELEASE)
@@ -145,6 +153,8 @@ class Program :
                  
             elif ( buildSettings.ReleaseSpecified() ) :
             
+                 distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
+                                                             Program._FILE_NAME_DYNAMIC                                               )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
                                                              Program._FILE_NAME_LIBRARY                                               )
                  zLibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X86_RELEASE)
@@ -152,6 +162,8 @@ class Program :
                  
             elif ( buildSettings.X64Specified() ) :
             
+                 distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
+                                                             systemManager.getDebugFileName(Program._FILE_NAME_DYNAMIC)               )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
                                                              systemManager.getDebugFileName(Program._FILE_NAME_LIBRARY)               )
                  zLibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X64_DEBUG)
@@ -159,6 +171,8 @@ class Program :
                  
             else :
             
+                 distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
+                                                             systemManager.getDebugFileName(Program._FILE_NAME_DYNAMIC)               )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
                                                              systemManager.getDebugFileName(Program._FILE_NAME_LIBRARY)               )
                  zLibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X86_DEBUG)
@@ -217,7 +231,9 @@ class Program :
                     systemManager.copyFile( buildBinaryFileName , \
                                             binaryFileName      )
                 
-                # copy the library file
+                # copy the library files
+                systemManager.copyFile( buildDynamicFileName        , \
+                                        distributionDynamicFileName )
                 systemManager.copyFile( buildLibraryFileName        , \
                                         distributionLibraryFileName )
         #----------------------------------------------------------------------
