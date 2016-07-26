@@ -28,6 +28,9 @@ class Program :
         # the name of the build file to build LibTIFF
         _FILE_NAME_BUILD_LIBTIFF = "build_libtiff.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build PROJ.4
+        _FILE_NAME_BUILD_PROJ4 = "build_proj4.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build ZLib
         _FILE_NAME_BUILD_ZLIB = "build_zlib.py"
         #----------------------------------------------------------------------
@@ -60,6 +63,7 @@ class Program :
         
             # build libraries that do not depend on other libraries
             self._build(Program._FILE_NAME_BUILD_LIBJPEG)
+            self._build(Program._FILE_NAME_BUILD_PROJ4  )
             self._build(Program._FILE_NAME_BUILD_ZLIB   )
             
             # build libraries that depend on other libraries
