@@ -35,6 +35,9 @@ class Program :
         # the name of the build file to build LibTIFF
         _FILE_NAME_BUILD_LIBTIFF = "build_libtiff.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build Newmat
+        _FILE_NAME_BUILD_NEWMAT = "build_newmat.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build PROJ.4
         _FILE_NAME_BUILD_PROJ4 = "build_proj4.py"
         #----------------------------------------------------------------------
@@ -79,6 +82,7 @@ class Program :
                 #     (order does not matter)
                 self._build(Program._FILE_NAME_BUILD_CURL   )
                 self._build(Program._FILE_NAME_BUILD_LIBJPEG)
+                self._build(Program._FILE_NAME_BUILD_NEWMAT )
                 self._build(Program._FILE_NAME_BUILD_PROJ4  )
                 self._build(Program._FILE_NAME_BUILD_ZLIB   )
                 
