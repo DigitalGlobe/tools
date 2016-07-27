@@ -209,7 +209,6 @@ class Program :
             
                 # copy the binary files
                 buildBinaryFileNames = glob.glob( os.path.join( buildPathName                , \
-                                                                "tools"                      , \
                                                                 Program._FILE_PATTERN_BINARY ) );
                 for buildBinaryFileName in buildBinaryFileNames :
                 
