@@ -20,6 +20,9 @@ class Program :
     # constants
     
         #----------------------------------------------------------------------
+        # the name of the build file to build CURL
+        _FILE_NAME_BUILD_CURL = "build_curl.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build LibGeoTIFF
         _FILE_NAME_BUILD_LIBGEOTIFF = "build_libgeotiff.py"
         #----------------------------------------------------------------------
@@ -74,6 +77,7 @@ class Program :
             
                 # build libraries that do not depend on other libraries
                 #     (order does not matter)
+                self._build(Program._FILE_NAME_BUILD_CURL   )
                 self._build(Program._FILE_NAME_BUILD_LIBJPEG)
                 self._build(Program._FILE_NAME_BUILD_PROJ4  )
                 self._build(Program._FILE_NAME_BUILD_ZLIB   )
