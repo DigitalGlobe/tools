@@ -7,10 +7,10 @@
 # You may want to add optimization options to the CFLAGS macro as well. 
 #
 
-OSGEO4W = c:\OSGeo4W
+#OSGEO4W = c:\OSGeo4W
 
-TIFF_INC = -I$(OSGEO4W)\include
-TIFF_LIB_DLL = $(OSGEO4W)\lib\libtiff_i.lib
+#TIFF_INC = -I$(OSGEO4W)\include
+#TIFF_LIB_DLL = $(OSGEO4W)\lib\libtiff_i.lib
 
 # Installation locations (with install, or devinstall targets)
 PREFIX =	release	
@@ -21,20 +21,19 @@ DATADIR =	$(PREFIX)\share\epsg_csv
 
 #
 CC      = cl
-INCL	= -I. -Ilibxtiff $(TIFF_INC)
+INCL	= -I. -Ilibxtiff $(TIFF_INC) $(PROJ_INC)
 
 
 # Pick the first LIBS definition for a static libtiff.lib or the second
 # to link against the libtiff DLL.
 
-#LIBS    = geotiff.lib $(TIFF_LIB)
-LIBS    = geotiff_i.lib $(TIFF_LIB_DLL)
+LIBS    = geotiff.lib $(TIFF_LIB) $(PROJ_LIB)
+#LIBS    = geotiff_i.lib $(TIFF_LIB_DLL)
 
 DLLNAME = geotiff.dll
 
 # Set optimization or debug flags here.
-CFLAGS  = $(INCL) /MD /Ox /nologo
-#CFLAGS  = $(INCL) /MD /Zi /nologo
+CFLAGS  = $(INCL) /MD $(COMPILE_FLAGS) /nologo
 
 #
 OBJS    = \
@@ -71,7 +70,7 @@ geotiff.lib:	$(OBJS)
 
 #
 $(DLLNAME):    $(OBJS)
-	link /dll /out:$(DLLNAME) /implib:geotiff_i.lib $(OBJS) $(TIFF_LIB_DLL)
+	link /dll /out:$(DLLNAME) /implib:geotiff_i.lib $(OBJS) $(TIFF_LIB) $(PROJ_LIB)
 	if exist $(DLLNAME).manifest mt -manifest $(DLLNAME).manifest -outputresource:$(DLLNAME);2
 
 geo_config.h:	geo_config.h.vc

@@ -20,6 +20,9 @@ class Program :
     # constants
     
         #----------------------------------------------------------------------
+        # the name of the build file to build LibGeoTIFF
+        _FILE_NAME_BUILD_LIBGEOTIFF = "build_libgeotiff.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build LibJPEG
         _FILE_NAME_BUILD_LIBJPEG = "build_libjpeg.py"
         #----------------------------------------------------------------------
@@ -70,13 +73,16 @@ class Program :
             else :
             
                 # build libraries that do not depend on other libraries
+                #     (order does not matter)
                 self._build(Program._FILE_NAME_BUILD_LIBJPEG)
                 self._build(Program._FILE_NAME_BUILD_PROJ4  )
                 self._build(Program._FILE_NAME_BUILD_ZLIB   )
                 
                 # build libraries that depend on other libraries
-                self._build(Program._FILE_NAME_BUILD_LIBPNG )
-                self._build(Program._FILE_NAME_BUILD_LIBTIFF)
+                #     (order does matter)
+                self._build(Program._FILE_NAME_BUILD_LIBPNG    )
+                self._build(Program._FILE_NAME_BUILD_LIBTIFF   )
+                self._build(Program._FILE_NAME_BUILD_LIBGEOTIFF)
         #----------------------------------------------------------------------
         
     #--------------------------------------------------------------------------
