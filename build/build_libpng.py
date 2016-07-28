@@ -118,8 +118,8 @@ class Program :
             binaryPathName      = ( systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X64) \
                                     if ( buildSettings.X64Specified() )                                     \
                                     else systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X86) )
-            buildPathName       = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD)
-            sourcePathName      = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
+            buildPathName       = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD       )
+            sourcePathName      = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE      )
             zlibIncludePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_ZLIB_INCLUDE)
             
             # determine file names
@@ -174,7 +174,6 @@ class Program :
                                    zlibLibraryFileName        , \
                                    sourcePathName             ) )
             systemManager.changeDirectory(buildPathName)
-            print(cmakeCommandLine)
             cmakeResult = systemManager.execute(cmakeCommandLine)
             if (cmakeResult != 0) :
             
@@ -190,7 +189,6 @@ class Program :
                                      if ( buildSettings.ReleaseSpecified() ) \
                                      else "Debug"                          )                       , \
                                    Program._FILE_NAME_SOLUTION                                     ) )
-            print(msBuildCommandLine)
             msbuildResult = systemManager.execute(msBuildCommandLine)
             if (msbuildResult != 0) :
             
