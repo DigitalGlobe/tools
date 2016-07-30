@@ -4,6 +4,7 @@
 #
 #------------------------------------------------------------------------------
 
+import glob
 import os
 import shutil
 import subprocess
@@ -130,6 +131,45 @@ class SystemManager :
             shutil.copyfile( sourceFileName , \
                              targetFileName )
         #----------------------------------------------------------------------
+        # Distributes specified files in a specified source path into a
+        # specified target path.
+        #
+        # Parameters :
+        #    self             : this manager
+        #    sourcePathName   : the name of the source path to use
+        #    targetPathName   : the name of the target path to use
+        #    filePattern      : the pattern (e.g., <code>*.lib</code> of the
+        #                       files to distribute
+        #    releaseSpecified : if <code>True</code>, this method will use
+        #                       the same source file names as the distributed
+        #                       file name; if <code>False</code>, this method
+        #                       will use a debug version of the source file
+        #                       name as the distributed file name
+        #    dConsidered      : if <code>True</code> and the
+        #                       <code>releaseSpecified</code> parameter is
+        #                       <code>True</code>, this method will handle
+        #                       <code>d</code> suffixes in debug file names
+        def distributeFiles( self             , \
+                             sourcePathName   , \
+                             targetPathName   , \
+                             filePattern      , \
+                             releaseSpecified , \
+                             dConsidered      ) :
+                             
+            sourceFileNames = glob.glob( os.path.join( sourcePathName , \
+                                                       filePattern    ) );
+            for sourceFileName in sourceFileNames :
+            
+                targetFileName = os.path.join( targetPathName                   , \
+                                               os.path.basename(sourceFileName) )
+                if (not releaseSpecified) : \
+                    
+                    targetFileName = self.getDebugFileName( targetFileName , \
+                                                            dConsidered    )
+                    
+                shutil.copyfile( sourceFileName , \
+                                 targetFileName )
+        #----------------------------------------------------------------------
         # Executes a specified command line.
         #
         # Parameters :
@@ -176,16 +216,31 @@ class SystemManager :
         # will return <code>libjpeg_d.lib</code>.
         #
         # Parameters :
-        #     self     : this manager
-        #     fileName : the file name to use
+        #     self        : this manager
+        #     fileName    : the file name to use
+        #     dConsidered : if <code>True</code>, this method should consider
+        #                   a trailing <code>d</code> that might already
+        #                   exist (e.g., <code>libpngd.py); if
+        #                   <code>False</code>, this method should not
+        #                   consider a trailing <code>d</code>
         # Returns :
         #     the debug version of the specified file name
-        def getDebugFileName( self     ,
-                              fileName ) :
+        def getDebugFileName( self                ,
+                              fileName            ,
+                              dConsidered = False ) :
                               
-            return ( os.path.splitext(fileName)[0] +
-                     SystemManager._DEBUG_SUFFIX   +
-                     os.path.splitext(fileName)[1] )
+            fileNameWithoutExtension = os.path.splitext(fileName)[0]
+            extension                = os.path.splitext(fileName)[1]
+            
+            if ( dConsidered and \
+                 ( fileNameWithoutExtension.endswith("d") or \
+                   fileNameWithoutExtension.endswith("D")  ) ) :
+                   
+                fileNameWithoutExtension = fileNameWithoutExtension[ 0:( len(fileNameWithoutExtension) - 1 ) ]
+                              
+            return ( fileNameWithoutExtension    + \
+                     SystemManager._DEBUG_SUFFIX + \
+                     extension                   )
         #----------------------------------------------------------------------
         # Gets the value of the include environment variable.
         #
