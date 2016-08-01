@@ -47,6 +47,9 @@ class Program :
         # the name of the build file to build ZLib
         _FILE_NAME_BUILD_ZLIB = "build_zlib.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build Boost
+        _FILE_NAME_BUILD_BOOST = "build_boost.py"
+        #----------------------------------------------------------------------
         # the name of the Python executable file
         _FILE_NAME_PYTHON = "python.exe"
         #----------------------------------------------------------------------
@@ -89,6 +92,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_OPENCV )
                 self._build(Program._FILE_NAME_BUILD_PROJ4  )
                 self._build(Program._FILE_NAME_BUILD_ZLIB   )
+                self._build(Program._FILE_NAME_BUILD_BOOST   )
                 
                 # build libraries that depend on other libraries
                 #     (order does matter)
