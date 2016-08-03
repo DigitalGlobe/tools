@@ -1,6 +1,9 @@
 #------------------------------------------------------------------------------
 #
 # Geos_x64Release.py
+
+#To run from the developer command prompt, navigate to the build directory
+#(in this case DigitalGlobe/tools/build) then type python Geos_x64Release.py 
 #
 #------------------------------------------------------------------------------
 
@@ -9,8 +12,8 @@ import shutil
 
 #------------------------------------------------------------------------------
 # Geos_x64Release script removes the .obj files from the selected directory
-# then builds Geo and places the dlls and libs into the appropriate
-# sdk directory 
+# then builds Geos and places the dlls, libs, and pdbs into the appropriate
+# sdk directory
 
 #you'll need to run autogen.bat the first time.  This file is located in
 #C:\DigitalGlobe\tools\src\GEOS_x64Release
@@ -19,7 +22,8 @@ import shutil
 #on the 64 bit builds 
 
 
-#get current working directory
+#get current working directory - should be the tools directory, ie.,
+#DigitalGlobe/tools/
 currentDir = os.getcwd()
 print("currentDir")
 print(currentDir)
@@ -67,5 +71,7 @@ for file_name in src_files:
         if full_file_name.endswith('.dll'):
             shutil.copy(full_file_name, dest_dll)
         elif full_file_name.endswith('.lib'):
+            shutil.copy(full_file_name, dest_lib)
+        elif full_file_name.endswith('.pdb'):
             shutil.copy(full_file_name, dest_lib)
 
