@@ -27,6 +27,18 @@ class Program :
         #----------------------------------------------------------------------
         
         #----------------------------------------------------------------------
+        # the name of the build debug debug file
+        _FILE_NAME_DEBUG_BUILD_DEBUG = "zlib.pdb"
+        #----------------------------------------------------------------------
+        # the name of the distribution debug debug file
+        _FILE_NAME_DEBUG_DISTRIBUTION_DEBUG = "zlib_d.pdb"
+        #----------------------------------------------------------------------
+        # the name of the build release debug file
+        _FILE_NAME_DEBUG_BUILD_RELEASE = "zlib.pdb"
+        #----------------------------------------------------------------------
+        # the name of the distribution release debug file
+        _FILE_NAME_DEBUG_DISTRIBUTION_RELEASE = "zlib.pdb"
+        #----------------------------------------------------------------------
         # the name of the build debug library file
         _FILE_NAME_LIBRARY_BUILD_DEBUG = "zlib.lib"
         #----------------------------------------------------------------------
@@ -117,29 +129,45 @@ class Program :
             if ( buildSettings.ReleaseSpecified() and \
                  buildSettings.X64Specified()       ) :
                  
+                 buildDebugFileName          = os.path.join( buildPathName                                                                 , \
+                                                             Program._FILE_NAME_DEBUG_BUILD_RELEASE                                        ) 
                  buildLibraryFileName        = os.path.join( buildPathName                                                                 , \
                                                              Program._FILE_NAME_LIBRARY_BUILD_RELEASE                                      ) 
+                 distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X64) , \
+                                                             Program._FILE_NAME_DEBUG_DISTRIBUTION_RELEASE                                 )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X64) , \
                                                              Program._FILE_NAME_LIBRARY_DISTRIBUTION_RELEASE                               )
                  
             elif ( buildSettings.ReleaseSpecified() ) :
             
+                 buildDebugFileName          = os.path.join( buildPathName                                                                 , \
+                                                             Program._FILE_NAME_DEBUG_BUILD_RELEASE                                        ) 
                  buildLibraryFileName        = os.path.join( buildPathName                                                                 , \
                                                              Program._FILE_NAME_LIBRARY_BUILD_RELEASE                                      ) 
+                 distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X86) , \
+                                                             Program._FILE_NAME_DEBUG_DISTRIBUTION_RELEASE                                 )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X86) , \
                                                              Program._FILE_NAME_LIBRARY_DISTRIBUTION_RELEASE                               )
                  
             elif ( buildSettings.X64Specified() ) :
             
+                 buildDebugFileName          = os.path.join( buildPathName                                                                 , \
+                                                             Program._FILE_NAME_DEBUG_BUILD_DEBUG                                          )
                  buildLibraryFileName        = os.path.join( buildPathName                                                                 , \
-                                                             Program._FILE_NAME_LIBRARY_BUILD_DEBUG                                        ) 
+                                                             Program._FILE_NAME_LIBRARY_BUILD_DEBUG                                        )
+                 distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X64) , \
+                                                             Program._FILE_NAME_DEBUG_DISTRIBUTION_DEBUG                                   )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X64) , \
                                                              Program._FILE_NAME_LIBRARY_DISTRIBUTION_DEBUG                                 )
                  
             else :
             
+                 buildDebugFileName          = os.path.join( buildPathName                                                                 , \
+                                                             Program._FILE_NAME_DEBUG_BUILD_DEBUG                                          )
                  buildLibraryFileName        = os.path.join( buildPathName                                                                 , \
                                                              Program._FILE_NAME_LIBRARY_BUILD_DEBUG                                        ) 
+                 distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X86) , \
+                                                             Program._FILE_NAME_DEBUG_DISTRIBUTION_DEBUG                                   )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X86) , \
                                                              Program._FILE_NAME_LIBRARY_DISTRIBUTION_DEBUG                                 )
             
@@ -161,11 +189,15 @@ class Program :
             systemManager.changeDirectory(buildPathName)
             nmakeResult = systemManager.execute(nmakeCommandLine)
                 
+            # distribute the debug files
+            systemManager.copyFile( buildDebugFileName        , \
+                                    distributionDebugFileName )
+
             # distribute the library files
             systemManager.copyFile( buildLibraryFileName        , \
                                     distributionLibraryFileName )
-
-            # copy the binary files
+                
+            # distribute the binary files
             buildBinaryFileNames = glob.glob( os.path.join( buildPathName                , \
                                                             Program._FILE_PATTERN_BINARY ) );
             for buildBinaryFileName in buildBinaryFileNames :

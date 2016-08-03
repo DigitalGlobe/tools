@@ -115,6 +115,9 @@ class SystemManager :
                            sourcePathName , \
                            targetPathName ) :
                              
+            print( "Copying directory \"%s\" to \"%s\"." % \
+                   ( sourcePathName , \
+                     targetPathName )                    )
             shutil.copytree( sourcePathName , \
                              targetPathName )
         #----------------------------------------------------------------------
@@ -128,6 +131,9 @@ class SystemManager :
                       sourceFileName , \
                       targetFileName ) :
                              
+            print( "Copying file \"%s\" to \"%s\"." % \
+                   ( sourceFileName , \
+                     targetFileName )               )
             shutil.copyfile( sourceFileName , \
                              targetFileName )
         #----------------------------------------------------------------------
@@ -167,6 +173,9 @@ class SystemManager :
                     targetFileName = self.getDebugFileName( targetFileName , \
                                                             dConsidered    )
                     
+                print( "Copying file \"%s\" to \"%s\"." % \
+                       ( sourceFileName , \
+                         targetFileName )               )
                 shutil.copyfile( sourceFileName , \
                                  targetFileName )
         #----------------------------------------------------------------------

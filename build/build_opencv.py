@@ -30,6 +30,9 @@ class Program :
         # the pattern for binary files
         _FILE_PATTERN_BINARY = "*.exe"
         #----------------------------------------------------------------------
+        # the pattern for debug files
+        _FILE_PATTERN_DEBUG = "*.pdb"
+        #----------------------------------------------------------------------
         # the pattern for library files
         _FILE_PATTERN_LIBRARY = "*.lib"
         #----------------------------------------------------------------------
@@ -173,6 +176,13 @@ class Program :
             
                 sys.exit(-1)
                 
+            # distribute the debug files
+            systemManager.distributeFiles( buildLibraryPathName             , \
+                                           distributionLibraryPathName      , \
+                                           Program._FILE_PATTERN_DEBUG      , \
+                                           buildSettings.ReleaseSpecified() , \
+                                           True                             )
+
             # distribute the library files
             systemManager.distributeFiles( buildLibraryPathName             , \
                                            distributionLibraryPathName      , \

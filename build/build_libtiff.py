@@ -32,6 +32,9 @@ class Program :
         # the name of the library file
         _FILE_NAME_LIBRARY = "libtiff.lib"
         #----------------------------------------------------------------------
+        # the name of the debug file
+        _FILE_NAME_DEBUG = "libtiff.pdb"
+        #----------------------------------------------------------------------
         # the name of the makefile
         _FILE_NAME_MAKEFILE = "makefile.vc"
         #----------------------------------------------------------------------
@@ -129,9 +132,9 @@ class Program :
             binaryPathName         = ( systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X64) \
                                        if ( buildSettings.X64Specified() )                                     \
                                        else systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X86) )
-            buildPathName          = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD)
-            sourcePathName         = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
-            zLibIncludePathName    = systemManager.getCurrentRelativePathName(Program._PATH_NAME_ZLIB_INCLUDE)
+            buildPathName          = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD          )
+            sourcePathName         = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE         )
+            zLibIncludePathName    = systemManager.getCurrentRelativePathName(Program._PATH_NAME_ZLIB_INCLUDE   )
             libJpegIncludePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBJPEG_INCLUDE)
             
             # determine file names
@@ -141,6 +144,9 @@ class Program :
             buildLibraryFileName = os.path.join( buildPathName              , \
                                                  "libtiff"                  , \
                                                  Program._FILE_NAME_LIBRARY )
+            buildDebugFileName   = os.path.join( buildPathName              , \
+                                                 "libtiff"                  , \
+                                                 Program._FILE_NAME_DEBUG   )
             if ( buildSettings.ReleaseSpecified() and \
                  buildSettings.X64Specified()       ) :
                  
@@ -148,7 +154,9 @@ class Program :
                                                              Program._FILE_NAME_DYNAMIC                                               )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
                                                              Program._FILE_NAME_LIBRARY                                               )
-                 zLibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X64_RELEASE)
+                 distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
+                                                             Program._FILE_NAME_DEBUG                                                 )
+                 zLibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X64_RELEASE   )
                  libJpegLibraryFileName      = systemManager.getCurrentRelativePathName(Program._FILE_NAME_LIBJPEG_LIBRARY_X64_RELEASE)
                  
             elif ( buildSettings.ReleaseSpecified() ) :
@@ -157,25 +165,31 @@ class Program :
                                                              Program._FILE_NAME_DYNAMIC                                               )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
                                                              Program._FILE_NAME_LIBRARY                                               )
-                 zLibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X86_RELEASE)
+                 distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
+                                                             Program._FILE_NAME_DEBUG                                                 )
+                 zLibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X86_RELEASE   )
                  libJpegLibraryFileName      = systemManager.getCurrentRelativePathName(Program._FILE_NAME_LIBJPEG_LIBRARY_X86_RELEASE)
                  
             elif ( buildSettings.X64Specified() ) :
             
                  distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
-                                                             systemManager.getDebugFileName(Program._FILE_NAME_DYNAMIC)               )
+                                                             Program._FILE_NAME_DYNAMIC                                               )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
-                                                             systemManager.getDebugFileName(Program._FILE_NAME_LIBRARY)               )
-                 zLibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X64_DEBUG)
+                                                             Program._FILE_NAME_LIBRARY                                               )
+                 distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
+                                                             Program._FILE_NAME_DEBUG                                                 )
+                 zLibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X64_DEBUG   )
                  libJpegLibraryFileName      = systemManager.getCurrentRelativePathName(Program._FILE_NAME_LIBJPEG_LIBRARY_X64_DEBUG)
                  
             else :
             
                  distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
-                                                             systemManager.getDebugFileName(Program._FILE_NAME_DYNAMIC)               )
+                                                             Program._FILE_NAME_DYNAMIC                                               )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
-                                                             systemManager.getDebugFileName(Program._FILE_NAME_LIBRARY)               )
-                 zLibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X86_DEBUG)
+                                                             Program._FILE_NAME_LIBRARY                                               )
+                 distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
+                                                             Program._FILE_NAME_DEBUG                                                 )
+                 zLibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X86_DEBUG   )
                  libJpegLibraryFileName      = systemManager.getCurrentRelativePathName(Program._FILE_NAME_LIBJPEG_LIBRARY_X86_DEBUG)
             
             # initialize LibJPEG environment variables
@@ -215,7 +229,7 @@ class Program :
             systemManager.changeDirectory(buildPathName)
             nmakeResult = systemManager.execute(nmakeCommandLine)
    
-            # copy the library and binary files, if Nmake executed successfully
+            # copy the library, debug, and binary files, if Nmake executed successfully
             if (nmakeResult == 0) :
             
                 # copy the binary files
@@ -231,6 +245,10 @@ class Program :
                     systemManager.copyFile( buildBinaryFileName , \
                                             binaryFileName      )
                 
+                # copy the debug file
+                systemManager.copyFile( buildDebugFileName        , \
+                                        distributionDebugFileName )
+
                 # copy the library files
                 systemManager.copyFile( buildDynamicFileName        , \
                                         distributionDynamicFileName )

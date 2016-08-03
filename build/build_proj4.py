@@ -26,6 +26,9 @@ class Program :
         #----------------------------------------------------------------------
         
         #----------------------------------------------------------------------
+        # the name of the debug file
+        _FILE_NAME_DEBUG = "proj.pdb"
+        #----------------------------------------------------------------------
         # the name of the library file
         _FILE_NAME_LIBRARY = "proj.lib"
         #----------------------------------------------------------------------
@@ -92,31 +95,42 @@ class Program :
             binaryPathName = ( systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X64) \
                                if ( buildSettings.X64Specified() )                                     \
                                else systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X86) )
-            buildPathName  = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD)
+            buildPathName  = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD )
             sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
             
             # determine file names
+            buildDebugFileName   = os.path.join( buildPathName              , \
+                                                 "src"                      , \
+                                                 Program._FILE_NAME_DEBUG   )
             buildLibraryFileName = os.path.join( buildPathName              , \
                                                  "src"                      , \
                                                  Program._FILE_NAME_LIBRARY )
             if ( buildSettings.ReleaseSpecified() and \
                  buildSettings.X64Specified()       ) :
                  
+                 distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
+                                                             Program._FILE_NAME_DEBUG                                                 )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
                                                              Program._FILE_NAME_LIBRARY                                               )
                  
             elif ( buildSettings.ReleaseSpecified() ) :
             
+                 distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
+                                                             Program._FILE_NAME_DEBUG                                                 )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
                                                              Program._FILE_NAME_LIBRARY                                               )
                  
             elif ( buildSettings.X64Specified() ) :
             
+                 distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
+                                                             Program._FILE_NAME_DEBUG                                                 )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
                                                              systemManager.getDebugFileName(Program._FILE_NAME_LIBRARY)               )
                  
             else :
             
+                 distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
+                                                             Program._FILE_NAME_DEBUG                                                 )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
                                                              systemManager.getDebugFileName(Program._FILE_NAME_LIBRARY)               )
             
@@ -153,6 +167,10 @@ class Program :
                     systemManager.copyFile( buildBinaryFileName , \
                                             binaryFileName      )
                 
+                # copy the debug file
+                systemManager.copyFile( buildDebugFileName        , \
+                                        distributionDebugFileName )
+
                 # copy the library file
                 systemManager.copyFile( buildLibraryFileName        , \
                                         distributionLibraryFileName )
