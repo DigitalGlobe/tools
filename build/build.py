@@ -53,6 +53,9 @@ class Program :
         # the name of the build file to build PROJ.4
         _FILE_NAME_BUILD_PROJ4 = "build_proj4.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build Xerces
+        _FILE_NAME_BUILD_XERCES = "build_xerces.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build ZLib
         _FILE_NAME_BUILD_ZLIB = "build_zlib.py"
         #----------------------------------------------------------------------
@@ -92,6 +95,7 @@ class Program :
             
                 # build libraries that do not depend on other libraries
                 #     (order does not matter)
+                self._build(Program._FILE_NAME_BUILD_BOOST   )
                 self._build(Program._FILE_NAME_BUILD_CURL    )
                 self._build(Program._FILE_NAME_BUILD_FREETYPE)
                 self._build(Program._FILE_NAME_BUILD_LIBJPEG )
@@ -99,7 +103,6 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_OPENCV  )
                 self._build(Program._FILE_NAME_BUILD_PROJ4   )
                 self._build(Program._FILE_NAME_BUILD_ZLIB    )
-                self._build(Program._FILE_NAME_BUILD_BOOST   )
 
                 # build libraries that depend on other libraries
                 #     (order does matter)
@@ -107,6 +110,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_LIBTIFF   )
                 self._build(Program._FILE_NAME_BUILD_LIBGEOTIFF)
                 self._build(Program._FILE_NAME_BUILD_PODOFO    )
+                self._build(Program._FILE_NAME_BUILD_XERCES    )
         #----------------------------------------------------------------------
         
     #--------------------------------------------------------------------------
