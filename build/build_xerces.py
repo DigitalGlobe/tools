@@ -122,9 +122,9 @@ class Program :
                                                                                     Program._PATH_NAME_BUILD_LIBRARY_RELEASE_X64 ) )
 
             # initialize directories
-#            systemManager.removeDirectory(buildPathName)
-#            systemManager.copyDirectory( sourcePathName , \
-#                                         buildPathName  )
+            systemManager.removeDirectory(buildPathName)
+            systemManager.copyDirectory( sourcePathName , \
+                                         buildPathName  )
                                
             # build the solution
             solutionFileName   = os.path.join( buildPathName               , \
