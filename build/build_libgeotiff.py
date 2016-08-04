@@ -26,6 +26,9 @@ class Program :
         #----------------------------------------------------------------------
         
         #----------------------------------------------------------------------
+        # the name of the dynamic file
+        _FILE_NAME_DYNAMIC = "geotiff.dll"
+        #----------------------------------------------------------------------
         # the name of the library file
         _FILE_NAME_LIBRARY = "geotiff.lib"
         #----------------------------------------------------------------------
@@ -142,11 +145,15 @@ class Program :
             sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
             
             # determine file names
+            buildDynamicFileName = os.path.join( buildPathName              , \
+                                                 Program._FILE_NAME_DYNAMIC )
             buildLibraryFileName = os.path.join( buildPathName              , \
                                                  Program._FILE_NAME_LIBRARY )
             if ( buildSettings.ReleaseSpecified() and \
                  buildSettings.X64Specified()       ) :
                  
+                distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
+                                                            Program._FILE_NAME_DYNAMIC                                               )
                 distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
                                                             Program._FILE_NAME_LIBRARY                                               )
                 libTiffLibraryFileName      = systemManager.getCurrentRelativePathName(Program._FILE_NAME_LIBTIFF_LIBRARY_X64_RELEASE)
@@ -154,6 +161,8 @@ class Program :
                  
             elif ( buildSettings.ReleaseSpecified() ) :
             
+                distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
+                                                            Program._FILE_NAME_DYNAMIC                                               )
                 distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
                                                             Program._FILE_NAME_LIBRARY                                               )
                 libTiffLibraryFileName      = systemManager.getCurrentRelativePathName(Program._FILE_NAME_LIBTIFF_LIBRARY_X86_RELEASE)
@@ -161,6 +170,8 @@ class Program :
                  
             elif ( buildSettings.X64Specified() ) :
             
+                distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
+                                                            systemManager.getDebugFileName(Program._FILE_NAME_DYNAMIC)               )
                 distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
                                                             systemManager.getDebugFileName(Program._FILE_NAME_LIBRARY)               )
                 libTiffLibraryFileName      = systemManager.getCurrentRelativePathName(Program._FILE_NAME_LIBTIFF_LIBRARY_X64_DEBUG)
@@ -168,6 +179,8 @@ class Program :
                  
             else :
             
+                distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
+                                                            systemManager.getDebugFileName(Program._FILE_NAME_DYNAMIC)               )
                 distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
                                                             systemManager.getDebugFileName(Program._FILE_NAME_LIBRARY)               )
                 libTiffLibraryFileName      = systemManager.getCurrentRelativePathName(Program._FILE_NAME_LIBTIFF_LIBRARY_X86_DEBUG)
@@ -219,6 +232,10 @@ class Program :
                     systemManager.copyFile( buildBinaryFileName , \
                                             binaryFileName      )
                 
+                # copy the dynamic file
+                systemManager.copyFile( buildDynamicFileName        , \
+                                        distributionDynamicFileName )
+
                 # copy the library file
                 systemManager.copyFile( buildLibraryFileName        , \
                                         distributionLibraryFileName )

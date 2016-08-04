@@ -29,6 +29,9 @@ class Program :
         # the name of the debug file
         _FILE_NAME_DEBUG = "proj.pdb"
         #----------------------------------------------------------------------
+        # the name of the dynamic file
+        _FILE_NAME_DYNAMIC = "proj.dll"
+        #----------------------------------------------------------------------
         # the name of the library file
         _FILE_NAME_LIBRARY = "proj.lib"
         #----------------------------------------------------------------------
@@ -102,6 +105,9 @@ class Program :
             buildDebugFileName   = os.path.join( buildPathName              , \
                                                  "src"                      , \
                                                  Program._FILE_NAME_DEBUG   )
+            buildDynamicFileName = os.path.join( buildPathName              , \
+                                                 "src"                      , \
+                                                 Program._FILE_NAME_DYNAMIC )
             buildLibraryFileName = os.path.join( buildPathName              , \
                                                  "src"                      , \
                                                  Program._FILE_NAME_LIBRARY )
@@ -110,6 +116,8 @@ class Program :
                  
                  distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
                                                              Program._FILE_NAME_DEBUG                                                 )
+                 distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
+                                                             Program._FILE_NAME_DYNAMIC                                               )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
                                                              Program._FILE_NAME_LIBRARY                                               )
                  
@@ -117,20 +125,26 @@ class Program :
             
                  distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
                                                              Program._FILE_NAME_DEBUG                                                 )
+                 distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
+                                                             Program._FILE_NAME_DYNAMIC                                               )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
                                                              Program._FILE_NAME_LIBRARY                                               )
                  
             elif ( buildSettings.X64Specified() ) :
             
                  distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
-                                                             Program._FILE_NAME_DEBUG                                                 )
+                                                             systemManager.getDebugFileName(Program._FILE_NAME_DEBUG  )               )
+                 distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
+                                                             systemManager.getDebugFileName(Program._FILE_NAME_DYNAMIC)               )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
                                                              systemManager.getDebugFileName(Program._FILE_NAME_LIBRARY)               )
                  
             else :
             
                  distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
-                                                             Program._FILE_NAME_DEBUG                                                 )
+                                                             systemManager.getDebugFileName(Program._FILE_NAME_DEBUG  )               )
+                 distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
+                                                             systemManager.getDebugFileName(Program._FILE_NAME_DYNAMIC)               )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
                                                              systemManager.getDebugFileName(Program._FILE_NAME_LIBRARY)               )
             
@@ -170,6 +184,10 @@ class Program :
                 # copy the debug file
                 systemManager.copyFile( buildDebugFileName        , \
                                         distributionDebugFileName )
+
+                # copy the dynamic file
+                systemManager.copyFile( buildDynamicFileName        , \
+                                        distributionDynamicFileName )
 
                 # copy the library file
                 systemManager.copyFile( buildLibraryFileName        , \

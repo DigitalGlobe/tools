@@ -146,6 +146,7 @@ class Program :
             fileDistributor.distributeAllFiles( buildBinaryPathName              , \
                                                 buildLibraryPathName             , \
                                                 buildLibraryPathName             , \
+                                                buildLibraryPathName             , \
                                                 buildSettings.X64Specified()     , \
                                                 buildSettings.ReleaseSpecified() , \
                                                 True                             )

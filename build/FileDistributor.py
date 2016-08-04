@@ -30,6 +30,9 @@ class FileDistributor :
         # the pattern for debug files
         _FILE_PATTERN_DEBUG = "*.pdb"
         #----------------------------------------------------------------------
+        # the pattern for dynamic files
+        _FILE_PATTERN_DYNAMIC = "*.dll"
+        #----------------------------------------------------------------------
         # the pattern for library files
         _FILE_PATTERN_LIBRARY = "*.lib"
         #----------------------------------------------------------------------
@@ -50,6 +53,14 @@ class FileDistributor :
         # the name of the default path to which to distribute 32-bit debug
         # files
         _PATH_NAME_DISTRIBUTION_DEBUG_X86 = "..\\sdk\\x86\\lib"
+        #----------------------------------------------------------------------
+        # the name of the default path to which to distribute 64-bit dynamic
+        # files
+        _PATH_NAME_DISTRIBUTION_DYNAMIC_X64 = "..\\sdk\\x64\\lib"
+        #----------------------------------------------------------------------
+        # the name of the default path to which to distribute 32-bit dynamic
+        # files
+        _PATH_NAME_DISTRIBUTION_DYNAMIC_X86 = "..\\sdk\\x86\\lib"
         #----------------------------------------------------------------------
         # the name of the default path to which to distribute 64-bit library
         # files
@@ -75,6 +86,12 @@ class FileDistributor :
         #----------------------------------------------------------------------
         # the name of the path to which to distribute x86 debug files
         _distributionDebugPathNameX86 = ""
+        #----------------------------------------------------------------------
+        # the name of the path to which to distribute x64 dynamic files
+        _distributionDynamicPathNameX64 = ""
+        #----------------------------------------------------------------------
+        # the name of the path to which to distribute x86 dynamic files
+        _distributionDynamicPathNameX86 = ""
         #----------------------------------------------------------------------
         # the name of the path to which to distribute x64 library files
         _distributionLibraryPathNameX64 = ""
@@ -175,6 +192,50 @@ class FileDistributor :
             self._distributionDebugPathNameX86 = value
         
         #----------------------------------------------------------------------
+        # Gets the name of the path to which to distribute x64 dynamic files.
+        #
+        # Parameters :
+        #     self : this distributor
+        # Returns :
+        #     the name of the path to which to distribute x64 dynamic files
+        def getDistributionDynamicPathNameX64(self) :
+        
+            return self._distributionDynamicPathNameX64
+        
+        #----------------------------------------------------------------------
+        # Sets x64 dynamic files distribution path name.
+        #
+        # Parameters :
+        #     self  : this distributor
+        #     value : x64 dynamic files distribution path name to use
+        def setDistributionDynamicPathNameX64( self  , \
+                                               value ) :
+        
+            self._distributionDynamicPathNameX64 = value
+        
+        #----------------------------------------------------------------------
+        # Gets the name of the path to which to distribute x86 dynamic files.
+        #
+        # Parameters :
+        #     self : this distributor
+        # Returns :
+        #     the name of the path to which to distribute x86 dynamic files
+        def getDistributionDynamicPathNameX86(self) :
+        
+            return self._distributionDynamicPathNameX86
+        
+        #----------------------------------------------------------------------
+        # Sets x86 dynamic files distribution path name.
+        #
+        # Parameters :
+        #     self  : this distributor
+        #     value : x86 dynamic files distribution path name to use
+        def setDistributionDynamicPathNameX86( self  , \
+                                               value ) :
+        
+            self._distributionDynamicPathNameX86 = value
+        
+        #----------------------------------------------------------------------
         # Gets the name of the path to which to distribute x64 library files.
         #
         # Parameters :
@@ -251,6 +312,10 @@ class FileDistributor :
                                                                                    FileDistributor._PATH_NAME_DISTRIBUTION_DEBUG_X64   ) )
             self._distributionDebugPathNameX86   = os.path.normpath( os.path.join( finalBuildPathName                                  , \
                                                                                    FileDistributor._PATH_NAME_DISTRIBUTION_DEBUG_X86   ) )
+            self._distributionDynamicPathNameX64 = os.path.normpath( os.path.join( finalBuildPathName                                  , \
+                                                                                   FileDistributor._PATH_NAME_DISTRIBUTION_DYNAMIC_X64 ) )
+            self._distributionDynamicPathNameX86 = os.path.normpath( os.path.join( finalBuildPathName                                  , \
+                                                                                   FileDistributor._PATH_NAME_DISTRIBUTION_DYNAMIC_X86 ) )
             self._distributionLibraryPathNameX64 = os.path.normpath( os.path.join( finalBuildPathName                                  , \
                                                                                    FileDistributor._PATH_NAME_DISTRIBUTION_LIBRARY_X64 ) )
             self._distributionLibraryPathNameX86 = os.path.normpath( os.path.join( finalBuildPathName                                  , \
@@ -305,27 +370,33 @@ class FileDistributor :
         # Distributes all files.
         #
         # Parameters :
-        #    self             : this manager
-        #    sourcePathName   : the name of the source path to use
-        #    x64Specified     : if <code>True</code>, this method will
-        #                       distribute to the x64 library distribution
-        #                       path; if <code>False</code>, this method will
-        #                       distribute to the x86 library distribution path
-        #    releaseSpecified : if <code>True</code>, this method will use
-        #                       the same source file names as the distributed
-        #                       file name; if <code>False</code>, this method
-        #                       will use a debug version of the source file
-        #                       name as the distributed file name
-        #    dConsidered      : if <code>True</code> and the
-        #                       <code>releaseSpecified</code> parameter is
-        #                       <code>True</code>, this method will handle
-        #                       <code>d</code> suffixes in debug file names
-        #    renameDictionary : the dictionary to use for renaming files,
-        #                       with source files names as keys and target
-        #                       file names as values
+        #    self                  : this manager
+        #    binarySourcePathName  : the name of the binary source path to use
+        #    debugSourcePathName   : the name of the debug source path to use
+        #    dynamicSourcePathName : the name of the dynamic source path to
+        #                            use
+        #    librarySourcePathName : the name of the library source path to
+        #                            use
+        #    x64Specified          : if <code>True</code>, this method will
+        #                            distribute to the x64 library distribution
+        #                            path; if <code>False</code>, this method will
+        #                            distribute to the x86 library distribution path
+        #    releaseSpecified      : if <code>True</code>, this method will use
+        #                            the same source file names as the distributed
+        #                            file name; if <code>False</code>, this method
+        #                            will use a debug version of the source file
+        #                            name as the distributed file name
+        #    dConsidered           : if <code>True</code> and the
+        #                            <code>releaseSpecified</code> parameter is
+        #                            <code>True</code>, this method will handle
+        #                            <code>d</code> suffixes in debug file names
+        #    renameDictionary      : the dictionary to use for renaming files,
+        #                            with source files names as keys and target
+        #                            file names as values
         def distributeAllFiles( self                     , \
                                 binarySourcePathName     , \
                                 debugSourcePathName      , \
+                                dynamicSourcePathName    , \
                                 librarySourcePathName    , \
                                 x64Specified             , \
                                 releaseSpecified         , \
@@ -342,6 +413,11 @@ class FileDistributor :
                                        releaseSpecified    , \
                                        dConsidered         , \
                                        renameDictionary    )
+            self.distributeDynamicFiles( dynamicSourcePathName , \
+                                         x64Specified          , \
+                                         releaseSpecified      , \
+                                         dConsidered           , \
+                                         renameDictionary      )
             self.distributeLibraryFiles( librarySourcePathName , \
                                          x64Specified          , \
                                          releaseSpecified      , \
@@ -421,6 +497,43 @@ class FileDistributor :
                                    releaseSpecified                            , \
                                    dConsidered                                 , \
                                    renameDictionary                            )
+        #----------------------------------------------------------------------
+        # Distributes the dynamic files in a specified source path.
+        #
+        # Parameters :
+        #    self             : this manager
+        #    sourcePathName   : the name of the source path to use
+        #    x64Specified     : if <code>True</code>, this method will
+        #                       distribute to the x64 dynamic distribution
+        #                       path; if <code>False</code>, this method will
+        #                       distribute to the x86 dynamic distribution path
+        #    releaseSpecified : if <code>True</code>, this method will use
+        #                       the same source file names as the distributed
+        #                       file name; if <code>False</code>, this method
+        #                       will use a debug version of the source file
+        #                       name as the distributed file name
+        #    dConsidered      : if <code>True</code> and the
+        #                       <code>releaseSpecified</code> parameter is
+        #                       <code>True</code>, this method will handle
+        #                       <code>d</code> suffixes in debug file names
+        #    renameDictionary : the dictionary to use for renaming files,
+        #                       with source files names as keys and target
+        #                       file names as values
+        def distributeDynamicFiles( self                     , \
+                                    sourcePathName           , \
+                                    x64Specified             , \
+                                    releaseSpecified         , \
+                                    dConsidered      = False , \
+                                    renameDictionary = {}    ) :
+                                      
+            self._distributeFiles( sourcePathName                                , \
+                                   ( self._distributionDynamicPathNameX64        \
+                                     if (x64Specified)                           \
+                                     else self._distributionDynamicPathNameX86 ) , \
+                                   FileDistributor._FILE_PATTERN_DYNAMIC         , \
+                                   releaseSpecified                              , \
+                                   dConsidered                                   , \
+                                   renameDictionary                              )
         #----------------------------------------------------------------------
         # Distributes the library files in a specified source path.
         #

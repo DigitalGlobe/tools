@@ -47,6 +47,9 @@ class Program :
         # the name of the build file to build OpenCV
         _FILE_NAME_BUILD_OPENCV = "build_opencv.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build PoDoFo
+        _FILE_NAME_BUILD_PODOFO = "build_podofo.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build PROJ.4
         _FILE_NAME_BUILD_PROJ4 = "build_proj4.py"
         #----------------------------------------------------------------------
@@ -103,6 +106,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_LIBPNG    )
                 self._build(Program._FILE_NAME_BUILD_LIBTIFF   )
                 self._build(Program._FILE_NAME_BUILD_LIBGEOTIFF)
+                self._build(Program._FILE_NAME_BUILD_PODOFO    )
         #----------------------------------------------------------------------
         
     #--------------------------------------------------------------------------

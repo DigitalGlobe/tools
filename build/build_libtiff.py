@@ -35,6 +35,9 @@ class Program :
         # the name of the debug file
         _FILE_NAME_DEBUG = "libtiff.pdb"
         #----------------------------------------------------------------------
+        # the name of the link file
+        _FILE_NAME_LINK = "libtiff.dll"
+        #----------------------------------------------------------------------
         # the name of the makefile
         _FILE_NAME_MAKEFILE = "makefile.vc"
         #----------------------------------------------------------------------
@@ -147,6 +150,9 @@ class Program :
             buildDebugFileName   = os.path.join( buildPathName              , \
                                                  "libtiff"                  , \
                                                  Program._FILE_NAME_DEBUG   )
+            buildLinkFileName    = os.path.join( buildPathName              , \
+                                                 "libtiff"                  , \
+                                                 Program._FILE_NAME_LINK    )
             if ( buildSettings.ReleaseSpecified() and \
                  buildSettings.X64Specified()       ) :
                  
@@ -156,6 +162,8 @@ class Program :
                                                              Program._FILE_NAME_LIBRARY                                               )
                  distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
                                                              Program._FILE_NAME_DEBUG                                                 )
+                 distributionLinkFileName    = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
+                                                             Program._FILE_NAME_LINK                                                  )
                  zLibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X64_RELEASE   )
                  libJpegLibraryFileName      = systemManager.getCurrentRelativePathName(Program._FILE_NAME_LIBJPEG_LIBRARY_X64_RELEASE)
                  
@@ -167,28 +175,34 @@ class Program :
                                                              Program._FILE_NAME_LIBRARY                                               )
                  distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
                                                              Program._FILE_NAME_DEBUG                                                 )
+                 distributionLinkFileName    = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
+                                                             Program._FILE_NAME_LINK                                                  )
                  zLibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X86_RELEASE   )
                  libJpegLibraryFileName      = systemManager.getCurrentRelativePathName(Program._FILE_NAME_LIBJPEG_LIBRARY_X86_RELEASE)
                  
             elif ( buildSettings.X64Specified() ) :
             
                  distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
-                                                             Program._FILE_NAME_DYNAMIC                                               )
+                                                             systemManager.getDebugFileName(Program._FILE_NAME_DYNAMIC)               )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
-                                                             Program._FILE_NAME_LIBRARY                                               )
+                                                             systemManager.getDebugFileName(Program._FILE_NAME_LIBRARY)               )
                  distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
-                                                             Program._FILE_NAME_DEBUG                                                 )
+                                                             systemManager.getDebugFileName(Program._FILE_NAME_DEBUG  )               )
+                 distributionLinkFileName    = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X64) , \
+                                                             systemManager.getDebugFileName(Program._FILE_NAME_LINK   )               )
                  zLibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X64_DEBUG   )
                  libJpegLibraryFileName      = systemManager.getCurrentRelativePathName(Program._FILE_NAME_LIBJPEG_LIBRARY_X64_DEBUG)
                  
             else :
             
                  distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
-                                                             Program._FILE_NAME_DYNAMIC                                               )
+                                                             systemManager.getDebugFileName(Program._FILE_NAME_DYNAMIC)               )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
-                                                             Program._FILE_NAME_LIBRARY                                               )
+                                                             systemManager.getDebugFileName(Program._FILE_NAME_LIBRARY)               )
                  distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
-                                                             Program._FILE_NAME_DEBUG                                                 )
+                                                             systemManager.getDebugFileName(Program._FILE_NAME_DEBUG  )               )
+                 distributionLinkFileName    = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBRARY_X86) , \
+                                                             systemManager.getDebugFileName(Program._FILE_NAME_LINK   )               )
                  zLibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X86_DEBUG   )
                  libJpegLibraryFileName      = systemManager.getCurrentRelativePathName(Program._FILE_NAME_LIBJPEG_LIBRARY_X86_DEBUG)
             
@@ -229,7 +243,7 @@ class Program :
             systemManager.changeDirectory(buildPathName)
             nmakeResult = systemManager.execute(nmakeCommandLine)
    
-            # copy the library, debug, and binary files, if Nmake executed successfully
+            # copy the library, debug, link, and binary files, if Nmake executed successfully
             if (nmakeResult == 0) :
             
                 # copy the binary files
@@ -248,6 +262,10 @@ class Program :
                 # copy the debug file
                 systemManager.copyFile( buildDebugFileName        , \
                                         distributionDebugFileName )
+
+                # copy the link file
+                systemManager.copyFile( buildLinkFileName        , \
+                                        distributionLinkFileName )
 
                 # copy the library files
                 systemManager.copyFile( buildDynamicFileName        , \

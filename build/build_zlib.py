@@ -39,6 +39,18 @@ class Program :
         # the name of the distribution release debug file
         _FILE_NAME_DEBUG_DISTRIBUTION_RELEASE = "zlib.pdb"
         #----------------------------------------------------------------------
+        # the name of the build debug dynamic file
+        _FILE_NAME_DYNAMIC_BUILD_DEBUG = "zlib1.dll"
+        #----------------------------------------------------------------------
+        # the name of the distribution debug dynamic file
+        _FILE_NAME_DYNAMIC_DISTRIBUTION_DEBUG = "zlib_d.dll"
+        #----------------------------------------------------------------------
+        # the name of the build release dynamic file
+        _FILE_NAME_DYNAMIC_BUILD_RELEASE = "zlib1.dll"
+        #----------------------------------------------------------------------
+        # the name of the distribution release dynamic file
+        _FILE_NAME_DYNAMIC_DISTRIBUTION_RELEASE = "zlib.dll"
+        #----------------------------------------------------------------------
         # the name of the build debug library file
         _FILE_NAME_LIBRARY_BUILD_DEBUG = "zlib.lib"
         #----------------------------------------------------------------------
@@ -122,7 +134,7 @@ class Program :
             binaryPathName = ( systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X64) \
                                if ( buildSettings.X64Specified() )                                     \
                                else systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X86) )
-            buildPathName  = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD)
+            buildPathName  = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD )
             sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
             
             # determine file names
@@ -131,10 +143,14 @@ class Program :
                  
                  buildDebugFileName          = os.path.join( buildPathName                                                                 , \
                                                              Program._FILE_NAME_DEBUG_BUILD_RELEASE                                        ) 
+                 buildDynamicFileName        = os.path.join( buildPathName                                                                 , \
+                                                             Program._FILE_NAME_DYNAMIC_BUILD_RELEASE                                      ) 
                  buildLibraryFileName        = os.path.join( buildPathName                                                                 , \
                                                              Program._FILE_NAME_LIBRARY_BUILD_RELEASE                                      ) 
                  distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X64) , \
                                                              Program._FILE_NAME_DEBUG_DISTRIBUTION_RELEASE                                 )
+                 distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X64) , \
+                                                             Program._FILE_NAME_DYNAMIC_DISTRIBUTION_RELEASE                               )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X64) , \
                                                              Program._FILE_NAME_LIBRARY_DISTRIBUTION_RELEASE                               )
                  
@@ -142,10 +158,14 @@ class Program :
             
                  buildDebugFileName          = os.path.join( buildPathName                                                                 , \
                                                              Program._FILE_NAME_DEBUG_BUILD_RELEASE                                        ) 
+                 buildDynamicFileName        = os.path.join( buildPathName                                                                 , \
+                                                             Program._FILE_NAME_DYNAMIC_BUILD_RELEASE                                      ) 
                  buildLibraryFileName        = os.path.join( buildPathName                                                                 , \
                                                              Program._FILE_NAME_LIBRARY_BUILD_RELEASE                                      ) 
                  distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X86) , \
                                                              Program._FILE_NAME_DEBUG_DISTRIBUTION_RELEASE                                 )
+                 distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X86) , \
+                                                             Program._FILE_NAME_DYNAMIC_DISTRIBUTION_RELEASE                               )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X86) , \
                                                              Program._FILE_NAME_LIBRARY_DISTRIBUTION_RELEASE                               )
                  
@@ -153,10 +173,14 @@ class Program :
             
                  buildDebugFileName          = os.path.join( buildPathName                                                                 , \
                                                              Program._FILE_NAME_DEBUG_BUILD_DEBUG                                          )
+                 buildDynamicFileName        = os.path.join( buildPathName                                                                 , \
+                                                             Program._FILE_NAME_DYNAMIC_BUILD_DEBUG                                        )
                  buildLibraryFileName        = os.path.join( buildPathName                                                                 , \
                                                              Program._FILE_NAME_LIBRARY_BUILD_DEBUG                                        )
                  distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X64) , \
                                                              Program._FILE_NAME_DEBUG_DISTRIBUTION_DEBUG                                   )
+                 distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X64) , \
+                                                             Program._FILE_NAME_DYNAMIC_DISTRIBUTION_DEBUG                                 )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X64) , \
                                                              Program._FILE_NAME_LIBRARY_DISTRIBUTION_DEBUG                                 )
                  
@@ -164,10 +188,14 @@ class Program :
             
                  buildDebugFileName          = os.path.join( buildPathName                                                                 , \
                                                              Program._FILE_NAME_DEBUG_BUILD_DEBUG                                          )
+                 buildDynamicFileName        = os.path.join( buildPathName                                                                 , \
+                                                             Program._FILE_NAME_DYNAMIC_BUILD_DEBUG                                        ) 
                  buildLibraryFileName        = os.path.join( buildPathName                                                                 , \
                                                              Program._FILE_NAME_LIBRARY_BUILD_DEBUG                                        ) 
                  distributionDebugFileName   = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X86) , \
                                                              Program._FILE_NAME_DEBUG_DISTRIBUTION_DEBUG                                   )
+                 distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X86) , \
+                                                             Program._FILE_NAME_DYNAMIC_DISTRIBUTION_DEBUG                                 )
                  distributionLibraryFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X86) , \
                                                              Program._FILE_NAME_LIBRARY_DISTRIBUTION_DEBUG                                 )
             
@@ -193,6 +221,10 @@ class Program :
             systemManager.copyFile( buildDebugFileName        , \
                                     distributionDebugFileName )
 
+            # distribute the dynamic files
+            systemManager.copyFile( buildDynamicFileName        , \
+                                    distributionDynamicFileName )
+                
             # distribute the library files
             systemManager.copyFile( buildLibraryFileName        , \
                                     distributionLibraryFileName )

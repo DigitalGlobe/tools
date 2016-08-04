@@ -33,6 +33,9 @@ class Program :
         # the pattern for debug files
         _FILE_PATTERN_DEBUG = "*.pdb"
         #----------------------------------------------------------------------
+        # the pattern for dynamic files
+        _FILE_PATTERN_DYNAMIC = "*.dll"
+        #----------------------------------------------------------------------
         # the pattern for library files
         _FILE_PATTERN_LIBRARY = "*.lib"
         #----------------------------------------------------------------------
@@ -180,6 +183,13 @@ class Program :
             systemManager.distributeFiles( buildLibraryPathName             , \
                                            distributionLibraryPathName      , \
                                            Program._FILE_PATTERN_DEBUG      , \
+                                           buildSettings.ReleaseSpecified() , \
+                                           True                             )
+
+            # distribute the dynamic files
+            systemManager.distributeFiles( buildLibraryPathName             , \
+                                           distributionLibraryPathName      , \
+                                           Program._FILE_PATTERN_DYNAMIC    , \
                                            buildSettings.ReleaseSpecified() , \
                                            True                             )
 
