@@ -647,8 +647,14 @@ class FileDistributor :
             extension                = os.path.splitext(fileName)[1]
             
             if ( dConsidered and \
-                 ( fileNameWithoutExtension.endswith("d") or \
-                   fileNameWithoutExtension.endswith("D")  ) ) :
+                 ( fileNameWithoutExtension.endswith("_d") or \
+                   fileNameWithoutExtension.endswith("_D")  ) ) :
+                   
+                fileNameWithoutExtension = fileNameWithoutExtension[ 0:( len(fileNameWithoutExtension) - 2 ) ]
+                              
+            elif ( dConsidered and \
+                   ( fileNameWithoutExtension.endswith("d") or \
+                     fileNameWithoutExtension.endswith("D")  ) ) :
                    
                 fileNameWithoutExtension = fileNameWithoutExtension[ 0:( len(fileNameWithoutExtension) - 1 ) ]
                               

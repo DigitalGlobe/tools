@@ -53,6 +53,9 @@ class Program :
         # the name of the build file to build PROJ.4
         _FILE_NAME_BUILD_PROJ4 = "build_proj4.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build SZip
+        _FILE_NAME_BUILD_SZIP = "build_szip.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build Xerces
         _FILE_NAME_BUILD_XERCES = "build_xerces.py"
         #----------------------------------------------------------------------
@@ -102,6 +105,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_NEWMAT  )
                 self._build(Program._FILE_NAME_BUILD_OPENCV  )
                 self._build(Program._FILE_NAME_BUILD_PROJ4   )
+                self._build(Program._FILE_NAME_BUILD_SZIP    )
                 self._build(Program._FILE_NAME_BUILD_ZLIB    )
 
                 # build libraries that depend on other libraries
