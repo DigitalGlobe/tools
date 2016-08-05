@@ -1,0 +1,200 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{dcf1719f-eda6-46c6-97f8-82df91c1d37a}</UniqueIdentifier>
+      <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;cnt;rtf;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+    <Filter Include="UserInterface">
+      <UniqueIdentifier>{7000613e-1542-4746-a43c-da98882ac287}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UserInterface\DynamicWindow">
+      <UniqueIdentifier>{45c272ae-3cf8-4c3b-b144-9ced25e8bf5c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Components">
+      <UniqueIdentifier>{1aa1e951-a643-4cac-966d-4a1f869caabc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NewFiles">
+      <UniqueIdentifier>{65cb3232-28ff-44ce-9452-489a8bff2cc7}</UniqueIdentifier>
+      <Extensions>*.cpp;*.h</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\errortype.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\test_type.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\tfwkui_r.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="DynamicWindow\cdxCDynamicBar.cpp">
+      <Filter>UserInterface\DynamicWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="DynamicWindow\cdxCDynamicControlsManager.cpp">
+      <Filter>UserInterface\DynamicWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="DynamicWindow\cdxCDynamicDialog.cpp">
+      <Filter>UserInterface\DynamicWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="DynamicWindow\cdxCDynamicFormView.cpp">
+      <Filter>UserInterface\DynamicWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="DynamicWindow\cdxCDynamicPropSheet.cpp">
+      <Filter>UserInterface\DynamicWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="DynamicWindow\cdxCDynamicWnd.cpp">
+      <Filter>UserInterface\DynamicWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="DynamicWindow\cdxCDynamicWndEx.cpp">
+      <Filter>UserInterface\DynamicWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="DynamicWindow\cdxCSizeIconCtrl.cpp">
+      <Filter>UserInterface\DynamicWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="DynamicWindow\SizeCBar.cpp">
+      <Filter>UserInterface\DynamicWindow</Filter>
+    </ClCompile>
+    <ClCompile Include="ListCtrlFormatter.cpp">
+      <Filter>UserInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="ListCtrlSetter.cpp">
+      <Filter>UserInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="MsDevCallerListCtrl.cpp">
+      <Filter>UserInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="ProgressBar.cpp">
+      <Filter>UserInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="ResourceLoaders.cpp">
+      <Filter>UserInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="StdAfx.cpp">
+      <Filter>UserInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="TestRunnerApp.cpp">
+      <Filter>UserInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="TestRunnerDlg.cpp">
+      <Filter>UserInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="TreeHierarchyDlg.cpp">
+      <Filter>UserInterface</Filter>
+    </ClCompile>
+    <ClCompile Include="ActiveTest.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="MfcTestRunner.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="TestRunnerModel.cpp">
+      <Filter>Components</Filter>
+    </ClCompile>
+    <ClCompile Include="MostRecentTests.cpp">
+      <Filter>NewFiles</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\include\msvc6\DSPlugin\TestRunnerDSPluginVC6_i.c">
+      <Filter>NewFiles</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="DynamicWindow\cdxCDynamicBar.h">
+      <Filter>UserInterface\DynamicWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="DynamicWindow\cdxCDynamicControlsManager.h">
+      <Filter>UserInterface\DynamicWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="DynamicWindow\cdxCDynamicDialog.h">
+      <Filter>UserInterface\DynamicWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="DynamicWindow\cdxCDynamicFormView.h">
+      <Filter>UserInterface\DynamicWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="DynamicWindow\cdxCDynamicPropSheet.h">
+      <Filter>UserInterface\DynamicWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="DynamicWindow\cdxCDynamicWnd.h">
+      <Filter>UserInterface\DynamicWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="DynamicWindow\cdxCDynamicWndEx.h">
+      <Filter>UserInterface\DynamicWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="DynamicWindow\cdxCSizeIconCtrl.h">
+      <Filter>UserInterface\DynamicWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="DynamicWindow\SizeCBar.h">
+      <Filter>UserInterface\DynamicWindow</Filter>
+    </ClInclude>
+    <ClInclude Include="ListCtrlFormatter.h">
+      <Filter>UserInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="ListCtrlSetter.h">
+      <Filter>UserInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="MsDevCallerListCtrl.h">
+      <Filter>UserInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="ProgressBar.h">
+      <Filter>UserInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>UserInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="ResourceLoaders.h">
+      <Filter>UserInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="StdAfx.h">
+      <Filter>UserInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="TestRunnerApp.h">
+      <Filter>UserInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="TestRunnerDlg.h">
+      <Filter>UserInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="TreeHierarchyDlg.h">
+      <Filter>UserInterface</Filter>
+    </ClInclude>
+    <ClInclude Include="ActiveTest.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="MfcSynchronizationObject.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\cppunit\ui\mfc\MfcTestRunner.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\cppunit\ui\mfc\TestRunner.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\msvc6\testrunner\TestRunner.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="TestRunnerModel.h">
+      <Filter>Components</Filter>
+    </ClInclude>
+    <ClInclude Include="MostRecentTests.h">
+      <Filter>NewFiles</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="TestRunner.rc">
+      <Filter>UserInterface</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="res\TestRunner.rc2">
+      <Filter>Resource Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="TestRunner.def">
+      <Filter>UserInterface</Filter>
+    </CustomBuild>
+  </ItemGroup>
+</Project>

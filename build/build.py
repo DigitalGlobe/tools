@@ -62,6 +62,9 @@ class Program :
         # the name of the build file to build ZLib
         _FILE_NAME_BUILD_ZLIB = "build_zlib.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build CppUnit
+        _FILE_NAME_BUILD_CPPUNIT = "build_cppunit.py"
+        #----------------------------------------------------------------------
         # the name of the Python executable file
         _FILE_NAME_PYTHON = "python.exe"
         #----------------------------------------------------------------------
@@ -107,6 +110,8 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_PROJ4   )
                 self._build(Program._FILE_NAME_BUILD_SZIP    )
                 self._build(Program._FILE_NAME_BUILD_ZLIB    )
+                self._build(Program._FILE_NAME_BUILD_CPPUNIT )
+                
 
                 # build libraries that depend on other libraries
                 #     (order does matter)
