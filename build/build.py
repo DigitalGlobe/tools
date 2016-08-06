@@ -29,6 +29,9 @@ class Program :
         # the name of the build file to build FreeType
         _FILE_NAME_BUILD_FREETYPE = "build_freetype.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build HDF5
+        _FILE_NAME_BUILD_HDF5 = "build_hdf5.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build LibGeoTIFF
         _FILE_NAME_BUILD_LIBGEOTIFF = "build_libgeotiff.py"
         #----------------------------------------------------------------------
@@ -102,15 +105,16 @@ class Program :
                 # build libraries that do not depend on other libraries
                 #     (order does not matter)
                 self._build(Program._FILE_NAME_BUILD_BOOST   )
+                self._build(Program._FILE_NAME_BUILD_CPPUNIT )
                 self._build(Program._FILE_NAME_BUILD_CURL    )
                 self._build(Program._FILE_NAME_BUILD_FREETYPE)
+                self._build(Program._FILE_NAME_BUILD_HDF5    )
                 self._build(Program._FILE_NAME_BUILD_LIBJPEG )
                 self._build(Program._FILE_NAME_BUILD_NEWMAT  )
                 self._build(Program._FILE_NAME_BUILD_OPENCV  )
                 self._build(Program._FILE_NAME_BUILD_PROJ4   )
                 self._build(Program._FILE_NAME_BUILD_SZIP    )
                 self._build(Program._FILE_NAME_BUILD_ZLIB    )
-                self._build(Program._FILE_NAME_BUILD_CPPUNIT )
                 
 
                 # build libraries that depend on other libraries

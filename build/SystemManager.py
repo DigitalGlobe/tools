@@ -8,6 +8,7 @@ import glob
 import os
 import shutil
 import subprocess
+import time
 
 #------------------------------------------------------------------------------
 # The SystemManager class represents managers that manage system environments
@@ -333,6 +334,19 @@ class SystemManager :
             
                 os.makedirs(pathName)
         #----------------------------------------------------------------------
+        # Removes a specified file.  This method does nothing if the specified
+        # file does not exist.
+        #
+        # Parameters :
+        #     self     : this manager
+        #     fileName : the file name of the file to delete
+        def removeFile( self     , \
+                        fileName ) :
+                             
+            if ( os.path.exists(fileName) ) :
+            
+                os.remove(fileName)
+        #----------------------------------------------------------------------
         # Removes a specified directory.  This method does nothing if the
         # specified directory does not exist.
         #
@@ -342,9 +356,19 @@ class SystemManager :
         def removeDirectory( self     , \
                              pathName ) :
                              
-            if ( os.path.exists(pathName) ) :
+            RETRY_DELAY = 1
+                             
+            while ( os.path.exists(pathName) ) :
             
-                shutil.rmtree(pathName)
+                try :
+            
+                    shutil.rmtree(pathName)
+                    
+                except (IOError) as ex:
+                
+                    print(ex)
+                    print("Retrying...")
+                    time.sleep(RETRY_DELAY)
         #----------------------------------------------------------------------
     
     #--------------------------------------------------------------------------
