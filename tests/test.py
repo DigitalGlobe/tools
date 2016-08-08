@@ -1,0 +1,122 @@
+#------------------------------------------------------------------------------
+#
+# test.py
+#
+# Summary : Tests all of the third-party libraries.
+#
+#------------------------------------------------------------------------------
+
+import os
+import sys
+
+from BuildSettingSet import *
+from SystemManager   import *
+
+#------------------------------------------------------------------------------
+# The Program class represents the main class of the script.
+class Program :
+
+    #--------------------------------------------------------------------------
+    # constants
+    
+        #----------------------------------------------------------------------
+        # the name of the Python executable file
+        _FILE_NAME_PYTHON = "python.exe"
+        #----------------------------------------------------------------------
+        # the name of the test file to test ZLib
+        _FILE_NAME_TEST_ZLIB = "test_zlib.py"
+        #----------------------------------------------------------------------
+        
+    #--------------------------------------------------------------------------
+    # constructors
+    
+        #----------------------------------------------------------------------
+        # Constructs this program.
+        #
+        # Parameters :
+        #     self : this program
+        def __init__(self) :
+        
+            pass
+        #----------------------------------------------------------------------
+        
+    #--------------------------------------------------------------------------
+    # public methods
+    
+        #----------------------------------------------------------------------
+        # The main method of the program.
+        #
+        # Parameters :
+        #     self : this program
+        def main(self) :
+        
+            if ( len(sys.argv) > 1 ) :
+            
+                # test all configurations of the specified test file
+                self._test(sys.argv[1])
+            
+            else :
+            
+                self._test(Program._FILE_NAME_TEST_ZLIB)
+        #----------------------------------------------------------------------
+        
+    #--------------------------------------------------------------------------
+    # private methods
+    
+        #----------------------------------------------------------------------
+        # Tests a library using a specified test file.
+        #
+        # Parameters :
+        #     self         : this program
+        #     testFileName : the name of the test file to use
+        def _test( self         , \
+                   testFileName ) :
+                    
+            systemManager = SystemManager()
+        
+            # test 32-bit debug
+            if ( systemManager.execute( "%s \"%s\" \"%s\" \"%s\"" % \
+                                        ( Program._FILE_NAME_PYTHON                            , \
+                                          os.path.join( systemManager.getCurrentPathName() , \
+                                                        testFileName                       )   , \
+                                          BuildSettingSet.ARGUMENT_VALUE_BITNESS_X86           , \
+                                          BuildSettingSet.ARGUMENT_VALUE_CONFIGURATION_DEBUG   ) ) != 0 ) :
+                                          
+                sys.exit(-1)
+
+            # test 32-bit release
+            if ( systemManager.execute( "%s \"%s\" \"%s\" \"%s\"" % \
+                                        ( Program._FILE_NAME_PYTHON                            , \
+                                          os.path.join( systemManager.getCurrentPathName() , \
+                                                        testFileName                       )   , \
+                                          BuildSettingSet.ARGUMENT_VALUE_BITNESS_X86           , \
+                                          BuildSettingSet.ARGUMENT_VALUE_CONFIGURATION_RELEASE ) ) != 0 ) :
+                                          
+                sys.exit(-1)
+
+            # test 64-bit debug
+            if ( systemManager.execute( "%s \"%s\" \"%s\" \"%s\"" % \
+                                        ( Program._FILE_NAME_PYTHON                            , \
+                                          os.path.join( systemManager.getCurrentPathName() , \
+                                                        testFileName                       )   , \
+                                          BuildSettingSet.ARGUMENT_VALUE_BITNESS_X64           , \
+                                          BuildSettingSet.ARGUMENT_VALUE_CONFIGURATION_DEBUG   ) ) != 0 ) :
+                                          
+                sys.exit(-1)
+
+            # test 64-bit release
+            if ( systemManager.execute( "%s \"%s\" \"%s\" \"%s\"" % \
+                                        ( Program._FILE_NAME_PYTHON                            , \
+                                          os.path.join( systemManager.getCurrentPathName() , \
+                                                        testFileName                       )   , \
+                                          BuildSettingSet.ARGUMENT_VALUE_BITNESS_X64           , \
+                                          BuildSettingSet.ARGUMENT_VALUE_CONFIGURATION_RELEASE ) ) != 0 ) :
+                                          
+                sys.exit(-1)
+        #----------------------------------------------------------------------
+        
+    #--------------------------------------------------------------------------
+    
+#------------------------------------------------------------------------------
+Program().main()
+#------------------------------------------------------------------------------
