@@ -46,6 +46,5 @@ The **src** directory contains the source code of the third-party libraries.
 The **tests** directory contains source code to build applications that use, demonstrate, and test the built third-party libraries, along with scripts to build and run these applications.
 
 The diagram at the following link shows the hierarchy of the directories and subdirectories in this repository:
-&nbsp;&nbsp;&nbsp;&nbsp;[Directory Structure of Signature Analysis Third-Party Tools](https://github.com/DigitalGlobe/sa/blob/master/docs/DirectoryStruct.png"Directory Structure of Signature Analysis Third-Party Tools")
 
-
+&nbsp;&nbsp;&nbsp;&nbsp;[Directory Structure of Signature Analysis Third-Party Tools](https://github.com/DigitalGlobe/sa/blob/master/docs/DirectoryStruct.png "Directory Structure of Signature Analysis Third-Party Tools")
