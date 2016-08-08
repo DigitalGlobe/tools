@@ -375,6 +375,29 @@ class SystemManager :
     # private methods
 
         #----------------------------------------------------------------------
+        # Appends a specified include to a specified include environment variable.
+        #
+        # Parameters :
+        #     self                    : this manager
+        #     environmentVariableName : the name of the environment variable
+        #                               to which to append
+        #     pathName                : the name of the include to append
+        def _appendToIncludeEnvironmentVariable( self                    , \
+                                                 environmentVariableName , \
+                                                 pathName                ) :
+                                                
+            if (environmentVariableName in os.environ) :
+            
+                if ( not os.environ[environmentVariableName].endswith(SystemManager._VALUE_SEPARATOR) ) :
+                
+                    os.environ[environmentVariableName] += SystemManager._VALUE_SEPARATOR
+                    
+                os.environ[environmentVariableName] += pathName
+            
+            else :
+            
+                os.environ[environmentVariableName] = pathName
+        #----------------------------------------------------------------------
         # Appends a specified path to a specified path environment variable.
         #
         # Parameters :

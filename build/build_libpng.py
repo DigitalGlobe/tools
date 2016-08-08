@@ -11,8 +11,8 @@ import os
 import sys
 
 from BuildSettingSet import *
-from PathFinder import *
-from SystemManager import *
+from PathFinder      import *
+from SystemManager   import *
 
 #------------------------------------------------------------------------------
 # The Program class represents the main class of the script.
@@ -113,6 +113,11 @@ class Program :
             
             # process command-line arguments
             buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
+            
+            # initialize environment variables
+            if ( buildSettings.X64Specified() ) :
+            
+                os.environ["PLATFORM"] = "X64"
             
             # determine path names
             binaryPathName      = ( systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X64) \
