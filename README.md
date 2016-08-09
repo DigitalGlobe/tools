@@ -47,4 +47,4 @@ The **tests** directory contains source code to build applications that use, dem
 
 The diagram at the following link shows the hierarchy of the directories and subdirectories in this repository:
 
-&nbsp;&nbsp;&nbsp;&nbsp;[Directory Structure of Signature Analysis Third-Party Tools](https://github.com/DigitalGlobe/sa/blob/master/docs/DirectoryStruct.png "Directory Structure of Signature Analysis Third-Party Tools")
+&nbsp;&nbsp;&nbsp;&nbsp;[Directory Structure of Signature Analyst Third-Party Tools](https://github.com/DigitalGlobe/sa/blob/master/docs/DirectoryStruct.png "Directory Structure of Signature Analysis Third-Party Tools")
