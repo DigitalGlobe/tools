@@ -23,6 +23,9 @@ class Program :
         # the name of the Python executable file
         _FILE_NAME_PYTHON = "python.exe"
         #----------------------------------------------------------------------
+        # the name of the test file to test CURL
+        _FILE_NAME_TEST_CURL = "test_curl.py"
+        #----------------------------------------------------------------------
         # the name of the test file to test ZLib
         _FILE_NAME_TEST_ZLIB = "test_zlib.py"
         #----------------------------------------------------------------------
@@ -57,6 +60,7 @@ class Program :
             
             else :
             
+                self._test(Program._FILE_NAME_TEST_CURL)
                 self._test(Program._FILE_NAME_TEST_ZLIB)
         #----------------------------------------------------------------------
         
