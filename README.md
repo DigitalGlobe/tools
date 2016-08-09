@@ -1,4 +1,4 @@
-Third-Party Libraries for Signature Analysis<p>[![Gitter](https://badges.gitter.im/DigitalGlobe/tools.svg)](https://gitter.im/DigitalGlobe/tools?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+Third-Party Libraries for Signature Analyst<p>[![Gitter](https://badges.gitter.im/DigitalGlobe/tools.svg)](https://gitter.im/DigitalGlobe/tools?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ===================
 
 This repository contains the third-party libraries ("tools") that the Signature Analysis application uses.  Building these third-party libraries requires the following versions of the following applications running on 64-bit Microsoft Windows 10 or greater:
