@@ -68,6 +68,9 @@ class Program :
         # the name of the build file to build CppUnit
         _FILE_NAME_BUILD_CPPUNIT = "build_cppunit.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build GDAL
+        _FILE_NAME_BUILD_GDAL = "build_gdal.py"
+        #----------------------------------------------------------------------
         # the name of the Python executable file
         _FILE_NAME_PYTHON = "python.exe"
         #----------------------------------------------------------------------
@@ -115,6 +118,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_PROJ4   )
                 self._build(Program._FILE_NAME_BUILD_SZIP    )
                 self._build(Program._FILE_NAME_BUILD_ZLIB    )
+                self._build(Program._FILE_NAME_BUILD_GDAL    )
                 
 
                 # build libraries that depend on other libraries

@@ -235,7 +235,7 @@ INCLUDE_OGR_FRMTS = YES
 BSB_SUPPORTED = 1
 
 # Comment out the following to disable ODBC support.
-ODBC_SUPPORTED = 1
+# ODBC_SUPPORTED = 1
 
 # Uncomment out the following to enable SQL Native Client support for MSSQL Bulk Copy.
 #SQLNCLI_VERSION = 11
