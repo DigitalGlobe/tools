@@ -115,9 +115,14 @@ class Program :
             buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
             
             # initialize environment variables
+            systemManager.initializeIncludeEnvironmentVariable( buildSettings.X64Specified() )
+            systemManager.initializeLibraryEnvironmentVariable( buildSettings.X64Specified() )
+            systemManager.appendToPathEnvironmentVariable( pathFinder.getVisualStudioBinPathName( buildSettings.X64Specified() ) )
             if ( buildSettings.X64Specified() ) :
             
                 os.environ["PLATFORM"] = "X64"
+                
+            print(os.environ["PATH"])
             
             # determine path names
             binaryPathName      = ( systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X64) \
@@ -170,14 +175,29 @@ class Program :
             systemManager.makeDirectory(buildPathName)
                                
             # run CMake
-            cmakeCommandLine = ( ( "\"%s\" "                    + \
-                                   "-DZLIB_INCLUDE_DIR=\"%s\" " + \
-                                   "-DZLIB_LIBRARY=\"%s\" "     + \
-                                   "\"%s\""                     ) % \
-                                 ( PathFinder.FILE_NAME_CMAKE , \
-                                   zlibIncludePathName        , \
-                                   zlibLibraryFileName        , \
-                                   sourcePathName             ) )
+            if ( buildSettings.X64Specified() ) :
+            
+                cmakeCommandLine = ( ( "\"%s\" "                            + \
+                                       "-DZLIB_INCLUDE_DIR=\"%s\" "         + \
+                                       "-DZLIB_LIBRARY=\"%s\" "             + \
+                                       "-G\"Visual Studio 14 2015 Win64\" " + \
+                                       "\"%s\""                             ) % \
+                                     ( PathFinder.FILE_NAME_CMAKE , \
+                                       zlibIncludePathName        , \
+                                       zlibLibraryFileName        , \
+                                       sourcePathName             ) )
+            
+            else :
+            
+                cmakeCommandLine = ( ( "\"%s\" "                    + \
+                                       "-DZLIB_INCLUDE_DIR=\"%s\" " + \
+                                       "-DZLIB_LIBRARY=\"%s\" "     + \
+                                       "\"%s\""                     ) % \
+                                     ( PathFinder.FILE_NAME_CMAKE , \
+                                       zlibIncludePathName        , \
+                                       zlibLibraryFileName        , \
+                                       sourcePathName             ) )
+                                       
             systemManager.changeDirectory(buildPathName)
             cmakeResult = systemManager.execute(cmakeCommandLine)
             if (cmakeResult != 0) :
