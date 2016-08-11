@@ -26,6 +26,9 @@ class Program :
         # the name of the test file to test CURL
         _FILE_NAME_TEST_CURL = "test_curl.py"
         #----------------------------------------------------------------------
+        # the name of the test file to test FreeType
+        _FILE_NAME_TEST_FREETYPE = "test_freetype.py"
+        #----------------------------------------------------------------------
         # the name of the test file to test HDF5
         _FILE_NAME_TEST_HDF5 = "test_hdf5.py"
         #----------------------------------------------------------------------
@@ -66,10 +69,11 @@ class Program :
             
             else :
             
-                self._test(Program._FILE_NAME_TEST_CURL   )
-                self._test(Program._FILE_NAME_TEST_HDF5   )
-                self._test(Program._FILE_NAME_TEST_LIBJPEG)
-                self._test(Program._FILE_NAME_TEST_ZLIB   )
+                self._test(Program._FILE_NAME_TEST_CURL    )
+                self._test(Program._FILE_NAME_TEST_FREETYPE)
+                self._test(Program._FILE_NAME_TEST_HDF5    )
+                self._test(Program._FILE_NAME_TEST_LIBJPEG )
+                self._test(Program._FILE_NAME_TEST_ZLIB    )
         #----------------------------------------------------------------------
         
     #--------------------------------------------------------------------------
