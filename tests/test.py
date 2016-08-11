@@ -26,6 +26,9 @@ class Program :
         # the name of the test file to test CURL
         _FILE_NAME_TEST_CURL = "test_curl.py"
         #----------------------------------------------------------------------
+        # the name of the test file to test HDF5
+        _FILE_NAME_TEST_HDF5 = "test_hdf5.py"
+        #----------------------------------------------------------------------
         # the name of the test file to test LibJPEG
         _FILE_NAME_TEST_LIBJPEG = "test_libjpeg.py"
         #----------------------------------------------------------------------
@@ -64,6 +67,7 @@ class Program :
             else :
             
                 self._test(Program._FILE_NAME_TEST_CURL   )
+                self._test(Program._FILE_NAME_TEST_HDF5   )
                 self._test(Program._FILE_NAME_TEST_LIBJPEG)
                 self._test(Program._FILE_NAME_TEST_ZLIB   )
         #----------------------------------------------------------------------
