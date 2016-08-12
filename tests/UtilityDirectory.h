@@ -7,6 +7,7 @@
 #pragma once
 
 #include <direct.h>
+#include <stdio.h>
 #include <string>
 
 //-----------------------------------------------------------------------------
@@ -31,7 +32,7 @@ namespace DigitalGlobeTesting
                  * Returns :
                  *     the path name of the current directory
                  */
-                static std::string GetCurrentDirectory()
+                static const std::string GetCurrentDirectory()
                 {
                     char* sCurrentPathName = nullptr;
 
@@ -41,8 +42,21 @@ namespace DigitalGlobeTesting
                     return sCurrentPathName;
                 }
                 //-------------------------------------------------------------
-            
-            //-----------------------------------------------------------------
+                /**
+                 * Gets a temporary file name.
+                 *
+                 * Returns :
+                 *     a temporary file name
+                 */
+                static const std::string GetTemporaryFileName()
+                {
+                    char szFileName[L_tmpnam];
+
+                    ::tmpnam_s(szFileName);
+                    
+                    return szFileName;
+                }
+                //-------------------------------------------------------------
             
         private:
             
