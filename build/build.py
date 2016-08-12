@@ -71,6 +71,9 @@ class Program :
         # the name of the build file to build GDAL
         _FILE_NAME_BUILD_GDAL = "build_gdal.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build LasZip
+        _FILE_NAME_BUILD_LASZIP = "build_laszip.py"
+        #----------------------------------------------------------------------
         # the name of the Python executable file
         _FILE_NAME_PYTHON = "python.exe"
         #----------------------------------------------------------------------
@@ -119,6 +122,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_SZIP    )
                 self._build(Program._FILE_NAME_BUILD_ZLIB    )
                 self._build(Program._FILE_NAME_BUILD_GDAL    )
+                self._build(Program._FILE_NAME_BUILD_LASZIP  )
                 
 
                 # build libraries that depend on other libraries
