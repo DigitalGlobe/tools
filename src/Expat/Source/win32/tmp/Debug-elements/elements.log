@@ -1,0 +1,4 @@
+﻿  elements.c
+elements.obj : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/SAFESEH' specification
+  elements.vcxproj -> C:\DigitalGlobeTemp\src\Expat\Source\examples\.\..\win32\bin\Debug\elements_d.exe
+  elements.vcxproj -> .\..\win32\bin\Debug\elements_d.pdb (Full PDB)

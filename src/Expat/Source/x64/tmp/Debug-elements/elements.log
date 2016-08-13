@@ -1,0 +1,4 @@
+﻿  elements.c
+elements.c(62): warning C4267: 'function': conversion from 'size_t' to 'int', possible loss of data
+  elements.vcxproj -> C:\DigitalGlobeTemp\src\Expat\Source\examples\.\..\x64\bin\Debug\elements_d.exe
+  elements.vcxproj -> .\..\x64\bin\Debug\elements_d.pdb (Full PDB)
