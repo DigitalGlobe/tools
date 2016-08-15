@@ -187,7 +187,7 @@ class Program :
                                            True                             )
 
             # distribute the dynamic files
-            systemManager.distributeFiles( buildLibraryPathName             , \
+            systemManager.distributeFiles( buildBinaryPathName              , \
                                            distributionLibraryPathName      , \
                                            Program._FILE_PATTERN_DYNAMIC    , \
                                            buildSettings.ReleaseSpecified() , \
