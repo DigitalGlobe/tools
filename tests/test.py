@@ -41,6 +41,9 @@ class Program :
         # the name of the test file to test LibPNG
         _FILE_NAME_TEST_LIBPNG = "test_libpng.py"
         #----------------------------------------------------------------------
+        # the name of the test file to test SZip
+        _FILE_NAME_TEST_SZIP = "test_szip.py"
+        #----------------------------------------------------------------------
         # the name of the test file to test LibTIFF
         _FILE_NAME_TEST_LIBTIFF = "test_libtiff.py"
         #----------------------------------------------------------------------
@@ -85,6 +88,7 @@ class Program :
                 self._test(Program._FILE_NAME_TEST_LIBJPEG   )
                 self._test(Program._FILE_NAME_TEST_LIBTIFF   )
                 self._test(Program._FILE_NAME_TEST_LIBPNG    )
+                self._test(Program._FILE_NAME_TEST_SZIP      )
                 self._test(Program._FILE_NAME_TEST_ZLIB      )
         #----------------------------------------------------------------------
         
