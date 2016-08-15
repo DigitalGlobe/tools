@@ -77,6 +77,9 @@ class Program :
         #the name of the build file to build Expat
         _FILE_NAME_BUILD_EXPAT = "build_expat.py"
         #----------------------------------------------------------------------
+        #the name of the build file to build Expat
+        _FILE_NAME_BUILD_URIPARSER = "build_uriparser.py"
+        #----------------------------------------------------------------------
         # the name of the Python executable file
         _FILE_NAME_PYTHON = "python.exe"
         #----------------------------------------------------------------------
@@ -127,6 +130,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_ZLIB    )
                 self._build(Program._FILE_NAME_BUILD_GDAL    )
                 self._build(Program._FILE_NAME_BUILD_LASZIP  )
+                self._build(Program._FILE_NAME_BUILD_URIPARSER )
                 
 
                 # build libraries that depend on other libraries
