@@ -74,6 +74,12 @@ class Program :
         # the name of the build file to build LasZip
         _FILE_NAME_BUILD_LASZIP = "build_laszip.py"
         #----------------------------------------------------------------------
+        #the name of the build file to build Expat
+        _FILE_NAME_BUILD_EXPAT = "build_expat.py"
+        #----------------------------------------------------------------------
+        #the name of the build file to build Expat
+        _FILE_NAME_BUILD_URIPARSER = "build_uriparser.py"
+        #----------------------------------------------------------------------
         # the name of the Python executable file
         _FILE_NAME_PYTHON = "python.exe"
         #----------------------------------------------------------------------
@@ -113,6 +119,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_BOOST   )
                 self._build(Program._FILE_NAME_BUILD_CPPUNIT )
                 self._build(Program._FILE_NAME_BUILD_CURL    )
+                self._build(Program._FILE_NAME_BUILD_EXPAT   )
                 self._build(Program._FILE_NAME_BUILD_FREETYPE)
                 self._build(Program._FILE_NAME_BUILD_HDF5    )
                 self._build(Program._FILE_NAME_BUILD_LIBJPEG )
@@ -123,6 +130,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_ZLIB    )
                 self._build(Program._FILE_NAME_BUILD_GDAL    )
                 self._build(Program._FILE_NAME_BUILD_LASZIP  )
+                self._build(Program._FILE_NAME_BUILD_URIPARSER )
                 
 
                 # build libraries that depend on other libraries

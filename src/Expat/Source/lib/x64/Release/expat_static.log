@@ -1,0 +1,11 @@
+﻿C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(392,5): warning MSB8028: The intermediate directory (x64\Release\) contains files shared from another project (expat.vcxproj, expatw.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  xmlparse.c
+xmlparse.c(725): warning C4311: 'type cast': pointer truncation from 'XML_Parser' to 'unsigned long'
+  xmlrole.c
+  xmltok.c
+  xmltok_impl.c
+  xmltok_ns.c
+  Generating Code...
+C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(1357,5): warning MSB8012: TargetPath(C:\LibExpat\Source\x64\Release\expat_static.lib) does not match the Library's OutputFile property value (C:\LibExpat\Source\win32\bin\Release\libexpatMT.lib). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Lib.OutputFile).
+C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(1359,5): warning MSB8012: TargetName(expat_static) does not match the Library's OutputFile property value (libexpatMT). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Lib.OutputFile).
+  expat_static.vcxproj -> C:\LibExpat\Source\x64\Release\expat_static.lib

@@ -1,0 +1,10 @@
+﻿  xmlparse.c
+xmlparse.c(725): warning C4311: 'type cast': pointer truncation from 'XML_Parser' to 'unsigned long'
+  xmlrole.c
+  xmltok.c
+  xmltok_impl.c
+  xmltok_ns.c
+  Generating Code...
+     Creating library .\..\x64\bin\Release\libexpatw.lib and object .\..\x64\bin\Release\libexpatw.exp
+  expatw.vcxproj -> C:\DigitalGlobeTemp\src\Expat\Source\lib\.\..\x64\bin\Release\libexpatw.dll
+  expatw.vcxproj -> .\..\x64\bin\Release\libexpatw.pdb (Full PDB)
