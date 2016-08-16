@@ -2043,6 +2043,8 @@ LAS_DLL LASErrorEnum LASVLR_SetData(const LASVLRH hVLR, uint8_t* data, uint16_t 
     return LE_None;
 }
 
+#pragma warning(push)
+#pragma warning( disable : 4700 )
 LAS_DLL LASGuidH LASGuid_Create() {
     try {
         boost::uuids::uuid id;
@@ -2053,6 +2055,7 @@ LAS_DLL LASGuidH LASGuid_Create() {
         return NULL;
     }
 }
+#pragma warning(pop)
 
 LAS_DLL LASGuidH LASGuid_CreateFromString(const char* string) {
     VALIDATE_LAS_POINTER1(string, "LASGuid_CreateFromString", NULL);    
@@ -2496,7 +2499,8 @@ LAS_DLL LASErrorEnum LASHeader_SetCompressed( LASHeaderH hHeader, int value)
 }
     
 
-LAS_C_END
+//LAS_C_END
+}
 
 #ifdef _MSC_VER
 # pragma warning(default: 4127) // enable warning C4127: conditional expression is constant

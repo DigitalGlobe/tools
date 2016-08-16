@@ -74,6 +74,9 @@ class Program :
         # the name of the build file to build LasZip
         _FILE_NAME_BUILD_LASZIP = "build_laszip.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build LasZip
+        _FILE_NAME_BUILD_LIBLAS = "build_liblas.py"
+        #----------------------------------------------------------------------
         #the name of the build file to build Expat
         _FILE_NAME_BUILD_EXPAT = "build_expat.py"
         #----------------------------------------------------------------------
@@ -133,6 +136,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_ZLIB    )
                 self._build(Program._FILE_NAME_BUILD_GDAL    )
                 self._build(Program._FILE_NAME_BUILD_LASZIP  )
+                self._build(Program._FILE_NAME_BUILD_LIBLAS  )
                 self._build(Program._FILE_NAME_BUILD_URIPARSER )
                 self._build(Program._FILE_NAME_BUILD_GOOGLETEST )
                 

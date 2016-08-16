@@ -1,0 +1,208 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\chipper.cpp" />
+    <ClCompile Include="..\..\src\classification.cpp" />
+    <ClCompile Include="..\..\src\color.cpp" />
+    <ClCompile Include="..\..\src\c_api.cpp" />
+    <ClCompile Include="..\..\src\dimension.cpp" />
+    <ClCompile Include="..\..\src\error.cpp" />
+    <ClCompile Include="..\..\src\factory.cpp" />
+    <ClCompile Include="..\..\src\filter.cpp" />
+    <ClCompile Include="..\..\src\gt_citation.cpp" />
+    <ClCompile Include="..\..\src\gt_wkt_srs.cpp" />
+    <ClCompile Include="..\..\src\header.cpp" />
+    <ClCompile Include="..\..\src\index.cpp" />
+    <ClCompile Include="..\..\src\point.cpp" />
+    <ClCompile Include="..\..\src\reader.cpp" />
+    <ClCompile Include="..\..\src\schema.cpp" />
+    <ClCompile Include="..\..\src\spatialreference.cpp" />
+    <ClCompile Include="..\..\src\tifvsi.cpp" />
+    <ClCompile Include="..\..\src\transform.cpp" />
+    <ClCompile Include="..\..\src\utility.cpp" />
+    <ClCompile Include="..\..\src\variablerecord.cpp" />
+    <ClCompile Include="..\..\src\version.cpp" />
+    <ClCompile Include="..\..\src\writer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\..\src\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\include\liblas\bounds.hpp" />
+    <ClInclude Include="..\..\include\liblas\chipper.hpp" />
+    <ClInclude Include="..\..\include\liblas\classification.hpp" />
+    <ClInclude Include="..\..\include\liblas\color.hpp" />
+    <ClInclude Include="..\..\include\liblas\compatibility.hpp" />
+    <ClInclude Include="..\..\include\liblas\dimension.hpp" />
+    <ClInclude Include="..\..\include\liblas\error.hpp" />
+    <ClInclude Include="..\..\include\liblas\exception.hpp" />
+    <ClInclude Include="..\..\include\liblas\export.hpp" />
+    <ClInclude Include="..\..\include\liblas\factory.hpp" />
+    <ClInclude Include="..\..\include\liblas\filter.hpp" />
+    <ClInclude Include="..\..\include\liblas\header.hpp" />
+    <ClInclude Include="..\..\include\liblas\index.hpp" />
+    <ClInclude Include="..\..\include\liblas\iterator.hpp" />
+    <ClInclude Include="..\..\include\liblas\liblas.hpp" />
+    <ClInclude Include="..\..\include\liblas\point.hpp" />
+    <ClInclude Include="..\..\include\liblas\reader.hpp" />
+    <ClInclude Include="..\..\include\liblas\schema.hpp" />
+    <ClInclude Include="..\..\include\liblas\spatialreference.hpp" />
+    <ClInclude Include="..\..\include\liblas\transform.hpp" />
+    <ClInclude Include="..\..\include\liblas\utility.hpp" />
+    <ClInclude Include="..\..\include\liblas\variablerecord.hpp" />
+    <ClInclude Include="..\..\include\liblas\version.hpp" />
+    <ClInclude Include="..\..\include\liblas\writer.hpp" />
+    <ClInclude Include="..\..\src\gt_citation.h" />
+    <ClInclude Include="..\..\src\gt_wkt_srs.h" />
+    <ClInclude Include="..\..\src\gt_wkt_srs_for_gdal.h" />
+    <ClInclude Include="..\..\src\tifvsi.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\src\Version.rc" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{34DAB7A0-442C-4428-847A-66E68D882C30}</ProjectGuid>
+    <RootNamespace>LibLAS</RootNamespace>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)_d</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <TargetName>$(ProjectName)_d</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\..\Boost\;$(SolutionDir)\..\include\liblas\capi;$(SolutionDir)\..\include\;%(AdditionalIncludeDirectories);$(SolutionDir)..\..\GDAL\port\;$(SolutionDir)\..\src\;$(SolutionDir)\..\..\GDAL\frmts\gtiff\libtiff\;$(SolutionDir)\..\..\GDAL\frmts\gtiff\libgeotiff\;$(SolutionDir)\..\..\GDAL\ogr;$(SolutionDir)\..\..\GDAL\gcore</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <ProgramDataBaseFileName>$(IntDir)$(ProjectName)_d.pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\include\liblas\capi</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\..\Boost\;$(SolutionDir)\..\include\liblas\capi;$(SolutionDir)\..\include\;%(AdditionalIncludeDirectories);$(SolutionDir)..\..\GDAL\port\;$(SolutionDir)\..\src\;$(SolutionDir)\..\..\GDAL\frmts\gtiff\libtiff\;$(SolutionDir)\..\..\GDAL\frmts\gtiff\libgeotiff\;$(SolutionDir)\..\..\GDAL\ogr;$(SolutionDir)\..\..\GDAL\gcore</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+      <ProgramDataBaseFileName>$(IntDir)$(ProjectName)_d.pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\include\liblas\capi</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\..\Boost\;$(SolutionDir)\..\include\liblas\capi;$(SolutionDir)\..\include\;%(AdditionalIncludeDirectories);$(SolutionDir)..\..\GDAL\port\;$(SolutionDir)\..\src\;$(SolutionDir)\..\..\GDAL\frmts\gtiff\libtiff\;$(SolutionDir)\..\..\GDAL\frmts\gtiff\libgeotiff\;$(SolutionDir)\..\..\GDAL\ogr;$(SolutionDir)\..\..\GDAL\gcore</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\include\liblas\capi</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\..\Boost\;$(SolutionDir)\..\include\liblas\capi;$(SolutionDir)\..\include\;%(AdditionalIncludeDirectories);$(SolutionDir)..\..\GDAL\port\;$(SolutionDir)\..\src\;$(SolutionDir)\..\..\GDAL\frmts\gtiff\libtiff\;$(SolutionDir)\..\..\GDAL\frmts\gtiff\libgeotiff\;$(SolutionDir)\..\..\GDAL\ogr;$(SolutionDir)\..\..\GDAL\gcore</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_MBCS;%(PreprocessorDefinitions);_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\include\liblas\capi</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
