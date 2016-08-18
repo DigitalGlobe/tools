@@ -47,6 +47,9 @@ class Program :
         # the name of the test file to test OpenCV
         _FILE_NAME_TEST_OPENCV = "test_opencv.py"
         #----------------------------------------------------------------------
+        # the name of the test file to test PoDoFo
+        _FILE_NAME_TEST_PODOFO = "test_podofo.py"
+        #----------------------------------------------------------------------
         # the name of the test file to test SZip
         _FILE_NAME_TEST_SZIP = "test_szip.py"
         #----------------------------------------------------------------------
@@ -92,6 +95,7 @@ class Program :
                 self._test(Program._FILE_NAME_TEST_LIBTIFF   )
                 self._test(Program._FILE_NAME_TEST_LIBPNG    )
                 self._test(Program._FILE_NAME_TEST_OPENCV    )
+                self._test(Program._FILE_NAME_TEST_PODOFO    )
                 self._test(Program._FILE_NAME_TEST_SZIP      )
                 self._test(Program._FILE_NAME_TEST_ZLIB      )
         #----------------------------------------------------------------------
