@@ -25,6 +25,18 @@ class Program :
         # a description of what the script does
         DESCRIPTION = "Builds the PoDoFo library."
         #----------------------------------------------------------------------
+        # the name of the build debug dynamic file
+        _FILE_NAME_DYNAMIC_BUILD_DEBUG = "podofo.dll"
+        #----------------------------------------------------------------------
+        # the name of the build release dynamic file
+        _FILE_NAME_DYNAMIC_BUILD_RELEASE = "podofo.dll"
+        #----------------------------------------------------------------------
+        # the name of the distribution debug dynamic file
+        _FILE_NAME_DYNAMIC_DISTRIBUTION_DEBUG = "podofo_d.dll"
+        #----------------------------------------------------------------------
+        # the name of the distribution release dynamic file
+        _FILE_NAME_DYNAMIC_DISTRIBUTION_RELEASE = "podofo.dll"
+        #----------------------------------------------------------------------
         # the name of the build debug library file
         _FILE_NAME_LIBRARY_BUILD_DEBUG = "podofo.lib"
         #----------------------------------------------------------------------
@@ -162,6 +174,11 @@ class Program :
             if ( buildSettings.ReleaseSpecified() and \
                  buildSettings.X64Specified()       ) :
                  
+                 buildDynamicFileName        = os.path.join( buildPathName                                                                 , \
+                                                             Program._PATH_NAME_BUILD_RELEASE                                              ,
+                                                             Program._FILE_NAME_DYNAMIC_BUILD_RELEASE                                      ) 
+                 distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X64) , \
+                                                             Program._FILE_NAME_DYNAMIC_DISTRIBUTION_RELEASE                               )
                  buildLibraryFileName        = os.path.join( buildPathName                                                                 , \
                                                              Program._PATH_NAME_BUILD_RELEASE                                              ,
                                                              Program._FILE_NAME_LIBRARY_BUILD_RELEASE                                      ) 
@@ -173,6 +190,11 @@ class Program :
                  
             elif ( buildSettings.ReleaseSpecified() ) :
             
+                 buildDynamicFileName        = os.path.join( buildPathName                                                                 , \
+                                                             Program._PATH_NAME_BUILD_RELEASE                                              ,
+                                                             Program._FILE_NAME_DYNAMIC_BUILD_RELEASE                                      ) 
+                 distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X86) , \
+                                                             Program._FILE_NAME_DYNAMIC_DISTRIBUTION_RELEASE                               )
                  buildLibraryFileName        = os.path.join( buildPathName                                                                 , \
                                                              Program._PATH_NAME_BUILD_RELEASE                                              ,
                                                              Program._FILE_NAME_LIBRARY_BUILD_RELEASE                                      ) 
@@ -184,6 +206,11 @@ class Program :
                  
             elif ( buildSettings.X64Specified() ) :
             
+                 buildDynamicFileName        = os.path.join( buildPathName                                                                 , \
+                                                             Program._PATH_NAME_BUILD_DEBUG                                                ,
+                                                             Program._FILE_NAME_DYNAMIC_BUILD_DEBUG                                        ) 
+                 distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X64) , \
+                                                             Program._FILE_NAME_DYNAMIC_DISTRIBUTION_DEBUG                                 )
                  buildLibraryFileName        = os.path.join( buildPathName                                                                 , \
                                                              Program._PATH_NAME_BUILD_DEBUG                                                ,
                                                              Program._FILE_NAME_LIBRARY_BUILD_DEBUG                                        ) 
@@ -195,6 +222,11 @@ class Program :
                  
             else :
             
+                 buildDynamicFileName        = os.path.join( buildPathName                                                                 , \
+                                                             Program._PATH_NAME_BUILD_DEBUG                                                ,
+                                                             Program._FILE_NAME_DYNAMIC_BUILD_DEBUG                                        ) 
+                 distributionDynamicFileName = os.path.join( systemManager.getCurrentRelativePathName(Program._PATH_NAME_DISTRIBUTION_X86) , \
+                                                             Program._FILE_NAME_DYNAMIC_DISTRIBUTION_DEBUG                                 )
                  buildLibraryFileName        = os.path.join( buildPathName                                                                 , \
                                                              Program._PATH_NAME_BUILD_DEBUG                                                ,
                                                              Program._FILE_NAME_LIBRARY_BUILD_DEBUG                                        ) 
@@ -209,34 +241,72 @@ class Program :
             systemManager.makeDirectory(buildPathName)
             
             # run CMake
-            cmakeCommandLine = ( ( "%s "                                + \
-                                   "-DFREETYPE_INCLUDE_DIR=\"%s\" "     + \
-                                   "-DFREETYPE_LIBRARY=\"%s\" "         + \
-                                   "-DFREETYPE_LIBRARY_DEBUG=\"%s\" "   + \
-                                   "-DFREETYPE_LIBRARY_RELEASE=\"%s\" " + \
-                                   "-DPNG_INCLUDE_DIR=\"%s\" "          + \
-                                   "-DPNG_LIBRARY=\"%s\" "              + \
-                                   "-DPNG_LIBRARY_DEBUG=\"%s\" "        + \
-                                   "-DPNG_LIBRARY_RELEASE=\"%s\" "      + \
-                                   "-DZLIB_INCLUDE_DIR=\"%s\" "         + \
-                                   "-DZLIB_LIBRARY=\"%s\" "             + \
-                                   "-DZLIB_LIBRARY_DEBUG=\"%s\" "       + \
-                                   "-DZLIB_LIBRARY_RELEASE=\"%s\" "     + \
-                                   "\"%s\""                             ) % \
-                                 ( PathFinder.FILE_NAME_CMAKE , \
-                                   freeTypeIncludePathName    , \
-                                   freeTypeLibraryFileName    , \
-                                   freeTypeLibraryFileName    , \
-                                   freeTypeLibraryFileName    , \
-                                   libPngIncludePathName      , \
-                                   libPngLibraryFileName      , \
-                                   libPngLibraryFileName      , \
-                                   libPngLibraryFileName      , \
-                                   zlibIncludePathName        , \
-                                   zlibLibraryFileName        , \
-                                   zlibLibraryFileName        , \
-                                   zlibLibraryFileName        , \
-                                   sourcePathName             ) )
+            if ( buildSettings.X64Specified() ) :
+            
+                cmakeCommandLine = ( ( "%s "                                + \
+                                       "-DFREETYPE_INCLUDE_DIR=\"%s\" "     + \
+                                       "-DFREETYPE_LIBRARY=\"%s\" "         + \
+                                       "-DFREETYPE_LIBRARY_DEBUG=\"%s\" "   + \
+                                       "-DFREETYPE_LIBRARY_RELEASE=\"%s\" " + \
+                                       "-DPNG_INCLUDE_DIR=\"%s\" "          + \
+                                       "-DPNG_LIBRARY=\"%s\" "              + \
+                                       "-DPNG_LIBRARY_DEBUG=\"%s\" "        + \
+                                       "-DPNG_LIBRARY_RELEASE=\"%s\" "      + \
+                                       "-DZLIB_INCLUDE_DIR=\"%s\" "         + \
+                                       "-DZLIB_LIBRARY=\"%s\" "             + \
+                                       "-DZLIB_LIBRARY_DEBUG=\"%s\" "       + \
+                                       "-DZLIB_LIBRARY_RELEASE=\"%s\" "     + \
+                                       "-DPODOFO_BUILD_SHARED:BOOL=FALSE "  + \
+                                       "-G\"Visual Studio 14 2015 Win64\" " + \
+                                       "\"%s\""                             ) % \
+                                     ( PathFinder.FILE_NAME_CMAKE , \
+                                       freeTypeIncludePathName    , \
+                                       freeTypeLibraryFileName    , \
+                                       freeTypeLibraryFileName    , \
+                                       freeTypeLibraryFileName    , \
+                                       libPngIncludePathName      , \
+                                       libPngLibraryFileName      , \
+                                       libPngLibraryFileName      , \
+                                       libPngLibraryFileName      , \
+                                       zlibIncludePathName        , \
+                                       zlibLibraryFileName        , \
+                                       zlibLibraryFileName        , \
+                                       zlibLibraryFileName        , \
+                                       sourcePathName             ) )
+                                       
+            else :
+            
+                cmakeCommandLine = ( ( "%s "                                + \
+                                       "-DFREETYPE_INCLUDE_DIR=\"%s\" "     + \
+                                       "-DFREETYPE_LIBRARY=\"%s\" "         + \
+                                       "-DFREETYPE_LIBRARY_DEBUG=\"%s\" "   + \
+                                       "-DFREETYPE_LIBRARY_RELEASE=\"%s\" " + \
+                                       "-DPNG_INCLUDE_DIR=\"%s\" "          + \
+                                       "-DPNG_LIBRARY=\"%s\" "              + \
+                                       "-DPNG_LIBRARY_DEBUG=\"%s\" "        + \
+                                       "-DPNG_LIBRARY_RELEASE=\"%s\" "      + \
+                                       "-DZLIB_INCLUDE_DIR=\"%s\" "         + \
+                                       "-DZLIB_LIBRARY=\"%s\" "             + \
+                                       "-DZLIB_LIBRARY_DEBUG=\"%s\" "       + \
+                                       "-DZLIB_LIBRARY_RELEASE=\"%s\" "     + \
+                                       "-DPODOFO_BUILD_SHARED:BOOL=FALSE "  + \
+                                       "\"%s\""                             ) % \
+                                     ( PathFinder.FILE_NAME_CMAKE , \
+                                       freeTypeIncludePathName    , \
+                                       freeTypeLibraryFileName    , \
+                                       freeTypeLibraryFileName    , \
+                                       freeTypeLibraryFileName    , \
+                                       libPngIncludePathName      , \
+                                       libPngLibraryFileName      , \
+                                       libPngLibraryFileName      , \
+                                       libPngLibraryFileName      , \
+                                       zlibIncludePathName        , \
+                                       zlibLibraryFileName        , \
+                                       zlibLibraryFileName        , \
+                                       zlibLibraryFileName        , \
+                                       sourcePathName             ) )
+                                       
+                                       
             systemManager.changeDirectory(buildPathName)
             cmakeResult = systemManager.execute(cmakeCommandLine)
             if (cmakeResult != 0) :
@@ -246,7 +316,7 @@ class Program :
             # build the solution
             msBuildCommandLine = ( ( "\"%s\" "              + \
                                      "/p:Configuration=%s " + \
-                                     "/t:podofo_static "    + \
+                                     "/t:podofo_shared "    + \
                                      "\"%s\""               ) % \
                                    ( pathFinder.getMSBuildFileName( buildSettings.X64Specified() ) , \
                                    ( "Release"                               \
@@ -259,6 +329,8 @@ class Program :
                 sys.exit(-1)
                 
             # distribute the library file
+            systemManager.copyFile( buildDynamicFileName        , \
+                                    distributionDynamicFileName )
             systemManager.copyFile( buildLibraryFileName        , \
                                     distributionLibraryFileName )
         #----------------------------------------------------------------------
