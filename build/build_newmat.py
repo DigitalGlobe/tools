@@ -39,8 +39,11 @@ class Program :
         # the name of the distribution release library file
         _FILE_NAME_LIBRARY_DISTRIBUTION_RELEASE = "newmat.lib"
         #----------------------------------------------------------------------
-        # the name of the makefile
-        _FILE_NAME_MAKEFILE = "nm_m8.mak"
+        # the name of the debug makefile
+        _FILE_NAME_MAKEFILE_DEBUG = "nm_m8_debug.mak"
+        #----------------------------------------------------------------------
+        # the name of the release makefile
+        _FILE_NAME_MAKEFILE_RELEASE = "nm_m8.mak"
         #----------------------------------------------------------------------
         # the pattern for binary files
         _FILE_PATTERN_BINARY = "*.exe"
@@ -142,9 +145,12 @@ class Program :
                                          buildPathName  )
                                          
             # execute Nmake
+            nmakeFileName    = ( Program._FILE_NAME_MAKEFILE_RELEASE     \
+                                 if ( buildSettings.ReleaseSpecified() ) \
+                                 else Program._FILE_NAME_MAKEFILE_DEBUG  )
             nmakeCommandLine = ( "\"%s\" /f \"%s\" _MSC_VER=1900" % \
                                  ( pathFinder.getNmakeFileName( buildSettings.X64Specified() ) , \
-                                   Program._FILE_NAME_MAKEFILE                                 ) )
+                                   nmakeFileName                                               ) )
             if ( buildSettings.ReleaseSpecified() ) :
             
                  nmakeCommandLine += " nodebug=1"
