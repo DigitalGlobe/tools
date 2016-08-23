@@ -47,6 +47,9 @@ class Program :
         # the name of the test file to test Newmat
         _FILE_NAME_TEST_NEWMAT = "test_newmat.py"
         #----------------------------------------------------------------------
+        # the name of the test file to test OpenThreads
+        _FILE_NAME_TEST_OPENTHREADS = "test_openthreads.py"
+        #----------------------------------------------------------------------
         # the name of the test file to test OpenCV
         _FILE_NAME_TEST_OPENCV = "test_opencv.py"
         #----------------------------------------------------------------------
@@ -93,19 +96,20 @@ class Program :
             
             else :
             
-                self._test(Program._FILE_NAME_TEST_CURL      )
-                self._test(Program._FILE_NAME_TEST_FREETYPE  )
-                self._test(Program._FILE_NAME_TEST_HDF5      )
-                self._test(Program._FILE_NAME_TEST_LIBGEOTIFF)
-                self._test(Program._FILE_NAME_TEST_LIBJPEG   )
-                self._test(Program._FILE_NAME_TEST_LIBTIFF   )
-                self._test(Program._FILE_NAME_TEST_LIBPNG    )
-                self._test(Program._FILE_NAME_TEST_NEWMAT    )
-                self._test(Program._FILE_NAME_TEST_OPENCV    )
-                self._test(Program._FILE_NAME_TEST_PODOFO    )
-                self._test(Program._FILE_NAME_TEST_PROJ4     )
-                self._test(Program._FILE_NAME_TEST_SZIP      )
-                self._test(Program._FILE_NAME_TEST_ZLIB      )
+                self._test(Program._FILE_NAME_TEST_CURL       )
+                self._test(Program._FILE_NAME_TEST_FREETYPE   )
+                self._test(Program._FILE_NAME_TEST_HDF5       )
+                self._test(Program._FILE_NAME_TEST_LIBGEOTIFF )
+                self._test(Program._FILE_NAME_TEST_LIBJPEG    )
+                self._test(Program._FILE_NAME_TEST_LIBTIFF    )
+                self._test(Program._FILE_NAME_TEST_LIBPNG     )
+                self._test(Program._FILE_NAME_TEST_NEWMAT     )
+                self._test(Program._FILE_NAME_TEST_OPENCV     )
+                self._test(Program._FILE_NAME_TEST_OPENTHREADS)
+                self._test(Program._FILE_NAME_TEST_PODOFO     )
+                self._test(Program._FILE_NAME_TEST_PROJ4      )
+                self._test(Program._FILE_NAME_TEST_SZIP       )
+                self._test(Program._FILE_NAME_TEST_ZLIB       )
         #----------------------------------------------------------------------
         
     #--------------------------------------------------------------------------
