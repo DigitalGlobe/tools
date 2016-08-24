@@ -78,7 +78,7 @@ class Program :
         _FILE_NAME_BUILD_LIBLAS = "build_liblas.py"
         #----------------------------------------------------------------------
         # the name of the build file to build OGDI
-        _FILE_NAME_BUILD_LIBLAS = "build_ogdi.py"
+        _FILE_NAME_BUILD_OGDI = "build_ogdi.py"
         #----------------------------------------------------------------------
         #the name of the build file to build Expat
         _FILE_NAME_BUILD_EXPAT = "build_expat.py"
