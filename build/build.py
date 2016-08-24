@@ -77,6 +77,9 @@ class Program :
         # the name of the build file to build LasZip
         _FILE_NAME_BUILD_LIBLAS = "build_liblas.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build OGDI
+        _FILE_NAME_BUILD_LIBLAS = "build_ogdi.py"
+        #----------------------------------------------------------------------
         #the name of the build file to build Expat
         _FILE_NAME_BUILD_EXPAT = "build_expat.py"
         #----------------------------------------------------------------------
@@ -148,6 +151,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_LIBGEOTIFF)
                 self._build(Program._FILE_NAME_BUILD_PODOFO    )
                 self._build(Program._FILE_NAME_BUILD_XERCES    )
+                self._build(Program._FILE_NAME_BUILD_OGDI    )
         #----------------------------------------------------------------------
         
     #--------------------------------------------------------------------------

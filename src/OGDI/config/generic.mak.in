@@ -1,0 +1,110 @@
+# Copyright (C) 2001 Her Majesty the Queen in Right of Canada.
+# Permission to use, copy, modify and distribute this software and
+# its documentation for any purpose and without fee is hereby granted,
+# provided that the above copyright notice appear in all copies, that
+# both the copyright notice and this permission notice appear in
+# supporting documentation, and that the name of Her Majesty the Queen
+# in Right  of Canada not be used in advertising or publicity pertaining
+# to distribution of the software without specific, written prior
+# permission.  Her Majesty the Queen in Right of Canada makes no
+# representations about the suitability of this software for any purpose.
+# It is provided "as is" without express or implied warranty.
+
+# Generic unix configuration file, processed by configure to make 
+# platform specific.
+
+#
+# Read in the configuration common to all Unix
+#
+include $(TOPDIR)/config/unix.mak
+
+#
+# platform specific Symbols
+#
+PLATFORM	= $(TARGET)
+_SOLARIS	= 1
+USE_TERMIO	= -DUSE_TERMIO
+
+# 
+# platform specific tools
+#
+AR		= ar cr
+
+
+#
+# Compilation and linking flags
+#
+SHLIB_CFLAGS	= @C_PIC@
+COMMON_CFLAGS	= $(OPTIMIZATION) @CFLAGS@ @C_WFLAGS@ -DUNIX=1
+
+SHLIB_LDFLAGS	= -shared 
+COMMON_LDFLAGS  = $(OPTIMIZATION) 
+
+RPC_INCLUDES = @RPC_INCLUDES@
+
+UCB_STATICLIB = 
+
+TCL_INCLUDE = -I/usr/include/tcl8.3
+TCL_LINKLIB =
+
+#
+#	Install Locations
+#
+prefix		= @prefix@
+exec_prefix 	= @exec_prefix@
+INST_INCLUDE	= ${prefix}/include
+INST_LIB	= @libdir@
+INST_BIN	= @bindir@
+
+#
+# platform specific file locations
+#
+#RPC_LINKLIB	= -lrpcsvc -lnsl -lsocket
+#RPC_LINKLIB	=	-ldl -ldbmalloc
+RPC_LINKLIB	=	@LIBS@
+
+#
+# Endian definition, could be little or big
+#
+BIG_ENDIAN          = @BIG_ENDIAN@
+
+#
+# Handle internal/external PROJ.4 library usage.
+#
+
+PROJ_SETTING=@PROJ_SETTING@
+
+ifeq ($(PROJ_SETTING),external)
+PROJ_INCLUDE :=	@PROJ_INCLUDE@
+PROJ_STATICLIB := @PROJ_LIB@
+endif
+
+#
+# Handle internal/external ZLIB library usage.
+#
+
+ZLIB_SETTING=@ZLIB_SETTING@
+
+ifeq ($(ZLIB_SETTING),external)
+ZLIB_INCLUDE :=	@ZLIB_INCLUDE@
+ZLIB_LINKLIB := @ZLIB_LIB@
+endif
+
+#
+# Handle internal/external/disabled "Expat" library handling.
+#
+
+EXPAT_SETTING=@EXPAT_SETTING@
+
+ifeq ($(EXPAT_SETTING),external)
+EXPAT_INCLUDE := @EXPAT_INCLUDE@
+EXPAT_LINKLIB := @EXPAT_LIB@
+endif
+
+ifeq ($(EXPAT_SETTING),disabled)
+EXPAT_INCLUDE := -DEXPAT_DISABLED
+EXPAT_LINKLIB := 
+endif
+
+# Iconv
+HAVE_ICONV=@HAVE_ICONV@

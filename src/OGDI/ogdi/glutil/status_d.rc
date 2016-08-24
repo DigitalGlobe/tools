@@ -1,0 +1,22 @@
+/****************************************************************************
+
+
+status_d.rc
+
+produced by Francois Levert from LAS inc.
+****************************************************************************/
+#define WIN32_LEAN_AND_MEAN
+
+#include <windows.h>
+#include "status_d.h"
+
+STATUS_D DIALOG 6, 15, 243, 119
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Status Update"
+FONT 8, "MS Sans Serif"
+{
+ PUSHBUTTON "Cancel", ID_CANCEL, 96, 96, 50, 14
+ LTEXT "Text", ID_TEXT1, 8, 11, 225, 16
+ LTEXT "Text", ID_TEXT2, 8, 34, 226, 16
+}
+

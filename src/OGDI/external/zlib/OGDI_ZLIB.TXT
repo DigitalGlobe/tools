@@ -1,0 +1,19 @@
+	OGDI / ZLIB README
+	==================
+
+
+This directory contains the ZLIB 1.1.4 source release code.  Only the
+core ZLIB code has been preserved, various contributed utilities and
+so forth have been omitted.  
+
+The nt/zlib.cnt DLL def file has been renamed zlib.def, and the only change
+has been to remove the DLL name so the makefile can force it to be based
+on the OGDI version.  Otherwise the DLL should be entry point compatible with
+a generic 1.1.3 zlib build. 
+
+
+More information about zlib can be found at:
+
+  http://www.gzip.org/zlib
+
+

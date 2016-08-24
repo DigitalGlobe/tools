@@ -1,0 +1,43 @@
+	Notes on Preparing an OGDI Source Release
+	=========================================
+
+1) Ensure the OGDI_VERSION and OGDI_RELEASEDATE values are up to date in
+   ogdi/include/ecs_util.h.
+
+2) Update OGDI_MINOR OGDI_MAJOR and OGDI_VERSION in configure.in for
+   proper soname versioning of libraries. Run autoconf to regenerate
+   configure script.
+
+3) Do complete test builds on several platforms - at least Linux, 
+   Solaris, and Windows NT.  
+
+4) Run testsuite on these platforms. 
+
+5) Add release notice in devdir/ChangeLog.
+
+6) Update the NEWS file based on a digested form of the ChangeLog file.
+
+7) If this is a major public release, apply a tag to the source for
+   the release.  Normally tags are not incorporated for alpha and beta
+   releases to avoid tag pollution. 
+
+   ie. 
+
+   cd devdir
+   cvs tag ogdi_3_1_0
+
+8) Create the source distributions using the mkogdidist.sh script.  The
+   version name should include subrelease name components as appropriate.
+   Hit enter when prompted for a CVS password.
+
+   ie. 
+   cd devdir
+   mkogdidist.sh 3.1beta2
+
+9) Publish the resulting files.  For public (ie. final) releases they should
+   be put up on the SourceForge file download manager area.  
+
+   <fill in details>
+
+10) Announce release.  For public releases announce to ogdidev mailing list,
+   and on Freshmeat.net.

@@ -1,0 +1,99 @@
+		
+				OGDI README
+				===========
+
+
+OGDI developer and user resources can be found online at:
+
+  http://ogdi.sourceforge.net/
+
+
+Building
+========
+
+Detailed building instructions are available at:
+
+  http://ogdi.sourceforge.net/build.html
+
+Unix
+----
+
+1) Set TOPDIR to point to the home directory of the OGDI source tree. 
+
+   eg. 
+   TOPDIR=/usr/ogdi-3.1.3
+   export TOPDIR
+
+2) Run configure.
+
+   eg. 
+   ./configure
+
+3) Build with make (GNUmake is required). 
+
+   make
+
+   NOTE: on some platforms you will need to add the shared libraries to
+   your LD_LIBRARY_PATH for the link phase to complete.  
+ 
+   eg. 
+
+   LD_LIBRARY_PATH=$TOPDIR/bin/Linux
+   export LD_LIBRARY_PATH
+
+4) Install.
+
+   make install
+
+Windows
+-------
+
+Windows works similarly, but a preset configuration is used instead of
+building one with configure.
+
+Requirements:
+  o Cygwin (build shell) from http://www.cygwin.com/ with the GNU Make utility
+  o Microsoft Visual C++ (make sure it works at the commandline from bash,
+    run VCVARS32.BAT / VCVARSALL.BAT if not). Make sure that the link.exe command
+    that comes with Cygwin does not override the link.exe of Visual Studio. You
+    may need to alter the PATH to make sure Visual Studio binaries come first, or
+    rename the link.exe in Cygwin
+
+1) Set TOPDIR to point to the home directory of the OGDI source tree.
+   (Do not use /cygdrive/c/ syntax)
+
+   eg. 
+   TOPDIR=c:/ogdi-3.1.3
+   export TOPDIR
+
+2) Set the target build configuration
+
+   eg.
+   TARGET=win32
+   export TARGET
+
+3) Build with make.
+
+   make
+
+
+Running
+=======
+
+Briefly, ensure that $TOPDIR/bin/$TARGET is in the path.  Ensure that
+$TOPDIR/bin/$TARGET is in the LD_LIBRARY_PATH on Unix. 
+
+To use in local mode try a command like:
+
+ ogdi_info -u gltp:/dted/d:/toronto/dted -f Matrix -l 'DTED(DISK)' -dl
+
+To use via the server, run gltpd.exe first in the background.  On windows, run 
+portmap.exe before running gltpd.exe.  Then use a command like:
+
+ ogdi_info -u gltp://localhost/dted/d:/toronto/dted -f Matrix -l 'DTED(DISK)' -dl
+
+
+
+
+  
+
