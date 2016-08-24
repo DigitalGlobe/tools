@@ -73,11 +73,14 @@ class Program :
             # start building
             systemManager.changeDirectory(buildPathName)
             cmd = "msbuild msvc\\libkml.sln "
+            
+            pathName = sourcePathName + "\\msvc"
                       
             compileOutDir = buildPathName + "\\msvc"
             # build command line based on options
             if ( buildSettings.X64Specified() ) :
                 compileOutDir = compileOutDir + "\\x64"
+                pathName = pathName + "\\x64"
                 distribLibs = Program._PATH_NAME_DISTRIBUTION_X64
             else :
                 distribLibs = Program._PATH_NAME_DISTRIBUTION_X86
@@ -86,9 +89,11 @@ class Program :
             if buildSettings.ReleaseSpecified():
                 cmd = cmd + "/p:configuration=Release "
                 compileOutDir = compileOutDir + "\\Release"
+                pathName = pathName + "\\Release"
             else :
                 cmd = cmd + "/p:configuration=Debug "
                 compileOutDir = compileOutDir + "\\Debug"
+                pathName = pathName + "\\Debug"
             
             cmdClean = cmd + "/t:clean"
                         
@@ -107,10 +112,13 @@ class Program :
             for file in glob.glob(compileOutDir + "\\*.lib"):
                 print( "copying " + file + " -> " + sdkOutLibsDir)
                 shutil.copy(file, sdkOutLibsDir)
+                print(pathName)
+                print (file)
+                shutil.copy(file, pathName)
+#                shutil.move(file, pathName)
             for file in glob.glob(compileOutDir + "\\*.pdb"):
                 print( "copying " + file + " -> " + sdkOutLibsDir)
-                shutil.copy(file, sdkOutLibsDir)
-                
+                shutil.copy(file, sdkOutLibsDir)                
                 
             #now we need to compile the 3rd party minizip stuff 
             #needed for the libkml driver
@@ -119,21 +127,27 @@ class Program :
             
             compileOutDir = buildPathName + "\\third_party\\zlib-1.2.3\\contrib\\minizip"
             
+            pathName = sourcePathName + "\\third_party\\zlib-1.2.3\\contrib\\minizip"
+            
             # build command line based on options
             if ( buildSettings.X64Specified() ) :
                 compileOutDir = compileOutDir + "\\x64"
+                pathName = pathName + "\\x64"
                 distribLibs = Program._PATH_NAME_DISTRIBUTION_X64
             else :
                 compileOutDir = compileOutDir + "\\Win32"
+                pathName = pathName + "\\Win32"
                 distribLibs = Program._PATH_NAME_DISTRIBUTION_X86
 
  
             if buildSettings.ReleaseSpecified():
                 cmd = cmd + "/p:configuration=Release "
                 compileOutDir = compileOutDir + "\\Release"
+                pathName = pathName + "\\Release"
             else:
                 cmd = cmd + "/p:configuration=Debug "
                 compileOutDir = compileOutDir + "\\Debug"
+                pathName = pathName + "\\Debug"
             
             cmdClean = cmd + "/t:clean"
                         
@@ -152,6 +166,9 @@ class Program :
             for file in glob.glob(compileOutDir + "\\*.lib"):
                 print( "copying " + file + " -> " + sdkOutLibsDir)
                 shutil.copy(file, sdkOutLibsDir)
+                print(pathName)
+                print (file)
+                shutil.copy(file, pathName)
             for file in glob.glob(compileOutDir + "\\*.pdb"):
                 print( "copying " + file + " -> " + sdkOutLibsDir)
                 shutil.copy(file, sdkOutLibsDir)
@@ -163,10 +180,13 @@ class Program :
             cmd = "msbuild third_party\\uriparser-0.7.5\\win32\Visual_Studio_2005\\uriparser.sln "
             
             compileOutDir = buildPathName + "\\third_party\\uriparser-0.7.5\\win32\\Visual_Studio_2005"
+            
+            pathName = sourcePathName + "\\third_party\\uriparser-0.7.5\\win32\\Visual_Studio_2005"
                         
             # build command line based on options
             if ( buildSettings.X64Specified() ) :
                 compileOutDir = compileOutDir + "\\x64"
+                pathName = pathName + "\\x64"
                 distribLibs = Program._PATH_NAME_DISTRIBUTION_X64
             else :
                 distribLibs = Program._PATH_NAME_DISTRIBUTION_X86
@@ -175,9 +195,11 @@ class Program :
             if buildSettings.ReleaseSpecified():
                 cmd = cmd + "/p:configuration=Release "
                 compileOutDir = compileOutDir + "\\Release"
+                pathName = pathName + "\\Release"
             else:
                 cmd = cmd + "/p:configuration=Debug "
                 compileOutDir = compileOutDir + "\\Debug"
+                pathName = pathName + "\\Debug"
            
             cmdClean = cmd + "/t:clean"
                         
@@ -196,6 +218,9 @@ class Program :
             for file in glob.glob(compileOutDir + "\\*.lib"):
                 print( "copying " + file + " -> " + sdkOutLibsDir)
                 shutil.copy(file, sdkOutLibsDir)
+                print(pathName)
+                print (file)
+                shutil.copy(file, pathName)
             for file in glob.glob(compileOutDir + "\\*.pdb"):
                 print( "copying " + file + " -> " + sdkOutLibsDir)
                 shutil.copy(file, sdkOutLibsDir)
