@@ -1,9 +1,9 @@
 // Copyright 2008, Google Inc. All rights reserved.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,18 +13,20 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef KML_DOM_KML_CAST_H__
 #define KML_DOM_KML_CAST_H__
+
+#include <exception>  // Needed by boost::instrusive_ptr.
 
 #include "kml/base/xml_element.h"
 #include "kml/dom/kmldom.h"
@@ -195,6 +197,8 @@ inline const XalThoroughfarePtr AsXalThoroughfare(const ElementPtr& element) {
   return ElementCast<XalThoroughfare>(element);
 }
 
+// gx
+
 inline const GxAnimatedUpdatePtr AsGxAnimatedUpdate(const ElementPtr element) {
   return ElementCast<GxAnimatedUpdate>(element);
 }
@@ -207,8 +211,22 @@ inline const GxLatLonQuadPtr AsGxLatLonQuad(const ElementPtr element) {
   return ElementCast<GxLatLonQuad>(element);
 }
 
+inline const GxMultiTrackPtr AsGxMultiTrack(const ElementPtr element) {
+  return ElementCast<GxMultiTrack>(element);
+}
+
 inline const GxPlaylistPtr AsGxPlaylist(const ElementPtr element) {
   return ElementCast<GxPlaylist>(element);
+}
+
+inline const GxSimpleArrayFieldPtr AsGxSimpleArrayField(
+    const ElementPtr element) {
+  return ElementCast<GxSimpleArrayField>(element);
+}
+
+inline const GxSimpleArrayDataPtr AsGxSimpleArrayData(
+    const ElementPtr element) {
+  return ElementCast<GxSimpleArrayData>(element);
 }
 
 inline const GxSoundCuePtr AsGxSoundCue(const ElementPtr element) {
@@ -233,6 +251,10 @@ inline const GxTourControlPtr AsGxTourControl(const ElementPtr element) {
 
 inline const GxTourPrimitivePtr AsGxTourPrimitive(const ElementPtr element) {
   return ElementCast<GxTourPrimitive>(element);
+}
+
+inline const GxTrackPtr AsGxTrack(const ElementPtr element) {
+  return ElementCast<GxTrack>(element);
 }
 
 inline const GxWaitPtr AsGxWait(const ElementPtr element) {

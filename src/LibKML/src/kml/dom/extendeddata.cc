@@ -87,6 +87,53 @@ void SimpleData::Serialize(Serializer& serializer) const {
 void SimpleData::Accept(Visitor* visitor) {
   visitor->VisitSimpleData(SimpleDataPtr(this));
 }
+///////////////////////////////////////////////
+// <GxSimpleArrayData>
+GxSimpleArrayData::GxSimpleArrayData()
+  : has_name_(false) {
+  set_xmlns(kmlbase::XMLNS_GX22);
+}
+
+GxSimpleArrayData::~GxSimpleArrayData() {}
+
+static const char kGxSimpleArrayDataName[] = "name";
+
+void GxSimpleArrayData::ParseAttributes(Attributes* attributes) {
+  if (!attributes) {
+    return;
+  }
+  has_name_ = attributes->CutValue(kGxSimpleArrayDataName, &name_);
+  AddUnknownAttributes(attributes);
+}
+
+void GxSimpleArrayData::SerializeAttributes(Attributes* attributes) const {
+  Element::SerializeAttributes(attributes);
+  if (has_name_) {
+    attributes->SetValue(kGxSimpleArrayDataName, name_);
+  }
+}
+
+void GxSimpleArrayData::AddElement(const ElementPtr& element) {
+  if (!element) {
+    return;
+  }
+  if (element->Type() == Type_GxValue) {
+    add_gx_value(element->get_char_data());
+  } else {
+    Element::AddElement(element);
+  }
+}
+
+void GxSimpleArrayData::Serialize(Serializer& serializer) const {
+  ElementSerializer element_serializer(*this, serializer);
+  for (size_t i = 0; i < gx_value_array_.size(); i++) {
+    serializer.SaveFieldById(Type_GxValue, get_gx_value_array_at(i));
+  }
+}
+
+void GxSimpleArrayData::Accept(Visitor* visitor) {
+  visitor->VisitGxSimpleArrayData(GxSimpleArrayDataPtr(this));
+}
 
 // <SchemaData>
 SchemaData::SchemaData()
@@ -117,10 +164,18 @@ void SchemaData::SerializeAttributes(Attributes* attributes) const {
 }
 
 void SchemaData::AddElement(const ElementPtr& element) {
-  if (SimpleDataPtr simpledata = AsSimpleData(element)) {
-    add_simpledata(simpledata);
-  } else {
-    Object::AddElement(element);
+  if (!element) {
+    return;
+  }
+  switch (element->Type()) {
+    case Type_SimpleData:
+      add_simpledata(AsSimpleData(element));
+      break;
+    case Type_GxSimpleArrayData:
+      add_gx_simplearraydata(AsGxSimpleArrayData(element));
+      break;
+    default:
+      Object::AddElement(element);
   }
 }
 
@@ -128,6 +183,7 @@ void SchemaData::Serialize(Serializer& serializer) const {
   ElementSerializer element_serializer(*this, serializer);
   Object::Serialize(serializer);
   serializer.SaveElementArray(simpledata_array_);
+  serializer.SaveElementArray(gx_simplearraydata_array_);
 }
 
 void SchemaData::Accept(Visitor* visitor) {
@@ -137,6 +193,8 @@ void SchemaData::Accept(Visitor* visitor) {
 void SchemaData::AcceptChildren(VisitorDriver* driver) {
   Object::AcceptChildren(driver);
   Element::AcceptRepeated<SimpleDataPtr>(&simpledata_array_, driver);
+  Element::AcceptRepeated<GxSimpleArrayDataPtr>(&gx_simplearraydata_array_,
+                                                driver);
 }
 
 // <Data>
@@ -206,6 +264,9 @@ ExtendedData::~ExtendedData() {
 }
 
 void ExtendedData::AddElement(const ElementPtr& element) {
+  if (!element) {
+    return;
+  }
   if (DataPtr data = AsData(element)) {
     add_data(data);
   } else if (SchemaDataPtr schemadata = AsSchemaData(element)) {

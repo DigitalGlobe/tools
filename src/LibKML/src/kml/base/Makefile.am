@@ -1,12 +1,12 @@
 AM_CPPFLAGS = -I$(top_srcdir)/src \
               -I$(top_srcdir)/third_party/boost_1_34_1 \
-              -I$(top_srcdir)/third_party/googletest-r108/include \
+              -I$(top_srcdir)/third_party/gtest-1.7.0/include \
               -I$(top_srcdir)/third_party/uriparser-0.7.5/include \
               -I$(top_srcdir)/third_party/zlib-1.2.3/contrib
 
 if GCC
-AM_CXXFLAGS = -Wall -Wextra -Wno-unused-parameter -Werror -ansi -pedantic -fno-rtti
-AM_TEST_CXXFLAGS = -Wall -Wextra -Wno-unused-parameter -Werror -ansi -fno-rtti -DGTEST_HAS_RTTI=0
+AM_CXXFLAGS = -Wall -Wextra -Wno-unused-parameter -Werror -pedantic -fno-rtti
+AM_TEST_CXXFLAGS = -Wall -Wextra -Wno-unused-parameter -Werror -fno-rtti -DGTEST_HAS_RTTI=0
 endif
 
 libkmlbase_la_LDFLAGS = -lexpat
@@ -98,115 +98,115 @@ check_PROGRAMS = $(TESTS)
 attributes_test_SOURCES = attributes_test.cc
 attributes_test_CXXFLAGS = $(AM_TEST_CXXFLAGS)
 attributes_test_LDADD = libkmlbase.la \
-			$(top_builddir)/third_party/libgtest.la
+			$(top_builddir)/third_party/libgtest_main.la
 
 color32_test_SOURCES = color32_test.cc
 color32_test_CXXFLAGS = $(AM_TEST_CXXFLAGS)
 color32_test_LDADD = libkmlbase.la \
-		     $(top_builddir)/third_party/libgtest.la
+		     $(top_builddir)/third_party/libgtest_main.la
 
 csv_splitter_test_SOURCES = csv_splitter_test.cc
 csv_splitter_test_CXXFLAGS = -DDATADIR=\"$(DATA_DIR)\" $(AM_TEST_CXXFLAGS)
 csv_splitter_test_LDADD = libkmlbase.la \
-			$(top_builddir)/third_party/libgtest.la
+			$(top_builddir)/third_party/libgtest_main.la
 
 date_time_test_SOURCES = date_time_test.cc
 date_time_test_CXXFLAGS = $(AM_TEST_CXXFLAGS)
 date_time_test_LDADD = libkmlbase.la \
-		       $(top_builddir)/third_party/libgtest.la
+		       $(top_builddir)/third_party/libgtest_main.la
 
 expat_handler_ns_test_SOURCES = expat_handler_ns_test.cc
 expat_handler_ns_test_CXXFLAGS = $(AM_TEST_CXXFLAGS)
 expat_handler_ns_test_LDADD = libkmlbase.la \
-			      $(top_builddir)/third_party/libgtest.la
+			      $(top_builddir)/third_party/libgtest_main.la
 
 expat_parser_test_SOURCES = expat_parser_test.cc
 expat_parser_test_CXXFLAGS = -DDATADIR=\"$(DATA_DIR)\" $(AM_TEST_CXXFLAGS)
 expat_parser_test_LDADD = libkmlbase.la \
-			      $(top_builddir)/third_party/libgtest.la
+			      $(top_builddir)/third_party/libgtest_main.la
 
 file_test_SOURCES = file_test.cc
 file_test_CXXFLAGS = -DDATADIR=\"$(DATA_DIR)\" $(AM_TEST_CXXFLAGS)
 file_test_LDADD = libkmlbase.la \
-		  $(top_builddir)/third_party/libgtest.la
+		  $(top_builddir)/third_party/libgtest_main.la
 
 math_util_test_SOURCES = math_util_test.cc
 math_util_test_CXXFLAGS = $(AM_TEST_CXXFLAGS)
 math_util_test_LDADD = libkmlbase.la \
-		  $(top_builddir)/third_party/libgtest.la
+		  $(top_builddir)/third_party/libgtest_main.la
 
 net_cache_test_SOURCES = net_cache_test.cc
 net_cache_test_CXXFLAGS = -DDATADIR=\"$(DATA_DIR)\" $(AM_TEST_CXXFLAGS)
 net_cache_test_LDADD = libkmlbase.la \
         $(top_builddir)/third_party/liburiparser.la \
-	$(top_builddir)/third_party/libgtest.la
+	$(top_builddir)/third_party/libgtest_main.la
 
 referent_test_SOURCES = referent_test.cc
 referent_test_CXXFLAGS = $(AM_TEST_CXXFLAGS)
 referent_test_LDADD= libkmlbase.la \
-		     $(top_builddir)/third_party/libgtest.la
+		     $(top_builddir)/third_party/libgtest_main.la
 
 string_util_test_SOURCES = string_util_test.cc
 string_util_test_CXXFLAGS = $(AM_TEST_CXXFLAGS)
 string_util_test_LDADD= libkmlbase.la \
-			$(top_builddir)/third_party/libgtest.la
+			$(top_builddir)/third_party/libgtest_main.la
 
 tempfile_test_SOURCES = tempfile_test.cc
 tempfile_test_CXXFLAGS = -DDATADIR=\"$(DATA_DIR)\" $(AM_TEST_CXXFLAGS)
 tempfile_test_LDADD = libkmlbase.la \
-		      $(top_builddir)/third_party/libgtest.la
+		      $(top_builddir)/third_party/libgtest_main.la
 
 time_util_test_SOURCES = time_util_test.cc
 time_util_test_CXXFLAGS = $(AM_TEST_CXXFLAGS)
 time_util_test_LDADD= libkmlbase.la \
-		      $(top_builddir)/third_party/libgtest.la
+		      $(top_builddir)/third_party/libgtest_main.la
 
 uri_parser_test_SOURCES = uri_parser_test.cc
 uri_parser_test_CXXFLAGS = -DDATADIR=\"$(DATA_DIR)\" $(AM_TEST_CXXFLAGS)
 uri_parser_test_LDADD= libkmlbase.la \
         $(top_builddir)/third_party/liburiparser.la \
-	$(top_builddir)/third_party/libgtest.la
+	$(top_builddir)/third_party/libgtest_main.la
 
 util_test_SOURCES = util_test.cc
 util_test_CXXFLAGS = $(AM_TEST_CXXFLAGS)
 util_test_LDADD= libkmlbase.la \
-		 $(top_builddir)/third_party/libgtest.la
+		 $(top_builddir)/third_party/libgtest_main.la
 
 vec3_test_SOURCES = vec3_test.cc
 vec3_test_CXXFLAGS = $(AM_TEST_CXXFLAGS)
 vec3_test_LDADD= libkmlbase.la \
-		 $(top_builddir)/third_party/libgtest.la
+		 $(top_builddir)/third_party/libgtest_main.la
 
 version_test_SOURCES = version_test.cc
 version_test_CXXFLAGS = $(AM_TEST_CXXFLAGS)
 version_test_LDADD= libkmlbase.la \
-		 $(top_builddir)/third_party/libgtest.la
+		 $(top_builddir)/third_party/libgtest_main.la
 
 xml_element_test_SOURCES = xml_element_test.cc
 xml_element_test_CXXFLAGS = $(AM_TEST_CXXFLAGS)
 xml_element_test_LDADD= libkmlbase.la \
-		 $(top_builddir)/third_party/libgtest.la
+		 $(top_builddir)/third_party/libgtest_main.la
 
 xml_file_test_SOURCES = xml_file_test.cc
 xml_file_test_CXXFLAGS = $(AM_TEST_CXXFLAGS)
 xml_file_test_LDADD= libkmlbase.la \
-		 $(top_builddir)/third_party/libgtest.la
+		 $(top_builddir)/third_party/libgtest_main.la
 
 xml_namespaces_test_SOURCES = xml_namespaces_test.cc
 xml_namespaces_test_CXXFLAGS = $(AM_TEST_CXXFLAGS)
 xml_namespaces_test_LDADD= libkmlbase.la \
-		 $(top_builddir)/third_party/libgtest.la
+		 $(top_builddir)/third_party/libgtest_main.la
 
 xmlns_test_SOURCES = xmlns_test.cc
 xmlns_test_CXXFLAGS = $(AM_TEST_CXXFLAGS)
 xmlns_test_LDADD= libkmlbase.la \
-		  $(top_builddir)/third_party/libgtest.la
+		  $(top_builddir)/third_party/libgtest_main.la
 
 zip_file_test_SOURCES = zip_file_test.cc
 zip_file_test_CXXFLAGS = -DDATADIR=\"$(DATA_DIR)\" $(AM_TEST_CXXFLAGS)
 zip_file_test_LDADD= libkmlbase.la \
 		 $(top_builddir)/third_party/libminizip.la \
-		 $(top_builddir)/third_party/libgtest.la
+		 $(top_builddir)/third_party/libgtest_main.la
 
 CLEANFILES = check_PROGRAMS
 

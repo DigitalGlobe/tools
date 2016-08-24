@@ -1,9 +1,9 @@
 // Copyright 2008, Google Inc. All rights reserved.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef KML_DOM_KML_PTR_H__
@@ -132,7 +132,10 @@ class XalThoroughfare;
 class GxAnimatedUpdate;
 class GxFlyTo;
 class GxLatLonQuad;
+class GxMultiTrack;
 class GxPlaylist;
+class GxSimpleArrayField;
+class GxSimpleArrayData;
 class GxSoundCue;
 class GxTimeSpan;
 class GxTimeStamp;
@@ -140,6 +143,7 @@ class GxTimePrimitive;
 class GxTour;
 class GxTourControl;
 class GxTourPrimitive;
+class GxTrack;
 class GxWait;
 
 typedef boost::intrusive_ptr<Element> ElementPtr;
@@ -245,13 +249,17 @@ typedef boost::intrusive_ptr<XalThoroughfare> XalThoroughfarePtr;
 typedef boost::intrusive_ptr<GxAnimatedUpdate> GxAnimatedUpdatePtr;
 typedef boost::intrusive_ptr<GxFlyTo> GxFlyToPtr;
 typedef boost::intrusive_ptr<GxLatLonQuad> GxLatLonQuadPtr;
+typedef boost::intrusive_ptr<GxMultiTrack> GxMultiTrackPtr;
 typedef boost::intrusive_ptr<GxPlaylist> GxPlaylistPtr;
+typedef boost::intrusive_ptr<GxSimpleArrayField> GxSimpleArrayFieldPtr;
+typedef boost::intrusive_ptr<GxSimpleArrayData> GxSimpleArrayDataPtr;
 typedef boost::intrusive_ptr<GxSoundCue> GxSoundCuePtr;
 typedef boost::intrusive_ptr<GxTimeSpan> GxTimeSpanPtr;
 typedef boost::intrusive_ptr<GxTimeStamp> GxTimeStampPtr;
 typedef boost::intrusive_ptr<GxTour> GxTourPtr;
 typedef boost::intrusive_ptr<GxTourControl> GxTourControlPtr;
 typedef boost::intrusive_ptr<GxTourPrimitive> GxTourPrimitivePtr;
+typedef boost::intrusive_ptr<GxTrack> GxTrackPtr;
 typedef boost::intrusive_ptr<GxWait> GxWaitPtr;
 
 }  // end namespace kmldom

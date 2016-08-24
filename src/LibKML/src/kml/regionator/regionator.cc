@@ -29,8 +29,12 @@
 #include "kml/regionator/regionator.h"
 #include <sstream>
 #include "kml/base/file.h"
+#include "kml/base/mimetypes.h"
 #include "kml/base/util.h"
+#include "kml/convenience/atom_util.h"
 #include "kml/dom.h"
+#include "kml/engine/bbox.h"
+#include "kml/engine/feature_view.h"
 #include "kml/regionator/regionator_qid.h"
 #include "kml/regionator/regionator_util.h"
 
@@ -45,7 +49,7 @@ namespace kmlregionator {
 // A Regionator instance is created from a class derived from RegionHandler
 // and descends over a Region hierarchy as specified.
 Regionator::Regionator(RegionHandler& rhandler, const RegionPtr& region)
-    : rhandler_(rhandler), region_count_(0) {
+    : rhandler_(rhandler), region_count_(0), root_filename_(0) {
   root_region_ = CloneRegion(region);
   root_region_->set_id(Qid::CreateRoot().str());
 }
@@ -58,6 +62,9 @@ Regionator::~Regionator() {
 // give Region.
 string Regionator::RegionFilename(const RegionPtr& region) {
   Qid qid(region->get_id());
+  if (root_filename_ && qid.IsRoot()) {
+    return root_filename_;
+  }
   std::stringstream str;
   str << qid_map_[qid.str()];
   return str.str() + ".kml";
@@ -99,6 +106,15 @@ bool Regionator::_Regionate(const RegionPtr& region) {
   DocumentPtr document = CreateRegionDocument(region);
   document->set_name(region->get_id());
 
+  // Add an <atom:link> for each node.  The root gets a "self" relation.
+  // All other nodes get an "up" relation whose href is the root KML file.
+  // up: "A URI that refers to a parent document in a hierarchy of documents."
+  // See: http://www.iana.org/assignments/link-relations/link-relations.xhtml
+  document->set_atomlink(kmlconvenience::AtomUtil::CreateBasicLink(
+    root_filename_ ? root_filename_ : "1.kml",
+    qid.IsRoot() ? "self" : "up",
+    kmlbase::kKmlMimeType));
+
   // Create a NetworkLink to the KML file for each child region with data.
   for (size_t i = 0; i < children.size(); ++i) {
     string href = RegionFilename(children[i]);
@@ -112,6 +128,16 @@ bool Regionator::_Regionate(const RegionPtr& region) {
   }
   document->add_feature(feature);
 
+  // Supply the root node of the RbNL hierarchy with a <LookAt> to the natural
+  // bounds of the data if such bounds were supplied using SetNaturalRegion().
+  if (natural_region_ && qid.IsRoot()) {
+    if (kmldom::LatLonAltBoxPtr llab = natural_region_->get_latlonaltbox()) {
+      kmlengine::Bbox bbox(llab->get_north(), llab->get_south(),
+                           llab->get_east(), llab->get_west());
+      document->set_abstractview(kmlengine::ComputeBboxLookAt(bbox));
+    }
+  }
+
   // Create the root element for the KML file and set the Document as the root
   // feature.  Hand the completed KML file to the RegionHandler for it to save.
   KmlPtr kml = kmldom::KmlFactory::GetFactory()->CreateKml();
@@ -121,7 +147,7 @@ bool Regionator::_Regionate(const RegionPtr& region) {
     filename = kmlbase::File::JoinPaths(output_directory_, filename);
   }
   rhandler_.SaveKml(kml, filename);
-  
+
   return true;  // This region has data.
 }
 
@@ -147,6 +173,7 @@ bool Regionator::RegionateAligned(RegionHandler& rhandler,
   aligned_region->set_lod(CloneLod(region->get_lod()));
   boost::scoped_ptr<Regionator> regionator(new Regionator(rhandler,
                                                           aligned_region));
+  regionator->SetNaturalRegion(region);
   return regionator->Regionate(output_directory);
 }
 

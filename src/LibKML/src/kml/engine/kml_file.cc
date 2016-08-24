@@ -31,6 +31,7 @@
 #include "kml/engine/id_mapper.h"
 #include "kml/engine/kmz_file.h"
 #include "kml/dom.h"
+#include "kml/dom/xml_serializer.h"
 
 using kmlbase::FindXmlNamespaceAndPrefix;
 using kmlbase::XmlnsId;
@@ -171,20 +172,42 @@ const string KmlFile::CreateXmlHeader() const {
   return string("<?xml version=\"1.0\" encoding=\"" + encoding_ + "\"?>\n");
 }
 
-bool KmlFile::SerializeToString(string* xml_output) const {
+bool KmlFile::SerializeToOstream(std::ostream* xml_output) const {
   if (!xml_output || !get_root()) {
     return false;
   }
-  xml_output->append(CreateXmlHeader());
+  const string xml_header = CreateXmlHeader();
+  xml_output->write(xml_header.data(), xml_header.size());
 
   // Find all xml namespaces known to libkml used by all elements descending
   // from the root and insert the appropriate xmlns attributes to the root
   // element.  See kmlengine::FindAndInsertXmlNamespaces() for more info on
   // how KML vs other namespaces are treated.
   FindAndInsertXmlNamespaces(get_root());
-  
+
   // Append the serialization to the XML header.
-  xml_output->append(kmldom::SerializePretty(get_root()));
+  kmldom::XmlSerializer<std::ostream>::Serialize(get_root(), "\n",
+                                                         "  ", xml_output);
+  return true;
+}
+
+bool KmlFile::SerializeToString(string* xml_output) const {
+  if (!xml_output) {
+    return false;
+  }
+  const string xml_header = CreateXmlHeader();
+  xml_output->append(xml_header.data(), xml_header.size());
+
+  // Find all xml namespaces known to libkml used by all elements descending
+  // from the root and insert the appropriate xmlns attributes to the root
+  // element.  See kmlengine::FindAndInsertXmlNamespaces() for more info on
+  // how KML vs other namespaces are treated.
+  FindAndInsertXmlNamespaces(get_root());
+
+  // Append the serialization to the XML header.
+  kmldom::StringAdapter string_adapter(xml_output);
+  kmldom::XmlSerializer<kmldom::StringAdapter>::Serialize(
+      get_root(), "\n", "  ", &string_adapter);
   return true;
 }
 

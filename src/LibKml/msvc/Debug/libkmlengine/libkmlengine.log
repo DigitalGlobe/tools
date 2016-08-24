@@ -1,0 +1,32 @@
+﻿  stdafx.cpp
+  update_processor.cc
+  update.cc
+  style_splitter.cc
+  style_resolver.cc
+  style_merger.cc
+  style_inliner.cc
+  parse_old_schema.cc
+  merge.cc
+  location_util.cc
+  link_util.cc
+  kmz_file.cc
+  kmz_cache.cc
+  kml_uri.cc
+  kml_stream.cc
+  kml_file.cc
+  kml_cache.cc
+  id_mapper.cc
+  href.cc
+  get_link_parents.cc
+  Generating Code...
+  Compiling...
+  get_links.cc
+  find_xml_namespaces.cc
+  find.cc
+  feature_visitor.cc
+  feature_view.cc
+  feature_balloon.cc
+  entity_mapper.cc
+  clone.cc
+  Generating Code...
+  libkmlengine.vcxproj -> C:\DigitalGlobe\LibKml\msvc\Debug\libkmlengine_d.lib

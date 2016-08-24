@@ -3,10 +3,12 @@ dnl Process this file with autoconf to produce a configure script.
 dnl Make sure we're interpreted by some minimal autoconf.
 AC_PREREQ(2.57)
 
-AC_INIT(libkml, 1.2.0, http://code.google.com/p/libkml/issues)
+AC_INIT(libkml, 1.3.0, http://code.google.com/p/libkml/issues)
 AC_CONFIG_SRCDIR(README)
 AC_CONFIG_AUX_DIR(config)
-AM_INIT_AUTOMAKE(-Wall -Werror)
+AC_CONFIG_MACRO_DIR([m4])
+AM_INIT_AUTOMAKE(-Wall -Werror subdir-objects)
+m4_ifdef([AM_PROG_AR], [AM_PROG_AR])
 
 AC_PROG_CPP
 AC_PROG_CXX
@@ -80,7 +82,8 @@ AC_CHECK_LIB(expat, XML_ParserCreate, [],
 AC_CHECK_HEADERS([float.h limits.h stdlib.h string.h])
 AC_CHECK_FUNCS([floor memset strstr])
 
-dnl If SWIG is available we will try to generate bindings.
+dnl If SWIG is available we will try to generate bindings. We need at least
+dnl 1.3.35 for boost::intrusive_ptr support.
 AC_ARG_ENABLE(swig,
 	[AS_HELP_STRING([--disable-swig],
 			[do not generate any SWIG language bindings])])
@@ -88,7 +91,8 @@ if test "x$enable_swig" != xno; then
 	AC_CHECK_PROG(SWIG, swig, swig)
 	if test "x$SWIG" != x; then
 		SWIG_VERSION=`swig -version 2>&1|grep Version|cut -d" " -f3`
-		if test ${SWIG_VERSION:4} -lt 35; then
+		SWIG_MAJOR=${SWIG_VERSION%%.*}
+		if test ${SWIG_MAJOR} = "1" -a ${SWIG_VERSION:4} -lt 35; then
 			AC_MSG_WARN([You have SWIG $SWIG_VERSION installed, but libkml requires at least SWIG 1.3.35. The bindings will not be built.])
 			SWIG=
 		fi
@@ -143,6 +147,7 @@ AM_CONDITIONAL(WITH_JAVA, [test "x$JAVA" != x])
 
 dnl Shall we build the Python SWIG bindings?
 if test "x$SWIG" != x; then
+	saved_LIBS=$LIBS
 	AC_ARG_ENABLE(python,
 		      [AS_HELP_STRING([--disable-python],
 				      [do not generate Python SWIG bindings])])
@@ -176,7 +181,7 @@ if test "x$SWIG" != x; then
 					[AC_MSG_WARN([could not find the Python library. The Python bindings will not be built.])
 			PYTHON=
 			])
-			LIBS=''  # don't append -lpython here.
+			LIBS=$saved_LIBS  # don't append -lpython here.
 			CPPFLAGS="$current_CPPFLAGS"
 		fi
 	fi
@@ -189,7 +194,12 @@ AC_CHECK_CURL(7.12.3)
 AM_CONDITIONAL(HAVE_CURL, test "$CURL_LIBS")
 
 dnl automake will add -DHAVE_CONFIG_H to compiler flags.
-AM_CONFIG_HEADER([config.h]) 
+AC_CONFIG_HEADER([config.h]) 
+
+dnl At least on some newer flavours of linux we need to force the discovery
+dnl of the pthread lib to keep the googletest lib happy.
+AC_CHECK_LIB(pthread, pthread_create,,
+	[AC_MSG_WARN([pthread library cannot be found])])
 
 AC_CONFIG_FILES([
 	Makefile
@@ -232,8 +242,8 @@ AC_CONFIG_FILES([
 	testdata/gx/Makefile
 	testdata/kml/Makefile
 	testdata/kmz/Makefile
-        testdata/kmz/files/Makefile
-        testdata/kmz/kmzfiles/Makefile
+	testdata/kmz/files/Makefile
+	testdata/kmz/kmzfiles/Makefile
 	testdata/kmz/rumsey/Makefile
 	testdata/kmz/rumsey/kml/Makefile
 	testdata/kmz/rumsey/imagery/Makefile

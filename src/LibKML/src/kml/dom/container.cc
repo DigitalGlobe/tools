@@ -69,11 +69,16 @@ FeaturePtr Container::DeleteFeatureById(const string& id) {
   for (; iter != feature_array_.end(); ++iter) {
     FeaturePtr feature = *iter;
     if (feature->has_id() && id == feature->get_id()) {
+  // TODO: if Container is in a KmlFile remove Feature from object map
       feature_array_.erase(iter);
       return feature;
     }
   }
   return NULL;
+}
+
+FeaturePtr Container::DeleteFeatureAt(size_t i) {
+  return Element::DeleteFromArrayAt(&feature_array_, i);
 }
 
 void Container::AcceptChildren(VisitorDriver* driver) {

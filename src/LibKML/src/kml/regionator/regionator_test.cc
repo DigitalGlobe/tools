@@ -38,6 +38,7 @@
 
 namespace kmlregionator {
 
+using kmldom::AtomLinkPtr;
 using kmldom::DocumentPtr;
 using kmldom::FeaturePtr;
 using kmldom::FolderPtr;
@@ -213,9 +214,48 @@ TEST_F(RegionatorTest, SimpleRegionateAligned) {
   ASSERT_EQ(-180, llab->get_west());
 }
 
-}  // end namespace kmlregionator
-
-int main(int argc, char** argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+TEST_F(RegionatorTest, SetRootFilenameTest) {
+  PointRegionHandler depth2(2, &kml_file_map_);
+  Regionator rtor(depth2, kmlconvenience::CreateRegion2d(10,0,10,0,128,-1));
+  const string kPickleKml("pickle.kml");
+  rtor.SetRootFilename(kPickleKml.c_str());
+  rtor.Regionate(NULL);
+  ASSERT_EQ(kmldom::Type_kml, kml_file_map_[kPickleKml]->Type());
+  const string k2Kml("2.kml");
+  ASSERT_EQ(kmldom::Type_kml, kml_file_map_[k2Kml]->Type());
+  DocumentPtr d = kmldom::AsDocument(kml_file_map_[kPickleKml]->get_feature());
+  ASSERT_TRUE(d);
+  ASSERT_TRUE(d->has_atomlink());
+  AtomLinkPtr link = d->get_atomlink();
+  ASSERT_EQ(string(kPickleKml), link->get_href());
+  ASSERT_EQ(string("self"), link->get_rel());
+  d = kmldom::AsDocument(kml_file_map_[k2Kml]->get_feature());
+  ASSERT_TRUE(d);
+  ASSERT_TRUE(d->has_atomlink());
+  link = d->get_atomlink();
+  ASSERT_EQ(string(kPickleKml), link->get_href());
+  ASSERT_EQ(string("up"), link->get_rel());
 }
+
+TEST_F(RegionatorTest, SetNaturalRegionTest) {
+  PointRegionHandler depth2(2, &kml_file_map_);
+  const double north(36.59062);
+  const double south(34.98788);
+  const double east(-82.00043);
+  const double west(-90.06512);
+  RegionPtr region =
+      kmlconvenience::CreateRegion2d(north,south,east,west,128,-1);
+  Regionator rtor(depth2, region);
+  rtor.SetNaturalRegion(region);
+  rtor.Regionate(NULL);
+  kmldom::KmlPtr kml = kml_file_map_["1.kml"];
+  ASSERT_TRUE(kml);
+  ASSERT_TRUE(kml->has_feature());
+  kmldom::LookAtPtr lookat =
+      kmldom::AsLookAt(kml->get_feature()->get_abstractview());
+  ASSERT_TRUE(lookat);
+  ASSERT_DOUBLE_EQ(35.78925, lookat->get_latitude());
+  ASSERT_DOUBLE_EQ(-86.032775, lookat->get_longitude());
+}
+
+}  // end namespace kmlregionator

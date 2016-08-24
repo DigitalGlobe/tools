@@ -27,6 +27,7 @@
 #include "kml/dom/kml22.h"
 #include "kml/dom/kml_ptr.h"
 #include "kml/dom/kmldom.h"
+#include "kml/dom/xsd.h"
 
 namespace kmldom {
 
@@ -124,16 +125,25 @@ ElementPtr KmlFactory::CreateElementById(KmlDomType id) const {
   case Type_GxAnimatedUpdate: return CreateGxAnimatedUpdate();
   case Type_GxFlyTo: return CreateGxFlyTo();
   case Type_GxLatLonQuad: return CreateGxLatLonQuad();
+  case Type_GxMultiTrack: return CreateGxMultiTrack();
   case Type_GxPlaylist: return CreateGxPlaylist();
+  case Type_GxSimpleArrayData: return CreateGxSimpleArrayData();
+  case Type_GxSimpleArrayField: return CreateGxSimpleArrayField();
   case Type_GxSoundCue: return CreateGxSoundCue();
   case Type_GxTimeSpan: return CreateGxTimeSpan();
   case Type_GxTimeStamp: return CreateGxTimeStamp();
   case Type_GxTour: return CreateGxTour();
   case Type_GxTourControl: return CreateGxTourControl();
+  case Type_GxTrack: return CreateGxTrack();
   case Type_GxWait: return CreateGxWait();
 
   default: return NULL;
   }
+}
+
+ElementPtr KmlFactory::CreateElementFromName(const string& element_name) const {
+  return CreateElementById(
+      static_cast<KmlDomType>(Xsd::GetSchema()->ElementId(element_name)));
 }
 
 Field* KmlFactory::CreateFieldById(KmlDomType type_id) const {
@@ -464,8 +474,20 @@ GxLatLonQuad* KmlFactory::CreateGxLatLonQuad() const {
   return new GxLatLonQuad();
 }
 
+GxMultiTrack* KmlFactory::CreateGxMultiTrack() const {
+  return new GxMultiTrack();
+}
+
 GxPlaylist* KmlFactory::CreateGxPlaylist() const {
   return new GxPlaylist();
+}
+
+GxSimpleArrayData* KmlFactory::CreateGxSimpleArrayData() const {
+  return new GxSimpleArrayData();
+}
+
+GxSimpleArrayField* KmlFactory::CreateGxSimpleArrayField() const {
+  return new GxSimpleArrayField();
 }
 
 GxSoundCue* KmlFactory::CreateGxSoundCue() const {
@@ -486,6 +508,10 @@ GxTour* KmlFactory::CreateGxTour() const {
 
 GxTourControl* KmlFactory::CreateGxTourControl() const {
   return new GxTourControl();
+}
+
+GxTrack* KmlFactory::CreateGxTrack() const {
+  return new GxTrack();
 }
 
 GxWait* KmlFactory::CreateGxWait() const {

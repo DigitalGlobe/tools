@@ -204,7 +204,7 @@ local int unzlocal_getShort (pzlib_filefunc_def,filestream,pX)
     uLong *pX;
 {
     uLong x ;
-    int i;
+    int i = 0;
     int err;
 
     err = unzlocal_getByte(pzlib_filefunc_def,filestream,&i);
@@ -232,7 +232,7 @@ local int unzlocal_getLong (pzlib_filefunc_def,filestream,pX)
     uLong *pX;
 {
     uLong x ;
-    int i;
+    int i = 0;
     int err;
 
     err = unzlocal_getByte(pzlib_filefunc_def,filestream,&i);
@@ -1601,7 +1601,7 @@ extern int ZEXPORT libkml_unzSetOffset (file, pos)
  * iomem_simple package at http://code.trak.dk/
  * See iomem_simple.c in this directory.
  */
-ZEXTERN voidpf ZEXPORT unzDetach(file)
+ZEXTERN voidpf ZEXPORT libkml_unzDetach(file)
     unzFile* file;
 {
     voidpf stream;
@@ -1618,7 +1618,7 @@ ZEXTERN voidpf ZEXPORT unzDetach(file)
     return stream;
 }
 
-extern unzFile ZEXPORT unzAttach (stream, pzlib_filefunc_def)
+extern unzFile ZEXPORT libkml_unzAttach (stream, pzlib_filefunc_def)
     voidpf stream;
     zlib_filefunc_def* pzlib_filefunc_def;
 {

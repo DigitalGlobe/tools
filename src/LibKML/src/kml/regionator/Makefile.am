@@ -1,11 +1,11 @@
 AM_CPPFLAGS= -I$(top_srcdir)/src \
              -I$(top_srcdir)/third_party/boost_1_34_1 \
-	     -I$(top_srcdir)/third_party/googletest-r108/include
+	     -I$(top_srcdir)/third_party/gtest-1.7.0/include
 
 
 if GCC
-AM_CXXFLAGS = -Wall -Wextra -Wno-unused-parameter -Werror -ansi -pedantic -fno-rtti
-AM_TEST_CXXFLAGS = -Wall -Wextra -Wno-unused-parameter -Werror -ansi -fno-rtti -DGTEST_HAS_RTTI=0
+AM_CXXFLAGS = -Wall -Wextra -Wno-unused-parameter -Werror -pedantic -Wno-long-long -fno-rtti
+AM_TEST_CXXFLAGS = -Wall -Wextra -Wno-unused-parameter -Werror -fno-rtti -DGTEST_HAS_RTTI=0
 endif
 
 lib_LTLIBRARIES = libkmlregionator.la
@@ -38,7 +38,7 @@ feature_list_region_handler_test_LDADD = libkmlregionator.la \
 	$(top_builddir)/src/kml/engine/libkmlengine.la \
 	$(top_builddir)/src/kml/dom/libkmldom.la \
 	$(top_builddir)/src/kml/base/libkmlbase.la \
-	$(top_builddir)/third_party/libgtest.la
+	$(top_builddir)/third_party/libgtest_main.la
 
 regionator_test_SOURCES = regionator_test.cc
 regionator_test_CXXFLAGS = $(AM_TEST_CXXFLAGS)
@@ -47,7 +47,7 @@ regionator_test_LDADD = libkmlregionator.la \
 	$(top_builddir)/src/kml/engine/libkmlengine.la \
 	$(top_builddir)/src/kml/dom/libkmldom.la \
 	$(top_builddir)/src/kml/base/libkmlbase.la \
-	$(top_builddir)/third_party/libgtest.la
+	$(top_builddir)/third_party/libgtest_main.la
 
 regionator_qid_test_SOURCES = regionator_qid_test.cc
 regionator_qid_test_CXXFLAGS = $(AM_TEST_CXXFLAGS)
@@ -56,7 +56,7 @@ regionator_qid_test_LDADD = libkmlregionator.la \
 	$(top_builddir)/src/kml/engine/libkmlengine.la \
 	$(top_builddir)/src/kml/dom/libkmldom.la \
 	$(top_builddir)/src/kml/base/libkmlbase.la \
-	$(top_builddir)/third_party/libgtest.la
+	$(top_builddir)/third_party/libgtest_main.la
 
 regionator_util_test_SOURCES = regionator_util_test.cc
 regionator_util_test_CXXFLAGS = $(AM_TEST_CXXFLAGS)
@@ -65,6 +65,6 @@ regionator_util_test_LDADD = libkmlregionator.la \
 	$(top_builddir)/src/kml/engine/libkmlengine.la \
 	$(top_builddir)/src/kml/dom/libkmldom.la \
 	$(top_builddir)/src/kml/base/libkmlbase.la \
-	$(top_builddir)/third_party/libgtest.la
+	$(top_builddir)/third_party/libgtest_main.la
 
 CLEANFILES = check_PROGRAMS

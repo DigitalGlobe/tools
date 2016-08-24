@@ -1,12 +1,18 @@
-uriparser = uriparser-0.7.5
+# As of automake 1.14 it's not possible to use variable references
+# in AM_CPPFLAGS -- the combination of -I$(top_srcdir) and $(foo) generates
+# directories with the literal unexpanded $(foo) name. It looks like a real
+# automake bug (see http://debbugs.gnu.org/cgi/bugreport.cgi?bug=13928) but
+# for now we work around it by explicit values.
+#uriparser = uriparser-0.7.5
+#googletest = gtest-1.7.0
 
 AM_CPPFLAGS = -I$(top_srcdir)/third_party/zlib-1.2.3/contrib \
-	      -I$(top_srcdir)/third_party/$(uriparser)/include \
-	      -I$(top_srcdir)/third_party/googletest-r108 \
-	      -I$(top_srcdir)/third_party/googletest-r108/include
+	      -I$(top_srcdir)/third_party/uriparser-0.7.5/include \
+	      -I$(top_srcdir)/third_party/gtest-1.7.0 \
+	      -I$(top_srcdir)/third_party/gtest-1.7.0/include
 
 lib_LTLIBRARIES = libminizip.la liburiparser.la
-noinst_LTLIBRARIES = libgtest.la
+noinst_LTLIBRARIES = libgtest.la libgtest_main.la
 
 libminizip_la_SOURCES = \
 	zlib-1.2.3/contrib/minizip/unzip.c \
@@ -16,24 +22,24 @@ libminizip_la_SOURCES = \
 libminizip_la_LDFLAGS = -lz
 
 liburiparser_la_SOURCES = \
-	$(uriparser)/lib/UriCommon.c \
-	$(uriparser)/lib/UriCommon.h \
-	$(uriparser)/lib/UriCompare.c \
-	$(uriparser)/lib/UriEscape.c \
-	$(uriparser)/lib/UriFile.c \
-	$(uriparser)/lib/UriIp4.c \
-	$(uriparser)/lib/UriIp4Base.c \
-	$(uriparser)/lib/UriIp4Base.h \
-	$(uriparser)/lib/UriNormalize.c \
-	$(uriparser)/lib/UriNormalizeBase.c \
-	$(uriparser)/lib/UriNormalizeBase.h \
-	$(uriparser)/lib/UriParse.c \
-	$(uriparser)/lib/UriParseBase.c \
-	$(uriparser)/lib/UriParseBase.h \
-	$(uriparser)/lib/UriQuery.c \
-	$(uriparser)/lib/UriRecompose.c \
-	$(uriparser)/lib/UriResolve.c \
-	$(uriparser)/lib/UriShorten.c
+	uriparser-0.7.5/lib/UriCommon.c \
+	uriparser-0.7.5/lib/UriCommon.h \
+	uriparser-0.7.5/lib/UriCompare.c \
+	uriparser-0.7.5/lib/UriEscape.c \
+	uriparser-0.7.5/lib/UriFile.c \
+	uriparser-0.7.5/lib/UriIp4.c \
+	uriparser-0.7.5/lib/UriIp4Base.c \
+	uriparser-0.7.5/lib/UriIp4Base.h \
+	uriparser-0.7.5/lib/UriNormalize.c \
+	uriparser-0.7.5/lib/UriNormalizeBase.c \
+	uriparser-0.7.5/lib/UriNormalizeBase.h \
+	uriparser-0.7.5/lib/UriParse.c \
+	uriparser-0.7.5/lib/UriParseBase.c \
+	uriparser-0.7.5/lib/UriParseBase.h \
+	uriparser-0.7.5/lib/UriQuery.c \
+	uriparser-0.7.5/lib/UriRecompose.c \
+	uriparser-0.7.5/lib/UriResolve.c \
+	uriparser-0.7.5/lib/UriShorten.c
 liburiparser_la_LDFLAGS = -version-info 1:5:0
 
 boost_root = boost_1_34_1
@@ -77,15 +83,15 @@ libboostconfigplatforminclude_HEADERS = \
 	$(boost)/config/platform/linux.hpp \
 	$(boost)/config/platform/macos.hpp
 
-googletest = googletest-r108
 libgtest_la_SOURCES = \
-	$(googletest)/src/gtest.cc \
-	$(googletest)/src/gtest-death-test.cc \
-	$(googletest)/src/gtest-filepath.cc \
-	$(googletest)/src/gtest-internal-inl.h \
-	$(googletest)/src/gtest-port.cc \
-	$(googletest)/src/gtest-test-part.cc \
-	$(googletest)/src/gtest-typed-test.cc
+	gtest-1.7.0/src/gtest-all.cc
+
+libgtest_main_la_SOURCES = gtest-1.7.0/src/gtest_main.cc
+libgtest_main_la_LIBADD = libgtest.la
+
+# TODO: add the new gtest libs for windows.
+#	gtest-1.7.0.win32/debug/gtest.lib \
+#	gtest-1.7.0.win32/release/gtest.lib
 
 EXTRA_DIST = \
 	expat.win32/expat.h \
@@ -143,31 +149,47 @@ EXTRA_DIST = \
 	$(boost)/config/stdlib/sgi.hpp \
 	$(boost)/config/stdlib/stlport.hpp \
 	$(boost)/config/stdlib/vacpp.hpp \
-	$(googletest).win32/debug/gtest.lib \
-	$(googletest).win32/release/gtest.lib \
-	$(googletest)/include/gtest/gtest.h \
-	$(googletest)/include/gtest/gtest-death-test.h \
-	$(googletest)/include/gtest/gtest-message.h \
-	$(googletest)/include/gtest/gtest-spi.h \
-	$(googletest)/include/gtest/gtest_pred_impl.h \
-	$(googletest)/include/gtest/gtest_prod.h \
-	$(googletest)/include/gtest/gtest-test-part.h \
-	$(googletest)/include/gtest/gtest-typed-test.h \
-	$(googletest)/include/gtest/internal/gtest-death-test-internal.h \
-	$(googletest)/include/gtest/internal/gtest-filepath.h \
-	$(googletest)/include/gtest/internal/gtest-internal.h \
-	$(googletest)/include/gtest/internal/gtest-port.h \
-	$(googletest)/include/gtest/internal/gtest-string.h \
-	$(googletest)/include/gtest/internal/gtest-type-util.h \
-	$(uriparser)/COPYING \
-	$(uriparser).win32/debug/uriparser.lib \
-	$(uriparser).win32/release/uriparser.lib \
-	$(uriparser)/include/uriparser/Uri.h \
-	$(uriparser)/include/uriparser/UriBase.h \
-	$(uriparser)/include/uriparser/UriDefsAnsi.h \
-	$(uriparser)/include/uriparser/UriDefsConfig.h \
-	$(uriparser)/include/uriparser/UriDefsUnicode.h \
-	$(uriparser)/include/uriparser/UriIp4.h \
+	gtest-1.7.0/include/gtest/gtest-death-test.h \
+	gtest-1.7.0/include/gtest/gtest-message.h \
+	gtest-1.7.0/include/gtest/gtest-param-test.h \
+	gtest-1.7.0/include/gtest/gtest-param-test.h.pump \
+	gtest-1.7.0/include/gtest/gtest-printers.h \
+	gtest-1.7.0/include/gtest/gtest-spi.h \
+	gtest-1.7.0/include/gtest/gtest-test-part.h \
+	gtest-1.7.0/include/gtest/gtest-typed-test.h \
+	gtest-1.7.0/include/gtest/gtest.h \
+	gtest-1.7.0/include/gtest/gtest_pred_impl.h \
+	gtest-1.7.0/include/gtest/gtest_prod.h \
+	gtest-1.7.0/include/gtest/internal/gtest-death-test-internal.h \
+	gtest-1.7.0/include/gtest/internal/gtest-filepath.h \
+	gtest-1.7.0/include/gtest/internal/gtest-internal.h \
+	gtest-1.7.0/include/gtest/internal/gtest-linked_ptr.h \
+	gtest-1.7.0/include/gtest/internal/gtest-param-util-generated.h \
+	gtest-1.7.0/include/gtest/internal/gtest-param-util-generated.h.pump \
+	gtest-1.7.0/include/gtest/internal/gtest-param-util.h \
+	gtest-1.7.0/include/gtest/internal/gtest-port.h \
+	gtest-1.7.0/include/gtest/internal/gtest-string.h \
+	gtest-1.7.0/include/gtest/internal/gtest-tuple.h \
+	gtest-1.7.0/include/gtest/internal/gtest-tuple.h.pump \
+	gtest-1.7.0/include/gtest/internal/gtest-type-util.h \
+	gtest-1.7.0/include/gtest/internal/gtest-type-util.h.pump \
+	gtest-1.7.0/src/gtest-death-test.cc \
+	gtest-1.7.0/src/gtest-filepath.cc \
+	gtest-1.7.0/src/gtest-internal-inl.h \
+	gtest-1.7.0/src/gtest-port.cc \
+	gtest-1.7.0/src/gtest-printers.cc \
+	gtest-1.7.0/src/gtest-test-part.cc \
+	gtest-1.7.0/src/gtest-typed-test.cc \
+	gtest-1.7.0/src/gtest.cc \
+	uriparser-0.7.5/COPYING \
+	uriparser-0.7.5.win32/debug/uriparser.lib \
+	uriparser-0.7.5.win32/release/uriparser.lib \
+	uriparser-0.7.5/include/uriparser/Uri.h \
+	uriparser-0.7.5/include/uriparser/UriBase.h \
+	uriparser-0.7.5/include/uriparser/UriDefsAnsi.h \
+	uriparser-0.7.5/include/uriparser/UriDefsConfig.h \
+	uriparser-0.7.5/include/uriparser/UriDefsUnicode.h \
+	uriparser-0.7.5/include/uriparser/UriIp4.h \
 	zlib-1.2.3/zconf.h \
 	zlib-1.2.3/zlib.h \
 	zlib-1.2.3/contrib/minizip/crypt.h \

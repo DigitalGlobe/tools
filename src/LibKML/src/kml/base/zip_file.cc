@@ -25,6 +25,7 @@
 
 // This file contains the implementation of the ZipFile class.
 
+#include <exception>
 #include "kml/base/zip_file.h"
 #include "kml/base/file.h"
 #include "minizip/unzip.h"
@@ -90,7 +91,7 @@ ZipFile::ZipFile(const string& data)
   if (voidpf mem_stream = mem_simple_create_file(
       &api, const_cast<void*>(static_cast<const void*>(data.data())),
       data.size())) {
-    unzFile zfile = unzAttach(mem_stream, &api);
+    unzFile zfile = libkml_unzAttach(mem_stream, &api);
     if (zfile) {
       unz_file_info finfo;
       do {
@@ -177,7 +178,7 @@ bool ZipFile::GetEntry(const string& path_in_zip,
   if (!mem_stream) {
     return false;
   }
-  unzFile unzfile = unzAttach(mem_stream, &api);
+  unzFile unzfile = libkml_unzAttach(mem_stream, &api);
   if (!unzfile) {
     return false;
   }

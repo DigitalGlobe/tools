@@ -42,7 +42,8 @@ enum CsvParserStatus {
   CSV_PARSER_STATUS_BLANK_LINE,
   CSV_PARSER_STATUS_NO_LAT_LON,
   CSV_PARSER_STATUS_BAD_LAT_LON,
-  CSV_PARSER_STATUS_INVALID_DATA
+  CSV_PARSER_STATUS_INVALID_DATA,
+  CSV_PARSER_STATUS_COMMENT
 };
 
 // This class is used as the output and error reporting mechanism for the
@@ -99,8 +100,16 @@ class CsvParser {
   }
 
   // This internal method sets the schema for subsequent lines of CSV data.
-  // This sets the mappings from column to field.  The "name" and "description"
-  // columns specify which columns become <Placemark> <name> and <description>.
+  // This sets the mappings from column to field.  Here is how the data for
+  // each column is used.  VAL is substituted for the value in the cell:
+  //   name - <name>VAL</name>
+  //   feature-id - <Placemark id="feature-VAL">
+  //   description - <description>VAL</description>
+  //   style-id - <styleUrl>style.kml#style-VAL</styleUrl>
+  //   latitude - <Point><coordinates>xxx,VAL</coordinates></Point>
+  //   longitude - <Point><coordinates>VAL,xxx</coordinates></Point>
+  //   other - <Data name="other"><value>VAL</value></Data>
+  //   # - comment causes CSV_PARSER_STATUS_COMMENT for that line
   // The "latitude" and "longitude" columns specify which columns are used
   // for the latitude and longitude of the <Point>.  All other columns specify
   // <ExtendedData>/<Data> names.  The csv_schema must contain at least
@@ -125,6 +134,9 @@ class CsvParser {
   size_t description_col_;
   size_t lat_col_;
   size_t lon_col_;
+  size_t feature_id_;
+  size_t style_id_;
+  string style_url_base_;
   kmldom::KmlFactory* kml_factory_;
   CsvSchema csv_schema_;
   LIBKML_DISALLOW_EVIL_CONSTRUCTORS(CsvParser);

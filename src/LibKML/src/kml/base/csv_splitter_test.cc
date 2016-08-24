@@ -93,7 +93,7 @@ TEST(CsvSplitterTest, TestCrNlFile) {
       kmlbase::File::JoinPaths(DATADIR,
                                kmlbase::File::JoinPaths("csv", "crnl.csv"));
   string cr_nl_csv;
-  ASSERT_TRUE(File::ReadFileToString(kCrNlCsv.c_str(), &cr_nl_csv));
+  ASSERT_TRUE(File::ReadFileToString(kCrNlCsv, &cr_nl_csv));
   CsvSplitter csv_splitter(cr_nl_csv);
   size_t this_end;
   size_t next_begin = csv_splitter.FindNextLine(&this_end);
@@ -120,7 +120,7 @@ TEST(CsvSplitterTest, TestCrFile) {
       kmlbase::File::JoinPaths(DATADIR,
                                kmlbase::File::JoinPaths("csv", "colleges.csv"));
   string colleges;
-  ASSERT_TRUE(File::ReadFileToString(kColleges.c_str(), &colleges));
+  ASSERT_TRUE(File::ReadFileToString(kColleges, &colleges));
   CsvSplitter csv_splitter(colleges);
   int count = 0;
   StringVector cols;
@@ -147,8 +147,3 @@ TEST(CsvSplitterTest, TestCrFile) {
 }
 
 }  // end namespace kmlbase
-
-int main(int argc, char** argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

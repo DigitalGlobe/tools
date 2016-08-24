@@ -72,6 +72,16 @@ TEST(StringUtilTest, TestBasicReplacements) {
   ASSERT_EQ(expected, CreateExpandedStrings(in, sm, kStart, kEnd));
 }
 
+// Verify that a replacement value containing its key doesn't cause an
+// infinite loop in CreateExpandedStrings.
+TEST(StringUtilTest, TestReplacementValueContainsKey) {
+  StringMap sm;
+  sm["description"] = "abcdefghi012345$[description]";
+  const string kIn("abcdefghi012345$[description]");
+  const string kExpected("abcdefghi012345abcdefghi012345$[description]");
+  ASSERT_EQ(kExpected, CreateExpandedStrings(kIn, sm, "$[", "]"));
+}
+
 TEST(StringUtilTest, TestSplitStringUsing) {
   const string kHi("hi");
   const string kHow("how");
@@ -141,23 +151,23 @@ TEST(StringUtilTest, TestFromString) {
 
   bool val;
   FromString("true", &val);
-  ASSERT_EQ(true, val);
+  ASSERT_TRUE(val);
   FromString("1", &val);
-  ASSERT_EQ(true, val);
+  ASSERT_TRUE(val);
   FromString("1\n", &val);
-  ASSERT_EQ(true, val);
+  ASSERT_TRUE(val);
   FromString("\n1\n", &val);
-  ASSERT_EQ(true, val);
+  ASSERT_TRUE(val);
   FromString("false", &val);
-  ASSERT_EQ(false, val);
+  ASSERT_FALSE(val);
   FromString("\nfalse", &val);
-  ASSERT_EQ(false, val);
+  ASSERT_FALSE(val);
   FromString("false\n", &val);
-  ASSERT_EQ(false, val);
+  ASSERT_FALSE(val);
   FromString("\nfalse\n", &val);
-  ASSERT_EQ(false, val);
+  ASSERT_FALSE(val);
   FromString("0", &val);
-  ASSERT_EQ(false, val);
+  ASSERT_FALSE(val);
 
   int fsc;
   FromString("137", &fsc);
@@ -353,8 +363,3 @@ TEST(StringUtilTest, TestSplitQuotedUsing) {
 }
 
 }  // end namespace kmlbase
-
-int main(int argc, char** argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

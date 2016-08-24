@@ -167,12 +167,7 @@ TEST(UnknownTest, TestSaveUnknown) {
       ++complex_count;
     }
   }
-  ASSERT_EQ(85, complex_count);  // Yes, must exactly match kml22.h
+  ASSERT_EQ(89, complex_count);  // Yes, must exactly match kml22.h
 }
 
 }  // end namespace kmldom
-
-int main(int argc, char** argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

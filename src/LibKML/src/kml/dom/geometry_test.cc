@@ -1049,9 +1049,189 @@ TEST_F(MultiGeometryTest, TestSerialize) {
   ASSERT_EQ(expected, SerializeRaw(multigeometry_));
 }
 
-}  // end namespace kmldom
+// Test gx:Track.
+class GxTrackTest: public testing::Test {
+ protected:
+  virtual void SetUp() {
+    gx_track_= KmlFactory::GetFactory()->CreateGxTrack();
+  }
 
-int main(int argc, char** argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+  GxTrackPtr gx_track_;
+};
+
+TEST_F(GxTrackTest, TestType) {
+  ASSERT_EQ(Type_GxTrack, gx_track_->Type());
+  ASSERT_TRUE(gx_track_->IsA(Type_GxTrack));
+  ASSERT_TRUE(gx_track_->IsA(Type_Geometry));
+  ASSERT_TRUE(gx_track_->IsA(Type_Object));
 }
+
+TEST_F(GxTrackTest, TestDefaults) {
+  ASSERT_FALSE(gx_track_->has_id());
+  ASSERT_FALSE(gx_track_->has_targetid());
+  ASSERT_EQ(static_cast<size_t>(0), gx_track_->get_when_array_size());
+  ASSERT_EQ(static_cast<size_t>(0), gx_track_->get_gx_coord_array_size());
+  ASSERT_EQ(static_cast<size_t>(0), gx_track_->get_gx_angles_array_size());
+  ASSERT_FALSE(gx_track_->has_model());
+  ASSERT_FALSE(gx_track_->has_extendeddata());
+}
+
+TEST_F(GxTrackTest, TestSetGet) {
+  // <when> arrays
+  const string when0("2010-02-07T19:57:44Z");
+  const string when1("2010-02-07T19:57:45Z");
+  gx_track_->add_when(when0);
+  gx_track_->add_when(when1);
+  ASSERT_EQ(static_cast<size_t>(2), gx_track_->get_when_array_size());
+  ASSERT_EQ(when0, gx_track_->get_when_array_at(0));
+  ASSERT_EQ(when1, gx_track_->get_when_array_at(1));
+  // <gx:coord> arrays
+  const Vec3 coord0(-122.0, 37.1, 100.2);
+  const Vec3 coord1(-122.1, 37.2, 100.3);
+  gx_track_->add_gx_coord(coord0);
+  gx_track_->add_gx_coord(coord1);
+  ASSERT_EQ(static_cast<size_t>(2), gx_track_->get_gx_coord_array_size());
+  ASSERT_TRUE(coord0 == gx_track_->get_gx_coord_array_at(0));
+  ASSERT_TRUE(coord1 == gx_track_->get_gx_coord_array_at(1));
+  // <gx:angles> arrays
+  const Vec3 angles0(-1.0, 7.1, 10.2);
+  const Vec3 angles1(-1.1, 7.2, 10.3);
+  gx_track_->add_gx_angles(angles0);
+  gx_track_->add_gx_angles(angles1);
+  ASSERT_EQ(static_cast<size_t>(2), gx_track_->get_gx_angles_array_size());
+  ASSERT_TRUE(angles0 == gx_track_->get_gx_angles_array_at(0));
+  ASSERT_TRUE(angles1 == gx_track_->get_gx_angles_array_at(1));
+  // <Model>
+  gx_track_->set_model(KmlFactory::GetFactory()->CreateModel());
+  ASSERT_TRUE(gx_track_->has_model());
+  gx_track_->clear_model();
+  ASSERT_FALSE(gx_track_->has_model());
+  // <ExtendedData>
+  gx_track_->set_extendeddata(KmlFactory::GetFactory()->CreateExtendedData());
+  ASSERT_TRUE(gx_track_->has_extendeddata());
+  gx_track_->clear_extendeddata();
+  ASSERT_FALSE(gx_track_->has_extendeddata());
+}
+
+TEST_F(GxTrackTest, TestParse) {
+  const string kGxTrackKml(
+    "<gx:Track>"
+    "<altitudeMode>relativeToGround</altitudeMode>"
+    "<when>2010-02-07T19:57:44Z</when>"
+    "<when>2010-02-07T19:57:45Z</when>"
+    "<gx:coord>-122.1 37.2 100.3       </gx:coord>"
+    "<gx:coord>-122.4 37.5 100.6</gx:coord>"
+    "<gx:angles>-1.1 7.2 10.3</gx:angles>"
+    "<gx:angles>-1.4 7.5 10.6</gx:angles>"
+    "<Model/>"
+    "<ExtendedData/>"
+    "</gx:Track>"
+  );
+  string errors;
+  ElementPtr element = Parse(kGxTrackKml, &errors);
+  ASSERT_TRUE(element);
+  ASSERT_TRUE(errors.empty());
+  const GxTrackPtr gx_track = AsGxTrack(element);
+  ASSERT_TRUE(gx_track);
+  ASSERT_TRUE(gx_track->has_altitudemode());
+  ASSERT_EQ(ALTITUDEMODE_RELATIVETOGROUND, gx_track->get_altitudemode());
+  ASSERT_EQ(static_cast<size_t>(2), gx_track->get_when_array_size());
+  ASSERT_EQ("2010-02-07T19:57:44Z", gx_track->get_when_array_at(0));
+  ASSERT_EQ("2010-02-07T19:57:45Z", gx_track->get_when_array_at(1));
+  ASSERT_EQ(static_cast<size_t>(2), gx_track->get_gx_coord_array_size());
+  ASSERT_TRUE(Vec3(-122.1, 37.2, 100.3) == gx_track->get_gx_coord_array_at(0));
+  ASSERT_TRUE(Vec3(-122.4, 37.5, 100.6) == gx_track->get_gx_coord_array_at(1));
+  ASSERT_EQ(static_cast<size_t>(2), gx_track->get_gx_angles_array_size());
+  ASSERT_TRUE(Vec3(-1.1, 7.2, 10.3) == gx_track->get_gx_angles_array_at(0));
+  ASSERT_TRUE(Vec3(-1.4, 7.5, 10.6) == gx_track->get_gx_angles_array_at(1));
+  ASSERT_TRUE(gx_track->has_model());
+  ASSERT_TRUE(gx_track->has_extendeddata());
+}
+
+TEST_F(GxTrackTest, TestSerialize) {
+  gx_track_->set_altitudemode(ALTITUDEMODE_RELATIVETOGROUND);
+  ASSERT_TRUE(gx_track_->has_altitudemode());
+  const string when0("2010-02-07T19:57:44Z");
+  const string when1("2010-02-07T19:57:45Z");
+  gx_track_->add_when(when0);
+  gx_track_->add_when(when1);
+  const Vec3 coord0(-122.1, 37.2, 100.3);
+  const Vec3 coord1(-122.4, 37.5, 100.6);
+  gx_track_->add_gx_coord(coord0);
+  gx_track_->add_gx_coord(coord1);
+  const Vec3 angles0(-1.1, 7.2, 10.3);
+  const Vec3 angles1(-1.4, 7.5, 10.6);
+  gx_track_->add_gx_angles(angles0);
+  gx_track_->add_gx_angles(angles1);
+  gx_track_->set_model(KmlFactory::GetFactory()->CreateModel());
+  gx_track_->set_extendeddata(KmlFactory::GetFactory()->CreateExtendedData());
+
+  const string kExpected(
+    "<gx:Track>"
+    "<altitudeMode>relativeToGround</altitudeMode>"
+    "<when>2010-02-07T19:57:44Z</when>"
+    "<when>2010-02-07T19:57:45Z</when>"
+    "<gx:coord>-122.1 37.2 100.3</gx:coord>"
+    "<gx:coord>-122.4 37.5 100.6</gx:coord>"
+    "<gx:angles>-1.1 7.2 10.3</gx:angles>"
+    "<gx:angles>-1.4 7.5 10.6</gx:angles>"
+    "<Model/>"
+    "<ExtendedData/>"
+    "</gx:Track>"
+  );
+  ASSERT_EQ(kExpected, SerializeRaw(gx_track_));
+}
+
+// Test gx:MultiTrack.
+class GxMultiTrackTest: public testing::Test {
+ protected:
+  virtual void SetUp() {
+    gx_multitrack_= KmlFactory::GetFactory()->CreateGxMultiTrack();
+  }
+
+  GxMultiTrackPtr gx_multitrack_;
+};
+
+TEST_F(GxMultiTrackTest, TestType) {
+  ASSERT_EQ(Type_GxMultiTrack, gx_multitrack_->Type());
+  ASSERT_TRUE(gx_multitrack_->IsA(Type_GxMultiTrack));
+  ASSERT_TRUE(gx_multitrack_->IsA(Type_Geometry));
+  ASSERT_TRUE(gx_multitrack_->IsA(Type_Object));
+}
+
+TEST_F(GxMultiTrackTest, TestDefaults) {
+  ASSERT_FALSE(gx_multitrack_->has_id());
+  ASSERT_FALSE(gx_multitrack_->has_targetid());
+  ASSERT_FALSE(gx_multitrack_->has_gx_interpolate());
+  ASSERT_FALSE(gx_multitrack_->get_gx_interpolate());
+  ASSERT_EQ(static_cast<size_t>(0), gx_multitrack_->get_gx_track_array_size());
+}
+
+TEST_F(GxMultiTrackTest, TestSetGet) {
+  gx_multitrack_->set_gx_interpolate(true);
+  ASSERT_TRUE(gx_multitrack_->has_gx_interpolate());
+  ASSERT_TRUE(gx_multitrack_->get_gx_interpolate());
+  gx_multitrack_->clear_gx_interpolate();
+  ASSERT_FALSE(gx_multitrack_->has_gx_interpolate());
+  ASSERT_FALSE(gx_multitrack_->get_gx_interpolate());
+  gx_multitrack_->add_gx_track(KmlFactory::GetFactory()->CreateGxTrack());
+  gx_multitrack_->add_gx_track(KmlFactory::GetFactory()->CreateGxTrack());
+  ASSERT_EQ(static_cast<size_t>(2), gx_multitrack_->get_gx_track_array_size());
+}
+
+TEST_F(GxMultiTrackTest, TestSerialize) {
+  gx_multitrack_->set_gx_interpolate(true);
+  gx_multitrack_->add_gx_track(KmlFactory::GetFactory()->CreateGxTrack());
+  gx_multitrack_->add_gx_track(KmlFactory::GetFactory()->CreateGxTrack());
+  gx_multitrack_->set_id("x");
+  const string kExpected(
+    "<gx:MultiTrack id=\"x\">"
+    "<gx:interpolate>1</gx:interpolate>"
+    "<gx:Track/>"
+    "<gx:Track/>"
+    "</gx:MultiTrack>"
+  );
+  ASSERT_EQ(kExpected, SerializeRaw(gx_multitrack_));
+}
+
+}  // end namespace kmldom

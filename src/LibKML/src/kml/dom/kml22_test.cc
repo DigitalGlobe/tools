@@ -33,7 +33,7 @@
 namespace kmldom {
 
 // Yes, must exactly match kml22.h
-static const int kNumberOfComplexElements = 88;
+static const int kNumberOfComplexElements = 92;
 
 class Kml22Test : public testing::Test {
  protected:
@@ -221,8 +221,3 @@ TEST_F(Kml22Test, TestSaveUnknown) {
 }
 
 }  // end namespace kmldom
-
-int main(int argc, char** argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

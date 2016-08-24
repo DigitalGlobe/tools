@@ -1,9 +1,9 @@
 // Copyright 2008, Google Inc. All rights reserved.
 //
-// Redistribution and use in source and binary forms, with or without 
+// Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 //
-//  1. Redistributions of source code must retain the above copyright notice, 
+//  1. Redistributions of source code must retain the above copyright notice,
 //     this list of conditions and the following disclaimer.
 //  2. Redistributions in binary form must reproduce the above copyright notice,
 //     this list of conditions and the following disclaimer in the documentation
@@ -13,14 +13,14 @@
 //     specific prior written permission.
 //
 // THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR IMPLIED
-// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF 
+// WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
-// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+// EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
 // SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
 // PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
 // OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
-// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR 
-// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF 
+// WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
+// OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // This file contains the unit tests for the Element and Field classes.
@@ -78,9 +78,16 @@ class TestElement : public Element {
   void add_child(const ComplexChildPtr& child) {
     AddComplexChild(child, &child_array_);
   }
+  size_t get_child_array_size() const {
+    return child_array_.size();
+  }
   // This method exemplifies how a complex array child is accessed.
   const ComplexChildPtr& get_child_array_at(int i) const {
     return child_array_[i];
+  }
+  // This method exemplifies how an array item is deleted.
+  ComplexChildPtr DeleteChildAt(size_t i) {
+    return Element::DeleteFromArrayAt(&child_array_, i);
   }
   // This method exemplifies how attributes are parsed.
   virtual void ParseAttributes(Attributes* attributes) {
@@ -461,6 +468,37 @@ TEST_F(ElementTest, TestSerializeMisplaced) {
   ASSERT_EQ(1, misplaced_serializer.get_id_vector()[2]);
 }
 
+TEST_F(ElementTest, TestDeleteFromArrayAt) {
+  const size_t kNumChildren(123);
+  for (size_t i = 0; i < kNumChildren; ++i) {
+    element_->add_child(new ComplexChild(i));
+  }
+  ASSERT_EQ(kNumChildren, element_->get_child_array_size());
+  // Attempt to delete Features off the end.
+  ASSERT_FALSE(element_->DeleteChildAt(kNumChildren));
+  ASSERT_FALSE(element_->DeleteChildAt(kNumChildren + 1001));
+  // Delete the even numbered children.
+  std::vector<ComplexChildPtr> deleted_children;
+  for (size_t i = kNumChildren-1;; i -= 2) {
+    deleted_children.push_back(element_->DeleteChildAt(i));
+    if (i == 0) {
+      break;
+    }
+  }
+  const size_t new_size = element_->get_child_array_size();
+  ASSERT_EQ(kNumChildren - deleted_children.size(), new_size);
+  // Verify the element only has the odd children.
+  for (size_t i = 0; i < new_size; ++i) {
+    ASSERT_EQ(static_cast<int>(2*i + 1),
+              element_->get_child_array_at(i)->id());
+  }
+  // Verify the deleted children are all even.
+  for (size_t i = 0; i < deleted_children.size(); ++i) {
+    ASSERT_EQ(static_cast<int>(kNumChildren - 2*i - 1),
+              deleted_children[i]->id());
+  }
+}
+
 class ElementSerializerTest : public testing::Test {
  protected:
   virtual void SetUp() {
@@ -510,7 +548,7 @@ TEST(FieldTest, TestSetBool) {
   KmlFactory* factory = KmlFactory::GetFactory();
   FieldPtr field = factory->CreateFieldById(Type_open);
   // Pathological, but well defined case.  Note: SetBool always deletes field.
-  ASSERT_EQ(false, field->SetBool(NULL));
+  ASSERT_FALSE(field->SetBool(NULL));
 
   // Handle the 5 variants of bool: "1", "true", "0", "false", garbage
   bool open;
@@ -561,7 +599,7 @@ TEST(FieldTest, TestSetDouble) {
   KmlFactory* factory = KmlFactory::GetFactory();
   FieldPtr field = factory->CreateFieldById(Type_north);
   // Pathological, but well defined case.  Note: SetDouble always deletes field.
-  ASSERT_EQ(false, field->SetDouble(NULL));
+  ASSERT_FALSE(field->SetDouble(NULL));
 
   // <north>37.123</north>
   field = factory->CreateFieldById(Type_north);
@@ -576,7 +614,7 @@ TEST(FieldTest, TestSetInt) {
   KmlFactory* factory = KmlFactory::GetFactory();
   FieldPtr field = factory->CreateFieldById(Type_drawOrder);
   // Pathological, but well defined case.  Note: SetInt always deletes field.
-  ASSERT_EQ(false, field->SetInt(NULL));
+  ASSERT_FALSE(field->SetInt(NULL));
 
   // <drawOrder>10</drawOrder>
   field = factory->CreateFieldById(Type_drawOrder);
@@ -592,7 +630,7 @@ TEST(FieldTest, TestSetEnum) {
   FieldPtr field = factory->CreateFieldById(Type_altitudeMode);
   // Pathological, but well defined case: null pointer to enum val.
   // Note: SetEnum always deletes field.
-  ASSERT_EQ(false, field->SetEnum(NULL));
+  ASSERT_FALSE(field->SetEnum(NULL));
 
   int altitudemode;
 
@@ -611,7 +649,7 @@ TEST(FieldTest, TestSetEnum) {
   field = factory->CreateFieldById(Type_altitudeMode);
   field->set_char_data("reach-for-the-stars");
   altitudemode = kmldom::ALTITUDEMODE_ABSOLUTE;
-  ASSERT_EQ(false, field->SetEnum(&altitudemode));
+  ASSERT_FALSE(field->SetEnum(&altitudemode));
   // Note: SetEnum() deletes field.
   // altitudemode remains unchanged:
   ASSERT_EQ(static_cast<int>(ALTITUDEMODE_ABSOLUTE),
@@ -621,7 +659,7 @@ TEST(FieldTest, TestSetEnum) {
   // touched and false is returned.
   field = factory->CreateFieldById(Type_visibility);
   int not_touched = 42;
-  ASSERT_EQ(false, field->SetEnum(&not_touched));
+  ASSERT_FALSE(field->SetEnum(&not_touched));
   ASSERT_EQ(42, not_touched);
 }
 
@@ -631,7 +669,7 @@ TEST(FieldTest, TestSetString) {
   FieldPtr field = factory->CreateFieldById(Type_description);
   // Pathological, but well defined case: null pointer to string val.
   // Note: SetString always deletes field.
-  ASSERT_EQ(false, field->SetString(NULL));
+  ASSERT_FALSE(field->SetString(NULL));
 
   string name;
 
@@ -639,7 +677,7 @@ TEST(FieldTest, TestSetString) {
   field = factory->CreateFieldById(Type_name);
   const char* kMyName = "my name";
   field->set_char_data(kMyName);
-  ASSERT_EQ(true, field->SetString(&name));
+  ASSERT_TRUE(field->SetString(&name));
   ASSERT_EQ(string(kMyName), name);
 }
 
@@ -659,8 +697,3 @@ TEST(FieldTest, TestSerialize) {
 }
 
 }  // end namespace kmldom
-
-int main(int argc, char** argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

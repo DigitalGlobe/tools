@@ -143,8 +143,14 @@ TEST_F(KmlCastTest, TestCasts) {
       factory->CreateElementById(Type_GxFlyTo)));
   ASSERT_TRUE(AsGxLatLonQuad(
       factory->CreateElementById(Type_GxLatLonQuad)));
+  ASSERT_TRUE(AsGxMultiTrack(
+      factory->CreateElementById(Type_GxMultiTrack)));
   ASSERT_TRUE(AsGxPlaylist(
       factory->CreateElementById(Type_GxPlaylist)));
+  ASSERT_TRUE(AsGxSimpleArrayField(
+      factory->CreateElementById(Type_GxSimpleArrayField)));
+  ASSERT_TRUE(AsGxSimpleArrayData(
+      factory->CreateElementById(Type_GxSimpleArrayData)));
   ASSERT_TRUE(AsGxSoundCue(
       factory->CreateElementById(Type_GxSoundCue)));
   ASSERT_TRUE(AsGxTimeSpan(
@@ -161,13 +167,10 @@ TEST_F(KmlCastTest, TestCasts) {
       factory->CreateElementById(Type_GxTourControl)));
   ASSERT_TRUE(AsGxTourPrimitive(
       factory->CreateElementById(Type_GxFlyTo)));
+  ASSERT_TRUE(AsGxTrack(
+      factory->CreateElementById(Type_GxTrack)));
   ASSERT_TRUE(AsGxWait(
       factory->CreateElementById(Type_GxWait)));
 }
 
 }  // end namespace kmldom
-
-int main(int argc, char** argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

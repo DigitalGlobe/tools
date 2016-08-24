@@ -39,9 +39,9 @@ void b2a_hex(uint32_t i, char* out) {
 }
 
 string CreateExpandedStrings(const string& in,
-                                  const StringMap& string_map,
-                                  const string& start,
-                                  const string& end) {
+                             const StringMap& string_map,
+                             const string& start,
+                             const string& end) {
   string out(in);
   StringMap::const_iterator itr = string_map.begin();
   for (itr = string_map.begin(); itr != string_map.end(); ++itr)  {
@@ -49,6 +49,11 @@ string CreateExpandedStrings(const string& in,
     size_t start_pos = out.find(candidate);
     while (start_pos != string::npos) {
       out.replace(start_pos, candidate.size(), itr->second);
+      // Avoid an infinite loop if the value contains the key. Allow the first
+      // replacement to happen, then bail.
+      if (itr->second.find(itr->first) != string::npos) {
+        break;
+      }
       start_pos = out.find(candidate, start_pos + candidate.size());
     }
   }

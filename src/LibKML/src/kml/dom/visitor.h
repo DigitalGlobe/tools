@@ -149,8 +149,17 @@ class Visitor {
   virtual void VisitGxLatLonQuad(
       const GxLatLonQuadPtr& element);
 
+  virtual void VisitGxMultiTrack(
+      const GxMultiTrackPtr& element);
+
   virtual void VisitGxPlaylist(
       const GxPlaylistPtr& element);
+
+  virtual void VisitGxSimpleArrayData(
+      const GxSimpleArrayDataPtr& element);
+
+  virtual void VisitGxSimpleArrayField(
+      const GxSimpleArrayFieldPtr& element);
 
   virtual void VisitGxSoundCue(
       const GxSoundCuePtr& element);
@@ -169,6 +178,9 @@ class Visitor {
 
   virtual void VisitGxTourPrimitive(
       const GxTourPrimitivePtr& element);
+
+  virtual void VisitGxTrack(
+      const GxTrackPtr& element);
 
   virtual void VisitGxWait(
       const GxWaitPtr& element);

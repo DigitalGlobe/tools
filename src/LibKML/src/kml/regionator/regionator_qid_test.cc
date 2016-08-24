@@ -62,6 +62,14 @@ TEST_F(RegionatorQidTest, TestCreateChild) {
   ASSERT_EQ(static_cast<size_t>(2), se.depth());
 }
 
+TEST_F(RegionatorQidTest, TestIsRoot) {
+  Qid nw = root_.CreateChild(NW);
+  Qid se = root_.CreateChild(SE);
+  ASSERT_TRUE(root_.IsRoot());
+  ASSERT_FALSE(nw.IsRoot());
+  ASSERT_FALSE(se.IsRoot());
+}
+
 // This tests a few more normal usage scenarios.
 TEST_F(RegionatorQidTest, TestCreateChildVarious) {
   Qid q0123("q0123");
@@ -76,8 +84,3 @@ TEST_F(RegionatorQidTest, TestCreateChildVarious) {
 }
 
 }  // end namespace kmlregionator
-
-int main(int argc, char** argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

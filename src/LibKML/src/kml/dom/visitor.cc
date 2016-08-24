@@ -161,9 +161,24 @@ void Visitor::VisitGxLatLonQuad(
   VisitObject(element);
 }
 
+void Visitor::VisitGxMultiTrack(
+    const GxMultiTrackPtr& element) {
+  VisitGeometry(element);
+}
+
 void Visitor::VisitGxPlaylist(
     const GxPlaylistPtr& element) {
   VisitObject(element);
+}
+
+void Visitor::VisitGxSimpleArrayData(
+    const GxSimpleArrayDataPtr& element) {
+  VisitElement(element);
+}
+
+void Visitor::VisitGxSimpleArrayField(
+    const GxSimpleArrayFieldPtr& element) {
+  VisitSimpleField(element);
 }
 
 void Visitor::VisitGxSoundCue(
@@ -194,6 +209,11 @@ void Visitor::VisitGxTourControl(
 void Visitor::VisitGxTourPrimitive(
     const GxTourPrimitivePtr& element) {
   VisitObject(element);
+}
+
+void Visitor::VisitGxTrack(
+    const GxTrackPtr& element) {
+  VisitGeometry(element);
 }
 
 void Visitor::VisitGxWait(

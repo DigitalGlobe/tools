@@ -16,8 +16,12 @@ EXTRA_DIST = \
     badcoords.kml \
     billion.kml \
     ge-point.kml \
+    gnis-ak-first-101.kml \
+    golf-style.kml \
     invalid_descriptions.kml \
     kmlsamples.kml \
     model-macky.kml \
+    old_schema_example.kml \
     outline_space.kml \
-    photooverlay-zermatt.kml
+    photooverlay-zermatt.kml \
+    schemadata.kml

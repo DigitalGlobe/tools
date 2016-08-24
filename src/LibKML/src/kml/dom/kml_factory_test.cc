@@ -24,6 +24,7 @@
 // ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "kml/dom/kml_factory.h"
+#include "kml/dom/kml_cast.h"
 #include "kml/dom/kmldom.h"
 #include "gtest/gtest.h"
 
@@ -280,8 +281,17 @@ TEST(KmlFactoryTest, TestFactory) {
   e = factory->CreateGxLatLonQuad();
   ASSERT_EQ(Type_GxLatLonQuad, e->Type());
 
+  e = factory->CreateGxMultiTrack();
+  ASSERT_EQ(Type_GxMultiTrack, e->Type());
+
   e = factory->CreateGxPlaylist();
   ASSERT_EQ(Type_GxPlaylist, e->Type());
+
+  e = factory->CreateGxSimpleArrayData();
+  ASSERT_EQ(Type_GxSimpleArrayData, e->Type());
+
+  e = factory->CreateGxSimpleArrayField();
+  ASSERT_EQ(Type_GxSimpleArrayField, e->Type());
 
   e = factory->CreateGxSoundCue();
   ASSERT_EQ(Type_GxSoundCue, e->Type());
@@ -295,6 +305,9 @@ TEST(KmlFactoryTest, TestFactory) {
   e = factory->CreateGxTour();
   ASSERT_EQ(Type_GxTour, e->Type());
 
+  e = factory->CreateGxTrack();
+  ASSERT_EQ(Type_GxTrack, e->Type());
+
   e = factory->CreateGxTourControl();
   ASSERT_EQ(Type_GxTourControl, e->Type());
 
@@ -302,9 +315,15 @@ TEST(KmlFactoryTest, TestFactory) {
   ASSERT_EQ(Type_GxWait, e->Type());
 }
 
-}  // end namespace kmldom
+TEST(KmlFactoryTest, TestCreateElementFromName) {
+  KmlFactory* kf = KmlFactory::GetFactory();
+  ASSERT_FALSE(kf->CreateElementFromName(""));
+  ASSERT_FALSE(kf->CreateElementFromName("complete junk"));
+  ASSERT_FALSE(kf->CreateElementFromName("<Placemark"));
 
-int main(int argc, char** argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+  ASSERT_TRUE(kmldom::AsPlacemark(kf->CreateElementFromName("Placemark")));
+  ASSERT_TRUE(kmldom::AsAtomAuthor(kf->CreateElementFromName("atom:author")));
+  ASSERT_TRUE(kmldom::AsGxTour(kf->CreateElementFromName("gx:Tour")));
 }
+
+}  // end namespace kmldom

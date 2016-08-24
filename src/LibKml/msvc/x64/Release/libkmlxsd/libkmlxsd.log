@@ -1,0 +1,9 @@
+﻿  xsd_primitive_type.cc
+  xsd_complex_type.cc
+  xsd_element.cc
+  xsd_file.cc
+  xsd_handler.cc
+  xsd_util.cc
+  xst_parser.cc
+  stdafx.cpp
+  libkmlxsd.vcxproj -> C:\DigitalGlobe\LibKml\msvc\x64\Release\libkmlxsd.lib

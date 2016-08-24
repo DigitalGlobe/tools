@@ -26,6 +26,7 @@
 // This file contains the unit tests for the KmlFile class.
 
 #include "kml/engine/kml_file.h"
+#include <sstream>
 #include "kml/base/file.h"
 #include "kml/base/net_cache.h"
 #include "kml/base/tempfile.h"
@@ -448,9 +449,23 @@ TEST_F(KmlFileTest, TestForSerializeWithNamespaces) {
   ASSERT_EQ(kExpected, xml);
 }
 
-}  // end namespace kmlengine
-
-int main(int argc, char** argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+TEST_F(KmlFileTest, TestBasicSerializeToOstream) {
+  kml_file_ = KmlFile::CreateFromString(
+      "<Document><gx:Tour><atom:author/></gx:Tour></Document>");
+  ASSERT_TRUE(kml_file_);
+  std::ostringstream oss;
+  ASSERT_TRUE(kml_file_->SerializeToOstream(&oss));
+  const string kExpected =
+      "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+      "<Document xmlns=\"http://www.opengis.net/kml/2.2\" "
+      "xmlns:atom=\"http://www.w3.org/2005/Atom\" "
+      "xmlns:gx=\"http://www.google.com/kml/ext/2.2\">\n"
+      "  <gx:Tour>\n"
+      "    <atom:author/>\n"
+      "  </gx:Tour>\n"
+      "</Document>\n";
+  const string kActual = oss.str();
+  ASSERT_EQ(kExpected, kActual);
 }
+
+}  // end namespace kmlengine

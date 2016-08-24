@@ -76,17 +76,13 @@ TEST(RoundTripTest, RunTestCases) {
     const char* subdir = kTestCases[i].subdir;
     const char* input_kml = kTestCases[i].input_kml;
     const char* golden_kml = kTestCases[i].golden_kml;
-    string actual_kml = ParseSerialize(ReadTestCase(subdir, input_kml));
+    const string test_case_kml = ReadTestCase(subdir, input_kml);
+    string actual_kml = ParseSerialize(test_case_kml);
     EXPECT_FALSE(actual_kml.empty()) << input_kml;
-    string expected_kml = ReadTestCase(subdir, golden_kml);
+    const string expected_kml = ReadTestCase(subdir, golden_kml);
     EXPECT_FALSE(expected_kml.empty()) << golden_kml;
     EXPECT_EQ(expected_kml, actual_kml);
   }
 }
 
 }  // end namespace kmldom
-
-int main(int argc, char** argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

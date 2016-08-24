@@ -110,6 +110,24 @@ TEST_F(ColorTest, TestConstruction) {
   color_.reset(new Color32(kBadString));
   expected = "0000a0c0";
   ASSERT_EQ(expected, color_->to_string_abgr());
+
+  // Verify construction from a string with a preceding '#' character.
+  const string kHashRed("#ff0000ff");
+  color_.reset(new Color32(kHashRed));
+  expected = "ff0000ff";
+  ASSERT_EQ(expected, color_->to_string_abgr());
+
+  // Verify construction from a string with leading whitespace.
+  const string kWhitespace("  \t\ndec0dded");
+  color_.reset(new Color32(kWhitespace));
+  expected = "dec0dded";
+  ASSERT_EQ(expected, color_->to_string_abgr());
+
+  // Verify construction from a string with leading whitespace & a hash.
+  const string kHashWhitespace("\r \n#babbb1ed");
+  color_.reset(new Color32(kHashWhitespace));
+  expected = "babbb1ed";
+  ASSERT_EQ(expected, color_->to_string_abgr());
 }
 
 TEST_F(ColorTest, TestGetSet) {
@@ -203,8 +221,3 @@ TEST_F(ColorTest, TestSetColorArgbFromString) {
 }
 
 }  // end namespace kmlbase
-
-int main(int argc, char** argv) {
-  testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}

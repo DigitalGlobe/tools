@@ -1,0 +1,2 @@
+#TargetFrameworkVersion=v4.0:PlatformToolSet=v140:EnableManagedIncrementalBuild=false:VCToolArchitecture=Native32Bit:WindowsTargetPlatformVersion=8.1
+Debug|x64|C:\DigitalGlobe\LibKml\third_party\uriparser-0.7.5\win32\Visual_Studio_2005\|
