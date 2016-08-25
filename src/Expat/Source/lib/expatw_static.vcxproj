@@ -95,13 +95,13 @@
     <OutDir>.\..\win32\bin\Debug\</OutDir>
     <IntDir>.\..\win32\tmp\Debug-w_static\</IntDir>
     <LinkIncremental>true</LinkIncremental>
-    <TargetName>libexpatwMT</TargetName>
+    <TargetName>libexpatwMT_d</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>.\..\x64\bin\Debug\</OutDir>
     <IntDir>.\..\x64\tmp\Debug-w_static\</IntDir>
-    <TargetName>libexpatwMT</TargetName>
+    <TargetName>libexpatwMT_d</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>.\..\win32\bin\Release\</OutDir>
@@ -142,7 +142,7 @@
     </Bscmake>
     <Lib>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>..\win32\bin\Debug\libexpatwMT.lib</OutputFile>
+      <OutputFile>..\win32\bin\Debug\libexpatwMT_d.lib</OutputFile>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -172,7 +172,7 @@
     </Bscmake>
     <Lib>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>..\x64\bin\Debug\libexpatwMT.lib</OutputFile>
+      <OutputFile>..\x64\bin\Debug\libexpatwMT_d.lib</OutputFile>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">

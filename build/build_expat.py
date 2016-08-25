@@ -23,6 +23,7 @@ class Program :
         _PATH_NAME_DISTRIBUTION_X86 = "\\x86\\lib"
         _PATH_NAME_DISTRIBUTION_X64 = "\\x64\\lib"
         _PATH_NAME_SOURCE = "..\\src\\Expat"
+        _PATH_NAME_LIBKML_OUT = "..\\src\\LibKml"
         _PATH_NAME_DESTINATION = "..\\sdk"
         _PATH_NAME_SDK_DIR = "..\\sdk"
 
@@ -63,6 +64,7 @@ class Program :
             buildPathName  = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD)
             sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
             buildDirName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SDK_DIR)
+            libKmlOut = systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBKML_OUT)
            
             # remove build dir
             systemManager.changeDirectory(sourcePathName)
@@ -75,11 +77,14 @@ class Program :
             systemManager.changeDirectory(buildPathName)
             cmd = "msbuild Source\\Expat.sln "
             
+            pathName = libKmlOut + "\\third_party\\expat.win32"
+            
             compileOutDir = buildPathName + "\\Source"
             # extend command line based on options
             if ( buildSettings.X64Specified() ) :
 #                cmd = cmd + "/p:platform=x64 "
                 compileOutDir = compileOutDir + "\\x64\\bin"
+                pathName = pathName + "\\x64"
                 distribLibs = Program._PATH_NAME_DISTRIBUTION_X64
                 distribExes = Program._PATH_NAME_BINARY_X64
             else :
@@ -92,10 +97,11 @@ class Program :
             if buildSettings.ReleaseSpecified():
                 cmd = cmd + "/p:configuration=Release "
                 compileOutDir = compileOutDir + "\\Release"
-
+                pathName = pathName + "\\Release"
             else:
                 cmd = cmd + "/p:configuration=Debug "
                 compileOutDir = compileOutDir + "\\Debug"
+                pathName = pathName + "\\Debug"
             
             cmdClean = cmd + "/t:clean"
             
@@ -114,6 +120,9 @@ class Program :
             for file in glob.glob(compileOutDir + "\\*.lib"):
                 print( "copying " + file + " -> " + sdkOutLibsDir)
                 shutil.copy(file, sdkOutLibsDir)
+                print(pathName)
+                print (file)
+                shutil.copy(file, pathName)
             for file in glob.glob(compileOutDir + "\\*.dll"):
                 print( "copying " + file + " -> " + sdkOutLibsDir)
                 shutil.copy(file, sdkOutLibsDir)
