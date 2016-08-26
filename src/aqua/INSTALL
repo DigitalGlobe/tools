@@ -1,0 +1,28 @@
+The Aqua library package has been developed and tested using a LFS 6.1
+GNU/Linux system (http://www.linuxfromscratch.org/), GCC 3.4.3 and
+glibc 2.3.4.
+
+
+To install the package, you need several other packages:
+
+- FFTW, The fastest Fourier transform in the west, version 3 or more
+  (http://www.fftw.org/),
+
+- GSL, The GNU scientific library, version 1.4 or more
+  (http://www.gnu.org/software/gsl/),
+
+- if you want to install the demo you need a GLUT implementation, like
+  freeglut (http://freeglut.sourceforge.net/).
+
+You have to install the single-precision version of the FFTWF library
+("--enable-float" flag of the configure script). To check if you have it
+installed on your system, look for library files named “libfftw3f.so”.
+
+
+For now, there is no “configure” installation script.
+
+Edit the “user configuration” part of the file “config.mk” as you need and
+type “make”.
+
+The library can be found as libaqua/libaqua.so and the OpenGL demo (if you
+have compiled it) as demo/aqua-demo.

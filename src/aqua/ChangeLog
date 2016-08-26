@@ -1,0 +1,18 @@
+2006-04-22  Jocelyn Fréchot  <jocelyn.frechot@labri.fr>
+
+	* aqua-1.0-pre-3 released. The code has been completely
+	reorganised and improved. Too much changes to list. This is a
+	dirty snapshot release.
+
+2003-10-16  Jocelyn Fréchot  <jocelyn.frechot@labri.fr>
+
+	* aqua-1.0-pre-2 released. This is the first public release,
+	thanks to Savannah (https://savannah.nongnu.org/).
+
+2003-05-22  Jocelyn Fréchot  <jocelyn.frechot@labri.fr>
+
+	* Rewrite of the code using C++.
+
+2002-03-??  Jocelyn Fréchot  <jocelyn.frechot@labri.fr>
+
+	* First outline (in C) as a student project.
