@@ -273,7 +273,7 @@ int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA|GLUT_DOUBLE);
     (void)glutCreateWindow(argv[0]);
-    init(argc == 1 ? "data/clouds.bw" : argv[1]);
+    init(argc == 1 ? "../data/clouds.bw" : argv[1]);
     glutDisplayFunc(display);
     glutKeyboardFunc(key);
     glutReshapeFunc(reshape);

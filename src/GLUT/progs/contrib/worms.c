@@ -65,7 +65,7 @@ Jeff R. Allen  |     Senior CS major    |    Support your local
    provided it is not sold or redistibuted in any way for profit. This
    is copyrighted material, and is NOT in the Public Domain.
 
-   $Id: //sw/apps/OpenGL/glut/progs/contrib/worms.c#6$
+   $Id: //sw/main/apps/OpenGL/glut/progs/contrib/worms.c#6 $
 
  */
 

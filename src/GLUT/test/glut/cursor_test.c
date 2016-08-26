@@ -116,13 +116,45 @@ display(void)
   glFlush();
 }
 
+void keyboard0( unsigned char key, int x, int y )
+{
+    printf( "main window: %d %c (%d, %d)\n", key, key, x, y );
+}
+
+void keyboardup( unsigned char key, int x, int y )
+{
+    printf( "main window (UP): %d %c (%d, %d)\n", key, key, x, y );
+}
+
+void keyboard1( unsigned char key, int x, int y )
+{
+    printf( "subwindow 1: %d %c (%d, %d)\n", key, key, x, y );
+}
+
+void keyboard2( unsigned char key, int x, int y )
+{
+    printf( "subwindow 2: %d %c (%d, %d)\n", key, key, x, y );
+}
+
+void keyboard3( unsigned char key, int x, int y )
+{
+    printf( "subwindow 3: %d %c (%d, %d)\n", key, key, x, y );
+}
+
+void motion( int x, int y )
+{
+	printf( "mouse motion: %d %d\n", x, y );
+}
+
 int
 main(int argc, char **argv)
 {
   int i;
+  int sub1, sub2;
 
   glutInit(&argc, argv);
   win = glutCreateWindow("cursor test");
+  glutSetCursor(GLUT_CURSOR_INFO);
   glClearColor(0.49, 0.62, 0.75, 0.0);
   glutDisplayFunc(display);
   glutCreateMenu(menu);
@@ -135,13 +167,26 @@ main(int argc, char **argv)
   glutAddMenuEntry("Warp to (2000,200)", -4);
   glutAddMenuEntry("Set cursor in 3 secs", -5);
   glutAttachMenu(GLUT_RIGHT_BUTTON);
-  glutCreateSubWindow(win, 10, 10, 90, 90);
+  glutKeyboardFunc( keyboard0 );
+  glutKeyboardUpFunc( keyboardup );
+  glutMotionFunc( motion );
+  sub1 = glutCreateSubWindow(win, 10, 10, 90, 90);
+  glutSetCursor(GLUT_CURSOR_CROSSHAIR);
   glutAttachMenu(GLUT_RIGHT_BUTTON);
+  glutKeyboardFunc( keyboard1 );
   glClearColor(0.3, 0.82, 0.55, 0.0);
   glutDisplayFunc(display);
-  glutCreateSubWindow(win, 80, 80, 90, 90);
+  sub2 = glutCreateSubWindow(win, 80, 80, 90, 90);
+  glutSetCursor(GLUT_CURSOR_WAIT);
   glutAttachMenu(GLUT_RIGHT_BUTTON);
+  glutKeyboardFunc( keyboard2 );
   glClearColor(0.9, 0.2, 0.2, 0.0);
+  glutDisplayFunc(display);
+  glutCreateSubWindow(sub2, 30, 30, 30, 30 );
+  glutSetCursor(GLUT_CURSOR_TEXT);
+  glutAttachMenu(GLUT_RIGHT_BUTTON);
+  glutKeyboardFunc( keyboard3 );
+  glClearColor(0.9, 0.9, 0.2, 0.0);
   glutDisplayFunc(display);
   glutMainLoop();
   return 0;             /* ANSI C requires main to return int. */

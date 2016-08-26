@@ -1,33 +1,27 @@
 /*    
- *  GLM library.  Wavefront .obj file format reader/writer/manipulator.
- *
- *  Written by Nate Robins, 1997.
- *  email: ndr@pobox.com
- *  www: http://www.pobox.com/~ndr
+      glm.c
+      Nate Robins, 1997
+      ndr@pobox.com, http://www.pobox.com/~ndr/
+ 
+      Wavefront OBJ model file format reader/writer/manipulator.
+
+      Includes routines for generating smooth normals with
+      preservation of edges, welding redundant vertices & texture
+      coordinate generation (spheremap and planar projections) + more.
+
  */
 
-/* includes */
+
 #include <math.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 #include "glm.h"
 
-/* Some <math.h> files do not define M_PI... */
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
 
-/* defines */
-#define T(x) model->triangles[(x)]
+#define T(x) (model->triangles[(x)])
 
-
-/* enums */
-enum { X, Y, Z, W };			/* elements of a vertex */
-
-
-/* typedefs */
 
 /* _GLMnode: general purpose node
  */
@@ -37,95 +31,72 @@ typedef struct _GLMnode {
   struct _GLMnode* next;
 } GLMnode;
 
-/* strdup is actually not a standard ANSI C or POSIX routine
-   so implement a private one.  OpenVMS does not have a strdup; Linux's
-   standard libc doesn't declare strdup by default (unless BSD or SVID
-   interfaces are requested). */
-static char *
-stralloc(const char *string)
-{
-  char *copy;
 
-  copy = malloc(strlen(string) + 1);
-  if (copy == NULL)
-    return NULL;
-  strcpy(copy, string);
-  return copy;
+/* glmMax: returns the maximum of two floats */
+static GLfloat
+glmMax(GLfloat a, GLfloat b) 
+{
+  if (b > a)
+    return b;
+  return a;
 }
 
-/* private functions */
-
-/* _glmMax: returns the maximum of two floats */
+/* glmAbs: returns the absolute value of a float */
 static GLfloat
-_glmMax(GLfloat a, GLfloat b) 
-{
-  if (a > b)
-    return a;
-  return b;
-}
-
-/* _glmAbs: returns the absolute value of a float */
-static GLfloat
-_glmAbs(GLfloat f)
+glmAbs(GLfloat f)
 {
   if (f < 0)
     return -f;
   return f;
 }
 
-/* _glmDot: compute the dot product of two vectors
+/* glmDot: compute the dot product of two vectors
  *
  * u - array of 3 GLfloats (GLfloat u[3])
  * v - array of 3 GLfloats (GLfloat v[3])
  */
 static GLfloat
-_glmDot(GLfloat* u, GLfloat* v)
+glmDot(GLfloat* u, GLfloat* v)
 {
-  assert(u);
-  assert(v);
+  assert(u); assert(v);
 
-  /* compute the dot product */
-  return u[X] * v[X] + u[Y] * v[Y] + u[Z] * v[Z];
+  return u[0]*v[0] + u[1]*v[1] + u[2]*v[2];
 }
 
-/* _glmCross: compute the cross product of two vectors
+/* glmCross: compute the cross product of two vectors
  *
  * u - array of 3 GLfloats (GLfloat u[3])
  * v - array of 3 GLfloats (GLfloat v[3])
  * n - array of 3 GLfloats (GLfloat n[3]) to return the cross product in
  */
 static GLvoid
-_glmCross(GLfloat* u, GLfloat* v, GLfloat* n)
+glmCross(GLfloat* u, GLfloat* v, GLfloat* n)
 {
-  assert(u);
-  assert(v);
-  assert(n);
+  assert(u); assert(v); assert(n);
 
-  /* compute the cross product (u x v for right-handed [ccw]) */
-  n[X] = u[Y] * v[Z] - u[Z] * v[Y];
-  n[Y] = u[Z] * v[X] - u[X] * v[Z];
-  n[Z] = u[X] * v[Y] - u[Y] * v[X];
+  n[0] = u[1]*v[2] - u[2]*v[1];
+  n[1] = u[2]*v[0] - u[0]*v[2];
+  n[2] = u[0]*v[1] - u[1]*v[0];
 }
 
-/* _glmNormalize: normalize a vector
+/* glmNormalize: normalize a vector
  *
- * n - array of 3 GLfloats (GLfloat n[3]) to be normalized
+ * v - array of 3 GLfloats (GLfloat v[3]) to be normalized
  */
 static GLvoid
-_glmNormalize(GLfloat* n)
+glmNormalize(GLfloat* v)
 {
   GLfloat l;
 
-  assert(n);
+  assert(v);
 
-  /* normalize */
-  l = (GLfloat)sqrt(n[X] * n[X] + n[Y] * n[Y] + n[Z] * n[Z]);
-  n[0] /= l;
-  n[1] /= l;
-  n[2] /= l;
+  l = (GLfloat)sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+  v[0] /= l;
+  v[1] /= l;
+  v[2] /= l;
 }
 
-/* _glmEqual: compares two vectors and returns GL_TRUE if they are
+/* glmEqual: compares two vectors and returns GL_TRUE if they are
  * equal (within a certain threshold) or GL_FALSE if not. An epsilon
  * that works fairly well is 0.000001.
  *
@@ -133,18 +104,18 @@ _glmNormalize(GLfloat* n)
  * v - array of 3 GLfloats (GLfloat v[3]) 
  */
 static GLboolean
-_glmEqual(GLfloat* u, GLfloat* v, GLfloat epsilon)
+glmEqual(GLfloat* u, GLfloat* v, GLfloat epsilon)
 {
-  if (_glmAbs(u[0] - v[0]) < epsilon &&
-      _glmAbs(u[1] - v[1]) < epsilon &&
-      _glmAbs(u[2] - v[2]) < epsilon) 
+  if (glmAbs(u[0] - v[0]) < epsilon &&
+      glmAbs(u[1] - v[1]) < epsilon &&
+      glmAbs(u[2] - v[2]) < epsilon) 
   {
     return GL_TRUE;
   }
   return GL_FALSE;
 }
 
-/* _glmWeldVectors: eliminate (weld) vectors that are within an
+/* glmWeldVectors: eliminate (weld) vectors that are within an
  * epsilon of each other.
  *
  * vectors    - array of GLfloat[3]'s to be welded
@@ -153,7 +124,7 @@ _glmEqual(GLfloat* u, GLfloat* v, GLfloat epsilon)
  *
  */
 GLfloat*
-_glmWeldVectors(GLfloat* vectors, GLuint* numvectors, GLfloat epsilon)
+glmWeldVectors(GLfloat* vectors, GLuint* numvectors, GLfloat epsilon)
 {
   GLfloat* copies;
   GLuint   copied;
@@ -165,7 +136,7 @@ _glmWeldVectors(GLfloat* vectors, GLuint* numvectors, GLfloat epsilon)
   copied = 1;
   for (i = 1; i <= *numvectors; i++) {
     for (j = 1; j <= copied; j++) {
-      if (_glmEqual(&vectors[3 * i], &copies[3 * j], epsilon)) {
+      if (glmEqual(&vectors[3 * i], &copies[3 * j], epsilon)) {
 	goto duplicate;
       }
     }
@@ -187,10 +158,10 @@ _glmWeldVectors(GLfloat* vectors, GLuint* numvectors, GLfloat epsilon)
   return copies;
 }
 
-/* _glmFindGroup: Find a group in the model
+/* glmFindGroup: Find a group in the model
  */
 GLMgroup*
-_glmFindGroup(GLMmodel* model, char* name)
+glmFindGroup(GLMmodel* model, char* name)
 {
   GLMgroup* group;
 
@@ -206,17 +177,17 @@ _glmFindGroup(GLMmodel* model, char* name)
   return group;
 }
 
-/* _glmAddGroup: Add a group to the model
+/* glmAddGroup: Add a group to the model
  */
 GLMgroup*
-_glmAddGroup(GLMmodel* model, char* name)
+glmAddGroup(GLMmodel* model, char* name)
 {
   GLMgroup* group;
 
-  group = _glmFindGroup(model, name);
+  group = glmFindGroup(model, name);
   if (!group) {
     group = (GLMgroup*)malloc(sizeof(GLMgroup));
-    group->name = stralloc(name);
+    group->name = strdup(name);
     group->material = 0;
     group->numtriangles = 0;
     group->triangles = NULL;
@@ -228,20 +199,23 @@ _glmAddGroup(GLMmodel* model, char* name)
   return group;
 }
 
-/* _glmFindGroup: Find a material in the model
+/* glmFindGroup: Find a material in the model
  */
 GLuint
-_glmFindMaterial(GLMmodel* model, char* name)
+glmFindMaterial(GLMmodel* model, char* name)
 {
   GLuint i;
 
+  /* XXX doing a linear search on a string key'd list is pretty lame,
+     but it works and is fast enough for now. */
   for (i = 0; i < model->nummaterials; i++) {
     if (!strcmp(model->materials[i].name, name))
       goto found;
   }
 
-  /* didn't find the name, so set it as the default material */
-  printf("_glmFindMaterial():  can't find material \"%s\".\n", name);
+  /* didn't find the name, so print a warning and return the default
+     material (0). */
+  printf("glmFindMaterial():  can't find material \"%s\".\n", name);
   i = 0;
 
 found:
@@ -249,19 +223,19 @@ found:
 }
 
 
-/* _glmDirName: return the directory given a path
+/* glmDirName: return the directory given a path
  *
  * path - filesystem path
  *
- * The return value should be free'd.
+ * NOTE: the return value should be free'd.
  */
 static char*
-_glmDirName(char* path)
+glmDirName(char* path)
 {
   char* dir;
   char* s;
 
-  dir = stralloc(path);
+  dir = strdup(path);
 
   s = strrchr(dir, '/');
   if (s)
@@ -273,13 +247,13 @@ _glmDirName(char* path)
 }
 
 
-/* _glmReadMTL: read a wavefront material library file
+/* glmReadMTL: read a wavefront material library file
  *
  * model - properly initialized GLMmodel structure
  * name  - name of the material library
  */
 static GLvoid
-_glmReadMTL(GLMmodel* model, char* name)
+glmReadMTL(GLMmodel* model, char* name)
 {
   FILE* file;
   char* dir;
@@ -287,16 +261,15 @@ _glmReadMTL(GLMmodel* model, char* name)
   char  buf[128];
   GLuint nummaterials, i;
 
-  dir = _glmDirName(model->pathname);
+  dir = glmDirName(model->pathname);
   filename = (char*)malloc(sizeof(char) * (strlen(dir) + strlen(name) + 1));
   strcpy(filename, dir);
   strcat(filename, name);
   free(dir);
 
-  /* open the file */
   file = fopen(filename, "r");
   if (!file) {
-    fprintf(stderr, "_glmReadMTL() failed: can't open material file \"%s\".\n",
+    fprintf(stderr, "glmReadMTL() failed: can't open material file \"%s\".\n",
 	    filename);
     exit(1);
   }
@@ -324,14 +297,13 @@ _glmReadMTL(GLMmodel* model, char* name)
 
   rewind(file);
 
-  /* allocate memory for the materials */
   model->materials = (GLMmaterial*)malloc(sizeof(GLMmaterial) * nummaterials);
   model->nummaterials = nummaterials;
 
   /* set the default material */
   for (i = 0; i < nummaterials; i++) {
     model->materials[i].name = NULL;
-    model->materials[i].shininess = 0;
+    model->materials[i].shininess = 65.0;
     model->materials[i].diffuse[0] = 0.8;
     model->materials[i].diffuse[1] = 0.8;
     model->materials[i].diffuse[2] = 0.8;
@@ -345,7 +317,7 @@ _glmReadMTL(GLMmodel* model, char* name)
     model->materials[i].specular[2] = 0.0;
     model->materials[i].specular[3] = 1.0;
   }
-  model->materials[0].name = stralloc("default");
+  model->materials[0].name = strdup("default");
 
   /* now, read in the data */
   nummaterials = 0;
@@ -359,7 +331,7 @@ _glmReadMTL(GLMmodel* model, char* name)
       fgets(buf, sizeof(buf), file);
       sscanf(buf, "%s %s", buf, buf);
       nummaterials++;
-      model->materials[nummaterials].name = stralloc(buf);
+      model->materials[nummaterials].name = strdup(buf);
       break;
     case 'N':
       fscanf(file, "%f", &model->materials[nummaterials].shininess);
@@ -401,14 +373,14 @@ _glmReadMTL(GLMmodel* model, char* name)
   }
 }
 
-/* _glmWriteMTL: write a wavefront material library file
+/* glmWriteMTL: write a wavefront material library file
  *
  * model      - properly initialized GLMmodel structure
  * modelpath  - pathname of the model being written
  * mtllibname - name of the material library to be written
  */
 static GLvoid
-_glmWriteMTL(GLMmodel* model, char* modelpath, char* mtllibname)
+glmWriteMTL(GLMmodel* model, char* modelpath, char* mtllibname)
 {
   FILE* file;
   char* dir;
@@ -416,8 +388,8 @@ _glmWriteMTL(GLMmodel* model, char* modelpath, char* mtllibname)
   GLMmaterial* material;
   GLuint i;
 
-  dir = _glmDirName(modelpath);
-  filename = (char*)malloc(sizeof(char) * (strlen(dir) + strlen(mtllibname)));
+  dir = glmDirName(modelpath);
+  filename = (char*)malloc(sizeof(char) * (strlen(dir)+strlen(mtllibname)));
   strcpy(filename, dir);
   strcat(filename, mtllibname);
   free(dir);
@@ -425,7 +397,7 @@ _glmWriteMTL(GLMmodel* model, char* modelpath, char* mtllibname)
   /* open the file */
   file = fopen(filename, "w");
   if (!file) {
-    fprintf(stderr, "_glmWriteMTL() failed: can't open file \"%s\".\n",
+    fprintf(stderr, "glmWriteMTL() failed: can't open file \"%s\".\n",
 	    filename);
     exit(1);
   }
@@ -435,9 +407,10 @@ _glmWriteMTL(GLMmodel* model, char* modelpath, char* mtllibname)
   fprintf(file, "#  \n");
   fprintf(file, "#  Wavefront MTL generated by GLM library\n");
   fprintf(file, "#  \n");
-  fprintf(file, "#  GLM library copyright (C) 1997 by Nate Robins\n");
-  fprintf(file, "#  email: ndr@pobox.com\n");
-  fprintf(file, "#  www:   http://www.pobox.com/~ndr\n");
+  fprintf(file, "#  GLM library\n");
+  fprintf(file, "#  Nate Robins\n");
+  fprintf(file, "#  ndr@pobox.com\n");
+  fprintf(file, "#  http://www.pobox.com/~ndr\n");
   fprintf(file, "#  \n\n");
 
   for (i = 0; i < model->nummaterials; i++) {
@@ -449,20 +422,20 @@ _glmWriteMTL(GLMmodel* model, char* modelpath, char* mtllibname)
 	    material->diffuse[0], material->diffuse[1], material->diffuse[2]);
     fprintf(file, "Ks %f %f %f\n", 
 	    material->specular[0],material->specular[1],material->specular[2]);
-    fprintf(file, "Ns %f\n", material->shininess);
+    fprintf(file, "Ns %f\n", material->shininess / 128.0 * 1000.0);
     fprintf(file, "\n");
   }
 }
 
 
-/* _glmFirstPass: first pass at a Wavefront OBJ file that gets all the
+/* glmFirstPass: first pass at a Wavefront OBJ file that gets all the
  * statistics of the model (such as #vertices, #normals, etc)
  *
  * model - properly initialized GLMmodel structure
  * file  - (fopen'd) file descriptor 
  */
 static GLvoid
-_glmFirstPass(GLMmodel* model, FILE* file) 
+glmFirstPass(GLMmodel* model, FILE* file) 
 {
   GLuint    numvertices;		/* number of vertices in model */
   GLuint    numnormals;			/* number of normals in model */
@@ -473,7 +446,7 @@ _glmFirstPass(GLMmodel* model, FILE* file)
   char      buf[128];
 
   /* make a default group */
-  group = _glmAddGroup(model, "default");
+  group = glmAddGroup(model, "default");
 
   numvertices = numnormals = numtexcoords = numtriangles = 0;
   while(fscanf(file, "%s", buf) != EOF) {
@@ -500,7 +473,7 @@ _glmFirstPass(GLMmodel* model, FILE* file)
 	numtexcoords++;
 	break;
       default:
-	printf("_glmFirstPass(): Unknown token \"%s\".\n", buf);
+	printf("glmFirstPass(): Unknown token \"%s\".\n", buf);
 	exit(1);
 	break;
       }
@@ -508,8 +481,8 @@ _glmFirstPass(GLMmodel* model, FILE* file)
     case 'm':
       fgets(buf, sizeof(buf), file);
       sscanf(buf, "%s %s", buf, buf);
-      model->mtllibname = stralloc(buf);
-      _glmReadMTL(model, buf);
+      model->mtllibname = strdup(buf);
+      glmReadMTL(model, buf);
       break;
     case 'u':
       /* eat up rest of line */
@@ -518,8 +491,12 @@ _glmFirstPass(GLMmodel* model, FILE* file)
     case 'g':				/* group */
       /* eat up rest of line */
       fgets(buf, sizeof(buf), file);
+#if SINGLE_STRING_GROUP_NAMES
       sscanf(buf, "%s", buf);
-      group = _glmAddGroup(model, buf);
+#else
+      buf[strlen(buf)-1] = '\0';	/* nuke '\n' */
+#endif
+      group = glmAddGroup(model, buf);
       break;
     case 'f':				/* face */
       v = n = t = 0;
@@ -576,15 +553,6 @@ _glmFirstPass(GLMmodel* model, FILE* file)
     }
   }
 
-#if 0
-  /* announce the model statistics */
-  printf(" Vertices: %d\n", numvertices);
-  printf(" Normals: %d\n", numnormals);
-  printf(" Texcoords: %d\n", numtexcoords);
-  printf(" Triangles: %d\n", numtriangles);
-  printf(" Groups: %d\n", model->numgroups);
-#endif
-
   /* set the stats in the model structure */
   model->numvertices  = numvertices;
   model->numnormals   = numnormals;
@@ -600,14 +568,14 @@ _glmFirstPass(GLMmodel* model, FILE* file)
   }
 }
 
-/* _glmSecondPass: second pass at a Wavefront OBJ file that gets all
+/* glmSecondPass: second pass at a Wavefront OBJ file that gets all
  * the data.
  *
  * model - properly initialized GLMmodel structure
  * file  - (fopen'd) file descriptor 
  */
 static GLvoid
-_glmSecondPass(GLMmodel* model, FILE* file) 
+glmSecondPass(GLMmodel* model, FILE* file) 
 {
   GLuint    numvertices;		/* number of vertices in model */
   GLuint    numnormals;			/* number of normals in model */
@@ -642,22 +610,22 @@ _glmSecondPass(GLMmodel* model, FILE* file)
       switch(buf[1]) {
       case '\0':			/* vertex */
 	fscanf(file, "%f %f %f", 
-	       &vertices[3 * numvertices + X], 
-	       &vertices[3 * numvertices + Y], 
-	       &vertices[3 * numvertices + Z]);
+	       &vertices[3 * numvertices + 0], 
+	       &vertices[3 * numvertices + 1], 
+	       &vertices[3 * numvertices + 2]);
 	numvertices++;
 	break;
       case 'n':				/* normal */
 	fscanf(file, "%f %f %f", 
-	       &normals[3 * numnormals + X],
-	       &normals[3 * numnormals + Y], 
-	       &normals[3 * numnormals + Z]);
+	       &normals[3 * numnormals + 0],
+	       &normals[3 * numnormals + 1], 
+	       &normals[3 * numnormals + 2]);
 	numnormals++;
 	break;
       case 't':				/* texcoord */
 	fscanf(file, "%f %f", 
-	       &texcoords[2 * numtexcoords + X],
-	       &texcoords[2 * numtexcoords + Y]);
+	       &texcoords[2 * numtexcoords + 0],
+	       &texcoords[2 * numtexcoords + 1]);
 	numtexcoords++;
 	break;
       }
@@ -665,13 +633,17 @@ _glmSecondPass(GLMmodel* model, FILE* file)
     case 'u':
       fgets(buf, sizeof(buf), file);
       sscanf(buf, "%s %s", buf, buf);
-      group->material = material = _glmFindMaterial(model, buf);
+      group->material = material = glmFindMaterial(model, buf);
       break;
     case 'g':				/* group */
       /* eat up rest of line */
       fgets(buf, sizeof(buf), file);
+#if SINGLE_STRING_GROUP_NAMES
       sscanf(buf, "%s", buf);
-      group = _glmFindGroup(model, buf);
+#else
+      buf[strlen(buf)-1] = '\0';	/* nuke '\n' */
+#endif
+      group = glmFindGroup(model, buf);
       group->material = material;
       break;
     case 'f':				/* face */
@@ -791,11 +763,10 @@ _glmSecondPass(GLMmodel* model, FILE* file)
 
 
 
-/* public functions */
-
 /* glmUnitize: "unitize" a model by translating it to the origin and
- * scaling it to fit in a unit cube around the origin.  Returns the
- * scalefactor used.
+ * scaling it to fit in a unit cube around the origin (-1 to 1 in all
+ * dimensions).  
+ * Returns the scalefactor used.
  *
  * model - properly initialized GLMmodel structure 
  */
@@ -811,30 +782,30 @@ glmUnitize(GLMmodel* model)
   assert(model->vertices);
 
   /* get the max/mins */
-  maxx = minx = model->vertices[3 + X];
-  maxy = miny = model->vertices[3 + Y];
-  maxz = minz = model->vertices[3 + Z];
+  maxx = minx = model->vertices[3 + 0];
+  maxy = miny = model->vertices[3 + 1];
+  maxz = minz = model->vertices[3 + 2];
   for (i = 1; i <= model->numvertices; i++) {
-    if (maxx < model->vertices[3 * i + X])
-      maxx = model->vertices[3 * i + X];
-    if (minx > model->vertices[3 * i + X])
-      minx = model->vertices[3 * i + X];
+    if (maxx < model->vertices[3 * i + 0])
+      maxx = model->vertices[3 * i + 0];
+    if (minx > model->vertices[3 * i + 0])
+      minx = model->vertices[3 * i + 0];
 
-    if (maxy < model->vertices[3 * i + Y])
-      maxy = model->vertices[3 * i + Y];
-    if (miny > model->vertices[3 * i + Y])
-      miny = model->vertices[3 * i + Y];
+    if (maxy < model->vertices[3 * i + 1])
+      maxy = model->vertices[3 * i + 1];
+    if (miny > model->vertices[3 * i + 1])
+      miny = model->vertices[3 * i + 1];
 
-    if (maxz < model->vertices[3 * i + Z])
-      maxz = model->vertices[3 * i + Z];
-    if (minz > model->vertices[3 * i + Z])
-      minz = model->vertices[3 * i + Z];
+    if (maxz < model->vertices[3 * i + 2])
+      maxz = model->vertices[3 * i + 2];
+    if (minz > model->vertices[3 * i + 2])
+      minz = model->vertices[3 * i + 2];
   }
 
   /* calculate model width, height, and depth */
-  w = _glmAbs(maxx) + _glmAbs(minx);
-  h = _glmAbs(maxy) + _glmAbs(miny);
-  d = _glmAbs(maxz) + _glmAbs(minz);
+  w = glmAbs(maxx) + glmAbs(minx);
+  h = glmAbs(maxy) + glmAbs(miny);
+  d = glmAbs(maxz) + glmAbs(minz);
 
   /* calculate center of the model */
   cx = (maxx + minx) / 2.0;
@@ -842,16 +813,16 @@ glmUnitize(GLMmodel* model)
   cz = (maxz + minz) / 2.0;
 
   /* calculate unitizing scale factor */
-  scale = 2.0 / _glmMax(_glmMax(w, h), d);
+  scale = 2.0 / glmMax(glmMax(w, h), d);
 
   /* translate around center then scale */
   for (i = 1; i <= model->numvertices; i++) {
-    model->vertices[3 * i + X] -= cx;
-    model->vertices[3 * i + Y] -= cy;
-    model->vertices[3 * i + Z] -= cz;
-    model->vertices[3 * i + X] *= scale;
-    model->vertices[3 * i + Y] *= scale;
-    model->vertices[3 * i + Z] *= scale;
+    model->vertices[3 * i + 0] -= cx;
+    model->vertices[3 * i + 1] -= cy;
+    model->vertices[3 * i + 2] -= cz;
+    model->vertices[3 * i + 0] *= scale;
+    model->vertices[3 * i + 1] *= scale;
+    model->vertices[3 * i + 2] *= scale;
   }
 
   return scale;
@@ -874,30 +845,30 @@ glmDimensions(GLMmodel* model, GLfloat* dimensions)
   assert(dimensions);
 
   /* get the max/mins */
-  maxx = minx = model->vertices[3 + X];
-  maxy = miny = model->vertices[3 + Y];
-  maxz = minz = model->vertices[3 + Z];
+  maxx = minx = model->vertices[3 + 0];
+  maxy = miny = model->vertices[3 + 1];
+  maxz = minz = model->vertices[3 + 2];
   for (i = 1; i <= model->numvertices; i++) {
-    if (maxx < model->vertices[3 * i + X])
-      maxx = model->vertices[3 * i + X];
-    if (minx > model->vertices[3 * i + X])
-      minx = model->vertices[3 * i + X];
+    if (maxx < model->vertices[3 * i + 0])
+      maxx = model->vertices[3 * i + 0];
+    if (minx > model->vertices[3 * i + 0])
+      minx = model->vertices[3 * i + 0];
 
-    if (maxy < model->vertices[3 * i + Y])
-      maxy = model->vertices[3 * i + Y];
-    if (miny > model->vertices[3 * i + Y])
-      miny = model->vertices[3 * i + Y];
+    if (maxy < model->vertices[3 * i + 1])
+      maxy = model->vertices[3 * i + 1];
+    if (miny > model->vertices[3 * i + 1])
+      miny = model->vertices[3 * i + 1];
 
-    if (maxz < model->vertices[3 * i + Z])
-      maxz = model->vertices[3 * i + Z];
-    if (minz > model->vertices[3 * i + Z])
-      minz = model->vertices[3 * i + Z];
+    if (maxz < model->vertices[3 * i + 2])
+      maxz = model->vertices[3 * i + 2];
+    if (minz > model->vertices[3 * i + 2])
+      minz = model->vertices[3 * i + 2];
   }
 
   /* calculate model width, height, and depth */
-  dimensions[X] = _glmAbs(maxx) + _glmAbs(minx);
-  dimensions[Y] = _glmAbs(maxy) + _glmAbs(miny);
-  dimensions[Z] = _glmAbs(maxz) + _glmAbs(minz);
+  dimensions[0] = glmAbs(maxx) + glmAbs(minx);
+  dimensions[1] = glmAbs(maxy) + glmAbs(miny);
+  dimensions[2] = glmAbs(maxz) + glmAbs(minz);
 }
 
 /* glmScale: Scales a model by a given amount.
@@ -911,9 +882,9 @@ glmScale(GLMmodel* model, GLfloat scale)
   GLuint i;
 
   for (i = 1; i <= model->numvertices; i++) {
-    model->vertices[3 * i + X] *= scale;
-    model->vertices[3 * i + Y] *= scale;
-    model->vertices[3 * i + Z] *= scale;
+    model->vertices[3 * i + 0] *= scale;
+    model->vertices[3 * i + 1] *= scale;
+    model->vertices[3 * i + 2] *= scale;
   }
 }
 
@@ -950,16 +921,16 @@ glmReverseWinding(GLMmodel* model)
 
   /* reverse facet normals */
   for (i = 1; i <= model->numfacetnorms; i++) {
-    model->facetnorms[3 * i + X] = -model->facetnorms[3 * i + X];
-    model->facetnorms[3 * i + Y] = -model->facetnorms[3 * i + Y];
-    model->facetnorms[3 * i + Z] = -model->facetnorms[3 * i + Z];
+    model->facetnorms[3 * i + 0] = -model->facetnorms[3 * i + 0];
+    model->facetnorms[3 * i + 1] = -model->facetnorms[3 * i + 1];
+    model->facetnorms[3 * i + 2] = -model->facetnorms[3 * i + 2];
   }
 
   /* reverse vertex normals */
   for (i = 1; i <= model->numnormals; i++) {
-    model->normals[3 * i + X] = -model->normals[3 * i + X];
-    model->normals[3 * i + Y] = -model->normals[3 * i + Y];
-    model->normals[3 * i + Z] = -model->normals[3 * i + Z];
+    model->normals[3 * i + 0] = -model->normals[3 * i + 0];
+    model->normals[3 * i + 1] = -model->normals[3 * i + 1];
+    model->normals[3 * i + 2] = -model->normals[3 * i + 2];
   }
 }
 
@@ -991,22 +962,22 @@ glmFacetNormals(GLMmodel* model)
   for (i = 0; i < model->numtriangles; i++) {
     model->triangles[i].findex = i+1;
 
-    u[X] = model->vertices[3 * T(i).vindices[1] + X] -
-           model->vertices[3 * T(i).vindices[0] + X];
-    u[Y] = model->vertices[3 * T(i).vindices[1] + Y] -
-           model->vertices[3 * T(i).vindices[0] + Y];
-    u[Z] = model->vertices[3 * T(i).vindices[1] + Z] -
-           model->vertices[3 * T(i).vindices[0] + Z];
+    u[0] = model->vertices[3 * T(i).vindices[1] + 0] -
+           model->vertices[3 * T(i).vindices[0] + 0];
+    u[1] = model->vertices[3 * T(i).vindices[1] + 1] -
+           model->vertices[3 * T(i).vindices[0] + 1];
+    u[2] = model->vertices[3 * T(i).vindices[1] + 2] -
+           model->vertices[3 * T(i).vindices[0] + 2];
 
-    v[X] = model->vertices[3 * T(i).vindices[2] + X] -
-           model->vertices[3 * T(i).vindices[0] + X];
-    v[Y] = model->vertices[3 * T(i).vindices[2] + Y] -
-           model->vertices[3 * T(i).vindices[0] + Y];
-    v[Z] = model->vertices[3 * T(i).vindices[2] + Z] -
-           model->vertices[3 * T(i).vindices[0] + Z];
+    v[0] = model->vertices[3 * T(i).vindices[2] + 0] -
+           model->vertices[3 * T(i).vindices[0] + 0];
+    v[1] = model->vertices[3 * T(i).vindices[2] + 1] -
+           model->vertices[3 * T(i).vindices[0] + 1];
+    v[2] = model->vertices[3 * T(i).vindices[2] + 2] -
+           model->vertices[3 * T(i).vindices[0] + 2];
 
-    _glmCross(u, v, &model->facetnorms[3 * (i+1)]);
-    _glmNormalize(&model->facetnorms[3 * (i+1)]);
+    glmCross(u, v, &model->facetnorms[3 * (i+1)]);
+    glmNormalize(&model->facetnorms[3 * (i+1)]);
   }
 }
 
@@ -1091,7 +1062,7 @@ glmVertexNormals(GLMmodel* model, GLfloat angle)
          facet normals is greater than the cosine of the threshold
          angle -- or, said another way, the angle between the two
          facet normals is less than (or equal to) the threshold angle */
-      dot = _glmDot(&model->facetnorms[3 * T(node->index).findex],
+      dot = glmDot(&model->facetnorms[3 * T(node->index).findex],
  		    &model->facetnorms[3 * T(members[i]->index).findex]);
       if (dot > cos_angle) {
 	node->averaged = GL_TRUE;
@@ -1107,7 +1078,7 @@ glmVertexNormals(GLMmodel* model, GLfloat angle)
 
     if (avg) {
       /* normalize the averaged normal */
-      _glmNormalize(average);
+      glmNormalize(average);
 
       /* add the normal to the vertex normals list */
       model->normals[3 * numnormals + 0] = average[0];
@@ -1173,8 +1144,6 @@ glmVertexNormals(GLMmodel* model, GLfloat angle)
     model->normals[3 * i + 2] = normals[3 * i + 2];
   }
   free(normals);
-
-  printf("glmVertexNormals(): %d normals generated\n", model->numnormals);
 }
 
 
@@ -1201,7 +1170,7 @@ glmLinearTexture(GLMmodel* model)
   
   glmDimensions(model, dimensions);
   scalefactor = 2.0 / 
-    _glmAbs(_glmMax(_glmMax(dimensions[0], dimensions[1]), dimensions[2]));
+    glmAbs(glmMax(glmMax(dimensions[0], dimensions[1]), dimensions[2]));
 
   /* do the calculations */
   for(i = 1; i <= model->numvertices; i++) {
@@ -1254,7 +1223,6 @@ glmSpheremapTexture(GLMmodel* model)
   model->numtexcoords = model->numnormals;
   model->texcoords=(GLfloat*)malloc(sizeof(GLfloat)*2*(model->numtexcoords+1));
      
-  /* do the calculations */
   for (i = 1; i <= model->numnormals; i++) {
     z = model->normals[3 * i + 0];	/* re-arrange for pole distortion */
     y = model->normals[3 * i + 1];
@@ -1267,25 +1235,18 @@ glmSpheremapTexture(GLMmodel* model)
 	phi = 0.0;
     } else {
       if(z == 0.0)
-	phi = M_PI / 2.0;
+	phi = 3.14159265 / 2.0;
       else
 	phi = acos(z / rho);
-      
-#if WE_DONT_NEED_THIS_CODE
-      if(x == 0.0)
-	theta = M_PI / 2.0;	/* asin(y / r); */
-      else
-	theta = acos(x / r);
-#endif
-      
+
       if(y == 0.0)
-	theta = M_PI / 2.0;	/* acos(x / r); */
+	theta = 3.141592365 / 2.0;
       else
-	theta = asin(y / r) + (M_PI / 2.0);
+	theta = asin(y / r) + (3.14159265 / 2.0);
     }
     
-    model->texcoords[2 * i + 0] = theta / M_PI;
-    model->texcoords[2 * i + 1] = phi / M_PI;
+    model->texcoords[2 * i + 0] = theta / 3.14159265;
+    model->texcoords[2 * i + 1] = phi / 3.14159265;
   }
   
   /* go through and put texcoord indices in all the triangles */
@@ -1298,11 +1259,6 @@ glmSpheremapTexture(GLMmodel* model)
     }
     group = group->next;
   }
-
-#if 0  
-  printf("glmSpheremapTexture(): generated %d spheremap texture coordinates\n",
-	 model->numtexcoords);
-#endif
 }
 
 /* glmDelete: Deletes a GLMmodel structure.
@@ -1360,14 +1316,9 @@ glmReadOBJ(char* filename)
     exit(1);
   }
 
-#if 0
-  /* announce the model name */
-  printf("Model: %s\n", filename);
-#endif
-
   /* allocate a new model */
   model = (GLMmodel*)malloc(sizeof(GLMmodel));
-  model->pathname      = stralloc(filename);
+  model->pathname      = strdup(filename);
   model->mtllibname    = NULL;
   model->numvertices   = 0;
   model->vertices      = NULL;
@@ -1389,7 +1340,7 @@ glmReadOBJ(char* filename)
 
   /* make a first pass through the file to get a count of the number
      of vertices, normals, texcoords & triangles */
-  _glmFirstPass(model, file);
+  glmFirstPass(model, file);
 
   /* allocate memory */
   model->vertices = (GLfloat*)malloc(sizeof(GLfloat) *
@@ -1408,7 +1359,7 @@ glmReadOBJ(char* filename)
   /* rewind to beginning of file and read in the data this pass */
   rewind(file);
 
-  _glmSecondPass(model, file);
+  glmSecondPass(model, file);
 
   /* close the file */
   fclose(file);
@@ -1461,6 +1412,22 @@ glmWriteOBJ(GLMmodel* model, char* filename, GLuint mode)
 	   "and smooth normal output requested (using smooth).\n");
     mode &= ~GLM_FLAT;
   }
+  if (mode & GLM_COLOR && !model->materials) {
+    printf("glmWriteOBJ() warning: color output requested "
+	   "with no colors (materials) defined.\n");
+    mode &= ~GLM_COLOR;
+  }
+  if (mode & GLM_MATERIAL && !model->materials) {
+    printf("glmWriteOBJ() warning: material output requested "
+	   "with no materials defined.\n");
+    mode &= ~GLM_MATERIAL;
+  }
+  if (mode & GLM_COLOR && mode & GLM_MATERIAL) {
+    printf("glmDraw() warning: color and material output requested "
+	   "outputting only materials.\n");
+    mode &= ~GLM_COLOR;
+  }
+
 
   /* open the file */
   file = fopen(filename, "w");
@@ -1474,14 +1441,15 @@ glmWriteOBJ(GLMmodel* model, char* filename, GLuint mode)
   fprintf(file, "#  \n");
   fprintf(file, "#  Wavefront OBJ generated by GLM library\n");
   fprintf(file, "#  \n");
-  fprintf(file, "#  GLM library copyright (C) 1997 by Nate Robins\n");
-  fprintf(file, "#  email: ndr@pobox.com\n");
-  fprintf(file, "#  www:   http://www.pobox.com/~ndr\n");
+  fprintf(file, "#  GLM library\n");
+  fprintf(file, "#  Nate Robins\n");
+  fprintf(file, "#  ndr@pobox.com\n");
+  fprintf(file, "#  http://www.pobox.com/~ndr\n");
   fprintf(file, "#  \n");
 
   if (mode & GLM_MATERIAL && model->mtllibname) {
     fprintf(file, "\nmtllib %s\n\n", model->mtllibname);
-    _glmWriteMTL(model, filename, model->mtllibname);
+    glmWriteMTL(model, filename, model->mtllibname);
   }
 
   /* spit out the vertices */
@@ -1518,7 +1486,7 @@ glmWriteOBJ(GLMmodel* model, char* filename, GLuint mode)
   /* spit out the texture coordinates */
   if (mode & GLM_TEXTURE) {
     fprintf(file, "\n");
-    fprintf(file, "# %d texcoords\n", model->numtexcoords);
+    fprintf(file, "# %d texcoords\n", model->texcoords);
     for (i = 1; i <= model->numtexcoords; i++) {
       fprintf(file, "vt %f %f\n", 
 	      model->texcoords[2 * i + 0],
@@ -1611,8 +1579,10 @@ glmWriteOBJ(GLMmodel* model, char* filename, GLuint mode)
 GLvoid
 glmDraw(GLMmodel* model, GLuint mode)
 {
-  GLuint i;
-  GLMgroup* group;
+  static GLuint i;
+  static GLMgroup* group;
+  static GLMtriangle* triangle;
+  static GLMmaterial* material;
 
   assert(model);
   assert(model->vertices);
@@ -1650,82 +1620,64 @@ glmDraw(GLMmodel* model, GLuint mode)
   }
   if (mode & GLM_COLOR && mode & GLM_MATERIAL) {
     printf("glmDraw() warning: color and material render mode requested "
-	   "using only material mode\n");
+	   "using only material mode.\n");
     mode &= ~GLM_COLOR;
   }
   if (mode & GLM_COLOR)
     glEnable(GL_COLOR_MATERIAL);
-  if (mode & GLM_MATERIAL)
+  else if (mode & GLM_MATERIAL)
     glDisable(GL_COLOR_MATERIAL);
 
-  glPushMatrix();
-  glTranslatef(model->position[0], model->position[1], model->position[2]);
+  /* perhaps this loop should be unrolled into material, color, flat,
+     smooth, etc. loops?  since most cpu's have good branch prediction
+     schemes (and these branches will always go one way), probably
+     wouldn't gain too much?  */
 
-  glBegin(GL_TRIANGLES);
   group = model->groups;
   while (group) {
     if (mode & GLM_MATERIAL) {
-      glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, 
-		   model->materials[group->material].ambient);
-      glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, 
-		   model->materials[group->material].diffuse);
-      glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, 
-		   model->materials[group->material].specular);
-       glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 
-  		  model->materials[group->material].shininess);
+      material = &model->materials[group->material];
+      glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, material->ambient);
+      glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, material->diffuse);
+      glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, material->specular);
+      glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, material->shininess);
     }
 
     if (mode & GLM_COLOR) {
-      glColor3fv(model->materials[group->material].diffuse);
+      material = &model->materials[group->material];
+      glColor3fv(material->diffuse);
     }
 
+    glBegin(GL_TRIANGLES);
     for (i = 0; i < group->numtriangles; i++) {
+      triangle = &T(group->triangles[i]);
+
       if (mode & GLM_FLAT)
-	glNormal3fv(&model->facetnorms[3 * T(group->triangles[i]).findex]);
+	glNormal3fv(&model->facetnorms[3 * triangle->findex]);
       
       if (mode & GLM_SMOOTH)
-	glNormal3fv(&model->normals[3 * T(group->triangles[i]).nindices[0]]);
+	glNormal3fv(&model->normals[3 * triangle->nindices[0]]);
       if (mode & GLM_TEXTURE)
-	glTexCoord2fv(&model->texcoords[2*T(group->triangles[i]).tindices[0]]);
-      glVertex3fv(&model->vertices[3 * T(group->triangles[i]).vindices[0]]);
-#if 0
-      printf("%f %f %f\n", 
-	     model->vertices[3 * T(group->triangles[i]).vindices[0] + X],
-	     model->vertices[3 * T(group->triangles[i]).vindices[0] + Y],
-	     model->vertices[3 * T(group->triangles[i]).vindices[0] + Z]);
-#endif
+	glTexCoord2fv(&model->texcoords[2 * triangle->tindices[0]]);
+      glVertex3fv(&model->vertices[3 * triangle->vindices[0]]);
       
       if (mode & GLM_SMOOTH)
-	glNormal3fv(&model->normals[3 * T(group->triangles[i]).nindices[1]]);
+	glNormal3fv(&model->normals[3 * triangle->nindices[1]]);
       if (mode & GLM_TEXTURE)
-	glTexCoord2fv(&model->texcoords[2*T(group->triangles[i]).tindices[1]]);
-      glVertex3fv(&model->vertices[3 * T(group->triangles[i]).vindices[1]]);
-#if 0
-      printf("%f %f %f\n", 
-	     model->vertices[3 * T(group->triangles[i]).vindices[1] + X],
-	     model->vertices[3 * T(group->triangles[i]).vindices[1] + Y],
-	     model->vertices[3 * T(group->triangles[i]).vindices[1] + Z]);
-#endif
+	glTexCoord2fv(&model->texcoords[2 * triangle->tindices[1]]);
+      glVertex3fv(&model->vertices[3 * triangle->vindices[1]]);
       
       if (mode & GLM_SMOOTH)
-	glNormal3fv(&model->normals[3 * T(group->triangles[i]).nindices[2]]);
+	glNormal3fv(&model->normals[3 * triangle->nindices[2]]);
       if (mode & GLM_TEXTURE)
-	glTexCoord2fv(&model->texcoords[2*T(group->triangles[i]).tindices[2]]);
-      glVertex3fv(&model->vertices[3 * T(group->triangles[i]).vindices[2]]);
-#if 0
-      printf("%f %f %f\n", 
-	     model->vertices[3 * T(group->triangles[i]).vindices[2] + X],
-	     model->vertices[3 * T(group->triangles[i]).vindices[2] + Y],
-	     model->vertices[3 * T(group->triangles[i]).vindices[2] + Z]);
-#endif
+	glTexCoord2fv(&model->texcoords[2 * triangle->tindices[2]]);
+      glVertex3fv(&model->vertices[3 * triangle->vindices[2]]);
       
     }
-    
+    glEnd();
+
     group = group->next;
   }
-  glEnd();
-
-  glPopMatrix();
 }
 
 /* glmList: Generates and returns a display list for the model using
@@ -1740,8 +1692,7 @@ glmDraw(GLMmodel* model, GLuint mode)
  *            GLM_COLOR    -  render with colors (color material)
  *            GLM_MATERIAL -  render with materials
  *            GLM_COLOR and GLM_MATERIAL should not both be specified.  
- *            GLM_FLAT and GLM_SMOOTH should not both be specified.  
- */
+ * GLM_FLAT and GLM_SMOOTH should not both be specified.  */
 GLuint
 glmList(GLMmodel* model, GLuint mode)
 {
@@ -1763,21 +1714,19 @@ glmList(GLMmodel* model, GLuint mode)
  *              ( 0.00001 is a good start for a unitized model)
  *
  */
-GLvoid
+GLuint
 glmWeld(GLMmodel* model, GLfloat epsilon)
 {
   GLfloat* vectors;
   GLfloat* copies;
   GLuint   numvectors;
-  GLuint   i;
+  GLuint   i, welded;
 
   /* vertices */
   numvectors = model->numvertices;
   vectors    = model->vertices;
-  copies = _glmWeldVectors(vectors, &numvectors, epsilon);
-
-  printf("glmWeld(): %d redundant vertices.\n", 
-	 model->numvertices - numvectors - 1);
+  copies = glmWeldVectors(vectors, &numvectors, epsilon);
+  welded = model->numvertices - numvectors - 1;
 
   for (i = 0; i < model->numtriangles; i++) {
     T(i).vindices[0] = (GLuint)vectors[3 * T(i).vindices[0] + 0];
@@ -1801,6 +1750,8 @@ glmWeld(GLMmodel* model, GLfloat epsilon)
   }
 
   free(copies);
+
+  return welded;
 }
 
 
@@ -1809,7 +1760,7 @@ glmWeld(GLMmodel* model, GLfloat epsilon)
   if (model->numnormals) {
   numvectors = model->numnormals;
   vectors    = model->normals;
-  copies = _glmOptimizeVectors(vectors, &numvectors);
+  copies = glmOptimizeVectors(vectors, &numvectors);
 
   printf("glmOptimize(): %d redundant normals.\n", 
 	 model->numnormals - numvectors);
@@ -1842,7 +1793,7 @@ glmWeld(GLMmodel* model, GLfloat epsilon)
   if (model->numtexcoords) {
   numvectors = model->numtexcoords;
   vectors    = model->texcoords;
-  copies = _glmOptimizeVectors(vectors, &numvectors);
+  copies = glmOptimizeVectors(vectors, &numvectors);
 
   printf("glmOptimize(): %d redundant texcoords.\n", 
 	 model->numtexcoords - numvectors);

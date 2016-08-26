@@ -192,6 +192,11 @@ main(int argc, char **argv)
     glutSetColor(opaqueP, 1.0, 0.0, 1.0);
     glClearIndex(opaqueP);
   }
+  else
+  {
+      printf("UNRESOLVED: need overlays for this test (your window system lacks overlays)\n");
+      return 0;
+  }
   glutInitDisplayMode(GLUT_SINGLE | GLUT_RGBA);
   sub_win = glutCreateSubWindow(main_win, 10, 10, 20, 20);
   glClearColor(0.0, 1.0, 0.0, 0.0);

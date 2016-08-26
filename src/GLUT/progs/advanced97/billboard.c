@@ -1,6 +1,6 @@
-#include "stdlib.h"
-#include "stdio.h"
-#include "math.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
 #include "texture.h"
 #include <GL/glut.h>
 

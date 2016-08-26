@@ -777,8 +777,9 @@ void extrusion_round_or_cut_join (int ncp,	/* number of contour points */
    double *norm_loop, *tmp; /* normal vectors, cast into 3d from 2d */
    int *front_is_trimmed, *back_is_trimmed;   /* T or F */
    float *front_color, *back_color;  /* pointers to segment colors */
-   void ((*cap_callback) ());  /* function callback to draw cap */
-   void ((*tmp_cap_callback) ());  /* function callback to draw cap */
+   void ((*cap_callback) (int,double [][3],float [3],gleDouble [3], gleDouble [3], double [][3],int));  /* function callback to draw cap */
+   void ((*tmp_cap_callback) (int,double [][3],float [3],gleDouble [3], gleDouble [3], double [][3],int));  /* function callback to draw cap */
+
    int join_style_is_cut;      /* TRUE if join style is cut */
    double dot;                  /* partial dot product */
    char *mem_anchor;

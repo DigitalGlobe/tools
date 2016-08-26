@@ -10,6 +10,7 @@
 #else
 #define random rand
 #define srandom srand
+#include <process.h>
 #endif
 /* Some <math.h> files do not define M_PI... */
 #ifndef M_PI
@@ -50,48 +51,48 @@ initshapes(int i)
 
   /* random init of pos, dir, color */
   for (k = i * 3; k <= i * 3 + 2; k++) {
-    f = random() / 2147483647.0;
+    f = random() / (float)RAND_MAX;
     pos[k] = f;
-    f = random() / 2147483647.0;
+    f = random() / (float)RAND_MAX;
     f = (f - 0.5) * 0.05;
     dir[k] = f;
-    f = random() / 2147483647.0;
+    f = random() / (float)RAND_MAX;
     f = (f - 0.5) * 0.0002;
     acc[k] = f;
-    f = random() / 2147483647.0;
+    f = random() / (float)RAND_MAX;
     col[k] = f;
   }
 
   speedsq[i] = dir[i * 3] * dir[i * 3] + dir[i * 3 + 1] * dir[i * 3 + 1];
-  f = random() / 2147483647.0;
+  f = random() / (float)RAND_MAX;
   blad[i] = 2 + (int) (f * 17.0);
-  f = random() / 2147483647.0;
+  f = random() / (float)RAND_MAX;
   ang[i] = f;
-  f = random() / 2147483647.0;
+  f = random() / (float)RAND_MAX;
   spn[i] = (f - 0.5) * 40.0 / (10 + blad[i]);
-  f = random() / 2147483647.0;
+  f = random() / (float)RAND_MAX;
   sca[i] = (f * 0.1 + 0.08);
   dir[i * 3] *= sca[i];
   dir[i * 3 + 1] *= sca[i];
 
-  f = random() / 2147483647.0;
+  f = random() / (float)RAND_MAX;
   hsv[i * 3] = f * 360.0;
 
-  f = random() / 2147483647.0;
+  f = random() / (float)RAND_MAX;
   hsv[i * 3 + 1] = f * 0.6 + 0.4;
 
-  f = random() / 2147483647.0;
+  f = random() / (float)RAND_MAX;
   hsv[i * 3 + 2] = f * 0.7 + 0.3;
 
-  f = random() / 2147483647.0;
+  f = random() / (float)RAND_MAX;
   hpr[i * 3] = f * 0.005 * 360.0;
-  f = random() / 2147483647.0;
+  f = random() / (float)RAND_MAX;
   hpr[i * 3 + 1] = f * 0.03;
-  f = random() / 2147483647.0;
+  f = random() / (float)RAND_MAX;
   hpr[i * 3 + 2] = f * 0.02;
 
   geep[i] = 0;
-  f = random() / 2147483647.0;
+  f = random() / (float)RAND_MAX;
   peep[i] = 0.01 + f * 0.2;
 }
 

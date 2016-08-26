@@ -6,7 +6,7 @@
 #include <GL/glut.h>
 #include "texture.h"
 
-static char defaultFile[] = "data/mandrill256.rgb";
+static char defaultFile[] = "../data/mandrill.rgb";
 GLuint *img, *black, *avgLum, *lum;
 GLsizei w, h;
 GLint comp;

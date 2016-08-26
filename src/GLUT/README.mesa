@@ -9,6 +9,14 @@ state machine, it is being used with authorization from Silicon
 Graphics, Inc.  Mesa is written by Brian Paul (brianp@elastic.avid.com)
 of Avid Technologies.
 
+If you intend to use GLUT with Mesa, please edit the Glut.cf file and
+follow the instructions at the top of the file for using Mesa.
+
+Also, note that a version of the GLUT library source code is contained
+in the MesaDemos source code distribution.  The version of the GLUT
+library source code in that distribution may be more or less up-to-date
+compared to the current GLUT source code distribution.
+
 You can find out more about Mesa from:
 
   http://www.ssec.wisc.edu/~brianp/Mesa.html
@@ -22,4 +30,4 @@ OS/2, and Windows 95/NT. See the README file included with the Mesa
 distribution for more details.
 
 - Mark Kilgard
-  January 22, 1997
+  November 22, 1998

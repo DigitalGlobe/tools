@@ -14,7 +14,7 @@ GLsizei sphereTexW, sphereTexH, padSphereTexW, padSphereTexH;
 GLint sphereTexComp;
 
 
-const char defaultSphereMap[] = "data/spheremap.rgb";
+const char defaultSphereMap[] = "../data/spheremap.rgb";
 int drawTorus = 1;
 
 

@@ -136,7 +136,7 @@ void KeyboardFunc(unsigned char key, int x, int y)
 
 void MenuFunc(int value)
 {
-  KeyboardFunc(value, 0, 0);
+  KeyboardFunc((unsigned char) value, 0, 0);
 }
 
 void IdleFunc(void)

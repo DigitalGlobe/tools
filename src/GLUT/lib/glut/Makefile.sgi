@@ -1,6 +1,6 @@
 #! smake
 #
-# Copyright (c) Mark J. Kilgard, 1995.
+# Copyright (c) Mark J. Kilgard, 1995, 1998.
 #
 include $(ROOT)/usr/include/make/commondefs
 
@@ -28,6 +28,7 @@ SRCS = \
 	glut_dstr.c \
 	glut_event.c \
 	glut_ext.c \
+	glut_fbc.c \
 	glut_fullscrn.c \
 	glut_gamemode.c \
 	glut_get.c \

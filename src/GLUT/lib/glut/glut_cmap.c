@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>  /* SunOS multithreaded assert() needs <stdio.h>.  Lame. */
 #include <assert.h>
 #if !defined(_WIN32)
 #include <X11/Xlib.h>

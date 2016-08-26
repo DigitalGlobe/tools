@@ -5,7 +5,28 @@ BUILD INSTRUCTIONS
 
 To build the GLUT Fortran API, do the following:
 
-  1)  Make sure you are running IRIX 5.3, 6.1, or 6.2 or higher.
+  1)  Make sure you are running IRIX 5.3, 6.1, or 6.2 or higher on
+      a Silicon Graphics workstation.
+
+      >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+      If you are not on an SGI workstation, I suggest you try out
+      the f90gl, a public domain implementation the official Fortran
+      90 bindings for OpenGL.  See the web site at:
+
+         http://math.nist.gov/f90gl/
+
+      f90gl implements a Fortran 90 interface for OpenGL 1.1, GLU 1.2,
+      GLUT 3.7, and several extensions.  f90gl supports both Unix
+      workstations, Linux PCs, and Windows 95/NT PCs.
+
+      William Mitchell deserves special credit for developing the
+      f90gl implementation and pushing for a standard OpenGL
+      Fortran 90 binding.
+
+      Also, note that GLUT 3.7 has a new "friend" interface for use
+      by f90gl to ensure future interoperability between f90gl
+      and future GLUT revisions.
+      <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
   2)  Make sure you have Fortran compilers and OpenGL Fortran
       libraries installed (make sure you have the right support

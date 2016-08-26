@@ -79,7 +79,7 @@ void init(void) {
     glEnable(GL_DEPTH_TEST);
     glShadeModel(GL_SMOOTH);
 
-    if (!(image = (GLubyte *)read_texture("data/sea.rgb", &width, &height, &components))) {
+    if (!(image = (GLubyte *)read_texture("../data/sea.rgb", &width, &height, &components))) {
 	perror("sea.rgb");
 	exit(EXIT_FAILURE);
     }

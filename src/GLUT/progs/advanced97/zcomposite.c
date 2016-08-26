@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <GL/glut.h>
 
@@ -417,6 +418,11 @@ main(int argc, char *argv[])
       glutSetColor(red, 1.0, 0.0, 0.0);  /* Red. */
       glutOverlayDisplayFunc(overlay);
     }
+	else
+	{
+		printf( "Overlay support unavailable - aborting.\n" );
+		return 1;
+	}
 
     glutMainLoop();
 

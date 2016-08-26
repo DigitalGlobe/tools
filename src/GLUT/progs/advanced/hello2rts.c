@@ -21,6 +21,8 @@
 
 #include "rtshadow.h"
 
+extern GLuint makeNVidiaLogo(GLuint dlistBase);
+
 /* Some <math.h> files do not define M_PI... */
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -31,11 +33,12 @@ enum {
 };
 
 enum {
-  DL_NONE, DL_TORUS, DL_CUBE, DL_DOUBLE_TORUS, DL_SPHERE
+  DL_NONE, DL_TORUS, DL_CUBE, DL_DOUBLE_TORUS, DL_SPHERE, DL_NVIDIA_LOGO
 };
 
 enum {
-  M_TORUS, M_CUBE, M_DOUBLE_TORUS, M_NORMAL_VIEW, M_LIGHT1_VIEW, M_LIGHT2_VIEW,
+  M_TORUS, M_CUBE, M_DOUBLE_TORUS, M_NVIDIA_LOGO,
+  M_NORMAL_VIEW, M_LIGHT1_VIEW, M_LIGHT2_VIEW,
   M_START_MOTION, M_ROTATING,
   M_TWO_BIT_STENCIL, M_ALL_STENCIL,
   M_RENDER_SILHOUETTE,
@@ -45,6 +48,7 @@ enum {
 #define OBJECT_1  0x8000
 #define OBJECT_2  0x4000
 
+int fullscreen = 0, forceStencilHack = 0;
 int lightView = M_NORMAL_VIEW;
 int rotate1 = 1, rotate2 = 1;
 
@@ -89,7 +93,9 @@ renderBasicObject(int shape)
     break;
   case M_DOUBLE_TORUS:
     glCallList(DL_DOUBLE_TORUS);
-    glutSolidTorus(0.2, 0.8, 10, 10);
+    break;
+  case M_NVIDIA_LOGO:
+    glCallList(DL_NVIDIA_LOGO);
     break;
   }
 }
@@ -120,10 +126,6 @@ renderObject2(void *data)
 void
 renderScene(GLenum castingLight, void *sceneData, RTSscene * scene)
 {
-  glMatrixMode(GL_PROJECTION);
-  glLoadIdentity();
-  gluPerspective(70.0, 1.0, 0.5, 30.0);
-
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
   switch (lightView) {
@@ -201,6 +203,18 @@ renderScene(GLenum castingLight, void *sceneData, RTSscene * scene)
   }
   renderObject(NULL);
   renderObject2(NULL);
+}
+
+void
+reshape(int w, int h)
+{
+  GLfloat wf = w, hf = h;
+
+  glViewport(0, 0, w, h);
+  glMatrixMode(GL_PROJECTION);
+  glLoadIdentity();
+  gluPerspective(70.0, wf/hf, 0.5, 30.0);
+  glMatrixMode(GL_MODELVIEW);
 }
 
 void
@@ -285,29 +299,6 @@ special(int c, int x, int y)
   glutPostRedisplay();
 }
 
-/* ARGSUSED1 */
-void
-keyboard(unsigned char c, int x, int y)
-{
-  switch (c) {
-  case 27:
-    exit(0);
-    /* NOTREACHED */
-    break;
-  case ' ':
-    if (rotate1 || rotate2) {
-      glutIdleFunc(NULL);
-      rotate1 = 0;
-      rotate2 = 0;
-    } else {
-      glutIdleFunc(idle);
-      rotate1 = 1;
-      rotate2 = 1;
-    }
-    break;
-  }
-}
-
 void
 updateIdleCallback(void)
 {
@@ -318,15 +309,7 @@ updateIdleCallback(void)
   }
 }
 
-void
-visible(int vis)
-{
-  if (vis == GLUT_VISIBLE)
-    updateIdleCallback();
-  else
-    glutIdleFunc(NULL);
-}
-
+/* ARGSUSED1 */
 void
 menuHandler(int value)
 {
@@ -334,6 +317,7 @@ menuHandler(int value)
   case OBJECT_1 | M_TORUS:
   case OBJECT_1 | M_CUBE:
   case OBJECT_1 | M_DOUBLE_TORUS:
+  case OBJECT_1 | M_NVIDIA_LOGO:
     shape1 = value & ~OBJECT_1;
     rtsUpdateObjectShape(object);
     glutPostRedisplay();
@@ -341,6 +325,7 @@ menuHandler(int value)
   case OBJECT_2 | M_TORUS:
   case OBJECT_2 | M_CUBE:
   case OBJECT_2 | M_DOUBLE_TORUS:
+  case OBJECT_2 | M_NVIDIA_LOGO:
     shape2 = value & ~OBJECT_2;
     rtsUpdateObjectShape(object2);
     glutPostRedisplay();
@@ -392,6 +377,61 @@ menuHandler(int value)
 }
 
 void
+keyboard(unsigned char c, int x, int y)
+{
+  switch (c) {
+  case 27:
+    exit(0);
+    /* NOTREACHED */
+    break;
+  case ' ':
+    if (rotate1 || rotate2) {
+      glutIdleFunc(NULL);
+      rotate1 = 0;
+      rotate2 = 0;
+    } else {
+      glutIdleFunc(idle);
+      rotate1 = 1;
+      rotate2 = 1;
+    }
+    break;
+  case '1':
+    menuHandler(OBJECT_1 | M_TORUS);
+    break;
+  case '2':
+    menuHandler(OBJECT_1 | M_CUBE);
+    break;
+  case '3':
+    menuHandler(OBJECT_1 | M_DOUBLE_TORUS);
+    break;
+  case '4':
+    menuHandler(OBJECT_1 | M_NVIDIA_LOGO);
+    break;
+  case '5':
+    menuHandler(OBJECT_2 | M_TORUS);
+    break;
+  case '6':
+    menuHandler(OBJECT_2 | M_CUBE);
+    break;
+  case '7':
+    menuHandler(OBJECT_2 | M_DOUBLE_TORUS);
+    break;
+  case '8':
+    menuHandler(OBJECT_2 | M_NVIDIA_LOGO);
+    break;
+  }
+}
+
+void
+visible(int vis)
+{
+  if (vis == GLUT_VISIBLE)
+    updateIdleCallback();
+  else
+    glutIdleFunc(NULL);
+}
+
+void
 initMenu(void)
 {
   glutCreateMenu(menuHandler);
@@ -399,10 +439,12 @@ initMenu(void)
   glutAddMenuEntry("1 Torus", OBJECT_1 | M_TORUS);
   glutAddMenuEntry("1 Cube", OBJECT_1 | M_CUBE);
   glutAddMenuEntry("1 Double torus", OBJECT_1 | M_DOUBLE_TORUS);
+  glutAddMenuEntry("1 NVIDIA logo", OBJECT_1 | M_NVIDIA_LOGO);
 
   glutAddMenuEntry("2 Torus", OBJECT_2 | M_TORUS);
   glutAddMenuEntry("2 Cube", OBJECT_2 | M_CUBE);
   glutAddMenuEntry("2 Double torus", OBJECT_2 | M_DOUBLE_TORUS);
+  glutAddMenuEntry("2 NVIDIA logo", OBJECT_2 | M_NVIDIA_LOGO);
 
   glutAddMenuEntry("Normal view", M_NORMAL_VIEW);
   glutAddMenuEntry("View from light 1", M_LIGHT1_VIEW);
@@ -453,28 +495,60 @@ motion(int x, int y)
 /* XXX RIVA 128 board vendors may change their GL_VENDOR
    and GL_RENDERER strings. */
 int
-detectRiva128hardware(void)
+needsStencilRenderingInvariantHack(void)
 {
-  const char *vendor, *renderer;
+  const char *renderer;
+  GLint bits;
 
-  vendor = glGetString(GL_VENDOR);
   renderer = glGetString(GL_RENDERER);
-  if (strcmp("NVIDIA Corporation", vendor)) {
-    return 0;
+  /* Stencil rendering on RIVA 128 and RIVA 128 ZX 
+     is not invariant with stencil-disabled rendering
+     in 16-bit hardware accelerated mode. */
+  if (!strncmp("RIVA 128", renderer, 8)) {
+    glGetIntegerv(GL_INDEX_BITS, &bits);
+    return bits == 16;
   }
-  if (strncmp("RIVA 128", renderer, 8)) {
-    return 0;
+  /* Stencil rendering on RIVA 128 and RIVA 128 ZX 
+     is not invariant with stencil-disabled rendering
+     in 16-bit hardware accelerated mode.  32-bit mode
+     is invariant (and hardware accelerated though!).  */
+  if (!strncmp("RIVA TNT", renderer, 8)) {
+    glGetIntegerv(GL_INDEX_BITS, &bits);
+    return bits == 16;
   }
   return 1;
+}
+
+void
+parseArgs(int argc, char **argv)
+{
+  int i;
+
+  for (i=1; i<argc; i++) {
+    if (!strcmp("-fullscreen", argv[i])) {
+      fullscreen = 1;
+    } else if (!strcmp("-stencilhack", argv[i])) {
+      forceStencilHack = 1;
+    }
+  }
 }
 
 int
 main(int argc, char **argv)
 {
+  glutInitDisplayString("stencil>=2 rgb depth samples");
   glutInitDisplayString("stencil>=2 rgb double depth samples");
   glutInit(&argc, argv);
 
-  glutCreateWindow("Hello to Real Time Shadows");
+  parseArgs(argc, argv);
+
+  if (fullscreen) {
+    glutGameModeString("640x480:32@60");
+    glutEnterGameMode();
+  } else {
+    glutCreateWindow("Hello to Real Time Shadows");
+  }
+  glutReshapeFunc(reshape);
   glutDisplayFunc(display);
   glutSpecialFunc(special);
   glutKeyboardFunc(keyboard);
@@ -503,7 +577,7 @@ main(int argc, char **argv)
   rtsAddObjectToLight(light2, object);
   rtsAddObjectToLight(light2, object2);
 
-  if (detectRiva128hardware()) {
+  if (forceStencilHack || needsStencilRenderingInvariantHack()) {
     /* RIVA 128 and RIVA 128 ZX lack hardware stencil
        support and the hardware rasterization path
        (non-stenciled) and the software rasterization
@@ -515,7 +589,9 @@ main(int argc, char **argv)
   glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
 
-  initMenu();
+  if (!fullscreen) {
+    initMenu();
+  }
 
   glNewList(DL_TORUS, GL_COMPILE);
   glutSolidTorus(0.2, 0.8, 10, 10);
@@ -534,6 +610,16 @@ main(int argc, char **argv)
 
   glNewList(DL_SPHERE, GL_COMPILE);
   glutSolidSphere(1.5, 20, 20);
+  glEndList();
+
+  makeNVidiaLogo(1000);
+  glNewList(DL_NVIDIA_LOGO, GL_COMPILE);
+  glPushMatrix();
+  glScalef(.25, .25, .25);
+  glEnable(GL_NORMALIZE);
+  glCallList(1000);
+  glDisable(GL_NORMALIZE);
+  glPopMatrix();
   glEndList();
 
   glutMainLoop();

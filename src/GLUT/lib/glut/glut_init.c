@@ -49,6 +49,10 @@ GLboolean __glutForceDirect = GL_FALSE,
 Atom __glutWMDeleteWindow;
 /* *INDENT-ON* */
 
+#ifdef _WIN32
+void (__cdecl *__glutExitFunc)(int retval) = NULL;
+#endif
+
 static Bool synchronize = False;
 
 #if defined(_WIN32)
@@ -92,9 +96,15 @@ __glutOpenWin32Connection(char* display)
   wc.lpszMenuName  = NULL;
   wc.lpszClassName = classname;
 
-  /* Fill in a default icon if one isn't specified as a resource. */
-  if(!wc.hIcon)
-    wc.hIcon = LoadIcon(NULL, IDI_WINLOGO);
+  if(wc.hIcon == NULL) {
+    HINSTANCE hDLLInstance = LoadLibrary("glut32.dll");
+	if (hDLLInstance == NULL) {
+	  /* Fill in a default icon if one isn't specified as a resource. */
+	  wc.hIcon = LoadIcon(NULL, IDI_WINLOGO);
+	} else {
+	  wc.hIcon = LoadIcon(hDLLInstance, "GLUT_ICON");
+	}
+  }
   
   if(!RegisterClass(&wc)) {
     __glutFatalError("RegisterClass() failed:"
@@ -213,7 +223,7 @@ glutInit(int *argcp, char **argv)
   for (i = 1; i < __glutArgc; i++) {
     if (!strcmp(__glutArgv[i], "-display")) {
 #if defined(_WIN32)
-      __glutWarning("-display option invalid for win32 glut.");
+      __glutWarning("-display option not supported by Win32 GLUT.");
 #endif
       if (++i >= __glutArgc) {
         __glutFatalError(
@@ -230,7 +240,7 @@ glutInit(int *argcp, char **argv)
       removeArgs(argcp, &argv[1], 2);
     } else if (!strcmp(__glutArgv[i], "-direct")) {
 #if defined(_WIN32)
-      __glutWarning("-direct option invalid for win32 glut.");
+      __glutWarning("-direct option not supported by Win32 GLUT.");
 #endif
       if (!__glutTryDirect)
         __glutFatalError(
@@ -239,7 +249,7 @@ glutInit(int *argcp, char **argv)
       removeArgs(argcp, &argv[1], 1);
     } else if (!strcmp(__glutArgv[i], "-indirect")) {
 #if defined(_WIN32)
-      __glutWarning("-indirect option invalid for win32 glut.");
+      __glutWarning("-indirect option not supported by Win32 GLUT.");
 #endif
       if (__glutForceDirect)
         __glutFatalError(
@@ -254,7 +264,7 @@ glutInit(int *argcp, char **argv)
       removeArgs(argcp, &argv[1], 1);
     } else if (!strcmp(__glutArgv[i], "-sync")) {
 #if defined(_WIN32)
-      __glutWarning("-indirect option invalid for win32 glut.");
+      __glutWarning("-sync option not supported by Win32 GLUT.");
 #endif
       synchronize = GL_TRUE;
       removeArgs(argcp, &argv[1], 1);
@@ -312,6 +322,15 @@ glutInit(int *argcp, char **argv)
   }
   __glutInitTime(&unused);
 }
+
+#ifdef _WIN32
+void APIENTRY 
+__glutInitWithExit(int *argcp, char **argv, void (__cdecl *exitfunc)(int))
+{
+  __glutExitFunc = exitfunc;
+  glutInit(argcp, argv);
+}
+#endif
 
 /* CENTRY */
 void APIENTRY 

@@ -1,3 +1,12 @@
+The information below is probably no longer accurate.  Please see
+Question 44 in the "FAQ.glut" file for instructions for building
+shared libraries today.
+
+- Mark Kilgard
+  November 25, 1998
+
+--------------
+
 IBM users wanting a GLUT shared library,
 
 I can't verify or maintain this information, but it could be useful to

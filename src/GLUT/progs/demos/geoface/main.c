@@ -542,7 +542,7 @@ make_menus(void)
 ** All the initialization and action takes place here.
 */
 
-void main ( int argc, char** argv )
+int main ( int argc, char** argv )
 {
   int i;
 
@@ -565,6 +565,7 @@ void main ( int argc, char** argv )
   glutDisplayFunc(display);
   make_menus();
   glutMainLoop() ;
+  return 0;             /* ANSI C requires main to return int. */
 }
 
   

@@ -6,8 +6,7 @@
    and is provided without guarantee or warrantee expressed or 
    implied. This program is -not- in the public domain. */
 
-#include <stdio.h>
-#include "win32_x11.h"
+#include "glutint.h"
 
 /* global variable that must be set for some functions to operate
    correctly. */
@@ -19,15 +18,18 @@ XGetVisualInfo(Display* display, long mask, XVisualInfo* template, int* nitems)
   /* KLUDGE: this function needs XHDC to be set to the HDC currently
      being operated on before it is invoked! */
 
-  PIXELFORMATDESCRIPTOR* pfds;
+  PIXELFORMATDESCRIPTOR* pfds = NULL;
   int i, n;
 
-  n = DescribePixelFormat(XHDC, 0, 0, NULL);
-  pfds = (PIXELFORMATDESCRIPTOR*)malloc(sizeof(PIXELFORMATDESCRIPTOR) * n);
-  memset(pfds, 0, sizeof(PIXELFORMATDESCRIPTOR) * n);
-  
+  n = DescribePixelFormat(XHDC, 1, 0, NULL);
+
+  if (n > 0) {
+    pfds = (PIXELFORMATDESCRIPTOR*)malloc(sizeof(PIXELFORMATDESCRIPTOR) * n);
+    memset(pfds, 0, sizeof(PIXELFORMATDESCRIPTOR) * n);
+  }
+ 
   for (i = 0; i < n; i++) {
-    DescribePixelFormat(XHDC, i, sizeof(PIXELFORMATDESCRIPTOR), &pfds[i]);
+    DescribePixelFormat(XHDC, i + 1, sizeof(PIXELFORMATDESCRIPTOR), &pfds[i]);
   }
 
   *nitems = n;

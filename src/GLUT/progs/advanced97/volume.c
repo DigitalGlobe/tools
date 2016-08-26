@@ -47,6 +47,10 @@ GLboolean geom = GL_FALSE;
 GLboolean map = GL_FALSE;
 GLint cutbias = 50;
 int hasBlendColor = 0;
+#if defined(_WIN32) && !defined(MESA)
+#include <windows.h>
+PFNGLBLENDCOLOREXTPROC glBlendColorEXT;
+#endif
 
 GLfloat objangle[2] = {0.f, 0.f};
 GLfloat objpos[3] = {0.f, 0.f, 0.f};
@@ -445,13 +449,13 @@ loadtex3d(int *texwid, int *texht, int *texdepth, int *texcomps)
     int i;
 
     /* load 3D texture data */
-    filename = (char*)malloc(sizeof(char) * strlen("data/skull/skullXX.la"));
+    filename = (char*)malloc(sizeof(char) * strlen("../data/skull/skullXX.la"));
 
     tex3ddata = (GLubyte *)malloc(Texwid * Texht * Texdepth * 
 				  4 * sizeof(GLubyte));
     for(i = 0; i < Texdepth; i++)
     {
-	sprintf(filename, "data/skull/skull%d.la", i);
+	sprintf(filename, "../data/skull/skull%d.la", i);
 	/* read_texture reads as RGBA */
 	texslice = read_texture(filename, texwid, texht, texcomps);
 	memcpy(&tex3ddata[i * Texwid * Texht * 4],  /* copy in a slice */
@@ -649,6 +653,12 @@ main(int argc, char *argv[])
     if(!hasBlendColor) {
       fprintf(stderr,
         "volume: needs OpenGL blend color extension to attenuate.\n");
+#if defined(_WIN32) && !defined(MESA)
+      glBlendColorEXT = (PFNGLBLENDCOLOREXTPROC) wglGetProcAddress("glBlendColorEXT");
+      if (glBlendColorEXT == NULL) {
+        hasBlendColor = 0;
+      }
+#endif
     }
 
     glutMainLoop();

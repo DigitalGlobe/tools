@@ -1,6 +1,6 @@
 #!smake
 #
-# Copyright (c) Mark J. Kilgard, 1995, 1996, 1997.
+# Copyright (c) Mark J. Kilgard, 1995, 1996, 1997, 1998.
 #
 
 TOP = ../..
@@ -14,8 +14,9 @@ OPTIMIZER = -g
 TARGETS = test1 test2 test3 test4 test5 test6 test7 test8 test9 test10 \
 	  test11 test12 test13 test14 test15 test16 test17 test18 test19 \
 	  test20 test21 test22 test23 test24 test25 test26 test27 test28 \
+	  test29 \
 	  bigtest cursor_test menu_test over_test shape_test timer_test \
-	  keyup_test joy_test
+	  keyup_test joy_test atexit_test
 
 RM = -rm -rf
 
@@ -31,7 +32,8 @@ $(TARGETS) : $(GLUT)
 
 # Do not be surprised if some of these tests fail on previous GLUT releases.
 
-# NOTE: first run of test2 can fail since time dependent, but run twice
+# NOTE: first run of test2 and test29 can fail since time
+# dependent, but run twice.
 
 test : $(TARGETS)
 	@GLUT_TEST_ALT_DISPLAY=$$DISPLAY ./test1
@@ -62,6 +64,8 @@ test : $(TARGETS)
 	@./test26
 	@./test27
 	@./test28
+	-./test29
+	@./test29
 
 SIFT_OUTPUT = 2>&1 | grep '^[A-Za-z]'
 
@@ -93,5 +97,6 @@ pure_test : $(TARGETS)
 	purify -windows=no test26 $(SIFT_OUTPUT) ; test26.pure $(SIFT_OUTPUT) ; /bin/rm ./test26.pure
 	purify -windows=no test27 $(SIFT_OUTPUT) ; test27.pure $(SIFT_OUTPUT) ; /bin/rm ./test27.pure
 	purify -windows=no test28 $(SIFT_OUTPUT) ; test28.pure $(SIFT_OUTPUT) ; /bin/rm ./test28.pure
+	purify -windows=no test29 $(SIFT_OUTPUT) ; test29.pure $(SIFT_OUTPUT) ; /bin/rm ./test29.pure
 
 include $(COMMONRULES)

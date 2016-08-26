@@ -14,6 +14,8 @@
 #ifndef __GUTIL_H__
 #define __GUTIL_H__
 
+#define __GUTIL_DOUBLE
+
 #ifdef __GUTIL_DOUBLE
 #define gutDouble double
 #else

@@ -526,7 +526,7 @@ redraw(void)
   glDepthFunc(GL_LESS);
   glTranslatef(0.0f, -0.05f, 0.0f);
 
-  glutSwapBuffers();
+glutSwapBuffers();
 }
 
 void

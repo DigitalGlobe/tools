@@ -394,7 +394,7 @@ __glutDetermineVisual(
   return vis;
 }
 
-void
+void GLUTCALLBACK
 __glutDefaultDisplay(void)
 {
   /* XXX Remove the warning after GLUT 3.0. */
@@ -404,7 +404,7 @@ __glutDefaultDisplay(void)
     __glutCurrentWindow->num + 1);
 }
 
-void
+void GLUTCALLBACK
 __glutDefaultReshape(int width, int height)
 {
   GLUToverlay *overlay;
@@ -498,6 +498,8 @@ __glutCreateWindow(GLUTwindow * parent,
       "visual with necessary capabilities not found.");
   }
   __glutSetupColormap(window->vis, &window->colormap, &window->cmap);
+#else
+  window->cmap = 0;
 #endif
   window->eventMask = StructureNotifyMask | ExposureMask;
 
@@ -682,6 +684,11 @@ __glutCreateWindow(GLUTwindow * parent,
     glDrawBuffer(GL_FRONT);
     glReadBuffer(GL_FRONT);
   }
+  #ifdef WIN32
+  if (gameMode) {
+	  glutFullScreen();
+  }
+  #endif
   return window;
 }
 
@@ -731,6 +738,15 @@ glutCreateWindow(const char *title)
   firstWindow = 0;
   return window->num + 1;
 }
+
+#ifdef _WIN32
+int APIENTRY
+__glutCreateWindowWithExit(const char *title, void (__cdecl *exitfunc)(int))
+{
+  __glutExitFunc = exitfunc;
+  return glutCreateWindow(title);
+}
+#endif
 
 int APIENTRY
 glutCreateSubWindow(int win, int x, int y, int width, int height)
@@ -843,6 +859,7 @@ glutDestroyWindow(int win)
   }
 #endif
   __glutDestroyWindow(window, window);
+  XFlush(__glutDisplay);
 }
 /* ENDCENTRY */
 
@@ -967,7 +984,7 @@ glutWindowStatusFunc(GLUTwindowStatusCB windowStatusFunc)
   }
 }
 
-static void
+static void GLUTCALLBACK
 visibilityHelper(int status)
 {
   if (status == GLUT_HIDDEN || status == GLUT_FULLY_COVERED)

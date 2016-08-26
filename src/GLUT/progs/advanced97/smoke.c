@@ -328,7 +328,7 @@ int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA|GLUT_DOUBLE|GLUT_DEPTH);
     (void)glutCreateWindow("smoke");
-    init(argc == 1 ? "data/smoke.la" : argv[1]);
+    init(argc == 1 ? "../data/smoke.bw" : argv[1]);
     glutDisplayFunc(display);
     glutKeyboardFunc(key);
     glutSpecialFunc(special);

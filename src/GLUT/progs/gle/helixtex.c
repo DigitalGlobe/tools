@@ -41,6 +41,8 @@ void DrawStuff (void) {
    glPopMatrix ();
 
    glutSwapBuffers ();
+
+   glutReportErrors();
 }
 
 /* ---------------------- end of file ------------------ */

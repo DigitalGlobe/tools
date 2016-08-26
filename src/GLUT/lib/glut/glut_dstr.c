@@ -97,7 +97,7 @@ determineMesaGLX(void)
   /* Recent versions for Mesa should support GLX 1.1 and
      therefore glXGetClientString.  If we get into this case,
      we would be compiling against a true OpenGL not supporting
-     GLX 1.1, and the resulting compiled library won't work well 
+     GLX 1.1, and the resulting compiled library won't work well
      with Mesa then. */
 #endif
   return 0;
@@ -715,14 +715,14 @@ findMatch(FrameBufferMode * fbmodes, int nfbmodes,
 
         if (result) {
           if (better || thisScore[j] > bestScore[j]) {
-            better = 1;
+			better = 1;
           } else if (thisScore[j] == bestScore[j]) {
             /* Keep looking. */
           } else {
             goto nextFBM;
           }
         } else {
-          if (cap == NUM) {
+			if (cap == NUM) {
             worse = 1;
           } else {
             goto nextFBM;
@@ -749,7 +749,7 @@ findMatch(FrameBufferMode * fbmodes, int nfbmodes,
 #if defined(GLX_VERSION_1_1) && defined(GLX_SGIX_fbconfig)
     *fbc = found->fbc;
 #endif
-    return found->vi;
+	return found->vi;
   } else {
     return NULL;
   }
@@ -1427,6 +1427,16 @@ getVisualInfoFromString(char *string, Bool * treatAsSingle,
   Bool allowDoubleAsSingle;
   int ncriteria, i;
 
+  /* In WIN32, after changing display settings, the visuals might change.
+  (e.g. if entering game mode with a different bitdepth!)
+  Therefore, reload the visuals each time they are queried. */
+#ifdef WIN32
+  if (fbmodes) {
+	  free(fbmodes);
+	  fbmodes = NULL;
+	  nfbmodes = 0;
+  }
+#endif
   if (!fbmodes) {
     fbmodes = loadVisuals(&nfbmodes);
   }
@@ -1465,7 +1475,7 @@ getVisualInfoFromString(char *string, Bool * treatAsSingle,
   if (visinfo) {
 #if defined(_WIN32)
     /* We could have a valid pixel format for drawing to a
-       bitmap. However, we don't want to draw into a bitmap, we 
+       bitmap. However, we don't want to draw into a bitmap, we
        need one that can be used with a window, so make sure
        that this is true. */
     if (!(visinfo->dwFlags & PFD_DRAW_TO_WINDOW))

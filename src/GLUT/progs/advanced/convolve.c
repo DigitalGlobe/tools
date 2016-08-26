@@ -66,6 +66,7 @@ resize(Filter *mat, int rows, int cols)
   if(mat->rows != rows ||
      mat->cols != cols) {
     free(mat->array);
+    mat->array = NULL;
     mat->array = (GLfloat *)realloc(mat->array, rows * cols * sizeof(GLfloat));
   }
   mat->rows = rows;

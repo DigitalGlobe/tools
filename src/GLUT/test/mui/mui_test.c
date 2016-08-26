@@ -143,7 +143,7 @@ void maketestui(void)
     muiSetCallback(vs, controltltop);
 }
 
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     glutInit(&argc, argv);
     if (argc > 1) mui_singlebuffered = 1;
@@ -157,4 +157,5 @@ void main(int argc, char **argv)
     maketestui();
     muiInit();
     glutMainLoop();
+    return 0;             /* ANSI C requires main to return int. */
 }

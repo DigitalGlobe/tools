@@ -1,6 +1,6 @@
 /* 
     particle.c
-    Nate Robins, 1997
+    Nate Robins, 1998
 
     An example of a simple particle system.
 
@@ -22,8 +22,8 @@
 /* #define SCREEN_SAVER_MODE */
 
 #define PS_GRAVITY -9.8
-#define PS_WATERFALL 0
-#define PS_FOUNTAIN  1
+#define PS_WATERFALL  0
+#define PS_FOUNTAIN   1
 
 
 typedef struct {
@@ -41,11 +41,16 @@ typedef struct {
 
 
 PSparticle* particles = NULL;
-PSsphere    sphere = { 0, 1, 0, 0.25 };
-int num_particles = 5000;
+#define NUM_SPHERES 3
+PSsphere spheres[NUM_SPHERES] = {	/* position of spheres */
+    { -0.1, 0.6, 0, 0.4 },
+    { -0.7, 1.4, 0, 0.25 },
+    { 0.1, 1.5, 0.1, 0.3 },
+};
+int num_particles = 10000;
 int type = PS_WATERFALL;
 int points = 1;
-int do_sphere = 0;
+int draw_spheres = 1;
 int frame_rate = 1;
 float frame_time = 0;
 float flow = 500;
@@ -53,11 +58,22 @@ float slow_down = 1;
 
 float spin_x = 0;
 float spin_y = 0;
-int point_size = 3;
+int point_size = 4;
 
 
 /* timedelta: returns the number of seconds that have elapsed since
    the previous call to the function. */
+#if defined(_WIN32)
+#include <sys/timeb.h>
+#else
+#include <limits.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/times.h>
+#endif
+#ifndef CLK_TCK
+#define CLK_TCK 1000
+#endif
 float
 timedelta(void)
 {
@@ -65,25 +81,18 @@ timedelta(void)
     static long finish, difference;
 
 #if defined(_WIN32)
-#include <sys/timeb.h>
     static struct timeb tb;
-
     ftime(&tb);
     finish = tb.time*1000+tb.millitm;
 #else
-#include <limits.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/times.h>
     static struct tms tb;
-
     finish = times(&tb);
 #endif
 
     difference = finish - begin;
     begin = finish;
 
-    return (float)difference/(float)1000;  /* CLK_TCK=1000 */
+    return (float)difference/(float)CLK_TCK;
 }
 
 
@@ -96,6 +105,7 @@ text(int x, int y, char* s)
     char* p;
 
     glDisable(GL_DEPTH_TEST);
+    glDisable(GL_FOG);
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -126,6 +136,7 @@ text(int x, int y, char* s)
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
     glPopMatrix();
+    glEnable(GL_FOG);
     glEnable(GL_DEPTH_TEST);
 }
 
@@ -167,7 +178,7 @@ void
 psNewParticle(PSparticle* p, float dt)
 {
     if (type == PS_WATERFALL) {
-	p->velocity[0] = 1*(drand48()-0.5);
+	p->velocity[0] = -2*(drand48()-0.0);
 	p->velocity[1] = 0;
 	p->velocity[2] = 0.5*(drand48()-0.0);
 	p->position[0] = 0;
@@ -180,10 +191,10 @@ psNewParticle(PSparticle* p, float dt)
 	p->alive = 1;
     } else if (type == PS_FOUNTAIN) {
 	p->velocity[0] = 2*(drand48()-0.5);
-	p->velocity[1] = 6;
+	p->velocity[1] = 5;
 	p->velocity[2] = 2*(drand48()-0.5);
-	p->position[0] = 0;
-	p->position[1] = 0;
+	p->position[0] = -0.1;
+	p->position[1] = 0.9;
 	p->position[2] = 0;
 	p->previous[0] = p->position[0];
 	p->previous[1] = p->position[1];
@@ -244,11 +255,11 @@ psBounce(PSparticle* p, float dt)
 }
 
 void
-psCollide(PSparticle* p)
+psCollideSphere(PSparticle* p, PSsphere* s)
 {
-    float vx = p->position[0] - sphere.x;
-    float vy = p->position[1] - sphere.y;
-    float vz = p->position[2] - sphere.z;
+    float vx = p->position[0] - s->x;
+    float vy = p->position[1] - s->y;
+    float vz = p->position[2] - s->z;
     float distance;
 
     if (p->alive == 0)
@@ -256,7 +267,7 @@ psCollide(PSparticle* p)
 
     distance = sqrt(vx*vx + vy*vy + vz*vz);
 
-    if (distance < sphere.radius) {
+    if (distance < s->radius) {
 #if 0
 	vx /= distance;  vy /= distance;  vz /= distance;
 	d = 2*(-vx*p->velocity[0] + -vy*p->velocity[1] + -vz*p->velocity[2]);
@@ -270,9 +281,9 @@ psCollide(PSparticle* p)
 	p->velocity[1] /= d;
 	p->velocity[2] /= d;
 #else
-	p->position[0] = sphere.x+(vx/distance)*sphere.radius;
-	p->position[1] = sphere.y+(vy/distance)*sphere.radius;
-	p->position[2] = sphere.z+(vz/distance)*sphere.radius;
+	p->position[0] = s->x+(vx/distance)*s->radius;
+	p->position[1] = s->y+(vy/distance)*s->radius;
+	p->position[2] = s->z+(vz/distance)*s->radius;
 	p->previous[0] = p->position[0];
 	p->previous[1] = p->position[1];
 	p->previous[2] = p->position[2];
@@ -292,7 +303,7 @@ reshape(int width, int height)
     glViewport(0, 0, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(60, 1, 0.1, 1000);
+    gluPerspective(60, (float)width/height, 0.1, 1000);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     gluLookAt(0, 1, 3, 0, 1, 0, 0, 1, 0);
@@ -318,6 +329,7 @@ display(void)
 {
     static int i;
     static float c;
+    static int j = 0;
     static char s[32];
     static int frames = 0;
 
@@ -328,12 +340,14 @@ display(void)
     glRotatef(spin_x, 0, 1, 0);
 
     glEnable(GL_LIGHTING);
-    if (do_sphere) {
-	glPushMatrix();
-	glTranslatef(sphere.x, sphere.y, sphere.z);
-	glColor3ub(0, 255, 128);
-	glutSolidSphere(sphere.radius, 16, 16);
-	glPopMatrix();
+    if (draw_spheres) {
+	for (i = 0; i < draw_spheres; i++) {
+	    glPushMatrix();
+	    glTranslatef(spheres[i].x, spheres[i].y, spheres[i].z);
+	    glColor3ub(0, 255, 128);
+	    glutSolidSphere(spheres[i].radius, 16, 16);
+	    glPopMatrix();
+	}
     }
     glDisable(GL_LIGHTING);
 
@@ -352,7 +366,7 @@ display(void)
 	    if (particles[i].alive == 0)
 		continue;
 	    c = particles[i].position[1]/2.1*255;
-	    glColor3ub((GLubyte) c, (GLubyte) (128+c*0.5), 255);
+	    glColor3ub(c, 128+c*0.5, 255);
 	    glVertex3fv(particles[i].position);
 	}
 	glEnd();
@@ -362,10 +376,10 @@ display(void)
 	    if (particles[i].alive == 0)
 		continue;
 	    c = particles[i].previous[1]/2.1*255;
-	    glColor3ub((GLubyte) c, (GLubyte) (128+c*0.5), 255);
+	    glColor4ub(c, 128+c*0.5, 255, 32);
 	    glVertex3fv(particles[i].previous);
 	    c = particles[i].position[1]/2.1*255;
-	    glColor3ub((GLubyte) c, (GLubyte) (128+c*0.5), 255);
+	    glColor4ub(c, 128+c*0.5, 255, 196);
 	    glVertex3fv(particles[i].position);
 	}
 	glEnd();
@@ -387,11 +401,12 @@ display(void)
 }
 
 void
-idleFunc(void)
+idle(void)
 {
-    static int i;
+    static int i, j;
     static int living = 0;		/* index to end of live particles */
     static float dt;
+    static float last = 0;
 
     dt = timedelta();
     frame_time += dt;
@@ -400,7 +415,7 @@ idleFunc(void)
     /* slow the simulation if we can't keep the frame rate up around
        10 fps */
     if (dt > 0.1) {
-	slow_down = 0.75;
+	slow_down = 1.0/(100*dt);
     } else if (dt < 0.1) {
 	slow_down = 1;
     }
@@ -420,8 +435,10 @@ idleFunc(void)
 	psTimeStep(&particles[i], dt);
 
 	/* collision with sphere? */
-	if (do_sphere) {
-	    psCollide(&particles[i]);
+	if (draw_spheres) {
+	    for (j = 0; j < draw_spheres; j++) {
+		psCollideSphere(&particles[i], &spheres[j]);
+	    }
 	}
 
 	/* collision with ground? */
@@ -442,12 +459,10 @@ idleFunc(void)
 void
 visible(int state)
 {
-    if (state == GLUT_VISIBLE) {
-        timedelta();
-	glutIdleFunc(idleFunc);
-    } else {
+    if (state == GLUT_VISIBLE)
+	glutIdleFunc(idle);
+    else
 	glutIdleFunc(NULL);
-    }
 }
 
 void
@@ -458,21 +473,18 @@ bail(int code)
 }
 
 #ifdef SCREEN_SAVER_MODE
-/* ARGSUSED */
 void
 ss_keyboard(char key, int x, int y)
 {
     bail(0);
 }
 
-/* ARGSUSED */
 void
 ss_mouse(int button, int state, int x, int y)
 {
     bail(0);
 }
 
-/* ARGSUSED */
 void
 ss_passive(int x, int y)
 {
@@ -490,31 +502,42 @@ ss_passive(int x, int y)
 
 #else
 
-/* ARGSUSED1 */
 void
 keyboard(unsigned char key, int x, int y)
 {
     static int fullscreen = 0;
     static int old_x = 50;
     static int old_y = 50;
-    static int old_width = 320;
-    static int old_height = 320;
+    static int old_width = 512;
+    static int old_height = 512;
+    static int s = 0;
 
     switch (key) {
     case 27:
         bail(0);
 	break;
 
-    case 'w':
-	type = PS_WATERFALL;
-	break;
-
-    case 'f':
-	type = PS_FOUNTAIN;
+    case 't':
+	if (type == PS_WATERFALL)
+	    type = PS_FOUNTAIN;
+	else if (type == PS_FOUNTAIN)
+	    type = PS_WATERFALL;
 	break;
 
     case 's':
-	do_sphere = !do_sphere;
+	draw_spheres++;
+	if (draw_spheres > NUM_SPHERES)
+	    draw_spheres = 0;
+	break;
+
+    case 'S':
+	printf("PSsphere spheres[NUM_SPHERES] = {/* position of spheres */\n");
+	for (s = 0; s < NUM_SPHERES; s++) {
+	    printf("  { %g, %g, %g, %g },\n", 
+		   spheres[s].x, spheres[s].y,
+		   spheres[s].z, spheres[s].radius);
+	}
+	printf("};\n");
 	break;
 
     case 'l':
@@ -547,6 +570,10 @@ keyboard(unsigned char key, int x, int y)
 	printf("%g particles/second\n", flow);
 	break;
 
+    case '#':
+	frame_rate = !frame_rate;
+	break;
+
     case '~':
 	fullscreen = !fullscreen;
 	if (fullscreen) {
@@ -560,14 +587,65 @@ keyboard(unsigned char key, int x, int y)
 	    glutPositionWindow(old_x, old_y);
 	}
 	break;
+
+    case '!':
+	s++;
+	if (s >= NUM_SPHERES)
+	    s = 0;
+	break;
+
+    case '4':
+	spheres[s].x -= 0.05;
+	break;
+
+    case '6':
+	spheres[s].x += 0.05;
+	break;
+
+    case '2':
+	spheres[s].y -= 0.05;
+	break;
+
+    case '8':
+	spheres[s].y += 0.05;
+	break;
+
+    case '7':
+	spheres[s].z -= 0.05;
+	break;
+
+    case '3':
+	spheres[s].z += 0.05;
+	break;
+
+    case '9':
+	spheres[s].radius += 0.05;
+	break;
+
+    case '1':
+	spheres[s].radius -= 0.05;
+	break;
+
     }
 }
 
+void
+menu(int item)
+{
+    keyboard((unsigned char)item, 0, 0);
+}
+
+void
+menustate(int state)
+{
+    /* hook up a fake time delta to avoid jumping when menu comes up */
+    if (state == GLUT_MENU_NOT_IN_USE)
+	timedelta();
+}
 #endif
 
 int old_x, old_y;
 
-/* ARGSUSED */
 void
 mouse(int button, int state, int x, int y)
 {
@@ -590,17 +668,11 @@ int
 main(int argc, char** argv)
 {
     glutInitDisplayMode(GLUT_RGB|GLUT_DEPTH|GLUT_DOUBLE);
-    glutInitWindowPosition(50, 50);
-    glutInitWindowSize(320, 320);
+    glutInitWindowPosition(0, 0);
+    glutInitWindowSize(640, 480);
     glutInit(&argc, argv);
 
-    if (argc > 1 && !strcmp(argv[1], "-fullscreen")) {
-      glutGameModeString("640x480:16@60");
-      glutEnterGameMode();
-    } else {
-      glutCreateWindow("Particles");
-    }
-
+    glutCreateWindow("Particles");
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
 #ifdef SCREEN_SAVER_MODE
@@ -615,9 +687,30 @@ main(int argc, char** argv)
     glutKeyboardFunc(keyboard);
 #endif
 
+    glutMenuStateFunc(menustate);
+    glutCreateMenu(menu);
+    glutAddMenuEntry("Particle", 0);
+    glutAddMenuEntry("", 0);
+    glutAddMenuEntry("[f]   Fog on/off", 'f');
+    glutAddMenuEntry("[t]   Spray type", 't');
+    glutAddMenuEntry("[s]   Collision spheres", 's');
+    glutAddMenuEntry("[-]   Less flow", '-');
+    glutAddMenuEntry("[+]   More flow", '+');
+    glutAddMenuEntry("[p]   Smaller points", 'p');
+    glutAddMenuEntry("[P]   Larger points", 'P');
+    glutAddMenuEntry("[l]   Toggle points/lines", 'l');
+    glutAddMenuEntry("[#]   Toggle framerate on/off", '#');
+    glutAddMenuEntry("[~]   Toggle fullscreen on/off", '~');
+    glutAddMenuEntry("", 0);
+    glutAddMenuEntry("Use the numeric keypad to move the spheres", 0);
+    glutAddMenuEntry("[!]   Change active sphere", 0);
+    glutAddMenuEntry("", 0);
+    glutAddMenuEntry("[Esc] Quit", 27);
+    glutAttachMenu(GLUT_RIGHT_BUTTON);
+
     if (argc > 1) {
 	if (strcmp(argv[1], "-h") == 0) {
-	    fprintf(stderr, "%s [particles] [flow] [speed%%]\n", argv[0]);
+	    fprintf(stderr, "%s [particles] [flow] [speed%]\n", argv[0]);
 	    exit(0);
 	}
 	sscanf(argv[1], "%d", &num_particles);

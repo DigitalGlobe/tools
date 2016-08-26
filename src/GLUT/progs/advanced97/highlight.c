@@ -667,7 +667,7 @@ main(int argc, char *argv[])
 
     /* load pattern for current 2d texture */
 
-    tex = read_texture("data/wood0.rgb", &texwid, &texht, &texcomps);
+    tex = read_texture("../data/wood.rgb", &texwid, &texht, &texcomps);
 
     gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGB, texwid, texht, GL_RGBA,
 		      GL_UNSIGNED_BYTE, tex);

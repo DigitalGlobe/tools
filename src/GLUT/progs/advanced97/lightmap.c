@@ -1015,7 +1015,7 @@ main(int argc, char *argv[])
     {
 	GLuint *surftex;
 	int texwid, texht, texcomps;
-	surftex = read_texture("data/brick.rgb", &texwid, &texht, &texcomps);
+	surftex = read_texture("../data/brick.rgb", &texwid, &texht, &texcomps);
 
 	glBindTexture(GL_TEXTURE_2D, SURFMAP);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

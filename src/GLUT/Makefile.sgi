@@ -31,7 +31,7 @@ DIST = README NOTICE README.glut2 README.fortran README.xinput \
        README.inventor README.irix64bit CHANGES Imakefile Makefile.sgi \
        mkmkfiles.imake mkmkfiles.sgi Glut.cf lib test progs man \
        README.ibm-shlib README.irix6 FAQ.glut README.glut3 README.linux \
-       linux README.man Makefile IAFA-PACKAGE README.mesa README.ada \
+       README.man Makefile IAFA-PACKAGE README.mesa README.ada \
        include adainclude glutdefs README.win README.mui \
        glutmake.bat glutwin32.mak Makefile.win Portability.txt
 

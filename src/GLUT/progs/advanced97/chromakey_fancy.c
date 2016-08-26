@@ -5,9 +5,9 @@
 #include <GL/glut.h>
 #include "texture.h"
 
-static char defaultFile0[] = "data/swamp.rgb";
-static char defaultFile1[] = "data/swamp.rgb";
-static char defaultFile2[] = "data/mandrill256.rgb";
+static char defaultFile0[] = "../data/swamp.rgb";
+static char defaultFile1[] = "../data/swamp.rgb";
+static char defaultFile2[] = "../data/mandrill.rgb";
 GLuint *img0, *img1, *img2;
 GLsizei w, h;
 GLsizei w0, w1, w2, h0, h1, h2;

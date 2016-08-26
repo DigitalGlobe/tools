@@ -10,7 +10,7 @@
 #define fabsf(x) ((float)fabs((x)))
 #endif
 
-static int pstyle;
+static int pstyle = 3;
 static float transx, transy, rotx, roty;
 static int ox = -1, oy = -1;
 static int mot;
@@ -304,7 +304,7 @@ int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA|GLUT_DOUBLE);
     (void)glutCreateWindow(argv[0]);
-    init(argc == 1 ? "data/light.bw" : argv[1]);
+    init(argc == 1 ? "../data/light.bw" : argv[1]);
     glutDisplayFunc(display);
     glutKeyboardFunc(key);
     glutReshapeFunc(reshape);

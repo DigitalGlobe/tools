@@ -9,6 +9,21 @@
 #include "textmap.h"
 #include "texture.h"
 
+/* byte swap a 32-bit value */
+#define SWAPL(x, n) { \
+                 n = ((char *) (x))[0];\
+                 ((char *) (x))[0] = ((char *) (x))[3];\
+                 ((char *) (x))[3] = n;\
+                 n = ((char *) (x))[1];\
+                 ((char *) (x))[1] = ((char *) (x))[2];\
+                 ((char *) (x))[2] = n; }
+
+/* byte swap a short */
+#define SWAPS(x, n) { \
+                 n = ((char *) (x))[0];\
+                 ((char *) (x))[0] = ((char *) (x))[1];\
+                 ((char *) (x))[1] = n; }
+
 static texfnt *curtfnt;
 static unsigned char *fb;
 static unsigned char *gptr;
@@ -24,8 +39,9 @@ static void
 getbytes(void *pbuf, int n)
 {
   char *buf = pbuf;
-  while (n--)
+  while (n--) {
     *buf++ = *gptr++;
+  }
 }
 
 static void
@@ -35,6 +51,19 @@ fixrow(unsigned short *sptr, int n)
     /* *sptr = *sptr + (0xff<<8); */
     /* *sptr = (*sptr<<8) | 0xff; */
     sptr++;
+  }
+}
+
+int
+doSwap(void)
+{
+  int i = 0xffff0000;
+  char *cptr = (char*) &i;
+
+  if (cptr[0] == 0) {
+    return 1;  /* little endian (x86, alpha) */
+  } else {
+    return 0;  /* big endian (SGI, 68000, VAX, SPARC) */
   }
 }
 
@@ -50,6 +79,8 @@ readtexfont(char *name)
   int i, y, extralines;
   texchardesc *cd;
   int xsize, ysize, components;
+  int swap = doSwap();
+  int tmp;
 
   tfnt = (texfnt *) malloc(sizeof(texfnt));
   image = read_texture(name, &xsize, &ysize, &components);
@@ -78,6 +109,12 @@ readtexfont(char *name)
   getbytes(&tfnt->charmax, sizeof(short));
   getbytes(&tfnt->pixhigh, sizeof(float));
   getbytes(&advancecell, sizeof(short));
+  if (swap) {
+    SWAPS(&tfnt->charmin, tmp);
+    SWAPS(&tfnt->charmax, tmp);
+    SWAPL(&tfnt->pixhigh, tmp);
+    SWAPS(&advancecell, tmp);
+  }
   tfnt->nchars = tfnt->charmax - tfnt->charmin + 1;
   tfnt->chars = (texchardesc *) malloc(tfnt->nchars * sizeof(texchardesc));
   tfnt->rasdata = (unsigned short *) malloc(tfnt->rasxsize * tfnt->rasysize * sizeof(long));
@@ -99,6 +136,15 @@ readtexfont(char *name)
     getbytes(&ury, sizeof(short));
     getbytes(&ox, sizeof(short));
     getbytes(&oy, sizeof(short));
+    if (swap) {
+      SWAPS(&xadvance, tmp);
+      SWAPS(&llx, tmp);
+      SWAPS(&lly, tmp);
+      SWAPS(&urx, tmp);
+      SWAPS(&ury, tmp);
+      SWAPS(&ox, tmp);
+      SWAPS(&oy, tmp);
+    }
     cd->movex = xadvance / (float) advancecell;
 
     if (llx >= 0) {
@@ -171,7 +217,7 @@ float
 texstrwidth(char *str)
 {
   unsigned int c;
-  int charmin, tnchars;
+  unsigned int charmin, tnchars;
   texfnt *tfnt;
   texchardesc *cdbase, *cd;
   float xpos;
@@ -200,7 +246,7 @@ void
 texcharstr(char *str)
 {
   unsigned int c;
-  int charmin, tnchars;
+  unsigned int charmin, tnchars;
   texfnt *tfnt;
   texchardesc *cdbase, *cd;
   float *fdata, xpos;

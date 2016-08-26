@@ -10,9 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
+#include "glutint.h"
 
 #ifndef _WIN32
 #include <X11/Xlib.h>
@@ -26,8 +24,6 @@
 #define XSGIFastInternAtom(dpy,string,fast_name,how) XInternAtom(dpy,string,how)
 #endif
 #endif  /* not _WIN32 */
-
-#include "glutint.h"
 
 int __glutDisplaySettingsChanged = 0;
 static DisplayMode *dmodes, *currentDm = NULL;
@@ -68,6 +64,7 @@ glutLeaveGameMode(void)
   }
   __glutDestroyWindow(__glutGameModeWindow,
     __glutGameModeWindow);
+  XFlush(__glutDisplay);
   __glutGameModeWindow = NULL;
 }
 
@@ -348,7 +345,7 @@ specialCaseParse(char *word, Criterion * criterion, int mask)
     criterion[0].comparison = EQ;
     criterion[0].value = bpp;
     got = specialCaseParse(response,
-      &criterion[1], 1 << DM_WIDTH | 1 << DM_PIXEL_DEPTH);
+      &criterion[1], (1 << DM_WIDTH) | (1 << DM_PIXEL_DEPTH));
     if (got >= 0) {
       return got + 1;
     } else {

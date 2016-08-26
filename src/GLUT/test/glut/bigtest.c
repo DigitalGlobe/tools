@@ -1764,23 +1764,24 @@ makeWindow(int index)
 
   case 6:              /* color index window  */
   case 7:              /* color index window  */
-
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_INDEX | GLUT_DEPTH);
-    glutInitWindowPosition(pos[index][0], pos[index][1]);
-    glutInitWindowSize(size[index][0], size[index][1]);
-    winId[index] = glutCreateWindow(" ");
-    PR("Window %d id = %d \n", index, winId[index]);
+	 if (glutGet(GLUT_DISPLAY_MODE_POSSIBLE)) {
+		 glutInitWindowPosition(pos[index][0], pos[index][1]);
+		 glutInitWindowSize(size[index][0], size[index][1]);
+		 winId[index] = glutCreateWindow(" ");
+		 PR("Window %d id = %d \n", index, winId[index]);
 
-    gfxInit(index);
+		 gfxInit(index);
 
-    addCallbacks();
+		 addCallbacks();
 
-    sprintf(str, "window %d (color index)", index);
-    glutSetWindowTitle(str);
-    sprintf(str, "icon %d", index);
-    glutSetIconTitle(str);
-    glutSetMenu(menu1);
-    glutAttachMenu(GLUT_RIGHT_BUTTON);
+		 sprintf(str, "window %d (color index)", index);
+		 glutSetWindowTitle(str);
+		 sprintf(str, "icon %d", index);
+		 glutSetIconTitle(str);
+		 glutSetMenu(menu1);
+		 glutAttachMenu(GLUT_RIGHT_BUTTON);
+	 }
     break;
 
   }

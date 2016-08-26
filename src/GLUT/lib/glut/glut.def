@@ -1,6 +1,9 @@
 DESCRIPTION 'OpenGL Utility Toolkit for Win32'
 
+VERSION 3.7
+
 EXPORTS
+
 	glutAddMenuEntry
 	glutAddSubMenu
 	glutAttachMenu
@@ -12,8 +15,10 @@ EXPORTS
 	glutChangeToSubMenu
 	glutCopyColormap
 	glutCreateMenu
+	__glutCreateMenuWithExit
 	glutCreateSubWindow
 	glutCreateWindow
+	__glutCreateWindowWithExit
 	glutDestroyMenu
 	glutDestroyWindow
 	glutDetachMenu
@@ -39,6 +44,7 @@ EXPORTS
 	glutIdleFunc
 	glutIgnoreKeyRepeat
 	glutInit
+	__glutInitWithExit
 	glutInitDisplayMode
 	glutInitDisplayString
 	glutInitWindowPosition
@@ -115,3 +121,6 @@ EXPORTS
 	glutWireTeapot
 	glutWireTetrahedron
 	glutWireTorus
+;    __glutSetFCB
+;    __glutGetFCB
+

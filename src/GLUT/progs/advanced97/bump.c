@@ -17,6 +17,16 @@
 #define sinf(x) (float)sin((x))
 #endif
 
+#ifdef GL_EXT_blend_subtract
+#if defined(_WIN32) && !defined(MESA)
+#include <windows.h>
+PFNGLBLENDEQUATIONEXTPROC glBlendEquationEXT = NULL;
+#endif
+static int hasBlendSubtract = 0;
+#else
+static const int hasBlendSubtract = 0;
+#endif
+
 int winWidth = 512;
 int winHeight = 512;
 
@@ -361,6 +371,7 @@ void draw(void)
 	    Nz = s;
 	    Tx = s;
 	    Ty = -c;
+		Tz = 0;
 	    bumpNormal3f(Nx, Ny, Nz);
 	    bumpTangent3f(Tx, Ty, Tz);
 	    bumpTexCoord2f(i/(GLfloat)steps_xz, j/(GLfloat)steps_y);
@@ -468,10 +479,12 @@ void redraw_blendext(void)
 	bumpDisable();
 
 #ifdef GL_EXT_blend_subtract
-	/* subtract unshifted */
-	glBlendEquationEXT(GL_FUNC_REVERSE_SUBTRACT_EXT);
-	draw();
-	glBlendEquationEXT(GL_FUNC_ADD_EXT);
+        if (hasBlendSubtract) {
+  	    /* subtract unshifted */
+	    glBlendEquationEXT(GL_FUNC_REVERSE_SUBTRACT_EXT);
+	    draw();
+	    glBlendEquationEXT(GL_FUNC_ADD_EXT);
+	}
 #endif
 	glDisable(GL_BLEND);
 	glDisable(GL_TEXTURE_2D);
@@ -802,7 +815,7 @@ main(int argc, char *argv[])
     diffuse[R] = diffuse[G] = diffuse[B] = .4f;
     diffuse[A] = 1.f;
     glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
-    bumptex = read_texture("data/ogllogo.bw", &texture_width, 
+    bumptex = read_texture("../data/opengl.bw", &texture_width, 
 		       &texture_height, &texcomps);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
@@ -819,7 +832,7 @@ main(int argc, char *argv[])
 		 texture_width, texture_height, 0, GL_RGBA,
 		 GL_UNSIGNED_BYTE, bumptex);
 
-    tex = read_texture("data/plank.rgb", &texwid, &texht, &texcomps);
+    tex = read_texture("../data/plank.rgb", &texwid, &texht, &texcomps);
 
     glBindTexture(GL_TEXTURE_2D, 1); /* for color */
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -844,10 +857,21 @@ main(int argc, char *argv[])
 
     CHECK_ERROR("end of main");
 
+#ifdef GL_EXT_blend_subtract
     if(!glutExtensionSupported("GL_EXT_blend_subtract")) {
       fprintf(stderr,
         "bump: requires OpenGL blend subtract extension to operate correctly.\n");
+      hasBlendSubtract = 0;
+    } else {
+      hasBlendSubtract = 1;
+#if defined(_WIN32) && !defined(MESA)
+      glBlendEquationEXT = (PFNGLBLENDEQUATIONEXTPROC) wglGetProcAddress("glBlendEquationEXT");
+      if (glBlendEquationEXT == NULL) {
+        hasBlendSubtract = 0;
+      }
+#endif
     }
+#endif
 
     key('?', 0, 0); /* startup message */
     glutMainLoop();

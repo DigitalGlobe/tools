@@ -17,17 +17,35 @@ typedef MINMAXINFO* LPMINMAXINFO;
 #include <sys/timeb.h>
 #endif
 
+/* The following added by Paul Garceau <pgarceau@teleport.com> */
+#if defined(__MINGW32__)
+#include <time.h>
+#include <windows.h>
+struct timeval;
+#endif
+
 extern StrokeFontRec glutStrokeRoman, glutStrokeMonoRoman;
 extern BitmapFontRec glutBitmap8By13, glutBitmap9By15, glutBitmapTimesRoman10, glutBitmapTimesRoman24, glutBitmapHelvetica10, glutBitmapHelvetica12, glutBitmapHelvetica18;
 
 int
 gettimeofday(struct timeval* tp, void* tzp)
 {
-  struct timeb tb;
+  LARGE_INTEGER t;
 
-  ftime(&tb);
-  tp->tv_sec = tb.time;
-  tp->tv_usec = tb.millitm * 1000;
+  if(QueryPerformanceCounter(&t)) {
+      /* hardware supports a performance counter */
+      LARGE_INTEGER f;
+      QueryPerformanceFrequency(&f);
+      tp->tv_sec = t.QuadPart/f.QuadPart;
+      tp->tv_usec = ((float)t.QuadPart/f.QuadPart*1000*1000) - (tp->tv_sec*1000*1000);
+  } else {
+      /* hardware doesn't support a performance counter,
+         so get the time in a more traditional way. */
+      DWORD t;
+      t = timeGetTime();
+      tp->tv_sec = t / 1000;
+      tp->tv_usec = t % 1000;
+  }
 
   /* 0 indicates that the call succeeded. */
   return 0;
@@ -63,6 +81,8 @@ __glutFont(void *font)
   }
   __glutFatalError("out of memory.");
   /* NOTREACHED */
+
+  return NULL;	/* keep MSVC compiler happy */
 }
 
 int

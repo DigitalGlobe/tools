@@ -822,8 +822,7 @@ main(int argc, char **argv)
     if (argc > 1) {
 	texFilename = argv[argc-1];
     } else {
-	usage(argv);
-	exit(EXIT_FAILURE);
+	texFilename = "../data/fendi.rgb";
     }
     loadTexture = loadImageTexture;
     drawObject = drawCube;

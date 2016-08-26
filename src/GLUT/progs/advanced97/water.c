@@ -309,7 +309,7 @@ int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA|GLUT_DOUBLE);
     (void)glutCreateWindow(argv[0]);
-    init(argc == 1 ? "data/water1.bw" : argv[1]);
+    init(argc == 1 ? "../data/water.bw" : argv[1]);
     glutDisplayFunc(display);
     glutKeyboardFunc(key);
     glutSpecialFunc(special);

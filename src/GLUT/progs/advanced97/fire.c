@@ -178,7 +178,7 @@ void init(int argc, char *argv[]) {
     }
 
     glBindTexture(GL_TEXTURE_2D, 1+texture_count);
-    image = read_texture("data/smoke.la", &width, &height, &components);
+    image = read_texture("../data/smoke.bw", &width, &height, &components);
     if (image == NULL) {
 	fprintf(stderr, "Error: Can't load image file \"%s\".\n", "smoke.la");
 	exit(EXIT_FAILURE);
@@ -204,7 +204,7 @@ void init(int argc, char *argv[]) {
     glTranslatef(0.,0.,-5.5);
     glClearColor(.25f, .25f, .75f, .25f);
 
-    glAlphaFunc(GL_GREATER, 0.016);
+    glAlphaFunc(GL_GREATER, 0.016f);
     glEnable(GL_ALPHA_TEST);
 
     glEnable(GL_BLEND);

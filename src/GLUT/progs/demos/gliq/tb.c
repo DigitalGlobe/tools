@@ -7,9 +7,9 @@
 
 /* includes */
 #include <math.h>
+#include <stdio.h>  /* SunOS 5.6 multithreaded assert() needs <stdio.h>.  Lame. */
 #include <assert.h>
 #include <GL/glut.h>
-#include "tb.h"
 #include "trackball.h"
 
 /* globals */

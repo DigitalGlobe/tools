@@ -5,6 +5,7 @@
    and is provided without guarantee or warrantee expressed or 
    implied. This program is -not- in the public domain. */
 
+#include <stdio.h>  /* SunOS multithreaded assert() needs <stdio.h>.  Lame. */
 #include <assert.h>
 
 #if !defined(_WIN32)

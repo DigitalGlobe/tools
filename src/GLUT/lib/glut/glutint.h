@@ -11,24 +11,58 @@
 #include <sys/time.h>
 #endif
 
+#define SUPPORT_FORTRAN  /* With GLUT 3.7, everyone supports Fortran. */
+
 #if defined(_WIN32)
 #include "glutwin32.h"
 #else
-#ifdef __sgi
-#define SUPPORT_FORTRAN
-#endif
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <GL/glx.h>
 #endif
 
+#define GLUT_BUILDING_LIB  /* Building the GLUT library itself. */
+
+/* GLUT_BUILDING_LIB is used by <GL/glut.h> to 1) not #pragma link
+   with the GLUT library, and 2) avoid the Win32 atexit hack. */
+
 #include <GL/glut.h>
+
+#ifndef CDECL
+# if defined(_WIN32) && defined(_MSC_VER)
+#  define CDECL __cdecl
+# else
+#  define CDECL
+# endif
+#endif
+
+/* This must be done after <GL/gl.h> is included.  MESA is defined
+   if the <GL/gl.h> is supplied by Brian Paul's Mesa library. */ 
+#if defined(MESA) && defined(_WIN32)
+/* Mesa implements "wgl" versions of GDI entry points needed for
+   using OpenGL.  Map these "wgl" versions to the GDI names via
+   macros. */
+WINGDIAPI int WINAPI wglChoosePixelFormat(HDC hdc, CONST PIXELFORMATDESCRIPTOR *ppfd);
+WINGDIAPI int WINAPI wglDescribePixelFormat(HDC hdc,int iPixelFormat,UINT nBytes, LPPIXELFORMATDESCRIPTOR ppfd);
+WINGDIAPI int WINAPI wglGetPixelFormat(HDC hdc);
+WINGDIAPI BOOL WINAPI wglSetPixelFormat(HDC hdc, int iPixelFormat, PIXELFORMATDESCRIPTOR *ppfd);
+WINGDIAPI BOOL WINAPI wglSwapBuffers(HDC hdc);
+#define ChoosePixelFormat wglChoosePixelFormat
+#define DescribePixelFormat wglDescribePixelFormat
+#define GetPixelFormat wglGetPixelFormat
+#define SetPixelFormat wglSetPixelFormat
+#define SwapBuffers wglSwapBuffers
+#endif
 
 /* Non-Win32 platforms need APIENTRY defined to nothing
    because all the GLUT routines have the APIENTRY prefix
    to make Win32 happy. */
 #ifndef APIENTRY
 #define APIENTRY
+#endif
+
+#ifdef SUPPORT_FORTRAN
+#include <GL/glutf90.h>
 #endif
 
 #ifdef __vms
@@ -243,55 +277,29 @@ typedef struct _DisplayMode {
 } DisplayMode;
 
 /* GLUT  function types */
-typedef void (*GLUTdisplayCB) (void);
-typedef void (*GLUTreshapeCB) (int, int);
-typedef void (*GLUTkeyboardCB) (unsigned char, int, int);
-typedef void (*GLUTmouseCB) (int, int, int, int);
-typedef void (*GLUTmotionCB) (int, int);
-typedef void (*GLUTpassiveCB) (int, int);
-typedef void (*GLUTentryCB) (int);
-typedef void (*GLUTvisibilityCB) (int);
-typedef void (*GLUTwindowStatusCB) (int);
-typedef void (*GLUTidleCB) (void);
-typedef void (*GLUTtimerCB) (int);
-typedef void (*GLUTmenuStateCB) (int);  /* DEPRICATED. */
-typedef void (*GLUTmenuStatusCB) (int, int, int);
-typedef void (*GLUTselectCB) (int);
-typedef void (*GLUTspecialCB) (int, int, int);
-typedef void (*GLUTspaceMotionCB) (int, int, int);
-typedef void (*GLUTspaceRotateCB) (int, int, int);
-typedef void (*GLUTspaceButtonCB) (int, int);
-typedef void (*GLUTdialsCB) (int, int);
-typedef void (*GLUTbuttonBoxCB) (int, int);
-typedef void (*GLUTtabletMotionCB) (int, int);
-typedef void (*GLUTtabletButtonCB) (int, int, int, int);
-typedef void (*GLUTjoystickCB) (unsigned int buttonMask, int x, int y, int z);
-#ifdef SUPPORT_FORTRAN
-typedef void (*GLUTdisplayFCB) (void);
-typedef void (*GLUTreshapeFCB) (int *, int *);
-/* NOTE the pressed key is int, not unsigned char for Fortran! */
-typedef void (*GLUTkeyboardFCB) (int *, int *, int *);
-typedef void (*GLUTmouseFCB) (int *, int *, int *, int *);
-typedef void (*GLUTmotionFCB) (int *, int *);
-typedef void (*GLUTpassiveFCB) (int *, int *);
-typedef void (*GLUTentryFCB) (int *);
-typedef void (*GLUTvisibilityFCB) (int *);
-typedef void (*GLUTwindowStatusFCB) (int *);
-typedef void (*GLUTidleFCB) (void);
-typedef void (*GLUTtimerFCB) (int *);
-typedef void (*GLUTmenuStateFCB) (int *);  /* DEPRICATED. */
-typedef void (*GLUTmenuStatusFCB) (int *, int *, int *);
-typedef void (*GLUTselectFCB) (int *);
-typedef void (*GLUTspecialFCB) (int *, int *, int *);
-typedef void (*GLUTspaceMotionFCB) (int *, int *, int *);
-typedef void (*GLUTspaceRotateFCB) (int *, int *, int *);
-typedef void (*GLUTspaceButtonFCB) (int *, int *);
-typedef void (*GLUTdialsFCB) (int *, int *);
-typedef void (*GLUTbuttonBoxFCB) (int *, int *);
-typedef void (*GLUTtabletMotionFCB) (int *, int *);
-typedef void (*GLUTtabletButtonFCB) (int *, int *, int *, int *);
-typedef void (*GLUTjoystickFCB) (unsigned int *buttonMask, int *x, int *y, int *z);
-#endif
+typedef void (GLUTCALLBACK *GLUTdisplayCB) (void);
+typedef void (GLUTCALLBACK *GLUTreshapeCB) (int, int);
+typedef void (GLUTCALLBACK *GLUTkeyboardCB) (unsigned char, int, int);
+typedef void (GLUTCALLBACK *GLUTmouseCB) (int, int, int, int);
+typedef void (GLUTCALLBACK *GLUTmotionCB) (int, int);
+typedef void (GLUTCALLBACK *GLUTpassiveCB) (int, int);
+typedef void (GLUTCALLBACK *GLUTentryCB) (int);
+typedef void (GLUTCALLBACK *GLUTvisibilityCB) (int);
+typedef void (GLUTCALLBACK *GLUTwindowStatusCB) (int);
+typedef void (GLUTCALLBACK *GLUTidleCB) (void);
+typedef void (GLUTCALLBACK *GLUTtimerCB) (int);
+typedef void (GLUTCALLBACK *GLUTmenuStateCB) (int);  /* DEPRICATED. */
+typedef void (GLUTCALLBACK *GLUTmenuStatusCB) (int, int, int);
+typedef void (GLUTCALLBACK *GLUTselectCB) (int);
+typedef void (GLUTCALLBACK *GLUTspecialCB) (int, int, int);
+typedef void (GLUTCALLBACK *GLUTspaceMotionCB) (int, int, int);
+typedef void (GLUTCALLBACK *GLUTspaceRotateCB) (int, int, int);
+typedef void (GLUTCALLBACK *GLUTspaceButtonCB) (int, int);
+typedef void (GLUTCALLBACK *GLUTdialsCB) (int, int);
+typedef void (GLUTCALLBACK *GLUTbuttonBoxCB) (int, int);
+typedef void (GLUTCALLBACK *GLUTtabletMotionCB) (int, int);
+typedef void (GLUTCALLBACK *GLUTtabletButtonCB) (int, int, int, int);
+typedef void (GLUTCALLBACK *GLUTjoystickCB) (unsigned int buttonMask, int x, int y, int z);
 
 typedef struct _GLUTcolorcell GLUTcolorcell;
 struct _GLUTcolorcell {
@@ -397,8 +405,7 @@ struct _GLUTwindow {
   int joyPollInterval; /* joystick polling interval */
 #endif
 #ifdef SUPPORT_FORTRAN
-  /* Special Fortran display  unneeded since no
-     parameters! */
+  GLUTdisplayFCB fdisplay;  /* Fortran display  */
   GLUTreshapeFCB freshape;  /* Fortran reshape  */
   GLUTmouseFCB fmouse;  /* Fortran mouse  */
   GLUTmotionFCB fmotion;  /* Fortran motion  */
@@ -406,24 +413,17 @@ struct _GLUTwindow {
   GLUTentryFCB fentry;  /* Fortran entry  */
   GLUTkeyboardFCB fkeyboard;  /* Fortran keyboard  */
   GLUTkeyboardFCB fkeyboardUp;  /* Fortran keyboard up */
-  GLUTwindowStatusFCB fwindowStatus;  /* Fortran visibility
-                                          */
-  GLUTvisibilityFCB fvisibility;  /* Fortran visibility
-                                      */
+  GLUTwindowStatusFCB fwindowStatus;  /* Fortran window status */
+  GLUTvisibilityFCB fvisibility;  /* Fortran visibility */
   GLUTspecialFCB fspecial;  /* special key */
   GLUTspecialFCB fspecialUp;  /* special key up */
   GLUTbuttonBoxFCB fbuttonBox;  /* button box */
   GLUTdialsFCB fdials;  /* dials */
-  GLUTspaceMotionFCB fspaceMotion;  /* Spaceball motion
-                                        */
-  GLUTspaceRotateFCB fspaceRotate;  /* Spaceball rotate
-                                        */
-  GLUTspaceButtonFCB fspaceButton;  /* Spaceball button
-                                        */
-  GLUTtabletMotionFCB ftabletMotion;  /* tablet motion
-                                       */
-  GLUTtabletButtonFCB ftabletButton;  /* tablet button
-                                       */
+  GLUTspaceMotionFCB fspaceMotion;  /* Spaceball motion */
+  GLUTspaceRotateFCB fspaceRotate;  /* Spaceball rotate */
+  GLUTspaceButtonFCB fspaceButton;  /* Spaceball button */
+  GLUTtabletMotionFCB ftabletMotion;  /* tablet motion */
+  GLUTtabletButtonFCB ftabletButton;  /* tablet button */
 #ifdef _WIN32
   GLUTjoystickFCB fjoystick;  /* joystick */
 #endif
@@ -448,8 +448,9 @@ struct _GLUToverlay {
 #endif
   int transparentPixel; /* transparent pixel value */
   GLUTdisplayCB display;  /* redraw  */
-  /* Special Fortran display  unneeded since no
-     parameters! */
+#ifdef SUPPORT_FORTRAN
+  GLUTdisplayFCB fdisplay;  /* redraw  */
+#endif
 };
 
 typedef struct _GLUTstale GLUTstale;
@@ -483,7 +484,11 @@ typedef struct _GLUTmenu GLUTmenu;
 typedef struct _GLUTmenuItem GLUTmenuItem;
 struct _GLUTmenu {
   int id;               /* small integer menu id (0-based) */
+#if defined(_WIN32)
+  HMENU win;            /* Win32 menu */
+#else
   Window win;           /* X window for the menu */
+#endif
   GLUTselectCB select;  /*  function of menu */
   GLUTmenuItem *list;   /* list of menu entries */
   int num;              /* number of entries */
@@ -509,7 +514,11 @@ struct _GLUTmenu {
 };
 
 struct _GLUTmenuItem {
+#if defined(_WIN32)
+  HMENU win;            /* Win32 window for entry */
+#else
   Window win;           /* InputOnly X window for entry */
+#endif
   GLUTmenu *menu;       /* menu entry belongs to */
   Bool isTrigger;       /* is a submenu trigger? */
   int value;            /* value to return for selecting this
@@ -650,11 +659,14 @@ extern int __glutScreenHeight;
 extern int __glutScreenWidth;
 extern Atom __glutMotifHints;
 extern unsigned int __glutModifierMask;
+#ifdef _WIN32
+extern void (__cdecl *__glutExitFunc)(int retval);
+#endif
 
 /* private variables from glut_menu.c */
 extern GLUTmenuItem *__glutItemSelected;
 extern GLUTmenu **__glutMenuList;
-extern void (*__glutMenuStatusFunc) (int, int, int);
+extern void (GLUTCALLBACK *__glutMenuStatusFunc) (int, int, int);
 extern void __glutMenuModificationError(void);
 extern void __glutSetMenuItem(GLUTmenuItem * item,
   const char *label, int value, Bool isTrigger);
@@ -709,10 +721,10 @@ extern void __glutInitTime(struct timeval *beginning);
 
 /* private routines for glut_menu.c (or win32_menu.c) */
 #if defined(_WIN32)
-extern GLUTmenu *__glutGetMenu(Window win);
+extern GLUTmenu *__glutGetMenu(HMENU win);
 extern GLUTmenu *__glutGetMenuByNum(int menunum);
 extern GLUTmenuItem *__glutGetMenuItem(GLUTmenu * menu,
-  Window win, int *which);
+  HMENU win, int *which);
 extern void __glutStartMenu(GLUTmenu * menu,
   GLUTwindow * window, int x, int y, int x_win, int y_win);
 extern void __glutFinishMenu(Window win, int x, int y);
@@ -736,7 +748,7 @@ extern XVisualInfo *__glutGetVisualInfo(unsigned int mode);
 extern void __glutSetWindow(GLUTwindow * window);
 extern void __glutReshapeFunc(GLUTreshapeCB reshapeFunc,
   int callingConvention);
-extern void  __glutDefaultReshape(int, int);
+extern void GLUTCALLBACK __glutDefaultReshape(int, int);
 extern GLUTwindow *__glutCreateWindow(
   GLUTwindow * parent,
   int x, int y, int width, int height, int gamemode);
@@ -756,7 +768,7 @@ extern void  __glutUpdateInputDeviceMask(GLUTwindow * window);
 extern void __glutDetermineMesaSwapHackSupport(void);
 
 /* private routines from glut_gameglut.c */
-extern void __glutCloseDownGameMode(void);
+extern void CDECL __glutCloseDownGameMode(void);
 
 #if defined(_WIN32)
 /* private routines from win32_*.c */

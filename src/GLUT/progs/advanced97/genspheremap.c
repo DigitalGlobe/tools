@@ -19,7 +19,7 @@
 
 #include <GL/glut.h>
 
-const char defaultBaseName[] = "data/small";
+const char defaultBaseName[] = "../data/";
 
 GLuint *faces[6];
 GLsizei faceW[6], faceH[6];
@@ -243,7 +243,7 @@ void show_usage(void)
 {
     fprintf(stderr, "Usage:\n");
     fprintf(stderr, "genspheremap -- use default files"
-	    "(%s0.rgb through %s5.rgb)\n", defaultBaseName, defaultBaseName);
+	    "(%s00.rgb through %s05.rgb)\n", defaultBaseName, defaultBaseName);
     fprintf(stderr, "genspheremap baseName -- use files of the form "
 	    "baseName0.rgb through baseName5.rgb\n");
     fprintf(stderr, "genspheremap f0.rgb f1.rgb f2.rgb f3.rgb f4.rgb f5.rgb\n");
@@ -270,7 +270,7 @@ main(int argc, char *argv[])
 	else baseName = argv[1];
 	assert(strlen(baseName) < 128 - (strlen("0.rgb") + 1));
 	for (i = 0; i < 6; i++) {
-	    sprintf(fname, "%s%d.rgb", baseName, i);
+	    sprintf(fname, "%s%02d.rgb", baseName, i);
 	    faces[i] = load_texture(fname, &faceW[i], &faceH[i]);
 	}
     } else if (argc == 7) {

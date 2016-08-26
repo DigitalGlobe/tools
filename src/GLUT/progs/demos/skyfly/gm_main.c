@@ -35,7 +35,7 @@ static int buttons[BUTCOUNT] = { 0 };
 static int mouse_x, mouse_y;
 
 GLboolean show_timer = GL_FALSE;
-GLboolean fullscreen = GL_TRUE;
+GLboolean fullscreen = GL_FALSE;
 
 int Xgetbutton(int button)
 {
@@ -311,8 +311,8 @@ main(int argc, char **argv)
 {
   glutInit(&argc, argv);
 
-  if (argc > 1 && !strcmp(argv[1], "-w"))
-      fullscreen = GL_FALSE;
+  if (argc > 1 && !strcmp(argv[1], "-f"))
+      fullscreen = GL_TRUE;
 
   glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH | GLUT_MULTISAMPLE);
   if (fullscreen) {

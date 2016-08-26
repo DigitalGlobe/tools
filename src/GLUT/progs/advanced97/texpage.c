@@ -1,9 +1,9 @@
-#include "stdlib.h"
-#include "stdio.h"
-#include "math.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
 #include <GL/glut.h>
 #include "texture.h"
-#include "string.h"
+#include <string.h>
 
 #if !defined(GL_VERSION_1_1) && !defined(GL_VERSION_1_2)
 #define glTexSubImage2D	glTexSubImage2DEXT
@@ -493,7 +493,7 @@ int main(int argc, char* argv[]) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA|GLUT_DOUBLE);
     (void)glutCreateWindow(argv[0]);
-    init(argv[1]);
+    init(argv[1] ? argv[1] : "../data/fendi.rgb");
     glutDisplayFunc(display);
     glutKeyboardFunc(key);
     glutSpecialFunc(special);

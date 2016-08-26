@@ -46,7 +46,7 @@ void myglInit(void)
 {
   glLineWidth(10.0);
   glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();

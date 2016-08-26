@@ -16,7 +16,6 @@
 #include <math.h>
 #include <GL/glut.h>
 #include "trackball.h"
-#include "tb.h"
 
 /* defines */
 #define BOARDSIZE 9   /* on a side, total of 81 holes */
@@ -71,6 +70,6 @@ extern  GLuint    select_buffer[];
 extern  GLboolean selection;
 extern  GLuint    pick(int x, int y);
 extern  void      passive(int x, int y);
-extern  void      text(GLuint x, GLuint y, GLfloat scale, char *format, ...);
+extern  void      text(GLfloat x, GLfloat y, GLfloat scale, char *format, ...);
 
 #endif

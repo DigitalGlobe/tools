@@ -53,7 +53,7 @@
 #define pclose _pclose
 #define popen _popen
 /* Win32 doesn't have a re-entrand rand() */
-#define rand_r rand
+#define rand_r(x) rand()
 #endif
 #include <string.h>
 #include <math.h>

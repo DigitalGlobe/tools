@@ -17,7 +17,7 @@ vnorm(float vec[3])
 {
   float len;
 
-  len = sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]);
+  len = (float)sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]);
   vec[0] = vec[0] / len;
   vec[1] = vec[1] / len;
   vec[2] = vec[2] / len;

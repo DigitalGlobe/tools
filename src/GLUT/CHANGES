@@ -4,11 +4,42 @@ GLUT Change Log
 
 NOTE:  This document is potentially incomplete.
 
+
+GLUT 3.7 -> 3.7.1
+------------------
+
+  o  Added a default icon for glut windows (Win32 only).
+
+  o  Added workspace and project files for compiling with
+     Microsoft Visual Studio (6 or greater).
+
+  o  Updated some of the demo programs.
+
+
 GLUT 3.6 -> 3.7
 ----------------
 
+  o  Added to <GL/glut.h> the ability to automatically link with
+     the necessary GLUT and OpenGL libraries.  Define GLUT_NO_LIB_PRAGMA
+     to disable this (you need to disable this when compiling the
+     library itself).  Define GLUT_USE_SGI_OPENGL for auto library
+     linking with the SGI OpenGL for Windows libraries.  Define
+     GLUT_NO_WARNINGS_DISABLE to avoid warnings that GLUT programs
+     typically want to suppress.
+
   o  Port of IRIS GL newave "wave physics" demo by Erik Larsen
      (cayman@sprintmail.com).  Look in progs/demos/newave
+
+  o  The glutSolidTeapot and glutWireTeapot do not tesselate as
+     finely as in previous releases.  Expect the teapot to render
+     much faster as of GLUT 3.7.
+
+  o  The lib/*/Imakefile files have been updated to make it easier
+     to build shared/debug/profiling versions of the various GLUT
+     libraries.  See Question 44 in the "FAQ.glut" files for
+     more details.
+
+  o  Fix progs/advanced/textext example to work on little-endian machines.
 
   o  Fixed a performance bug in progs/advanced/rts.c that eliminates
      one full shadow volume rendering pass.  If you have the silhouette
@@ -30,6 +61,20 @@ GLUT 3.6 -> 3.7
 
      Note that the GLX version still assumes that a redundant
      glXMakeCurrent is short circuited.
+
+  o  Call glutDestroyWindow (and glutLeaveGameMode) destroys the
+     window (or game mode window) before returning.  Previously,
+     the X11 implementation didn't do an explicit flush so the
+     window could still be on the screen after glutDestroyWindow
+     (or glutLeaveGameMode) returned.  The Win32 behavior was
+     corret in GLUT 3.6.
+
+  o  Work around Microsoft's bug where atexit callbacks are not
+     called if exit is called from within a DLL.  I had to add new
+     routines glutCreateWindowWITHEXIT, glutCreateMenuWITHEXIT,
+     and glutInitWITHEXIT that pass in the exit routine's function
+     pointer so GLUT can call this routine and exit with the
+     atexit callbacks called correctly.
 
   o  Added lib/glsmap library for dynamic real-time sphere mapping.
      See the demos in progs/spheremap/glsmap

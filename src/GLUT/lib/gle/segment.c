@@ -18,8 +18,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>	/* for the memcpy() subroutine */
-#include "port.h"
 #include "GL/tube.h"
+#include "port.h"
 #include "extrude.h"
 #include "tube_gc.h"
 #include "segment.h"

@@ -143,7 +143,7 @@ Extrusion *arrow = NULL;
 float lastx=0;
 float lasty=0;
 
-void draw_arrow () {
+void draw_arrow (void) {
 
    /* attach the mouse */
    arrow->sweepTheta = 180.0 + 0.13* lastx;

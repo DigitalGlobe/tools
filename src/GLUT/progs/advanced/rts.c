@@ -5,7 +5,7 @@
    provided without guarantee or warrantee expressed or implied.  This
    program is -not- in the public domain. */
 
-/* Real-time Shadowing library, Version 0.96 */
+/* Real-time Shadowing library, Version 0.97 */
 
 /* XXX This is library is not fully implemented yet, but still quite
    functional. */
@@ -36,12 +36,15 @@
 #endif
 
 #ifdef _WIN32
+# include <windows.h>  /* for wglGetProcAddress */
 # ifdef _MT  /* If Visual C++ "/MT" compiler switch specified. */
 #  define MP
 # endif
 #endif
 
+#ifndef NDEBUG
 #define NDEBUG  /* No assertions for best performance. */
+#endif
 
 #include <assert.h>
 #include <stdlib.h>
@@ -57,7 +60,6 @@
 #  include <sys/sysmp.h>
 # endif
 # ifdef _WIN32
-#  include <windows.h>
 #  include <process.h>
 # endif
 #endif
@@ -92,6 +94,9 @@ static const int hasVertexArray = 0;
 
 #ifdef GL_EXT_blend_subtract
 static int hasBlendSubtract = 0;
+#if defined(_WIN32) && !defined(MESA)
+PFNGLBLENDEQUATIONEXTPROC glBlendEquationEXT = NULL;
+#endif
 #else
 static const int hasBlendSubtract = 0;
 #endif
@@ -750,6 +755,14 @@ getViewScale(RTSscene * scene)
 
 #ifdef GL_EXT_blend_subtract
     hasBlendSubtract = extensionSupported("GL_EXT_blend_subtract");
+#if defined(_WIN32) && !defined(MESA)
+    if (hasBlendSubtract) {
+      glBlendEquationEXT = (PFNGLBLENDEQUATIONEXTPROC) wglGetProcAddress("glBlendEquationEXT");
+      if (glBlendEquationEXT == NULL) {
+        hasBlendSubtract = 0;
+      }
+    }
+#endif
 
     /* XXX RealityEngine workaround. */
     if (!strcmp((char *) glGetString(GL_VENDOR), "SGI")) {

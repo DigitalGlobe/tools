@@ -22,7 +22,7 @@
 #include "glutint.h"
 #include "layerutil.h"
 
-void (*__glutMenuStatusFunc) (int, int, int);
+void (CDECL *__glutMenuStatusFunc) (int, int, int);
 GLUTmenuItem *__glutItemSelected;
 GLUTmenu **__glutMenuList = NULL;
 

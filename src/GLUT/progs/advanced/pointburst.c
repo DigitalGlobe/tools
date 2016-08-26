@@ -50,7 +50,7 @@
 #define GL_POINT_SIZE_MAX_EXT               0x8127
 #define GL_POINT_FADE_THRESHOLD_SIZE_EXT    0x8128
 #define GL_DISTANCE_ATTENUATION_EXT         0x8129
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(MESA)
 /* Curse Microsoft for the insanity of wglGetProcAddress. */
 typedef void (APIENTRY * PFNGLPOINTPARAMETERFEXTPROC) (GLenum pname, GLfloat param);
 typedef void (APIENTRY * PFNGLPOINTPARAMETERFVEXTPROC) (GLenum pname, const GLfloat *params);
@@ -58,7 +58,7 @@ typedef void (APIENTRY * PFNGLPOINTPARAMETERFVEXTPROC) (GLenum pname, const GLfl
 #endif
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(MESA)
 PFNGLPOINTPARAMETERFEXTPROC glPointParameterfEXT;
 PFNGLPOINTPARAMETERFVEXTPROC glPointParameterfvEXT;
 #endif
@@ -491,17 +491,22 @@ main(int argc, char **argv)
 
   hasPointParameters = glutExtensionSupported("GL_SGIS_point_parameters") ||
     glutExtensionSupported("GL_EXT_point_parameters");
-#ifdef _WIN32
   if (hasPointParameters) {
+#if defined(_WIN32) && !defined(MESA)
     glPointParameterfEXT = (PFNGLPOINTPARAMETERFEXTPROC)
       wglGetProcAddress("glPointParameterfEXT");
     glPointParameterfvEXT = (PFNGLPOINTPARAMETERFVEXTPROC)
       wglGetProcAddress("glPointParameterfvEXT");
+    if (!glPointParameterfEXT || !glPointParameterfvEXT) {
+      hasPointParameters = 0;
+    }
+#endif
+  }
+  if (hasPointParameters) {
     printf("has point parameters extension!\n");
   } else {
     printf("does NOT have point parameters extension!\n");
   }
-#endif
 
   glutDisplayFunc(redraw);
   glutMouseFunc(mouse);

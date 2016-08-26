@@ -29,6 +29,10 @@ extern "C" {
 #define GLE_API_VERSION                228
 #endif
 
+#ifdef _WIN32
+#define OPENGL_10
+#endif
+
 /* some types */
 #define gleDouble double
 typedef gleDouble gleAffine[2][3];

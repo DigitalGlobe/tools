@@ -87,12 +87,18 @@ logo.o : logo.c.Z
 	$(CC) -c $(CFLAGS) logo.c
 	$(RM) logo.c
 
+logo.c.Z :
+	test -e $@ || gzip -c logo.c > $@
+
 mjkimage.o : mjkimage.c.Z
 	$(RM) $@
 	zcat mjkimage.c.Z > mjkimage.c
 	$(CC) -c $(CFLAGS) mjkimage.c
 	$(RM) mjkimage.c
 
+mjkimage.c.Z :
+	test -e $@ || gzip -c mjkimage.c > $@
+										
 clean::
 	$(RM) render.eps
 

@@ -171,7 +171,7 @@ void redraw(void)
     CHECK_ERROR("OpenGL Error in redraw()");
 }
 
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     glutInit(&argc, argv);
     glutInitWindowSize(winWidth, winHeight);
@@ -214,10 +214,11 @@ void main(int argc, char **argv)
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 
-    loader("data/f15.data");
+    loader("../data/f15.data");
 
     CHECK_ERROR("OpenGL Error in main()");
 
     key('?', 0, 0); /* print usage message */
     glutMainLoop();
+    return 0;             /* ANSI C requires main to return int. */
 }

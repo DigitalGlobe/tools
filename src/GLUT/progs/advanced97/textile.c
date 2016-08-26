@@ -325,7 +325,7 @@ main(int argc, char *argv[])
 {
     char *name = "Texture Tiling Test";
     int width = 300, height = 300;
-    char *filename = NULL;
+    char *filename = "../data/fendi.rgb";
     int i;
 
     glutInitWindowSize(width, height);

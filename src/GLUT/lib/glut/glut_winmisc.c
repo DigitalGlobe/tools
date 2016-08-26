@@ -38,6 +38,7 @@ glutSetWindowTitle(const char *title)
 void APIENTRY 
 glutSetIconTitle(const char *title)
 {
+#if !defined(_WIN32)
   XTextProperty textprop;
 
   assert(!__glutCurrentWindow->parent);
@@ -49,6 +50,7 @@ glutSetIconTitle(const char *title)
   XSetWMIconName(__glutDisplay,
     __glutCurrentWindow->win, &textprop);
   XFlush(__glutDisplay);
+#endif
 }
 
 void APIENTRY 

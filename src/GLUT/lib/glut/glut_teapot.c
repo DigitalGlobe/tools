@@ -198,7 +198,7 @@ teapot(GLint grid, GLdouble scale, GLenum type)
 void APIENTRY 
 glutSolidTeapot(GLdouble scale)
 {
-  teapot(14, scale, GL_FILL);
+  teapot(7, scale, GL_FILL);
 }
 
 void APIENTRY 

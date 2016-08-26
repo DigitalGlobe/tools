@@ -16,7 +16,7 @@
 
 GLUquadricObj *cone, *base, *qsphere;
 
-static char defaultFile[] = "data/mandrill256.rgb";
+static char defaultFile[] = "../data/mandrill.rgb";
 GLuint floorList;
 
 GLboolean animate = 1, useSphereMaps = 1;

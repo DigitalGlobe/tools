@@ -5,9 +5,9 @@
 #include <GL/glut.h>
 #include "texture.h"
 
-static char defaultFile0[] = "data/blurredsgi.bw";
-static char defaultFile1[] = "data/mandrill256.rgb";
-static char defaultFile2[] = "data/brick.rgb";
+static char defaultFile0[] = "../data/sgi.bw";
+static char defaultFile1[] = "../data/mandrill.rgb";
+static char defaultFile2[] = "../data/brick.rgb";
 GLuint *img0, *img1, *img2;
 GLsizei w, h;
 GLsizei w0, w1, w2, h0, h1, h2;

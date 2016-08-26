@@ -62,7 +62,7 @@ void maketestui(int win)
     muiAttachUIList(win);
 }
 
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     glutInit(&argc, argv);
     if (argc > 1) mui_singlebuffered = 1;
@@ -81,4 +81,5 @@ void main(int argc, char **argv)
     maketestui(2);
 
     glutMainLoop();
+    return 0;             /* ANSI C requires main to return int. */
 }

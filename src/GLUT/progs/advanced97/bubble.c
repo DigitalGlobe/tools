@@ -437,7 +437,7 @@ int main(int argc, char** argv) {
     glutInitDisplayMode (GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
     glutInitWindowPosition(100, 100);
     glutCreateWindow (argv[0]);
-    init(argc > 1 ? argv[1] : "data/cv.rgb");
+    init(argc > 1 ? argv[1] : "../data/spheremap.rgb");
     glutDisplayFunc(display);
     glutReshapeFunc(reshape);
     glutKeyboardFunc(key);

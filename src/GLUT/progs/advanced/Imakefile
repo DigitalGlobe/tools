@@ -17,7 +17,7 @@ SRCS = hiddenline.c haloed.c silhouette.c softshadow.c accumaa.c field.c \
   warp.c motionblur.c projtex.c zcomposite.c videoresize.c occlude.c \
   addfog.c af_depthcue.c af_teapots.c multilight.c boundary.c shadowfun.c \
   rts.c hello2rts.c rasonly.c sgiflag.c pointburst.c redblue_stereo.c \
-  texwinalign.c
+  texwinalign.c nvidia_logo.c
 
 AllTarget($(TARGETS))
 
@@ -35,7 +35,7 @@ SimpleGlutProgramTarget(envphong)
 SimpleGlutProgramTarget(field)
 NormalGlutProgramTarget(genmipmap,genmipmap.o texture.o)
 SimpleGlutProgramTarget(haloed)
-NormalGlutProgramTarget(hello2rts,hello2rts.o rts.o)
+NormalGlutProgramTarget(hello2rts,hello2rts.o rts.o nvidia_logo.o)
 SimpleGlutProgramTarget(hiddenline)
 NormalGlutProgramTarget(imgproc,imgproc.o texture.o)
 NormalGlutProgramTarget(mipmap_lines,mipmap_lines.o izoom.o texture.o)

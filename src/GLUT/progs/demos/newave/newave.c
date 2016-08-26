@@ -797,7 +797,7 @@ void keyboard(unsigned char ch, int x, int y)
     glutPostRedisplay();
 }
 
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
@@ -884,6 +884,7 @@ void main(int argc, char **argv)
     glutAttachMenu(GLUT_RIGHT_BUTTON);
 
     glutMainLoop();
+    return 0;             /* ANSI C requires main to return int. */
 }
 
     

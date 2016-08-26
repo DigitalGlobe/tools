@@ -63,6 +63,11 @@ __glutFatalError(char *format,...)
   vfprintf(stderr, format, args);
   va_end(args);
   putc('\n', stderr);
+#ifdef _WIN32
+  if (__glutExitFunc) {
+    __glutExitFunc(1);
+  }
+#endif
   exit(1);
 }
 

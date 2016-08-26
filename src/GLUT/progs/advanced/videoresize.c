@@ -127,7 +127,13 @@ Bugs:
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#if !defined(_WIN32)
 #include <unistd.h>
+#else
+#define lrand48() (0)
+#define srand48(x) (0)
+#define getpid() (0)
+#endif
 
 #define OVERLOAD 0
 #define ZOOMED 1

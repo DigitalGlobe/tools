@@ -19,7 +19,6 @@ GLboolean selection = GL_FALSE;
 
 GLuint pick(int x, int y);
 void passive(int x, int y);
-void text(GLuint x, GLuint y, GLfloat scale, char *format, ...);
 
 GLuint pick(int x, int y)
 {
@@ -131,7 +130,7 @@ void passive(int x, int y)
  * format - as in printf()
  */
 void 
-text(GLuint x, GLuint y, GLfloat scale, char* format, ...)
+text(GLfloat x, GLfloat y, GLfloat scale, char* format, ...)
 {
   va_list args;
   char buffer[255], *p;

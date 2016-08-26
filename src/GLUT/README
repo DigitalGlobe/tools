@@ -4,14 +4,15 @@ Toolkit (GLUT) distribution.  See the NOTICE for legal terms.
 
 VERSION:
 
-Release 3.7, May 7, 1998.
+Release 3.7, Novermber 22, 1998.
 
 SUPPORTED PLATFORMS:
 
 This distribution should compile for:
 
-  o  Microsoft Windows 95 or Windows NT with SGI OpenGL for Windows
-     (aka Cosmo OpenGL) and/or Microsoft OpenGL 1.1.
+  o  Microsoft Windows 95, Windows 98, or Windows NT with Microsoft
+     OpenGL 1.1 (bundled standard with these systems) or SGI OpenGL
+     for Windows (aka Cosmo OpenGL).
   
   o  SGI workstation running IRIX 5.2 or higher supporting OpenGL,
      including 64-bit and N32 support IRIX 6.1, 6.2, 6.3, 6.4, and
@@ -24,17 +25,35 @@ This distribution should compile for:
 
   o  Metro Link's Metro OpenGL for Linux.
 
-  o  Template Graphics Software's OpenGL for Sun workstations.
+  o  Sun's OpenGL implementation for its workstations or Template
+     Graphics Software's OpenGL for Sun workstations.
 
-  o  Mesa 2.x (and 1.x) for Unix workstations, including Linux PCs
+  o  Mesa 3.x (and 2.x) for Unix workstations, including Linux PCs
      and SunOS 4.1.x.
 
-MICROSOFT WINDOWS 95 and NT BUILD INSTRUCTIONS:   <-- IMPOARTANT!
+  o  Most other Unix workstations supporting either OpenGL or Mesa.
 
-Read the "README.win" accompanying file.  The short instructions if you
-have Microsoft's Visual C++ compiler is to run the "glutmake" batch
-file.  You may need to edit "glutwin32.mak" to indicate your compiler
-location.
+MICROSOFT WINDOWS 95 and NT BUILD INSTRUCTIONS:   <-- IMPORTANT!
+
+Read the "README-win32.txt" accompanying file.
+
+MESA BUILD INSTRUCTIONS:                          <-- IMPORTANT!
+
+Mesa 3.x and higher provide an implementation of GLUT in Mesa's
+"MesaDemos" source code distribution.  The official GLUT source
+code distribution may or may not be more current than the version
+of the GLUT library included with the MesaDemos distribution.
+
+Please note that even though the MesaDemos distribution contains
+the source code for the GLUT library, the many GLUT source code
+examples and demos in the GLUT source code distribution are not
+part of Mesa.
+
+To ease building the GLUT source code distribution for Mesa,
+users, see the note in the Glut.cf file in this directory.  If
+you uncomment the line saying "#define UseMesa 1" and then
+set the "MesaDir" #define to the location of your Mesa source
+code distribution, GLUT should build easily with Mesa.
 
 MAKEFILE GENERATION TO BUILD GLUT:                <-- IMPORTANT!
 
@@ -164,4 +183,4 @@ Kok is responsible for the several way cool demos in GLUT 3.5.  Thanks
 for your help!
 
 - Mark Kilgard
-  mjk@sgi.com
+  mjk@nvidia.com

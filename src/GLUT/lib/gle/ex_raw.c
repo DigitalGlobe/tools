@@ -908,7 +908,7 @@ void extrusion_raw_join (int ncp,		/* number of contour points */
                                    (gleDouble (*)[3]) front_norm, (gleDouble (*)[3]) back_norm,
                                    color_array[inext-1],
                                    color_array[inext],
-				   len, inext);
+				   inext, len);
             }
             if (__TUBE_DRAW_CAP) {
                 C3F (color_array[inext-1]);

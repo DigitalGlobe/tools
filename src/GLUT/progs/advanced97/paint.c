@@ -18,9 +18,9 @@
 #define GW 0.6094
 #define BW 0.0820
 
-static char defaultFile0[] = "data/mandrill256.rgb";
-static char defaultFile1[] = "data/weave.bw";
-static char defaultBrushFile[] = "data/brush3.rgb";
+static char defaultFile0[] = "../data/mandrill.rgb";
+static char defaultFile1[] = "../data/sgi.bw";
+static char defaultBrushFile[] = "../data/brush.rgb";
 GLuint *img0, *img1, *brush;
 GLsizei w0, w1, wbrush, h0, h1, hbrush;
 GLsizei w, h;

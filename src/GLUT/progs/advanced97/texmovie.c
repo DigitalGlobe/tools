@@ -79,6 +79,28 @@ void init(int argc, char *argv[]) {
     glEnable(GL_TEXTURE_2D);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
+	if (argv[0] == NULL) {
+	  char name[256];
+	  for (i = 0; i < 32; i++) {
+  		sprintf(name, "../data/flame/f%02d", i);
+ 	    image = read_texture(name, &width, &height, &components);
+	    if (image == NULL) {
+		  fprintf(stderr, "Error: Can't load image file \"%s\".\n", argv[i]);
+		  exit(EXIT_FAILURE);
+		} else {
+		  printf("%d x %d image loaded\n", width, height);
+		}
+		glBindTexture(GL_TEXTURE_2D, i+1);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		glTexImage2D(GL_TEXTURE_2D, 0, components, width,
+					 height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+		texture_count++;
+	  }
+	}
+
     for(i = 0; i < argc; i++) {
 	image = read_texture(argv[i], &width, &height, &components);
 	if (image == NULL) {

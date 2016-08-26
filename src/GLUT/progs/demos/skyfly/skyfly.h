@@ -30,9 +30,12 @@
 #define MOUSEY          1
 #define VALCOUNT        2
 
+#ifdef _WIN32
 #undef random
 extern long random(void);
-
+#else
+/* random is defined in stdlib.h, return type varies depending on headers*/
+#endif
 
 #undef	MIN
 #undef	MAX

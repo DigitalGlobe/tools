@@ -1,13 +1,17 @@
 /*    
- *  GLM library.  Wavefront .obj file format reader/writer/manipulator.
- *
- *  Written by Nate Robins, 1997.
- *  email: ndr@pobox.com
- *  www: http://www.pobox.com/~ndr
+      glm.h
+      Nate Robins, 1997
+      ndr@pobox.com, http://www.pobox.com/~ndr/
+ 
+      Wavefront OBJ model file format reader/writer/manipulator.
+
+      Includes routines for generating smooth normals with
+      preservation of edges, welding redundant vertices & texture
+      coordinate generation (spheremap and planar projections) + more.
+
  */
 
 
-/* includes */
 #include <GL/glut.h>
 
 
@@ -15,8 +19,6 @@
 #define M_PI 3.14159265
 #endif
 
-
-/* defines */
 #define GLM_NONE     (0)		/* render with only vertices */
 #define GLM_FLAT     (1 << 0)		/* render with facet normals */
 #define GLM_SMOOTH   (1 << 1)		/* render with vertex normals */
@@ -24,8 +26,6 @@
 #define GLM_COLOR    (1 << 3)		/* render with colors */
 #define GLM_MATERIAL (1 << 4)		/* render with materials */
 
-
-/* structs */
 
 /* GLMmaterial: Structure that defines a material in a model. 
  */
@@ -41,7 +41,7 @@ typedef struct _GLMmaterial
 
 /* GLMtriangle: Structure that defines a triangle in a model.
  */
-typedef struct {
+typedef struct _GLMtriangle {
   GLuint vindices[3];			/* array of triangle vertex indices */
   GLuint nindices[3];			/* array of triangle normal indices */
   GLuint tindices[3];			/* array of triangle texcoord indices*/
@@ -60,7 +60,7 @@ typedef struct _GLMgroup {
 
 /* GLMmodel: Structure that defines a model.
  */
-typedef struct {
+typedef struct _GLMmodel {
   char*    pathname;			/* path to this model */
   char*    mtllibname;			/* name of the material library */
 
@@ -89,8 +89,6 @@ typedef struct {
 
 } GLMmodel;
 
-
-/* public functions */
 
 /* glmUnitize: "unitize" a model by translating it to the origin and
  * scaling it to fit in a unit cube around the origin.  Returns the
@@ -245,5 +243,5 @@ glmList(GLMmodel* model, GLuint mode);
  *              ( 0.00001 is a good start for a unitized model)
  *
  */
-GLvoid
+GLuint
 glmWeld(GLMmodel* model, GLfloat epsilon);

@@ -1,6 +1,6 @@
-#include "stdlib.h"
-#include "stdio.h"
-#include "math.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
 #include <GL/glut.h>
 #include "texture.h"
 
@@ -310,7 +310,7 @@ main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGBA|GLUT_DOUBLE);
     (void)glutCreateWindow("warp");
-    init(argv[1]);
+    init(argv[1] ? argv[1] : "../data/mandrill.rgb");
     glutKeyboardFunc(key);
     glutSpecialFunc(special);
     glutDisplayFunc(display);

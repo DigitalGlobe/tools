@@ -5,8 +5,7 @@
    and is provided without guarantee or warrantee expressed or 
    implied. This program is -not- in the public domain. */
 
-#include <stdio.h>
-#include "win32_glx.h"
+#include "glutint.h"
 
 /* global current HDC */
 extern HDC XHDC;
@@ -45,7 +44,7 @@ glXGetConfig(Display * display, XVisualInfo * visual, int attrib, int *value)
 
   switch (attrib) {
   case GLX_USE_GL:
-    if (visual->dwFlags & (PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW)) {
+    if ((visual->dwFlags & PFD_SUPPORT_OPENGL ) && (visual->dwFlags & PFD_DRAW_TO_WINDOW)) {
       /* XXX Brad's Matrix Millenium II has problems creating
          color index windows in 24-bit mode (lead to GDI crash)
          and 32-bit mode (lead to black window).  The cColorBits

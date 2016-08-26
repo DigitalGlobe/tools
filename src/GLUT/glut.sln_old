@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "glut32", "lib\glut\glut32.vcproj", "{0031B2F1-C6DF-43A8-977E-059EE30A7424}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0031B2F1-C6DF-43A8-977E-059EE30A7424}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0031B2F1-C6DF-43A8-977E-059EE30A7424}.Debug|Win32.Build.0 = Debug|Win32
+		{0031B2F1-C6DF-43A8-977E-059EE30A7424}.Debug|x64.ActiveCfg = Debug|x64
+		{0031B2F1-C6DF-43A8-977E-059EE30A7424}.Debug|x64.Build.0 = Debug|x64
+		{0031B2F1-C6DF-43A8-977E-059EE30A7424}.Release|Win32.ActiveCfg = Release|Win32
+		{0031B2F1-C6DF-43A8-977E-059EE30A7424}.Release|Win32.Build.0 = Release|Win32
+		{0031B2F1-C6DF-43A8-977E-059EE30A7424}.Release|x64.ActiveCfg = Release|x64
+		{0031B2F1-C6DF-43A8-977E-059EE30A7424}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

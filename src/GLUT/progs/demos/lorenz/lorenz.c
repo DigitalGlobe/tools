@@ -166,7 +166,7 @@ static void Draw(void)
     }
 }
 
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     glutInitWindowSize(600, 600);
 
@@ -205,6 +205,7 @@ void main(int argc, char **argv)
     glutIdleFunc(Draw);
     glutDisplayFunc(Draw);
     glutMainLoop();
+    return 0;             /* ANSI C requires main to return int. */
 }
 
 /* compute the next point on the path according to Lorenz' equations. */

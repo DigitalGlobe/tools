@@ -126,5 +126,10 @@ stralloc(const char *string)
      idle callback "idle" and include <unistd.h>.  Do no use a function
      named idle if you include <unistd.h>.
 
+  o  The SunOS 5.6 version of <assert.h> requires that <stdio.h> also
+     be included because the assert() macro uses stderr.  Be sure to
+     include <stdio.h> along with <assert.h> everywhere to avoid
+     build errors on SunOS 5.6.
+
 - Mark Kilgard
-  June 11, 1998
+  October 17, 1998

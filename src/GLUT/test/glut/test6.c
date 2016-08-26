@@ -475,6 +475,26 @@ keyboard(unsigned char c, int x, int y)
       printf("FAIL: keyboard expected alt modifier\n");
       exit(1);
     }
+    break;
+  case 4:
+    if (c != '\b') {
+      printf("FAIL: keyboard expected BACKSPACE\n");
+      exit(1);
+    }
+    if (glutGetModifiers() != 0) {
+      printf("FAIL: keyboard expected alt modifier\n");
+      exit(1);
+    }
+    break;
+  case 5:
+    if (c != 127) {
+      printf("FAIL: keyboard expected DEL\n");
+      exit(1);
+    }
+    if (glutGetModifiers() != 0) {
+      printf("FAIL: keyboard expected no modifier\n");
+      exit(1);
+    }
     glutKeyboardFunc(NULL);
     glutTimerFunc(1000, time1, 1);
     break;
@@ -493,7 +513,7 @@ time0(int value)
     exit(1);
   }
   glutKeyboardFunc(keyboard);
-  printf("In the black window, please press: g, G, Ctrl-g, then Alt-g\n");
+  printf("In the black window, please press: g, G, Ctrl-g, Alt-g, Backspace, Delete\n");
 }
 
 int
@@ -511,7 +531,6 @@ main(int argc, char **argv)
       mouseButtons);
     mouseButtons = 3;  /* Testing only of 3 mouse buttons. */
   }
-  mouseButtons = 0;
   glutCreateWindow("test");
   glutDisplayFunc(display);
   glutTimerFunc(1000, time0, 0);

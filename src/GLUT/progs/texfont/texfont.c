@@ -95,6 +95,7 @@ getTCVI(TexFont * txf, int c)
     isprint(c) ? c : ' ', c);
   abort();
   /* NOTREACHED */
+  return NULL;
 }
 
 static char *lastError;

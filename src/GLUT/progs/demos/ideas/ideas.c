@@ -778,7 +778,7 @@ static void initialize(void)
 
     attr = doublebuffer ? RGBA_DB_attributes : RGBA_SB_attributes;
     glutInitDisplayMode(attr);
-    glutInitWindowSize(300, 240);
+    glutInitWindowSize(640, 480);
     glutCreateWindow("Ideas");
 
     if (multisample) glEnable(GL_POLYGON_SMOOTH); 

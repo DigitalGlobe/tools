@@ -320,16 +320,22 @@ interruptibleXNextEvent(Display * dpy, XEvent * event)
 static void
 processEventsAndTimeouts(void)
 {
-  do {
-#if defined(_WIN32)
-    MSG event;
+#if defined ( _WIN32 )
+	MSG msg;
+	
+	while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+		TranslateMessage( &msg );
+		DispatchMessage( &msg );
+		if ( msg.message == WM_QUIT ) {
+			exit( 0 );
+		}
+	}
+	if (__glutTimerList) {
+		handleTimeouts();
+	}
+#else  /* _WIN32 */
 
-    if(!GetMessage(&event, NULL, 0, 0))	/* bail if no more messages */
-      exit(0);
-    TranslateMessage(&event);		/* translate virtual-key messages */
-    DispatchMessage(&event);		/* call the window proc */
-    /* see win32_event.c for event (message) processing procedures */
-#else
+  do {
     static int mappedMenuButton;
     GLUTeventParser *parser;
     XEvent event, ahead;
@@ -815,12 +821,12 @@ processEventsAndTimeouts(void)
         break;
       }
     }
-#endif /* _WIN32 */
     if (__glutTimerList) {
       handleTimeouts();
     }
   }
   while (XPending(__glutDisplay));
+#endif /* _WIN32 */
 }
 
 static void
@@ -902,16 +908,7 @@ waitForSomething(void)
   if (rc < 0 && errno != EINTR)
     __glutFatalError("select error.");
 #else
-#if 0 /* XXX Nate, what is this junk? */
-  /* Set up a timer to fire in at least a millisecond, then wait for
-     the message.  This should act like a select. */
-  SetTimer(NULL, 2, waittime.tv_usec, NULL);
-  WaitMessage();
-  KillTimer(NULL, 2);
-#endif
-
-  /* Actually, a sleep seems to do the trick -- do we even need this? */
-  Sleep(0);
+  MsgWaitForMultipleObjects(0, NULL, FALSE, waittime.tv_sec*1000 + waittime.tv_usec/1000, QS_ALLEVENTS);
 #endif
 #endif /* not vms6.2 or lower */
   /* Without considering the cause of select unblocking, check
@@ -954,6 +951,8 @@ processWindowWorkList(GLUTwindow * window)
 
   if (window->prevWorkWin) {
     window->prevWorkWin = processWindowWorkList(window->prevWorkWin);
+	if (beforeEnd == 0)
+      beforeEnd = &window->prevWorkWin;
   } else {
     beforeEnd = &window->prevWorkWin;
   }
@@ -1022,68 +1021,97 @@ processWindowWorkList(GLUTwindow * window)
     /* Be sure to configure window BEFORE map window is done. */
     if (workMask & GLUT_CONFIGURE_WORK) {
 #if defined(_WIN32)
-      RECT changes;
-      POINT point;
-      UINT flags = SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOOWNERZORDER
-	| SWP_NOSENDCHANGING | SWP_NOSIZE | SWP_NOZORDER;
+        if ( workMask & GLUT_FULL_SCREEN_WORK ) {
+            DWORD s;
+            RECT r;
 
-      GetClientRect(window->win, &changes);
-      
-      /* If this window is a toplevel window, translate the 0,0 client
-         coordinate into a screen coordinate for proper placement. */
-      if (!window->parent) {
-        point.x = 0;
-        point.y = 0;
-        ClientToScreen(window->win, &point);
-        changes.left = point.x;
-        changes.top = point.y;
-      }
-      if (window->desiredConfMask & (CWX | CWY)) {
-        changes.left = window->desiredX;
-        changes.top = window->desiredY;
-	flags &= ~SWP_NOMOVE;
-      }
-      if (window->desiredConfMask & (CWWidth | CWHeight)) {
-        changes.right = changes.left + window->desiredWidth;
-        changes.bottom = changes.top + window->desiredHeight;
-	flags &= ~SWP_NOSIZE;
-	/* XXX If overlay exists, resize the overlay here, ie.
-	   if (window->overlay) ... */
-      }
-      if (window->desiredConfMask & CWStackMode) {
-	flags &= ~SWP_NOZORDER;
-	/* XXX Overlay support might require something special here. */
-      }
+            GetWindowRect(GetDesktopWindow(), &r);
+            s = GetWindowLong(window->win, GWL_STYLE);
+            s &= ~WS_OVERLAPPEDWINDOW;
+            s |= WS_POPUP;
+            SetWindowLong(window->win, GWL_STYLE, s);
+            SetWindowPos(window->win, 
+                HWND_TOP, /* safer - a lot of people use windows atop a fullscreen GLUT window. */
+				//HWND_TOPMOST, /* is better, but no windows atop it */
+                r.left, r.top, 
+                r.right-r.left, r.bottom-r.top, 
+                SWP_FRAMECHANGED);
+            
+            /* This hack causes the window to go back to the right position
+            when it is taken out of fullscreen mode. */
+            {
+                POINT p;
 
-      /* Adjust the window rectangle because Win32 thinks that the x, y,
-         width & height are the WHOLE window (including decorations),
-         whereas GLUT treats the x, y, width & height as only the CLIENT
-         area of the window.  Only do this to top level windows
-         that are not in game mode (since game mode windows do
-         not have any decorations). */
-      if (!window->parent && window != __glutGameModeWindow) {
-        AdjustWindowRect(&changes,
-          WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
-          FALSE);
-      }
+                p.x = 0;
+                p.y = 0;
+                ClientToScreen(window->win, &p);
+                window->desiredConfMask |= CWX | CWY;
+                window->desiredX = p.x;
+                window->desiredY = p.y;
+            }
+        } else {
+            RECT changes;
+            POINT point;
+            UINT flags = SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOSENDCHANGING | SWP_NOSIZE | SWP_NOZORDER;
+            DWORD style;
+			
+            GetClientRect(window->win, &changes);
+            style = GetWindowLong(window->win, GWL_STYLE);
+            
+            /* Get rid of fullscreen mode, if it exists */
+            if ( style & WS_POPUP ) {
+                style &= ~WS_POPUP;
+                style |= WS_OVERLAPPEDWINDOW;
+                SetWindowLong(window->win, GWL_STYLE, style);
+                flags |= SWP_FRAMECHANGED;
+            }
 
-      /* Do the repositioning, moving, and push/pop. */
-      SetWindowPos(window->win,
-        window->desiredStack == Above ? HWND_TOP : HWND_NOTOPMOST,
-        changes.left, changes.top,
-        changes.right - changes.left, changes.bottom - changes.top,
-        flags);
-
-      /* Zero out the mask. */
-      window->desiredConfMask = 0;
-
-      /* This hack causes the window to go back to the right position
-         when it is taken out of fullscreen mode. */
-      if (workMask & GLUT_FULL_SCREEN_WORK) {
-        window->desiredConfMask |= CWX | CWY;
-        window->desiredX = point.x;
-        window->desiredY = point.y;
-      }
+            /* If this window is a toplevel window, translate the 0,0 client
+            coordinate into a screen coordinate for proper placement. */
+            if (!window->parent) {
+                point.x = 0;
+                point.y = 0;
+                ClientToScreen(window->win, &point);
+                changes.left = point.x;
+                changes.top = point.y;
+            }
+            if (window->desiredConfMask & (CWX | CWY)) {
+                changes.left = window->desiredX;
+                changes.top = window->desiredY;
+                flags &= ~SWP_NOMOVE;
+            }
+            if (window->desiredConfMask & (CWWidth | CWHeight)) {
+                changes.right = changes.left + window->desiredWidth;
+                changes.bottom = changes.top + window->desiredHeight;
+                flags &= ~SWP_NOSIZE;
+                /* XXX If overlay exists, resize the overlay here, ie.
+                if (window->overlay) ... */
+            }
+            if (window->desiredConfMask & CWStackMode) {
+                flags &= ~SWP_NOZORDER;
+                /* XXX Overlay support might require something special here. */
+            }
+            
+            /* Adjust the window rectangle because Win32 thinks that the x, y,
+            width & height are the WHOLE window (including decorations),
+            whereas GLUT treats the x, y, width & height as only the CLIENT
+            area of the window.  Only do this to top level windows
+            that are not in game mode (since game mode windows do
+            not have any decorations). */
+            if (!window->parent && window != __glutGameModeWindow) {
+                AdjustWindowRect(&changes, style, FALSE);
+            }
+            
+            /* Do the repositioning, moving, and push/pop. */
+            SetWindowPos(window->win,
+                window->desiredStack == Above ? HWND_TOP : HWND_BOTTOM,
+                changes.left, changes.top,
+                changes.right - changes.left, changes.bottom - changes.top,
+                flags);
+            
+            /* Zero out the mask. */
+            window->desiredConfMask = 0;
+        }
 #else /* !_WIN32 */
       XWindowChanges changes;
 
@@ -1306,6 +1334,8 @@ processWindowWorkList(GLUTwindow * window)
     /* Leave on work list. */
     return window;
   } else {
+	if (beforeEnd == &window->prevWorkWin)
+	  beforeEnd = 0;
     /* Remove current window from work list. */
     return window->prevWorkWin;
   }
@@ -1344,7 +1374,13 @@ glutMainLoop(void)
       } else {
         processEventsAndTimeouts();
       }
+#if defined(_WIN32)
+	  // If there is no idle function, go to sleep for a millisecond (we 
+	  // still need to possibly service timers) or until there is some 
+	  // event in our queue.
+      MsgWaitForMultipleObjects(0, NULL, FALSE, 1, QS_ALLEVENTS);
+#endif
     }
-  }
+ }
 }
 /* ENDCENTRY */
