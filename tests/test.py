@@ -23,6 +23,9 @@ class Program :
         # the name of the Python executable file
         _FILE_NAME_PYTHON = "python.exe"
         #----------------------------------------------------------------------
+        # the name of the test file to test Bison
+        _FILE_NAME_TEST_BISON = "test_bison.py"
+        #----------------------------------------------------------------------
         # the name of the test file to test CURL
         _FILE_NAME_TEST_CURL = "test_curl.py"
         #----------------------------------------------------------------------
@@ -96,6 +99,7 @@ class Program :
             
             else :
             
+                self._test(Program._FILE_NAME_TEST_BISON      )
                 self._test(Program._FILE_NAME_TEST_CURL       )
                 self._test(Program._FILE_NAME_TEST_FREETYPE   )
                 self._test(Program._FILE_NAME_TEST_HDF5       )
