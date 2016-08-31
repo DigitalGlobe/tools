@@ -102,6 +102,9 @@ class Program :
             print("clean command is: " + cmdClean)
 
 
+            #restoring required nmake.opt file
+            shutil.copy( "nmake_old.opt", "nmake.opt")
+
             # execute clean
             print("executing clean")
             systemManager.changeDirectory(buildPathName)
