@@ -32,6 +32,9 @@ class Program :
         # the name of the build file to build FreeType
         _FILE_NAME_BUILD_FREETYPE = "build_freetype.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build FreeType
+        _FILE_NAME_BUILD_FREETYPE = "build_glut.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build HDF5
         _FILE_NAME_BUILD_HDF5 = "build_hdf5.py"
         #----------------------------------------------------------------------
