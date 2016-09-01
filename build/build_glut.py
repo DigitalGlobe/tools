@@ -80,7 +80,7 @@ class Program :
                 compileOutDir = compileOutDir + "\\x64"
                 distribLibs = Program._PATH_NAME_DISTRIBUTION_X64
             else :
-                cmd = cmd + "/p:platform=x86 "
+                #cmd = cmd + "/p:platform=x86 "
                 compileOutDir = compileOutDir + "\\Win32"
                 distribLibs = Program._PATH_NAME_DISTRIBUTION_X86
 
