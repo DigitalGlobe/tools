@@ -33,7 +33,7 @@ class Program :
         _FILE_NAME_BUILD_FREETYPE = "build_freetype.py"
         #----------------------------------------------------------------------
         # the name of the build file to build FreeType
-        _FILE_NAME_BUILD_FREETYPE = "build_glut.py"
+        _FILE_NAME_BUILD_GLUT = "build_glut.py"
         #----------------------------------------------------------------------
         # the name of the build file to build HDF5
         _FILE_NAME_BUILD_HDF5 = "build_hdf5.py"
@@ -143,6 +143,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_CURL    )
                 self._build(Program._FILE_NAME_BUILD_EXPAT   )
                 self._build(Program._FILE_NAME_BUILD_FREETYPE)
+                self._build(Program._FILE_NAME_BUILD_GLUT    )
                 self._build(Program._FILE_NAME_BUILD_HDF5    )
                 self._build(Program._FILE_NAME_BUILD_LIBICONV)
                 self._build(Program._FILE_NAME_BUILD_LIBJPEG )
