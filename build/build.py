@@ -38,6 +38,9 @@ class Program :
         # the name of the build file to build LibGeoTIFF
         _FILE_NAME_BUILD_LIBGEOTIFF = "build_libgeotiff.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build LibICONV
+        _FILE_NAME_BUILD_LIBICONV = "build_libiconv.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build LibJPEG
         _FILE_NAME_BUILD_LIBJPEG = "build_libjpeg.py"
         #----------------------------------------------------------------------
@@ -138,6 +141,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_EXPAT   )
                 self._build(Program._FILE_NAME_BUILD_FREETYPE)
                 self._build(Program._FILE_NAME_BUILD_HDF5    )
+                self._build(Program._FILE_NAME_BUILD_LIBICONV)
                 self._build(Program._FILE_NAME_BUILD_LIBJPEG )
                 self._build(Program._FILE_NAME_BUILD_NEWMAT  )
                 self._build(Program._FILE_NAME_BUILD_OPENCV  )
