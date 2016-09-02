@@ -8,7 +8,7 @@ include(OssimUtilities)
 
 SET(LIBRAW_SRC LibRaw-0.9.0)
 find_package(JPEG)
-find_package(TIFF)
+########find_package(TIFF)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR} ${LIBRAW_SRC} ${JPEG_INCLUDE_DIR} ${TIFF_INCLUDE_DIR})
 
 FILE(GLOB OSSIMPLUGIN_SRCS ${LIBRAW_SRC}/internal/*.cpp ${LIBRAW_SRC}/src/*.cpp *.cpp)

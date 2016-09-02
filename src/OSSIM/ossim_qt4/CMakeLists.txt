@@ -15,7 +15,7 @@ find_package(Qt4)
 
 find_package(OpenThreads)
 find_package(ossim)
-find_package(TIFF)
+########find_package(TIFF)
 
 ADD_DEFINITIONS(${QT_DEFINITIONS}
 	-DQT_CORE_LIB

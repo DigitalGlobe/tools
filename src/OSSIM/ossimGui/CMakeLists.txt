@@ -14,7 +14,7 @@ find_package(Qt4)
 
 find_package(OpenThreads)
 find_package(ossim)
-find_package(TIFF)
+########find_package(TIFF)
 IF(BUILD_OSSIMPLANET)
 	find_package(ossimPlanet)
 	find_package(OpenGL)

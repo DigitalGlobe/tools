@@ -9,7 +9,7 @@ include(OssimUtilities)
 SET(OSSIM_FRAMEWORK_GENERATION "OFF")
 SET(OSSIM_USER_DEFINED_DYNAMIC_OR_STATIC "SHARED")
 
-find_package(TIFF)
+########find_package(TIFF)
 find_package(ZLIB)
 find_package(GDAL)
 find_package(CURL)

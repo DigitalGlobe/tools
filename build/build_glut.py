@@ -76,11 +76,11 @@ class Program :
             compileOutDir = buildPathName + "\\lib\\glut"
             # build command line based on options
             if ( buildSettings.X64Specified() ) :
-#                cmd = cmd + "/p:platform=x64 "
+                cmd = cmd + "/p:platform=x64 "
                 compileOutDir = compileOutDir + "\\x64"
                 distribLibs = Program._PATH_NAME_DISTRIBUTION_X64
             else :
-#                cmd = cmd + "/p:platform=x86 "
+                #cmd = cmd + "/p:platform=x86 "
                 compileOutDir = compileOutDir + "\\Win32"
                 distribLibs = Program._PATH_NAME_DISTRIBUTION_X86
 

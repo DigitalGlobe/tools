@@ -29,7 +29,7 @@ ELSE(ZLIB_FOUND)
    MESSAGE(FATAL_ERROR "Could not find zlib")
 ENDIF(ZLIB_FOUND)
 
-find_package(TIFF)
+########find_package(TIFF)
 IF(TIFF_FOUND)
    INCLUDE_DIRECTORIES( ${TIFF_INCLUDE_DIR} )
    SET(requiredLibs ${requiredLibs} ${TIFF_LIBRARIES} )

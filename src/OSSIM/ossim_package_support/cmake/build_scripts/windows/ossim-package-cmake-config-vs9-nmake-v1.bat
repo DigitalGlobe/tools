@@ -1,7 +1,6 @@
-
-set common_dir="D:/vs9"
-set build_dir="D:/vs9/osgeo"
-set pkg_dir="D:/ossim_package_support"
+set common_dir="C:/Projects/SURGE/DigitalGlobe/Projects/Tools/build/OSSIM"
+set build_dir="C:/Projects/SURGE/DigitalGlobe/Projects/Tools/build/OSSIM"
+set pkg_dir="C:/Projects/SURGE/DigitalGlobe/Projects/Tools/src/OSSIM/ossim_package_support"
 
 cmake -G "NMake Makefiles" ^
 -DWIN32_USE_MP=OFF ^
@@ -47,4 +46,4 @@ cmake -G "NMake Makefiles" ^
 -DOSSIM_DEPENDENCIES=%build_dir%/local ^
 -DOSSIM_DEV_HOME=%build_dir% ^
 -DBUILD_SHARED_LIBS=ON ^
-../../../ossim_package_support/cmake/
+%pkg_dir%/cmake/

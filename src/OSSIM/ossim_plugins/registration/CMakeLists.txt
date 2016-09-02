@@ -7,7 +7,7 @@ include(OssimCommonVariables)
 include(OssimUtilities)
 
 find_package(FFTW3)
-#find_package(TIFF)
+#########find_package(TIFF)
 #find_package(CURL)
 #find_package(EXPAT)
 #find_library(SQLITE_LIBRARY NAMES sqlite sqlite3)

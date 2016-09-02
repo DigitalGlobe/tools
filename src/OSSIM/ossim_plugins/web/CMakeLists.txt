@@ -8,7 +8,7 @@ include(OssimUtilities)
 
 find_package(ossim)
 find_package(OpenThreads)
-find_package(TIFF)
+########find_package(TIFF)
 find_package(CURL)
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
