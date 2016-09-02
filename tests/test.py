@@ -50,6 +50,9 @@ class Program :
         # the name of the test file to test LibTIFF
         _FILE_NAME_TEST_LIBTIFF = "test_libtiff.py"
         #----------------------------------------------------------------------
+        # the name of the test file to test LibXML
+        _FILE_NAME_TEST_LIBXML = "test_libxml.py"
+        #----------------------------------------------------------------------
         # the name of the test file to test Newmat
         _FILE_NAME_TEST_NEWMAT = "test_newmat.py"
         #----------------------------------------------------------------------
@@ -111,6 +114,7 @@ class Program :
                 self._test(Program._FILE_NAME_TEST_LIBJPEG    )
                 self._test(Program._FILE_NAME_TEST_LIBTIFF    )
                 self._test(Program._FILE_NAME_TEST_LIBPNG     )
+                self._test(Program._FILE_NAME_TEST_LIBXML     )
                 self._test(Program._FILE_NAME_TEST_NEWMAT     )
                 self._test(Program._FILE_NAME_TEST_OPENCV     )
                 self._test(Program._FILE_NAME_TEST_OPENTHREADS)
