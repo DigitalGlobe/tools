@@ -47,6 +47,9 @@ class Program :
         # the name of the build file to build LibPNG
         _FILE_NAME_BUILD_LIBPNG = "build_libpng.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build LibXML
+        _FILE_NAME_BUILD_LIBXML = "build_libxml.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build LibTIFF
         _FILE_NAME_BUILD_LIBTIFF = "build_libtiff.py"
         #----------------------------------------------------------------------
@@ -134,36 +137,37 @@ class Program :
             
                 # build libraries that do not depend on other libraries
                 #     (order does not matter)
-                self._build(Program._FILE_NAME_BUILD_BISON   )
-                self._build(Program._FILE_NAME_BUILD_BOOST   )
-                self._build(Program._FILE_NAME_BUILD_CPPUNIT )
-                self._build(Program._FILE_NAME_BUILD_CURL    )
-                self._build(Program._FILE_NAME_BUILD_EXPAT   )
-                self._build(Program._FILE_NAME_BUILD_FREETYPE)
-                self._build(Program._FILE_NAME_BUILD_HDF5    )
-                self._build(Program._FILE_NAME_BUILD_LIBICONV)
-                self._build(Program._FILE_NAME_BUILD_LIBJPEG )
-                self._build(Program._FILE_NAME_BUILD_NEWMAT  )
-                self._build(Program._FILE_NAME_BUILD_OPENCV  )
-                self._build(Program._FILE_NAME_BUILD_PROJ4   )
-                self._build(Program._FILE_NAME_BUILD_SZIP    )
-                self._build(Program._FILE_NAME_BUILD_ZLIB    )
-                self._build(Program._FILE_NAME_BUILD_GDAL    )
-                self._build(Program._FILE_NAME_BUILD_LASZIP  )
-                self._build(Program._FILE_NAME_BUILD_LIBLAS  )
+                self._build(Program._FILE_NAME_BUILD_BISON     )
+                self._build(Program._FILE_NAME_BUILD_BOOST     )
+                self._build(Program._FILE_NAME_BUILD_CPPUNIT   )
+                self._build(Program._FILE_NAME_BUILD_CURL      )
+                self._build(Program._FILE_NAME_BUILD_EXPAT     )
+                self._build(Program._FILE_NAME_BUILD_FREETYPE  )
+                self._build(Program._FILE_NAME_BUILD_HDF5      )
+                self._build(Program._FILE_NAME_BUILD_LIBICONV  )
+                self._build(Program._FILE_NAME_BUILD_LIBJPEG   )
+                self._build(Program._FILE_NAME_BUILD_NEWMAT    )
+                self._build(Program._FILE_NAME_BUILD_OPENCV    )
+                self._build(Program._FILE_NAME_BUILD_PROJ4     )
+                self._build(Program._FILE_NAME_BUILD_SZIP      )
+                self._build(Program._FILE_NAME_BUILD_ZLIB      )
+                self._build(Program._FILE_NAME_BUILD_GDAL      )
+                self._build(Program._FILE_NAME_BUILD_LASZIP    )
+                self._build(Program._FILE_NAME_BUILD_LIBLAS    )
                 self._build(Program._FILE_NAME_BUILD_URIPARSER )
-                self._build(Program._FILE_NAME_BUILD_GOOGLETEST )
-                self._build(Program._FILE_NAME_BUILD_AQUA )
+                self._build(Program._FILE_NAME_BUILD_GOOGLETEST)
+                self._build(Program._FILE_NAME_BUILD_AQUA      )
                 
 
                 # build libraries that depend on other libraries
                 #     (order does matter)
                 self._build(Program._FILE_NAME_BUILD_LIBPNG    )
+                self._build(Program._FILE_NAME_BUILD_LIBXML    )
                 self._build(Program._FILE_NAME_BUILD_LIBTIFF   )
                 self._build(Program._FILE_NAME_BUILD_LIBGEOTIFF)
                 self._build(Program._FILE_NAME_BUILD_PODOFO    )
                 self._build(Program._FILE_NAME_BUILD_XERCES    )
-                self._build(Program._FILE_NAME_BUILD_OGDI    )
+                self._build(Program._FILE_NAME_BUILD_OGDI      )
         #----------------------------------------------------------------------
         
     #--------------------------------------------------------------------------
