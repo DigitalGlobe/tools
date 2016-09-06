@@ -71,6 +71,9 @@ class Program :
         # the name of the test file to test SZip
         _FILE_NAME_TEST_SZIP = "test_szip.py"
         #----------------------------------------------------------------------
+        # the name of the test file to test uriparser
+        _FILE_NAME_TEST_URIPARSER = "test_uriparser.py"
+        #----------------------------------------------------------------------
         # the name of the test file to test ZLib
         _FILE_NAME_TEST_ZLIB = "test_zlib.py"
         #----------------------------------------------------------------------
@@ -121,6 +124,7 @@ class Program :
                 self._test(Program._FILE_NAME_TEST_PODOFO     )
                 self._test(Program._FILE_NAME_TEST_PROJ4      )
                 self._test(Program._FILE_NAME_TEST_SZIP       )
+                self._test(Program._FILE_NAME_TEST_URIPARSER  )
                 self._test(Program._FILE_NAME_TEST_ZLIB       )
         #----------------------------------------------------------------------
         
