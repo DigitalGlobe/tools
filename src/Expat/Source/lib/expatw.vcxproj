@@ -233,7 +233,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OutputFile>..\win32\bin\Debug\libexpatw_d.dll</OutputFile>
-      <ImportLibrary>.\..\win32\bin\Debug\libexpatw.lib</ImportLibrary>
+      <ImportLibrary>.\..\win32\bin\Debug\libexpatw_d.lib</ImportLibrary>
       <ModuleDefinitionFile>.\libexpatw.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
@@ -274,7 +274,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OutputFile>..\x64\bin\Debug\libexpatw_d.dll</OutputFile>
-      <ImportLibrary>.\..\x64\bin\Debug\libexpatw.lib</ImportLibrary>
+      <ImportLibrary>.\..\x64\bin\Debug\libexpatw_d.lib</ImportLibrary>
       <ModuleDefinitionFile>.\libexpatw.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>

@@ -153,7 +153,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OutputFile>..\win32\bin\Debug\libexpat_d.dll</OutputFile>
-      <ImportLibrary>.\..\win32\bin\Debug\libexpat.lib</ImportLibrary>
+      <ImportLibrary>.\..\win32\bin\Debug\libexpat_d.lib</ImportLibrary>
       <ModuleDefinitionFile>.\libexpat.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
@@ -194,7 +194,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OutputFile>..\x64\bin\Debug\libexpat_d.dll</OutputFile>
-      <ImportLibrary>.\..\x64\bin\Debug\libexpat.lib</ImportLibrary>
+      <ImportLibrary>.\..\x64\bin\Debug\libexpat_d.lib</ImportLibrary>
       <ModuleDefinitionFile>.\libexpat.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>

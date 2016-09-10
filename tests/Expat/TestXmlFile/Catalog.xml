@@ -1,0 +1,18 @@
+<CATALOG>
+  <CD>
+    <TITLE>For The Roses</TITLE>
+    <ARTIST>Joni Mitchell</ARTIST>
+    <COUNTRY>USA</COUNTRY>
+    <COMPANY>Columbia</COMPANY>
+    <PRICE>10.90</PRICE>
+    <YEAR>1972</YEAR>
+  </CD>
+  <CD>
+    <TITLE>Benefit</TITLE>
+    <ARTIST>Jethro Tull</ARTIST>
+    <COUNTRY>UK</COUNTRY>
+    <COMPANY>CBS Records</COMPANY>
+    <PRICE>9.90</PRICE>
+    <YEAR>1971</YEAR>
+  </CD>
+</CATALOG>
