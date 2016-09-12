@@ -26,6 +26,9 @@ class Program :
         # the name of the build file to build Boost
         _FILE_NAME_BUILD_BOOST = "build_boost.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build Crypto++
+        _FILE_NAME_BUILD_CRYPTO = "build_crypto.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build CURL
         _FILE_NAME_BUILD_CURL = "build_curl.py"
         #----------------------------------------------------------------------
@@ -143,6 +146,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_BISON     )
                 self._build(Program._FILE_NAME_BUILD_BOOST     )
                 self._build(Program._FILE_NAME_BUILD_CPPUNIT   )
+                self._build(Program._FILE_NAME_BUILD_CRYPTO    )
                 self._build(Program._FILE_NAME_BUILD_CURL      )
                 self._build(Program._FILE_NAME_BUILD_EXPAT     )
                 self._build(Program._FILE_NAME_BUILD_FREETYPE  )
