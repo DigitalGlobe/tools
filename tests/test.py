@@ -35,6 +35,9 @@ class Program :
         # the name of the test file to test FreeType
         _FILE_NAME_TEST_FREETYPE = "test_freetype.py"
         #----------------------------------------------------------------------
+        # the name of the test file to test Glut
+        _FILE_NAME_TEST_GLUT = "test_glut.py"
+        #----------------------------------------------------------------------
         # the name of the test file to test LibGEOTIFF
         _FILE_NAME_TEST_LIBGEOTIFF = "test_libgeotiff.py"
         #----------------------------------------------------------------------
@@ -114,6 +117,7 @@ class Program :
                 self._test(Program._FILE_NAME_TEST_BISON      )
                 self._test(Program._FILE_NAME_TEST_CURL       )
                 self._test(Program._FILE_NAME_TEST_EXPAT      )
+                self._test(Program._FILE_NAME_TEST_GLUT       )
                 self._test(Program._FILE_NAME_TEST_FREETYPE   )
                 self._test(Program._FILE_NAME_TEST_HDF5       )
                 self._test(Program._FILE_NAME_TEST_LIBGEOTIFF )
