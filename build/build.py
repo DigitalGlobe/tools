@@ -26,6 +26,9 @@ class Program :
         # the name of the build file to build Boost
         _FILE_NAME_BUILD_BOOST = "build_boost.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build Crypto++
+        _FILE_NAME_BUILD_CRYPTO = "build_crypto.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build CURL
         _FILE_NAME_BUILD_CURL = "build_curl.py"
         #----------------------------------------------------------------------
@@ -34,6 +37,9 @@ class Program :
         #----------------------------------------------------------------------
         # the name of the build file to build FreeType
         _FILE_NAME_BUILD_GLUT = "build_glut.py"
+        #----------------------------------------------------------------------
+        # the name of the build file to build GSoap
+        _FILE_NAME_BUILD_GSOAP = "build_gsoap.py"
         #----------------------------------------------------------------------
         # the name of the build file to build HDF5
         _FILE_NAME_BUILD_HDF5 = "build_hdf5.py"
@@ -143,9 +149,11 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_BISON     )
                 self._build(Program._FILE_NAME_BUILD_BOOST     )
                 self._build(Program._FILE_NAME_BUILD_CPPUNIT   )
+                self._build(Program._FILE_NAME_BUILD_CRYPTO    )
                 self._build(Program._FILE_NAME_BUILD_CURL      )
                 self._build(Program._FILE_NAME_BUILD_EXPAT     )
                 self._build(Program._FILE_NAME_BUILD_FREETYPE  )
+                self._build(Program._FILE_NAME_BUILD_GSOAP     )
                 self._build(Program._FILE_NAME_BUILD_HDF5      )
                 self._build(Program._FILE_NAME_BUILD_LIBICONV  )
                 self._build(Program._FILE_NAME_BUILD_LIBJPEG   )
