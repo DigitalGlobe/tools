@@ -101,6 +101,9 @@ class Program :
          #the name of the build file to build googletest
         _FILE_NAME_BUILD_GOOGLETEST = "build_googletest.py"
         #----------------------------------------------------------------------
+         #the name of the build file to build OpenSceneGraph
+        _FILE_NAME_BUILD_OSG = "build_osg.py"
+        #----------------------------------------------------------------------
         # the name of the Python executable file
         _FILE_NAME_PYTHON = "python.exe"
         #----------------------------------------------------------------------
@@ -185,6 +188,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_PODOFO    )
                 self._build(Program._FILE_NAME_BUILD_XERCES    )
                 self._build(Program._FILE_NAME_BUILD_OGDI      )
+                self._build(Program._FILE_NAME_BUILD_OSG       )
         #----------------------------------------------------------------------
         
     #--------------------------------------------------------------------------
