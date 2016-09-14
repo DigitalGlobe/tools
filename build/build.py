@@ -62,6 +62,9 @@ class Program :
         # the name of the build file to build LibTIFF
         _FILE_NAME_BUILD_LIBTIFF = "build_libtiff.py"
         #----------------------------------------------------------------------
+         #the name of the build file to build muparser
+        _FILE_NAME_BUILD_MUPARSER = "build_muparser.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build Newmat
         _FILE_NAME_BUILD_NEWMAT = "build_newmat.py"
         #----------------------------------------------------------------------
@@ -185,6 +188,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_LIBLAS    )
                 self._build(Program._FILE_NAME_BUILD_URIPARSER )
                 self._build(Program._FILE_NAME_BUILD_GOOGLETEST)
+                self._build(Program._FILE_NAME_BUILD_MUPARSER  )
                 
 
                 # build libraries that depend on other libraries
