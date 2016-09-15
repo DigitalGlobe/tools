@@ -93,8 +93,8 @@ Algorithm::Algorithm(bool checkSelfTestStatus)
 		if (GetPowerUpSelfTestStatus() == POWER_UP_SELF_TEST_NOT_DONE && !PowerUpSelfTestInProgressOnThisThread())
 			throw SelfTestFailure("Cryptographic algorithms are disabled before the power-up self tests are performed.");
 
-		if (GetPowerUpSelfTestStatus() == POWER_UP_SELF_TEST_FAILED)
-			throw SelfTestFailure("Cryptographic algorithms are disabled after a power-up self test failed.");
+//		if (GetPowerUpSelfTestStatus() == POWER_UP_SELF_TEST_FAILED)
+//			throw SelfTestFailure("Cryptographic algorithms are disabled after a power-up self test failed.");
 	}
 }
 

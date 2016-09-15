@@ -143,8 +143,6 @@ class Program :
                 sys.exit(-1)
                 
             # distribute files
-            print("Binary Path Name  : " + buildBinaryPathName  + "\n")
-            print("Library Path Name : " + buildLibraryPathName + "\n")
             fileDistributor.distributeAllFiles( buildBinaryPathName              , \
                                                 buildLibraryPathName             , \
                                                 buildLibraryPathName             , \
