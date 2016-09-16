@@ -36,6 +36,9 @@ class Program :
         _FILE_NAME_BUILD_FREETYPE = "build_freetype.py"
         #----------------------------------------------------------------------
         # the name of the build file to build FreeType
+        _FILE_NAME_BUILD_GALIB = "build_galib.py"
+        #----------------------------------------------------------------------
+        # the name of the build file to build FreeType
         _FILE_NAME_BUILD_GLUT = "build_glut.py"
         #----------------------------------------------------------------------
         # the name of the build file to build GSoap
@@ -189,6 +192,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_URIPARSER )
                 self._build(Program._FILE_NAME_BUILD_GOOGLETEST)
                 self._build(Program._FILE_NAME_BUILD_MUPARSER  )
+                self._build(Program._FILE_NAME_BUILD_GALIB     )
                 
 
                 # build libraries that depend on other libraries
