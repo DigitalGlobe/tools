@@ -16,7 +16,7 @@ import shutil
 # sdk directory
 
 #you'll need to run autogen.bat the first time.  This file is located in
-#C:\DigitalGlobe\tools\src\GEOS_x86Release
+#C:\DigitalGlobe\tools\src\GEOS_x86Release-1
 
 #you also should probably run vcvarsall x86 to initial the visual studio paths 
 
@@ -30,7 +30,7 @@ baseDir = os.path.normpath(os.getcwd() + os.sep + os.pardir)
 print("baseDir")
 print(baseDir)
 
-srcDirectory = baseDir + "\\src\\GEOS_x86Release\\src"
+srcDirectory = baseDir + "\\src\\GEOS_x86Release-1\\src"
 
 print("srcDirectory")
 print(srcDirectory)
@@ -38,7 +38,7 @@ print(srcDirectory)
 dest_dll = baseDir + "\\sdk\\x86\\bin"
 dest_lib = baseDir + "\\sdk\\x86\\lib"
 
-makefilePath = baseDir + "\\src\\GEOS_x86Release"
+makefilePath = baseDir + "\\src\\GEOS_x86Release-1"
 
 print("makefilePath")
 print(makefilePath)
