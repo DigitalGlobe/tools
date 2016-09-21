@@ -47,6 +47,9 @@ class Program :
         # the name of the build file to build HDF5
         _FILE_NAME_BUILD_HDF5 = "build_hdf5.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build KDIS
+        _FILE_NAME_BUILD_KDIS = "build_kdis.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build LibGeoTIFF
         _FILE_NAME_BUILD_LIBGEOTIFF = "build_libgeotiff.py"
         #----------------------------------------------------------------------
@@ -161,6 +164,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_FREETYPE  )
                 self._build(Program._FILE_NAME_BUILD_GSOAP     )
                 self._build(Program._FILE_NAME_BUILD_HDF5      )
+                self._build(Program._FILE_NAME_BUILD_KDIS      )
                 self._build(Program._FILE_NAME_BUILD_LIBICONV  )
                 self._build(Program._FILE_NAME_BUILD_LIBJPEG   )
                 self._build(Program._FILE_NAME_BUILD_NEWMAT    )
