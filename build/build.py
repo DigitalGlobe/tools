@@ -44,6 +44,9 @@ class Program :
         # the name of the build file to build GSoap
         _FILE_NAME_BUILD_GSOAP = "build_gsoap.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build HawkNL
+        _FILE_NAME_BUILD_HAWKNL = "build_hawknl.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build HDF5
         _FILE_NAME_BUILD_HDF5 = "build_hdf5.py"
         #----------------------------------------------------------------------
@@ -197,6 +200,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_GOOGLETEST)
                 self._build(Program._FILE_NAME_BUILD_MUPARSER  )
                 self._build(Program._FILE_NAME_BUILD_GALIB     )
+                self._build(Program._FILE_NAME_BUILD_HAWKNL    )
                 
 
                 # build libraries that depend on other libraries
