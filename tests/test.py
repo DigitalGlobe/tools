@@ -41,6 +41,9 @@ class Program :
         # the name of the test file to test GoogleTest
         _FILE_NAME_TEST_GOOGLETEST = "test_googletest.py"
         #----------------------------------------------------------------------
+        # the name of the test file to test KDIS
+        _FILE_NAME_TEST_KDIS = "test_kdis.py"
+        #----------------------------------------------------------------------
         # the name of the test file to test LibGEOTIFF
         _FILE_NAME_TEST_LIBGEOTIFF = "test_libgeotiff.py"
         #----------------------------------------------------------------------
@@ -127,6 +130,7 @@ class Program :
                 self._test(Program._FILE_NAME_TEST_GLUT       )
                 self._test(Program._FILE_NAME_TEST_GOOGLETEST )
                 self._test(Program._FILE_NAME_TEST_HDF5       )
+                self._test(Program._FILE_NAME_TEST_KDIS       )
                 self._test(Program._FILE_NAME_TEST_LIBGEOTIFF )
                 self._test(Program._FILE_NAME_TEST_LIBICONV   )
                 self._test(Program._FILE_NAME_TEST_LIBJPEG    )
