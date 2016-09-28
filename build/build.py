@@ -80,6 +80,9 @@ class Program :
         # the name of the build file to build OpenCV
         _FILE_NAME_BUILD_OPENCV = "build_opencv.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build OpenDIS
+        _FILE_NAME_BUILD_OPENDIS = "build_opendis.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build OpenThreads
         _FILE_NAME_BUILD_OPENTHREADS = "build_openthreads.py"
         #----------------------------------------------------------------------
@@ -182,6 +185,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_LASZIP     )
                 self._build(Program._FILE_NAME_BUILD_LIBLAS     )
                 self._build(Program._FILE_NAME_BUILD_GLUT       )
+                self._build(Program._FILE_NAME_BUILD_OPENDIS    )
                 self._build(Program._FILE_NAME_BUILD_OPENTHREADS)
                 self._build(Program._FILE_NAME_BUILD_URIPARSER  )
                 self._build(Program._FILE_NAME_BUILD_GOOGLETEST )
