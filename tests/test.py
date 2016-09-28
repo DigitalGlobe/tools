@@ -74,6 +74,9 @@ class Program :
         # the name of the test file to test OpenCV
         _FILE_NAME_TEST_OPENCV = "test_opencv.py"
         #----------------------------------------------------------------------
+        # the name of the test file to test OpenDIS
+        _FILE_NAME_TEST_OPENDIS = "test_opendis.py"
+        #----------------------------------------------------------------------
         # the name of the test file to test PoDoFo
         _FILE_NAME_TEST_PODOFO = "test_podofo.py"
         #----------------------------------------------------------------------
@@ -139,6 +142,7 @@ class Program :
                 self._test(Program._FILE_NAME_TEST_LIBXML     )
                 self._test(Program._FILE_NAME_TEST_NEWMAT     )
                 self._test(Program._FILE_NAME_TEST_OPENCV     )
+                self._test(Program._FILE_NAME_TEST_OPENDIS    )
                 self._test(Program._FILE_NAME_TEST_OPENTHREADS)
                 self._test(Program._FILE_NAME_TEST_PODOFO     )
                 self._test(Program._FILE_NAME_TEST_PROJ4      )
