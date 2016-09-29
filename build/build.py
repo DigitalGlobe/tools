@@ -56,6 +56,9 @@ class Program :
         # the name of the build file to build LibGeoTIFF
         _FILE_NAME_BUILD_LIBGEOTIFF = "build_libgeotiff.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build LibGIST
+        _FILE_NAME_BUILD_LIBGIST = "build_libgist.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build LibICONV
         _FILE_NAME_BUILD_LIBICONV = "build_libiconv.py"
         #----------------------------------------------------------------------
@@ -192,6 +195,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_MUPARSER   )
                 self._build(Program._FILE_NAME_BUILD_GALIB      )
                 self._build(Program._FILE_NAME_BUILD_HAWKNL     )
+                self._build(Program._FILE_NAME_BUILD_LIBGIST    )
                 
 
                 # build libraries that depend on other libraries
