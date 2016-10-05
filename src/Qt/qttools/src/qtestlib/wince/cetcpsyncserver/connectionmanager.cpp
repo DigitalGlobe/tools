@@ -1,0 +1,136 @@
+/****************************************************************************
+**
+** Copyright (C) 2016 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the tools applications of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:LGPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+#include "connectionmanager.h"
+#include "commands.h"
+#include <QtCore/QDebug>
+
+ConnectionManager::ConnectionManager()
+    : QObject()
+    , m_server(0)
+{
+    debugOutput(0, "ConnectionManager::ConnectionManager()");
+}
+
+ConnectionManager::~ConnectionManager()
+{
+    debugOutput(0, "ConnectionManager::~ConnectionManager()");
+    cleanUp();
+}
+
+bool ConnectionManager::init()
+{
+    debugOutput(0, "ConnectionManager::init()");
+    debugOutput(3, "Initializing server...");
+    cleanUp();
+    m_server = new QTcpServer(this);
+    connect(m_server, SIGNAL(newConnection()), this, SLOT(newConnection()));
+    bool result = m_server->listen(QHostAddress::Any, SERVER_PORT);
+    if (!result)
+        debugOutput(3, QString::fromLatin1("   Error: Server start failed:") + m_server->errorString());
+    debugOutput(3, "   Waiting for action");
+    return result;
+}
+
+void ConnectionManager::cleanUp()
+{
+    debugOutput(0, "ConnectionManager::cleanUp()");
+
+    if (m_server) {
+        debugOutput(1, "Removing server instance...");
+        disconnect(m_server, SIGNAL(newConnection()), this, SLOT(newConnection()));
+        delete m_server;
+        m_server = 0;
+    }
+}
+
+void ConnectionManager::newConnection()
+{
+    debugOutput(0, "ConnectionManager::newConnection()");
+
+    QTcpSocket* connection = m_server->nextPendingConnection();
+    if (!connection) {
+        debugOutput(3, "Received connection has empty socket");
+        return;
+    }
+    debugOutput(0, QString::fromLatin1("   received a connection: %1").arg((int) connection));
+    new Connection(connection);
+}
+
+Connection::Connection(QTcpSocket *socket)
+        : QObject()
+        , m_connection(socket)
+        , m_command(0)
+{
+    connect(m_connection, SIGNAL(readyRead()), this, SLOT(receiveCommand()));
+    connect(m_connection, SIGNAL(disconnected()), this, SLOT(closedConnection()));
+}
+
+Connection::~Connection()
+{
+    if (m_command) {
+        m_command->commandFinished();
+        delete m_command;
+        m_command = 0;
+    }
+    delete m_connection;
+}
+
+void Connection::receiveCommand()
+{
+    QByteArray arr = m_connection->readAll();
+    debugOutput(1, QString::fromLatin1("Command received: ") + (arr));
+    QList<CommandInfo> commands = availableCommands();
+    for(QList<CommandInfo>::iterator it = commands.begin(); it != commands.end(); ++it) {
+        if (it->commandName == QString::fromLatin1(arr)) {
+            debugOutput(1, "Found command in list");
+            disconnect(m_connection, SIGNAL(readyRead()), this, SLOT(receiveCommand()));
+            AbstractCommand* command = (*it).commandFunc();
+            command->setSocket(m_connection);
+            m_command = command;
+            return;
+        }
+    }
+    debugOutput(2, QString::fromLatin1("Unknown command received: ") + (arr));
+}
+
+void Connection::closedConnection()
+{
+    debugOutput(0, "connection being closed...");
+    this->deleteLater();
+}

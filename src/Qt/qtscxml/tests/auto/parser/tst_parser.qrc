@@ -1,0 +1,12 @@
+<RCC>
+    <qresource prefix="/tst_parser">
+        <file>data/eventnames.scxml</file>
+        <file>data/ids1.scxml</file>
+        <file>data/ids2.scxml</file>
+        <file>data/namespaces1.scxml</file>
+        <file>data/qtmode.scxml</file>
+        <file>data/scxml1.scxml</file>
+        <file>data/scxml2.scxml</file>
+        <file>data/test1.scxml</file>
+    </qresource>
+</RCC>
