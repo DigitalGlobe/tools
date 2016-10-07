@@ -41,6 +41,9 @@ class Program :
          # the name of the build file to build Geos
         _FILE_NAME_BUILD_GEOS = "build_geos.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build Glew
+        _FILE_NAME_BUILD_GLEW = "build_glew.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build FreeType
         _FILE_NAME_BUILD_GLUT = "build_glut.py"
         #----------------------------------------------------------------------
@@ -181,6 +184,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_EXPAT      )
                 self._build(Program._FILE_NAME_BUILD_FREETYPE   )
                 self._build(Program._FILE_NAME_BUILD_GEOS       )
+                self._build(Program._FILE_NAME_BUILD_GLEW       )
                 self._build(Program._FILE_NAME_BUILD_GSOAP      )
                 self._build(Program._FILE_NAME_BUILD_HDF5       )
                 self._build(Program._FILE_NAME_BUILD_KDIS       )
