@@ -64,7 +64,6 @@ class Program :
             buildPathName  = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD)
             sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
             buildDirName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SDK_DIR)
-#            libKmlOut = systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBKML_OUT)
            
             # remove build dir
             systemManager.changeDirectory(sourcePathName)
@@ -76,10 +75,7 @@ class Program :
             # start building
             systemManager.changeDirectory(buildPathName)
             cmd = "msbuild Build\\vc12\\glew.sln "
-            
-#            pathName = libKmlOut + "\\third_party\\expat.win32"
-#            pathName = ""
-            
+                        
             compileOutBin = buildPathName + "\\bin"
             compileOutLib = buildPathName + "\\lib"
             
@@ -87,7 +83,6 @@ class Program :
                 cmd = cmd + "/p:configuration=Release "
                 compileOutBin = compileOutBin + "\\Release"
                 compileOutLib = compileOutLib + "\\Release"
-#                pathName = pathName + "\\Release"
             else:
                 cmd = cmd + "/p:configuration=Debug "
                 compileOutBin = compileOutBin + "\\Debug"
@@ -124,17 +119,16 @@ class Program :
             for file in glob.glob(compileOutLib + "\\*.lib"):
                 print( "copying " + file + " -> " + sdkOutLibsDir)
                 shutil.copy(file, sdkOutLibsDir)
-#                print(pathName)
-#                print (file)
-#                shutil.copy(file, pathName)
-            for file in glob.glob(compileOutLib + "\\*.dll"):
-                print( "copying " + file + " -> " + sdkOutLibsDir)
-                shutil.copy(file, sdkOutLibsDir)
-            for file in glob.glob(compileOutLib + "\\*.pdb"):
-                print( "copying " + file + " -> " + sdkOutLibsDir)
-                shutil.copy(file, sdkOutLibsDir)
                 
             sdkOutExesDir = buildDirName + distribExes
+            
+            for file in glob.glob(compileOutBin + "\\*.dll"):
+                print( "copying " + file + " -> " + sdkOutExesDir)
+                shutil.copy(file, sdkOutExesDir)
+                
+            for file in glob.glob(compileOutBin + "\\*.pdb"):
+                print( "copying " + file + " -> " + sdkOutExesDir)
+                shutil.copy(file, sdkOutExesDir)
                         
             for file in glob.glob(compileOutBin + "\\*.exe"):
                 print( "copying " + file + " -> " + sdkOutExesDir)
