@@ -104,6 +104,9 @@ class Program :
         # the name of the build file to build ThreadingBuildingBlocks
         _FILE_NAME_BUILD_TBB = "build_tbb.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build Visual Leak Detector
+        _FILE_NAME_BUILD_VLD = "build_vld.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build Xerces
         _FILE_NAME_BUILD_XERCES = "build_xerces.py"
         #----------------------------------------------------------------------
@@ -204,6 +207,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_HAWKNL     )
                 self._build(Program._FILE_NAME_BUILD_LIBGIST    )
                 self._build(Program._FILE_NAME_BUILD_TBB        )
+                self._build(Program._FILE_NAME_BUILD_VLD        )
                 
 
                 # build libraries that depend on other libraries
