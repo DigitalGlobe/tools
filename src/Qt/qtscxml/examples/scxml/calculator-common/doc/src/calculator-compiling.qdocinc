@@ -1,0 +1,19 @@
+    \section1 Compiling the State Machine
+
+    We link against the Qt SCXML module by adding the following line to the
+    \e .pro file:
+
+    \quotefromfile calculator-widgets/calculator-widgets.pro
+    \printuntil scxml
+
+    We then specify the state machine to compile:
+
+    \skipto STATECHARTS
+    \printline calculator
+
+    We also tell qmake to run \c qscxmlc, which generates \e statemachine.h and
+    \e statemachine.cpp, and adds them to the \c HEADERS and \c SOURCES
+    variables for compilation:
+
+    \skipto load
+    \printline qscxmlc
