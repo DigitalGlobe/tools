@@ -82,13 +82,13 @@ class Program :
             compileOutDir = buildPathName + "\\Source"
             # extend command line based on options
             if ( buildSettings.X64Specified() ) :
-#                cmd = cmd + "/p:platform=x64 "
+                cmd = cmd + "/p:platform=x64 "
                 compileOutDir = compileOutDir + "\\x64\\bin"
                 pathName = pathName + "\\x64"
                 distribLibs = Program._PATH_NAME_DISTRIBUTION_X64
                 distribExes = Program._PATH_NAME_BINARY_X64
             else :
-#                cmd = cmd + "/p:platform=x86 "
+                cmd = cmd + "/p:platform=Win32 "
                 compileOutDir = compileOutDir + "\\Win32\\bin"
                 distribLibs = Program._PATH_NAME_DISTRIBUTION_X86
                 distribExes = Program._PATH_NAME_BINARY_X86
@@ -116,6 +116,8 @@ class Program :
             
             # copy output to appropriate directory
             sdkOutLibsDir = buildDirName + distribLibs
+            
+            systemManager.makeDirectory( pathName)
                         
             for file in glob.glob(compileOutDir + "\\*.lib"):
                 print( "copying " + file + " -> " + sdkOutLibsDir)
