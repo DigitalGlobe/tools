@@ -26,6 +26,9 @@ class Program :
         # the name of the test file to test APR
         _FILE_NAME_TEST_APR = "test_apr.py"
         #----------------------------------------------------------------------
+        # the name of the test file to test APR Util
+        _FILE_NAME_TEST_APR_UTIL = "test_aprutil.py"
+        #----------------------------------------------------------------------
         # the name of the test file to test Bison
         _FILE_NAME_TEST_BISON = "test_bison.py"
         #----------------------------------------------------------------------
@@ -136,6 +139,7 @@ class Program :
             else :
             
                 self._test(Program._FILE_NAME_TEST_APR        )
+                self._test(Program._FILE_NAME_TEST_APR_UTIL   )
                 self._test(Program._FILE_NAME_TEST_BISON      )
                 self._test(Program._FILE_NAME_TEST_CURL       )
                 self._test(Program._FILE_NAME_TEST_EXPAT      )
