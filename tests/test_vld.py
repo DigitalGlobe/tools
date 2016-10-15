@@ -1,31 +1,27 @@
 #------------------------------------------------------------------------------
 #
-# build_expat.py
+# test_vld.py
 #
-# Summary : Builds the Expat libraries and exes.
+# Summary : Builds Virtual Leak Detector and runs tests
 #
 #------------------------------------------------------------------------------
 
 import glob
 import os
-import shutil
-#import sys
+import sys
 
 from BuildSettingSet import *
 from PathFinder import *
 from SystemManager import *
 
 class Program :
-        DESCRIPTION = "Builds Expat libs and exes."
-        _PATH_NAME_BINARY_X86 = "\\x86\\bin"
-        _PATH_NAME_BINARY_X64 = "\\x64\\bin"
-        _PATH_NAME_BUILD = "Expat"
-        _PATH_NAME_DISTRIBUTION_X86 = "\\x86\\lib"
-        _PATH_NAME_DISTRIBUTION_X64 = "\\x64\\lib"
-        _PATH_NAME_SOURCE = "..\\src\\Expat"
-        _PATH_NAME_LIBKML_OUT = "..\\src\\LibKml"
-        _PATH_NAME_DESTINATION = "..\\sdk"
-        _PATH_NAME_SDK_DIR = "..\\sdk"
+        DESCRIPTION = "Tests VLD."
+        _PATH_NAME_BINARY_X86 = "..\\sdk\\x86\\bin"
+        _PATH_NAME_BINARY_X64 = "..\\sdk\\x64\\bin"
+        _PATH_NAME_BUILD = "vld"
+        _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
+        _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
+        _PATH_NAME_SOURCE = "..\\src\\vld"
 
         def __init__(self) :
         
@@ -52,93 +48,107 @@ class Program :
 
             compileOutDir = ""
             if ( buildSettings.X64Specified() ) :
+                print("64bit Build")
+
                 # append path for 64-bit rc.exe
                 systemManager.appendToPathEnvironmentVariable( os.path.join( systemManager.getProgramFilesPathName(False) , \
                                                                              "Windows Kits\\10\\bin\\x64"                 ) )
             else:
+                print("32bit Build")
+
                 # append path for 32-bit rc.exe
                 systemManager.appendToPathEnvironmentVariable( os.path.join( systemManager.getProgramFilesPathName(False) , \
                                                                              "Windows Kits\\10\\bin\\x86"                 ) )
 
-            # get the paths
+            # determine path names
+            print("Getting Paths")
             buildPathName  = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD)
             sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
-            buildDirName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SDK_DIR)
-            libKmlOut = systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBKML_OUT)
-           
-            # remove build dir
+            print("build path: " + buildPathName)
+            print("source path: " + sourcePathName)
+
+            # initialize directories
+            print("removing previous build dir")
             systemManager.changeDirectory(sourcePathName)
             systemManager.removeDirectory(buildPathName)
 
-            #copy Expat to the Build area
+            print("copying source to build dir")
             systemManager.copyDirectory( sourcePathName, buildPathName)
         
             # start building
             systemManager.changeDirectory(buildPathName)
-            cmd = "msbuild Source\\Expat.sln "
+            cmd = "msbuild vld_vs14_wo_mfc.sln "
+            cmdStatic = "msbuild vld_static.sln "
             
-            pathName = libKmlOut + "\\third_party\\expat.win32"
-            
-            compileOutDir = buildPathName + "\\Source"
+            buildOutDir = ""
+            buildOutConfig = ""
+            buildOutPlat = ""
+
             # extend command line based on options
             if ( buildSettings.X64Specified() ) :
                 cmd = cmd + "/p:platform=x64 "
-                compileOutDir = compileOutDir + "\\x64\\bin"
-                pathName = pathName + "\\x64"
-                distribLibs = Program._PATH_NAME_DISTRIBUTION_X64
-                distribExes = Program._PATH_NAME_BINARY_X64
+                cmdStatic = cmdStatic + "/p:platform=x64 "
+                distribPath = Program._PATH_NAME_DISTRIBUTION_X64
+                buildOutPlat = "x64"
+                FileSuffix = "x64"
             else :
                 cmd = cmd + "/p:platform=Win32 "
-                compileOutDir = compileOutDir + "\\Win32\\bin"
-                distribLibs = Program._PATH_NAME_DISTRIBUTION_X86
-                distribExes = Program._PATH_NAME_BINARY_X86
+                cmdStatic = cmdStatic + "/p:platform=Win32 "
+                distribPath = Program._PATH_NAME_DISTRIBUTION_X86
+                buildOutPlat = "Win32"
+                FileSuffix = "x86"
 
- 
             if buildSettings.ReleaseSpecified():
-                cmd = cmd + "/p:configuration=Release "
-                compileOutDir = compileOutDir + "\\Release"
-                pathName = pathName + "\\Release"
+                cmd = cmd + "/p:configuration=\"Release\" "
+                cmdStatic = cmdStatic + "/p:configuration=\"Release\" "
+                suffix = ""
+                buildOutConfig = "Release"
             else:
-                cmd = cmd + "/p:configuration=Debug "
-                compileOutDir = compileOutDir + "\\Debug"
-                pathName = pathName + "\\Debug"
+                cmd = cmd + "/p:configuration=\"Debug\" "
+                cmdStatic = cmdStatic + "/p:configuration=\"Debug\" "
+                suffix = "_d"
+                buildOutConfig = "Debug"
+
+            buildOutDir = buildPathName + "\\src\\bin\\" + buildOutPlat + "\\" + buildOutConfig + "-v140"
             
+            print("build output dir: " + buildOutDir)
+
+            sdkOutDir = buildPathName + "\\..\\" + distribPath
+
             cmdClean = cmd + "/t:clean"
+            cmdStaticClean = cmdStatic + "/t: clean"
             
-            # clean
+            print("command is: " + cmd)
+            print("clean command is: " + cmdClean)
+            print("buid output path is: " + buildOutDir)
+            print("sdk out is: " + sdkOutDir)
+
+
+            # execute clean
+            print("executing clean")
             systemManager.changeDirectory(buildPathName)
             res = systemManager.execute(cmdClean)
-            
-            cmd = cmd + "/p:VisualStudioVersion=14.0"
+            if (res != 0):
+            	sys.exit(-1)
 
-            # compile
+            # build -------------------------------------------------------------------------------
+            print("executing compile")
             res = systemManager.execute(cmd)
-            
-            # copy output to appropriate directory
-            sdkOutLibsDir = buildDirName + distribLibs
-            
-            systemManager.makeDirectory( pathName)
-                        
-            for file in glob.glob(compileOutDir + "\\*.lib"):
-                print( "copying " + file + " -> " + sdkOutLibsDir)
-                shutil.copy(file, sdkOutLibsDir)
-                print(pathName)
-                print (file)
-                shutil.copy(file, pathName)
-            for file in glob.glob(compileOutDir + "\\*.dll"):
-                print( "copying " + file + " -> " + sdkOutLibsDir)
-                shutil.copy(file, sdkOutLibsDir)
-            for file in glob.glob(compileOutDir + "\\*.pdb"):
-                print( "copying " + file + " -> " + sdkOutLibsDir)
-                shutil.copy(file, sdkOutLibsDir)
-                
-            sdkOutExesDir = buildDirName + distribExes
-                        
-            for file in glob.glob(compileOutDir + "\\*.exe"):
-                print( "copying " + file + " -> " + sdkOutExesDir)
-                shutil.copy(file, sdkOutExesDir)
+            if (res != 0):
+            	sys.exit(-1)
 
+            # execute tests -----------------------------------------------------------------------
+            test1 = buildOutDir + "\\test_basics.exe"
+            test2 = buildOutDir + "\\testsuite.exe"
 
+            res = systemManager.execute(test1)
+            if (res != 0):
+            	sys.exit(res)
+			
+            res = systemManager.execute(test2)
+
+            sys.exit(res)
+            
 
 #------------------------------------------------------------------------------
 Program().main()

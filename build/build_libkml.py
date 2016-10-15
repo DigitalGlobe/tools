@@ -79,10 +79,12 @@ class Program :
             compileOutDir = buildPathName + "\\msvc"
             # build command line based on options
             if ( buildSettings.X64Specified() ) :
+                cmd = cmd + "/p:platform=x64 "
                 compileOutDir = compileOutDir + "\\x64"
                 pathName = pathName + "\\x64"
                 distribLibs = Program._PATH_NAME_DISTRIBUTION_X64
             else :
+                cmd = cmd + "/p:platform=Win32 "
                 distribLibs = Program._PATH_NAME_DISTRIBUTION_X86
 
  
