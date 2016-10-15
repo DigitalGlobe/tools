@@ -23,6 +23,9 @@ class Program :
         # the name of the build file to build APR
         _FILE_NAME_BUILD_APR = "build_apr.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build APR Util
+        _FILE_NAME_BUILD_APR_UTIL = "build_aprutil.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build Bison
         _FILE_NAME_BUILD_BISON = "build_bison.py"
         #----------------------------------------------------------------------
@@ -183,6 +186,7 @@ class Program :
                 # build libraries that do not depend on other libraries
                 #     (order does not matter)
                 self._build(Program._FILE_NAME_BUILD_APR        )
+                self._build(Program._FILE_NAME_BUILD_APR_UTIL   )
                 self._build(Program._FILE_NAME_BUILD_BISON      )
                 self._build(Program._FILE_NAME_BUILD_BOOST      )
                 self._build(Program._FILE_NAME_BUILD_CPPUNIT    )
