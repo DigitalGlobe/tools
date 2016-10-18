@@ -116,7 +116,7 @@ class Program :
 
 
             #restoring required nmake.opt file
-            shutil.copy( "nmake_old.opt", "nmake.opt")
+            shutil.copy( "nmake_sabuild.opt", "nmake.opt")
 
             # execute clean
             print("executing clean")
