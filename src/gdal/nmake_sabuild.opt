@@ -519,7 +519,9 @@ OCI_INCLUDE =	-I$(ORACLE_HOME)\oci\include
 
 FGDB_ENABLED = YES
 FGDB_PLUGIN = YES
-FGDB_SDK = C:\Surge\DigitalGlobe\tools\src\FileGDB
+#FGDB_SDK = C:\Surge\DigitalGlobe\tools\src\FileGDB
+# pass in path via build script
+#FGDB_SDK = ..\FileGDB
 FGDB_INC = $(FGDB_SDK)\include 
 
 !IFDEF WIN64

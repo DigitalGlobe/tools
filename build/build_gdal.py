@@ -91,6 +91,7 @@ class Program :
             # start building
             systemManager.changeDirectory(buildPathName)
             cmd = "nmake -f makefile.vc MSVC_VER=1900 "
+            cmd = cmd + "FGDB_SDK=" + buildPathNameFileGDB + " "
             suffix = ""
             
             # extend command line based on options
