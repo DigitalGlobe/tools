@@ -237,6 +237,10 @@ class Program :
                                                       "libapr-1.dll"              ) , \
                                         os.path.join( distributionLibraryPathName , \
                                                       "apr_d.dll"                 ) )
+                systemManager.copyFile( os.path.join( buildLibraryPathName        , \
+                                                      "libapr-1.pdb"              ) , \
+                                        os.path.join( distributionLibraryPathName , \
+                                                      "apr_d.pdb"                 ) )
                  
             else :
             
@@ -248,6 +252,11 @@ class Program :
                                                       "libapr-1.dll"              ) , \
                                         os.path.join( distributionLibraryPathName , \
                                                       "apr_d.dll"                 ) )
+                systemManager.copyFile( os.path.join( buildLibraryPathName        , \
+                                                      "libapr-1.pdb"              ) , \
+                                        os.path.join( distributionLibraryPathName , \
+                                                      "apr_d.pdb"                 ) )
+
         #----------------------------------------------------------------------
         
     #--------------------------------------------------------------------------
