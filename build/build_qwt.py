@@ -34,6 +34,8 @@ class Program :
         #Path to QMake directories - modify as necessary for your system
         _PATH_NAME_QMAKE64_DIR = "C:\\Qt\\Qt5.7.0\\5.7\\msvc2015_64\\bin\\"
         _PATH_NAME_QMAKE86_DIR = "C:\\QtX86\\Qt5.7.0\\5.7\\msvc2015\\bin\\"
+        #Path to qwt.pro - modify as necessary for your system
+        _PATH_TO_QWT_PRO = "C:\\DigitalGlobeTemp\\tools\\src\\QWT\\qwt.pro"
 
         def __init__(self) :
         
@@ -60,16 +62,16 @@ class Program :
             # get the paths
             if ( buildSettings.X64Specified() and buildSettings.ReleaseSpecified()) :
                 sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE_X64Release)
-                cmd = Program._PATH_NAME_QMAKE64_DIR + "qmake.exe C:\\DigitalGlobeTemp\\tools\\src\\QWT\\qwt.pro -r -spec win32-msvc2015"
+                cmd = Program._PATH_NAME_QMAKE64_DIR + "qmake.exe " + Program._PATH_TO_QWT_PRO + " -r -spec win32-msvc2015"
             elif ( buildSettings.X64Specified()) :
                 sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE_X64Debug)
-                cmd =  Program._PATH_NAME_QMAKE64_DIR + "qmake.exe C:\\DigitalGlobeTemp\\tools\\src\\QWT\\qwt.pro -r -spec win32-msvc2015 " + "CONFIG+=debug " + "CONFIG+=qml_debug"
+                cmd =  Program._PATH_NAME_QMAKE64_DIR + "qmake.exe " + Program._PATH_TO_QWT_PRO + " -r -spec win32-msvc2015 " + "CONFIG+=debug " + "CONFIG+=qml_debug"
             elif (buildSettings.ReleaseSpecified()) :
                 sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE_X86Release)
-                cmd = Program._PATH_NAME_QMAKE86_DIR + "qmake.exe C:\\DigitalGlobeTemp\\tools\\src\\QWT\\qwt.pro -r -spec win32-msvc2015"
+                cmd = Program._PATH_NAME_QMAKE86_DIR + "qmake.exe " + Program._PATH_TO_QWT_PRO + " -r -spec win32-msvc2015"
             else:
                 sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE_X86Debug)
-                cmd = Program._PATH_NAME_QMAKE86_DIR + "qmake.exe C:\\DigitalGlobeTemp\\tools\\src\\QWT\\qwt.pro -r -spec win32-msvc2015 " + "CONFIG+=debug " + "CONFIG+=qml_debug"
+                cmd = Program._PATH_NAME_QMAKE86_DIR + "qmake.exe " + Program._PATH_TO_QWT_PRO + " -r -spec win32-msvc2015 " + "CONFIG+=debug " + "CONFIG+=qml_debug"
                                      
             buildDirName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SDK_DIR)
                                             
