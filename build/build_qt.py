@@ -97,8 +97,8 @@ class Program :
 
 
 			# configure ----------------------------------------------------------------------------
-            binDir = "d:\\qtbase"
-            #binDir = buildPathName + "\\build"
+            #binDir = "d:\\qtbase"
+            binDir = buildPathName + "\\build"
             if ( buildSettings.X64Specified() ) :
                 binDir = binDir + "\\x64"
                 plat = "win32-msvc2015"
