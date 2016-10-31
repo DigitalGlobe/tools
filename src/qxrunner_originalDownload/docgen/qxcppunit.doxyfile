@@ -1,0 +1,20 @@
+
+# qxcppunit.doxyfile
+
+@INCLUDE               = qx_pckg.doxyfile
+
+PROJECT_NAME           = "QxCppUnit"
+
+PROJECT_NUMBER         = "QxRunner for CppUnit"
+
+OUTPUT_DIRECTORY       = ../doc/qxcppunit
+
+INPUT                  = ../include/qxcppunit        \
+                         ../src/qxcppunit
+
+EXAMPLE_PATH           = ../examples/qxcppunitdemo
+
+IMAGE_PATH             = ../src/qxcppunit/resources 
+
+#PROJECT_NAME           = "QxCppUnit (Browse)"
+#@INCLUDE               = qx_browse.doxyfile
