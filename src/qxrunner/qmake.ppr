@@ -1,0 +1,26 @@
+[Config]
+Relative path=1
+Compilator.SaveAll=0
+Compilator.Capture=0
+Compilator.HideOutput=0
+DefaultCPIndex=0
+LogtoEnd=1
+DontOpen=0
+FileFormat=0
+[Project tree]
+qmake
+	+Ordner
+		qxconfig.pro
+		src\qxrunner\qxrunner.pro
+		src\qxcppunit\qxcppunit.pro
+		examples\qxrunnerdemo\qxrunnerdemo.pro
+		examples\qxcppunitdemo\qxcppunitdemo.pro
+		qxrunner_all.pro
+[Open project files]
+0=Neu1.txt
+[Selected Project Files]
+Main=
+Selected=Neu1.txt
+[Neu1.txt]
+TopLine=1
+Caret=1,1

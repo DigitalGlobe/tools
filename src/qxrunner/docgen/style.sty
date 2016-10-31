@@ -1,0 +1,200 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{doxygen}
+\RequirePackage{calc}
+\RequirePackage{array}
+\pagestyle{fancyplain}
+\newcommand{\clearemptydoublepage}{\newpage{\pagestyle{empty}\cleardoublepage}}
+\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+\renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
+\lhead[\fancyplain{}{\bfseries\thepage}]
+        {\fancyplain{}{\bfseries\rightmark}}
+\rhead[\fancyplain{}{\bfseries\leftmark}]
+        {\fancyplain{}{\bfseries\thepage}}
+\rfoot[\fancyplain{}{\bfseries\scriptsize Generated for Delta3D by Doxygen, Graphviz and MikTex }]{}
+\lfoot[]{\fancyplain{}{\bfseries\scriptsize Generated for Delta3D by Doxygen, Graphviz and MikTex  }}
+\cfoot{}
+\newenvironment{CompactList}
+{\begin{list}{}{
+  \setlength{\leftmargin}{0.5cm}
+  \setlength{\itemsep}{0pt}
+  \setlength{\parsep}{0pt}
+  \setlength{\topsep}{0pt}
+  \renewcommand{\makelabel}{}}}
+{\end{list}}
+\newenvironment{CompactItemize}
+{
+  \begin{itemize}
+  \setlength{\itemsep}{-3pt}
+  \setlength{\parsep}{0pt}
+  \setlength{\topsep}{0pt}
+  \setlength{\partopsep}{0pt}
+}
+{\end{itemize}}
+\newcommand{\PBS}[1]{\let\temp=\\#1\let\\=\temp}
+\newlength{\tmplength}
+\newenvironment{TabularC}[1]
+{
+\setlength{\tmplength}
+     {\linewidth/(#1)-\tabcolsep*2-\arrayrulewidth*(#1+1)/(#1)}
+      \par\begin{tabular*}{\linewidth}
+             {*{#1}{|>{\PBS\raggedright\hspace{0pt}}p{\the\tmplength}}|}
+}
+{\end{tabular*}\par}
+\newcommand{\entrylabel}[1]{
+   {\parbox[b]{\labelwidth-4pt}{\makebox[0pt][l]{\textbf{#1}}\\}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newenvironment{Desc}
+{\begin{list}{}
+  {
+    \settowidth{\labelwidth}{40pt}
+    \setlength{\leftmargin}{\labelwidth}
+    \setlength{\parsep}{-8pt}
+    \setlength{\itemsep}{-4pt}
+    \renewcommand{\makelabel}{\entrylabel}
+  }
+}
+{\end{list}}
+
+
+%\newenvironment{Desc}
+%{\begin{list}{}
+%  {
+%    \settowidth{\labelwidth}{40pt}
+%    \setlength{\leftmargin}{\labelwidth}
+%    \setlength{\parsep}{0pt}
+%    \setlength{\itemsep}{-4pt}
+%    \renewcommand{\makelabel}{\entrylabel}
+%  }
+%}
+%{\end{list}}
+
+
+\newenvironment{Indent}
+  {\begin{list}{}{\setlength{\leftmargin}{0.5cm}}
+      \item[]\ignorespaces}
+  {\unskip\end{list}}
+\setlength{\parindent}{0cm}
+\setlength{\parskip}{0.2cm}
+\addtocounter{secnumdepth}{1}
+\sloppy
+\usepackage[T1]{fontenc}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Font style for the document.
+
+\renewcommand{\rmdefault}{phv}
+
+% Taken from book.cls and adapted to smaller font sizes.
+
+% Captions for source code documentation sections.
+
+\renewcommand\section{\@startsection {section}{1}{\z@}%
+                                   {-3.5ex \@plus -1ex \@minus -.2ex}%
+%                                   {2.3ex \@plus.2ex}%
+                                   {2.0ex \@plus.2ex}%
+                                   {\normalfont\fontsize{13}{15}\bfseries}}
+\renewcommand\subsection{\@startsection{subsection}{2}{\z@}%
+%                                     {-3.25ex\@plus -1ex \@minus -.2ex}%
+%                                     {1.5ex \@plus .2ex}%
+                                     {-1.5ex\@plus -1ex \@minus -.2ex}%
+                                     {0.5ex \@plus .2ex}%
+                                     {\normalfont\fontsize{11}{13}\bfseries}}
+\renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}%
+%                                     {-3.25ex\@plus -1ex \@minus -.2ex}%
+%                                     {1.5ex \@plus .2ex}%
+                                     {-0.5ex\@plus -1ex \@minus -.2ex}%
+                                     {0.1ex \@plus .2ex}%
+                                     {\normalfont\normalsize\bfseries}}
+
+
+%\newcommand\section{\@startsection {section}{1}{\z@}%
+%                                   {-3.5ex \@plus -1ex \@minus -.2ex}%
+%                                   {2.3ex \@plus.2ex}%
+%                                   {\normalfont\Large\bfseries}}
+%\newcommand\subsection{\@startsection{subsection}{2}{\z@}%
+%                                     {-3.25ex\@plus -1ex \@minus -.2ex}%
+%                                     {1.5ex \@plus .2ex}%
+%                                     {\normalfont\large\bfseries}}
+%\newcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}%
+%                                     {-3.25ex\@plus -1ex \@minus -.2ex}%
+%                                     {1.5ex \@plus .2ex}%
+%                                     {\normalfont\normalsize\bfseries}}
+
+
+% Chapter titles for source code documentation chapters.
+
+\def\@makechapterhead#1{%
+%  \vspace*{10\p@}%
+  \hfill
+  {\parindent \z@ \raggedright \normalfont
+    \ifnum \c@secnumdepth >\m@ne
+      \if@mainmatter
+        \fontsize{18}{20}\bfseries \@chapapp\space \thechapter
+        \par\nobreak
+        \vskip 30\p@
+      \fi
+    \fi
+    \interlinepenalty\@M
+    \fontsize{20}{22} \bfseries #1\par\nobreak
+    \vskip 20\p@
+    \hrulefill
+    \vskip 40\p@
+  }}
+
+
+%\def\@makechapterhead#1{%
+%  \vspace*{50\p@}%
+%  {\parindent \z@ \raggedright \normalfont
+%    \ifnum \c@secnumdepth >\m@ne
+%      \if@mainmatter
+%        \huge\bfseries \@chapapp\space \thechapter
+%        \par\nobreak
+%        \vskip 20\p@
+%      \fi
+%    \fi
+%    \interlinepenalty\@M
+%    \Huge \bfseries #1\par\nobreak
+%    \vskip 40\p@
+%  }}
+
+
+% Chapter titles for other chapters such as index.
+
+\def\@makeschapterhead#1{%
+%  \vspace*{50\p@}%
+  {\parindent \z@ \raggedright
+    \normalfont
+    \interlinepenalty\@M
+    \fontsize{20}{22} \bfseries  #1\par\nobreak
+    \hrulefill
+    \vskip 20\p@
+  }}
+
+
+%\def\@makeschapterhead#1{%
+%  \vspace*{50\p@}%
+%  {\parindent \z@ \raggedright
+%    \normalfont
+%    \interlinepenalty\@M
+%    \Huge \bfseries  #1\par\nobreak
+%    \vskip 40\p@
+%  }}
+
+
+% Paper dimension
+
+\setlength{\topmargin}{-10mm}
+\setlength{\textheight}{250mm} 
+
+\setlength\evensidemargin{-5mm}
+\setlength\oddsidemargin{-5mm}
+
+\setlength{\textwidth}{175mm}
+\setlength{\headwidth}{175mm}
+\setlength{\footwidth}{175mm}
+
+
+  
