@@ -107,6 +107,9 @@ class Program :
         # the name of the build file to build PROJ.4
         _FILE_NAME_BUILD_PROJ4 = "build_proj4.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build Qt
+        _FILE_NAME_BUILD_QT = "build_qt.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build QWT
         _FILE_NAME_BUILD_QWT = "build_qwt.py"
         #----------------------------------------------------------------------
@@ -207,6 +210,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_NEWMAT     )
                 self._build(Program._FILE_NAME_BUILD_OPENCV     )
                 self._build(Program._FILE_NAME_BUILD_PROJ4      )
+                self._build(Program._FILE_NAME_BUILD_QT         )
                 self._build(Program._FILE_NAME_BUILD_QWT        )
                 self._build(Program._FILE_NAME_BUILD_SZIP       )
                 self._build(Program._FILE_NAME_BUILD_ZLIB       )
