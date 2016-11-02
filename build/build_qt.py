@@ -81,9 +81,13 @@ class Program :
             print("Getting Paths")
             buildPathName  = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD)
             sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
+            binPathName  = systemManager.getCurrentRelativePathName("..\\Qt\\5.7")
+            
             print("build path: " + buildPathName)
             print("source path: " + sourcePathName)
-
+            print("install path: " + binPathName)
+            
+            
             # initialize directories
             print("removing previous build dir")
             systemManager.changeDirectory(sourcePathName)
@@ -98,7 +102,8 @@ class Program :
 
 			# configure ----------------------------------------------------------------------------
             #binDir = "d:\\qtbase"
-            binDir = buildPathName + "\\build"
+            #binDir = buildPathName + "\\build"
+            binDir = binPathName
             if ( buildSettings.X64Specified() ) :
                 binDir = binDir + "\\x64"
                 plat = "win32-msvc2015"
@@ -131,35 +136,35 @@ class Program :
 
             
             # copy ---------------------------------------------------------------------------------
-
-            if ( buildSettings.X64Specified() ) :
-                distribPath = Program._PATH_NAME_DISTRIBUTION_X64
-            else:
-                distribPath = Program._PATH_NAME_DISTRIBUTION_X86
-            
-            sdkOutDir = buildPathName + "\\..\\" + distribPath
-
-
-            buildOutDir = binDir
-            print("Copy files into SDK dir")
-            for file in glob.glob(buildOutDir + "\\bin\\Qt5*.dll"):
-                print( "copying " + file + " -> " + sdkOutDir)
-                shutil.copy(file, sdkOutDir)
-            for file in glob.glob(buildOutDir + "\\bin\\Qt5*.pdb"):
-                print( "copying " + file + " -> " + sdkOutDir)
-                shutil.copy(file, sdkOutDir)
-            for file in glob.glob(buildOutDir + "\\lib\\Qt5*.lib"):
-                print( "copying " + file + " -> " + sdkOutDir)
-                shutil.copy(file, sdkOutDir)
-            for file in glob.glob(buildOutDir + "\\lib\\Qt5*.pdb"):
-                print( "copying " + file + " -> " + sdkOutDir)
-                shutil.copy(file, sdkOutDir)
-            for file in glob.glob(buildOutDir + "\\bin\\lib*.dll"):
-                print( "copying " + file + " -> " + sdkOutDir)
-                shutil.copy(file, sdkOutDir)
-            for file in glob.glob(buildOutDir + "\\bin\\lib*.pdb"):
-                print( "copying " + file + " -> " + sdkOutDir)
-                shutil.copy(file, sdkOutDir)
+            # Leaving QT files in their normal structure, not copying them into the sdk dir
+#            if ( buildSettings.X64Specified() ) :
+#                distribPath = Program._PATH_NAME_DISTRIBUTION_X64
+#            else:
+#                distribPath = Program._PATH_NAME_DISTRIBUTION_X86
+#            
+#            sdkOutDir = buildPathName + "\\..\\" + distribPath
+#
+#
+#            buildOutDir = binDir
+#            print("Copy files into SDK dir")
+#            for file in glob.glob(buildOutDir + "\\bin\\Qt5*.dll"):
+#                print( "copying " + file + " -> " + sdkOutDir)
+#                shutil.copy(file, sdkOutDir)
+#            for file in glob.glob(buildOutDir + "\\bin\\Qt5*.pdb"):
+#                print( "copying " + file + " -> " + sdkOutDir)
+#                shutil.copy(file, sdkOutDir)
+#            for file in glob.glob(buildOutDir + "\\lib\\Qt5*.lib"):
+#                print( "copying " + file + " -> " + sdkOutDir)
+#                shutil.copy(file, sdkOutDir)
+#            for file in glob.glob(buildOutDir + "\\lib\\Qt5*.pdb"):
+#                print( "copying " + file + " -> " + sdkOutDir)
+#                shutil.copy(file, sdkOutDir)
+#            for file in glob.glob(buildOutDir + "\\bin\\lib*.dll"):
+#                print( "copying " + file + " -> " + sdkOutDir)
+#                shutil.copy(file, sdkOutDir)
+#            for file in glob.glob(buildOutDir + "\\bin\\lib*.pdb"):
+#                print( "copying " + file + " -> " + sdkOutDir)
+#                shutil.copy(file, sdkOutDir)
                 
             # may need to also copy in some plugins from their dirs
             
