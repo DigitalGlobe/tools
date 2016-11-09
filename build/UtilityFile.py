@@ -23,6 +23,26 @@ class UtilityFile :
     # public methods
     
         #----------------------------------------------------------------------
+        # Reads a specified file.
+        #
+        # Parameters :
+        #     fileName : the name of the file to read
+        # Returns :
+        #     the content of the specified file
+        # Throws :
+        #     Exception : if this method failed to read the specified file
+        @staticmethod
+        def readFile(fileName) :
+        
+            with open( fileName                 , \
+                       UtilityFile._ACCESS_READ ) \
+                       as file :
+                       
+                content = file.read()
+                file.close()
+        
+            return content
+        #----------------------------------------------------------------------
         # Reads the lines of a specified file.
         #
         # Parameters :
@@ -81,6 +101,45 @@ class UtilityFile :
                 UtilityFile.writeLines( fileName , \
                                         lines    )
         #----------------------------------------------------------------------
+        # Replaces specified text in a specified file with specified
+        # replacement text.
+        #
+        # Parameters :
+        #     fileName        : the name of the file whose text to replace
+        #     searchText      : the text to replace
+        #     replacementText : the replacement text to use
+        # Throws :
+        #     Exception : if this method failed to replace the specified text
+        @staticmethod
+        def replaceText( fileName        , \
+                         searchText      , \
+                         replacementText ) :
+                         
+            content = UtilityFile.readFile(fileName)
+            content = content.replace( searchText      , \
+                                       replacementText )
+            UtilityFile.writeFile( fileName , \
+                                   content  )
+        #----------------------------------------------------------------------
+        # Writes specified text to a specified file
+        #
+        # Parameters :
+        #     fileName : the name of the file to which to write
+        #     text     : the text to write
+        # Throws :
+        #     Exceptoin : if this method failed to write the specified lines
+        #                 to the specified file
+        @staticmethod
+        def writeFile( fileName , \
+                       text     ) :
+                       
+            with open( fileName                  , \
+                       UtilityFile._ACCESS_WRITE ) \
+                       as file :
+                       
+                file.write(text)
+                file.close()
+        #----------------------------------------------------------------------
         # Writes specified lines to a specified file.
         #
         # Parameters :
@@ -99,8 +158,6 @@ class UtilityFile :
                        
                 file.write( '\n'.join(lines) )
                 file.close()
-        
-            return lines
         #----------------------------------------------------------------------
         
     #--------------------------------------------------------------------------

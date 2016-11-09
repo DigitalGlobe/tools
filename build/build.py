@@ -110,6 +110,9 @@ class Program :
         # the name of the build file to build Qt
         _FILE_NAME_BUILD_QT = "build_qt.py"
         #----------------------------------------------------------------------
+        # the name of the build file to build QuaZIP
+        _FILE_NAME_BUILD_QUAZIP = "build_quazip.py"
+        #----------------------------------------------------------------------
         # the name of the build file to build QWT
         _FILE_NAME_BUILD_QWT = "build_qwt.py"
         #----------------------------------------------------------------------
@@ -237,6 +240,7 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_LIBTIFF   )
                 self._build(Program._FILE_NAME_BUILD_LIBGEOTIFF)
                 self._build(Program._FILE_NAME_BUILD_PODOFO    )
+                self._build(Program._FILE_NAME_BUILD_QUAZIP    )
                 self._build(Program._FILE_NAME_BUILD_XERCES    )
                 self._build(Program._FILE_NAME_BUILD_OGDI      )
                 self._build(Program._FILE_NAME_BUILD_OSG       )

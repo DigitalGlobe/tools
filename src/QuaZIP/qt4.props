@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <IncludePath>C:\Qt\Qt5.7.0_x64\5.7\msvc2015_64\include;C:\Qt\Qt5.7.0_x64\5.7\msvc2015_64\include\Qt;C:\Qt\Qt5.7.0_x64\5.7\msvc2015_64\include\QtCore;C:\Qt\Qt5.7.0_x64\5.7\msvc2015_64\include\QtNetwork;c:\include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LibraryPath>C:\Qt\Qt5.7.0_x64\5.7\msvc2015_64\lib;C:\lib;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup />
+  <ItemGroup />
+</Project>

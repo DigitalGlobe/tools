@@ -621,7 +621,10 @@ class FileDistributor :
                     
                     targetFileName = self._getDebugFileName( targetFileName , \
                                                              dConsidered    )
-                                                            
+
+                print( "Copying file \"%s\" to \"%s\"." % \
+                       ( sourceFileName , \
+                         targetFileName )               )
                 shutil.copyfile( sourceFileName , \
                                  targetFileName )
         #----------------------------------------------------------------------
