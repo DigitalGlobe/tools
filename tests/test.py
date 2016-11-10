@@ -95,6 +95,9 @@ class Program :
         # the name of the test file to test PROJ4
         _FILE_NAME_TEST_PROJ4 = "test_proj4.py"
         #----------------------------------------------------------------------
+        # the name of the test file to test QuaZIP
+        _FILE_NAME_TEST_QUAZIP = "test_quazip.py"
+        #----------------------------------------------------------------------
         # the name of the test file to test qwt
         _FILE_NAME_TEST_QWT = "test_qwt.py"
         #----------------------------------------------------------------------
@@ -168,6 +171,7 @@ class Program :
                 self._test(Program._FILE_NAME_TEST_OPENTHREADS)
                 self._test(Program._FILE_NAME_TEST_PODOFO     )
                 self._test(Program._FILE_NAME_TEST_PROJ4      )
+                self._test(Program._FILE_NAME_TEST_QUAZIP     )
                 self._test(Program._FILE_NAME_TEST_QWT        )
                 self._test(Program._FILE_NAME_TEST_SZIP       )
                 self._test(Program._FILE_NAME_TEST_URIPARSER  )
