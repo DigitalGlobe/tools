@@ -42,6 +42,9 @@ class Program :
             systemManager.initializeIncludeEnvironmentVariable( buildSettings.X64Specified() )
             systemManager.initializeLibraryEnvironmentVariable( buildSettings.X64Specified() )
             systemManager.appendToPathEnvironmentVariable( pathFinder.getVisualStudioBinPathName( buildSettings.X64Specified() ) )
+            os.environ["PLATFORM"] = ( "x64"                               \
+                                       if ( buildSettings.X64Specified() ) \
+                                       else "Win32"                        )
 
             # MSBuild is under "Program Files (x86)"
             systemManager.appendToPathEnvironmentVariable( os.path.join( systemManager.getProgramFilesPathName(False) , \
