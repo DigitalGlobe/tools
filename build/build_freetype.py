@@ -117,6 +117,10 @@ class Program :
             if ( buildSettings.X64Specified() ) :
             
                 os.environ["PLATFORM"] = "X64"
+                
+            else :
+            
+                os.environ["PLATFORM"] = "Win32"
             
             # determine path names
             binaryPathName = ( systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X64) \
