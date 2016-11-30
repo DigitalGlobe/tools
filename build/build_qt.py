@@ -116,7 +116,7 @@ class Program :
             else:
                 buildType = "-debug"	
 
-            cmdConfigure = "configure -prefix " + binDir + " " + buildType + " -opensource -confirm-license -nomake examples -skip qt3d -skip qtdatavis3d -platform " + plat
+            cmdConfigure = "configure -prefix " + binDir + " " + buildType + " -opensource -confirm-license -opengl desktop -nomake examples -skip qt3d -skip qtdatavis3d -platform " + plat
             print( "configure: " + cmdConfigure)
             
             res = systemManager.execute( cmdConfigure)
