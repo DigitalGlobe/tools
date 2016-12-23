@@ -112,13 +112,13 @@ class Program :
             buildBoostResult = systemManager.execute("bootstrap.bat")
 
             print("generating final compile command")
-            buildBoostCommandLine =  "b2 toolset=msvc-14.0 --abbreviate-paths architecture=x86 --prefix=../../build/Boost install -j2"
+            buildBoostCommandLine =  "b2 toolset=msvc-14.0 --abbreviate-paths architecture=x86 --prefix=../../build/Boost install --link=static -j2"
                                          
             # extend command line based on options
             if ( buildSettings.X64Specified() ) :
-                buildBoostCommandLine = buildBoostCommandLine + "address-model=64 --libdir=../../sdk/x64/lib"
+                buildBoostCommandLine = buildBoostCommandLine + " address-model=64 --libdir=../../sdk/x64/lib"
             else :
-                buildBoostCommandLine = buildBoostCommandLine + "address-model=32 --libdir=../../sdk/x86/lib"
+                buildBoostCommandLine = buildBoostCommandLine + " address-model=32 --libdir=../../sdk/x86/lib"
 
             if buildSettings.ReleaseSpecified():
                 buildBoostCommandLine = buildBoostCommandLine + " variant=release"
