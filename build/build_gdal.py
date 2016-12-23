@@ -18,10 +18,10 @@ class Program :
         DESCRIPTION = "Builds the GDAL library"
         _PATH_NAME_BINARY_X86 = "..\\sdk\\x86\\bin"
         _PATH_NAME_BINARY_X64 = "..\\sdk\\x64\\bin"
-        _PATH_NAME_BUILD = "GDAL"
+        _PATH_NAME_BUILD = "GDAL-1.11.5"
         _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
         _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
-        _PATH_NAME_SOURCE = "..\\src\\GDAL"
+        _PATH_NAME_SOURCE = "..\\src\\GDAL-1.11.5"
 
         _PATH_NAME_BUILD_FILEGDB = "FileGDB"
         _PATH_NAME_SOURCE_FILEGDB = "..\\src\\FileGDB"
@@ -117,7 +117,7 @@ class Program :
 
 
             #restoring required nmake.opt file
-            shutil.copy( "nmake_sabuild.opt", "nmake.opt")
+            #shutil.copy( "nmake_sabuild.opt", "nmake.opt")
 
             # execute clean
             print("executing clean")
@@ -130,7 +130,7 @@ class Program :
 
             # copy output to appropriate bin dir
             print("Copy files into SDK dir")
-            shutil.copy( buildPathName + "\\gdal201.dll", sdkOutDir + "\\gdal201" + suffix + ".dll")
+            shutil.copy( buildPathName + "\\gdal111.dll", sdkOutDir + "\\gdal111" + suffix + ".dll")
             shutil.copy( buildPathName + "\\gdal_i.exp", sdkOutDir + "\\gdal_i" + suffix + ".exp")
             shutil.copy( buildPathName + "\\gdal_i.lib", sdkOutDir + "\\gdal_i" + suffix + ".lib")
             shutil.copy( buildPathName + "\\gdal.lib", sdkOutDir + "\\gdal" + suffix + ".lib")
