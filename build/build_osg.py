@@ -18,10 +18,10 @@ class Program :
         DESCRIPTION = "Builds OpenSceneGraph."
         _PATH_NAME_BINARY_X86 = "..\\sdk\\x86\\bin"
         _PATH_NAME_BINARY_X64 = "..\\sdk\\x64\\bin"
-        _PATH_NAME_BUILD = "OpenSceneGraph"
+        _PATH_NAME_BUILD = "OpenSceneGraph-2.8.5"
         _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
         _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
-        _PATH_NAME_SOURCE = "..\\src\\OpenSceneGraph"
+        _PATH_NAME_SOURCE = "..\\src\\OpenSceneGraph-2.8.5"
 
         def __init__(self) :
         
@@ -70,10 +70,10 @@ class Program :
             # initialize directories
             print("removing previous build dir")
             systemManager.changeDirectory(sourcePathName)
-            systemManager.removeDirectory(buildPathName)
+            #systemManager.removeDirectory(buildPathName)
 
             print("copying source to build dir")
-            systemManager.copyDirectory( sourcePathName, buildPathName)
+            #systemManager.copyDirectory( sourcePathName, buildPathName)
         
             # start building
             systemManager.changeDirectory(buildPathName)
@@ -87,7 +87,7 @@ class Program :
                 cmakeCommand = "cmake -G \"Visual Studio 14 2015\""
                 target="x86"
 
-            cmakeCommand = cmakeCommand + " -DCMAKE_SOURCE_DIR=\"c:\\surge\\digitalglobe\\tools\\src\\OpenSceneGraph\""
+            cmakeCommand = cmakeCommand + " -DCMAKE_SOURCE_DIR=\"c:\\surge\\digitalglobe\\tools\\src\\OpenSceneGraph-2.8.5\""
 
             if buildSettings.ReleaseSpecified():
                 cmakeCommand = cmakeCommand +  " -DCMAKE_BUILD_TYPE=\"Release\" "
@@ -98,10 +98,16 @@ class Program :
 
             #Add CMAKE Vars for 3rd party libs
             #FreeType
-            cmakeCommand = cmakeCommand + "-DFREETYPE_INCLUDE_DIRS=\"../FreeType/include/freetype/\" "
+            #cmakeCommand = cmakeCommand + "-DFREETYPE_INCLUDE_DIRS=\"../FreeType/include/freetype/\" "
+            cmakeCommand = cmakeCommand + "-DFREETYPE_INCLUDE_DIRS=\"C:\\Surge\\DigitalGlobe\\tools\\src\\FreeType\\include\" "
+            
+            
             cmakeCommand = cmakeCommand + "-DFREETYPE_LIBRARY=\"../../sdk/" + target + "/lib/freetype" + libSuffix + ".lib\" "
             #JPEG
-            cmakeCommand = cmakeCommand + "-DJPEG_INCLUDE_DIR=\"../libjpeg/\" "
+            #cmakeCommand = cmakeCommand + "-DJPEG_INCLUDE_DIR=\"../libjpeg/\" "
+            cmakeCommand = cmakeCommand + "-DJPEG_INCLUDE_DIR=\"C:\\Surge\\DigitalGlobe\\tools\\src\\LibJPEG\" "
+            
+            
             cmakeCommand = cmakeCommand + "-DJPEG_LIBRARY=\"../../sdk/" + target + "/lib/libjpeg" + libSuffix + ".lib\" "
 
 
@@ -155,31 +161,31 @@ class Program :
             # copy output to appropriate bin dir
             print("Copy files into SDK dir")
 
-            #libs 
-            for file in glob.glob(libOutDir + "\\*.lib"):
-                print( "copying " + file + " -> " + sdkOutDir)
-                shutil.copy(file, sdkOutDir)
-            for file in glob.glob(libOutDir + "\\*.exp"):
-                print( "copying " + file + " -> " + sdkOutDir)
-                shutil.copy(file, sdkOutDir)
-
-            #lib plugins
-            for file in glob.glob(libOutDir + "\\osgPlugins-3.4.0\\*.lib"):
-                print( "copying " + file + " -> " + sdkOutDir)
-                shutil.copy(file, sdkOutDir)
-            for file in glob.glob(libOutDir + "\\osgPlugins-3.4.0\\*.exp"):
-                print( "copying " + file + " -> " + sdkOutDir)
-                shutil.copy(file, sdkOutDir)
-
-            #DLL's
-            for file in glob.glob(exeOutDir + "\\*.dll"):
-                print( "copying " + file + " -> " + sdkOutDir)
-                shutil.copy(file, sdkOutDir)
-
-            #DLL Plugins
-            for file in glob.glob(exeOutDir + "\\osgPlugins-3.4.0\\*.dll"):
-                print( "copying " + file + " -> " + sdkOutDir)
-                shutil.copy(file, sdkOutDir)
+#            #libs 
+#            for file in glob.glob(libOutDir + "\\*.lib"):
+#                print( "copying " + file + " -> " + sdkOutDir)
+#                shutil.copy(file, sdkOutDir)
+#            for file in glob.glob(libOutDir + "\\*.exp"):
+#                print( "copying " + file + " -> " + sdkOutDir)
+#                shutil.copy(file, sdkOutDir)
+#
+#            #lib plugins
+#            for file in glob.glob(libOutDir + "\\osgPlugins-3.4.0\\*.lib"):
+#                print( "copying " + file + " -> " + sdkOutDir)
+#                shutil.copy(file, sdkOutDir)
+#            for file in glob.glob(libOutDir + "\\osgPlugins-3.4.0\\*.exp"):
+#                print( "copying " + file + " -> " + sdkOutDir)
+#                shutil.copy(file, sdkOutDir)
+#
+#            #DLL's
+#            for file in glob.glob(exeOutDir + "\\*.dll"):
+#                print( "copying " + file + " -> " + sdkOutDir)
+#                shutil.copy(file, sdkOutDir)
+#
+#            #DLL Plugins
+#            for file in glob.glob(exeOutDir + "\\osgPlugins-3.4.0\\*.dll"):
+#                print( "copying " + file + " -> " + sdkOutDir)
+#                shutil.copy(file, sdkOutDir)
 
 
 
