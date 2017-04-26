@@ -1,9 +1,0 @@
-ossimPlanetQt builds ossimPlanet - the Trolltech Qt gui version of the ossimPlanet global visualization program.  Developers are typically available at irc.freenode.net on the #ossimplanet channel.  The main website is www.ossim.org.
-
-It requires Qt version 4.3, ossim, libwms, ossimPlanet, OpenSceneGraph 2.2.
-
-to build:
-
-qmake-qt4 ossimPlanetQt.pro; make
-
-

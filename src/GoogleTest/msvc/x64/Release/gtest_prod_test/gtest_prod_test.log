@@ -1,6 +1,0 @@
-﻿C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(392,5): warning MSB8028: The intermediate directory (x64\Release\gtest_prod_test\) contains files shared from another project (gtest.vcxproj).  This can lead to incorrect clean and rebuild behavior.
-  gtest_prod_test.cc
-  production.cc
-  Generating Code...
-  gtest_prod_test.vcxproj -> C:\GoogleTest\googletest-release-1.7.0\msvc\x64\Release\gtest_prod_test.exe
-  gtest_prod_test.vcxproj -> C:\GoogleTest\googletest-release-1.7.0\msvc\x64\Release\gtest_prod_test.pdb (Full PDB)

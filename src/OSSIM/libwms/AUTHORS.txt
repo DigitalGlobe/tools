@@ -1,9 +1,0 @@
-// $Id: AUTHORS.txt 9129 2006-06-15 13:06:24Z gpotts $
-Eric Sokolowski
-     Wrote the original wms code that libws is based on.
-
-Garrett Potts
-     Added c++ support ad additional support classes	
-
-Norman Vine
-  

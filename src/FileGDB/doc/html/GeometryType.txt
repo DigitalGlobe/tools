@@ -1,6 +1,0 @@
-geometryNull
-geometryPoint
-geometryMultipoint
-geometryPolyline
-geometryPolygon
-geometryMultiPatch

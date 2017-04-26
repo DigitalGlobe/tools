@@ -1,9 +1,0 @@
-﻿  xmlparse.c
-  xmlrole.c
-  xmltok.c
-  xmltok_impl.c
-  xmltok_ns.c
-  Generating Code...
-     Creating library .\..\win32\bin\Release\libexpat.lib and object .\..\win32\bin\Release\libexpat.exp
-  expat.vcxproj -> C:\DigitalGlobeTemp\src\Expat\Source\lib\.\..\win32\bin\Release\libexpat.dll
-  expat.vcxproj -> .\..\win32\bin\Release\libexpat.pdb (Full PDB)

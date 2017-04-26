@@ -1,5 +1,0 @@
-﻿  stdafx.cpp
-  feature_list_region_handler.cc
-  regionator.cc
-  regionator_util.cc
-  libkmlregionator.vcxproj -> C:\DigitalGlobe\LibKml\msvc\x64\Release\libkmlregionator.lib

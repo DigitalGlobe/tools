@@ -1,7 +1,0 @@
-﻿  xmlparse.c
-  xmlrole.c
-  xmltok.c
-  xmltok_impl.c
-  xmltok_ns.c
-  Generating Code...
-  expatw_static.vcxproj -> C:\DigitalGlobeTemp\src\Expat\Source\lib\.\..\win32\bin\Debug\libexpatwMT.lib

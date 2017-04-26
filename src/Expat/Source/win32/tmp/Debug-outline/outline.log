@@ -1,4 +1,0 @@
-﻿  outline.c
-outline.obj : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/SAFESEH' specification
-  outline.vcxproj -> C:\DigitalGlobeTemp\src\Expat\Source\examples\.\..\win32\bin\Debug\outline_d.exe
-  outline.vcxproj -> .\..\win32\bin\Debug\outline_d.pdb (Full PDB)

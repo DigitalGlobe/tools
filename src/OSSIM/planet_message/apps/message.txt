@@ -1,6 +1,0 @@
-<Set target=":navigator"><Camera><latitude>51</latitude><longitude>.5</longitude><altitude>40000</altitude><altitudeMode>absolute</altitudeMode><pitch>0</pitch><heading>45</heading></Camera></Set>
-
-<Add target=':idolbridge'><Image groupType='groundTexture'><filename>/data/ccf_utm/foo.ccf</filename> <id>/data/ccf_utm/foo.ccf</id><name>/data/ccf_utm/foo.ccf</name></Image></Add>
-
-// single image remove example
-<Remove target=':idolbridge' id='/data/ccf_utm/foo.ccf'/>

@@ -1,6 +1,0 @@
-language: cpp
-compiler:
-  - gcc
-  - clang
-install: ./autogen.sh
-script: ./configure && make && make check

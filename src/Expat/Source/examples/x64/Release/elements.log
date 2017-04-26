@@ -1,3 +1,0 @@
-﻿  elements.c
-elements.c(62): warning C4267: 'function': conversion from 'size_t' to 'int', possible loss of data
-LINK : fatal error LNK1181: cannot open input file 'libexpatMT.lib'

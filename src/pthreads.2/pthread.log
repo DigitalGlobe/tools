@@ -1,2 +1,0 @@
-﻿LINK : warning LNK4068: /MACHINE not specified; defaulting to X86
-  pthread.vcxproj -> C:\Surge\DigitalGlobe\pthreads.2\.\.\pthread-static.lib

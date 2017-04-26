@@ -1,6 +1,0 @@
-﻿  pthread.c
-C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(1189,5): warning MSB8012: TargetPath(C:\Surge\DigitalGlobe\pthreads.2\.\.\pthread.dll) does not match the Linker's OutputFile property value (C:\Surge\DigitalGlobe\pthreads.2\pthreadVC2.dll). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).
-C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(1191,5): warning MSB8012: TargetName(pthread) does not match the Linker's OutputFile property value (pthreadVC2). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).
-     Creating library .\.\pthreadVC2.lib and object .\.\pthreadVC2.exp
-  pthread-static.vcxproj -> C:\Surge\DigitalGlobe\pthreads.2\.\.\pthread.dll
-  pthread-static.vcxproj -> .\.\pthread.pdb (Full PDB)
