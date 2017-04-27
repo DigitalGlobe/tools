@@ -1,0 +1,122 @@
+;/************************************************************************
+;
+;	Copyright (c) 2003-2007 Macrovision Europe Ltd. and/or Macrovision Corporation. All Rights Reserved
+;        This software has been provided pursuant to a License Agreement
+;        containing restrictions on its use.  This software contains
+;        valuable trade secrets and proprietary information of 
+;        Macrovision Corp. and is protected by law.  It may not be copied
+;        or distributed in any form or medium, disclosed to third parties,
+;        reverse engineered or used in any manner not provided for in
+;        said License Agreement except with the prior written authorization
+;        from Macrovision Corp.
+;
+; ************************************************************************/
+
+LIBRARY   LMGR10
+HEAPSIZE  8192
+EXPORTS
+
+        lc_auth_data            @32
+        lc_checkin              @33
+        lc_checkout             @34
+        lc_ck_feats             @35
+        lc_daemon               @36
+        lc_disconn              @37
+        lc_display              @38
+        lc_errstring            @39
+        lc_feat_list            @40
+        lc_feat_set             @41
+
+        lc_free_job             @43
+        lc_get_attr             @44
+        lc_get_config           @45
+        lc_get_feats            @46
+        lc_get_redir            @47
+        lc_gethostid            @48
+        lc_getid_type           @49
+        lc_hostname             @50
+        lc_idle                 @51
+        lc_init                 @52
+        lc_isadmin              @53
+        lc_lic_where            @54
+        lc_log                  @55
+        lc_master_list          @56
+        lc_next_conf            @57
+        lc_perror               @59
+        lc_remove               @60
+        lc_set_attr             @61
+        lc_shutdown             @62
+        lc_status               @63
+        lc_test_conf            @64
+        lc_userlist             @65
+        lc_username             @66
+        lc_vsend                @67
+        lc_first_job            @68
+        lc_next_job             @69
+        lc_sleep                @70
+        lc_hosttype             @71
+        lc_get_errno            @72
+        lc_removeh              @73
+        lc_set_errno            @74
+        lc_xstrcmp              @75
+        lc_timer                @77
+        lc_crypt                @78
+        lc_baddate              @79
+        lc_cryptstr             @80
+
+        lc_errtext              @95;
+        la_reread               @96;
+        lc_hostid               @97;
+        lc_chk_conf             @181
+        lc_free_hostid          @182
+        lc_copy_hostid          @185
+        lc_expire_days          @186
+        lc_heartbeat            @188
+        lp_checkin              @189
+        lp_checkout             @190
+        lp_errstring            @191
+				l_new_hostid            @194
+				lp_heartbeat            @195
+        lc_free_mem                     @213
+        lp_perror                       @215
+        lp_warning                      @216
+        lp_pwarn                        @217
+        lc_free_lmgrd_stat              @225
+        lc_check_key                    @229
+        la_parse_daemon                 @230
+        lc_cleanup                      @243
+        lc_set_registry                 @244
+        lc_convert                      @245
+        lc_err_info                     @248
+        lc_new_job                      @249
+				
+;				l_pubkey_verify			@253
+;				l_x77_buf			@254
+;
+;       WINNT specific startup routine.
+;
+
+        LP_SETUP                        @300
+        LP_CHECKOUT                     @301
+        LP_CHECKIN                      @302
+        LP_HEARTBEAT                    @303
+        LP_ERRSTRING                    @304
+        LC_CRYPTSTR                     @305
+        LC_HOSTID                       @306
+        COM_LC_CRYPTSTR                 @307
+        COM_LC_HOSTID                   @308
+
+	lt_checkout                     @401
+	lt_checkin                      @402
+	lt_heartbeat                    @403
+	lt_errstring	                @404
+	lt_perror	                @405
+	lt_pwarn	                @406
+	lt_warning	                @407
+
+	lc_init_simple_composite        @408
+	lc_borrow_return                @409
+	l_n36_buf				@410
+	Java_com_macrovision_flexlm_HostId_lGetNativeHostId	@450
+
+        DllMain                         @500

@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<!-- Version 2 schema -->
+<!-- 
+	* Copyright 2005 - 2006 Macrovision Europe Ltd. All Rights Reserved. 
+	* 
+	* This software has been provided pursuant to a License Agreement containing
+	* restrictions on its use. This software contains valuable trade secrets 
+	* and proprietary information of Macrovision Europe Ltd. and is protected 
+	* by law. It may not be copied or distributed in any form or medium, 
+	* disclosed to third parties, reverse engineered or used in any manner not 
+	* provided for in said License Agreement except with the prior written 
+	* authorization from Macrovision Europe Ltd. 
+    -->
+<xsd:schema targetNamespace="http://www.macrovision.com/fnp/2004/11/activation" xmlns="http://www.macrovision.com/fnp/2004/11/activation"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+    <!-- A non empty string -->
+    <xsd:simpleType name="NonEmptyString">
+        <xsd:restriction base="xsd:string">
+            <xsd:minLength value="1" />
+        </xsd:restriction>
+    </xsd:simpleType>
+</xsd:schema>

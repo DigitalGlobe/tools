@@ -1,0 +1,2 @@
+#include <winuser.h>
+1RT_MANIFEST"installanchorservice.exe.manifest"

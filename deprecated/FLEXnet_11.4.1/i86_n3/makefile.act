@@ -1,0 +1,381 @@
+#########################################################################
+#	Copyright (c) 2003-2007 Macrovision Europe Ltd. and/or Macrovision Corporation. All Rights Reserved
+#        This software has been provided pursuant to a License Agreement
+#        containing restrictions on its use.  This software contains
+#        valuable trade secrets and proprietary information of 
+#        Macrovision Corporation and is protected by law.  It may 
+#        not be copied or distributed in any form or medium, disclosed 
+#        to third parties, reverse engineered or used in any manner not 
+#        provided for in said License Agreement except with the prior 
+#        written authorization from Macrovision Corporation.
+##########################################################################
+#
+# FLEXLM makefile for PCs
+# If you have a real kit, change VENDORNAME=demo below to your real
+# vendor daemon name
+# Use nmake MD=1 for dynamic runtime library: msvcrt.lib
+#
+
+!if "$(VENDORNAME)" == ""
+VENDORNAME = demo
+!endif
+DAEMON = $(VENDORNAME).exe
+
+PREPTOOL = .\preptool.exe
+
+
+SRCDIR = ..\machind
+EXAMPLESDIR= ..\examples
+EZCALCSRC= $(EXAMPLESDIR)\ezcalc
+!ifdef DEBUG
+XTRACFLAG=/Zi /Od
+LDFLAGS=/DEBUG 
+CNAME=d
+!else
+XTRACFLAG =  /O1
+LDFLAGS = 
+CNAME=
+!endif
+
+LD = LINK /nologo /NODEFAULTLIB /OPT:NOREF $(LDFLAGS)
+RC = RC
+
+INCFLAGS = /I$(SRCDIR) /I.
+
+FNPLOADLIB=libFNPload.lib
+
+!ifdef MD
+LMGRNAME=_md
+LIBSUFFIX=_md
+LMNEW_OBJ=lm_new_md.obj 
+CRT_FLAG=/MD$(CNAME)
+CRT_LIB=msvcrt$(CNAME).lib 
+LMNEW_OBJ_CLIENT=$(LMNEW_OBJ)
+CPPRT_LIB=msvcrt.lib msvcprt.lib
+!else
+LMGRNAME=
+LIBSUFFIX=
+CRT_FLAG=/MT$(CNAME)
+CPPRT_LIB=libcmt.lib libcpmt.lib
+LMNEW_OBJ=lm_new.obj
+LMNEW_OBJ_CLIENT=$(LMNEW_OBJ)
+CRT_LIB=libcmt$(CNAME).lib
+!endif
+
+SUFFIX=$(LIBSUFFIX)
+
+
+ACTIVATIONSRC= $(EXAMPLESDIR)\activation
+AAINCDIR = $(SRCDIR)\activation\include
+APREPXMLDIR = $(SRCDIR)\activation\prep_xml
+AALIBDIR = .\activation\lib
+AALIB = $(AALIBDIR)\libact$(SUFFIX).lib
+ACTSTUB = $(AALIBDIR)\libnoact$(SUFFIX).lib
+ACTLIB = $(AALIB) $(FNPLOADLIB)
+ACTINSTALLERLIB = FNP_Act_Installer.lib
+ACTINSTALLERSRC = $(EXAMPLESDIR)\anchor_service
+JAVAACCESS=tsJavaAcc.dll
+ACTIVATION_BINARIES= Activation_binaries appactutil.exe serveractutil.exe ezcalc.exe ezcalcsdt.exe ezcalcsdtplus.exe asrgen.exe installanchorservice.exe uninstallanchorservice.exe
+
+SDTINCLUDES = $(SRCDIR)\sdt
+LMGR_LIB=lmgr$(LMGRNAME).lib
+
+XTRALIB1 =  oldnames.lib kernel32.lib user32.lib netapi32.lib \
+        advapi32.lib  gdi32.lib comdlg32.lib  comctl32.lib wsock32.lib
+
+XTRALIB =  $(XTRALIB1) $(CRT_LIB)
+CPPXTRALIB = $(XTRALIB1) $(CPPRT_LIB)
+
+XTRACFLAG=$(XTRACFLAG) $(DLL_FLAG)
+
+#
+#	Use XTRAOBJS to define your object files for vendor daemon
+#	initialization routines, checkout filter, checkin callback, etc.
+#
+XTRAOBJS = 
+
+
+CFLAGS_NOOPT = -DPC /nologo /c  $(INCFLAGS) $(CRT_FLAG) $(XTRACFLAG)
+CPPFLAGS_NOOPT = /nologo /c $INCFLAGS) $(CPPRT_FLAG) $(XTRACFLAG)
+CFLAGS = $(CFLAGS_NOOPT) /DWINDOWS
+CPPCFLAGS = $(CPPFLAGS_NOOPT) /DWINDOWS
+LMNEW_CFLAGS = /nologo /c  $(INCFLAGS) $(CRT_FLAG) $(DLL_FLAG)
+
+SRCS	= $(SRCDIR)\lsvendor.c
+
+EXECS =   lmflex.exe lmcrypt.exe lmsign.lib installs.exe $(ACTIVATION_BINARIES)
+
+CLIENTLIB        = $(LMGR_LIB) libsb$(SUFFIX).lib libcrvs$(SUFFIX).lib $(ACTLIB)
+STATIC_CLIENTLIB = lmgr$(SUFFIX).lib libsb$(SUFFIX).lib libcrvs$(SUFFIX).lib 
+LIBS             = lmgras$(SUFFIX).lib lmgrs$(SUFFIX).lib $(STATIC_CLIENTLIB)
+DAEMONLIBS       = lmgras$(SUFFIX).lib lmgrs$(SUFFIX).lib lmgr$(SUFFIX).lib $(ACTLIB) libsb$(SUFFIX).lib libcrvs$(SUFFIX).lib
+EVENTLOGMESSAGEFILE = VendorLicenseServerMsgs
+EVENTLOGMESSAGEFILE2 = MvsnLicenseServerMsgs
+
+all:	$(EXECS) $(DAEMON) utils $(JAVAACCESS)
+     
+daemon:	$(DAEMON)
+
+$(DAEMON): $(XTRAOBJS) $(DAEMONLIBS) lsvendor.obj $(SRCDIR)\lsserver.h $(LMNEW_OBJ)
+           $(LD) /subsystem:console /out:$(DAEMON) lsvendor.obj $(LMNEW_OBJ) \
+           	$(XTRAOBJS) $(DAEMONLIBS) $(CRT_LIB) $(XTRALIB1)
+	   $(PREPTOOL) -v $(APREPXMLDIR)\vendor_daemon.xml
+	   
+Activation_binaries:
+	copy publisher\tsreset.exe tsreset_app.exe $(COPYARG)
+	$(PREPTOOL) -v $(APREPXMLDIR)\tsreset_app.xml
+	copy publisher\tsreset.exe tsreset_svr.exe $(COPYARG)
+	$(PREPTOOL) -v $(APREPXMLDIR)\tsreset_svr.xml
+
+lsvendor.obj: lm_new.obj
+        $(CC) $(CFLAGS) -I../h /Fo$@ lsrvend.c 
+ 
+$(LMNEW_OBJ): $(SRCDIR)\lsvendor.c $(SRCDIR)\lm_code.h 
+	lmrand1 -i $(SRCDIR)\lsvendor.c
+	$(CC) /c $(LMNEW_CFLAGS) -I../h lmcode.c
+	$(LD) /subsystem:CONSOLE lmnewgen$(SUFFIX).obj lmcode.obj $(ACTSTUB) \
+        lmgr$(SUFFIX).lib libcrvs$(SUFFIX).lib libsb$(SUFFIX).lib $(XTRALIB1) $(CRT_LIB) /out:lmnewgen.exe
+	if exist lm_new.c del lm_new.c
+	lmnewgen.exe $(VENDORNAME) -o lm_new.c
+    	$(CC) $(LMNEW_CFLAGS) /Fo$(LMNEW_OBJ) lm_new.c
+    	
+lmsign.lib: $(SRCDIR)\lmsign.c \
+		$(SRCDIR)\lmclient.h $(SRCDIR)\lm_code.h $(STATIC_CLIENTLIB) 
+	$(CC) $(CFLAGS) $(SRCDIR)\lmsign.c
+	LIB /out:lmsign.lib lmsign.obj    	
+	
+asrgen.exe: asrgen.obj lmsign.lib
+	$(LD) /out:asrgen.exe asrgen.obj lmsign.lib $(STATIC_CLIENTLIB) $(ACTSTUB) $(XTRALIB)
+
+lmcrypt.exe: $(SRCDIR)\lmcrypt.c \
+		$(SRCDIR)\lmclient.h $(SRCDIR)\lm_code.h $(STATIC_CLIENTLIB) 
+	$(CC) $(CFLAGS) $(SRCDIR)\lmcrypt.c
+	$(LD) /out:lmcrypt.exe lmcrypt.obj $(STATIC_CLIENTLIB) $(ACTSTUB) $(XTRALIB)
+
+lmflex.exe: $(SRCDIR)\lmflex.c  $(LMNEW_OBJ) \
+            $(CLIENTLIB) 
+	$(CC) $(CFLAGS) $(SRCDIR)\lmflex.c
+	$(LD) /out:lmflex.exe lmflex.obj $(LMNEW_OBJ_CLIENT) $(CLIENTLIB) $(ACTLIB) $(XTRALIB)
+	$(PREPTOOL) -v $(APREPXMLDIR)\lmflex.xml	
+	if exist lmflex.obj del lmflex.obj
+	
+ezcalcsdt.exe: $(EZCALCSRC)\ezcalcsdt.c $(LMNEW_OBJ) $(SRCDIR)\sdt\sdtdata.c $(EZCALCSRC)\sdtdefs.c
+	-del sdtdefs.obj
+	-del sdtdata.obj
+	-del ezcalcsdt.obj
+	$(CC) /DWIN32 $(CFLAGS) /I$(AAINCDIR) /I$(SDTINCLUDES) $(SRCDIR)\sdt\sdtdata.c
+	$(CC) /DWIN32 $(CFLAGS) /I$(AAINCDIR) /I$(SDTINCLUDES) $(EZCALCSRC)\sdtdefs.c
+	$(CC) $(CFLAGS) /I$(AAINCDIR) /I$(SDTINCLUDES) $(EZCALCSRC)\ezcalcsdt.c
+	$(LD) /out:ezcalcsdt.exe ezcalcsdt.obj sdtdata.obj sdtdefs.obj $(LMNEW_OBJ_CLIENT) $(CLIENTLIB) $(ACTLIB) $(ACTINSTALLERLIB) $(XTRALIB)
+	$(PREPTOOL) -v $(EZCALCSRC)\ezcalcsdt.xml
+	if exist ezcalcsdt.obj del ezcalcsdt.obj	
+	if exist sdtdata.obj del sdtdata.obj	
+
+ezcalc.exe: $(EZCALCSRC)\ezcalc.c $(LMNEW_OBJ)
+	$(CC) $(CFLAGS) /I$(AAINCDIR) $(EZCALCSRC)\ezcalc.c
+	$(LD) /out:ezcalc.exe ezcalc.obj $(LMNEW_OBJ_CLIENT) $(CLIENTLIB) $(ACTLIB) $(ACTINSTALLERLIB) $(XTRALIB)
+	$(PREPTOOL) -v $(EZCALCSRC)\ezcalc.xml
+	if exist ezcalc.obj del ezcalc.obj
+	
+ezcalcsdtplus.exe: $(EZCALCSRC)\ezcalcsdtplus.cpp $(LMNEW_OBJ) $(SRCDIR)\sdt\sdttype.cpp $(EZCALCSRC)\sdtdefs.c
+	-del sdtdefs.obj
+	-del sdttype.obj
+	-del ezcalcsdtplus.obj
+	$(CC) /DWIN32 $(CFLAGS) /Zm1000 /I$(AAINCDIR) /I$(SDTINCLUDES) $(SRCDIR)\sdt\sdttype.cpp
+	$(CC) /DWIN32 $(CFLAGS) /I$(AAINCDIR) /I$(SDTINCLUDES) $(EZCALCSRC)\sdtdefs.c
+	$(CC) $(CFLAGS) /EHsc /I$(AAINCDIR) /I$(SDTINCLUDES) $(EZCALCSRC)\ezcalcsdtplus.cpp
+	$(LD) /out:ezcalcsdtplus.exe ezcalcsdtplus.obj sdttype.obj sdtdefs.obj $(LMNEW_OBJ_CLIENT) $(CLIENTLIB) $(ACTLIB) $(ACTINSTALLERLIB) $(CPPXTRALIB)
+	$(PREPTOOL) -v $(EZCALCSRC)\ezcalcsdtplus.xml
+	if exist ezcalcsdtplus.obj del ezcalcsdtplus.obj	
+	
+appactutil.exe: $(ACTIVATIONSRC)\appActUtil.c  $(ACTLIB) $(CLIENTLIB)
+	$(CC) $(CFLAGS) /I$(AAINCDIR) $(ACTIVATIONSRC)\appActUtil.c
+	$(LD) /out:appactutil.exe appActUtil.obj $(LMNEW_OBJ_CLIENT) $(CLIENTLIB) $(ACTLIB) $(ACTINSTALLERLIB) $(XTRALIB)
+	$(PREPTOOL) -v $(ACTIVATIONSRC)\appActUtil.xml
+	if exist appActUtil.obj del appActUtil.obj
+    
+serveractutil.exe: $(ACTIVATIONSRC)\serverActUtil.c  $(ACTLIB) $(CLIENTLIB)
+	$(CC) $(CFLAGS) /I$(AAINCDIR) $(ACTIVATIONSRC)\serverActUtil.c
+	$(LD) /out:serveractutil.exe serverActUtil.obj $(LMNEW_OBJ_CLIENT) $(CLIENTLIB) $(ACTLIB) $(ACTINSTALLERLIB) $(XTRALIB)
+	$(PREPTOOL) -v $(ACTIVATIONSRC)\serverActUtil.xml	
+	if exist serverActUtil.obj del serverActUtil.obj
+    
+installanchorservice.exe:	$(ACTINSTALLERSRC)\install_service.c
+	$(CC) $(CFLAGS) $(ACTINSTALLERSRC)\install_service.c
+	$(LD) /out:installanchorservice.exe install_service.obj $(ACTINSTALLERLIB) $(XTRALIB)
+
+uninstallanchorservice.exe:	$(ACTINSTALLERSRC)\uninstall_service.c
+	$(CC) $(CFLAGS) $(ACTINSTALLERSRC)\uninstall_service.c
+	$(LD) /out:uninstallanchorservice.exe uninstall_service.obj $(ACTINSTALLERLIB) $(XTRALIB)
+    
+installs.exe: $(SRCDIR)\installs.c
+        $(CC) $(CFLAGS) $(SRCDIR)\installs.c
+        $(LD) /out:installs.exe installs.obj $(XTRALIB)
+	if exist installs.obj del installs.obj
+	
+tsJavaAcc.dll:  $(AALIBDIR)\TSJavaAccess.obj
+    	$(LD) /NODEFAULTLIB /out:tsJavaAcc.dll  /implib:"tsJavaAcc.lib" /dll \
+        $(AALIBDIR)\TSJavaAccess$(SUFFIX).obj lmgr$(SUFFIX).lib $(LIBS) \
+        $(ACTLIB) $(XTRALIB)
+    	$(PREPTOOL) -v $(APREPXMLDIR)\tsJavaAcc.xml
+
+buildmsgfile:;
+	if exist $(EVENTLOGMESSAGEFILE).dll copy $(EVENTLOGMESSAGEFILE).dll $(EVENTLOGMESSAGEFILE).dll_bak
+	mc -u -U $(SRCDIR)\$(EVENTLOGMESSAGEFILE).mc
+	$(RC) -r -fo $(EVENTLOGMESSAGEFILE).res $(EVENTLOGMESSAGEFILE).rc
+	$(LD) /dll /noentry /machine:x86 /out:$(EVENTLOGMESSAGEFILE).dll $(EVENTLOGMESSAGEFILE).res
+	if exist $(EVENTLOGMESSAGEFILE2).dll copy $(EVENTLOGMESSAGEFILE2).dll $(EVENTLOGMESSAGEFILE2).dll_bak
+	mc -u -U $(SRCDIR)\$(EVENTLOGMESSAGEFILE2).mc
+	$(RC) -r -fo $(EVENTLOGMESSAGEFILE2).res $(EVENTLOGMESSAGEFILE2).rc
+	$(LD) /dll /noentry /machine:x86 /out:$(EVENTLOGMESSAGEFILE2).dll $(EVENTLOGMESSAGEFILE2).res
+
+clean:;	
+        if exist lmnewgen.obj ren lmnewgen.obj lmnewgen.sav
+        if exist lmnewgen_md.obj ren lmnewgen_md.obj lmnewgen_md.sav
+        if exist lmnewgen_prep.obj ren lmnewgen_prep.obj lmnewgen_prep.sav
+        if exist lmnewgen_md_prep.obj ren lmnewgen_md_prep.obj lmnewgen_md_prep.sav        
+        if exist asrgen.obj copy asrgen.obj asrgen_obj.bak
+        if exist *.obj del *.obj
+        if exist lmgr11.* del lmgr11.*
+        if exist asrgen_obj.bak move asrgen_obj.bak asrgen.obj
+        if exist lmnewgen_md.sav ren lmnewgen_md.sav lmnewgen_md.obj
+        if exist lmnewgen.sav ren lmnewgen.sav lmnewgen.obj
+        if exist lmnewgen_md_prep.sav ren lmnewgen_md_prep.sav lmnewgen_md_prep.obj
+	if exist lmnewgen_prep.sav ren lmnewgen_prep.sav lmnewgen_prep.obj
+	if exist lmnewgen.exe del lmnewgen.exe 
+        if exist lmcrypt.exe del lmcrypt.exe 
+        if exist lmsign.* del lmsign.*
+        if exist $(DAEMON) del $(DAEMON)
+        if exist $(VENDORNAME)*.dll del $(VENDORNAME)*.dll
+        if exist lmcode.c del lmcode.c 
+        if exist lmcode.obj del lmcode.obj 
+        if exist lm_new.c del lm_new*.c 
+        if exist lm_new.obj del lm_new*.obj 
+        if exist lsrvend.c del lsrvend.c 
+        if exist lmflex.exe del lmflex.exe
+        if exist lmflex*.dll del lmflex*.dll
+        if exist Config.xml del Config.xml
+        if exist ezcalc.exe del ezcalc.exe
+        if exist ezcalc*.dll del ezcalc*.dll
+        if exist ezcalcsdt.exe del ezcalcsdt.exe
+        if exist ezcalcsdt*.dll del ezcalcsdt*.dll
+        if exist ezcalcsdtplus.exe del ezcalcsdtplus.exe
+        if exist ezcalcsdtplus*.dll del ezcalcsdtplus*.dll
+        if exist appactutil.exe del appactutil.exe
+        if exist appactutil*.dll del appactutil*.dll
+        if exist serveractutil.exe del serveractutil.exe
+        if exist serveractutil*.dll del serveractutil*.dll
+        if exist installanchorservice.exe del installanchorservice.exe
+        if exist uninstallanchorservice.exe del uninstallanchorservice.exe
+	if exist *.ilk del *.ilk
+	if exist vc60.pdb rename vc60.pdb vc60.sav
+	if exist *.p* del *.p*
+	if exist vc60.sav rename vc60.sav vc60.pdb
+	if exist $(VENDORNAME)$(LMGRNAME).lib del $(VENDORNAME)$(LMGRNAME).lib
+	if exist $(VENDORNAME).dll del $(VENDORNAME).dll
+	if exist $(VENDORNAME).exp del $(VENDORNAME).exp
+	if exist *.bin del *.bin
+	if exist $(EVENTLOGMESSAGEFILE).h del $(EVENTLOGMESSAGEFILE).h
+	if exist $(EVENTLOGMESSAGEFILE).res del $(EVENTLOGMESSAGEFILE).res
+	if exist $(EVENTLOGMESSAGEFILE).rc del $(EVENTLOGMESSAGEFILE).rc
+	if exist $(EVENTLOGMESSAGEFILE2).h del $(EVENTLOGMESSAGEFILE2).h
+	if exist $(EVENTLOGMESSAGEFILE2).res del $(EVENTLOGMESSAGEFILE2).res
+	if exist $(EVENTLOGMESSAGEFILE2).rc del $(EVENTLOGMESSAGEFILE2).rc
+    if exist tsJavaAcc*.*  del tsJavaAcc*.*
+
+veryclean: clean
+	if exist lmhostid.exe del lmhostid.exe
+	if exist lmver.exe del lmver.exe
+	if exist lmcksum.exe del lmcksum.exe
+	if exist lmdown.exe del lmdown.exe
+	if exist lmremove.exe del lmremove.exe
+	if exist lmreread.exe del lmreread.exe
+	if exist lmswitchr.exe del lmswitchr.exe
+	if exist lmstat.exe del lmstat.exe
+	if exist lmborrow.exe del lmborrow.exe
+	if exist lmdiag.exe del lmdiag.exe
+	if exist lminstall.exe del lminstall.exe
+
+kitclean:
+	if exist lmcode.c del lmcode.c
+	if exist lmcode.obj del lmcode.obj
+	if exist lmcrypt.obj del lmcrypt.obj
+	if exist lm_new.c del lm_new.c
+	if exist lm_new.obj del lm_new.obj
+	if exist lmnewgen.exe del lmnewgen.exe
+	if exist lsvendor.obj del lsvendor.obj
+	if exist lmhostid.exe del lmhostid.exe
+	if exist lmver.exe del lmver.exe
+	if exist lmcksum.exe del lmcksum.exe
+	if exist lmdown.exe del lmdown.exe
+	if exist lmhostid.exe del lmhostid.exe
+	if exist lminstall.exe del lminstall.exe
+	if exist lmremove.exe del lmremove.exe
+	if exist lmreread.exe del lmreread.exe
+	if exist  lmswitchr.exe del  lmswitchr.exe
+	if exist lmstat.exe del lmstat.exe
+	if exist lmdiag.exe del lmdiag.exe
+	if exist lmver.exe  del lmver.exe 
+	if exist lmflex.exe  del lmflex.exe
+	if exist lmsign.* del lmsign.*
+	if exist *.bin del *.bin
+	if exist $(EVENTLOGMESSAGEFILE).h del $(EVENTLOGMESSAGEFILE).h
+	if exist $(EVENTLOGMESSAGEFILE).res del $(EVENTLOGMESSAGEFILE).res
+	if exist $(EVENTLOGMESSAGEFILE).rc del $(EVENTLOGMESSAGEFILE).rc
+	if exist $(EVENTLOGMESSAGEFILE2).h del $(EVENTLOGMESSAGEFILE2).h
+	if exist $(EVENTLOGMESSAGEFILE2).res del $(EVENTLOGMESSAGEFILE2).res
+	if exist $(EVENTLOGMESSAGEFILE2).rc del $(EVENTLOGMESSAGEFILE2).rc
+
+
+lmcrypt.obj:	$(SRCDIR)\lmcrypt.c $(SRCDIR)\lm_code.h $(SRCDIR)\lmclient.h
+	$(CC) $(CFLAGS) $(SRCDIR)\lmcrypt.c
+	if exist lmcrypt.exe del lmcrypt.exe
+
+utils:	lmhostid.exe lmver.exe lmdown.exe lmremove.exe lmreread.exe lmswitchr.exe lmstat.exe lmdiag.exe lminstall.exe lmborrow.exe lmpath.exe
+
+lmhostid.exe:   lmutil.exe
+    copy lmutil.exe lmhostid.exe
+
+lmver.exe:   lmutil.exe
+    copy lmutil.exe lmver.exe
+
+lmdown.exe:   lmutil.exe
+    copy lmutil.exe lmdown.exe
+
+lmremove.exe:   lmutil.exe
+    copy lmutil.exe lmremove.exe
+
+lmswitchr.exe:   lmutil.exe
+    copy lmutil.exe lmswitchr.exe
+
+lmreread.exe:   lmutil.exe
+    copy lmutil.exe lmreread.exe
+
+lmstat.exe:   lmutil.exe
+    copy lmutil.exe lmstat.exe
+
+lmborrow.exe:   lmutil.exe
+    copy lmutil.exe lmborrow.exe
+
+lmpath.exe:   lmutil.exe
+    copy lmutil.exe lmpath.exe
+
+lmdiag.exe:   lmutil.exe
+    copy lmutil.exe lmdiag.exe
+
+lminstall.exe:   lmutil.exe
+    copy lmutil.exe lminstall.exe
+
+        copy lmutil.exe lmhostid.exe
+        copy lmutil.exe lmver.exe
+        copy lmutil.exe lmdown.exe
+        copy lmutil.exe lmremove.exe
+        copy lmutil.exe lmreread.exe
+        copy lmutil.exe lmswitchr.exe
+        copy lmutil.exe lmstat.exe
+        copy lmutil.exe lmborrow.exe
+        copy lmutil.exe lmdiag.exe
+        copy lmutil.exe lminstall.exe
+    	copy lmutil.exe lmpath.exe
+
+

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Request xmlns="http://www.macrovision.com/fnp/2004/11/activation">
+<RequestHeader>
+<VersionNumber>1</VersionNumber>
+<RequestType>REPAIR</RequestType>
+</RequestHeader>
+<RequestData>
+<PublisherId>256</PublisherId>
+<OriginData>
+<ClientVersion>11.02.008</ClientVersion>
+<ConfigData>
+<IsServer>0</IsServer>
+<TrustedHostInformation>
+<TrustedId>1</TrustedId>
+<Revision>NumberOne</Revision>
+<RevisionType>SRV</RevisionType>
+<MachineIdentifier>750A0AA103A465C2AD02AA62813B83D562342564</MachineIdentifier>
+<Status>OK</Status>
+</TrustedHostInformation>
+</ConfigData>
+<SequenceNumber>6</SequenceNumber>
+</OriginData>
+<EnterpriseData>
+<username>BOB</username>
+<hostname>CHAOS</hostname>
+</EnterpriseData>
+<RepairData>
+<TSSN>68CEBDFC67467B9A5506B8604A099537DA4DF4B85273EC7E5EE0D2D9B5CB2733</TSSN>
+<BreakInfo>
+<Anchoring>
+<Break>
+<Type>Registry</Type>
+<Reason>ItemHasChanged</Reason>
+</Break>
+<Break>
+<Type>TrackZero</Type>
+<Reason>ItemHasChanged</Reason>
+</Break>
+</Anchoring>
+</BreakInfo>
+<RepairItem>
+<FulfillmentRecordUniqueId>1.190191.0.1</FulfillmentRecordUniqueId>
+<FulfillmentRecord>
+<FulfillmentRecordHeader>
+<VersionNumber>1</VersionNumber>
+</FulfillmentRecordHeader>
+<FulfillmentRecordData>
+<FulfillmentId>ID1</FulfillmentId>
+<FulfillmentDictionary>
+<Entries>
+<Entry>
+<Key>fulfillmentType</Key>
+<Value>6</Value>
+</Entry>
+<Entry>
+<Key>expiry</Key>
+<Value>31-dec-2006</Value>
+</Entry>
+<Entry>
+<Key>serverHostID</Key>
+<Value>FLEXID=6-a6300155</Value>
+</Entry>
+<Entry>
+<Key>servOrLocal</Key>
+<Value>2</Value>
+</Entry>
+<Entry>
+<Key>ProductId</Key>
+<Value>EZCALC-C</Value>
+</Entry>
+<Entry>
+<Key>EntitlementId</Key>
+<Value>ENTL-EZCALC-C1</Value>
+</Entry>
+<Entry>
+<Key>availAct</Key>
+<Value>1</Value>
+</Entry>
+<Entry>
+<Key>features</Key>
+<Value>INCREMENT ADD demo 1.0 31-dec-2006 1 SIGN="007D 989D 3BD9 69EC 4FA0 \
+13D8 DBBA 9700 5192 5C56 D5EB 272B 78C8 5AD7 F607"
+INCREMENT SUBTRACT demo 1.0 31-dec-2006 1 SIGN="00C7 E32E B428 5506 \
+069F F202 9C4E 5700 0289 A79E 8748 55F9 D9C7 A4E5 AF13"
+INCREMENT MULTIPLY demo 1.0 31-dec-2006 1 SIGN="004A 580A AF4E 1FED \
+ED91 F688 C6B6 4300 C6F6 B602 4B5E 3A39 5BAA 73ED 9610"
+INCREMENT DIVIDE demo 1.0 31-dec-2006 1 SIGN="00E8 4AFE C8CC 9A08 \
+7236 1292 F62F 6E00 185A D085 C4E8 B68D 77F4 55A5 3473"
+INCREMENT AVG demo 1.0 31-dec-2006 1 SIGN="0074 C55E 0F86 741D 7190 \
+1BA8 EC1A 1D00 5B32 A9AE AEFA F005 A02B 7869 3F33"
+INCREMENT POWER demo 1.0 31-dec-2006 1 SIGN="008A CB32 0F82 4B74 7C71 \
+C762 8FF1 B300 D9BD AE0E F9C0 4D2F 67B8 554B 76E8"
+</Value>
+</Entry>
+</Entries>
+</FulfillmentDictionary>
+</FulfillmentRecordData>
+</FulfillmentRecord>
+<OriginalMachineIdentifier>E0CB25FC820217FF9BF7F447847C2CAA87479888</OriginalMachineIdentifier>
+<TrustFlags>
+<Anchoring>0</Anchoring>
+<Binding>1</Binding>
+<Time>1</Time>
+</TrustFlags>
+</RepairItem>
+</RepairData>
+</RequestData>
+<Hash>EA77D5CA918BEBAA5D62C1CFD1B091E5F0B2EC61</Hash>
+<HashVersion>1</HashVersion>
+</Request>

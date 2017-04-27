@@ -1,0 +1,23 @@
+The files below, located in the machind directory, 
+provide FLEXenabled application examples:
+   
+       
+
+       GUI-based    - lmwin.c (Windows only, WIN32 application)
+                      To build, from the platform directory,
+                      type:
+                          nmake lmwin.exe   
+ 
+
+       FLEXible API - lmflex.c
+                      To build, from the platform directory,
+                      type:
+                          make lmflex (UNIX)
+                          nmake lmflex.exe (Windows)
+
+
+Additional examples showcasing other FLEXlm features
+are provided in the examples directory:
+
+          <install_dir>/flexlm/<version>/examples (UNIX)
+          C:/Program Files/flexlm/<version>/examples (Windows)

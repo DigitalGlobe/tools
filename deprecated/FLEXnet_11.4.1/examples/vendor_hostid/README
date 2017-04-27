@@ -1,0 +1,3 @@
+The file, vendor_hostid.c, is an example implementation of a vendor defined 
+hostid.  For further details, refer to the FLEXnet Licensing Programming and
+Reference Guide. 

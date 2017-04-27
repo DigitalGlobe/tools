@@ -1,0 +1,60 @@
+		FLEXnet Licensing Examples			
+
+This directory contains several sub-directories with example 
+license files and code.  
+
+ 
+    advanced      - Advanced examples, including:
+                    exinstal.c  -- example license installer 
+                                   program
+                    get_dir.c   -- gets directory in $PATH 
+                                   command is in; useful for default 
+                                   license file location
+                    licstring.c -- sample licensed application that
+                                   incorporates a "license in a buffer"
+                    ls_co_ex.c  -- vendor-daemon checkout
+
+    c#            - C sharp example interfacing to FLEXnet Licensing.
+ 
+    child         - Child process which checks out a license and 
+                    communicates status with parent.  Optional 
+                    encryption of traffic with parent.  A possible 
+                    solution for Unix programs that cannot use SIGALRM, 
+                    but need regular heartbeats.
+    composite     - Composite Hostid source examples.
+
+    licenses      - Example licenses, useful for lmcrypt
+    trivial       - Example FLEXenabled application using the Trivial API
+    simple        - Example FLEXenabled application using the Simple API
+
+    vb            - FLEXnet Licensing client API implemented as wrapper 
+                    functions
+                    for use by Visual Basic licenses applications.
+                    Examples are  provided for VB v3.0, v4.0, v6.0, and
+                    vb.NET.
+
+    vendor_hostid - Example of vendor-defined hostid code.
+
+    vendor_info   - Example of accessing vendor specific information
+                    via the lc_get_attr(job, LM_A_VD_FEATINFO...)
+                    FLEXible API function.
+        
+These examples are intended to provide instruction in the 
+use of various FLEXnet Licensing features. They are unsupported and
+may not exist in future FLEXnet Licensing toolkits.
+While we have made every effort to insure that these examples are 
+correct, they are not intended to be release-quality debugged 
+products. 
+
+For developers new to FLEXnet Licensing, please read:
+	-Getting Started with the FLEXnet Licensing Toolkit, Chapters 1 and 2  
+	-Programming and Reference Guide, Chapters 1-5
+
+
+In addition to the files in this directory,
+FLEXenabled application examples are provided in the machind
+directory of the Licensing toolkit:
+
+
+     <install_dir>/flexlm/<version>/machind (UNIX)
+     C:/Program Files/flexlm/<version>/machind (Windows)

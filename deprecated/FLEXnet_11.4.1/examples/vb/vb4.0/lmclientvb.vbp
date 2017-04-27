@@ -1,0 +1,15 @@
+Form=LMCLIENT.FRM
+Module=LM_CLIEN; lmclient.bas
+ProjWinSize=73,399,251,121
+ProjWinShow=0
+IconForm="Form1"
+Name="Project1"
+HelpContextID="0"
+StartMode=0
+VersionCompatible32="0"
+MajorVer=1
+MinorVer=0
+RevisionVer=0
+AutoIncrementVer=0
+ServerSupportFiles=0
+VersionCompanyName="Macrovision Corporation"

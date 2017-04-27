@@ -1,0 +1,74 @@
+# properties for customization
+# number of retries, and wait time before a retry, when TCP connection breaks.
+maxRetries=3
+retryWaitSeconds=1
+debugFlag=1
+
+
+#==================================================================
+# Error Messages. FlexlmException needs resources in this format.
+# errcode=error message
+0=No Error
+1=Soap Client Fault
+2=Soap Server Fault
+3=Soap Tag Mismatch
+4=Soap Type Mismatch
+5=Soap Syntax Error
+6=Soap No Tag
+7=Soap IOB
+8=Soap Must Understand
+9=Soap Namespace
+10=Soap Object Mismatch
+11=Soap Fatal Error
+12=Soap Fault
+13=Soap No Method
+14=Soap Get Method
+15=Soap End Of Message
+16=Soap Null
+17=Soap Multiple IDs
+18=Soap Missing ID
+19=Soap HREF
+20=Soap TCP Error
+21=Soap HTTP Error
+22=Soap SSL Error
+23=Soap ZLIB Error
+24=Soap DIME Error
+25=Soap EOD
+26=Soap Version Mismatch
+27=Soap DIME Mismatch
+28=Soap Plugin Error
+29=Soap Data Encoding Unknown
+
+32=Missing Parameter
+33=Invalid Parameter
+34=Insufficient Entitlement
+35=VCG Error
+
+40=Unexpected Error
+41=Memory Allocation Error
+42=Invalid Host Id
+43=Invalid Item Id
+44=Invalid custom attribute
+45=Not enough entitlement to fulfill the request
+46=Missing input quantity
+47=Missing input duration
+48=date_based_version from contract has expired (obsolete)
+49=date_based_version required but not found in order item
+50=Database transaction failed after max retries
+
+#==================================================================
+# map error names to error codes.
+# These error names are returned by the Fulfill service.
+# errName=errCode
+UnexpectedError.errcode=40
+InvalidHostId.errcode=42
+InvalidItemID.errcode=43
+InvalidAttribute.errcode=44
+AmountExceedsAvailable.errcode=45
+Missing.input_qty.errcode=46
+Missing.input_duration.errcode=47
+ExpiredMaintDBV.errcode=48
+NoDBVfound.errcode=49
+MaxRetryFailed.errcode=50
+
+

@@ -1,0 +1,37 @@
+REGEDIT4
+;/****************************************************************************
+;	Copyright (c) 2003-2007 Macrovision Europe Ltd. and/or Macrovision Corporation. All Rights Reserved.	
+;	This software has been provided pursuant to a License Agreement	
+;	containing restrictions on its use.  This software contains
+;	valuable trade secrets and proprietary information of
+;	Macrovision Corporation and is protected by law.
+;	It may 	not be copied or distributed in any form or medium, disclosed
+;	to third parties, reverse engineered or used in any manner not
+;	provided for in said License Agreement except with the prior
+;	written authorization from Macrovision Corporation.
+;*****************************************************************************/
+;/*	$Id: eventlogadd.reg,v 1.2 2003/06/06 19:32:50 jwong Exp $	     */
+;/****************************************************************************/
+;
+; LMGRD_EventLoggingMode possible settings: "ENABLE" or "DISABLE"
+; <vendorname>_EventLoggingMode possible settings: "ENABLE" or "DISABLE"
+;
+; <vendorname> == your vendordaemon name
+;
+; <path> == fully qualified path. (i.e., C:\\Program Files\\FLEXlm\\v9.2\\i86_n3)
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Macrovision Corporation\FLEXlm License Manager]
+"LMGRD_EventLoggingMode"="DISABLE"
+"<vendorname>_EventLoggingMode"="DISABLE"
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Eventlog\Application\lmgrd_LicenseServer]
+"CategoryCount"=dword:00000019
+"TypesSupported"=dword:00000007
+"EventMessageFile"="<path>\\MvsnLicenseServerMsgs.dll"
+"CategoryMessageFile"="<path>\\MvsnLicenseServerMsgs.dll"
+
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Eventlog\Application\<vendorname>_LicenseServer]
+"CategoryCount"=dword:00000013
+"TypesSupported"=dword:00000007
+"EventMessageFile"="<path>\\VendorLicenseServerMsgs.dll"
+"CategoryMessageFile"="<path>\\VendorLicenseServerMsgs.dll"

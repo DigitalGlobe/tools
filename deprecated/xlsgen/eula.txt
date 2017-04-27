@@ -1,0 +1,71 @@
+NOTICE TO USER: THIS IS A CONTRACT. BY INSTALLING, DOWNLOADING OR USING
+THIS SOFTWARE, YOU ACCEPT THE TERMS AND CONDITIONS OF THIS LICENSE 
+AGREEMENT. 
+
+
+1. Intellectual Property Rights: This software program (the "Software") 
+is copyrighted and is proprietary product of ARsT design. This 
+executable program and help file constitute as a whole a program 
+developed by ARsT design. Trademarks shall be used in accordance with 
+accepted trademark practice, including identification of trademark 
+owner's name. Trademarks can only be used to identify printed output 
+produced by the Software. Such use of any trademark does not give you 
+any rights of ownership in that trademark. Except as stated above, this 
+Agreement does not grant you any intellectual property rights in the Software. 
+
+
+
+
+2. Use of the Software: You May: (1) use the Software on any single 
+computer, provided that the Software is in use on only one computer at 
+a time. The software is " in use" on a computer when it is loaded into 
+the temporary memory (i.e. RAM) or installed into the permanent memory 
+(i.e. hard disk) of that computer. You May Not: (1) use, or have used, 
+the Software in any form of pornography, or in any matter which is in any 
+way defamatory of any person or business entity in any such image, or which 
+implies any form of endorsement by the Software, its suppliers, its licensors, 
+or any individual or entity depicted in the Software. (2) reverse engineer, 
+decompile or disassemble or otherwise attempt to discover the source code 
+of the Software. (3) modify, adapt, translate, rent, lease, loan or create 
+derivative works from the Software.
+
+
+
+
+3. The deployment license is the same than the developer license defined in 2.
+with the exception that the Software can be installed on an arbitrary
+amount of computers and physical sites, provided that Software is part of
+a product that has a primary feature other than generating Excel files. 
+The redistribuable component cannot be used to create or sell a competing 
+product.
+
+
+
+
+4. Term: This License shall continue for as long as you use the 
+Software, except that it will terminate if you fail to comply with any 
+term or condition of this Agreement. Upon such termination, or in order 
+for you to terminate the Agreement, you agree to destroy the original 
+and any copies of the Software. 
+
+
+
+
+5. Limited Warranty: ARST DESIGN AND ITS SUPPLIERS DO NOT AND CANNOT 
+WARRANT THE PERFORMANCE OR RESULTS YOU MAY OBTAIN BY USING THE SOFTWARE 
+OR THE ACCOMPANYING ITEMS. THE FOREGOING STATES THE SOLE AND EXCLUSIVE 
+REMEDIES FOR ARST DESIGN'S OR ITS SUPPLIERS' BREACH OF WARRANTY. EXCEPT 
+FOR THE EXPRESSED WARRANTY SET FORTH ABOVE, ARST DESIGN GRANTS NO OTHER 
+WARRANTIES, EXPRESS OR IMPLIED, AS TO NONINFRINGEMENT OF THIRD PARTY 
+RIGHTS, MERCHANTABILITY, OR FITNESS FOR ANY PARTICULAR PURPOSE. NO ORAL 
+OR WRITTEN INFORMATION OR ADVICE GIVEN BY ARST DESIGN, ITS RESELLERS, 
+AGENTS, OR EMPLOYEES SHALL CREATE A WARRANTY. 
+
+
+
+
+6. Limitation of Liability: IN NO EVENT WILL ARSTDESIGN BE LIABLE FOR 
+ANY DAMAGES, INCLUDING ANY LOSS OF PROFITS, OR OTHER INCIDENTAL OR 
+CONSEQUENTIAL DAMAGES, ARISING OUT OF YOUR USE OR INABILITY TO USE THE 
+SOFTWARE OR WRITTEN MATERIAL, EVEN IF ARSTDESIGN HAS BEEN ADVISED OF 
+THE POSSIBILITY OF SUCH DAMAGES. 

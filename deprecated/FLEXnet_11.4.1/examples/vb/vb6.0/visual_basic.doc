@@ -1,0 +1,162 @@
+{\rtf1\ansi\ansicpg1252\uc1\deff36\stshfdbch0\stshfloch0\stshfhich0\stshfbi0\deflang1033\deflangfe1033{\fonttbl{\f0\froman\fcharset0\fprq2{\*\panose 02020603050405020304}Times New Roman;}
+{\f36\fswiss\fcharset0\fprq0{\*\panose 00000000000000000000}MS Sans Serif;}{\f187\froman\fcharset238\fprq2 Times New Roman CE;}{\f188\froman\fcharset204\fprq2 Times New Roman Cyr;}{\f190\froman\fcharset161\fprq2 Times New Roman Greek;}
+{\f191\froman\fcharset162\fprq2 Times New Roman Tur;}{\f192\froman\fcharset177\fprq2 Times New Roman (Hebrew);}{\f193\froman\fcharset178\fprq2 Times New Roman (Arabic);}{\f194\froman\fcharset186\fprq2 Times New Roman Baltic;}
+{\f195\froman\fcharset163\fprq2 Times New Roman (Vietnamese);}}{\colortbl;\red0\green0\blue0;\red0\green0\blue255;\red0\green255\blue255;\red0\green255\blue0;\red255\green0\blue255;\red255\green0\blue0;\red255\green255\blue0;\red255\green255\blue255;
+\red0\green0\blue128;\red0\green128\blue128;\red0\green128\blue0;\red128\green0\blue128;\red128\green0\blue0;\red128\green128\blue0;\red128\green128\blue128;\red192\green192\blue192;}{\stylesheet{\ql \li0\ri0\widctlpar\faauto\adjustright\rin0\lin0\itap0 
+\f36\fs20\lang1033\langfe1033\cgrid\langnp1033\langfenp1033 \snext0 Normal;}{\*\cs10 \additive \ssemihidden Default Paragraph Font;}{\*
+\ts11\tsrowd\trftsWidthB3\trpaddl108\trpaddr108\trpaddfl3\trpaddft3\trpaddfb3\trpaddfr3\trcbpat1\trcfpat1\tscellwidthfts0\tsvertalt\tsbrdrt\tsbrdrl\tsbrdrb\tsbrdrr\tsbrdrdgl\tsbrdrdgr\tsbrdrh\tsbrdrv 
+\ql \li0\ri0\widctlpar\aspalpha\aspnum\faauto\adjustright\rin0\lin0\itap0 \fs20\lang1024\langfe1024\cgrid\langnp1024\langfenp1024 \snext11 \ssemihidden Normal Table;}}{\*\latentstyles\lsdstimax156\lsdlockeddef0}{\*\rsidtbl \rsid8208310\rsid8748626}
+{\*\generator Microsoft Word 11.0.5604;}{\info{\author Nobody}{\operator User}{\creatim\yr2000\mo12\dy18\hr8\min3}{\revtim\yr2004\mo5\dy24\hr14\min34}{\version5}{\edmins17}{\nofpages3}{\nofwords1202}{\nofchars6854}{\*\company GLOBEtrotter Software, Inc.}
+{\nofcharsws8040}{\vern24689}}\widowctrl\ftnbj\aendnotes\hyphhotz0\noxlattoyen\expshrtn\noultrlspc\dntblnsbdb\nospaceforul\lytprtmet\hyphcaps0\horzdoc\dghspace120\dgvspace120\dghorigin1701\dgvorigin1984\dghshow0\dgvshow3
+\jcompress\viewkind1\viewscale100\pgbrdrhead\pgbrdrfoot\nolnhtadjtbl\rsidroot8748626 \fet0\sectd \linex0\endnhere\sectdefaultcl\sftnbj {\*\pnseclvl1\pnucrm\pnstart1\pnindent720\pnhang {\pntxta .}}{\*\pnseclvl2\pnucltr\pnstart1\pnindent720\pnhang 
+{\pntxta .}}{\*\pnseclvl3\pndec\pnstart1\pnindent720\pnhang {\pntxta .}}{\*\pnseclvl4\pnlcltr\pnstart1\pnindent720\pnhang {\pntxta )}}{\*\pnseclvl5\pndec\pnstart1\pnindent720\pnhang {\pntxtb (}{\pntxta )}}{\*\pnseclvl6\pnlcltr\pnstart1\pnindent720\pnhang 
+{\pntxtb (}{\pntxta )}}{\*\pnseclvl7\pnlcrm\pnstart1\pnindent720\pnhang {\pntxtb (}{\pntxta )}}{\*\pnseclvl8\pnlcltr\pnstart1\pnindent720\pnhang {\pntxtb (}{\pntxta )}}{\*\pnseclvl9\pnlcrm\pnstart1\pnindent720\pnhang {\pntxtb (}{\pntxta )}}\pard\plain 
+\ql \li0\ri0\widctlpar\faauto\adjustright\rin0\lin0\itap0 \f36\fs20\lang1033\langfe1033\cgrid\langnp1033\langfenp1033 {\b\f0\fs32\insrsid8748626 FLEXlm for VisualBasic}{\f0\insrsid8748626 
+\par 
+\par 
+\par FLEXnet Licensing is simple to use for Visual Basic.  Because of differences between Basic and C, a few minor changes have  been made in the API, but otherwise it follows the Simple API of FLEXlm.
+\par 
+\par The functions available from Visual Basic are:
+\par }{\b\f0\insrsid8748626 LP_SETUP
+\par LP_CHECKOUT
+\par LP_CHECKIN
+\par LP_HEARTBEAT
+\par LP_ERRSTRING
+\par LC_CRYPTSTR
+\par LC_HOSTID
+\par }{\f0\insrsid8748626 
+\par These functions are included in the }{\i\f0\insrsid8748626 LMCLIENT.BAS}{\f0\insrsid8748626  file which needs to be included in your Visual Basic project.  Here are detailed descriptions of each function:
+\par 
+\par 
+\par 
+\par }{\b\f0\insrsid8748626 LP_SETUP(Name As String, Vendor_Key1 as Long, Vendor_Key2 As Long, Vendor_Key3 as Long, Vendor_Key4 as Long, XorValue1 As Long, XorValue2 As Long) As Integer
+\par }{\f0\insrsid8748626 
+\par }{\f0\insrsid8748626 This function}{\f0\insrsid8748626  takes as parameters your Vendor Keys 1-4 and the XOR'd}{\f0\insrsid8748626  value of Vendor_key5 and your encryption s}{\f0\insrsid8748626 
+eeds. This routine only needs to be called once during your programs operation.  It must be called before calling any other FLEXnet Licensing client function.  It returns 0 if not error, or 1 if an error }{\f0\insrsid8748626 occurred}{\f0\insrsid8748626 
+ by not}{\f0\insrsid8748626  }{\f0\insrsid8748626 specifying the proper arguments.
+\par 
+\par When you receive the FLEXnet Licensing toolkit, you will be sent an email such as this:
+\par 
+\par FLEXnet Licensing }{\f0\insrsid8748626 v10.x}{\f0\insrsid8748626  vendor keys for "Typical Sample Company " (daemon name: "Typsample")
+\par 
+\par \tab Your FLEXnet Licensing vendor key #1 is "0xe33c8917"
+\par \tab Your FLEXnet Licensing vendor key #2 is "0x42bc26e4"
+\par \tab Your FLEXnet Licensing vendor key #3 is "0x9a5a456f"
+\par \tab Your FLEXnet Licensing vendor key #4 is "0xd6993e1d"
+\par \tab Your FLEXnet Licensing vendor key #5 is "0xbf8e6775"
+\par 
+\par     These keys enable the following platforms:
+\par 
+\par \tab alpha_osf hp700 rs6000 sgi64 sun windows winnt_intel
+\par 
+\par The values that you pass into LP_SETUP are obtained from this E-mail.  Note that the numbers are }{\f0\insrsid8748626 precede}{\f0\insrsid8748626 
+\par by a 0x . This represents a }{\f0\insrsid8748626 hexadecimal}{\f0\insrsid8748626  number. In Visual Basic this is represented by }{\f0\insrsid8748626 preceding}{\f0\insrsid8748626  the number with a 'H'.
+\par 
+\par }{\b\f0\insrsid8748626 IMPORTANT NOTE ABOUT ENCRYPTION_SEEDS:}{\f0\insrsid8748626 
+\par 
+\par The ENCRYPTION_SEED1 and ENCRYPTION_SEED2 are numbers }{\f0\insrsid8748626 that}{\f0\insrsid8748626  are key to FLEXnet Licensing security.  By default, they are
+\par \tab 
+\par ENCRYPTION_SEED1 =  }{\f0\insrsid8748626 0x}{\f0\insrsid8748626 87654321
+\par ENCRYPTION_SEED2  = }{\f0\insrsid8748626 0x}{\f0\insrsid8748626 12345678
+\par \tab 
+\par Each vendor must ensure that these with numbers are replaced with numbers which are unique to your company and are kept secret.  Only someone with access t
+o these numbers can generate license files that will work with your application.  MAKE SURE the numbers are not left to the defaults.
+\par 
+\par You should define as a Const the result of the XOR of Vendor_Key5 and your Encryption Seeds.  This is to prevent the appearance of these numbers in your source, to minimize the compromising of your encryption seeds.
+\par 
+\par Example:
+\par CONST XorValue1 As Long  = H87654321 Xor H45f9aeB0
+\par CONST XorValue2 As Long  = H12345678 Xor H45f9aeB0
+\par where H87654321 H12345678 are an example of  Encryption Seeds, and H45f9aeb0 is an example of Vendor_Key5
+\par 
+\par All parameters except for Name are Long integers.  Name is a string.
+\par 
+\par 
+\par }{\b\f0\insrsid8748626 LP_CHECKOUT(policy As Integer, feature As String, version As String, nlic As Integer, license_path As String, lp_handle As Long) as Integer
+\par }{\f0\insrsid8748626 This function is just like the }{\b\f0\insrsid8748626\charrsid8748626 lp_checkout}{\f0\insrsid8748626  call as detailed in the }{\i\f0\insrsid8748626\charrsid8748626 FLEXnet Licensing Programming and Reference Guide}{
+\f0\insrsid8748626 .  The major difference in this call compared to the 'C' call is that the LPCODE structure is not passed.  This}{\f0\insrsid8748626  }{\f0\insrsid8748626 
+is generated by the LP_SETUP call.  All of the other parameters are the same as the 'C' call except for lp_handle, which is a Basic variable defined as a Long.
+\par 
+\par We have defined the following constants that can be OR'd together for the }{\b\f0\insrsid8748626 policy}{\f0\insrsid8748626  variable.
+\par The policies are:
+\par LM_RESTRICTIVE
+\par LM_QUEUE
+\par LM_FAILSAFE
+\par LM_LENIENT
+\par The modifiers are:
+\par LM_MANUAL_HEARTBEAT
+\par LM_RETRY_RESTRICTIVE
+\par 
+\par The }{\b\f0\insrsid8748626 policy}{\f0\insrsid8748626  is determined by choosing one of the policies and adding any of the modifiers to it.  See the }{\i\f0\insrsid8748626\charrsid8748626 FLEXnet Licensing Programming and Reference Guide}{
+\f0\insrsid8748626  for more information.
+\par }\pard \ql \li0\ri0\widctlpar\tx2835\faauto\adjustright\rin0\lin0\itap0\pararsid8748626 {\f0\insrsid8748626 \tab }{\f0\insrsid8748626 
+\par }\pard \ql \li0\ri0\widctlpar\faauto\adjustright\rin0\lin0\itap0 {\f0\insrsid8748626 The return value of this function is 0 if successful, or the FLEXnet Licensing error number if not.
+\par 
+\par }{\b\f0\insrsid8748626 LP_CHECKIN(lp_handle As Long) As Integer}{\b\f0\insrsid8748626\charrsid8748626 
+\par }{\f0\insrsid8748626 Checks in feature that was checked out.  }{\b\f0\insrsid8748626 lp_handle }{\f0\insrsid8748626 needs to be the same value that was returned from LP_CHECKOUT.  See the }{\i\f0\insrsid8748626\charrsid8748626 
+FLEXnet Licensing Programming and Reference Guide}{\f0\insrsid8748626  for more information.
+\par }\pard \qc \li0\ri0\widctlpar\faauto\adjustright\rin0\lin0\itap0\pararsid8748626 {\f0\insrsid8748626 
+\par }\pard \ql \li0\ri0\widctlpar\faauto\adjustright\rin0\lin0\itap0 {\f0\insrsid8748626  
+\par }{\b\f0\insrsid8748626 LP_HEARTBEAT(lp_handle As Long, num_reconnects As Long, num_minutes As Long) as Integer}{\b\f0\insrsid8748626\charrsid8748626 
+\par }{\f0\insrsid8748626 Allows checking of HOSTID, or to check if the server is still connected.   See the }{\i\f0\insrsid8748626\charrsid8748626 FLEXnet Licensing Programming and Reference Guide}{\f0\insrsid8748626  for more information.
+\par }{\b\f0\insrsid8748626 
+\par LP_ERRSTRING (lp_handle As Long, errors As String, errors_length as Integer) As Integer
+\par }{\f0\insrsid8748626 This function returns the text of the current error in errors.
+\par 
+\par }{\b\f0\insrsid8748626 errors}{\f0\insrsid8748626  should be filled with spaces before calling this function.  You can then use the RTRIM$ function to remove trailing blanks.  
+\par 
+\par }{\b\f0\insrsid8748626 e}{\b\f0\insrsid8748626 rrors_length}{\f0\insrsid8748626  is the number of characters in }{\b\f0\insrsid8748626\charrsid8748626 errors}{\f0\insrsid8748626 
+.  If the length of  the generated string is longer than the specified length, it will not be copied into errors.  }{\b\f0\insrsid8748626\charrsid8748626 errors_length}{\f0\insrsid8748626  will be set to the length of the string r
+equired to contain the error text. 
+\par 
+\par See }{\i\f0\insrsid8748626\charrsid8748626 the FLEXnet Licensing Programming and Reference Guide}{\f0\insrsid8748626  for more information}{\f0\insrsid8748626 .}{\f0\insrsid8748626 
+\par 
+\par 
+\par }{\b\f0\insrsid8748626 LC_CRYPTSTR (str As String, return_str As String, return_length As Integer, errors as String, errors_length as Integer, Vendor_Key5) As Integer}{\b\f0\insrsid8748626\charrsid8748626 
+\par }{\f0\insrsid8748626 Allows the generation of licenses.  Given a license file it will fill in the 20 character codes.  
+\par 
+\par }{\b\f0\insrsid8748626 str}{\f0\insrsid8748626  is a string that has in it the contents of the license file that is to be authenticated. 
+\par 
+\par }{\b\f0\insrsid8748626 return_str }{\f0\insrsid8748626 is where the newly generated license string will be placed.  It should be filled with spaces before calling this function.  You can then use the RTRIM$ function to remove trailing blanks.
+\par 
+\par }{\b\f0\insrsid8748626 return_length}{\f0\insrsid8748626  is the length of  the }{\b\f0\insrsid8748626\charrsid8748626 return}{\b\f0\insrsid8748626\charrsid8748626 _str}{\f0\insrsid8748626  buffer.  If the length of  the generated string is longer th
+an the specified length, it will not be copied into the return_string.  return_length will be set to the length of the string required to contain the error text. 
+\par }{\b\f0\insrsid8748626 
+\par errors }{\f0\insrsid8748626 is where any errors resulting from generating the  license string will be placed.  It should be filled with spaces before calling this function.  You can then use the RTRIM$ function to remove trailing blanks. 
+\par }{\b\f0\insrsid8748626 
+\par errors_length}{\f0\insrsid8748626  is the length of  the }{\b\f0\insrsid8748626\charrsid8748626 errors}{\f0\insrsid8748626  buffer.  If the length of  the generated string is longer than the specified length, it will not be copied into the }{
+\b\f0\insrsid8748626\charrsid8748626 error}{\b\f0\insrsid8748626\charrsid8748626 s}{\f0\insrsid8748626 .  }{\b\f0\insrsid8748626\charrsid8748626 error}{\b\f0\insrsid8748626\charrsid8748626 s}{\b\f0\insrsid8748626\charrsid8748626 _length}{
+\f0\insrsid8748626  will be set to the
+\par length of the string required to contain the error text. 
+\par 
+\par }{\b\f0\insrsid8748626 Vendor_Key5}{\f0\insrsid8748626  is your assigned fifth vendor key.  If you use this function and distribute a program using this}{\f0\insrsid8748626  feature, the security of your e}{\f0\insrsid8748626 ncryption }{
+\f0\insrsid8748626 s}{\f0\insrsid8748626 eeds could be compromised.  Care should be exercised in the operation of this function.
+\par 
+\par Function returns 0 if successful, or an error code if not.
+\par 
+\par This function is very similar to the lc_cryptstr function defined in the }{\i\f0\insrsid8748626\charrsid8748626 FLEXnet Licensing Programming and Reference Guide}{\f0\insrsid8748626 
+.  The job, code, flag, and filename parameters are defaulted.  This results in using the LM_CRYPT_FO
+RCE flag, and disabling the writing of errors to a file.  The code variable is derived from the calling of LP_SETUP and the passing of Vendor_Key5 to the routine.
+\par 
+\par }{\b\f0\insrsid8748626 LC_HOSTID(id_type As Long, buf As String, buf_length as Integer) as Integer
+\par 
+\par }{\f0\insrsid8748626 This function allows you to obtain the Hostid of the system to use to generate a license.
+\par Refer to the lmclient.bas for the HOSTID constant(i.e. HOSTID_DISK_SERIAL_NUM=11).
+\par The following are the allowed values of id_type: 
+\par HOSTID_ETHER     \tab \tab Ethernet address
+\par HOSTID_USER\tab \tab \tab Username 
+\par HOSTID_DISPLAY \tab \tab Display\tab 
+\par HOSTID_HOSTNAME \tab \tab Computer Name
+\par HOSTID_DISK_SERIAL_NUM \tab Disk Volume Serial Number\tab \tab 
+\par HOSTID_INTERNET   \tab \tab IP address
+\par HOSTID_FLEXID1_KEY \tab (FLEXID=7-xxxx)
+\par HOSTID_FLEXID2_KEY \tab (FLEXID=8-xxxxxxxxxx)\tab \tab }{\b\f0\insrsid8748626 
+\par 
+\par buf  }{\f0\insrsid8748626 is where the }{\f0\insrsid8748626 ASCII}{\f0\insrsid8748626  representation of the }{\f0\insrsid8748626 specified}{\f0\insrsid8748626 
+ hostid will be placed. It should be filled with spaces before calling this function.  You can then use the RTRIM$ function to remove trailing blanks. 
+\par }{\b\f0\insrsid8748626 
+\par buf_length}{\f0\insrsid8748626  is the length of  the }{\b\f0\insrsid8748626\charrsid8748626 buf}{\f0\insrsid8748626 .  If the length of  the generated string is longer than the specified length, it will not be copied into the hostid_string.  }{
+\b\f0\insrsid8748626\charrsid8748626 buf}{\b\f0\insrsid8748626\charrsid8748626 _length}{\f0\insrsid8748626  will be set to the length of the string required to contain the hostid text. 
+\par 
+\par Function returns 0 if successful, or an error code if not.
+\par }}

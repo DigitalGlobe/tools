@@ -1,0 +1,104 @@
+10
+
+dir
+3429
+svn+ssh://duff.spadac.com/var/svn/tools/sdk/trunk/FLEXnet_11.4.1/examples
+svn+ssh://duff.spadac.com/var/svn/tools
+
+
+
+2007-12-13T19:20:30.018254Z
+64
+harsh.govind
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ae17a9c7-da6e-46a2-847f-66f87cfd00f4
+
+csharp
+dir
+
+child
+dir
+
+simple
+dir
+
+anchor_service
+dir
+
+README
+file
+
+
+
+
+2013-07-08T13:58:51.238648Z
+e5c7009374461f560a80373eeedfe1df
+2007-12-13T19:20:30.018254Z
+64
+harsh.govind
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+2644
+
+fulfill
+dir
+
+ezcalc
+dir
+
+activation
+dir
+
+composite
+dir
+
+licenses
+dir
+
+advanced
+dir
+
+vendor_hostid
+dir
+
+vb
+dir
+
+vendor_info
+dir
+
+trivial
+dir
+

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ActivationSpecificationRecord xmlns="http://www.macrovision.com/fnp/2004/11/activation">
+<Header>
+<Version>1</Version>
+<Id>1</Id>
+<PublisherId>256</PublisherId>
+</Header>
+<ConfigData>
+<ClientConfig>
+<Id>1</Id>
+<Revision>NumberOne</Revision>
+<RevisionType>ASR</RevisionType>
+<Data>E52E76223F3DC75D526EF107811C0A36E7738ECD5C559321FD4FFAA5DA29C8C046F0DE952CF03CA63A894F640C61811867594474BC01F0EE5D05192EC75E942F00490F57AD0944598965940CBF6947366999FA1C9310BE8423CCF740992F2213757FB0FF7569A7EE9C8E30927E56D133716E690CCA257FBE19706F908B757C4380FA6FF5D453D52D56C475BFE397680E5CCBAB237B75A13BC48900DFFB80578DA030FEE693B939C3E5318454D75B6D1322335150298A11BC44E6C26FD5C2C0AF84EFDD51F662FE37CF352CA1845139B1B89DBAA2FF3781D38C</Data>
+</ClientConfig>
+</ConfigData>
+<DataDictionary>
+<Entries>
+<Entry>
+<Key>PUBLISHER_DEFINED_CRITERION</Key>
+<Value>LOCAL_ONCE</Value>
+</Entry>
+<Entry>
+<Key>PUBLISHER_TRIAL_ID</Key>
+<Value>18</Value>
+</Entry>
+<Entry>
+<Key>PUBLISHER_TRIAL_RESET</Key>
+<Value>1</Value>
+</Entry>
+<Entry>
+<Key>PUBLISHER_DEFINED_DURATION</Key>
+<Value>2592000</Value>
+</Entry>
+</Entries>
+</DataDictionary>
+<FulfillmentRecord>
+<FulfillmentRecordHeader>
+<VersionNumber>1</VersionNumber>
+</FulfillmentRecordHeader>
+<FulfillmentRecordData>
+<FulfillmentId>FIL-EZCALC-A1</FulfillmentId>
+<FulfillmentDictionary>
+<Entries>
+<Entry>
+<Key>fulfillmentType</Key>
+<Value>1</Value>
+</Entry>
+<Entry>
+<Key>expiry</Key>
+<Value>31-dec-2007</Value>
+</Entry>
+<Entry>
+<Key>serverHostID</Key>
+<Value>FLEXID=6-a6300155</Value>
+</Entry>
+<Entry>
+<Key>servOrLocal</Key>
+<Value>2</Value>
+</Entry>
+<Entry>
+<Key>ProductId</Key>
+<Value>EZCALC-A</Value>
+</Entry>
+<Entry>
+<Key>EntitlementId</Key>
+<Value>ENTL-EZCALC-A1</Value>
+</Entry>
+<Entry>
+<Key>availAct</Key>
+<Value>1</Value>
+</Entry>
+<Entry>
+<Key>features</Key>
+<Value>INCREMENT ADD demo 1.0 31-dec-2007 1 SIGN="0073 BFF6 1F7B E414 4ACC \
+	B0E5 0175 6700 9ED6 C5D5 DDC3 1DCB 6636 BA0C A397"
+INCREMENT SUBTRACT demo 1.0 31-dec-2007 1 SIGN="0054 C9D9 EB86 9579 \
+	BAA3 A510 C742 D400 3F8D 6B56 527F 27DC F902 1EDC 4E30"
+INCREMENT MULTIPLY demo 1.0 31-dec-2007 1 SIGN="0017 C0EE DE78 6674 \
+	9307 64D9 E187 6F00 D03C 60E5 E6C4 CBCA AE69 A1B1 8CE8"
+INCREMENT DIVIDE demo 1.0 31-dec-2007 1 SIGN="0006 0932 B9BD 2407 \
+	C136 ACF9 64A3 0400 4068 149D 8558 444B 5223 EDA4 B506"
+INCREMENT AVG demo 1.0 31-dec-2007 1 SIGN="0078 6ACC 9D7B B6B4 4160 \
+	10E6 E429 E800 0569 158D 42B9 1908 6EE4 CE9E 04EA"
+</Value>
+</Entry>
+</Entries>
+</FulfillmentDictionary>
+</FulfillmentRecordData>
+</FulfillmentRecord>
+<Signature>0C0B53816B16E920664B1F9A38F6C85B50291B344486DBAD2AE6D964EB3A03DA9DC5419B7CF2A7F242B1F951968E5517B79A055B56D5808513A2F4E6</Signature>
+</ActivationSpecificationRecord>

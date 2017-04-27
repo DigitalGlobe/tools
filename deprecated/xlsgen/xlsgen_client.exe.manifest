@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0">
+<assemblyIdentity
+    version="1.0.0.0"
+    processorArchitecture="X86"
+    name="xlsgen_client.exe"
+    type="win32"
+/>
+<description>xlsgen client application</description>
+<dependency>
+    <dependentAssembly>
+        <assemblyIdentity
+            type="win32"
+            name="Microsoft.Windows.Common-Controls"
+            version="6.0.0.0"
+            processorArchitecture="X86"
+            publicKeyToken="6595b64144ccf1df"
+            language="*"
+        />
+    </dependentAssembly>
+</dependency>
+<file name="xlsgen.dll">
+  <typelib 
+       tlbid="{2BDEA919-2489-4ed2-8F55-C12D74DAD9B8}" 
+	   version="1.0" 
+	   helpdir="" 
+  />
+  <comClass 
+      clsid="{089D25AC-7618-4fef-9BB1-6FDDF1FD3B3A}" 
+      threadingModel="Both" 
+	  progid="ExcelGenerator.ARsTdesign"
+      tlbid="{2BDEA919-2489-4ed2-8F55-C12D74DAD9B8}" 
+  />
+</file>
+</assembly>

@@ -1,0 +1,45 @@
+12/17/91:
+
+This directory contains files to start a child process to check out licenses.
+In addition, there is a test program (parent.c) which starts up the child
+process and periodically checks the status of the license.
+
+NOTE: You will need to set the KITDIR variable in the makefile to point to
+the appropriate FLEXnet Licensing kit to build the executables.
+
+These programs are intended to be used as an example, and we recommend
+that you modify them for your purposes.  In particular, if you intend
+to encrypt the traffic between the processes, you should modify the
+file crypt.c, which contains null encrypt() and decrypt() routines.
+
+The relevant functions in startchild.c are:
+
+ start_child(path, feature, number, version) - starts a child process.
+ check_child(handle) 	- Checks the license that the child holds
+ kill_child(handle) 	- Kills the child, thereby checking the
+				  license back in.
+ 
+ 	Parameters:	(char *) path - Pathname to child process
+ 			(char *) feature - feature to check out
+ 			(int) number - Number of licenses to checkout
+ 			(double) version - Version of feature
+ 			(CHILD_HANDLE) handle - Handle for child
+
+	Return:		start_child() returns CHILD_HANDLE
+ 			check_child() returns 0 for OK, 1 for re-acquiring 
+						license, -1 for no license
+			kill_child() returns nothing
+
+	Note that each time check_child() is called, the child will
+	call lm_timer().
+
+Contents:
+
+	child.c		- The example child process
+	crypt.c		- encrypt/decrypt routines
+	makefile	- Makefile for parent and child
+	parent.c	- Test parent program
+	parent.h	- Include file for parent
+	pnopen.c	- More flexible "popen" command (used by parent)
+	pnopen.h	- Include file for parent
+	startchild.c	- child control routines.

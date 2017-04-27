@@ -1,0 +1,8 @@
+<?xml version="1.0" ?>
+<xsd:schema targetNamespace="http://www.macrovision.com/fnp/2004/11/activation" xmlns="http://www.macrovision.com/fnp/2004/11/activation"
+	xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+	<!-- Root element -->
+	<xsd:element name="CreateRepairResponse">
+	</xsd:element>		
+	
+</xsd:schema>
