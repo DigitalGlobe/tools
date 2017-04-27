@@ -1,0 +1,322 @@
+#
+#   Version script to hide private symbols from Firebird libraries
+#   GNU and Solaris linkers should understand it
+#
+#
+#  The contents of this file are subject to the Interbase Public
+#  License Version 1.0 (the "License"); you may not use this file
+#  except in compliance with the License. You may obtain a copy
+#  of the License at http://www.Inprise.com/IPL.html
+# 
+#  Software distributed under the License is distributed on an
+#  "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+#  or implied. See the License for the specific language governing
+#  rights and limitations under the License.
+# 
+#  The Original Code was created by Inprise Corporation
+#  and its predecessors. Portions created by Inprise Corporation are
+#  Copyright (C) Inprise Corporation.
+# 
+#   Created from fbclient.def by Nickolay Samofatov
+#
+#  All Rights Reserved.
+#  Contributor(s): ______________________________________.
+#
+# private entrypoint for REMOTE server
++e server_main
+#-------------------
+# PRIVATE INTERFACE
+#-------------------
++e gds__alloc
++e gds__attach_database
++e gds__blob_info
++e gds__blob_size
++e gds__cancel_blob
++e gds__cancel_events
++e gds__close
++e gds__close_blob
++e gds__commit_retaining
++e gds__commit_transaction
++e gds__compile_request
++e gds__compile_request2
++e gds__create_blob
++e gds__create_blob2
++e gds__create_database
++e gds__database_cleanup
++e gds__database_info
++e gds__ddl
++e gds__declare
++e gds__decode
++e gds__decode_date
++e gds__describe
++e gds__describe_bind
++e gds__detach_database
++e gds__disable_subsystem
++e gds__dsql_finish
++e gds__edit
++e gds__enable_subsystem
++e gds__encode
++e gds__encode_date
++e gds__event_block
++e gds__event_counts
++e gds__event_wait
++e gds__execute
++e gds__execute_immediate
++e gds__fetch
++e gds__free
++e gds__ftof
++e gds__get_prefix
++e gds__get_segment
++e gds__get_slice
++e gds__interprete
++e gds__log
++e gds__log_status
++e gds__map_blobs
++e gds__msg_close
++e gds__msg_format
++e gds__msg_lookup
++e gds__msg_open
++e gds__msg_put
++e gds__open
++e gds__open_blob
++e gds__open_blob2
++e gds__parse_bpb
++e gds__prefix
++e gds__prefix_lock
++e gds__prefix_msg
++e gds__prepare
++e gds__prepare_transaction
++e gds__prepare_transaction2
++e gds__print_blr
++e gds__print_status
++e gds__put_error
++e gds__put_segment
++e gds__put_slice
++e gds__qtoq
++e gds__que_events
++e gds__receive
++e gds__reconnect_transaction
++e gds__register_cleanup
++e gds__release_request
++e gds__request_info
++e gds__rollback_transaction
++e gds__seek_blob
++e gds__send
++e gds__set_debug
++e gds__sqlcode
++e gds__start_and_send
++e gds__start_multiple
++e gds__start_request
++e gds__start_transaction
++e gds__temp_file
++e gds__thread_enable
++e gds__thread_enter
++e gds__thread_exit
++e gds__thread_start
++e gds__to_sqlda
++e gds__transaction_cleanup
++e gds__transaction_info
++e gds__unregister_cleanup
++e gds__unwind_request
++e gds__validate_lib_path
++e gds__vax_integer
++e gds__version
++e gds__vtof
++e gds__vtov
++e gds__default_printer
++e gds__alloc_debug
++e gds_alloc_flag_unfreed
++e gds_alloc_report
++e perf_format
++e perf_get_info
++e perf_report
++e perf64_format
++e perf64_get_info
++e perf64_report
+#----------------------------
+# PUBLIC INTERFACE, i.e. API
+#----------------------------
+# Array functions
++e isc_array_gen_sdl
++e isc_array_get_slice
++e isc_array_lookup_bounds
++e isc_array_lookup_desc
++e isc_array_put_slice
++e isc_array_set_desc
++e isc_get_slice
++e isc_put_slice
+# BLOB functions
++e isc_blob_default_desc
++e isc_blob_gen_bpb
++e isc_blob_info
++e isc_blob_lookup_desc
++e isc_blob_set_desc
++e isc_cancel_blob
++e isc_close_blob
++e isc_create_blob
++e isc_create_blob2
++e isc_get_segment
++e isc_open_blob
++e isc_open_blob2
++e isc_put_segment
+# Database functions
++e isc_attach_database
++e isc_create_database
++e isc_database_info
++e isc_detach_database
++e isc_drop_database
++e isc_expand_dpb
++e isc_modify_dpb
++e isc_version
++e isc_get_client_major_version
++e isc_get_client_minor_version
++e isc_get_client_version
+# Conversion functions
++e isc_decode_date
++e isc_decode_sql_date
++e isc_decode_sql_time
++e isc_decode_timestamp
++e isc_encode_date
++e isc_encode_sql_date
++e isc_encode_sql_time
++e isc_encode_timestamp
++e isc_portable_integer
++e isc_vax_integer
+# DSQL functions
++e isc_dsql_allocate_statement
++e isc_dsql_alloc_statement2
++e isc_dsql_describe
++e isc_dsql_describe_bind
++e isc_dsql_execute
++e isc_dsql_execute2
++e isc_dsql_execute_m
++e isc_dsql_execute2_m
++e isc_dsql_execute_immediate
++e isc_dsql_exec_immed2
++e isc_dsql_execute_immediate_m
++e isc_dsql_exec_immed2_m
++e isc_dsql_exec_immed3_m
++e isc_dsql_fetch
++e isc_dsql_fetch_a
++e isc_dsql_fetch_m
++e isc_dsql_finish
++e isc_dsql_free_statement
++e isc_dsql_insert
++e isc_dsql_insert_m
++e isc_dsql_prepare
++e isc_dsql_prepare_m
++e isc_dsql_release
++e isc_dsql_set_cursor_name
++e isc_dsql_sql_info
+# ESQL functions
++e isc_embed_dsql_close
++e isc_embed_dsql_declare
++e isc_embed_dsql_describe
++e isc_embed_dsql_describe_bind
++e isc_embed_dsql_execute
++e isc_embed_dsql_execute2
++e isc_embed_dsql_execute_immed
++e isc_embed_dsql_exec_immed2
++e isc_embed_dsql_fetch
++e isc_embed_dsql_fetch_a
++e isc_embed_dsql_insert
++e isc_embed_dsql_open
++e isc_embed_dsql_open2
++e isc_embed_dsql_prepare
++e isc_embed_dsql_release
+# Error-handling functions
++e isc_interprete
++e fb_interpret
++e isc_print_sqlerror
++e isc_print_status
++e isc_sqlcode
++e isc_sql_interprete
++e fb_sqlstate
+# Event functions
++e isc_cancel_events
++e isc_event_block
++e isc_event_counts
++e isc_que_events
++e isc_wait_for_event
+# Security functions
++e isc_add_user
++e isc_delete_user
++e isc_modify_user
+# Services functions
++e isc_service_attach
++e isc_service_detach
++e isc_service_query
++e isc_service_start
+# Transaction control functions
++e isc_commit_retaining
++e isc_commit_transaction
++e isc_prepare_transaction
++e isc_prepare_transaction2
++e isc_rollback_retaining
++e isc_rollback_transaction
++e isc_start_multiple
++e isc_start_transaction
++e isc_transaction_info
++e fb_disconnect_transaction
+# Other functions
++e isc_compile_request
++e isc_compile_request2
++e isc_ddl
++e isc_prepare
++e isc_receive
++e isc_reconnect_transaction
++e isc_release_request
++e isc_request_info
++e isc_seek_blob
++e isc_send
++e isc_start_and_send
++e isc_start_request
++e isc_transact_request
++e isc_unwind_request
++e fb_cancel_operation
+# Other SQL functions
++e isc_close
++e isc_declare
++e isc_describe
++e isc_describe_bind
++e isc_execute
++e isc_execute_immediate
++e isc_fetch
++e isc_fetch_a
++e isc_open
+# Other BLOB functions
++e BLOB_close
++e BLOB_display
++e BLOB_dump
++e BLOB_edit
++e BLOB_get
++e BLOB_load
++e BLOB_open
++e BLOB_put
++e BLOB_text_dump
++e BLOB_text_load
++e Bopen
+# Server shutdown support
++e fb_shutdown
++e fb_shutdown_callback
+# Other misc functions
++e isc_ftof
++e isc_free
++e isc_print_blr
++e fb_print_blr
++e isc_qtoq
++e isc_reset_fpe
++e isc_set_debug
++e isc_to_sqlda
++e isc_vtof
++e isc_vtov
+#-----------------
+# Stubs - were exported in previous versions due to various reasons, missing now
+#-----------------
++e CVT_move
++e SCH_ast
+#-----------------
+# OTHER FUNCTIONS
+#-----------------
++e KEYWORD_stringIsAToken
++e KEYWORD_getTokens

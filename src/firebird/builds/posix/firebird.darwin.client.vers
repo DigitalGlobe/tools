@@ -1,0 +1,349 @@
+#
+#  Version script to hide private symbols from Firebird libraries
+#  This version to support the MacOSX Linker  
+#
+#  The contents of this file are subject to the Initial 
+#  Developers Public License Version 1.0 (the "License");
+#  you may not use this file except in compliance with the
+#  License. You may obtain a copy of the License at
+#  http://www.firebirdsql.org/
+# 
+#  Software distributed under the License is distributed on an
+#  "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+#  or implied. See the License for the specific language governing
+#  rights and limitations under the License.
+# 
+#  This Code was created by Paul Beach, IBPhoenix
+#  based on original code created by Inprise and Nickolay Somofatov
+#  based on firebird.vers (Nickolay Samofatov) and fbclient.def (Inprise)
+#
+#  All Rights Reserved.
+#  Contributor(s): ______________________________________.
+
+#-------------------
+# PRIVATE INTERFACE
+#-------------------
+	_gds__alloc
+	_gds__attach_database
+	_gds__blob_info
+	_gds__blob_size
+	_gds__cancel_blob
+	_gds__cancel_events
+	_gds__close
+	_gds__close_blob
+	_gds__commit_retaining
+	_gds__commit_transaction
+	_gds__compile_request
+	_gds__compile_request2
+	_gds__create_blob
+	_gds__create_blob2
+	_gds__create_database
+	_gds__database_cleanup
+	_gds__database_info
+	_gds__ddl
+	_gds__declare
+	_gds__decode
+	_gds__decode_date
+	_gds__describe
+	_gds__describe_bind
+	_gds__detach_database
+	_gds__disable_subsystem
+	_gds__dsql_finish
+	_gds__edit
+	_gds__enable_subsystem
+	_gds__encode
+	_gds__encode_date
+	_gds__event_block
+	_gds__event_counts
+	_gds__event_wait
+	_gds__execute
+	_gds__execute_immediate
+	_gds__fetch
+	_gds__free
+	_gds__ftof
+	_gds__get_prefix
+	_gds__get_segment
+	_gds__get_slice
+	_gds__interprete
+	_gds__log
+	_gds__log_status
+	_gds__map_blobs
+	_gds__msg_close
+	_gds__msg_format
+	_gds__msg_lookup
+	_gds__msg_open
+	_gds__msg_put
+	_gds__open
+	_gds__open_blob
+	_gds__open_blob2
+	_gds__parse_bpb
+	_gds__prefix
+	_gds__prefix_lock
+	_gds__prefix_msg
+	_gds__prepare
+	_gds__prepare_transaction
+	_gds__prepare_transaction2
+	_gds__print_blr
+	_gds__print_status
+	_gds__put_error
+	_gds__put_segment
+	_gds__put_slice
+	_gds__qtoq
+	_gds__que_events
+	_gds__receive
+	_gds__reconnect_transaction
+	_gds__register_cleanup
+	_gds__release_request
+	_gds__request_info
+	_gds__rollback_transaction
+	_gds__seek_blob
+	_gds__send
+	_gds__set_debug
+	_gds__sqlcode
+	_gds__start_and_send
+	_gds__start_multiple
+	_gds__start_request
+	_gds__start_transaction
+	_gds__temp_file
+	_gds__thread_enable
+	_gds__thread_enter
+	_gds__thread_exit
+	_gds__thread_start
+	_gds__to_sqlda
+	_gds__transaction_cleanup
+	_gds__transaction_info
+	_gds__unregister_cleanup
+	_gds__unwind_request
+	_gds__validate_lib_path
+	_gds__vax_integer
+	_gds__version
+	_gds__vtof
+	_gds__vtov
+	_gds__default_printer
+	_gds__alloc_debug
+	_gds_alloc_flag_unfreed
+	_gds_alloc_report
+	
+	_perf_format
+	_perf_get_info
+	_perf_report
+	_perf64_format
+	_perf64_get_info
+	_perf64_report
+
+#----------------------------
+# PUBLIC INTERFACE, i.e. API
+#----------------------------
+
+# Array functions
+
+	_isc_array_gen_sdl
+	_isc_array_get_slice
+	_isc_array_lookup_bounds
+	_isc_array_lookup_desc
+	_isc_array_put_slice
+	_isc_array_set_desc
+	_isc_get_slice
+	_isc_put_slice
+
+# BLOB functions
+
+	_isc_blob_default_desc
+	_isc_blob_gen_bpb
+	_isc_blob_info
+	_isc_blob_lookup_desc
+	_isc_blob_set_desc
+	_isc_cancel_blob
+	_isc_close_blob
+	_isc_create_blob
+	_isc_create_blob2
+	_isc_get_segment
+	_isc_open_blob
+	_isc_open_blob2
+	_isc_put_segment
+	
+# Database functions
+
+	_isc_attach_database
+	_isc_create_database
+	_isc_database_info
+	_isc_detach_database
+	_isc_drop_database
+	_isc_expand_dpb
+	_isc_modify_dpb
+	_isc_version
+	_isc_get_client_major_version
+	_isc_get_client_minor_version
+	_isc_get_client_version
+
+# Conversion functions
+
+	_isc_decode_date
+	_isc_decode_sql_date
+	_isc_decode_sql_time
+	_isc_decode_timestamp
+	_isc_encode_date
+	_isc_encode_sql_date
+	_isc_encode_sql_time
+	_isc_encode_timestamp
+	_isc_portable_integer
+	_isc_vax_integer
+
+# DSQL functions
+
+	_isc_dsql_allocate_statement
+	_isc_dsql_alloc_statement2
+	_isc_dsql_describe
+	_isc_dsql_describe_bind
+	_isc_dsql_execute
+	_isc_dsql_execute2
+	_isc_dsql_execute_m
+	_isc_dsql_execute2_m
+	_isc_dsql_execute_immediate
+	_isc_dsql_exec_immed2
+	_isc_dsql_execute_immediate_m
+	_isc_dsql_exec_immed2_m
+	_isc_dsql_exec_immed3_m
+	_isc_dsql_fetch
+	_isc_dsql_fetch_a
+	_isc_dsql_fetch_m
+	_isc_dsql_finish
+	_isc_dsql_free_statement
+	_isc_dsql_insert
+	_isc_dsql_insert_m
+	_isc_dsql_prepare
+	_isc_dsql_prepare_m
+	_isc_dsql_release
+	_isc_dsql_set_cursor_name
+	_isc_dsql_sql_info
+
+# ESQL functions
+
+	_isc_embed_dsql_close
+	_isc_embed_dsql_declare
+	_isc_embed_dsql_describe
+	_isc_embed_dsql_describe_bind
+	_isc_embed_dsql_execute
+	_isc_embed_dsql_execute2
+	_isc_embed_dsql_execute_immed
+	_isc_embed_dsql_exec_immed2
+	_isc_embed_dsql_fetch
+	_isc_embed_dsql_fetch_a
+	_isc_embed_dsql_insert
+	_isc_embed_dsql_open
+	_isc_embed_dsql_open2
+	_isc_embed_dsql_prepare
+	_isc_embed_dsql_release
+
+# Error-handling functions
+
+	_isc_interprete
+	_fb_interpret
+	_fb_sqlstate
+	_isc_print_sqlerror
+	_isc_print_status
+	_isc_sqlcode
+	_isc_sql_interprete
+
+# Event functions
+
+	_isc_cancel_events
+	_isc_event_block
+	_isc_event_counts
+	_isc_que_events
+	_isc_wait_for_event
+
+# Security functions
+
+	_isc_add_user
+	_isc_delete_user
+	_isc_modify_user
+
+# Services functions
+
+	_isc_service_attach
+	_isc_service_detach
+	_isc_service_query
+	_isc_service_start
+
+# Transaction control functions
+
+	_isc_commit_retaining
+	_isc_commit_transaction
+	_isc_prepare_transaction
+	_isc_prepare_transaction2
+	_isc_rollback_retaining
+	_isc_rollback_transaction
+	_isc_start_multiple
+	_isc_start_transaction
+	_isc_transaction_info
+
+# Other functions
+
+	_isc_compile_request
+	_isc_compile_request2
+	_isc_ddl
+	_isc_prepare
+	_isc_receive
+	_isc_reconnect_transaction
+	_isc_release_request
+	_isc_request_info
+	_isc_seek_blob
+	_isc_send
+	_isc_start_and_send
+	_isc_start_request
+	_isc_transact_request
+	_isc_unwind_request
+	_fb_cancel_operation
+
+# Other SQL functions
+
+	_isc_close
+	_isc_declare
+	_isc_describe
+	_isc_describe_bind
+	_isc_execute
+	_isc_execute_immediate
+	_isc_fetch
+	_isc_fetch_a
+	_isc_open
+
+# Other BLOB functions
+
+	_BLOB_close
+	_BLOB_display
+	_BLOB_dump
+	_BLOB_edit
+	_BLOB_get
+	_BLOB_load
+	_BLOB_open
+	_BLOB_put
+	_BLOB_text_dump
+	_BLOB_text_load
+	_Bopen
+
+# Server shutdown support
+
+	_fb_shutdown_callback
+	_fb_shutdown
+
+# Other misc functions
+
+	_isc_ftof
+	_isc_free
+	_isc_print_blr
+	_fb_print_blr
+	_isc_qtoq
+	_isc_set_debug
+	_isc_to_sqlda
+	_isc_vtof
+	_isc_vtov
+
+#-----------------
+# OTHER FUNCTIONS
+#-----------------
+
+	_CVT_move
+
+	_KEYWORD_stringIsAToken
+	_KEYWORD_getTokens

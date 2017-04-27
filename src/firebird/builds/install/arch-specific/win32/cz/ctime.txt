@@ -1,0 +1,93 @@
+	
+======================================
+Firebird $MAJOR.$MINOR.$RELEASE    (Windows sestavení)
+======================================
+
+
+o Úvod
+o Urèeno Uivatelùm
+o Známé problémy
+o Funkce v této verzi (všechny platformy)
+o Instalace
+o Hlášení chyb
+
+
+Úvod
+====
+
+Vítejte ve Firebird $MAJOR.$MINOR.
+
+
+Urèeno Uivatelùm
+=================
+
+Firebird $MAJOR.$MINOR prošel rozsáhlım testováním a je
+urèen pro široké pracovní nasazení. Nicménì, uivatelùm
+se doporuèuje dodrovat standardní postupy pøed
+nasazení této verzi na provozní server. tj.:
+
+ o Ujistìte se, e jste si pøeèetli instalaèní
+   ctime a poznámky k vydání.
+
+ o Máte-li data, kterıch si ceníte, nezapomeòte si je,
+   pøed instalací tohoto vydání, zazálohovat.
+
+ o Pøed instalací se doporuèuje odebrání jakékoliv 
+   pøedchozí verze. Odinstalace zachová konfiguraèní 
+   soubory a soubory protokolu.
+
+ o Pøed nasazením do provozu se doporuèuje, provést své
+   vlastní testy ve vıvojovém prostøedí.
+
+
+Známé problémy
+==============
+
+Windows Vista - Binární instalátor nedokáe spustit
+Firebird jako slubu pøi instalaci, avšak po restartu
+se sluba spouští správnì. Pro obejití mùete klepnout
+pravım tlaèítkem za souèasného drení klávesy shift na
+ovládací panel Firebirdu a zvolit 'Spustit jako...' a
+spuste slubu odtamtud.
+
+
+Funkce v této verzi
+===================
+
+Pro podrobné informace se, prosím, podívejte
+na Poznámky k vydání.
+
+
+Instalace
+=========
+
+Otázky instalace detailnì pokrıvá Instalaèní prùvodce,
+kterı je po nainstalování k dispozici ve sloce doc.
+K dispozici je rovnì dostupnı struènı pøehled problémù
+s instalací instalace_ctime.txt, takté ve sloce doc
+po instalaci.
+
+
+Hlášení chyb
+==============
+
+Ne nahlásíte chybu:
+
+ o Ovìøte si, e víte, jak Firebird funguje.
+   Moná to vùbec není chyba.
+
+ o Moná o nìkterıch ji hlášeny to? Lidé
+   stávajících chybovıch hlášení zde:
+
+    http://tracker.firebirdsql.org/browse/CORE
+
+ o Máte-li pochybnosti, proè o problému nediskutovat
+   na Firebird-devel listu? Mùete se pøihlásit zde:
+
+    http://lists.sourceforge.net/lists/listinfo/firebird-devel
+
+
+
+
+Od Firebird tımu.
+

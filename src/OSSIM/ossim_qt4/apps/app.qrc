@@ -1,0 +1,32 @@
+<!DOCTYPE RCC>
+<RCC version="1.0">
+ <qresource>
+     <file alias="ImageLinkerSplash">../images/ImageLinkerSplash.png</file>
+     <file alias="Splash">../images/Splash.png</file>
+     <file alias="alignbottom">../images/alignbottom.png</file>
+     <file alias="alignleft">../images/alignleft.png</file>
+     <file alias="alignright">../images/alignright.png</file>
+     <file alias="aligntop">../images/aligntop.png</file>
+     <file alias="conection">../images/connection.png</file>
+     <file alias="dataextract">../images/dataextract.png</file>
+     <file alias="datastore">../images/datastore.png</file>
+     <file alias="display">../images/display.png</file>
+     <file alias="editcopy">../images/editcopy.png</file>
+     <file alias="editcut">../images/editcut.png</file>
+     <file alias="editpaste">../images/editpaste.png</file>
+     <file alias="filenew">../images/filenew.png</file>
+     <file alias="fileopen">../images/fileopen.png</file>
+     <file alias="filesave">../images/filesave.png</file>
+     <file alias="fingerup">../images/fingerup.png</file>
+     <file alias="histogram">../images/histogram.png</file>
+     <file alias="iviewsplash">../images/iviewsplash.png</file>
+     <file alias="print">../images/print.png</file>
+     <file alias="redo">../images/redo.png</file>
+     <file alias="resetproperty">../images/resetproperty.png</file>
+     <file alias="searchfind">../images/searchfind.png</file>
+     <file alias="tilecascade">../images/tilecascade.png</file>
+     <file alias="undo">../images/undo.png</file>
+     <file alias="zoom">../images/zoom.png</file>
+     <file alias="pan">../images/pan.png</file>
+</qresource>
+</RCC>

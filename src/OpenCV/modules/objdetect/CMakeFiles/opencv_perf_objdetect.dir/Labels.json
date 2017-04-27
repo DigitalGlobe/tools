@@ -1,0 +1,40 @@
+
+{
+	"sources" : 
+	[
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/objdetect/perf/opencl/perf_cascades.cpp",
+			"labels" : [ "Main", "opencv_objdetect", "PerfTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/objdetect/perf/opencl/perf_hogdetect.cpp",
+			"labels" : [ "Main", "opencv_objdetect", "PerfTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/objdetect/perf/perf_main.cpp",
+			"labels" : [ "Main", "opencv_objdetect", "PerfTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/objdetect/perf/perf_precomp.hpp",
+			"labels" : [ "Main", "opencv_objdetect", "PerfTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/objdetect/opencv_perf_objdetect_pch.cpp",
+			"labels" : [ "Main", "opencv_objdetect", "PerfTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/objdetect/CMakeLists.txt"
+		}
+	],
+	"target" : 
+	{
+		"labels" : [ "Main", "opencv_objdetect", "PerfTest" ],
+		"name" : "opencv_perf_objdetect"
+	}
+}

@@ -1,0 +1,202 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build" InitialTargets="ValidateSolutionConfiguration;ValidateToolsVersions;ValidateProjects">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\SolutionFile\ImportBefore\*" Condition="'$(ImportByWildcardBeforeSolution)' != 'false' and exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\SolutionFile\ImportBefore')" />
+  <Import Project="C:\DigitalGlobeTemp\src\Expat\Source\before.expat.sln.targets" Condition="exists('C:\DigitalGlobeTemp\src\Expat\Source\before.expat.sln.targets')" />
+  <PropertyGroup Condition=" '$(Configuration)' == '' ">
+    <Configuration>Debug</Configuration>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Platform)' == '' ">
+    <Platform>Win32</Platform>
+  </PropertyGroup>
+  <PropertyGroup Condition=" ('$(AspNetConfiguration)' == '') ">
+    <AspNetConfiguration>$(Configuration)</AspNetConfiguration>
+  </PropertyGroup>
+  <PropertyGroup>
+    <SolutionDir>C:\DigitalGlobeTemp\src\Expat\Source\</SolutionDir>
+    <SolutionExt>.sln</SolutionExt>
+    <SolutionFileName>expat.sln</SolutionFileName>
+    <SolutionName>expat</SolutionName>
+    <SolutionPath>C:\DigitalGlobeTemp\src\Expat\Source\expat.sln</SolutionPath>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == '' and '$(MSBuildToolsVersion)' == '2.0'">v2.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == '' and ('$(MSBuildToolsVersion)' == '3.5' or '$(MSBuildToolsVersion)' == '3.0')">v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == '' and !('$(MSBuildToolsVersion)' == '3.5' or '$(MSBuildToolsVersion)' == '3.0' or '$(MSBuildToolsVersion)' == '2.0')">v4.0</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" ('$(Configuration)' == 'Debug') and ('$(Platform)' == 'Win32') ">
+    <CurrentSolutionConfigurationContents>
+      <SolutionConfiguration xmlns="">
+  <ProjectConfiguration Project="{35262250-C85F-463A-9F6D-670088BFA17E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\elements.vcxproj" BuildProjectInSolution="True">Debug|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{45A5074D-66E8-44A4-A03F-018027B528D6}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat.vcxproj" BuildProjectInSolution="True">Debug|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{58A821BC-E4AF-4DF4-9A54-2BAA22B92615}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat_static.vcxproj" BuildProjectInSolution="True">Debug|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{C04F1C11-7079-48AD-A90B-6F59B7A55BEF}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw.vcxproj" BuildProjectInSolution="True">Debug|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{9220B0F2-C895-4CB2-91D1-1C16C4ECB759}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw_static.vcxproj" BuildProjectInSolution="True">Debug|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{DE74E6FD-E107-4326-B1B0-A0CFEEB64F25}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\outline.vcxproj" BuildProjectInSolution="True">Debug|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{E3C5991F-5238-4168-A179-275D1AC98D7E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\xmlwf\xmlwf.vcxproj" BuildProjectInSolution="True">Debug|Win32</ProjectConfiguration>
+</SolutionConfiguration>
+    </CurrentSolutionConfigurationContents>
+  </PropertyGroup>
+  <ItemGroup>
+    <SolutionConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+      <Content>
+        <SolutionConfiguration xmlns="">
+  <ProjectConfiguration Project="{35262250-C85F-463A-9F6D-670088BFA17E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\elements.vcxproj" BuildProjectInSolution="True">Debug|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{45A5074D-66E8-44A4-A03F-018027B528D6}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat.vcxproj" BuildProjectInSolution="True">Debug|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{58A821BC-E4AF-4DF4-9A54-2BAA22B92615}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat_static.vcxproj" BuildProjectInSolution="True">Debug|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{C04F1C11-7079-48AD-A90B-6F59B7A55BEF}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw.vcxproj" BuildProjectInSolution="True">Debug|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{9220B0F2-C895-4CB2-91D1-1C16C4ECB759}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw_static.vcxproj" BuildProjectInSolution="True">Debug|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{DE74E6FD-E107-4326-B1B0-A0CFEEB64F25}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\outline.vcxproj" BuildProjectInSolution="True">Debug|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{E3C5991F-5238-4168-A179-275D1AC98D7E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\xmlwf\xmlwf.vcxproj" BuildProjectInSolution="True">Debug|Win32</ProjectConfiguration>
+</SolutionConfiguration>
+      </Content>
+    </SolutionConfiguration>
+    <SolutionConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+      <Content>
+        <SolutionConfiguration xmlns="">
+  <ProjectConfiguration Project="{35262250-C85F-463A-9F6D-670088BFA17E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\elements.vcxproj" BuildProjectInSolution="True">Debug|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{45A5074D-66E8-44A4-A03F-018027B528D6}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat.vcxproj" BuildProjectInSolution="True">Debug|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{58A821BC-E4AF-4DF4-9A54-2BAA22B92615}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat_static.vcxproj" BuildProjectInSolution="True">Debug|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{C04F1C11-7079-48AD-A90B-6F59B7A55BEF}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw.vcxproj" BuildProjectInSolution="True">Debug|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{9220B0F2-C895-4CB2-91D1-1C16C4ECB759}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw_static.vcxproj" BuildProjectInSolution="True">Debug|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{DE74E6FD-E107-4326-B1B0-A0CFEEB64F25}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\outline.vcxproj" BuildProjectInSolution="True">Debug|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{E3C5991F-5238-4168-A179-275D1AC98D7E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\xmlwf\xmlwf.vcxproj" BuildProjectInSolution="True">Debug|x64</ProjectConfiguration>
+</SolutionConfiguration>
+      </Content>
+    </SolutionConfiguration>
+    <SolutionConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+      <Content>
+        <SolutionConfiguration xmlns="">
+  <ProjectConfiguration Project="{35262250-C85F-463A-9F6D-670088BFA17E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\elements.vcxproj" BuildProjectInSolution="True">Release|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{45A5074D-66E8-44A4-A03F-018027B528D6}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat.vcxproj" BuildProjectInSolution="True">Release|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{58A821BC-E4AF-4DF4-9A54-2BAA22B92615}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat_static.vcxproj" BuildProjectInSolution="True">Release|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{C04F1C11-7079-48AD-A90B-6F59B7A55BEF}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw.vcxproj" BuildProjectInSolution="True">Release|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{9220B0F2-C895-4CB2-91D1-1C16C4ECB759}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw_static.vcxproj" BuildProjectInSolution="True">Release|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{DE74E6FD-E107-4326-B1B0-A0CFEEB64F25}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\outline.vcxproj" BuildProjectInSolution="True">Release|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{E3C5991F-5238-4168-A179-275D1AC98D7E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\xmlwf\xmlwf.vcxproj" BuildProjectInSolution="True">Release|Win32</ProjectConfiguration>
+</SolutionConfiguration>
+      </Content>
+    </SolutionConfiguration>
+    <SolutionConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+      <Content>
+        <SolutionConfiguration xmlns="">
+  <ProjectConfiguration Project="{35262250-C85F-463A-9F6D-670088BFA17E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\elements.vcxproj" BuildProjectInSolution="True">Release|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{45A5074D-66E8-44A4-A03F-018027B528D6}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat.vcxproj" BuildProjectInSolution="True">Release|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{58A821BC-E4AF-4DF4-9A54-2BAA22B92615}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat_static.vcxproj" BuildProjectInSolution="True">Release|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{C04F1C11-7079-48AD-A90B-6F59B7A55BEF}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw.vcxproj" BuildProjectInSolution="True">Release|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{9220B0F2-C895-4CB2-91D1-1C16C4ECB759}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw_static.vcxproj" BuildProjectInSolution="True">Release|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{DE74E6FD-E107-4326-B1B0-A0CFEEB64F25}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\outline.vcxproj" BuildProjectInSolution="True">Release|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{E3C5991F-5238-4168-A179-275D1AC98D7E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\xmlwf\xmlwf.vcxproj" BuildProjectInSolution="True">Release|x64</ProjectConfiguration>
+</SolutionConfiguration>
+      </Content>
+    </SolutionConfiguration>
+    <SolutionConfiguration Include="Template|Win32">
+      <Configuration>Template</Configuration>
+      <Platform>Win32</Platform>
+      <Content>
+        <SolutionConfiguration xmlns="">
+  <ProjectConfiguration Project="{35262250-C85F-463A-9F6D-670088BFA17E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\elements.vcxproj" BuildProjectInSolution="True">Release|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{45A5074D-66E8-44A4-A03F-018027B528D6}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{58A821BC-E4AF-4DF4-9A54-2BAA22B92615}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat_static.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{C04F1C11-7079-48AD-A90B-6F59B7A55BEF}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{9220B0F2-C895-4CB2-91D1-1C16C4ECB759}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw_static.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{DE74E6FD-E107-4326-B1B0-A0CFEEB64F25}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\outline.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{E3C5991F-5238-4168-A179-275D1AC98D7E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\xmlwf\xmlwf.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+</SolutionConfiguration>
+      </Content>
+    </SolutionConfiguration>
+    <SolutionConfiguration Include="Template|x64">
+      <Configuration>Template</Configuration>
+      <Platform>x64</Platform>
+      <Content>
+        <SolutionConfiguration xmlns="">
+  <ProjectConfiguration Project="{35262250-C85F-463A-9F6D-670088BFA17E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\elements.vcxproj" BuildProjectInSolution="True">Release|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{45A5074D-66E8-44A4-A03F-018027B528D6}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{58A821BC-E4AF-4DF4-9A54-2BAA22B92615}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat_static.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{C04F1C11-7079-48AD-A90B-6F59B7A55BEF}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{9220B0F2-C895-4CB2-91D1-1C16C4ECB759}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw_static.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{DE74E6FD-E107-4326-B1B0-A0CFEEB64F25}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\outline.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{E3C5991F-5238-4168-A179-275D1AC98D7E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\xmlwf\xmlwf.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+</SolutionConfiguration>
+      </Content>
+    </SolutionConfiguration>
+  </ItemGroup>
+  <PropertyGroup Condition=" ('$(Configuration)' == 'Debug') and ('$(Platform)' == 'x64') ">
+    <CurrentSolutionConfigurationContents>
+      <SolutionConfiguration xmlns="">
+  <ProjectConfiguration Project="{35262250-C85F-463A-9F6D-670088BFA17E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\elements.vcxproj" BuildProjectInSolution="True">Debug|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{45A5074D-66E8-44A4-A03F-018027B528D6}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat.vcxproj" BuildProjectInSolution="True">Debug|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{58A821BC-E4AF-4DF4-9A54-2BAA22B92615}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat_static.vcxproj" BuildProjectInSolution="True">Debug|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{C04F1C11-7079-48AD-A90B-6F59B7A55BEF}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw.vcxproj" BuildProjectInSolution="True">Debug|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{9220B0F2-C895-4CB2-91D1-1C16C4ECB759}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw_static.vcxproj" BuildProjectInSolution="True">Debug|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{DE74E6FD-E107-4326-B1B0-A0CFEEB64F25}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\outline.vcxproj" BuildProjectInSolution="True">Debug|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{E3C5991F-5238-4168-A179-275D1AC98D7E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\xmlwf\xmlwf.vcxproj" BuildProjectInSolution="True">Debug|x64</ProjectConfiguration>
+</SolutionConfiguration>
+    </CurrentSolutionConfigurationContents>
+  </PropertyGroup>
+  <PropertyGroup Condition=" ('$(Configuration)' == 'Release') and ('$(Platform)' == 'Win32') ">
+    <CurrentSolutionConfigurationContents>
+      <SolutionConfiguration xmlns="">
+  <ProjectConfiguration Project="{35262250-C85F-463A-9F6D-670088BFA17E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\elements.vcxproj" BuildProjectInSolution="True">Release|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{45A5074D-66E8-44A4-A03F-018027B528D6}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat.vcxproj" BuildProjectInSolution="True">Release|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{58A821BC-E4AF-4DF4-9A54-2BAA22B92615}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat_static.vcxproj" BuildProjectInSolution="True">Release|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{C04F1C11-7079-48AD-A90B-6F59B7A55BEF}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw.vcxproj" BuildProjectInSolution="True">Release|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{9220B0F2-C895-4CB2-91D1-1C16C4ECB759}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw_static.vcxproj" BuildProjectInSolution="True">Release|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{DE74E6FD-E107-4326-B1B0-A0CFEEB64F25}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\outline.vcxproj" BuildProjectInSolution="True">Release|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{E3C5991F-5238-4168-A179-275D1AC98D7E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\xmlwf\xmlwf.vcxproj" BuildProjectInSolution="True">Release|Win32</ProjectConfiguration>
+</SolutionConfiguration>
+    </CurrentSolutionConfigurationContents>
+  </PropertyGroup>
+  <PropertyGroup Condition=" ('$(Configuration)' == 'Release') and ('$(Platform)' == 'x64') ">
+    <CurrentSolutionConfigurationContents>
+      <SolutionConfiguration xmlns="">
+  <ProjectConfiguration Project="{35262250-C85F-463A-9F6D-670088BFA17E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\elements.vcxproj" BuildProjectInSolution="True">Release|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{45A5074D-66E8-44A4-A03F-018027B528D6}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat.vcxproj" BuildProjectInSolution="True">Release|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{58A821BC-E4AF-4DF4-9A54-2BAA22B92615}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat_static.vcxproj" BuildProjectInSolution="True">Release|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{C04F1C11-7079-48AD-A90B-6F59B7A55BEF}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw.vcxproj" BuildProjectInSolution="True">Release|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{9220B0F2-C895-4CB2-91D1-1C16C4ECB759}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw_static.vcxproj" BuildProjectInSolution="True">Release|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{DE74E6FD-E107-4326-B1B0-A0CFEEB64F25}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\outline.vcxproj" BuildProjectInSolution="True">Release|x64</ProjectConfiguration>
+  <ProjectConfiguration Project="{E3C5991F-5238-4168-A179-275D1AC98D7E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\xmlwf\xmlwf.vcxproj" BuildProjectInSolution="True">Release|x64</ProjectConfiguration>
+</SolutionConfiguration>
+    </CurrentSolutionConfigurationContents>
+  </PropertyGroup>
+  <PropertyGroup Condition=" ('$(Configuration)' == 'Template') and ('$(Platform)' == 'Win32') ">
+    <CurrentSolutionConfigurationContents>
+      <SolutionConfiguration xmlns="">
+  <ProjectConfiguration Project="{35262250-C85F-463A-9F6D-670088BFA17E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\elements.vcxproj" BuildProjectInSolution="True">Release|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{45A5074D-66E8-44A4-A03F-018027B528D6}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{58A821BC-E4AF-4DF4-9A54-2BAA22B92615}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat_static.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{C04F1C11-7079-48AD-A90B-6F59B7A55BEF}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{9220B0F2-C895-4CB2-91D1-1C16C4ECB759}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw_static.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{DE74E6FD-E107-4326-B1B0-A0CFEEB64F25}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\outline.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{E3C5991F-5238-4168-A179-275D1AC98D7E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\xmlwf\xmlwf.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+</SolutionConfiguration>
+    </CurrentSolutionConfigurationContents>
+  </PropertyGroup>
+  <PropertyGroup Condition=" ('$(Configuration)' == 'Template') and ('$(Platform)' == 'x64') ">
+    <CurrentSolutionConfigurationContents>
+      <SolutionConfiguration xmlns="">
+  <ProjectConfiguration Project="{35262250-C85F-463A-9F6D-670088BFA17E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\elements.vcxproj" BuildProjectInSolution="True">Release|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{45A5074D-66E8-44A4-A03F-018027B528D6}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{58A821BC-E4AF-4DF4-9A54-2BAA22B92615}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expat_static.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{C04F1C11-7079-48AD-A90B-6F59B7A55BEF}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{9220B0F2-C895-4CB2-91D1-1C16C4ECB759}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\lib\expatw_static.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{DE74E6FD-E107-4326-B1B0-A0CFEEB64F25}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\examples\outline.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+  <ProjectConfiguration Project="{E3C5991F-5238-4168-A179-275D1AC98D7E}" AbsolutePath="C:\DigitalGlobeTemp\src\Expat\Source\xmlwf\xmlwf.vcxproj" BuildProjectInSolution="True">Template|Win32</ProjectConfiguration>
+</SolutionConfiguration>
+    </CurrentSolutionConfigurationContents>
+  </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\SolutionFile\ImportAfter\*" Condition="'$(ImportByWildcardBeforeSolution)' != 'false' and exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\SolutionFile\ImportAfter')" />
+  <Import Project="C:\DigitalGlobeTemp\src\Expat\Source\after.expat.sln.targets" Condition="exists('C:\DigitalGlobeTemp\src\Expat\Source\after.expat.sln.targets')" />
+  <Target Name="Build" />
+  <Target Name="Rebuild" />
+  <Target Name="Clean" />
+  <Target Name="Publish" />
+</Project>

@@ -1,0 +1,102 @@
+
+==================================
+Firebird $MAJOR.$MINOR.$RELEASE  (Windows Build)
+==================================
+
+o Introduction
+o Avertissements
+o Problèmes connus
+o Fonctionnalités nouvelles (toutes platformes)
+o Bugs corrigés dans cette version
+o Installation
+o Rapporter des bugs
+
+
+Introduction
+============
+
+Bienvenue dans le monde de Firebird $MAJOR.$MINOR.
+
+
+Avertissements
+==============
+
+Firebird $MAJOR.$MINOR.$RELEASE a été testé intensivement
+et peut être utiliseé en production. Toutefois, les
+utilisateurs sont invités à suivre ces prescriptions 
+avant de déployer cette version en production. ie:
+
+ o Lisez les notes de version et le fichier 
+   installation_lisezmoi.txt.
+
+ o N'oubliez pas de sauvegarder vos données.
+
+ o Il est recommandé de faire d'abords une 
+   désinstallation. Une désinstallation conserve vos 
+   fichier de log et de configuration.
+
+ o Il est recommandé de faire vos propres tests
+   avant tout déploiement en production.
+
+
+
+
+Problèmes connus
+================
+
+Windows Vista - Le programme d'installation échoue dans
+sa tentative de démmarage du service après l'installation.
+Toutefois, le service est correctement installé et démarre
+après un reboot.
+Vous pouvez aussi démarrer vous même le service, y compris depuis
+le panneau de configuration, en faisant un shift-click droit
+sur l'icône Firebird, choisir "Démarrer comme..." et démarrer le
+service à partir de là.
+
+Fonctionnalités nouvelles
+=========================
+
+Voir les notes de version (release notes) pour plus
+d'informations.
+
+
+Installation
+============
+
+Vous trouverez toutes les explications dans le répertoire
+doc de l'installation, dans l'Installation Guide ainsi
+que dans le fichier installation_lisez_moi.txt.
+
+
+Rapporter des bugs
+==================
+
+o Etes vous certain de comprendre comment Firebird
+  fonctionne?
+
+  Peut être avez vous vu le comportement normal mais
+  que vous avez une question à posez au support. Dans
+  ce cas contactez la liste firebird-support.
+
+  Vous pouvez vous inscrire ici:
+
+	mailto:firebird-support-subscribe@yahoogroups.com
+
+  Il existe aussi des news et un forum en français à :
+
+	news://server.amis.tv/nzn.fr.firebird
+	http://www.developpez.net/forums/f43/bases-donnees/firebird/
+
+o Vous pensez toujours que c'est un bug?
+
+  Regardez la liste des bugs ouverts. Vous trouverez
+  cette liste à:
+
+	http://tracker.firebirdsql.org/browse/CORE
+
+Toutefois, si vous pensez raisonablement que c'est un
+bug, alors s'il vous plait, essayez de créer un test
+reproductible. Vous pourrez alors le soumetttre au
+traceur de bug.
+
+

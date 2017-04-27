@@ -1,0 +1,107 @@
+
+==================================
+Firebird $MAJOR.$MINOR.$RELEASE       (Windows Build)
+==================================
+
+
+o Introduzione
+o A chi è rivolta questa versione
+o Caratteristiche di questa versione (per tutte le
+  piattaforme)
+o Errori corretti in questa versione
+o Installazione automatica
+o Problemi aperti
+o Segnalazione di errori
+o Richiesta di nuove funzionalità
+
+
+Introduzione
+============
+
+Benvenuti in Firebird $MAJOR.$MINOR
+
+
+A chi è rivolta questa versione
+===============================
+
+Firebird $MAJOR.$MINOR.$RELEASE è stato estensivamente testato ed
+è considerato pronto per l'uso in produzione.
+Tuttavia, si raccomanda di applicare le cautele
+standard per la messa in produzione di questa
+nuova release, e cioè:
+
+o Leggete le note sul rilascio.
+
+o Effettuate una copia di sicurezza dei
+  dati preesistenti.
+
+o Disinstallate eventuali versioni precedenti
+  prima di installare questa. La disinstallazione
+  non elimina i file di configurazione e di log.
+
+o Prima di usare questa versione di Firebird in
+  produzione, è consigliabile effettuare prove
+  in un ambiente separato.
+
+
+Caratteristiche di questa versione
+(per tutte le piattaforme)
+==================================
+
+Fate riferimento a:
+
+  doc/Firebird_v$MAJOR.$MINOR.$RELEASE.ReleaseNotes.pdf
+
+per maggiori informazioni.
+
+
+Errori corretti in questa versione
+==================================
+
+Fate riferimento a:
+
+  doc/Firebird_v$MAJOR.$MINOR.$RELEASE.ReleaseNotes.pdf
+
+per maggiori informazioni.
+
+
+Installazione automatica
+========================
+
+Lanciate il file seguibile e seguite le istruzioni a
+video.
+
+
+
+Segnalazione di errori
+======================
+
+o Siete sicuri di conoscere il funzionamento di
+  Firebird?
+
+  Forse ciò che state osservando come errore è il
+  comportamento corretto, e avete in realtà bisogno di
+  inoltrare una richiesta di supporto. In questo caso,
+  potete usare la mailing list firebird-support. Per
+  iscrivervi:
+  
+    mailto:firebird-support-subscribe@yahoogroups.com
+
+o Pensate ancora che si tratti di un errore?
+
+  Per prima cosa, controllate che il problema non sia
+  già stato segnalato nel Bug Tracker:
+
+    http://tracker.firebirdsql.org/browse/CORE
+
+  Vi raccomandiamo di non usare il Tracker per richieste
+  di supporto. Nel dubbio, iscrivetevi alla mailing list
+  
+    mailto:firebird-support-subscribe@yahoogroups.com
+
+  e chiedete lì. Se avete problemi con l'inglese,
+  potete usare l'area dedicata a Firebird su
+  Delphi & Dintorni:
+  
+    http://www.delphiedintorni.it
+

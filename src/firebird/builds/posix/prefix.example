@@ -1,0 +1,18 @@
+#_____________________________________________________________________________
+
+# Changing options based on module
+
+# Something that Solaris was doing for intl libraries.
+if $(eq $(ModuleName), "intl") 
+    LIB_LINK_OPTIONS := -assert pure-text -assert nosymbolic 
+endif
+
+# Firebird needs no RTTI
+CXXFLAGS:= $(CXXFLAGS) -fno-rtti
+
+OS_ServerFiles=inet_server.cpp
+
+EMBED_UTIL_TARGETS=gstat gsec fbguard nbackup fb_lock_print
+CLIENT_UTIL_TARGETS=gstat gsec fbguard nbackup fbmgr_bin fb_lock_print
+
+Physical_IO_Module=os/posix/unix.cpp

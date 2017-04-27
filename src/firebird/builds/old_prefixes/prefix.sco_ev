@@ -1,0 +1,127 @@
+# The contents of this file are subject to the Interbase Public
+# License Version 1.0 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy
+# of the License at http://www.Inprise.com/IPL.html
+#
+# Software distributed under the License is distributed on an
+# "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+# or implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code was created by Inprise Corporation
+# and its predecessors. Portions created by Inprise Corporation are
+# Copyright (C) Inprise Corporation.
+#
+# All Rights Reserved.
+# Contributor(s): ______________________________________.
+.SUFFIXES: .c .e
+.e.c:
+	$(GPRE) $(GPRE_FLAGS) $<
+.SUFFIXES: .bin .o .c
+.c.o:
+	$(CC) -c $(CFLAGS) $(VERSION_FLAG) $<
+.c.bin:
+	$(CC) -c $(PIC_FLAGS) $(VERSION_FLAG) -o $*.bin $<
+
+
+CC= gcc
+PROD_DEBUG_OBJECTS=	nodebug.o
+PROD_SHRLIB_DIR=
+PROD_VERSION_FLAG=	-DPROD_BUILD
+PROD_CFLAGS=		-O3 -m486 -fwritable-strings -DHADES
+
+DEV_DEBUG_OBJECTS=	grammar.o dbg.o dbt.o dmp.o
+DEV_SHRLIB_DIR=		-Lsource/jrd
+DEV_VERSION_FLAG=	-DDEV_BUILD
+DEV_CFLAGS=		-ggdb -fwritable-strings -DHADES
+
+DEBUG_OBJECTS=		$($(VERSION)_DEBUG_OBJECTS)
+SHRLIB_DIR=		$($(VERSION)_SHRLIB_DIR)
+VERSION_FLAG=		$($(VERSION)_VERSION_FLAG)
+CFLAGS=			$($(VERSION)_CFLAGS) -D$(SYSTEM) -w -fPIC -melf 
+PIC_FLAGS= $(CFLAGS)
+
+ACCESS_METHOD=		gdslib.sco_ev pipe
+BACKEND_BRIDGE_MISC=	head5.o allp.o
+B_ELF=			-melf
+BIN_PATH=		/usr/gds/sbin
+BRIDGE_MISC=		head5.o allp.o
+CHMOD_VAL=		666
+COPT_JRD_SQZ=		NO
+FORM_OBJECTS=		form.o
+FORM_TRN_OBJECTS=	form_trn.o
+FUNCTIONS=	functions.bin
+GDS_LINK=		$(GDSSHR_LINK)
+GDS_PYXIS=		gds_pyxis.a
+GDSLIB_BACKEND=		source/jrd/gds_b.a
+GDSLIB_LINK=		-$(B_ELF) -Lsource/jrd -lgds_b -lsocket -lgds_pyxis
+GDSSHR=			source/interbase/lib/gds.so.0
+SCO_EV_GDSSHR=		$(GDSSHR)
+GDSSHR_LINK=		-$(B_ELF) -Lsource/jrd -lgds -lsocket -lgds_pyxis
+HLPDIR=			source/qli/
+INCLUDES=		include_sco
+INTL=			intl
+INTL_CFLAGS=		$(CFLAGS)
+INTL_LD_LINE=		ld -G -Bdynamic -z text -o gdsintl
+INTL_PIC_FLAGS=         $(CFLAGS)
+INTL_TARGET=		intl_shr_objs
+IO_OBJECTS=		unix.o
+IO_P_OBJECTS=		unix.bin
+JRD_MISC_OBJECTS=       stubs.o
+JRD_P_MISC_OBJECTS=     source/jrd/nodebug.bin
+LANG_OBJECTS=		ada.o
+LANGUAGES=		cc cxx gdl1 make15 ada sco_ada
+LD_LIBS=		
+LD_OPTS=		-G -h
+LINK_OPTS=		$(B_ELF)
+LOCK_MANAGER=		manager
+MARION_DB=		-d source/marion.gdb
+MATHLIB=		-lm
+MUISQL=                 muisql
+MUISQL_MU_LIB=          -L/usr/gds/lib -lmu $(GDSSHR_LINK)
+PIPE=			gds.a gds_pipe
+PYXIS_MISC_OBJECTS=	$(PYXDIR)cdm.o $(PYXDIR)vt100.o
+REG_HELP=		isc_ins_hlp.dat
+REMOTE_GDSSHR=		$(GDSSHR)
+REMOTE_GDSSHR_LINK=	$(SERVER_LINK)
+SCREEN_LIBS=		-lcurses
+SERVER_LINK=		$(GDSSHR_LINK)
+SETUP_ISC=		ISC_USER=sysdba; ISC_PASSWORD=masterkey; export ISC_USER ISC_PASSWORD;
+SCO_SOCKET_LIB=		-$(B_ELF) -lsocket
+SPECIAL_OPT=		sh source/special_opt
+UTILITIES=		drop
+
+INET_SERVER_DEST=	source/interbase/bin/gds_inet_server
+DNET_SERVER_DEST=	source/interbase/bin/gds_dnet_server
+AMBX_SERVER_DEST=	source/interbase/bin/gds_server
+INET_LIB_DEST=		source/interbase/lib/gds_inet_server.a
+DNET_LIB_DEST=		source/interbase/lib/gds_dnet_server.a
+
+SH=                     sh -c
+RM=                     rm -f
+CHMOD=                  chmod
+CHMOD_6=                chmod 666
+CHMOD_7=                chmod 777
+CHMOD_S7=               chmod 06777
+MV=                     mv -f
+TOUCH=                  touch
+CP=                     cp
+ECHO=                   echo
+QUIET_ECHO=             @echo
+CD=                     cd
+CAT=                    cat
+AR=                     ar r
+EXPAND_DBNAME=          @echo No need to expand...
+COMPRESS_DBNAME=        @echo No need to compress...
+
+ARCH_EXT=               .a
+EXEC_EXT=
+
+
+V3PRINTER=		source/lock/printv3.o
+UDF_LINK_CMD=           ld
+UDF_CFLAGS=             -O -mieee-fp -melf -fPIC
+UDF_LFLAGS=             -G
+UDF_SHRLIBS=            -lgds -lsocket -lgds_pyxis -lm -lc 
+SHRLIB_EXT= .so
+UDF_UTIL_RESOLV=        -h ib_util.so

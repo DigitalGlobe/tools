@@ -1,0 +1,1027 @@
+/*
+ * The contents of this file are subject to the Interbase Public
+ * License Version 1.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy
+ * of the License at http://www.Inprise.com/IPL.html
+ *
+ * Software distributed under the License is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+ * or implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code was created by Inprise Corporation
+ * and its predecessors. Portions created by Inprise Corporation are
+ * Copyright (C) Inprise Corporation.
+ *
+ * All Rights Reserved.
+ * Contributor(s): ______________________________________.
+ *
+ *	PROGRAM:	PLI preprocessor
+ *	MODULE:		gds.pli
+ *	DESCRIPTION:	BLR constants
+ */
+
+%REPLACE GDS__TRUE BY 1;
+%REPLACE GDS__FALSE BY 0;
+
+%REPLACE blr_text	BY 14;
+%REPLACE blr_short	BY 7;
+%REPLACE blr_long	BY 8;
+%REPLACE blr_quad	BY 9;
+%REPLACE blr_float	BY 10;
+%REPLACE blr_double	BY 27;
+%REPLACE blr_d_float	BY 11;
+%REPLACE blr_date	BY 35;
+%REPLACE blr_varying	BY 37;
+%REPLACE blr_blob	BY 261;
+%REPLACE blr_cstring	BY 40;
+
+%REPLACE blr_version4	BY 4;
+%REPLACE blr_version4_extended	BY 20;
+%REPLACE blr_eoc	BY 76;
+%REPLACE blr_end	BY 255;
+
+%REPLACE blr_assignment	BY 1;
+%REPLACE blr_begin	BY 2;
+%REPLACE blr_message	BY 4;
+%REPLACE blr_erase	BY 5;
+%REPLACE blr_fetch	BY 6;
+%REPLACE blr_for	BY 7;
+%REPLACE blr_if		BY 8;
+%REPLACE blr_loop	BY 9;
+%REPLACE blr_modify	BY 10;
+%REPLACE blr_handler	BY 11;
+%REPLACE blr_receive	BY 12;
+%REPLACE blr_select	BY 13;
+%REPLACE blr_send	BY 14;
+%REPLACE blr_store	BY 15;
+%REPLACE blr_label	BY 17;
+%REPLACE blr_leave	BY 18;
+%REPLACE blr_literal	BY 21;
+%REPLACE blr_dbkey	BY 22;
+%REPLACE blr_field	BY 23;
+%REPLACE blr_fid	BY 24;
+%REPLACE blr_parameter	BY 25;
+%REPLACE blr_variable	BY 26;
+%REPLACE blr_average	BY 27;
+%REPLACE blr_count	BY 28;
+%REPLACE blr_maximum	BY 29;
+%REPLACE blr_minimum	BY 30;
+%REPLACE blr_total	BY 31;
+
+%REPLACE blr_add	BY 34;
+%REPLACE blr_subtract	BY 35;
+%REPLACE blr_multiply	BY 36;
+%REPLACE blr_divide	BY 37;
+%REPLACE blr_negate	BY 38;
+%REPLACE blr_concatenate BY 39;
+%REPLACE blr_substring	BY 40;
+%REPLACE blr_parameter2	BY 41;
+%REPLACE blr_from	BY 42;
+%REPLACE blr_via	BY 43;
+%REPLACE blr_null	BY 45;
+
+%REPLACE blr_eql	BY 47;
+%REPLACE blr_neq	BY 48;
+%REPLACE blr_gtr	BY 49;
+%REPLACE blr_geq	BY 50;
+%REPLACE blr_lss	BY 51;
+%REPLACE blr_leq	BY 52;
+%REPLACE blr_containing	BY 53;
+%REPLACE blr_matching	BY 54;
+%REPLACE blr_starting	BY 55;
+%REPLACE blr_between	BY 56;
+%REPLACE blr_or		BY 57;
+%REPLACE blr_and	BY 58;
+%REPLACE blr_not	BY 59;
+%REPLACE blr_any	BY 60;
+%REPLACE blr_missing	BY 61;
+%REPLACE blr_unique	BY 62;
+%REPLACE blr_like	BY 63;
+
+%REPLACE blr_stream     BY 65;
+%REPLACE blr_set_index  BY 66;
+
+%REPLACE blr_rse	BY 67;
+%REPLACE blr_first	BY 68;
+%REPLACE blr_project	BY 69;
+%REPLACE blr_sort	BY 70;
+%REPLACE blr_boolean	BY 71;
+%REPLACE blr_ascending	BY 72;
+%REPLACE blr_descending	BY 73;
+%REPLACE blr_relation	BY 74;
+%REPLACE blr_rid	BY 75;
+%REPLACE blr_union	BY 76;
+%REPLACE blr_map	BY 77;
+%REPLACE blr_group_by	BY 78;
+%REPLACE blr_aggregate	BY 79;
+%REPLACE blr_join_type  BY 80;
+
+%REPLACE blr_agg_count	BY 83;
+%REPLACE blr_agg_max	BY 84;
+%REPLACE blr_agg_min	BY 85;
+%REPLACE blr_agg_total	BY 86;
+%REPLACE blr_agg_average BY 87;
+%REPLACE blr_run_count	BY 88;
+%REPLACE blr_run_max	BY 89;
+%REPLACE blr_run_min	BY 90;
+%REPLACE blr_run_total	BY 91;
+%REPLACE blr_run_average BY 92;
+%REPLACE blr_upcase     BY 103;
+%REPLACE blr_lock_state BY 104;
+%REPLACE blr_value_if   BY 105;
+%REPLACE blr_matching2  BY 106;
+%REPLACE blr_index      BY 107;
+%REPLACE blr_ansi_like  BY 108;
+
+%REPLACE blr_bookmark   BY 109;
+%REPLACE blr_crack      BY 110;
+%REPLACE blr_force_crack BY 111;
+%REPLACE blr_seek       BY 112;
+%REPLACE blr_find       BY 113;
+%REPLACE blr_lock_relation BY 114;
+%REPLACE blr_lock_record BY 115;
+%REPLACE blr_set_bookmark BY 116;
+%REPLACE blr_get_bookmark BY 117;
+
+%REPLACE blr_rs_stream  BY 119;
+%REPLACE blr_exec_proc  BY 120;
+
+%REPLACE blr_begin_range BY 121;
+%REPLACE blr_end_range  BY 122;
+%REPLACE blr_delete_range BY 123;
+
+%REPLACE blr_inner      BY 0;
+%REPLACE blr_left       BY 1;
+%REPLACE blr_right      BY 2;
+%REPLACE blr_full       BY 3;
+
+
+/* Array slice description language (SDL) */
+
+%REPLACE gds__sdl_version1          BY 1;
+%REPLACE gds__sdl_eoc               BY -1;
+%REPLACE gds__sdl_relation          BY 2;
+%REPLACE gds__sdl_rid               BY 3;
+%REPLACE gds__sdl_field             BY 4;
+%REPLACE gds__sdl_fid               BY 5;
+%REPLACE gds__sdl_struct            BY 6;
+%REPLACE gds__sdl_variable          BY 7;
+%REPLACE gds__sdl_scalar            BY 8;
+%REPLACE gds__sdl_tiny_integer      BY 9;
+%REPLACE gds__sdl_short_integer     BY 10;
+%REPLACE gds__sdl_long_integer      BY 11;
+%REPLACE gds__sdl_literal           BY 12;
+%REPLACE gds__sdl_add               BY 13;
+%REPLACE gds__sdl_subtract          BY 14;
+%REPLACE gds__sdl_multiply          BY 15;
+%REPLACE gds__sdl_divide            BY 16;
+%REPLACE gds__sdl_negate            BY 17;
+%REPLACE gds__sdl_eql               BY 18;
+%REPLACE gds__sdl_neq               BY 19;
+%REPLACE gds__sdl_gtr               BY 20;
+%REPLACE gds__sdl_geq               BY 21;
+%REPLACE gds__sdl_lss               BY 22;
+%REPLACE gds__sdl_leq               BY 23;
+%REPLACE gds__sdl_and               BY 24;
+%REPLACE gds__sdl_or                BY 25;
+%REPLACE gds__sdl_not               BY 26;
+%REPLACE gds__sdl_while             BY 27;
+%REPLACE gds__sdl_assignment        BY 28;
+%REPLACE gds__sdl_label             BY 29;
+%REPLACE gds__sdl_leave             BY 30;
+%REPLACE gds__sdl_begin             BY 31;
+%REPLACE gds__sdl_end               BY 32;
+%REPLACE gds__sdl_do3               BY 33;
+%REPLACE gds__sdl_do2               BY 34;
+%REPLACE gds__sdl_do1               BY 35;
+%REPLACE gds__sdl_element           BY 36;
+
+%REPLACE dsc$k_dtype_t			BY 14;
+%REPLACE dsc$k_dtype_vt			BY 37;
+%REPLACE dsc$k_dtype_w			BY 7;
+%REPLACE dsc$k_dtype_l			BY 8;
+%REPLACE dsc$k_dtype_q			BY 9;
+%REPLACE dsc$k_dtype_f			BY 10;
+%REPLACE dsc$k_dtype_g			BY 27;
+%REPLACE dsc$k_dtype_adt		BY 35;
+
+%REPLACE rdb$k_dpb_cdd_pathname		BY 1;
+%REPLACE rdb$k_dpb_allocation		BY 2;
+%REPLACE rdb$k_dpb_aij			BY 3;
+%REPLACE rdb$k_dpb_page_size		BY 4;
+%REPLACE rdb$k_dpb_num_buff		BY 5;
+%REPLACE rdb$k_dpb_buffer_length	BY 6;
+%REPLACE rdb$k_dpb_debug		BY 7;
+%REPLACE rdb$k_dpb_garbage_collect	BY 8;
+%REPLACE rdb$k_dpb_verify		BY 9;
+%REPLACE rdb$k_dpb_sweep		BY 10;
+%REPLACE rdb$k_dpb_enable_journal	BY 11;
+%REPLACE rdb$k_dpb_disable_journal	BY 12;
+%REPLACE rdb$k_dpb_dbkey_scope		BY 13;
+%REPLACE rdb$k_dpb_number_of_users	BY 14;
+
+%REPLACE rdb$k_db_type_default		BY 0;
+%REPLACE rdb$k_db_type_vms		BY 1;
+%REPLACE rdb$k_db_type_eln		BY 2;
+%REPLACE rdb$k_db_type_gds		BY -1;
+
+/* Database parameter block stuff */
+
+%REPLACE gds__dpb_cdd_pathname		BY 1;	/* not implemented */
+%REPLACE gds__dpb_allocation		BY 2;	/* not implemented */
+%REPLACE gds__dpb_journal 		BY 3;	/* not implemented */
+%REPLACE gds__dpb_page_size 		BY 4;
+%REPLACE gds__dpb_buffers 		BY 5;
+%REPLACE gds__dpb_buffer_length		BY 6;	/* not implemented */
+%REPLACE gds__dpb_debug 		BY 7;	/* not implemented */
+%REPLACE gds__dpb_garbage_collect	BY 8;	/* not implemented */
+%REPLACE gds__dpb_verify 		BY 9;
+%REPLACE gds__dpb_sweep 		BY 10;
+%REPLACE gds__dpb_enable_journal	BY 11;
+%REPLACE gds__dpb_disable_journal	BY 12;
+%REPLACE gds__dpb_dbkey_scope		BY 13;	/* not implemented */
+%REPLACE gds__dpb_number_of_users	BY 14;	/* not implemented */
+%REPLACE gds__dpb_trace			BY 15;	/* not implemented */
+%REPLACE gds__dpb_no_garbage_collect	BY 16;	/* not implemented */
+%REPLACE gds__dpb_damaged		BY 17;	/* not implemented */
+%REPLACE gds__dpb_license		BY 18;
+%REPLACE gds__dpb_sys_user_name		BY 19;	/* User Name (advisory only) */
+%REPLACE gds__dpb_encrypt_key		BY 20;	/* Encryption key */
+%REPLACE gds__dpb_activate_shadow	BY 21;	
+%REPLACE gds__dpb_sweep_interval	BY 22;
+%REPLACE gds__dpb_delete_shadow		BY 23;
+
+%REPLACE gds__dpb_pages			BY 1;
+%REPLACE gds__dpb_records		BY 2;
+%REPLACE gds__dpb_indices		BY 4;
+%REPLACE gds__dpb_transactions		BY 8;
+%REPLACE gds__dpb_no_update		BY 16;
+%REPLACE gds__dpb_repair		BY 32;
+
+/* Bit assignments in RDB$SYSTEM_FLAG */
+
+%REPLACE RDB_system		BY 1;	/* Object belongs to system */
+%REPLACE RDB_id_assigned	BY 2;	/* Internal id has been assigned */
+
+/* Transaction parameter blob stuff */
+
+%REPLACE gds__tpb_version1	BY 1;
+%REPLACE gds__tpb_version3	BY 3;
+%REPLACE gds__tpb_consistency	BY 1;
+%REPLACE gds__tpb_concurrency	BY 2;
+%REPLACE gds__tpb_shared	BY 3;
+%REPLACE gds__tpb_protected	BY 4;
+%REPLACE gds__tpb_exclusive	BY 5;
+%REPLACE gds__tpb_wait		BY 6;
+%REPLACE gds__tpb_nowait	BY 7;
+%REPLACE gds__tpb_read		BY 8;
+%REPLACE gds__tpb_write		BY 9;
+%REPLACE gds__tpb_lock_read	BY 10;
+%REPLACE gds__tpb_lock_write	BY 11;
+%REPLACE gds__tpb_verb_time	BY 12;
+%REPLACE gds__tpb_commit_time	BY 13;
+
+
+/* Blob parameter block stuff */
+
+%REPLACE gds__bpb_version1		BY 1;
+%REPLACE gds__bpb_source_type		BY 1;
+%REPLACE gds__bpb_target_type		BY 2;
+%REPLACE gds__bpb_type			BY 3;
+
+%REPLACE gds__bpb_type_segmented	BY 0;
+%REPLACE gds__bpb_type_stream		BY 1;
+
+/* Information call declarations */
+
+/* Common, structural codes */
+
+%REPLACE gds__info_end			BY 1;
+%REPLACE gds__info_truncated		BY 2;
+%REPLACE gds__info_error		BY 3;
+
+/* Database information items */
+
+%REPLACE gds__info_db_id		BY 4;
+%REPLACE gds__info_reads		BY 5;
+%REPLACE gds__info_writes		BY 6;
+%REPLACE gds__info_fetches		BY 7;
+%REPLACE gds__info_marks		BY 8;
+%REPLACE gds__info_implementation 	BY 11;
+%REPLACE gds__info_version		BY 12;
+%REPLACE gds__info_base_level		BY 13;
+%REPLACE gds__info_page_size		BY 14;
+%REPLACE gds__info_number_buffers	BY 15;
+%REPLACE gds__info_limbo		BY 16;
+%REPLACE gds__info_current_memory	BY 17;
+%REPLACE gds__info_max_memory		BY 18;
+%REPLACE gds__info_window_turns		BY 19;
+%REPLACE gds__info_license              BY 20;
+%REPLACE gds__info_allocation           BY 21;
+%REPLACE gds__info_attachment_id        BY 22;
+%REPLACE gds__info_read_seq_count       BY 23;
+%REPLACE gds__info_read_idx_count       BY 24;
+%REPLACE gds__info_insert_count         BY 25;
+%REPLACE gds__info_update_count         BY 26;
+%REPLACE gds__info_delete_count         BY 27;
+%REPLACE gds__info_backout_count        BY 28;
+%REPLACE gds__info_purge_count          BY 29;
+%REPLACE gds__info_expunge_count        BY 30;
+%REPLACE gds__info_sweep_interval       BY 31;
+%REPLACE gds__info_ods_version          BY 32;
+%REPLACE gds__info_ods_minor_version    BY 33;
+
+/* Request information items */
+
+%REPLACE gds__info_number_messages	BY 4;
+%REPLACE gds__info_max_message		BY 5;
+%REPLACE gds__info_max_send		BY 6;
+%REPLACE gds__info_max_receive		BY 7;
+%REPLACE gds__info_state		BY 8;
+%REPLACE gds__info_message_number	BY 9;
+%REPLACE gds__info_message_size		BY 10;
+%REPLACE gds__info_request_cost		BY 11;
+
+%REPLACE gds__info_req_active		BY 2;
+%REPLACE gds__info_req_inactive		BY 3;
+%REPLACE gds__info_req_send		BY 4;
+%REPLACE gds__info_req_receive		BY 5;
+%REPLACE gds__info_req_select		BY 6;
+
+/* Blob information items */
+
+%REPLACE gds__info_number_segments	BY 4;
+%REPLACE gds__info_max_segment		BY 5;
+%REPLACE gds__info_total_length		BY 6;
+%REPLACE gds__info_blob_type		BY 7;
+
+/* Transaction information items */
+
+%REPLACE gds__info_transaction_id	BY 4;
+
+
+%REPLACE gds_facility BY 20;
+%REPLACE gds_err_base BY 335544320;
+%REPLACE gds_err_factor BY 1;
+%REPLACE    gds_arg_end  BY 0;
+%REPLACE    gds_arg_gds  BY 1;
+%REPLACE    gds_arg_string BY 2;
+%REPLACE    gds_arg_cstring BY 3; 
+%REPLACE    gds_arg_number BY 4; 
+%REPLACE    gds_arg_interpreted BY 5;
+%REPLACE    gds_arg_vms  BY 6;
+%REPLACE    gds_arg_unix BY 7;
+%REPLACE    gds_arg_domain BY 8;
+
+%REPLACE gds__arith_except        	BY 335544321;
+%REPLACE gds__bad_dbkey           	BY 335544322;
+%REPLACE gds__bad_db_format       	BY 335544323;
+%REPLACE gds__bad_db_handle       	BY 335544324;
+%REPLACE gds__bad_dpb_content     	BY 335544325;
+%REPLACE gds__bad_dpb_form        	BY 335544326;
+%REPLACE gds__bad_req_handle      	BY 335544327;
+%REPLACE gds__bad_segstr_handle   	BY 335544328;
+%REPLACE gds__bad_segstr_id       	BY 335544329;
+%REPLACE gds__bad_tpb_content     	BY 335544330;
+%REPLACE gds__bad_tpb_form        	BY 335544331;
+%REPLACE gds__bad_trans_handle    	BY 335544332;
+%REPLACE gds__bug_check           	BY 335544333;
+%REPLACE gds__convert_error       	BY 335544334;
+%REPLACE gds__db_corrupt          	BY 335544335;
+%REPLACE gds__deadlock            	BY 335544336;
+%REPLACE gds__excess_trans        	BY 335544337;
+%REPLACE gds__from_no_match       	BY 335544338;
+%REPLACE gds__infinap             	BY 335544339;
+%REPLACE gds__infona              	BY 335544340;
+%REPLACE gds__infunk              	BY 335544341;
+%REPLACE gds__integ_fail          	BY 335544342;
+%REPLACE gds__invalid_blr         	BY 335544343;
+%REPLACE gds__io_error            	BY 335544344;
+%REPLACE gds__lock_conflict       	BY 335544345;
+%REPLACE gds__metadata_corrupt    	BY 335544346;
+%REPLACE gds__not_valid           	BY 335544347;
+%REPLACE gds__no_cur_rec          	BY 335544348;
+%REPLACE gds__no_dup              	BY 335544349;
+%REPLACE gds__no_finish           	BY 335544350;
+%REPLACE gds__no_meta_update      	BY 335544351;
+%REPLACE gds__no_priv             	BY 335544352;
+%REPLACE gds__no_recon            	BY 335544353;
+%REPLACE gds__no_record           	BY 335544354;
+%REPLACE gds__no_segstr_close     	BY 335544355;
+%REPLACE gds__obsolete_metadata   	BY 335544356;
+%REPLACE gds__open_trans          	BY 335544357;
+%REPLACE gds__port_len            	BY 335544358;
+%REPLACE gds__read_only_field     	BY 335544359;
+%REPLACE gds__read_only_rel       	BY 335544360;
+%REPLACE gds__read_only_trans     	BY 335544361;
+%REPLACE gds__read_only_view      	BY 335544362;
+%REPLACE gds__req_no_trans        	BY 335544363;
+%REPLACE gds__req_sync            	BY 335544364;
+%REPLACE gds__req_wrong_db        	BY 335544365;
+%REPLACE gds__segment             	BY 335544366;
+%REPLACE gds__segstr_eof          	BY 335544367;
+%REPLACE gds__segstr_no_op        	BY 335544368;
+%REPLACE gds__segstr_no_read      	BY 335544369;
+%REPLACE gds__segstr_no_trans     	BY 335544370;
+%REPLACE gds__segstr_no_write     	BY 335544371;
+%REPLACE gds__segstr_wrong_db     	BY 335544372;
+%REPLACE gds__sys_request         	BY 335544373;
+%REPLACE gds__unavailable         	BY 335544375;
+%REPLACE gds__unres_rel           	BY 335544376;
+%REPLACE gds__uns_ext             	BY 335544377;
+%REPLACE gds__wish_list           	BY 335544378;
+%REPLACE gds__wrong_ods           	BY 335544379;
+%REPLACE gds__wronumarg           	BY 335544380;
+%REPLACE gds__imp_exc             	BY 335544381;
+%REPLACE gds__random              	BY 335544382;
+%REPLACE gds__fatal_conflict      	BY 335544383;
+
+/* Minor codes subject to change */
+
+%REPLACE gds__badblk              	BY 335544384;
+%REPLACE gds__invpoolcl           	BY 335544385;
+%REPLACE gds__nopoolids           	BY 335544386;
+%REPLACE gds__relbadblk           	BY 335544387;
+%REPLACE gds__blktoobig           	BY 335544388;
+%REPLACE gds__bufexh              	BY 335544389;
+%REPLACE gds__syntaxerr           	BY 335544390;
+%REPLACE gds__bufinuse            	BY 335544391;
+%REPLACE gds__bdbincon            	BY 335544392;
+%REPLACE gds__reqinuse            	BY 335544393;
+%REPLACE gds__badodsver           	BY 335544394;
+%REPLACE gds__relnotdef           	BY 335544395;
+%REPLACE gds__fldnotdef           	BY 335544396;
+%REPLACE gds__dirtypage           	BY 335544397;
+%REPLACE gds__waifortra           	BY 335544398;
+%REPLACE gds__doubleloc           	BY 335544399;
+%REPLACE gds__nodnotfnd           	BY 335544400;
+%REPLACE gds__dupnodfnd           	BY 335544401;
+%REPLACE gds__locnotmar           	BY 335544402;
+%REPLACE gds__badpagtyp           	BY 335544403;
+%REPLACE gds__corrupt             	BY 335544404;
+%REPLACE gds__badpage             	BY 335544405;
+%REPLACE gds__badindex            	BY 335544406;
+%REPLACE gds__dbbnotzer           	BY 335544407;
+%REPLACE gds__tranotzer           	BY 335544408;
+%REPLACE gds__trareqmis           	BY 335544409;
+%REPLACE gds__badhndcnt           	BY 335544410;
+%REPLACE gds__wrotpbver           	BY 335544411;
+%REPLACE gds__wroblrver           	BY 335544412;
+%REPLACE gds__wrodpbver           	BY 335544413;
+%REPLACE gds__blobnotsup          	BY 335544414;
+%REPLACE gds__badrelation         	BY 335544415;
+%REPLACE gds__nodetach            	BY 335544416;
+%REPLACE gds__notremote           	BY 335544417;
+%REPLACE gds__trainlim            	BY 335544418;
+%REPLACE gds__notinlim            	BY 335544419;
+%REPLACE gds__traoutsta           	BY 335544420;
+%REPLACE gds__connect_reject      	BY 335544421;
+%REPLACE gds__dbfile              	BY 335544422;
+%REPLACE gds__orphan              	BY 335544423;
+%REPLACE gds__no_lock_mgr         	BY 335544424;
+%REPLACE gds__ctxinuse            	BY 335544425;
+%REPLACE gds__ctxnotdef           	BY 335544426;
+%REPLACE gds__datnotsup           	BY 335544427;
+%REPLACE gds__badmsgnum           	BY 335544428;
+%REPLACE gds__badparnum           	BY 335544429;
+%REPLACE gds__virmemexh           	BY 335544430;
+%REPLACE gds__blocking_signal     	BY 335544431;
+%REPLACE gds__lockmanerr          	BY 335544432;
+%REPLACE gds__journerr            	BY 335544433;
+%REPLACE gds__keytoobig           	BY 335544434;
+%REPLACE gds__nullsegkey          	BY 335544435;
+%REPLACE gds__sqlerr              	BY 335544436;
+%REPLACE gds__wrodynver              	BY 335544437;
+%REPLACE gds__obj_in_use                BY 335544453;
+%REPLACE gds__nofilter                  BY 335544454;
+%REPLACE gds__shadow_accessed     	BY 335544455;
+%REPLACE gds__invalid_sdl         	BY 335544456;
+%REPLACE gds__out_of_bounds       	BY 335544457;
+%REPLACE gds__invalid_dimension   	BY 335544458;
+
+
+DECLARE GDS__SQLCODE ENTRY(
+	(20) FIXED)	/* status vector */
+	RETURNS (FIXED);
+
+DECLARE GDS__ATTACH_DATABASE ENTRY(
+	ANY VALUE,			/* status vector */
+	FIXED BINARY (15) VALUE,	/* file name length */
+	ANY,				/* file name */
+	ANY,				/* database handle */
+	FIXED BINARY (15) VALUE,	/* dpb length */
+	ANY );			/* dpb */
+
+DECLARE GDS__CANCEL_BLOB ENTRY(
+	ANY VALUE,	/* status vector */
+	ANY);		/* blob handle */
+
+DECLARE GDS__CANCEL_EVENTS ENTRY(
+        ANY VALUE,       /* status vector */
+        ANY,             /* database handle */
+        ANY);            /* id */
+
+DECLARE GDS__CLOSE_BLOB ENTRY(
+	ANY VALUE,	/* status vector */
+	ANY);		/* blob handle */
+
+DECLARE GDS__COMMIT_RETAINING ENTRY(
+        ANY VALUE,      /* status vector */
+        ANY);           /* transaction handle */
+
+DECLARE GDS__COMMIT_TRANSACTION ENTRY(
+	ANY VALUE,	/* status vector */
+	ANY);		/* transaction handle */
+
+DECLARE GDS__COMPILE_REQUEST ENTRY(
+	ANY VALUE,	/* status vector */
+	ANY,		/* database handle */
+	ANY,		/* request handle */
+	FIXED BINARY (15) VALUE,	/* blr length */
+	ANY);		/* blr */
+
+DECLARE GDS__COMPILE_REQUEST2 ENTRY(
+	ANY VALUE,	/* status vector */
+	ANY,		/* database handle */
+	ANY,		/* request handle */
+	FIXED BINARY (15) VALUE,	/* blr length */
+	ANY);		/* blr */
+
+DECLARE GDS__CREATE_BLOB ENTRY(
+	ANY VALUE,	/* status vector */
+	ANY,		/* database handle */
+	ANY,		/* transaction handle */
+	ANY,		/* blob handle */
+	(2) FIXED);		/* blob id */
+
+DECLARE GDS__CREATE_BLOB2 ENTRY(
+	ANY VALUE,	/* status vector */
+	ANY,		/* database handle */
+	ANY,		/* transaction handle */
+	ANY,		/* blob handle */
+	(2) FIXED,	/* blob id */
+        FIXED BINARY (15) VALUE,        /* blob parameter block length */
+        ANY);           /* blob parameter block */
+
+DECLARE GDS__CREATE_DATABASE ENTRY(
+	ANY VALUE,			/* status vector */
+	FIXED BINARY (15) VALUE,	/* file name length */
+	ANY,				/* file name */
+	ANY,				/* database handle */
+	FIXED BINARY (15) VALUE,	/* dpb length */
+	ANY  VALUE,			/* dpb */
+	FIXED BINARY (15) VALUE);	/* database type */
+
+DECLARE GDS__DDL ENTRY(
+	ANY VALUE,			/* status vector */
+	ANY,				/* database handle */
+	ANY,				/* transaction handle */
+	FIXED BINARY (15) VALUE,	/* mblr length */
+	ANY);				/* mblr */
+
+DECLARE GDS__DETACH_DATABASE ENTRY(
+	ANY VALUE,	/* status vector */
+	ANY);		/* database handle */
+
+DECLARE GDS__DROP_DATABASE ENTRY(
+	ANY VALUE,			/* status vector */
+	FIXED BINARY (15) VALUE,	/* file name length */
+	ANY,				/* file name */
+	FIXED BINARY (15) VALUE);	/* database type */
+
+DECLARE GDS__EVENT_WAIT ENTRY(
+        ANY VALUE,      /* status vector */
+        ANY,            /* database handle */
+        ANY,            /* length */
+        ANY,            /* events */
+        ANY);           /* buffer */
+
+DECLARE GDS__GET_SEGMENT ENTRY(
+	ANY VALUE,	/* status vector */
+	ANY,		/* blob handle */
+	ANY,	/* segment length */
+	FIXED BINARY (15) VALUE,	/* buffer length */
+	ANY)		/* buffer */
+	RETURNS (FIXED);
+
+DECLARE GDS__GET_SLICE ENTRY(
+        ANY VALUE,      /* status vector */
+        ANY,            /* database handle */
+        ANY,            /* transaction handle */
+        ANY,            /* array (blob) id */
+        FIXED BINARY (15),  /* sdl length */
+        ANY,            /* sdl */
+        FIXED BINARY (15),  /* parameter length */
+        ANY,            /* parameter */
+        FIXED BINARY (31),  /* slice length */
+        ANY,            /* slice */
+        FIXED BINARY (31));  /* return length */
+
+DECLARE GDS__OPEN_BLOB ENTRY(
+	ANY VALUE,	/* status vector */
+	ANY,		/* database handle */
+	ANY,		/* transaction handle */
+	ANY,		/* blob handle */
+	(2) FIXED);		/* blob id */
+
+DECLARE GDS__OPEN_BLOB2 ENTRY(
+	ANY VALUE,	   /* status vector */
+	ANY,		   /* database handle */
+	ANY,		   /* transaction handle */
+	ANY,		   /* blob handle */
+	(2) FIXED,	   /* blob id */
+        FIXED BINARY (15), /* blob parameter block length */
+        ANY);              /* blob parameter block */
+
+DECLARE GDS__PREPARE_TRANSACTION ENTRY(
+	ANY VALUE,	/* status vector */
+	ANY);		/* transaction handle */
+
+DECLARE GDS__PREPARE_TRANSACTION2 ENTRY(
+	ANY VALUE,	   /* status vector */
+	ANY,		   /* transaction handle */
+        FIXED BINARY (15),
+        ANY);
+
+DECLARE GDS__PUT_SEGMENT ENTRY(
+	ANY VALUE,	/* status vector */
+	ANY,		/* blob handle */
+	FIXED BINARY (15) VALUE,	/* buffer length */
+	ANY)		/* buffer */
+	RETURNS (FIXED);
+
+DECLARE GDS__PUT_SLICE ENTRY(
+        ANY VALUE,      /* status vector */
+        ANY,            /* database handle */
+        ANY,            /* transaction handle */
+        ANY,            /* array (blob) id */
+        FIXED BINARY (15),  /* sdl length */
+        ANY,            /* sdl */
+        FIXED BINARY (15),  /* parameter length */
+        ANY,            /* parameter */
+        FIXED BINARY (31),  /* slice length */
+        ANY);            /* slice */
+
+DECLARE GDS__QUE_EVENTS ENTRY(
+        ANY VALUE,      /* status vector */
+        ANY,            /* database handle */
+        ANY,            /* id */
+        ANY,            /* length */
+        ANY,            /* events */
+        ANY,            /* ast */
+        ANY);           /* arg */
+
+DECLARE GDS__RECEIVE ENTRY(
+	ANY VALUE,	/* status vector */
+	ANY,		/* request handle */
+	FIXED BINARY (15) VALUE,	/* message type */
+	FIXED BINARY (15) VALUE,	/* message length */
+	PTR VALUE,		/* message */
+	FIXED BINARY (15) VALUE);	/* instantiation */
+
+DECLARE GDS__RELEASE_REQUEST ENTRY(
+	ANY VALUE,	/* status vector */
+	ANY);		/* request handle */
+
+DECLARE GDS__ROLLBACK_TRANSACTION ENTRY(
+	ANY VALUE,	/* status vector */
+	ANY);		/* transaction handle */
+
+DECLARE GDS__SEND ENTRY(
+	ANY VALUE,	/* status vector */
+	ANY,		/* request handle */
+	FIXED BINARY (15) VALUE,	/* message type */
+	FIXED BINARY (15) VALUE,	/* message length */
+	ANY,		/* message */
+	FIXED BINARY (15) VALUE);	/* instantiation */
+
+DECLARE GDS__SET_DEBUG ENTRY(
+        FIXED BINARY (15) VALUE);
+
+DECLARE GDS__START_AND_SEND ENTRY(
+	ANY VALUE,	/* status vector */
+	ANY,		/* request handle */
+	ANY,		/* transaction handle */
+	FIXED BINARY (15) VALUE,	/* message type */
+	FIXED BINARY (15) VALUE,	/* message length */
+	ANY,		/* message */
+	FIXED BINARY (15) VALUE);	/* instantiation */
+
+DECLARE GDS__START_REQUEST ENTRY(
+	ANY VALUE,	/* status vector */
+	ANY,		/* request handle */
+	ANY,		/* transaction handle */
+	FIXED BINARY (15) VALUE);	/* instantiation */
+
+DECLARE GDS__START_MULTIPLE ENTRY(
+	ANY VALUE,	/* status vector */
+	ANY,		/* transaction handle */
+	FIXED BINARY (15) VALUE,	/* transaction count */
+	ANY);		/* teb */
+
+DECLARE GDS__START_TRANSACTION ENTRY(
+	ANY VALUE,			/* status vector */
+	ANY,				/* transaction handle */
+	FIXED BINARY (15) VALUE,	/* transaction count */
+	ANY VALUE,			/* database handle */
+	FIXED BINARY (15) VALUE,	/* tpb length */
+	ANY VALUE) 			/* tpb */
+	OPTIONS (VARIABLE);
+
+DECLARE GDS__STATUS_AND_STOP ENTRY(
+	ANY VALUE);		/* status vector */
+
+DECLARE GDS__UNWIND_REQUEST ENTRY(
+	ANY VALUE,			/* status vector */
+	ANY,				/* request handle */
+	FIXED BINARY (15) VALUE);	/* instantiation */
+
+DECLARE gds__print_status ENTRY(
+	(20) FIXED);		/* status vector */
+
+
+DECLARE gds__encode_date ENTRY(
+	ANY,		/* time record */
+	(2) FIXED);		/* date */
+
+DECLARE gds__decode_date ENTRY(
+	(2) FIXED,		/* date */
+	ANY);		/* time record */
+
+
+DECLARE blob__display ENTRY (
+		(2) FIXED,	/* blob_id*/
+		ANY,		/* database handle */
+		ANY,		/* transaction handle */
+		ANY,		/* field name */
+                ANY);		/* name_length */
+
+DECLARE blob__dump ENTRY (
+		(2) FIXED,	/* blob_id*/
+		ANY,		/* database handle */
+		ANY,		/* transaction handle */
+		ANY,		/* file name */
+                ANY);		/* name_length */
+
+DECLARE blob__edit ENTRY (
+		(2) FIXED,	/* blob_id*/
+		ANY,		/* database handle */
+		ANY,		/* transaction handle */
+		ANY,		/* field name */
+                ANY);		/* name_length */
+
+DECLARE blob__load ENTRY (
+		(2) FIXED,	/* blob_id*/
+		ANY,		/* database handle */
+		ANY,		/* transaction handle */
+		ANY,		/* file name */
+                ANY);		/* name_length */
+
+/* Dynamic SQL datatypes */
+
+%REPLACE  SQL_TEXT	BY 452;
+%REPLACE  SQL_VARYING	BY 448;
+%REPLACE  SQL_SHORT	BY 500;
+%REPLACE  SQL_LONG	BY 496;
+%REPLACE  SQL_FLOAT	BY 482;
+%REPLACE  SQL_DOUBLE	BY 480;
+%REPLACE  SQL_D_FLOAT	BY 530;
+%REPLACE  SQL_DATE	BY 510;
+%REPLACE  SQL_BLOB	BY 520;
+
+/* Dynamic SQL DECLAREs */
+
+DECLARE gds__close ENTRY (
+	ANY VALUE,		/* status vector */
+	ANY		/* cursor_name */
+	);
+
+DECLARE gds__declare ENTRY (
+	ANY VALUE,		/* status vector */
+	ANY,		/* statement_name */
+	ANY		/* cursor_name */
+	);
+
+DECLARE gds__describe ENTRY (
+	ANY VALUE,		/* status vector */
+	ANY,		/* statement_name */
+	ANY		/* descriptor */
+	);
+
+DECLARE gds__dsql_finish ENTRY (
+	ANY		/* db_handle */
+	);
+
+DECLARE gds__execute ENTRY (
+	ANY VALUE,		/* status vector */
+	ANY,		/* trans_handle	*/
+	ANY,		/* statement_name */
+	ANY		/* descriptor */
+	);
+
+DECLARE gds__execute_immediate ENTRY (
+	ANY VALUE,		/* status vector */
+	ANY,		/* db_handle */
+	ANY,		/* trans_handle */
+	ANY,		/* string_length */
+	ANY		/* string */
+	);
+
+DECLARE gds__fetch ENTRY (
+	ANY VALUE,		/* status vector */
+	ANY,		/* cursor_name */
+	ANY		/* descriptor */
+	) RETURNS (FIXED);
+
+DECLARE gds__open ENTRY (
+	ANY VALUE,		/* status vector */
+	ANY,		/* trans_handle */
+	ANY,		/* cursor_name */
+	ANY		/* descriptor */
+	);
+
+DECLARE gds__prepare ENTRY (
+	ANY VALUE,		/* status vector */
+	ANY,		/* db_handle */
+	ANY,		/* trans_handle */
+	ANY,		/* statement_name */
+	ANY,		/* string_length */
+	ANY,		/* string */
+	ANY		/* descriptor */
+	);
+
+/* Forms Package definitions */
+
+/* Map definition block definitions */
+
+%REPLACE  PYXIS__MAP_VERSION1		BY 1;
+%REPLACE  PYXIS__MAP_FIELD2		BY 2;
+%REPLACE  PYXIS__MAP_FIELD1		BY 3;
+%REPLACE  PYXIS__MAP_MESSAGE		BY 4;
+%REPLACE  PYXIS__MAP_TERMINATOR		BY 5;
+%REPLACE  PYXIS__MAP_TERMINATING_FIELD	BY 6;
+%REPLACE  PYXIS__MAP_OPAQUE		BY 7;
+%REPLACE  PYXIS__MAP_TRANSPARENT	BY 8;
+%REPLACE  PYXIS__MAP_TAG		BY 9;
+%REPLACE  PYXIS__MAP_SUB_FORM		BY 10;
+%REPLACE  PYXIS__MAP_ITEM_INDEX		BY 11;
+%REPLACE  PYXIS__MAP_SUB_FIELD		BY 12;
+%REPLACE  PYXIS__MAP_END		BY -1;
+
+/* Field option flags for display options */
+
+%REPLACE  PYXIS__OPT_DISPLAY	BY 1;
+%REPLACE  PYXIS__OPT_UPDATE	BY 2;
+%REPLACE  PYXIS__OPT_WAKEUP	BY 4;
+%REPLACE  PYXIS__OPT_POSITION	BY 8;
+
+/* Field option values following display */
+
+%REPLACE  PYXIS__OPT_NULL	BY 1;
+%REPLACE  PYXIS__OPT_DEFAULT	BY 2;
+%REPLACE  PYXIS__OPT_INITIAL	BY 3;
+%REPLACE  PYXIS__OPT_USER_DATA	BY 4;
+
+/* Pseudo key definitions */
+
+%REPLACE  PYXIS__KEY_DELETE		BY 127;
+%REPLACE  PYXIS__KEY_UP			BY 128;
+%REPLACE  PYXIS__KEY_DOWN		BY 129;
+%REPLACE  PYXIS__KEY_RIGHT		BY 130;
+%REPLACE  PYXIS__KEY_LEFT		BY 131;
+%REPLACE  PYXIS__KEY_PF1		BY 132;
+%REPLACE  PYXIS__KEY_PF2		BY 133;
+%REPLACE  PYXIS__KEY_PF3		BY 134;
+%REPLACE  PYXIS__KEY_PF4		BY 135;
+%REPLACE  PYXIS__KEY_PF5		BY 136;
+%REPLACE  PYXIS__KEY_PF6		BY 137;
+%REPLACE  PYXIS__KEY_PF7		BY 138;
+%REPLACE  PYXIS__KEY_PF8		BY 139;
+%REPLACE  PYXIS__KEY_PF9		BY 140;
+%REPLACE  PYXIS__KEY_ENTER		BY 141;
+%REPLACE  PYXIS__KEY_SCROLL_TOP		BY 146;
+%REPLACE  PYXIS__KEY_SCROLL_BOTTOM	BY 147;
+
+/* Menu definition stuff */
+
+%REPLACE  PYXIS__MENU_VERSION1		BY 1;
+%REPLACE  PYXIS__MENU_LABEL		BY 2;
+%REPLACE  PYXIS__MENU_ENTREE		BY 3;
+%REPLACE  PYXIS__MENU_OPAQUE		BY 4;
+%REPLACE  PYXIS__MENU_TRANSPARENT	BY 5;
+%REPLACE  PYXIS__MENU_HORIZONTAL	BY 6;
+%REPLACE  PYXIS__MENU_VERTICAL		BY 7;
+%REPLACE  PYXIS__MENU_END		BY -1;
+
+DECLARE pyxis__compile_map ENTRY (
+	ANY VALUE,		/* status vector */
+	ANY,			/* form handle */
+	ANY,			/* map handle */
+	FIXED BINARY (15),	/* length */
+	ANY			/* map handle */
+	);
+
+DECLARE pyxis__compile_sub_map ENTRY (
+	ANY VALUE,		/* status vector */
+	ANY,			/* form handle */
+	ANY,			/* map handle */
+	FIXED BINARY (15),	/* length */
+	ANY			/* map */
+	);
+
+DECLARE pyxis__create_window ENTRY (
+	ANY,			/* window handle */
+	FIXED BINARY (15),	/* length */
+	ANY,			/* file_name */
+	FIXED BINARY (15),	/* width */
+	FIXED BINARY (15)	/* height */
+	);
+
+DECLARE pyxis__delete_window ENTRY (
+	ANY		/* window handle */
+	);
+
+DECLARE pyxis__drive_form ENTRY (
+	ANY VALUE,		/* status vector */
+	ANY,			/* database handle */
+	ANY,			/* transaction handle */
+	ANY,			/* window handle */
+	ANY,			/* map handle */
+	ANY,			/* input */
+	ANY			/* output */
+	);
+
+DECLARE pyxis__fetch ENTRY (
+	ANY VALUE,		/* status vector */
+	ANY,		/* database handle */
+	ANY,		/* transaction handle */
+	ANY,		/* map handle */
+	ANY		/* output */
+	);
+
+DECLARE pyxis__insert ENTRY (
+	ANY VALUE,		/* status vector */
+	ANY,		/* database handle */
+	ANY,		/* transaction handle */
+	ANY,		/* map handle */
+	ANY		/* intput */
+	);
+
+DECLARE pyxis__load_form ENTRY (
+	ANY VALUE,		/* status vector */
+	ANY,		/* database handle */
+	ANY,		/* transaction handle */
+	ANY,		/* form handle */
+	ANY,		/* map handle */
+	ANY		/* form_name */
+	);
+
+DECLARE pyxis__menu ENTRY (
+	ANY,			/* window handle */
+	ANY,			/* menu handle */
+	FIXED BINARY (15),	/* length */
+	ANY			/* menu */
+	) RETURNS (FIXED BINARY (15));
+
+DECLARE pyxis__pop_window ENTRY (
+	ANY		/* window handle */
+	);
+
+DECLARE pyxis__reset_form ENTRY (
+	ANY VALUE,		/* status vector */
+	ANY		/* window handle */
+	);
+
+DECLARE pyxis__drive_menu ENTRY (
+	ANY,			/* window_handle */
+	ANY,			/* menu_handle */
+	FIXED BINARY (15),	/* blr_length */
+	ANY,			/* blr_source */
+	FIXED BINARY (15),	/* title_length */
+	ANY,			/* title */
+	FIXED BINARY (15),	/* terminator */
+	FIXED BINARY (15),	/* entree_length */
+	ANY,			/* entree_text */
+	ANY			/* entree_value */
+	);
+        
+DECLARE pyxis__get_entree ENTRY (
+	ANY,			/* menu_handle */
+	FIXED BINARY (15),	/* entree_length */
+	ANY,			/* entree_text */
+	ANY,			/* entree_value */
+	FIXED BINARY (15)	/* entree_end */
+	);
+
+DECLARE pyxis__initialize_menu ENTRY (
+	ANY			/* menu_handle */
+	);
+
+DECLARE pyxis__put_entree ENTRY (
+	ANY,			/* menu_handle */
+	FIXED BINARY (15),	/* entree_length */
+	ANY,			/* entree_text */
+	ANY			/* entree_value */
+	);
+

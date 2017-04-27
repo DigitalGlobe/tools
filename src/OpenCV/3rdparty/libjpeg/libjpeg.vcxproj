@@ -1,0 +1,229 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGUID>{F668D2AB-49A0-3DE3-96BC-637BE1ECC828}</ProjectGUID>
+    <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
+    <Keyword>Win32Proj</Keyword>
+    <Platform>Win32</Platform>
+    <ProjectName>libjpeg</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+    <PropertyGroup>
+      <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+      <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\tools\src\OpenCV\3rdparty\lib\Debug\</OutDir>
+      <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">libjpeg.dir\Debug\</IntDir>
+      <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">libjpegd</TargetName>
+      <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.lib</TargetExt>
+      <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\tools\src\OpenCV\3rdparty\lib\Release\</OutDir>
+      <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">libjpeg.dir\Release\</IntDir>
+      <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">libjpeg</TargetName>
+      <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.lib</TargetExt>
+    </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <AdditionalOptions> /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>C:\tools\src\OpenCV\3rdparty\libjpeg;C:\tools\src\OpenCV;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>Debug/</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <CompileAs>CompileAsC</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4013;4244;4267</DisableSpecificWarnings>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <ExceptionHandling>
+      </ExceptionHandling>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <ProcessorNumber>4</ProcessorNumber>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;_DEBUG;_VARIADIC_MAX=10;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>C:\tools\src\OpenCV\3rdparty\lib\Debug\libjpegd.pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;_DEBUG;_VARIADIC_MAX=10;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\tools\src\OpenCV\3rdparty\libjpeg;C:\tools\src\OpenCV;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\tools\src\OpenCV\3rdparty\libjpeg;C:\tools\src\OpenCV;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions> /machine:X86 %(AdditionalOptions)</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalOptions> /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>C:\tools\src\OpenCV\3rdparty\libjpeg;C:\tools\src\OpenCV;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>Release/</AssemblerListingLocation>
+      <CompileAs>CompileAsC</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4013;4244;4267</DisableSpecificWarnings>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <ExceptionHandling>
+      </ExceptionHandling>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <ProcessorNumber>4</ProcessorNumber>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;NDEBUG;_VARIADIC_MAX=10;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>C:\tools\src\OpenCV\3rdparty\lib\Release\libjpeg.pdb</ProgramDataBaseFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;NDEBUG;_VARIADIC_MAX=10;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\tools\src\OpenCV\3rdparty\libjpeg;C:\tools\src\OpenCV;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\tools\src\OpenCV\3rdparty\libjpeg;C:\tools\src\OpenCV;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions> /machine:X86 %(AdditionalOptions)</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\tools\src\OpenCV\3rdparty\libjpeg\CMakeLists.txt">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building Custom Rule C:/tools/src/OpenCV/3rdparty/libjpeg/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -HC:/tools/src/OpenCV -BC:/tools/src/OpenCV --check-stamp-file C:\tools\src\OpenCV\3rdparty\libjpeg\CMakeFiles\generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:/tools/src/OpenCV/3rdparty/libjpeg/CMakeLists.txt;C:\tools\src\OpenCV\3rdparty\libjpeg\CMakeLists.txt;C:\tools\src\OpenCV\3rdparty\libjpeg\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\tools\src\OpenCV\3rdparty\libjpeg\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building Custom Rule C:/tools/src/OpenCV/3rdparty/libjpeg/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -HC:/tools/src/OpenCV -BC:/tools/src/OpenCV --check-stamp-file C:\tools\src\OpenCV\3rdparty\libjpeg\CMakeFiles\generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:/tools/src/OpenCV/3rdparty/libjpeg/CMakeLists.txt;C:\tools\src\OpenCV\3rdparty\libjpeg\CMakeLists.txt;C:\tools\src\OpenCV\3rdparty\libjpeg\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\tools\src\OpenCV\3rdparty\libjpeg\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jconfig.h" />
+    <ClInclude Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jdct.h" />
+    <ClInclude Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jerror.h" />
+    <ClInclude Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jinclude.h" />
+    <ClInclude Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jmemsys.h" />
+    <ClInclude Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jmorecfg.h" />
+    <ClInclude Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jpegint.h" />
+    <ClInclude Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jpeglib.h" />
+    <ClInclude Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jversion.h" />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jaricom.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jcapimin.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jcapistd.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jcarith.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jccoefct.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jccolor.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jcdctmgr.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jchuff.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jcinit.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jcmainct.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jcmarker.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jcmaster.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jcomapi.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jcparam.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jcprepct.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jcsample.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jctrans.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jdapimin.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jdapistd.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jdarith.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jdatadst.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jdatasrc.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jdcoefct.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jdcolor.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jddctmgr.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jdhuff.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jdinput.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jdmainct.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jdmarker.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jdmaster.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jdmerge.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jdpostct.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jdsample.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jdtrans.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jerror.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jfdctflt.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jfdctfst.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jfdctint.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jidctflt.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jidctfst.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jidctint.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jmemansi.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jmemmgr.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jquant1.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jquant2.c"  />
+    <ClCompile Include="C:\tools\src\OpenCV\3rdparty\libjpeg\jutils.c"  />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="C:/tools/src/OpenCV/ZERO_CHECK.vcxproj">
+      <Project>E0284986-3AE0-3E66-BB73-8BA76038446D</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

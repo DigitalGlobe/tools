@@ -1,0 +1,37 @@
+<!-- 
+ * File: local.properties.template
+ * Description: Template for local.propertices
+ * $Id: local.properties.template 22798 2014-05-23 12:45:55Z gpotts $
+-->
+
+<!-- 
+ *  This is a template.  Copy to "local.properties" and fill these out 
+ *  appropriately... 
+-->
+
+<!-- Uncomment and set if needed. -->
+<!-- OSSIM_DEV_HOME = /some_path_to_your_workspace -->
+
+<!-- Your path to java. -->
+<!-- Uncomment and set if needed. -->
+jdk.home=${env.JAVA_HOME}
+
+<!-- The top level of this module. -->
+ossimjni.home=${env.OSSIM_DEV_HOME}/ossimjni
+
+<!-- The name of this module. -->
+module.name=ossimjni
+
+<!-- Home of ossim. -->
+ossim.home=${env.OSSIM_DEV_HOME}/ossim
+ossim.install_prefix=${env.OSSIM_INSTALL_PREFIX}
+
+<!-- Where the c++ ossim and ossimjni libraries are placed during build. -->
+ossim.lib_path=${env.OSSIM_BUILD_DIR}/${env.OSSIM_BUILD_TYPE}
+
+<!-- For /usr/lib64 use 64 (64 bit), Use blank for /usr/lib (32 bit). -->
+lib_suffix=64
+
+<!-- ossim.build=${env.OSSIM_BUILD_DIR}/${env.OSSIM_BUILD_TYPE} -->
+ossim.build=${env.OSSIM_BUILD_DIR}
+ossim.dependencies=${env.OSSIM_DEPENDENCIES}

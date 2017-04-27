@@ -1,0 +1,35 @@
+
+{
+	"sources" : 
+	[
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/flann/test/test_lshtable_badarg.cpp",
+			"labels" : [ "Main", "opencv_flann", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/flann/test/test_main.cpp",
+			"labels" : [ "Main", "opencv_flann", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/flann/test/test_precomp.hpp",
+			"labels" : [ "Main", "opencv_flann", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/flann/opencv_test_flann_pch.cpp",
+			"labels" : [ "Main", "opencv_flann", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/flann/CMakeLists.txt"
+		}
+	],
+	"target" : 
+	{
+		"labels" : [ "Main", "opencv_flann", "AccuracyTest" ],
+		"name" : "opencv_test_flann"
+	}
+}

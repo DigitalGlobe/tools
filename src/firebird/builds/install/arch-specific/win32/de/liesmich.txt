@@ -1,0 +1,97 @@
+
+====================================
+Firebird $MAJOR.$MINOR.$RELEASE    (Windows Build)
+====================================
+
+
+o Einführung
+o Verwendungszweck
+o Bekannte Probleme
+o Features in diesem Release (alle Plattformen)
+o Installation
+o Bugs berichten
+
+
+Einführung
+==========
+
+Willkommen zu Firebird $MAJOR.$MINOR.
+
+
+Verwendungszweck
+================
+
+Firebird $MAJOR.$MINOR wurde intensiven Tests unterzogen und ist nun für
+die breite Verwendung in Produktionsumgebungen bestimmt. Dennoch
+wird darauf hingewiesen, dass eine Standardvorgehen eingehalten
+wird, das wie folgt aussehen kann.
+
+ o Lesen Sie die Installation Liesmich und die Release
+   Notes.
+
+ o Wenn Sie wichtige Daten haben, vergessen Sie nicht,
+   vor dem Einsatz dieses Release ein Backup durchzuführen.
+
+ o Es wird empfohlen, dass eine frühere Version vor der
+   Installation entfernt wird. Die Deinstallation entfernt
+   keine Konfigurations- oder Log-Dateien.
+
+ o Es wird empfohlen, dass Sie eigene Tests in einer
+   Entwicklungsumgebung durchführen, bevor es an eine
+   Produktionsumgebung weitergegeben wird.
+
+
+
+
+Bekannte Probleme
+=================
+
+Windows Vista - Die Setuproutine kann Firebird nicht als
+Dienst starten, jedoch wird der Dienst nach einem Neustart
+korrekt gestartet. Als Workaround können Sie auf dem Firebird
+Systemsteuerungs-Applet mit einem SHIFT-Rechtsklick 'Ausführen
+als...' auswählen und den Dienst von dort aus starten.
+
+
+Features in diesem Release
+==========================
+
+Nähere Informationen dazu finden Sie in den Release Notes.
+
+
+Installation
+============
+
+Die Installationsthemen werden im Detail in der Installations-
+anleitung, die nach der Installation im doc Verzeichnis verfügbar
+ist, diskutiert. Eine kurze Zusammenfassung dieser Themen finden
+Sie auch in der installation_liesmich.txt. Diese Datei finden
+Sie ebenfalls im doc Verzeichnis nach der Installation.
+
+
+Bugs berichten
+==============
+
+Bevor Sie einen Bug berichten:
+
+ o Stellen Sie sicher, dass Sie verstehen, wie Firebird arbeitet.
+   Womöglich handelt es sich um gar kein Problem.
+
+ o Vielleicht hat jemand bereits das selbe Problem berichtet? Sie
+   können existierende Problemberichte hier einsehen:
+   http://tracker.firebirdsql.org/browse/CORE
+
+ o Falls Sie sich nicht sicher sind, diskutieren Sie das
+   Problem am besten vorab in der Firebird-devel Liste.
+   Dieser Liste können Sie hier beitreten:
+
+	http://lists.sourceforge.net/lists/listinfo/firebird-devel
+
+   Diese Liste ist auch über ein Newsgroup-Interface hier
+   einsehbar:
+
+	news://news.atkin.com/
+
+
+
+

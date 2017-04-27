@@ -1,0 +1,7 @@
+-prefix
+C:\tools\src\Qt\qtbase
+-opensource
+-nomake
+tests
+-platform
+win32-msvc2015

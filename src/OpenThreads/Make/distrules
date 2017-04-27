@@ -1,0 +1,17 @@
+distribution : 
+	@$(MAKEDIST) \
+		$(OS)\
+		$(TOPDIR)\
+		$(INST_LIBS)\
+		$(INST_PLUGINS)\
+		$(INST_INCLUDE)\
+		$(INST_DEMOS)\
+		$(INST_SRC)\
+		$(INST_DEMO_SRC)\
+		$(INST_DOC)\
+		$(INST_DATA)
+
+	
+
+cleandist:
+	@$(MAKECLEANDIST)

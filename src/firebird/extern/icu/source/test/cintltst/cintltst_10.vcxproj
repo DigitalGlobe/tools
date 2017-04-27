@@ -1,0 +1,324 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectName>cintltst</ProjectName>
+    <ProjectGuid>{3D1246AE-1B32-479B-BECA-AEFA97BE2321}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+    <Import Project="..\..\allinone\firebird2intl.props" />
+    <Import Project="..\..\allinone\firebird2release.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+    <Import Project="..\..\allinone\firebird2intl.props" />
+    <Import Project="..\..\allinone\firebird2debug.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+    <Import Project="..\..\allinone\firebird2intl.props" />
+    <Import Project="..\..\allinone\firebird2release.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+    <Import Project="..\..\allinone\firebird2intl.props" />
+    <Import Project="..\..\allinone\firebird2debug.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Midl>
+      <TypeLibraryName>$(IntDir)cintltst.tlb</TypeLibraryName>
+    </Midl>
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\..\..\include;..\..\tools\ctestfw;..\..\common;..\..\i18n;..\..\tools\toolutil;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <OutputFile>$(OutDir)$(ProjectName).exe</OutputFile>
+      <ProgramDatabaseFile>$(IntDir)cintltst.pdb</ProgramDatabaseFile>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <FixedBaseAddress>false</FixedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+      <TypeLibraryName>$(IntDir)cintltst.tlb</TypeLibraryName>
+    </Midl>
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\..\..\include;..\..\tools\ctestfw;..\..\common;..\..\i18n;..\..\tools\toolutil;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <OutputFile>$(OutDir)$(ProjectName).exe</OutputFile>
+      <ProgramDatabaseFile>$(IntDir)cintltst.pdb</ProgramDatabaseFile>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <FixedBaseAddress>false</FixedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX64</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Midl>
+      <TypeLibraryName>$(IntDir)cintltst.tlb</TypeLibraryName>
+    </Midl>
+    <ClCompile>
+      <Optimization>Full</Optimization>
+      <AdditionalIncludeDirectories>..\..\..\include;..\..\tools\ctestfw;..\..\common;..\..\i18n;..\..\tools\toolutil;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <OutputFile>$(OutDir)$(ProjectName).exe</OutputFile>
+      <ProgramDatabaseFile>$(IntDir)cintltst.pdb</ProgramDatabaseFile>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+      <TypeLibraryName>$(IntDir)cintltst.tlb</TypeLibraryName>
+    </Midl>
+    <ClCompile>
+      <Optimization>Full</Optimization>
+      <AdditionalIncludeDirectories>..\..\..\include;..\..\tools\ctestfw;..\..\common;..\..\i18n;..\..\tools\toolutil;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <CompileAs>Default</CompileAs>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Link>
+      <OutputFile>$(OutDir)$(ProjectName).exe</OutputFile>
+      <ProgramDatabaseFile>$(IntDir)cintltst.pdb</ProgramDatabaseFile>
+      <SubSystem>Console</SubSystem>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <DataExecutionPrevention>
+      </DataExecutionPrevention>
+      <TargetMachine>MachineX64</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="cbididat.c" />
+    <ClCompile Include="cbiditst.c" />
+    <ClCompile Include="cbiapts.c" />
+    <ClCompile Include="cbkittst.c" />
+    <ClCompile Include="cregrtst.c" />
+    <ClCompile Include="callcoll.c" />
+    <ClCompile Include="capitst.c" />
+    <ClCompile Include="ccolltst.c" />
+    <ClCompile Include="ccurrtst.c" />
+    <ClCompile Include="cdantst.c" />
+    <ClCompile Include="cdetst.c" />
+    <ClCompile Include="cestst.c" />
+    <ClCompile Include="cfintst.c" />
+    <ClCompile Include="cfrtst.c" />
+    <ClCompile Include="cg7coll.c" />
+    <ClCompile Include="citertst.c" />
+    <ClCompile Include="cjaptst.c" />
+    <ClCompile Include="cmsccoll.c" />
+    <ClCompile Include="colutil.c" />
+    <ClCompile Include="cturtst.c" />
+    <ClCompile Include="encoll.c" />
+    <ClCompile Include="usrchdat.c" />
+    <ClCompile Include="usrchtst.c" />
+    <ClCompile Include="chashtst.c" />
+    <ClCompile Include="sorttest.c" />
+    <ClCompile Include="trietest.c" />
+    <ClCompile Include="ucmptst.c" />
+    <ClCompile Include="uenumtst.c" />
+    <ClCompile Include="bocu1tst.c" />
+    <ClCompile Include="ccapitst.c" />
+    <ClCompile Include="cconvtst.c" />
+    <ClCompile Include="cctest.c" />
+    <ClCompile Include="eurocreg.c" />
+    <ClCompile Include="nccbtst.c" />
+    <ClCompile Include="ncnvfbts.c" />
+    <ClCompile Include="ncnvtst.c" />
+    <ClCompile Include="nucnvtst.c" />
+    <ClCompile Include="stdnmtst.c" />
+    <ClCompile Include="udatatst.c">
+      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</DisableLanguageExtensions>
+      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</DisableLanguageExtensions>
+      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</DisableLanguageExtensions>
+      <DisableLanguageExtensions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</DisableLanguageExtensions>
+    </ClCompile>
+    <ClCompile Include="calltest.c" />
+    <ClCompile Include="ccaltst.c" />
+    <ClCompile Include="cdattst.c" />
+    <ClCompile Include="cdtdptst.c" />
+    <ClCompile Include="cdtrgtst.c" />
+    <ClCompile Include="cformtst.c" />
+    <ClCompile Include="cmsgtst.c" />
+    <ClCompile Include="cnmdptst.c" />
+    <ClCompile Include="cnumtst.c" />
+    <ClCompile Include="cloctst.c" />
+    <ClCompile Include="cposxtst.c" />
+    <ClCompile Include="crestst.c" />
+    <ClCompile Include="creststn.c" />
+    <ClCompile Include="cintltst.c" />
+    <ClCompile Include="ctstdep.c" />
+    <ClCompile Include="cutiltst.c" />
+    <ClCompile Include="hpmufn.c" />
+    <ClCompile Include="mstrmtst.c" />
+    <ClCompile Include="putiltst.c" />
+    <ClCompile Include="tracetst.c" />
+    <ClCompile Include="cnormtst.c" />
+    <ClCompile Include="cucdapi.c" />
+    <ClCompile Include="cucdtst.c" />
+    <ClCompile Include="usettest.c" />
+    <ClCompile Include="cstrcase.c" />
+    <ClCompile Include="cstrtest.c" />
+    <ClCompile Include="custrtrn.c" />
+    <ClCompile Include="custrtst.c" />
+    <ClCompile Include="utf16tst.c" />
+    <ClCompile Include="utf8tst.c" />
+    <ClCompile Include="utransts.c" />
+    <ClCompile Include="reapits.c" />
+    <ClCompile Include="idnatest.c" />
+    <ClCompile Include="nfsprep.c" />
+    <ClCompile Include="spreptst.c" />
+    <ClCompile Include="sprpdata.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="cbiditst.h" />
+    <ClInclude Include="cbiapts.h" />
+    <ClInclude Include="cregrtst.h" />
+    <ClInclude Include="callcoll.h" />
+    <ClInclude Include="capitst.h" />
+    <ClInclude Include="ccolltst.h" />
+    <ClInclude Include="ccurrtst.h" />
+    <ClInclude Include="cdantst.h" />
+    <ClInclude Include="cdetst.h" />
+    <ClInclude Include="cestst.h" />
+    <ClInclude Include="cfintst.h" />
+    <ClInclude Include="cfrtst.h" />
+    <ClInclude Include="cg7coll.h" />
+    <ClInclude Include="citertst.h" />
+    <ClInclude Include="cjaptst.h" />
+    <ClInclude Include="cturtst.h" />
+    <ClInclude Include="encoll.h" />
+    <ClInclude Include="ccapitst.h" />
+    <ClInclude Include="nccbtst.h" />
+    <ClInclude Include="ncnvfbts.h" />
+    <ClInclude Include="nucnvtst.h" />
+    <ClInclude Include="ccaltst.h" />
+    <ClInclude Include="cdattst.h" />
+    <ClInclude Include="cdtdptst.h" />
+    <ClInclude Include="cdtrgtst.h" />
+    <ClInclude Include="cformtst.h" />
+    <ClInclude Include="cmsgtst.h" />
+    <ClInclude Include="cnmdptst.h" />
+    <ClInclude Include="cnumtst.h" />
+    <ClInclude Include="cloctst.h" />
+    <ClInclude Include="crestst.h" />
+    <ClInclude Include="creststn.h" />
+    <ClInclude Include="cintltst.h" />
+    <ClInclude Include="cnormtst.h" />
+    <ClInclude Include="cucdapi.h" />
+    <ClInclude Include="cucdtst.h" />
+    <ClInclude Include="nfsprep.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\common\common_10.vcxproj">
+      <Project>{73c0a65b-d1f2-4de1-b3a6-15dad2c23f3d}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\i18n\i18n_10.vcxproj">
+      <Project>{0178b127-6269-407d-b112-93877bb62776}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\tools\ctestfw\ctestfw_10.vcxproj">
+      <Project>{eca6b435-b4fa-4f9f-bf95-f451d078fc47}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\tools\toolutil\toolutil_10.vcxproj">
+      <Project>{6b231032-3cb5-4eed-9210-810d666a23a0}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -1,0 +1,193 @@
+1>------ Build started: Project: common_static, Configuration: Release x64 ------
+1>  alloc.cpp
+1>  locks.cpp
+1>  fb_exception.cpp
+1>  StatusHolder.cpp
+1>..\..\..\src\common\classes\alloc.cpp(750): warning C4267: '=': conversion from 'size_t' to 'ULONG', possible loss of data
+1>..\..\..\src\common\classes\alloc.cpp(1286): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+1>..\..\..\src\common\classes\alloc.cpp(1300): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+1>..\..\..\src\common\classes\alloc.cpp(1316): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+1>..\..\..\src\common\classes\alloc.cpp(1316): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
+1>..\..\..\src\common\classes\alloc.cpp(1514): warning C4267: '-=': conversion from 'size_t' to 'USHORT', possible loss of data
+1>..\..\..\src\common\classes\alloc.cpp(1524): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+1>..\..\..\src\common\classes\alloc.cpp(1602): warning C4267: '-=': conversion from 'size_t' to 'USHORT', possible loss of data
+1>..\..\..\src\common\classes\alloc.cpp(1612): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+1>..\..\..\src\common\classes\alloc.cpp(1688): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+1>..\..\..\src\common\classes\alloc.cpp(1693): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+1>..\..\..\src\common\classes\alloc.cpp(1700): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+1>..\..\..\src\common\classes\alloc.cpp(1850): warning C4267: '+=': conversion from 'size_t' to 'USHORT', possible loss of data
+1>..\..\..\src\common\classes\alloc.cpp(1865): warning C4267: '+=': conversion from 'size_t' to 'USHORT', possible loss of data
+1>..\..\..\src\common\classes\alloc.cpp(1887): warning C4267: '+=': conversion from 'size_t' to 'USHORT', possible loss of data
+1>  config.cpp
+1>  config_file.cpp
+1>  config_root.cpp
+1>  dir_list.cpp
+1>  BaseStream.cpp
+1>  ClumpletReader.cpp
+1>  ClumpletWriter.cpp
+1>..\..\..\src\common\classes\BaseStream.cpp(47): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+1>  cvt.cpp
+1>  db_alias.cpp
+1>  dllinst.cpp
+1>  fb_string.cpp
+1>  fbsyslog.cpp
+1>..\..\..\src\common\cvt.cpp(440): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+1>  init.cpp
+1>  MetaName.cpp
+1>..\..\..\src\common\classes\fb_string.cpp(136): warning C4267: '=': conversion from 'size_t' to 'Firebird::AbstractString::internal_size_type', possible loss of data
+1>..\..\..\src\common\classes\fb_string.cpp(145): warning C4267: '+=': conversion from 'size_t' to 'Firebird::AbstractString::internal_size_type', possible loss of data
+1>..\..\..\src\common\classes\fb_string.cpp(158): warning C4267: '+=': conversion from 'size_t' to 'Firebird::AbstractString::internal_size_type', possible loss of data
+1>..\..\..\src\common\classes\fb_string.cpp(166): warning C4267: '-=': conversion from 'size_t' to 'Firebird::AbstractString::internal_size_type', possible loss of data
+1>..\..\..\src\common\classes\fb_string.cpp(188): warning C4267: '=': conversion from 'size_t' to 'Firebird::AbstractString::internal_size_type', possible loss of data
+1>..\..\..\src\common\classes\fb_string.cpp(196): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+1>..\..\..\src\common\classes\fb_string.cpp(201): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+1>..\..\..\src\common\classes\fb_string.cpp(215): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+1>..\..\..\src\common\classes\fb_string.cpp(220): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+1>..\..\..\src\common\classes\fb_string.cpp(248): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+1>..\..\..\src\common\classes\fb_string.cpp(250): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+1>..\..\..\src\common\classes\fb_string.cpp(278): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+1>..\..\..\src\common\classes\fb_string.cpp(280): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+1>..\..\..\src\common\classes\fb_string.cpp(323): warning C4267: 'argument': conversion from 'size_t' to 'unsigned long', possible loss of data
+1>..\..\..\src\common\classes\fb_string.cpp(334): warning C4267: 'argument': conversion from 'size_t' to 'unsigned long', possible loss of data
+1>..\..\..\src\common\classes\fb_string.cpp(372): warning C4267: '=': conversion from 'size_t' to 'Firebird::AbstractString::internal_size_type', possible loss of data
+1>  mod_loader.cpp
+1>  MsgPrint.cpp
+1>..\..\..\src\common\classes\MetaName.cpp(43): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+1>..\..\..\src\common\classes\MetaName.cpp(64): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+1>..\..\..\src\common\classes\MetaName.cpp(119): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+1>  path_utils.cpp
+1>  SafeArg.cpp
+1>  StatusArg.cpp
+1>..\..\..\src\common\classes\MsgPrint.cpp(220): warning C4267: 'argument': conversion from 'size_t' to 'unsigned int', possible loss of data
+1>..\..\..\src\common\classes\MsgPrint.cpp(402): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+1>  thd.cpp
+1>  timestamp.cpp
+1>  UserBlob.cpp
+1>  utils.cpp
+1>..\..\..\src\common\utils.cpp(315): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+1>..\..\..\src\common\utils.cpp(315): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
+1>..\..\..\src\common\utils.cpp(361): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+1>..\..\..\src\common\utils.cpp(361): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
+1>  common_static.vcxproj -> C:\tools\src\firebird\builds\win32\msvc14\..\..\..\temp\x64\Release\common_static\common_static.lib
+2>------ Build started: Project: gpre_boot, Configuration: Release x64 ------
+2>  c_cxx.cpp
+2>  cmd.cpp
+2>  cme.cpp
+2>  cmp.cpp
+2>c:\tools\src\firebird\src\gpre\../gpre/gpre.h(1252): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data (compiling source file ..\..\..\src\gpre\cmp.cpp)
+2>c:\tools\src\firebird\src\gpre\../gpre/gpre.h(1252): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data (compiling source file ..\..\..\src\gpre\cme.cpp)
+2>c:\tools\src\firebird\src\gpre\../gpre/gpre.h(1252): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data (compiling source file ..\..\..\src\gpre\cmd.cpp)
+2>c:\tools\src\firebird\src\gpre\../gpre/gpre.h(1252): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data (compiling source file ..\..\..\src\gpre\c_cxx.cpp)
+2>..\..\..\src\gpre\cmp.cpp(381): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+2>..\..\..\src\gpre\cmp.cpp(442): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\cmp.cpp(451): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\cmp.cpp(462): warning C4267: '=': conversion from 'size_t' to 'char', possible loss of data
+2>..\..\..\src\gpre\cmp.cpp(469): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\cmd.cpp(1415): warning C4267: '=': conversion from 'size_t' to 'SSHORT', possible loss of data
+2>..\..\..\src\gpre\cmd.cpp(1425): warning C4267: '=': conversion from 'size_t' to 'SSHORT', possible loss of data
+2>..\..\..\src\gpre\cmp.cpp(1314): warning C4267: '=': conversion from 'size_t' to 'SSHORT', possible loss of data
+2>..\..\..\src\gpre\cmp.cpp(1324): warning C4267: '=': conversion from 'size_t' to 'SSHORT', possible loss of data
+2>..\..\..\src\gpre\cmp.cpp(1334): warning C4267: '=': conversion from 'size_t' to 'SSHORT', possible loss of data
+2>..\..\..\src\gpre\cmp.cpp(1345): warning C4267: '=': conversion from 'size_t' to 'SSHORT', possible loss of data
+2>..\..\..\src\gpre\cmp.cpp(1356): warning C4267: '=': conversion from 'size_t' to 'SSHORT', possible loss of data
+2>..\..\..\src\gpre\cme.cpp(234): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+2>..\..\..\src\gpre\cmp.cpp(1545): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+2>..\..\..\src\gpre\cme.cpp(988): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\cme.cpp(1041): warning C4267: '=': conversion from 'size_t' to 'FLD_LENGTH', possible loss of data
+2>..\..\..\src\gpre\cmd.cpp(2399): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+2>..\..\..\src\gpre\cmd.cpp(2618): warning C4267: '=': conversion from 'size_t' to 'SSHORT', possible loss of data
+2>..\..\..\src\gpre\cme.cpp(1413): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+2>..\..\..\src\gpre\cme.cpp(1417): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+2>..\..\..\src\gpre\cme.cpp(1572): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+2>..\..\..\src\gpre\cme.cpp(1590): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\cme.cpp(1928): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data
+2>  exp.cpp
+2>  gpre.cpp
+2>..\..\..\src\gpre\c_cxx.cpp(1102): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\c_cxx.cpp(1276): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\c_cxx.cpp(3414): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\c_cxx.cpp(3418): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\c_cxx.cpp(3705): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\c_cxx.cpp(4045): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\c_cxx.cpp(4049): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\c_cxx.cpp(4049): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
+2>  gpre_meta_boot.cpp
+2>c:\tools\src\firebird\src\gpre\../gpre/gpre.h(1252): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data (compiling source file ..\..\..\src\gpre\exp.cpp)
+2>c:\tools\src\firebird\src\gpre\../gpre/gpre.h(1252): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data (compiling source file ..\..\..\src\gpre\gpre.cpp)
+2>..\..\..\src\gpre\exp.cpp(745): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\exp.cpp(1044): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+2>c:\tools\src\firebird\src\gpre\../gpre/gpre.h(1252): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data (compiling source file ..\..\..\src\gpre\gpre_meta_boot.cpp)
+2>  hsh.cpp
+2>..\..\..\src\gpre\gpre_meta_boot.cpp(610): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+2>..\..\..\src\gpre\gpre_meta_boot.cpp(628): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+2>..\..\..\src\gpre\gpre_meta_boot.cpp(642): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+2>  int_cxx.cpp
+2>  jrdmet.cpp
+2>c:\tools\src\firebird\src\gpre\../gpre/gpre.h(1252): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data (compiling source file ..\..\..\src\gpre\hsh.cpp)
+2>c:\tools\src\firebird\src\gpre\../gpre/gpre.h(1252): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data (compiling source file ..\..\..\src\gpre\int_cxx.cpp)
+2>..\..\..\src\gpre\gpre.cpp(2511): warning C4267: 'initializing': conversion from 'size_t' to 'SSHORT', possible loss of data
+2>  movg.cpp
+2>c:\tools\src\firebird\src\gpre\../gpre/gpre.h(1252): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data (compiling source file ..\..\..\src\gpre\jrdmet.cpp)
+2>c:\tools\src\firebird\src\gpre\../gpre/gpre.h(1252): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data (compiling source file ..\..\..\src\gpre\movg.cpp)
+2>  msc.cpp
+2>  par.cpp
+2>  pat.cpp
+2>c:\tools\src\firebird\src\gpre\../gpre/gpre.h(1252): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data (compiling source file ..\..\..\src\gpre\msc.cpp)
+2>..\..\..\src\gpre\msc.cpp(333): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\msc.cpp(448): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\msc.cpp(513): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+2>c:\tools\src\firebird\src\gpre\../gpre/gpre.h(1252): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data (compiling source file ..\..\..\src\gpre\par.cpp)
+2>c:\tools\src\firebird\src\gpre\../gpre/gpre.h(1252): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data (compiling source file ..\..\..\src\gpre\pat.cpp)
+2>  pretty.cpp
+2>  sqe.cpp
+2>..\..\..\src\gpre\par.cpp(522): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\par.cpp(524): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\par.cpp(2839): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+2>c:\tools\src\firebird\src\gpre\../gpre/gpre.h(1252): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data (compiling source file ..\..\..\src\gpre\sqe.cpp)
+2>  sql.cpp
+2>  dsc.cpp
+2>c:\tools\src\firebird\src\gpre\../gpre/gpre.h(1252): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data (compiling source file ..\..\..\src\gpre\sql.cpp)
+2>..\..\..\src\gpre\sqe.cpp(441): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+2>  gds.cpp
+2>..\..\..\src\gpre\sqe.cpp(1122): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\sqe.cpp(1773): warning C4267: '+=': conversion from 'size_t' to 'USHORT', possible loss of data
+2>..\..\..\src\gpre\sqe.cpp(2113): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\sqe.cpp(2888): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\sqe.cpp(2937): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\sqe.cpp(3903): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+2>  isc.cpp
+2>  os_utils.cpp
+2>..\..\..\src\gpre\sql.cpp(2673): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\sql.cpp(2708): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\sql.cpp(4714): warning C4267: 'initializing': conversion from 'size_t' to 'USHORT', possible loss of data
+2>..\..\..\src\gpre\sql.cpp(4714): warning C4267: 'initializing': conversion from 'size_t' to 'const USHORT', possible loss of data
+2>..\..\..\src\gpre\sql.cpp(4830): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\sql.cpp(4906): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+2>..\..\..\src\gpre\sql.cpp(4909): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+2>..\..\..\src\gpre\sql.cpp(5070): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+2>..\..\..\src\gpre\sql.cpp(5169): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+2>..\..\..\src\gpre\sql.cpp(5177): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+2>..\..\..\src\gpre\sql.cpp(5284): warning C4267: 'initializing': conversion from 'size_t' to 'USHORT', possible loss of data
+2>..\..\..\src\gpre\sql.cpp(5284): warning C4267: 'initializing': conversion from 'size_t' to 'const USHORT', possible loss of data
+2>  TempFile.cpp
+2>..\..\..\src\common\classes\TempFile.cpp(293): warning C4267: 'argument': conversion from 'size_t' to 'DWORD', possible loss of data
+2>..\..\..\src\common\classes\TempFile.cpp(320): warning C4267: 'argument': conversion from 'size_t' to 'DWORD', possible loss of data
+2>..\..\..\src\jrd\gds.cpp(859): warning C4267: 'argument': conversion from 'size_t' to 'unsigned int', possible loss of data
+2>..\..\..\src\jrd\gds.cpp(873): warning C4267: 'argument': conversion from 'size_t' to 'unsigned int', possible loss of data
+2>..\..\..\src\jrd\gds.cpp(921): warning C4267: 'argument': conversion from 'size_t' to 'DWORD', possible loss of data
+2>..\..\..\src\jrd\gds.cpp(924): warning C4267: 'argument': conversion from 'size_t' to 'DWORD', possible loss of data
+2>..\..\..\src\jrd\gds.cpp(880): warning C4477: 'sprintf' : format string '%ld' requires an argument of type 'long', but variadic argument 1 has type 'ISC_STATUS'
+2>  ..\..\..\src\jrd\gds.cpp(880): note: consider using '%Id' in the format string
+2>..\..\..\src\jrd\gds.cpp(911): warning C4477: 'sprintf' : format string '%ld' requires an argument of type 'long', but variadic argument 1 has type 'ISC_STATUS'
+2>  ..\..\..\src\jrd\gds.cpp(911): note: consider using '%Id' in the format string
+2>..\..\..\src\jrd\gds.cpp(915): warning C4477: 'sprintf' : format string '%ld' requires an argument of type 'long', but variadic argument 1 has type 'ISC_STATUS'
+2>  ..\..\..\src\jrd\gds.cpp(915): note: consider using '%Id' in the format string
+2>..\..\..\src\jrd\gds.cpp(927): warning C4477: 'sprintf' : format string '%ld' requires an argument of type 'long', but variadic argument 1 has type 'ISC_STATUS'
+2>  ..\..\..\src\jrd\gds.cpp(927): note: consider using '%Id' in the format string
+2>..\..\..\src\jrd\gds.cpp(1040): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+2>..\..\..\src\jrd\gds.cpp(1418): warning C4267: 'initializing': conversion from 'size_t' to 'USHORT', possible loss of data
+2>..\..\..\src\jrd\gds.cpp(1418): warning C4267: 'initializing': conversion from 'size_t' to 'const USHORT', possible loss of data
+2>  gpre_boot.vcxproj -> C:\tools\src\firebird\builds\win32\msvc14\..\..\..\temp\x64\Release\firebird\bin\gpre_boot.exe
+2>  gpre_boot.vcxproj -> ..\..\..\temp\x64\Release\gpre_boot\gpre_boot.pdb (Full PDB)
+========== Build: 2 succeeded, 0 failed, 0 up-to-date, 0 skipped ==========
+

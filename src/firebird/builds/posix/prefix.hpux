@@ -1,0 +1,42 @@
+# The contents of this file are subject to the Interbase Public
+# License Version 1.0 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy
+# of the License at http://www.Inprise.com/IPL.html
+#
+# Software distributed under the License is distributed on an
+# "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+# or implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code was created by Inprise Corporation
+# and its predecessors. Portions created by Inprise Corporation are
+# Copyright (C) Inprise Corporation.
+#
+# All Rights Reserved.
+# Contributor(s): Paul Beach
+#
+# Compiler settings for HPUX 11 (PA-RISC)
+#
+# compile flags for GCC compiler
+
+PROD_FLAGS= -pipe -fPIC -O3 -MMD -DNDEBUG -DHP11 -DHPUX -D_HPUX_SOURCE -D_XOPEN_SOURCE_EXTENDED -D_REENTRANT -march=2.0
+DEV_FLAGS= -ggdb -pipe -fPIC -MMD -DHP11 -DHPUX -D_HPUX_SOURCE -D_XOPEN_SOURCE_EXTENDED -D_REENTRANT -march=2.0 
+
+OS_ServerFiles=inet_server.cpp
+
+LIB_LINK_OPTIONS= -fPIC -shared
+LIB_LINK_RPATH= -Wl,+b,$(1)
+LIB_LINK_SONAME= -Wl,+h,$(1)
+LIB_LINK_MAPFILE= -Wl,-c,
+LINK_FBINTL_SYMBOLS= $(LIB_LINK_MAPFILE)$(ROOT)/builds/posix/fbintl.hpux.vers
+LINK_IBUTIL_SYMBOLS= $(LIB_LINK_MAPFILE)$(ROOT)/builds/posix/ib_util.hpux.vers
+LINK_FIREBIRD_SYMBOLS= $(LIB_LINK_MAPFILE)$(ROOT)/builds/posix/firebird.hpux.vers
+LINK_TRACE_SYMBOLS = $(LIB_LINK_MAPFILE)$(ROOT)/builds/posix/fbtrace.hpux.vers
+LINK_EMPTY_SYMBOLS = $(LIB_LINK_MAPFILE)$(ROOT)/builds/posix/empty.hpux.vers
+
+EMBED_UTIL_TARGETS=gstat gds_relay gsec nbackup fbguard fb_lock_print fbsvcmgr fbtracemgr
+CLIENT_UTIL_TARGETS=gds_relay gstat gsec nbackup fbguard fbmgr_bin fb_lock_print fbsvcmgr fbtracemgr
+
+Physical_IO_Module=unix.cpp
+
+UNDEF_PLATFORM=

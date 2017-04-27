@@ -1,0 +1,230 @@
+# The contents of this file are subject to the Interbase Public
+# License Version 1.0 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy
+# of the License at http://www.Inprise.com/IPL.html
+#
+# Software distributed under the License is distributed on an
+# "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+# or implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code was created by Inprise Corporation
+# and its predecessors. Portions created by Inprise Corporation are
+# Copyright (C) Inprise Corporation.
+#
+# All Rights Reserved.
+# Contributor(s): ______________________________________.
+# ---------------------------------------------------------------------
+# Generic Compilation Rules 
+#
+# Do NOT change anything below this point.
+# ---------------------------------------------------------------------
+.SUFFIXES: .o .c .e
+
+.e.c: 
+	$(GPRE) $< -d $(DB)
+
+.c.o:
+	$(CC) $< $(CFLAGS) $@
+
+.o:
+	$(LINK) -o $@ $< $(LINK_FLAGS)
+
+# ---------------------------------------------------------------------
+# Specific targets to build 
+# ---------------------------------------------------------------------
+
+cmt:
+	@echo "--------------------------- makefile ----------------------------"
+	@echo "									" 
+	@echo " This makefile will build the InterBase 5.0 examples.		"
+	@echo " See the Programmer's Guide for information about the example	"
+	@echo " databases and example programs.					"
+	@echo "									"
+	@echo " You can edit the IBASE definition in this file to point to the	"
+	@echo " directory where InterBase was installed. Or you can specify the "
+	@echo " defenition on the command-line of make.				"
+	@echo "									"
+	@echo " To build all the examples use the 'all' target, by issuing the 	"
+	@echo " following command:						"
+	@echo "									"
+	@echo " 	make all						"
+	@echo " or								"
+	@echo " 	make IBASE=/usr/interbase all				"
+	@echo "									"
+	@echo " To build any one individual target, use the command:		"
+	@echo "									"
+	@echo " 	make 'target'						"
+	@echo " or								"
+	@echo " 	make IBASE=/usr/interbase 'target'			"
+	@echo "									"
+	@echo " where 'target' is one of the following:				"
+	@echo "									"
+	@echo " 	employe2.gdb, api1, api2, api3, api4, api5, api6, api7, "
+	@echo " 	api8, api9, api9f, api10, api11, api12, api13, api14, 	"
+	@echo " 	api15, api16, api16t, apifull, dyn1, dyn2, dyn3, dyn4, 	"
+	@echo " 	dyn5, dynfull, stat1, stat2, stat3, stat4, stat5,	"
+	@echo " 	stat6, stat7, stat8, stat9, stat10, stat11, stat12, 	"
+	@echo " 	stat12t, udflib						"
+	@echo " 								"
+	@echo "-----------------------------------------------------------------"
+
+all:	employe2.gdb api1 api2 api3 api4 api5 api6 api7 \
+	api8 api9 api10 api11 api12 api13 api14 api15 \
+	api16 api16t apifull dyn1 dyn2 dyn3 dyn4 \
+	dyn5 dynfull stat1 stat2 stat3 stat4 stat5 \
+	stat6 stat7 stat8 stat9 stat10 stat11 stat12 \
+	stat12t udflib api9f
+
+employe2.gdb: employe2.sql
+	$(ISQL) -i employe2.sql
+
+api1.o:	api1.c example.h
+
+api2.o: api2.c example.h
+
+api3.o: api3.c example.h
+
+api4.o: api4.c example.h
+
+api5.o: api5.c example.h
+
+api6.o: api6.c example.h
+
+api7.o: api7.c example.h
+
+api8.o: api8.c example.h
+
+api9.o: api9.c example.h
+
+api9:	api9.o api9f.sql
+	$(LINK) $@.o -o $@ $(LINK_FLAGS)
+	$(ISQL) $(DB) -i api9f.sql
+
+api9f.o:api9f.c example.h
+	$(CC) $< $(LIB_CFLAGS) $@
+
+api9f:	api9f.o
+	$(LIB_LINK) $@.o -o $@ $(LIB_LINK_FLAGS)
+	@echo ------------------------------------------------------
+	@echo You need to copy api9f to the interbase lib directory
+	@echo in order for api9 to work correctly.
+	@echo ------------------------------------------------------
+
+udflib.o:udflib.c example.h
+	$(CC) $< $(LIB_CFLAGS) $@
+
+udflib: udflib.o
+	$(LIB_LINK) $@.o -o $@ $(LIB_LINK_FLAGS)
+	@echo ------------------------------------------------------
+	@echo You need to copy udflib to the interbase lib directory
+	@echo in order for the server to load it. 
+	@echo ------------------------------------------------------
+
+api10.o: api10.c example.h
+
+api11.o: api11.c example.h
+
+api12.o: api12.c example.h
+
+api13.o: api13.c example.h
+
+api14.c:api14.e 
+	$(GPRE_M) $< -d $(DB)
+
+api14.o: api14.c example.h
+
+api15.o: api15.c example.h
+
+api16.o: api16.c example.h
+
+api16t.o: api16t.c example.h
+
+apifull.o: apifull.c example.h align.h
+
+stat1.c:stat1.e 
+
+stat1.o:stat1.c example.h
+
+stat2.c:stat2.e 
+
+stat2.o:stat2.c example.h
+
+stat3.c:stat3.e 
+
+stat3.o:stat3.c example.h
+
+stat4.c:stat4.e 
+
+stat4.o:stat4.c example.h
+
+stat5.c:stat5.e 
+
+stat5.o:stat5.c example.h
+
+stat6.c:stat6.e 
+
+stat6.o:stat6.c example.h
+
+stat7.c:stat7.e 
+
+stat7.o:stat7.c example.h
+
+stat8.c:stat8.e 
+
+stat8.o:stat8.c example.h
+
+stat9.c:stat9.e 
+
+stat9.o:stat9.c example.h
+
+stat10.c:stat10.e 
+	$(GPRE_M) $<
+
+stat10.o:stat10.c example.h
+
+stat11.c:stat11.e 
+	$(GPRE_M) $<
+
+stat11.o:stat11.c example.h
+
+stat12.c:stat12.e 
+	$(GPRE_M) $<
+
+stat12.o:stat12.c example.h
+
+stat12t.c:stat12t.e 
+	$(GPRE_M) $<
+
+stat12t.o:stat12t.c example.h
+
+dyn1.c:	dyn1.e 
+	$(GPRE_M) $<
+
+dyn1.o:	dyn1.c example.h
+
+dyn2.c:	dyn2.e 
+	$(GPRE_M) $<
+
+dyn2.o:	dyn2.c example.h
+
+dyn3.c:	dyn3.e 
+	$(GPRE_M) $<
+
+dyn3.o:	dyn3.c example.h
+
+dyn4.c:	dyn4.e 
+	$(GPRE_M) $<
+
+dyn4.o:	dyn4.c example.h
+
+dyn5.c:	dyn5.e 
+	$(GPRE_M) $<
+
+dyn5.o:	dyn5.c example.h
+
+dynfull.c:dynfull.e 
+	$(GPRE_M) $<
+
+dynfull.o:dynfull.c example.h align.h
+

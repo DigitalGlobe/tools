@@ -1,0 +1,8 @@
+﻿  ioapi.c
+  iomem_simple.c
+  unzip.c
+  zip.c
+..\iomem_simple.c(137): warning C4018: '>' : signed/unsigned mismatch
+..\iomem_simple.c(163): warning C4018: '>' : signed/unsigned mismatch
+..\iomem_simple.c(233): warning C4267: '=' : conversion from 'size_t' to 'long', possible loss of data
+  libMinizip.vcxproj -> C:\DigitalGlobe\LibKml\third_party\zlib-1.2.3\contrib\minizip\x64\Release\minizip.lib

@@ -1,0 +1,4 @@
+﻿C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(392,5): warning MSB8028: The intermediate directory (Win32\Release\) contains files shared from another project (decmn.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  gencmn_14.vcxproj -> C:\tools\src\firebird\extern\icu\source\tools\gencmn\Win32\Release\gencmn.exe
+  gencmn_14.vcxproj -> Win32\Release\gencmn.pdb (Full PDB)
+          1 file(s) copied.

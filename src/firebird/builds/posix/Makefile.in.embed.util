@@ -1,0 +1,207 @@
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+# You may obtain a copy of the Licence at
+# http://www.gnu.org/licences/lgpl.html
+# 
+# As a special exception this file can also be included in modules
+# with other source code as long as that source code has been 
+# released under an Open Source Initiative certificed licence.  
+# More information about OSI certification can be found at: 
+# http://www.opensource.org 
+# 
+# This module is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public Licence for more details.
+# 
+# This module was created by members of the firebird development 
+# team.  All individual contributions remain the Copyright (C) of 
+# those individuals and all rights are reserved.  Contributors to 
+# this file are either listed below or can be obtained from a CVS 
+# history command.
+#
+#  Created by:  Mark O'Donohue <mark.odonohue@ludwig.edu.au>
+#
+#  Contributor(s):
+# 
+#
+#
+ROOT=..
+ObjModuleType=std
+
+include     $(ROOT)/gen/make.defaults
+include     $(ROOT)/gen/make.platform
+include     $(ROOT)/gen/make.rules
+include     $(ROOT)/gen/make.shared.variables
+
+
+@SET_MAKE@
+
+
+LOCKPRINT_Other_Sources += jrd/isc_sync.cpp jrd/isc.cpp jrd/db_alias.cpp \
+$(OS_SPECIFIC_Sources)
+
+LOCKPRINT_Files= print.cpp
+LOCKPRINT_Sources = $(addprefix lock/, $(LOCKPRINT_Files)) $(LOCKPRINT_Other_Sources)
+LOCKPRINT_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(LOCKPRINT_Sources)))) \
+$(FBCONFIG_Objects)
+
+NBACKUP_Other_Sources = jrd/isc_file.cpp jrd/db_alias.cpp common/UtilSvc.cpp $(OS_SPECIFIC_Sources)
+
+NBACKUP_Files= nbackup.cpp nbackup/nbkMain.cpp
+NBACKUP_Sources = $(addprefix utilities/, $(NBACKUP_Files)) $(NBACKUP_Other_Sources)
+NBACKUP_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(NBACKUP_Sources)))) \
+$(FBCONFIG_Objects)
+
+
+DROP_Other_Sources += common/utils.cpp jrd/isc_sync.cpp jrd/isc.cpp \
+common/config/config.cpp common/config/config_file.cpp $(OS_SPECIFIC_Sources)
+
+DROP_Files= drop.cpp
+DROP_Sources = $(addprefix utilities/, $(DROP_Files)) $(DROP_Other_Sources)
+DROP_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(DROP_Sources)))) $(FBCOMMON_ClientObjects)
+
+
+GSEC_Other_Sources = jrd/enc.cpp jrd/sha.cpp jrd/guid.cpp \
+jrd/isc_file.cpp common/config/config.cpp common/config/config_file.cpp \
+common/config/dir_list.cpp \
+common/UtilSvc.cpp jrd/ThreadData.cpp \
+$(OS_SPECIFIC_Sources)
+
+GSEC_Files =  gsec.cpp security.cpp call_service.cpp gsecMain.cpp
+GSEC_Sources = $(addprefix utilities/gsec/, $(GSEC_Files)) $(GSEC_Other_Sources)
+GSEC_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(GSEC_Sources))))
+
+
+GSTAT_Other_Sources = jrd/btn.cpp jrd/db_alias.cpp common/utils.cpp jrd/ods.cpp \
+common/UtilSvc.cpp jrd/ThreadData.cpp jrd/isc_file.cpp $(OS_SPECIFIC_Sources)
+
+GSTAT_Files =  dba.epp ppg.cpp gstatMain.cpp
+GSTAT_Sources = $(addprefix utilities/gstat/, $(GSTAT_Files)) $(GSTAT_Other_Sources)
+GSTAT_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(GSTAT_Sources))))
+
+
+FBSVCMGR_Files= fbsvcmgr.cpp
+FBSVCMGR_Other_Sources = common/classes/fb_string.cpp common/classes/alloc.cpp \
+common/fb_exception.cpp common/utils.cpp common/classes/locks.cpp jrd/path_utils.cpp \
+common/classes/semaphore.cpp
+
+FBSVCMGR_Sources = $(addprefix utilities/, $(FBSVCMGR_Files)) $(FBSVCMGR_Other_Sources)
+FBSVCMGR_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(FBSVCMGR_Sources)))) \
+$(FBCLASSES_MsgObjects) $(CLUMPLETS_Objects) $(FBCOMMON_ClientObjects)
+
+
+FBTRACEMGR_Files= fbtracemgr/traceMgrMain.cpp
+FBTRACEMGR_Other_Sources = common/classes/fb_string.cpp common/classes/alloc.cpp \
+common/fb_exception.cpp common/utils.cpp common/classes/locks.cpp common/UtilSvc.cpp \
+jrd/trace/TraceCmdLine.cpp jrd/path_utils.cpp common/classes/semaphore.cpp
+
+FBTRACEMGR_Sources = $(addprefix utilities/, $(FBTRACEMGR_Files)) $(FBTRACEMGR_Other_Sources)
+FBTRACEMGR_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(FBTRACEMGR_Sources)))) \
+$(FBCLASSES_MsgObjects) $(CLUMPLETS_Objects) $(FBCOMMON_ClientObjects)
+
+
+FBGUARD_Other_Sources = jrd/isc.cpp jrd/divorce.cpp jrd/path_utils.cpp $(OS_SPECIFIC_Sources)
+FBGUARD_Files =  guard.cpp util.cpp
+FBGUARD_Sources = $(addprefix utilities/guard/, $(FBGUARD_Files)) $(FBGUARD_Other_Sources)
+FBGUARD_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(FBGUARD_Sources)))) $(FBCLASSES_ClientObjects)
+
+
+IBMGR_Files =  	ibmgr.cpp srvrmgr.cpp
+IBMGR_Sources = $(addprefix utilities/ibmgr/, $(IBMGR_Files))
+IBMGR_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(IBMGR_Sources))))
+
+
+REBUILD_Files =  rebuild.cpp rstore.epp rmet.epp 
+REBUILD_Sources = $(addprefix utilities/rebuild/, $(REBUILD_Files))
+REBUILD_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(REBUILD_Sources))))
+
+
+RELAY_Files =  relay.cpp
+RELAY_Sources = $(addprefix utilities/, $(RELAY_Files))
+RELAY_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(RELAY_Sources))))
+
+AllObjects = $(DROP_Object) $(FBSVCMGR_Objects) \
+			 $(GSEC_Objects) $(GSTAT_Object) $(FBGUARD_Objects) \
+			 $(IBMGR_Objects) $(REBUILD_Objects) $(RELAY_Objects) $(CLUMPLETS_Objects)
+
+Dependencies = $(AllObjects:.o=.d) 
+
+
+.PHONY: gstat gds_drop gds_relay gsec fbguard ibmgr_bin nbackup fb_lock_print \
+	fbsvcmgr fbtracemgr
+
+all: $(EMBED_UTIL_TARGETS)
+
+
+nbackup: $(LIBFBEMBED_SO) $(NBACKUP)
+
+$(NBACKUP):	$(NBACKUP_Objects) $(CLUMPLETS_Objects) $(COMMON_Objects)
+	$(EXE_LINK) $(LINK_EMPTY_SYMBOLS) $(LINK_OPTS) $^ -o $@ $(FBEMBED_LINK) $(LINK_LIBS)
+
+
+fb_lock_print: $(LIBFBEMBED_SO) $(LOCKPRINT)
+
+$(LOCKPRINT):	$(LOCKPRINT_Objects) $(COMMON_Objects)
+	$(EXE_LINK) $(LINK_EMPTY_SYMBOLS) $(LINK_OPTS) $^ -o $@ $(FBEMBED_LINK) $(LINK_LIBS)
+
+
+gstat : $(LIBFBEMBED_SO) $(GSTAT)
+
+$(GSTAT):	$(GSTAT_Objects) $(CLUMPLETS_Objects) $(COMMON_Objects) $(FBCONFIG_Objects)
+	$(EXE_LINK) $(LINK_EMPTY_SYMBOLS) $(LINK_OPTS) $^ -o $@ $(FBEMBED_LINK) $(LINK_LIBS)
+
+
+gds_drop: $(GDS_DROP)
+
+$(GDS_DROP):	$(DROP_Objects) $(FBCOMMON_Objects) $(FBCLASSES_Objects)
+	$(EXE_LINK) $(LINK_EMPTY_SYMBOLS) $(LINK_OPTS) $^ -o $@ $(FBEMBED_LINK) $(LINK_LIBS)
+
+
+fbsvcmgr: $(FBSVCMGR)
+
+$(FBSVCMGR):	$(FBSVCMGR_Objects) $(LIBFBEMBED_SO)
+	$(EXE_LINK) $(LINK_EMPTY_SYMBOLS) $(LINK_OPTS) $^ -o $@ $(FBEMBED_LINK) $(LINK_LIBS)
+
+
+fbtracemgr: $(FBTRACEMGR)
+
+$(FBTRACEMGR):	$(FBTRACEMGR_Objects) $(LIBFBEMBED_SO)
+	$(EXE_LINK) $(LINK_EMPTY_SYMBOLS) $(LINK_OPTS) $^ -o $@ $(FBEMBED_LINK) $(LINK_LIBS)
+
+
+gds_relay: $(GDS_RELAY)
+
+$(GDS_RELAY):	$(RELAY_Objects) $(LIBFBEMBED_SO)
+	$(EXE_LINK) $(LINK_EMPTY_SYMBOLS) $(LINK_OPTS) $(RELAY_Objects) -o $@ $(FBEMBED_LINK) $(LINK_LIBS)
+
+
+gsec: $(GSEC)
+
+$(GSEC):	$(GSEC_Objects) $(CLUMPLETS_Objects) $(COMMON_Objects)
+	$(EXE_LINK) $(LINK_EMPTY_SYMBOLS) $(LINK_OPTS) $^ -o $@ $(FBEMBED_LINK) $(LINK_LIBS)
+
+
+fbguard: $(LIBFBCLIENT_SO) $(FBGUARD)
+
+$(FBGUARD):	$(FBGUARD_Objects) $(FBCOMMON_Objects) $(FBCLASSES_Objects)
+	$(EXE_LINK) $(LINK_EMPTY_SYMBOLS) $(LINK_OPTS) $^ -o $@ -L$(LIB) -lfbclient $(LIB_GUI) $(LINK_LIBS)
+
+
+ibmgr_bin: $(IBMGR_BIN)
+
+$(IBMGR_BIN):	$(IBMGR_Objects) $(LIBFBEMBED_SO)  
+	$(EXE_LINK) $(LINK_EMPTY_SYMBOLS) $(LINK_OPTS) $(IBMGR_Objects) -o $@ $(FBEMBED_LINK) $(LINK_LIBS)
+
+# This one needs a bit of work.
+
+rebuild: $(GDS_REBUILD)
+
+$(GDS_REBUILD):	$(REBUILD_Objects) $(LIBFBEMBED_SO)  
+	$(EXE_LINK) $(LINK_EMPTY_SYMBOLS) $(LINK_OPTS) $(REBUILD_Objects) -o $@ $(FBEMBED_LINK) $(LINK_LIBS)
+
+include $(ROOT)/gen/make.shared.targets
+
+-include $(Dependencies)

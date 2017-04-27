@@ -1,0 +1,15 @@
+shapeHasZs
+shapeHasMs
+shapeHasCurves
+shapeHasIDs
+shapeHasNormals
+shapeHasTextures
+shapeHasPartIDs
+shapeHasMaterials
+shapeIsCompressed
+shapeModifierMask
+shapeMultiPatchModifierMask
+shapeBasicTypeMask
+shapeBasicModifierMask
+shapeNonBasicModifierMask
+shapeExtendedModifierMask

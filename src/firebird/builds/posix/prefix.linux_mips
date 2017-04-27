@@ -1,0 +1,14 @@
+COMMON_FLAGS=-ggdb -DFB_SEND_FLAGS=MSG_NOSIGNAL -DLINUX -pipe -MMD -fPIC -fmessage-length=0
+OPTIMIZE_FLAGS=-O3 -fno-omit-frame-pointer -fno-builtin
+WARN_FLAGS=-Wall -Wno-switch -Wno-parentheses -Wno-unknown-pragmas -Wno-unused-variable
+
+PROD_FLAGS=-DNDEBUG $(COMMON_FLAGS) $(OPTIMIZE_FLAGS)
+#DEV_FLAGS=-DUSE_VALGRIND -p $(COMMON_FLAGS) $(WARN_FLAGS)
+DEV_FLAGS=-p $(COMMON_FLAGS) $(WARN_FLAGS)
+
+OS_ServerFiles=inet_server.cpp
+
+EMBED_UTIL_TARGETS=gstat gsec fbguard nbackup fb_lock_print fbsvcmgr fbtracemgr
+CLIENT_UTIL_TARGETS=gstat gsec fbguard fbmgr_bin nbackup fb_lock_print fbsvcmgr fbtracemgr
+
+Physical_IO_Module=os/posix/unix.cpp

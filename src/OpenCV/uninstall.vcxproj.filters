@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\tools\src\OpenCV\CMakeLists.txt" />
+    <CustomBuild Include="C:\tools\src\OpenCV\CMakeFiles\7bb1624a381558e2e5e3f39300fd3f01\uninstall.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\tools\src\OpenCV\CMakeFiles\uninstall" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{43B09869-DF13-3107-AE82-47643196EE60}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

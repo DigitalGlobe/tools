@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\opencl\test_stereobm.cpp">
+      <Filter>Src\opencl</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_affine3.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_affine3d_estimator.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_cameracalibration.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_cameracalibration_artificial.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_cameracalibration_badarg.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_cameracalibration_tilt.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_chessboardgenerator.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_chesscorners.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_chesscorners_badarg.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_chesscorners_timing.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_compose_rt.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_cornerssubpix.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_decompose_projection.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_fisheye.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_fundam.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_homography.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_homography_decomp.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_main.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_modelest.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_posit.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_reproject_image_to_3d.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_solvepnp_ransac.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_stereomatching.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_undistort.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_undistort_badarg.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\test\test_undistort_points.cpp">
+      <Filter>Src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\tools\src\OpenCV\modules\calib3d\opencv_test_calib3d_pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\tools\src\OpenCV\modules\calib3d\test\test_chessboardgenerator.hpp">
+      <Filter>Include</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\tools\src\OpenCV\modules\calib3d\test\test_precomp.hpp">
+      <Filter>Include</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\tools\src\OpenCV\modules\calib3d\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Src\opencl">
+      <UniqueIdentifier>{1568B8C2-25C6-33BB-8A0C-751C636A5122}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{21FCBA3E-1157-3A49-82AE-80D1F847A128}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Src">
+      <UniqueIdentifier>{5B958A8D-13EB-3757-B96E-7848412A72D4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Include">
+      <UniqueIdentifier>{8A2871E7-42A8-3905-9061-0CDAC1663539}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

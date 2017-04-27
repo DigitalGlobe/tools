@@ -1,0 +1,60 @@
+﻿  closure.c
+  error.c
+  lalr.c
+  lr0.c
+c:\tools\src\firebird\extern\btyacc\defs.h(300): warning C4273: '_errno': inconsistent dll linkage (compiling source file ..\..\..\extern\btyacc\error.c)
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\stddef.h(29): note: see previous definition of '_errno' (compiling source file ..\..\..\extern\btyacc\error.c)
+c:\tools\src\firebird\extern\btyacc\defs.h(300): warning C4273: '_errno': inconsistent dll linkage (compiling source file ..\..\..\extern\btyacc\lalr.c)
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\stddef.h(29): note: see previous definition of '_errno' (compiling source file ..\..\..\extern\btyacc\lalr.c)
+c:\tools\src\firebird\extern\btyacc\defs.h(300): warning C4273: '_errno': inconsistent dll linkage (compiling source file ..\..\..\extern\btyacc\lr0.c)
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\stddef.h(29): note: see previous definition of '_errno' (compiling source file ..\..\..\extern\btyacc\lr0.c)
+..\..\..\extern\btyacc\lr0.c(166): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
+..\..\..\extern\btyacc\lr0.c(293): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
+c:\tools\src\firebird\extern\btyacc\defs.h(300): warning C4273: '_errno': inconsistent dll linkage (compiling source file ..\..\..\extern\btyacc\closure.c)
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\stddef.h(29): note: see previous definition of '_errno' (compiling source file ..\..\..\extern\btyacc\closure.c)
+  main.c
+  mkpar.c
+  mstring.c
+  output.c
+c:\tools\src\firebird\extern\btyacc\defs.h(300): warning C4273: '_errno': inconsistent dll linkage (compiling source file ..\..\..\extern\btyacc\main.c)
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\stddef.h(29): note: see previous definition of '_errno' (compiling source file ..\..\..\extern\btyacc\main.c)
+..\..\..\extern\btyacc\main.c(309): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\extern\btyacc\main.c(310): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\extern\btyacc\main.c(357): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+c:\tools\src\firebird\extern\btyacc\defs.h(300): warning C4273: '_errno': inconsistent dll linkage (compiling source file ..\..\..\extern\btyacc\mstring.c)
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\stddef.h(29): note: see previous definition of '_errno' (compiling source file ..\..\..\extern\btyacc\mstring.c)
+c:\tools\src\firebird\extern\btyacc\defs.h(300): warning C4273: '_errno': inconsistent dll linkage (compiling source file ..\..\..\extern\btyacc\mkpar.c)
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\stddef.h(29): note: see previous definition of '_errno' (compiling source file ..\..\..\extern\btyacc\mkpar.c)
+..\..\..\extern\btyacc\mstring.c(22): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\extern\btyacc\mstring.c(24): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
+..\..\..\extern\btyacc\mstring.c(41): warning C4244: 'initializing': conversion from '__int64' to 'int', possible loss of data
+  reader.c
+c:\tools\src\firebird\extern\btyacc\defs.h(300): warning C4273: '_errno': inconsistent dll linkage (compiling source file ..\..\..\extern\btyacc\output.c)
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\stddef.h(29): note: see previous definition of '_errno' (compiling source file ..\..\..\extern\btyacc\output.c)
+..\..\..\extern\btyacc\output.c(1033): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+  readskel.c
+c:\tools\src\firebird\extern\btyacc\defs.h(300): warning C4273: '_errno': inconsistent dll linkage (compiling source file ..\..\..\extern\btyacc\reader.c)
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\stddef.h(29): note: see previous definition of '_errno' (compiling source file ..\..\..\extern\btyacc\reader.c)
+  skeleton.c
+..\..\..\extern\btyacc\reader.c(740): warning C4244: 'function': conversion from '__int64' to 'int', possible loss of data
+..\..\..\extern\btyacc\reader.c(1001): warning C4244: 'function': conversion from '__int64' to 'int', possible loss of data
+..\..\..\extern\btyacc\reader.c(1670): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\extern\btyacc\reader.c(1866): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+  symtab.c
+c:\tools\src\firebird\extern\btyacc\defs.h(300): warning C4273: '_errno': inconsistent dll linkage (compiling source file ..\..\..\extern\btyacc\readskel.c)
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\stddef.h(29): note: see previous definition of '_errno' (compiling source file ..\..\..\extern\btyacc\readskel.c)
+..\..\..\extern\btyacc\readskel.c(29): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\extern\btyacc\readskel.c(75): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+c:\tools\src\firebird\extern\btyacc\defs.h(300): warning C4273: '_errno': inconsistent dll linkage (compiling source file ..\..\..\extern\btyacc\skeleton.c)
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\stddef.h(29): note: see previous definition of '_errno' (compiling source file ..\..\..\extern\btyacc\skeleton.c)
+  verbose.c
+c:\tools\src\firebird\extern\btyacc\defs.h(300): warning C4273: '_errno': inconsistent dll linkage (compiling source file ..\..\..\extern\btyacc\symtab.c)
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\stddef.h(29): note: see previous definition of '_errno' (compiling source file ..\..\..\extern\btyacc\symtab.c)
+c:\tools\src\firebird\extern\btyacc\defs.h(300): warning C4273: '_errno': inconsistent dll linkage (compiling source file ..\..\..\extern\btyacc\verbose.c)
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\stddef.h(29): note: see previous definition of '_errno' (compiling source file ..\..\..\extern\btyacc\verbose.c)
+  warshall.c
+c:\tools\src\firebird\extern\btyacc\defs.h(300): warning C4273: '_errno': inconsistent dll linkage (compiling source file ..\..\..\extern\btyacc\warshall.c)
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.10240.0\ucrt\stddef.h(29): note: see previous definition of '_errno' (compiling source file ..\..\..\extern\btyacc\warshall.c)
+C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(1189,5): warning MSB8012: TargetPath(C:\tools\src\firebird\builds\win32\msvc14\..\..\..\temp\x64\Release\btyacc\btyacc.exe) does not match the Linker's OutputFile property value (C:\tools\src\firebird\temp\x64\Release\firebird\bin\btyacc.exe). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).
+  btyacc.vcxproj -> C:\tools\src\firebird\builds\win32\msvc14\..\..\..\temp\x64\Release\btyacc\btyacc.exe
+  btyacc.vcxproj -> ..\..\..\temp\x64\Release\btyacc\btyacc.pdb (Full PDB)

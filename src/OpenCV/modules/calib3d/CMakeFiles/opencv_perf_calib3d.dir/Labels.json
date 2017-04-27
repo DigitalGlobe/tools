@@ -1,0 +1,50 @@
+
+{
+	"sources" : 
+	[
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/calib3d/perf/opencl/perf_stereobm.cpp",
+			"labels" : [ "Main", "opencv_calib3d", "PerfTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/calib3d/perf/perf_cicrlesGrid.cpp",
+			"labels" : [ "Main", "opencv_calib3d", "PerfTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/calib3d/perf/perf_main.cpp",
+			"labels" : [ "Main", "opencv_calib3d", "PerfTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/calib3d/perf/perf_pnp.cpp",
+			"labels" : [ "Main", "opencv_calib3d", "PerfTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/calib3d/perf/perf_stereosgbm.cpp",
+			"labels" : [ "Main", "opencv_calib3d", "PerfTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/calib3d/perf/perf_precomp.hpp",
+			"labels" : [ "Main", "opencv_calib3d", "PerfTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/calib3d/opencv_perf_calib3d_pch.cpp",
+			"labels" : [ "Main", "opencv_calib3d", "PerfTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/calib3d/CMakeLists.txt"
+		}
+	],
+	"target" : 
+	{
+		"labels" : [ "Main", "opencv_calib3d", "PerfTest" ],
+		"name" : "opencv_perf_calib3d"
+	}
+}

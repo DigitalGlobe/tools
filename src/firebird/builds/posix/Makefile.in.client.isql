@@ -1,0 +1,67 @@
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+# You may obtain a copy of the Licence at
+# http://www.gnu.org/licences/lgpl.html
+# 
+# As a special exception this file can also be included in modules
+# with other source code as long as that source code has been 
+# released under an Open Source Initiative certificed licence.  
+# More information about OSI certification can be found at: 
+# http://www.opensource.org 
+# 
+# This module is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public Licence for more details.
+# 
+# This module was created by members of the firebird development 
+# team.  All individual contributions remain the Copyright (C) of 
+# those individuals and all rights are reserved.  Contributors to 
+# this file are either listed below or can be obtained from a CVS 
+# history command.
+#
+#  Created by:  Mark O'Donohue <mark.odonohue@ludwig.edu.au>
+#
+#  Contributor(s):
+# 
+#
+#
+ROOT=..
+ObjModuleType=std
+
+include     $(ROOT)/gen/make.defaults
+include     $(ROOT)/gen/make.platform
+include     $(ROOT)/gen/make.rules
+include     $(ROOT)/gen/make.shared.variables
+
+@SET_MAKE@
+
+unexport ISC_USER
+unexport ISC_PASSWORD
+
+ISQL_Other_Sources = jrd/path_utils.cpp dsql/keywords.cpp
+ISQL_Files = extract.epp isql.epp show.epp Extender.cpp InputDevices.cpp \
+    ColList.cpp OptionsBase.cpp
+ISQL_Sources = $(addprefix isql/, $(ISQL_Files)) $(ISQL_Other_Sources)
+ISQL_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(ISQL_Sources))))
+
+AllObjects = $(ISQL_Objects) $(CLUMPLETS_Objects)
+
+Dependencies = $(AllObjects:.o=.d) 
+
+
+
+.PHONY: isql
+
+
+isql : $(LIBFBCLIENT_SO) $(ISQL)
+
+$(ISQL):	$(ISQL_Objects) $(CLUMPLETS_Objects) $(FBCOMMON_Objects) $(FBCLASSES_Objects)
+	$(EXE_LINK) $(LINK_EMPTY_SYMBOLS) $(LINK_OPTS) $^ -o $@ -L$(LIB) -lfbclient $(LIBEDITLINE) $(LINK_LIBS)
+
+
+include $(ROOT)/gen/make.shared.targets
+
+-include $(Dependencies)

@@ -1,0 +1,156 @@
+Firebird Datenbank Server 2.5
+==================================================
+
+
+Dieses Dokument ist eine Anleitung um dieses Paket
+von Firebird $MAJOR.$MINOR auf einer Windows Plattform zu installieren.
+Diese Hinweise beziehen sich ausschließlich auf das
+Installationspaket und nicht auf Firebird $MAJOR.$MINOR im
+Allgemeinen. Des Weiteren ist diese Anleitung für
+die Benutzer der Setuproutine gedacht.
+
+Es wird vorausgesetzt, dass der/die Leser(in) dieses
+Dokuments bereits mit Firebird 2.1 vertraut ist. Falls
+Sie Firebird $MAJOR.$MINOR im Zuge einer Migration von Fb 2.1
+evaluieren, dann sollten Sie zuvor die Fb $MAJOR.$MINOR Dokumentation
+lesen, um die durchgeführten Änderungen zwischen 2.1 und
+$MAJOR.$MINOR zu verstehen.
+
+
+Inhalt
+------
+
+o Vor der Installation
+o Probleme bei der Installation der MS VC Laufzeitbibliotheken
+o Weitere bekannte Installationsprobleme
+o Deinstallation
+o Weitere Hinweise
+o Installation mit einer Batch-Datei
+
+
+Vor der Installation
+--------------------
+
+Es wird empfohlen, dass Sie alle älteren Versionen von
+Firebird oder InterBase DEINSTALLIEREN, bevor Sie dieses
+Paket installieren. Es ist vor allem wichtig, dass Sie
+vorher überprüfen, dass sich fbclient.dll und gds32.dll
+nicht im <system32> Verzeichnis befinden.
+
+
+Probleme bei der Installation der MS VC Laufzeitbibliotheken
+------------------------------------------------------------
+
+Es wurde viel daran gearbeitet, um sicherzustellen, dass die
+MS Visual C Laufzeitbibliotheken von der Setuproutine korrekt
+installiert werden. Dennoch kann es beim Auftreten von Problemen
+notwendig sein, die offizielle vcredist.exe weiterzugeben. Die
+korrekte Version für dieses Build von Firebird finden Sie hier:
+
+	http://www.microsoft.com/downloads/details.aspx?familyid=32BC1BEE-A3F9-4C13-9C99-220B62A191EE&displaylang=en
+
+  und für x64:
+
+	http://www.microsoft.com/downloads/details.aspx?familyid=90548130-4468-4BBC-9673-D6ACABD5D13B&displaylang=en
+
+
+Weitere bekannte Installationsprobleme
+--------------------------------------
+
+o Sie können die Setuproutine nur für die Installation
+  der Default-Instanz von Firebird 2.5 verwenden. Falls
+  Sie die Installation von weiteren, benannten Instanzen
+  durchführen möchten, dann müssen Sie dazu die gezippte
+  Distribution verwenden.
+
+o Unglücklicherweise kann die Setuproutine einen laufenden
+  Firebird Classic Server nicht verläßlich erkennen.
+
+o Es existieren bekannte Probleme in Bezug auf die 
+  Überlappung der 32-bit und 64-bit Installation:
+
+  - Der Installer des Diensts (instsvc) verwendet den
+	selben Default-Instanznamen für 32-bit und 64-bit
+	Installationen. Dies ist "By Design". Dienste
+	existieren in einem einzelnen Namensraum.
+
+  - Falls das 32-bit und 64-bit Systemsteuerungs-Panel
+	installiert ist: Beide verweisen auf die selbe
+	Default-Instanz.
+
+o Falls Sie Firebird unter Vista installieren, stellen Sie
+  sicher, dass dies als Administrator durchgeführt wird.
+  So kann zum Beispiel die Setuproutine durch einen
+  Rechtsklick über 'Ausführen als Administrator' gestartet
+  werden. Ist dies nicht der Fall, so kann am Ende der
+  Installation die Setuproutine den Firebird Dienst nicht
+  starten.
+
+
+Deinstallation
+--------------
+
+o Dieses Paket sollte mit der mitgelieferten Deinstallationsroutine
+  entfernt werden. Dies kann über die Systemsteuerung durchgeführt
+  werden. Alternativ dazu kann dies auch direkt durch das Ausführen
+  von unins000.exe im Installationsverzeichnis erfolgen.
+
+o Falls Firebird als Anwendung läuft (anstatt eines Dienstes), so
+  wird empfohlen, dass der Server manuell gestoppt wird, bevor die
+  Deinstallationsroutine ausgeführt wird. Der Grund dafür ist, dass
+  der Deinstaller eine laufende Anwendung nicht beenden kann. Falls
+  ein Server während der Deinstallation läuft, wird diese mit Fehlern
+  abgeschlossen. Die übrig gebliebenen Dateien müssen im Anschluss
+  daran manuell entfernt werden.
+
+o Die Deinstallation entfernt folgende Dateien NICHT:
+
+  - aliases.conf
+  - firebird.conf
+  - fbtrace.conf
+  - firebird.log
+  - security2.fdb
+
+  Dies ist beabsichtigt. Diese Dateien sind höchstwahrscheinlich
+  von Benutzern geändert worden und werden vermutlich zu einem
+  späteren Zeitpunkt benötigt, falls Firebird neu installiert
+  werden soll. Diese Dateien können gelöscht werden, wenn Sie
+  dafür keine Verwendung mehr haben.
+
+o Die Deinstallationsroutine kann nun auch mit dem /CLEAN
+  Parameter aufgerufen werden. Dies überprüft den Shared File
+  Count für jede der oben genannten Datei. Falls möglich,
+  werden diese gelöscht.
+
+o Eine Deinstallation entfernt die MS VC Laufzeitbibliotheken
+  nicht aus dem Systemverzeichnis. Diese können über die
+  Systemsteuerung entfernt werden, allerdings sollte dies unter
+  normalen Umständen nicht notwendig sein.
+
+
+Weitere Hinweise
+----------------
+
+  Firebird benötigt WinSock2. Alle Win32 Plattformen, ausgenommen
+  Win95, sollten WinSock2 installiert haben. Ein Test, ob sich die
+  Winsock2 Bibliothek auf dem Rechner befindet, wird während der
+  Installation durchgeführt. Falls diese Bibliothek nicht vorgefunden
+  wird, so wird die Installation fehlschlagen. Sie können diesen Link
+  besuchen:
+
+	http://support.microsoft.com/default.aspx?scid=kb;EN-US;q177719
+
+  um herauszufinden, wie ein Upgrade erfolgen kann.
+
+
+Installation mit einer Batch-Datei
+----------------------------------
+
+Das Setup-Programm kann von einer Batch-Datei aus verwendet werden.
+Nähere Informationen dazu finden Sie in:
+
+	installation_scripted.txt
+
+
+
+

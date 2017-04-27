@@ -1,0 +1,6 @@
+﻿  feature_list_region_handler.cc
+  regionator.cc
+  regionator_util.cc
+  stdafx.cpp
+  Generating Code...
+  libkmlregionator.vcxproj -> C:\DigitalGlobe\LibKml\msvc\x64\Debug\libkmlregionator_d.lib

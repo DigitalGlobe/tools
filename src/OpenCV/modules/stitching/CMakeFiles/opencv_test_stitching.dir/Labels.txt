@@ -1,0 +1,30 @@
+# Target labels
+ Main
+ opencv_stitching
+ AccuracyTest
+# Source files and their labels
+C:/tools/src/OpenCV/modules/stitching/test/ocl/test_warpers.cpp
+ Main
+ opencv_stitching
+ AccuracyTest
+C:/tools/src/OpenCV/modules/stitching/test/test_blenders.cpp
+ Main
+ opencv_stitching
+ AccuracyTest
+C:/tools/src/OpenCV/modules/stitching/test/test_main.cpp
+ Main
+ opencv_stitching
+ AccuracyTest
+C:/tools/src/OpenCV/modules/stitching/test/test_matchers.cpp
+ Main
+ opencv_stitching
+ AccuracyTest
+C:/tools/src/OpenCV/modules/stitching/test/test_precomp.hpp
+ Main
+ opencv_stitching
+ AccuracyTest
+C:/tools/src/OpenCV/modules/stitching/opencv_test_stitching_pch.cpp
+ Main
+ opencv_stitching
+ AccuracyTest
+C:/tools/src/OpenCV/modules/stitching/CMakeLists.txt

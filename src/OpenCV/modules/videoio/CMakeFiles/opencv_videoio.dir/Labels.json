@@ -1,0 +1,103 @@
+
+{
+	"sources" : 
+	[
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/include/opencv2/videoio.hpp",
+			"labels" : [ "Main", "opencv_videoio", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/include/opencv2/videoio/videoio.hpp",
+			"labels" : [ "Main", "opencv_videoio", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/include/opencv2/videoio/cap_ios.h",
+			"labels" : [ "Main", "opencv_videoio", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/include/opencv2/videoio/videoio_c.h",
+			"labels" : [ "Main", "opencv_videoio", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/src/cap.cpp",
+			"labels" : [ "Main", "opencv_videoio", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/src/cap_images.cpp",
+			"labels" : [ "Main", "opencv_videoio", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/src/cap_mjpeg_encoder.cpp",
+			"labels" : [ "Main", "opencv_videoio", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/src/cap_mjpeg_decoder.cpp",
+			"labels" : [ "Main", "opencv_videoio", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/src/cap_cmu.cpp",
+			"labels" : [ "Main", "opencv_videoio", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/src/cap_dshow.cpp",
+			"labels" : [ "Main", "opencv_videoio", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/src/cap_vfw.cpp",
+			"labels" : [ "Main", "opencv_videoio", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/src/cap_ffmpeg.cpp",
+			"labels" : [ "Main", "opencv_videoio", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/src/precomp.hpp",
+			"labels" : [ "Main", "opencv_videoio", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/src/cap_dshow.hpp",
+			"labels" : [ "Main", "opencv_videoio", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/src/cap_ffmpeg_impl.hpp",
+			"labels" : [ "Main", "opencv_videoio", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/cvconfig.h"
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/opencv2/opencv_modules.hpp"
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/opencv_videoio_pch.cpp",
+			"labels" : [ "Main", "opencv_videoio", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/CMakeLists.txt"
+		}
+	],
+	"target" : 
+	{
+		"labels" : [ "Main", "opencv_videoio", "Module" ],
+		"name" : "opencv_videoio"
+	}
+}

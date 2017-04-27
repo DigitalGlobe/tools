@@ -1,0 +1,136 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGUID>{90B5971E-8483-3C75-8D72-C07F01EC79E5}</ProjectGUID>
+    <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
+    <Keyword>Win32Proj</Keyword>
+    <Platform>Win32</Platform>
+    <ProjectName>uninstall</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Utility</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+    <PropertyGroup>
+      <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+      <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+      <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Midl>
+      <AdditionalIncludeDirectories>C:\tools\src\OpenCV\3rdparty\ippicv\unpack\ippicv_win\include;C:\tools\src\OpenCV;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Midl>
+      <AdditionalIncludeDirectories>C:\tools\src\OpenCV\3rdparty\ippicv\unpack\ippicv_win\include;C:\tools\src\OpenCV;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\tools\src\OpenCV\CMakeLists.txt">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building Custom Rule C:/tools/src/OpenCV/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -HC:/tools/src/OpenCV -BC:/tools/src/OpenCV --check-stamp-file C:\tools\src\OpenCV\CMakeFiles\generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:/tools/src/OpenCV/CMakeLists.txt;C:\tools\src\OpenCV\CMakeLists.txt;C:\tools\src\OpenCV\cmake\OpenCVMinDepVersions.cmake;C:\tools\src\OpenCV\cmake\OpenCVUtils.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeParseArguments.cmake;C:\tools\src\OpenCV\CMakeFiles\3.7.2\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\Platform\WindowsPaths.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeCommonLanguageInclude.cmake;C:\tools\src\OpenCV\cmake\OpenCVDetectCXXCompiler.cmake;C:\tools\src\OpenCV\cmake\OpenCVVersion.cmake;C:\tools\src\OpenCV\modules\core\include\opencv2\core\version.hpp;C:\Program Files\CMake\share\cmake-3.7\Modules\FindGit.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeParseArguments.cmake;C:\tools\src\OpenCV\cmake\OpenCVCompilerOptions.cmake;C:\tools\src\OpenCV\cmake\checks\fp16.cpp;C:\tools\src\OpenCV\cmake\OpenCVCRTLinkage.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\ProcessorCount.cmake;C:\tools\src\OpenCV\cmake\OpenCVPCHSupport.cmake;C:\tools\src\OpenCV\cmake\OpenCVModule.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\TestBigEndian.cmake;C:\tools\src\OpenCV\cmake\OpenCVFindLibsGrfmt.cmake;C:\tools\src\OpenCV\cmake\OpenCVFindWebP.cmake;C:\tools\src\OpenCV\cmake\OpenCVFindLibsGUI.cmake;C:\tools\src\OpenCV\cmake\checks\win32uitest.cpp;C:\tools\src\OpenCV\cmake\OpenCVFindLibsVideo.cmake;C:\tools\src\OpenCV\cmake\checks\vfwtest.cpp;C:\tools\src\OpenCV\cmake\FindGstreamerWindows.cmake;C:\tools\src\OpenCV\3rdparty\ffmpeg\ffmpeg.cmake;C:\tools\src\OpenCV\3rdparty\ffmpeg\ffmpeg_version.cmake;C:\tools\src\OpenCV\cmake\OpenCVFindLibsPerf.cmake;C:\tools\src\OpenCV\cmake\OpenCVFindIPP.cmake;C:\tools\src\OpenCV\3rdparty\ippicv\downloader.cmake;C:\tools\src\OpenCV\cmake\OpenCVDetectCUDA.cmake;C:\tools\src\OpenCV\cmake\FindCUDA.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeParseArguments.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindDoxygen.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeParseArguments.cmake;C:\tools\src\OpenCV\cmake\OpenCVDetectPython.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPythonInterp.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeParseArguments.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPythonInterp.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeParseArguments.cmake;C:\tools\src\OpenCV\cmake\OpenCVDetectApacheAnt.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindJNI.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeFindJavaCommon.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeParseArguments.cmake;C:\tools\src\OpenCV\cmake\OpenCVDetectOpenCL.cmake;C:\tools\src\OpenCV\cmake\checks\opencl.cpp;C:\tools\src\OpenCV\cmake\OpenCVDetectDirectX.cmake;C:\tools\src\OpenCV\cmake\checks\directx.cpp;C:\tools\src\OpenCV\cmake\checks\directx.cpp;C:\tools\src\OpenCV\cmake\OpenCVFindMatlab.cmake;C:\tools\src\OpenCV\cmake\OpenCVDetectVTK.cmake;C:\tools\src\OpenCV\cmake\templates\custom_hal.hpp.in;C:\tools\src\OpenCV\cmake\OpenCVExtraTargets.cmake;C:\tools\src\OpenCV\cmake\templates\cmake_uninstall.cmake.in;C:\tools\src\OpenCV\cmake\OpenCVGenHeaders.cmake;C:\tools\src\OpenCV\cmake\templates\cvconfig.h.in;C:\tools\src\OpenCV\cmake\templates\cvconfig.h.in;C:\tools\src\OpenCV\cmake\templates\opencv_modules.hpp.in;C:\tools\src\OpenCV\cmake\OpenCVGenPkgconfig.cmake;C:\tools\src\OpenCV\cmake\templates\opencv-XXX.pc.in;C:\tools\src\OpenCV\cmake\OpenCVGenAndroidMK.cmake;C:\tools\src\OpenCV\cmake\OpenCVGenConfig.cmake;C:\tools\src\OpenCV\cmake\templates\OpenCVConfig.cmake.in;C:\tools\src\OpenCV\cmake\templates\OpenCVConfig-version.cmake.in;C:\tools\src\OpenCV\cmake\templates\OpenCVConfig-version.cmake.in;C:\tools\src\OpenCV\cmake\templates\OpenCVConfig.cmake.in;C:\tools\src\OpenCV\cmake\templates\OpenCVConfig.root-WIN32.cmake.in;C:\tools\src\OpenCV\cmake\OpenCVGenABI.cmake;C:\tools\src\OpenCV\cmake\OpenCVPackaging.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CPack.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CPackComponent.cmake;C:\Program Files\CMake\share\cmake-3.7\Templates\CPackConfig.cmake.in;C:\Program Files\CMake\share\cmake-3.7\Templates\CPackConfig.cmake.in;C:\tools\src\OpenCV\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\tools\src\OpenCV\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building Custom Rule C:/tools/src/OpenCV/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -HC:/tools/src/OpenCV -BC:/tools/src/OpenCV --check-stamp-file C:\tools\src\OpenCV\CMakeFiles\generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:/tools/src/OpenCV/CMakeLists.txt;C:\tools\src\OpenCV\CMakeLists.txt;C:\tools\src\OpenCV\cmake\OpenCVMinDepVersions.cmake;C:\tools\src\OpenCV\cmake\OpenCVUtils.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeParseArguments.cmake;C:\tools\src\OpenCV\CMakeFiles\3.7.2\CMakeSystem.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeSystemSpecificInitialize.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeSystemSpecificInformation.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeGenericSystem.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\Platform\Windows.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\Platform\WindowsPaths.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeCXXInformation.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\Compiler\MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\Platform\Windows-MSVC-CXX.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeRCInformation.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeCommonLanguageInclude.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeCInformation.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeLanguageInformation.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\Platform\Windows-MSVC-C.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\Platform\Windows-MSVC.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeCommonLanguageInclude.cmake;C:\tools\src\OpenCV\cmake\OpenCVDetectCXXCompiler.cmake;C:\tools\src\OpenCV\cmake\OpenCVVersion.cmake;C:\tools\src\OpenCV\modules\core\include\opencv2\core\version.hpp;C:\Program Files\CMake\share\cmake-3.7\Modules\FindGit.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeParseArguments.cmake;C:\tools\src\OpenCV\cmake\OpenCVCompilerOptions.cmake;C:\tools\src\OpenCV\cmake\checks\fp16.cpp;C:\tools\src\OpenCV\cmake\OpenCVCRTLinkage.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\ProcessorCount.cmake;C:\tools\src\OpenCV\cmake\OpenCVPCHSupport.cmake;C:\tools\src\OpenCV\cmake\OpenCVModule.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\TestBigEndian.cmake;C:\tools\src\OpenCV\cmake\OpenCVFindLibsGrfmt.cmake;C:\tools\src\OpenCV\cmake\OpenCVFindWebP.cmake;C:\tools\src\OpenCV\cmake\OpenCVFindLibsGUI.cmake;C:\tools\src\OpenCV\cmake\checks\win32uitest.cpp;C:\tools\src\OpenCV\cmake\OpenCVFindLibsVideo.cmake;C:\tools\src\OpenCV\cmake\checks\vfwtest.cpp;C:\tools\src\OpenCV\cmake\FindGstreamerWindows.cmake;C:\tools\src\OpenCV\3rdparty\ffmpeg\ffmpeg.cmake;C:\tools\src\OpenCV\3rdparty\ffmpeg\ffmpeg_version.cmake;C:\tools\src\OpenCV\cmake\OpenCVFindLibsPerf.cmake;C:\tools\src\OpenCV\cmake\OpenCVFindIPP.cmake;C:\tools\src\OpenCV\3rdparty\ippicv\downloader.cmake;C:\tools\src\OpenCV\cmake\OpenCVDetectCUDA.cmake;C:\tools\src\OpenCV\cmake\FindCUDA.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeParseArguments.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindDoxygen.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeParseArguments.cmake;C:\tools\src\OpenCV\cmake\OpenCVDetectPython.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPythonInterp.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeParseArguments.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPythonInterp.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeParseArguments.cmake;C:\tools\src\OpenCV\cmake\OpenCVDetectApacheAnt.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindJNI.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeFindJavaCommon.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageHandleStandardArgs.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\FindPackageMessage.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CMakeParseArguments.cmake;C:\tools\src\OpenCV\cmake\OpenCVDetectOpenCL.cmake;C:\tools\src\OpenCV\cmake\checks\opencl.cpp;C:\tools\src\OpenCV\cmake\OpenCVDetectDirectX.cmake;C:\tools\src\OpenCV\cmake\checks\directx.cpp;C:\tools\src\OpenCV\cmake\checks\directx.cpp;C:\tools\src\OpenCV\cmake\OpenCVFindMatlab.cmake;C:\tools\src\OpenCV\cmake\OpenCVDetectVTK.cmake;C:\tools\src\OpenCV\cmake\templates\custom_hal.hpp.in;C:\tools\src\OpenCV\cmake\OpenCVExtraTargets.cmake;C:\tools\src\OpenCV\cmake\templates\cmake_uninstall.cmake.in;C:\tools\src\OpenCV\cmake\OpenCVGenHeaders.cmake;C:\tools\src\OpenCV\cmake\templates\cvconfig.h.in;C:\tools\src\OpenCV\cmake\templates\cvconfig.h.in;C:\tools\src\OpenCV\cmake\templates\opencv_modules.hpp.in;C:\tools\src\OpenCV\cmake\OpenCVGenPkgconfig.cmake;C:\tools\src\OpenCV\cmake\templates\opencv-XXX.pc.in;C:\tools\src\OpenCV\cmake\OpenCVGenAndroidMK.cmake;C:\tools\src\OpenCV\cmake\OpenCVGenConfig.cmake;C:\tools\src\OpenCV\cmake\templates\OpenCVConfig.cmake.in;C:\tools\src\OpenCV\cmake\templates\OpenCVConfig-version.cmake.in;C:\tools\src\OpenCV\cmake\templates\OpenCVConfig-version.cmake.in;C:\tools\src\OpenCV\cmake\templates\OpenCVConfig.cmake.in;C:\tools\src\OpenCV\cmake\templates\OpenCVConfig.root-WIN32.cmake.in;C:\tools\src\OpenCV\cmake\OpenCVGenABI.cmake;C:\tools\src\OpenCV\cmake\OpenCVPackaging.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CPack.cmake;C:\Program Files\CMake\share\cmake-3.7\Modules\CPackComponent.cmake;C:\Program Files\CMake\share\cmake-3.7\Templates\CPackConfig.cmake.in;C:\Program Files\CMake\share\cmake-3.7\Templates\CPackConfig.cmake.in;C:\tools\src\OpenCV\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\tools\src\OpenCV\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\tools\src\OpenCV\CMakeFiles\7bb1624a381558e2e5e3f39300fd3f01\uninstall.rule">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'"></Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -P C:/tools/src/OpenCV/cmake_uninstall.cmake
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:/tools/src/OpenCV/CMakeFiles/7bb1624a381558e2e5e3f39300fd3f01/uninstall.rule;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\tools\src\OpenCV\CMakeFiles\uninstall</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'"></Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -P C:/tools/src/OpenCV/cmake_uninstall.cmake
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:/tools/src/OpenCV/CMakeFiles/7bb1624a381558e2e5e3f39300fd3f01/uninstall.rule;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\tools\src\OpenCV\CMakeFiles\uninstall</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\tools\src\OpenCV\CMakeFiles\uninstall" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="C:/tools/src/OpenCV/ZERO_CHECK.vcxproj">
+      <Project>E0284986-3AE0-3E66-BB73-8BA76038446D</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

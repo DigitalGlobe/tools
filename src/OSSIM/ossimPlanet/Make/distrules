@@ -1,0 +1,16 @@
+distribution : 
+	@$(MAKEDIST) \
+		$(OS)\
+		$(TOPDIR)\
+		$(INST_LIBS)\
+		$(INST_INCLUDE)\
+		$(INST_EXAMPLES)\
+		$(INST_SRC)\
+		$(INST_EXAMPLE_SRC)\
+		"$(VERSION)-$(VERSION_REVISION)" \
+		$(INST_DOC) 
+
+	
+
+cleandist:
+	@$(MAKECLEANDIST)

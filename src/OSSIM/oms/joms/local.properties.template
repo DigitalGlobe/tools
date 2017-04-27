@@ -1,0 +1,44 @@
+<!-- $Id: local.properties.template 22935 2014-10-31 15:01:34Z dburken $ -->
+
+<!-- 
+ *  This is a template.  Copy to "local.properties" and fill these out 
+ *  appropriately... 
+-->
+
+<!-- Uncomment and set if needed. -->
+<!-- OSSIM_DEV_HOME = /some_path_to_your_workspace -->
+
+<!-- Your path to java. -->
+<!-- Uncomment and set if needed. -->
+jdk.home=${env.JAVA_HOME}
+
+mac.sdk_version=10.7
+
+<!-- The top level of this module. -->
+oms.home=${env.OSSIM_DEV_HOME}/oms
+
+<!-- The name of this module. -->
+module.name=joms
+
+<!-- Home of ossim. -->
+ossim.home=${env.OSSIM_DEV_HOME}/ossim
+
+ossim.install_prefix=${env.OSSIM_INSTALL_PREFIX}
+ossim.build=${env.OSSIM_BUILD_DIR}/${env.OSSIM_BUILD_TYPE}
+ossim.dependencies=${env.OSSIM_DEPENDENCIES}
+ossim.version=${env.OSSIM_VERSION}
+
+
+<!-- Home of ossimPredator. -->
+predator.home=${env.OSSIM_DEV_HOME}/ossimPredator
+
+groovy.home=${env.GROOVY_HOME}
+groovy.version=${env.GROOVY_VERSION}
+
+<!-- Where the c++ ossim and ossimjni libraries are placed during build. -->
+ossim.lib_path=${env.OSSIM_DEV_HOME}/build
+
+<!-- For /usr/lib64 use 64 (64 bit), Use blank for /usr/lib (32 bit). -->
+lib_suffix=64
+package.dir=oms
+

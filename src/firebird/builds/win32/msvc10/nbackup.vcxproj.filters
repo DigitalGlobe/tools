@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="UTILITIES files">
+      <UniqueIdentifier>{15ccccf9-1b45-4b76-bb22-c2595eaef975}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{6a9f6cd2-ab02-470b-8a45-35d7581c9479}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="Resource files">
+      <UniqueIdentifier>{0e47469b-d9ed-4d47-ad7a-94eed9330d07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="JRD files">
+      <UniqueIdentifier>{a023690f-c2ef-48d2-bf6d-887e2e2f3293}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\utilities\nbackup.cpp">
+      <Filter>UTILITIES files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\utilities\nbackup\nbkMain.cpp">
+      <Filter>UTILITIES files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\os\win32\guid.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\isc_file.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\isc.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\os\win32\os_utils.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\src\jrd\version.rc">
+      <Filter>Resource files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

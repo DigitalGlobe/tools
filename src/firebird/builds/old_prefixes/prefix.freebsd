@@ -1,0 +1,166 @@
+# The contents of this file are subject to the Interbase Public
+# License Version 1.0 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy
+# of the License at http://www.Inprise.com/IPL.html
+#
+# Software distributed under the License is distributed on an
+# "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+# or implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code was created by Inprise Corporation
+# and its predecessors. Portions created by Inprise Corporation are
+# Copyright (C) Inprise Corporation.
+#
+# All Rights Reserved.
+# Contributor(s): ______________________________________.
+#
+
+.SUFFIXES: .c .e
+.e.c:
+	$(GPRE) $(GPRE_FLAGS) $<
+.SUFFIXES: .bin .o .c
+.c.o:
+	$(CC) -c $(CFLAGS) $(VERSION_FLAG) $<
+.c.bin:
+	$(CC) -c $(PIC_FLAGS) $(VERSION_FLAG) -o $*.bin $<
+
+
+PROD_DEBUG_OBJECTS=	nodebug.o
+PROD_SHRLIB_DIR=	-Lsource/jrd
+PROD_VERSION_FLAG=	-DPROD_BUILD
+PROD_CFLAGS=            -O -m486 -fpic -DFLINTSTONE
+
+
+DEV_DEBUG_OBJECTS=	grammar.o dbg.o dbt.o dmp.o
+DEV_SHRLIB_DIR=		-Lsource/jrd
+DEV_VERSION_FLAG=	-DDEV_BUILD
+DEV_CFLAGS=		-ggdb
+
+DEBUG_OBJECTS=		$($(VERSION)_DEBUG_OBJECTS)
+SHRLIB_DIR=		$($(VERSION)_SHRLIB_DIR)
+VERSION_FLAG=		$($(VERSION)_VERSION_FLAG)
+CFLAGS_COMMON=		$($(VERSION)_CFLAGS)  -Isource/interbase/include -DFREEBSD -w -fwritable-strings
+CFLAGS=			$(CFLAGS_COMMON) $(SUPER_FLAG)
+PIC_J_CFLAGS=		$(CFLAGS_COMMON) -DPIPE_IS_SHRLIB -fPIC
+SPECIAL_OBJECTS=	j
+UDF_LINK_CMD=		gcc
+UDF_CFLAGS=         	-fPIC -mieee-fp
+UDF_LFLAGS=         	-shared
+UDF_SHRLIBS=        	$(SHRLIB_DIR) -lgds -lm -lc -mieee-fp -ldescrypt
+
+#NOTE: PIC_J_CFLAGS is special CFLAGS used to build PIPD_IS_SHRLIB modules
+#      to workaround the Solaris threading problems with signals
+
+
+#NOTE: -Xt is ANSI C transition mode (default)
+#      -DBDS_COMP is for BSD Compatibility package and is used in <sys/ioctl.h>
+
+ACCESS_METHOD=		gdslib.freebsd pipe
+BACKEND_BRIDGE_MISC=	head5.o allp.o
+BIN_PATH=		interbase/bin
+BRIDGE_MISC=		head5.o allp.o
+CHMOD_VAL=		666
+CURSES_LIB=             -lncurses
+DSQL_P_OBJS=		dsql_p_objects
+FORM_OBJECTS=		form.o
+FORM_TRN_OBJECTS=	form_trn.o
+FUNCTIONS=		functions.bin
+FUNCSHR=		source/interbase/lib/gdsf.so
+GDS_LINK=		$(GDSSHR_LINK)
+GDS_PYXIS=		gds_pyxis.a
+GDSLIB_BACKEND=		source/interbase/lib/gds_b.a
+GDSLIB_LINK=		-Lsource/jrd -lgds_b -lc -ldescrypt
+
+GDSSHR=			source/interbase/lib/gds.so
+LINUX_GDSSHR=		$(GDSSHR)
+GDSSHR_LINK=		$(SHRLIB_DIR) -lgds -lgds_pyxis -ldescrypt
+PIPE_GDSSHR_LINK=	$(SHRLIB_DIR) -lgds -lgds_pyxis
+HLPDIR=			source/qli/
+HOSTNAME=		`hostname | cut -d'.' -f1`
+INCLUDES=		include_so include_so_ada	
+INTL=			intl
+
+INTL_CFLAGS=		$(CFLAGS)
+INTL_LD_LINE=		ld -G -o gdsintl 
+INTL_PIC_FLAGS=		$(PIC_FLAGS)
+INTL_TARGET=		intl_shr_objs
+IO_OBJECTS=		unix.o
+IO_P_OBJECTS=		unix.bin
+JRD_MISC_OBJECTS=	source/jrd/sun_ftn.o
+JRD_J_MISC_OBJECTS=	source/jrd/sun_ftn.j 
+JRD_P_MISC_OBJECTS=	source/jrd/sun_ftn.bin source/jrd/nodebug.bin
+LANG_OBJECTS=		ada.o ftn.o cob.o
+LANGUAGES=		cc cxx ada sun_ada microfocus_cob make16 gdl1 sun_ftn
+LD_LIBS=		-lc
+LD_LIBS_J=		-lc
+LD_OPTS=		-shared
+LOCK_JRD_MISC=		source/jrd/thd.o
+LOCK_MANAGER=		manager
+MARION_DB=		-d source/marion.gdb
+MUISQL=			muisql
+MUISQL_MU_LIB=		-L /usr/gds.$(HOSTNAME)/qa_tools/lib -lmu
+MUISQL_LINK_OPTS=	$(MUISQL_MU_LIB) $(PIPE_GDSSHR_LINK) -lm 
+PIC_FLAGS=		$(CFLAGS) -fPIC
+PIPE=			gds.a gds_pipe
+PYXIS=			pyxis
+PYXIS_MISC_OBJS=	$(PYXIS_MISC)
+PYXIS_P_MISC_OBJS=	$(PYXIS_P_MISC)
+PYXIS_OBJECTS=		pyxis_objects
+PYXIS_MISC_OBJECTS=	$(PYXDIR)cdm.o $(PYXDIR)vt100.o $(PYXDIR)sun_ftn_pyxis.o
+REG_HELP=		isc_ins_hlp.dat
+REMOTE_GDSSHR=		$(GDSSHR)
+REMOTE_GDSSHR_LINK=	$(SERVER_LINK)
+REMOTE_P_OBJS=		rem_p_objects
+SCREEN_LIBS=
+#SCREEN_LIBS=		-lncurses
+SERVER_LINK=		$(GDSSHR_LINK)
+SETUP_ISC=              ISC_USER=sysdba; ISC_PASSWORD=masterkey; export ISC_USER ISC_PASSWORD;
+SPECIAL_OPT=		source/special_opt
+NETWORK_LIB=		
+SOCKET_LIB=		-lc
+THREAD_LIB=		-llthread
+SUN_FUNCSHR=		$(FUNCSHR)
+LX_SUPER_GDSSHR=		source/interbase/lib/gds.so.1
+SUPER_CLIENT_GDSSHR=    $(LX_SUPER_GDSSHR)
+SUPER_BACKEND=		source/jrd/gds_ss.a
+SUPER_LINK=		-Lsource/jrd -lgds_ss -lc -ldescrypt -L/usr/local/lib -llthread
+SUPER_SERVER=	
+UTILITIES=		
+WAL_P_OBJS=		wal_p_objects
+
+
+SUPER_SERVER_DEST=	source/interbase/bin/ibserver
+INET_SERVER_DEST=	source/interbase/bin/gds_inet_server
+DNET_SERVER_DEST=	source/interbase/bin/gds_dnet_server
+AMBX_SERVER_DEST=	source/interbase/bin/gds_server
+INET_LIB_DEST=		source/interbase/lib/gds_inet_server.a
+DNET_LIB_DEST=		source/interbase/lib/gds_dnet_server.a
+
+SH=			sh -c
+RM=			rm -f
+CHMOD=			chmod
+CHMOD_6=		chmod 666
+CHMOD_7=		chmod 777
+CHMOD_S7=		chmod 06777
+MV=			mv -f
+TOUCH=			touch
+CP=			cp
+ECHO=			echo
+QUIET_ECHO=		@echo
+CD=			cd
+CAT=			cat
+AR=			ar r
+EXPAND_DBNAME=		@echo No need to expand...
+COMPRESS_DBNAME=	@echo No need to compress...
+
+ARCH_EXT=		.a
+EXEC_EXT=
+SHRLIB_EXT=		.so
+
+V3PRINTER=		source/lock/printv3.o
+
+# Forces library build for FreeBSD
+PYXIS_LIBRARY= libpyxis.a
+
+#   End of file prefix.freebsd:	$(VERSION)	$(PLATFORM)

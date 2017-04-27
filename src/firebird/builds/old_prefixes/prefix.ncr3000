@@ -1,0 +1,119 @@
+# The contents of this file are subject to the Interbase Public
+# License Version 1.0 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy
+# of the License at http://www.Inprise.com/IPL.html
+#
+# Software distributed under the License is distributed on an
+# "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+# or implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code was created by Inprise Corporation
+# and its predecessors. Portions created by Inprise Corporation are
+# Copyright (C) Inprise Corporation.
+#
+# All Rights Reserved.
+# Contributor(s): ______________________________________.
+.SUFFIXES: .c .e
+.e.c:
+	$(GPRE) $(GPRE_FLAGS) $<
+.SUFFIXES: .bin .o .c
+.c.o:
+	$(CC) -c $(CFLAGS) $(VERSION_FLAG) $<
+.c.bin:
+	$(CC) -c $(PIC_FLAGS) $(VERSION_FLAG) -o $*.bin $<
+
+
+PROD_DEBUG_OBJECTS=	nodebug.o
+PROD_SHRLIB_DIR=	-Lsource/jrd
+PROD_VERSION_FLAG=	-DPROD_BUILD
+PROD_CFLAGS=		-O -DHADES
+
+DEV_DEBUG_OBJECTS=	grammar.o dbg.o dbt.o dmp.o
+DEV_SHRLIB_DIR=		-Lsource/jrd
+DEV_VERSION_FLAG=	-DDEV_BUILD
+DEV_CFLAGS=		-g
+
+DEBUG_OBJECTS=		$($(VERSION)_DEBUG_OBJECTS)
+SHRLIB_DIR=		$($(VERSION)_SHRLIB_DIR)
+VERSION_FLAG=		$($(VERSION)_VERSION_FLAG)
+CFLAGS=			$($(VERSION)_CFLAGS) -D$(SYSTEM)
+
+ACCESS_METHOD=		gdslib.ncr3000 pipe
+BACKEND_BRIDGE_MISC=	head5.o allp.o
+HOSTNAME=		.`hostname`
+BIN_PATH=		/usr/gds$(HOSTNAME)/bin
+BRIDGE_MISC=		head5.o allp.o
+CHMOD_VAL=		666
+CURSES_LIB=		-lcurses
+DSQL_P_OBJS=		dsql_p_objects
+EXAMPLES_NODE=		jughead:
+FORM_OBJECTS=		noform.o
+FUNCTIONS=		functions.bin
+GDS_LINK=		$(GDSSHR_LINK)
+GDSLIB_BACKEND=		source/jrd/gds_b.a
+GDSLIB_LINK=		-Lsource/jrd -lgds_b -lsocket -lnsl -ldl
+GDSSHR=			source/interbase/lib/gds.so.0
+NCR3000_GDSSHR=		$(GDSSHR)
+GDSSHR_LINK=		$(SHRLIB_DIR) -lgds -lsocket -lnsl
+HLPDIR=			source/qli/
+INTL=			intl
+INTL_CFLAGS=		$(CFLAGS)
+INTL_LD_LINE=		ld -G -z text -o gdsintl
+INTL_P_OBJS=		intl
+INTL_PIC_FLAGS=		$(PIC_FLAGS)
+INTL_TARGET=		intl_shr_objs
+IO_OBJECTS=		unix.o
+IO_P_OBJECTS=		unix.bin
+JRD_MISC_OBJECTS=	stubs.o
+JRD_P_MISC_OBJECTS=	nodebug.bin stubs.bin
+LANG_OBJECTS=		
+LANGUAGES=		cc cxx make15 gdl1
+LD_LIBS=		-ldl
+LD_OPTS=		-G -h
+LOCK_MANAGER=		manager
+MARION_DB=		-d source/marion.gdb
+MUISQL=                 muisql
+MUISQL_MU_LIB=          -L/usr/gds.jughead/qa_tools/lib -lmu
+NSL_LIB=                -lnsl
+PIC_FLAGS=		$(CFLAGS) -KPIC
+PIPE=			gds.a gds_pipe
+REG_HELP=		isc_ins_hlp.dat
+REMOTE_GDSSHR=		$(GDSSHR)
+REMOTE_GDSSHR_LINK=	$(SERVER_LINK)
+REMOTE_P_OBJS=		rem_p_objects
+SCREEN_LIBS=		-lcurses
+SERVER_LINK=		$(GDSSHR_LINK)
+SPECIAL_OPT=		sh source/special_opt
+SOCKET_LIB=		-lsocket -lnsl 
+UTILITIES=		drop
+VT100_FLAGS=		-DBSD_COMP
+
+INET_SERVER_DEST=	source/interbase/bin/gds_inet_server
+DNET_SERVER_DEST=	source/interbase/bin/gds_dnet_server
+AMBX_SERVER_DEST=	source/interbase/bin/gds_server
+INET_LIB_DEST=		source/interbase/lib/gds_inet_server.a
+DNET_LIB_DEST=		source/interbase/lib/gds_dnet_server.a
+
+SH=			sh -c
+RM=			rm -f
+CHMOD=			chmod
+CHMOD_6=		chmod 666
+CHMOD_7=		chmod 777
+CHMOD_S7=		chmod 06777
+MV=			mv -f
+TOUCH=			touch
+CP=			cp
+ECHO=			echo
+QUIET_ECHO=		@echo
+CD=			cd
+CAT=			cat
+AR=			ar r
+EXPAND_DBNAME=		@echo No need to expand...
+COMPRESS_DBNAME=	@echo No need to compress...
+
+ARCH_EXT=		.a
+EXEC_EXT=
+
+V3PRINTER=		source/lock/printv3.o
+

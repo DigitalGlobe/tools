@@ -1,0 +1,152 @@
+Firebird Database Server $MAJOR.$MINOR.$RELEASE
+==================================================
+
+Ovaj dokument je vodic za instalaciju ovog paketa
+Firebird-a $MAJOR.$MINOR za Windows platformu. Ovaj tekst
+se odnosi na instalacioni paket, a ne na Firebird $MAJOR.$MINOR
+u generalnom smislu. Kao dodatak, ovaj tekst je
+primarno namijenjen korisnicima binarne instalacije.
+
+Pretpostavljamo da citaoci ovog dokumenta su vec
+upoznati sa Firebird-om 2.1. Ako evaluirate
+Firebird $MAJOR.$MINOR kao dio migracione strategije
+sa Fb 2.1 preporucujemo vam da pogledate Fb $MAJOR.$MINOR 
+dokumentaciju kako bi razumjeli promjene napravljene 
+uzmedju 2.1 i $MAJOR.$MINOR.
+
+
+Sadrzaj
+--------
+
+o Prije instalacije
+o Problemi sa instalacijom MS VC runtime biblioteka
+o Poznati problemi u vezi s instalacijom
+o Deinstalacija
+o Druge biljeske
+o Instalacija batch datotekom
+
+
+Prije instalacije
+-------------------
+
+Preporucuje se DEINSTALIRATI sve prethodne
+verzije Firebird-a ili InterBase-a prije instalacije
+ovog paketa. Veoma je vazno provjeriti da su
+fbclient.dll i gds32.dll uklonjeni iz <system32>.
+
+
+Problemi sa instalacijom MS VC runtime biblioteka
+-----------------------------------------------------
+
+Dosta posla je uradjeno da osigura da MS Visual
+C runtime biblioteke se ispravno instalirane putem
+instalacionog programa. Medjutim, u slucaju problema moze
+biti potrebno uraditi deploy oficijelnog vcredist.exe.
+Ispravne verzije za ovaj build Firebird-a mogu se
+naci ovdje:
+
+    http://www.microsoft.com/downloads/details.aspx?familyid=32BC1BEE-A3F9-4C13-9C99-220B62A191EE&displaylang=en
+
+  i za x64 ovdje:
+
+    http://www.microsoft.com/downloads/details.aspx?familyid=90548130-4468-4BBC-9673-D6ACABD5D13B&displaylang=en
+
+
+Drugi poznati problemi vezani za instalaciju
+---------------------------------
+
+o Moguce je jedino koristiti instalacioni program
+  za instalaciju default-ne instance Firebird-a $MAJOR.$MINOR.
+  Ako zelite da instalirate dodatne, named instance,
+  trebate ih rucno instalirati iz zip datoteke.
+
+o Nazalost, instalacioni program ne moze pouzdano
+  detektovati da li je prethodna verzija Firebird
+  Classic server-a pokrenuta.
+
+o Poznate su zone preklapanja izmedju
+  32-bit i 64-bit instalacija:
+
+  - Service installer (instsvc) koristi isto
+    default instance ime za 32-bit i 64-bit
+    instalacije. To je "by design". Servisi postoje
+    u jedinstvenom "name space-u".
+
+  - Ako su 32-bit i 64-bit control panel applet-i
+    instalirani, oba ce pokazivati na istu default
+    instancu.
+
+o Kada se instalira pod Vista-om budite sigurni da
+  instalirate kao administrator. tj, ako koristite
+  instalacioni program uradite sljedece:
+  desni click i izaberite 'Run as administrator'.
+  U suprotnom instalacioni program nece biti sposoban
+  da pokrene Firebird service na kraju instalacije.
+
+
+Deinstalacija
+--------------
+
+o Preferira se da se ovaj paket deinstalira
+ korektno pomocu deinstalacionog programa.
+ On se moze pozvati iz Control Panel-a.
+ Alternativno se moze deinstalirati
+ pokrecuci unins000.exe neposredno iz
+ instalacionog folder-a.
+
+o Ako je Firebird pokrenut kao aplikacija (umjesto kao
+ windows service) preporucuje se da se server rucno zaustavi,
+ pa tek onda pokrene deinstalacija. Ovo je
+ zato sto deinstalacioni program ne moze zaustaviti pokrenutu
+ aplikaciju. Ako je server pokrenut u toku deinstalacije,
+ deinstalacija ce zavrsiti s greskom.
+ Moracete izbrisati ostatke rucno.
+
+o Deinstalacija ostavlja 5 datoteka u install
+  direktoriju:
+
+  - aliases.conf
+  - firebird.conf
+  - fbtrace.conf
+  - firebird.log
+  - security2.fdb
+
+  Ovo je uradjeno namjerno. Ove datoteke su sve
+  potencijalno modifikovane od strane korisnika i mogu
+  biti potrebne ako ce Firebird biti re-instaliran u
+  buducnosti. One mogu biti izbrisane ako vise nisu
+  potrebne.
+
+o Novi feature deinstalacionog programa je opcija da se
+  pokrene sa /CLEAN parametrom. Ovo ce provjeriti
+  broj dijeljenih datoteka svake od gore navedenih
+  datoteka. Ako je moguce onda ce ih pobrisati.
+
+o Deinstalacija nece ukloniti MS VC runtime
+  biblioteke iz system-skog direktorija. One mogu
+  biti uklonjene rucno kroz control panel, ali ovo
+  ne bi trebalo biti potrebno u normalnim okolnostima.
+
+
+Druge biljeske
+---------------
+
+ Firebird zahtijeva WinSock2. Sve Win32 platforme bi trebale
+ imati ovo, izuzevsi Win95. Testiranje na prisustvo Winsock2
+ biblioteke se obavlje u toku instalacije. Ako nije nadjen,
+ instalacija nece uspjeti. Posjetite ovaj link:
+
+    http://support.microsoft.com/default.aspx?/scid=kb;EN-US;q177719
+
+ da bi saznali kako isti instalirati.
+
+
+Instalacija batch datotekom
+------------------------------
+
+Setup program se moze pokrenuti iz batch datoteke.
+Molimo da pogledate ovaj dokument:
+
+    installation_scripted.txt
+
+za sve detalje.

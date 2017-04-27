@@ -1,0 +1,31 @@
+﻿  burp.cpp
+  canonical.cpp
+  misc.cpp
+  mvol.cpp
+..\..\..\src\burp\burp.cpp(186): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\burp\burp.cpp(186): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
+..\..\..\src\burp\burp.cpp(308): warning C4267: 'argument': conversion from 'size_t' to 'unsigned short', possible loss of data
+..\..\..\src\burp\canonical.cpp(145): warning C4267: '=': conversion from 'size_t' to 'SSHORT', possible loss of data
+..\..\..\src\burp\burp.cpp(495): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\burp\burp.cpp(495): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
+..\..\..\src\burp\canonical.cpp(509): warning C4267: '=': conversion from 'size_t' to 'SSHORT', possible loss of data
+..\..\..\src\burp\burp.cpp(1682): warning C4267: 'argument': conversion from 'size_t' to 'short', possible loss of data
+..\..\..\src\burp\burp.cpp(1998): warning C4267: 'argument': conversion from 'size_t' to 'short', possible loss of data
+  backup.cpp
+  restore.cpp
+C:\tools\src\firebird\src\include\../common/stuff.h(53): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data (compiling source file ..\..\..\gen\x64\burp\backup.cpp)
+C:\tools\src\firebird\src\include\../common/stuff.h(53): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data (compiling source file ..\..\..\gen\x64\burp\restore.cpp)
+..\..\..\gen\x64\burp\backup.cpp(3159): warning C4267: 'initializing': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\gen\x64\burp\backup.cpp(3301): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\gen\x64\burp\backup.cpp(3414): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\gen\x64\burp\restore.cpp(2279): warning C4267: 'argument': conversion from 'size_t' to 'short', possible loss of data
+..\..\..\gen\x64\burp\restore.cpp(2320): warning C4267: 'argument': conversion from 'size_t' to 'short', possible loss of data
+..\..\..\gen\x64\burp\backup.cpp(4717): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\gen\x64\burp\backup.cpp(7653): warning C4267: 'argument': conversion from 'size_t' to 'SSHORT', possible loss of data
+..\..\..\gen\x64\burp\restore.cpp(2789): warning C4267: 'argument': conversion from 'size_t' to 'short', possible loss of data
+..\..\..\gen\x64\burp\restore.cpp(3179): warning C4267: '=': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\gen\x64\burp\restore.cpp(3887): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\gen\x64\burp\restore.cpp(7759): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\gen\x64\burp\restore.cpp(9569): warning C4267: 'argument': conversion from 'size_t' to 'unsigned short', possible loss of data
+..\..\..\gen\x64\burp\restore.cpp(12769): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  burp.vcxproj -> C:\tools\src\firebird\builds\win32\msvc14\..\..\..\temp\x64\Release\burp\burp.lib

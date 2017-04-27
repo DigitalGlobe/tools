@@ -1,0 +1,34 @@
+# Target labels
+ Main
+ opencv_calib3d
+ PerfTest
+# Source files and their labels
+C:/tools/src/OpenCV/modules/calib3d/perf/opencl/perf_stereobm.cpp
+ Main
+ opencv_calib3d
+ PerfTest
+C:/tools/src/OpenCV/modules/calib3d/perf/perf_cicrlesGrid.cpp
+ Main
+ opencv_calib3d
+ PerfTest
+C:/tools/src/OpenCV/modules/calib3d/perf/perf_main.cpp
+ Main
+ opencv_calib3d
+ PerfTest
+C:/tools/src/OpenCV/modules/calib3d/perf/perf_pnp.cpp
+ Main
+ opencv_calib3d
+ PerfTest
+C:/tools/src/OpenCV/modules/calib3d/perf/perf_stereosgbm.cpp
+ Main
+ opencv_calib3d
+ PerfTest
+C:/tools/src/OpenCV/modules/calib3d/perf/perf_precomp.hpp
+ Main
+ opencv_calib3d
+ PerfTest
+C:/tools/src/OpenCV/modules/calib3d/opencv_perf_calib3d_pch.cpp
+ Main
+ opencv_calib3d
+ PerfTest
+C:/tools/src/OpenCV/modules/calib3d/CMakeLists.txt

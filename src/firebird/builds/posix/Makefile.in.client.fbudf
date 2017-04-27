@@ -1,0 +1,87 @@
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+# You may obtain a copy of the Licence at
+# http://www.gnu.org/licences/lgpl.html
+# 
+# As a special exception this file can also be included in modules
+# with other source code as long as that source code has been 
+# released under an Open Source Initiative certificed licence.  
+# More information about OSI certification can be found at: 
+# http://www.opensource.org 
+# 
+# This module is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public Licence for more details.
+# 
+# This module was created by members of the firebird development 
+# team.  All individual contributions remain the Copyright (C) of 
+# those individuals and all rights are reserved.  Contributors to 
+# this file are either listed below or can be obtained from a CVS 
+# history command.
+#
+#  Created by:  Blas Rodriguez Somoza
+#
+#  Contributor(s):
+# 
+#
+#
+ROOT=..
+ObjModuleType=superclient
+CPPFLAGS+= -DSUPERCLIENT
+
+include     $(ROOT)/gen/make.defaults
+include     $(ROOT)/gen/make.platform
+include     $(ROOT)/gen/make.rules
+include     $(ROOT)/gen/make.shared.variables
+
+@SET_MAKE@
+
+UDF=	$(FIREBIRD)/UDF
+
+FBUDF_Other_Sources = common/classes/timestamp.cpp
+FBUDF_Files = fbudf.cpp
+FBUDF_Sources = $(addprefix extlib/fbudf/, $(FBUDF_Files)) $(FBUDF_Other_Sources)
+FBUDF_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(FBUDF_Sources))))
+
+UTIL_Files = ib_util.cpp
+UTIL_Sources = $(addprefix extlib/, $(UTIL_Files))
+UTIL_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(UTIL_Sources))))
+
+CLASSES_Files = timestamp.cpp
+CLASSES_Sources = $(addprefix common/classes/, $(CLASSES_Files))
+CLASSES_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(CLASSES_Sources))))
+
+AllObjects = $(FBUDF_Objects) $(FBUTIL_Objects) $(CLASSES_Objects)
+Dependencies = $(AllObjects:.o=.d)
+
+
+.PHONY: all lib_fbudf
+
+all: lib_fbudf
+
+
+# The libraries in this directory could do with a bit more work, since they
+# the previous code (presumably by John) that does the ar crv stuff, might
+# work still, even if the .o files have directory prefixes on them.
+# And the udf stuff doesn't want to do .$(SHRLIB_EXT).X.X.X extensions in UDF directory
+# or the loader gets confused with loading the links.
+# MOD 29-July-2002
+
+
+
+#
+# User defined functions.  (I've put the .$(SHRLIB_EXT) extension back onto the library)
+# 
+
+lib_fbudf: $(LIBIBUTIL_SO) $(UDF)/fbudf.$(SHRLIB_EXT) 
+
+$(UDF)/fbudf.$(SHRLIB_EXT):	$(AllObjects)
+	$(call LINK_UDF,fbudf) -o $@ $^ $(LINK_UDF_LIBS)
+
+
+include $(ROOT)/gen/make.shared.targets
+
+-include $(Dependencies)

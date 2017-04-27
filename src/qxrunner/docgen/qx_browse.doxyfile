@@ -1,0 +1,10 @@
+
+# qx_browse.doxyfile
+
+EXTRACT_PRIVATE        = YES
+
+SOURCE_BROWSER         = YES
+
+REFERENCED_BY_RELATION = NO
+
+REFERENCES_RELATION    = NO

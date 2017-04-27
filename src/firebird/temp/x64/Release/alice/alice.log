@@ -1,0 +1,10 @@
+﻿  alice.cpp
+  exe.cpp
+  tdr.cpp
+  alice_meta.cpp
+..\..\..\src\alice\exe.cpp(88): warning C4267: 'argument': conversion from 'size_t' to 'short', possible loss of data
+..\..\..\src\alice\exe.cpp(162): warning C4267: 'argument': conversion from 'size_t' to 'short', possible loss of data
+..\..\..\src\alice\tdr.cpp(223): warning C4267: 'argument': conversion from 'size_t' to 'short', possible loss of data
+..\..\..\src\alice\alice.cpp(153): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\alice\tdr.cpp(794): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+  alice.vcxproj -> C:\tools\src\firebird\builds\win32\msvc14\..\..\..\temp\x64\Release\alice\alice.lib

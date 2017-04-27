@@ -1,0 +1,65 @@
+
+{
+	"sources" : 
+	[
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/test/test_basic_props.cpp",
+			"labels" : [ "Main", "opencv_videoio", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/test/test_ffmpeg.cpp",
+			"labels" : [ "Main", "opencv_videoio", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/test/test_fourcc.cpp",
+			"labels" : [ "Main", "opencv_videoio", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/test/test_framecount.cpp",
+			"labels" : [ "Main", "opencv_videoio", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/test/test_main.cpp",
+			"labels" : [ "Main", "opencv_videoio", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/test/test_positioning.cpp",
+			"labels" : [ "Main", "opencv_videoio", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/test/test_video_io.cpp",
+			"labels" : [ "Main", "opencv_videoio", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/test/test_video_pos.cpp",
+			"labels" : [ "Main", "opencv_videoio", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/test/test_precomp.hpp",
+			"labels" : [ "Main", "opencv_videoio", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/opencv_test_videoio_pch.cpp",
+			"labels" : [ "Main", "opencv_videoio", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/videoio/CMakeLists.txt"
+		}
+	],
+	"target" : 
+	{
+		"labels" : [ "Main", "opencv_videoio", "AccuracyTest" ],
+		"name" : "opencv_test_videoio"
+	}
+}

@@ -1,0 +1,46 @@
+#
+#   Version script to hide private symbols from Firebird libraries
+#   GNU and Solaris linkers should understand it
+#
+#   The contents of this file are subject to the Initial
+#   Developer's Public License Version 1.0 (the "License");
+#   you may not use this file except in compliance with the
+#   License. You may obtain a copy of the License at
+#   http://www.ibphoenix.com/main.nfs?a=ibphoenix&page=ibp_idpl.
+# 
+#   Software distributed under the License is distributed AS IS,
+#   WITHOUT WARRANTY OF ANY KIND, either express or implied.
+#   See the License for the specific language governing rights
+#   and limitations under the License.
+# 
+#   The Original Code was created by Nickolay Samofatov
+#   for the Firebird Open Source RDBMS project.
+# 
+#   Copyright (c) 2004 Nickolay Samofatov <nickolay@broadviewsoftware.com>
+#   and all contributors signed below.
+# 
+#   All Rights Reserved.
+#   Contributor(s): ______________________________________.
+#   Adriano dos Santos Fernandes
+#	Alex Peshkov
+#
+
+	_trace_create
+#	_u_strCompare_3_0
+#	_gds__prefix_msg
+#	_u_countChar32_3_0
+#	_ucnv_close_3_0
+#	_fb_interpret
+#	_gds__alloc_debug
+#	_gds__vax_integer
+#	_gds__register_cleanup
+#	_gds__get_prefix
+#	_gds__msg_lookup
+#	_gds__thread_start
+#	_utf8_nextCharSafeBody_3_0
+#	_gds__log
+#	_gds__prefix_lock
+#	_u_tolower_3_0
+#	_gds_alloc_flag_unfreed
+#	_uncnv_open_3_0
+#	_ucnv_fromUChars_3_0

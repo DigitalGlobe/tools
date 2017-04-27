@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://earth.google.com/kml/2.1">
+<Folder>
+	<name>Sightseeing</name>
+	<open>1</open>
+	<description>Start your Google Earth world tour here! Click on an underlinedplacename for information, double-click to fly to the indicated location, andclick on the blue &quot;Play&quot;arrow below to start a tour.</description>
+	<Placemark>
+		<name>Google Campus</name>
+		<description>Google&apos;s Mountain View, California Campus is one of several corporate locations worldwide.</description>
+		<LookAt>
+			<longitude>-122.0839768933045</longitude>
+			<latitude>37.42218251594567</latitude>
+			<altitude>0</altitude>
+			<range>961.9293005206328</range>
+			<tilt>12.99787999810844</tilt>
+			<heading>-151.810674441166</heading>
+		</LookAt>
+		<styleUrl>root://styles#default</styleUrl>
+		<Point>
+			<coordinates>-122.0852756225358,37.42251611704262,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark>
+		<name>Grand Canyon</name>
+		<description>Double-click on &quot;Colorado River View&quot;to enter thecanyon.</description>
+		<LookAt id="khLookAt617">
+			<longitude>-112.3281223683081</longitude>
+			<latitude>36.22385437221043</latitude>
+			<altitude>0</altitude>
+			<range>41397.15175473856</range>
+			<tilt>8.436559392543462</tilt>
+			<heading>131.0855756174833</heading>
+		</LookAt>
+		<styleUrl>root://styles#default</styleUrl>
+		<Point id="khPoint618">
+			<coordinates>-112.3283024752253,36.22398105257263,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark>
+		<name>Colorado River View</name>
+		<description>Depress the left mouse button and move the mouse to explore theGrand Canyon.</description>
+		<LookAt>
+			<longitude>-112.3492783160376</longitude>
+			<latitude>36.23605655164987</latitude>
+			<altitude>0</altitude>
+			<range>8036.889947006463</range>
+			<tilt>65.48720785217708</tilt>
+			<heading>131.0798673118696</heading>
+		</LookAt>
+		<styleUrl>root://styleMaps#default+nicon=0x307+hicon=0x317</styleUrl>
+		<Point>
+			<coordinates>-112.3683253166248,36.24624682640626,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark>
+		<name>Mount Saint Helens</name>
+		<LookAt>
+			<longitude>-122.1765049975703</longitude>
+			<latitude>46.20949719891466</latitude>
+			<altitude>0</altitude>
+			<range>14738.71272604479</range>
+			<tilt>52.79852112517888</tilt>
+			<heading>-125.1767116367731</heading>
+		</LookAt>
+		<styleUrl>root://styles#default</styleUrl>
+		<Point>
+			<coordinates>-122.1742222289048,46.20625578850274,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark>
+		<name>Chicago River</name>
+		<description><![CDATA[Enable <b>Buildings</b> in the <b>Layers Panel</b> below.<p>Enable the <a href="http://bbs.keyhole.com"><b>Google Earth Community</b></a> layer in the <b>Layers Panel</b> at the lower left. Then click on one of the <b>Information Icons</b> that appear on the screen.]]></description>
+		<LookAt>
+			<longitude>-87.61480429916141</longitude>
+			<latitude>41.89034136847671</latitude>
+			<altitude>0</altitude>
+			<range>670.6808105518038</range>
+			<tilt>56.92376754161995</tilt>
+			<heading>-64.92431623676165</heading>
+		</LookAt>
+		<styleUrl>root://styles#default</styleUrl>
+		<Point>
+			<coordinates>-87.61480429916141,41.89034136847672,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark>
+		<name>Manhattan Island</name>
+		<description><![CDATA[Enable <b>Buildings</b> in the control panel below.<p>Enable the <a href="http://bbs.keyhole.com"><b>Google Earth Community BBS</b></a> layer in the <b>Layers Panel</b> at the lower left. Then click on one of the <b>Information Icons</b> that appear on the screen.]]></description>
+		<LookAt>
+			<longitude>-74.0135161531766</longitude>
+			<latitude>40.70399949812894</latitude>
+			<altitude>0</altitude>
+			<range>1136.693225849449</range>
+			<tilt>71.97876731209369</tilt>
+			<heading>26.98589710041852</heading>
+		</LookAt>
+		<styleUrl>root://styles#default</styleUrl>
+		<Point>
+			<coordinates>-74.0135161531766,40.70399949812894,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark>
+		<name>Eiffel Tower and Trocadero, Paris, France</name>
+		<description><![CDATA[Enable the <a href="http://bbs.keyhole.com"><b>Google Earth Community BBS</b></a> layer in the <b>Layers Panel</b> at the lower left. Then click on one of the <b>Information Icons</b> that appear on the screen.]]></description>
+		<LookAt>
+			<longitude>2.292401900991479</longitude>
+			<latitude>48.85962385154655</latitude>
+			<altitude>0</altitude>
+			<range>773.3128078888122</range>
+			<tilt>0</tilt>
+			<heading>-104.8653005571585</heading>
+		</LookAt>
+		<styleUrl>root://styles#default</styleUrl>
+		<Point>
+			<coordinates>2.292401900991479,48.85962385154655,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark>
+		<name>Nelson&apos;s Column, London, England</name>
+		<description><![CDATA[Enable the <a href="http://bbs.keyhole.com"><b>Google Earth Community BBS</b></a> layer in the <b>Layers Panel</b> at the lower left. Then click on one of the <b>Information Icons</b> that appear on the screen.]]></description>
+		<LookAt>
+			<longitude>-0.1279200016150827</longitude>
+			<latitude>51.50772094316393</latitude>
+			<altitude>0</altitude>
+			<range>501.5100853687367</range>
+			<tilt>0</tilt>
+			<heading>-154.6001656645483</heading>
+		</LookAt>
+		<styleUrl>root://styles#default</styleUrl>
+		<Point>
+			<coordinates>-0.1275738709029213,51.50784372845428,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark>
+		<name>Red Square, Moscow, Russian Federation</name>
+		<description><![CDATA[Enable the <a href="http://bbs.keyhole.com"><b>Google Earth Community BBS</b></a> layer in the <b>Layers Panel</b> at the lower left. Then click on one of the <b>Information Icons</b> that appear on the screen.]]></description>
+		<LookAt>
+			<longitude>37.62140615995129</longitude>
+			<latitude>55.75396799742666</latitude>
+			<altitude>0</altitude>
+			<range>611.2247443867194</range>
+			<tilt>10.95482486847226</tilt>
+			<heading>127.8871180073777</heading>
+		</LookAt>
+		<styleUrl>root://styles#default</styleUrl>
+		<Point>
+			<coordinates>37.6203801032777,55.75393849559108,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark>
+		<name>Saint Peter&apos;s Basilica, Vatican City</name>
+		<description><![CDATA[Enable the <a href="http://bbs.keyhole.com"><b>Google Earth Community BBS</b></a> layer in the <b>Layers Panel</b> at the lower left. Then click on one of the <b>Information Icons</b> that appear on the screen.]]></description>
+		<LookAt>
+			<longitude>12.45407610317238</longitude>
+			<latitude>41.90182823256871</latitude>
+			<altitude>0</altitude>
+			<range>855.0752568361546</range>
+			<tilt>42.2637552222145</tilt>
+			<heading>86.55748322522395</heading>
+		</LookAt>
+		<styleUrl>root://styles#default</styleUrl>
+		<Point>
+			<coordinates>12.45311197563487,41.90207449663287,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark>
+		<name>Former Republican Palace, Bagdad, Iraq</name>
+		<description><![CDATA[Enable the <a href="http://bbs.keyhole.com"><b>Google Earth Community BBS</b></a> layer in the <b>Layers Panel</b> at the lower left. Then click on one of the <b>Information Icons</b> that appear on the screen.]]></description>
+		<LookAt>
+			<longitude>44.40918913037233</longitude>
+			<latitude>33.30461608329547</latitude>
+			<altitude>0</altitude>
+			<range>1617.972524296523</range>
+			<tilt>30.94193035310158</tilt>
+			<heading>6.366189390617175</heading>
+		</LookAt>
+		<styleUrl>root://styles#default</styleUrl>
+		<Point>
+			<coordinates>44.40918913037233,33.30461608329547,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark>
+		<name>Union Buildings, Pretoria, South Africa</name>
+		<description><![CDATA[Enable the <a href="http://bbs.keyhole.com"><b>Google Earth Community BBS</b></a> layer in the <b>Layers Panel</b> at the lower left. Then click on one of the <b>Information Icons</b> that appear on the screen.]]></description>
+		<LookAt>
+			<longitude>28.21164037797451</longitude>
+			<latitude>-25.74128265527159</latitude>
+			<altitude>0</altitude>
+			<range>547.9950419111831</range>
+			<tilt>30.15486044904574</tilt>
+			<heading>43.71373576732425</heading>
+		</LookAt>
+		<styleUrl>root://styles#default</styleUrl>
+		<Point>
+			<coordinates>28.21164037797451,-25.74128265527159,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark>
+		<name>Forbidden City, Beijing, China</name>
+		<description><![CDATA[Enable the <a href="http://bbs.keyhole.com"><b>Google Earth Community BBS</b></a> layer in the <b>Layers Panel</b> at the lower left. Then click on one of the <b>Information Icons</b> that appear on the screen.]]></description>
+		<LookAt>
+			<longitude>116.3909651781352</longitude>
+			<latitude>39.91572577075024</latitude>
+			<altitude>0</altitude>
+			<range>276.5158230924737</range>
+			<tilt>9.572885367892344</tilt>
+			<heading>84.05397809554989</heading>
+		</LookAt>
+		<styleUrl>root://styles#default</styleUrl>
+		<Point>
+			<coordinates>116.3909342053073,39.91584896769784,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark>
+		<name>Olympic Site, Sydney NSW, Australia</name>
+		<description><![CDATA[Enable the <a href="http://bbs.keyhole.com"><b>Google Earth Community BBS</b></a> layer in the <b>Layers Panel</b> at the lower left. Then click on one of the <b>Information Icons</b> that appear on the screen.]]></description>
+		<LookAt>
+			<longitude>151.0660291947064</longitude>
+			<latitude>-33.84773282237531</latitude>
+			<altitude>0</altitude>
+			<range>2280.029950239135</range>
+			<tilt>52.04000921152831</tilt>
+			<heading>99.24653520806585</heading>
+		</LookAt>
+		<styleUrl>root://styles#default</styleUrl>
+		<Point>
+			<coordinates>151.0660291947064,-33.84773282237531,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark>
+		<name>Rashtrapati Bhavan, New Delhi, India</name>
+		<description><![CDATA[Enable the <a href="http://bbs.keyhole.com"><b>Google Earth Community BBS</b></a> layer in the <b>Layers Panel</b> at the lower left. Then click on one of the <b>Information Icons</b> that appear on the screen.]]></description>
+		<LookAt>
+			<longitude>77.1997341693402</longitude>
+			<latitude>28.61447974662854</latitude>
+			<altitude>0</altitude>
+			<range>738.3131608786638</range>
+			<tilt>4.493349370924239</tilt>
+			<heading>-24.00641048802288</heading>
+		</LookAt>
+		<styleUrl>root://styles#default</styleUrl>
+		<Point>
+			<coordinates>77.1994550841317,28.61437630259058,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark>
+		<name>Reichstag, Berlin, Germany</name>
+		<description><![CDATA[Enable the <a href="http://bbs.keyhole.com"><b>Google Earth Community BBS</b></a> layer in the <b>Layers Panel</b> at the lower left. Then click on one of the <b>Information Icons</b> that appear on the screen.]]></description>
+		<LookAt>
+			<longitude>13.37724999052185</longitude>
+			<latitude>52.51839049242399</latitude>
+			<altitude>0</altitude>
+			<range>372.2395656405301</range>
+			<tilt>7.909183527734729</tilt>
+			<heading>-142.9205951507897</heading>
+		</LookAt>
+		<styleUrl>root://styles#default</styleUrl>
+		<Point>
+			<coordinates>13.37578466691475,52.51850127774947,0</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark>
+		<name>Imperial Palace, Tokyo, Japan</name>
+		<description><![CDATA[Enable the <a href="http://bbs.keyhole.com"><b>Google Earth Community BBS</b></a> layer in the <b>Layers Panel</b> at the lower left. Then click on one of the <b>Information Icons</b> that appear on the screen.]]></description>
+		<LookAt>
+			<longitude>139.7524597221864</longitude>
+			<latitude>35.68475393899309</latitude>
+			<altitude>0</altitude>
+			<range>2298.356249135484</range>
+			<tilt>7.909211180032625</tilt>
+			<heading>84.34698095462433</heading>
+		</LookAt>
+		<styleUrl>root://styles#default</styleUrl>
+		<Point>
+			<coordinates>139.7524597221864,35.68475393899309,0</coordinates>
+		</Point>
+	</Placemark>
+</Folder>
+</kml>

@@ -1,0 +1,415 @@
+/*
+ * The contents of this file are subject to the Interbase Public
+ * License Version 1.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy
+ * of the License at http://www.Inprise.com/IPL.html
+ *
+ * Software distributed under the License is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+ * or implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code was created by Inprise Corporation
+ * and its predecessors. Portions created by Inprise Corporation are
+ * Copyright (C) Inprise Corporation.
+ *
+ * All Rights Reserved.
+ * Contributor(s): ______________________________________.
+ */
+/*
+ *	This file documents InterBase Version 3.3D ODS 7.2 metadata structure.
+ *
+ *	It was made with a hacked version of GDEF, which
+ *	extracted system fields only.
+ *
+ *	Sorting is as follows:
+ *		Global fields:	Name
+ *		Relations:	Relation ID
+ *		Indices:	Created order
+ *		Generators:	Created order
+ *		Triggers:	Created order
+ *
+ *	Note: Sources for system triggers are missing.
+ *	      The compiled blr versions are in jrd/trig.h.
+ *
+ *	Note: You can run this script by globally replacing "RDB$"
+ *	      with "XRDB$", it will then make user relations
+ *            with the specified system structure.
+ *
+ */
+
+define database "v33d_ods72.fdb"
+	page_size 1024;
+
+
+/*	Global Field Definitions	*/
+
+define field RDB$ACL                  blob segment_length 80 sub_type ACL;
+define field RDB$BOUND                long;
+define field RDB$CONTEXT_NAME         char [31];
+define field RDB$DBKEY_LENGTH         short;
+define field RDB$DEFAULT_VALUE        blob segment_length 80 sub_type BLR;
+define field RDB$DEPENDENCY_TYPE      short;
+define field RDB$DESCRIPTION          blob segment_length 80 sub_type text;
+define field RDB$DESCRIPTOR           blob segment_length 80 sub_type 6;
+define field RDB$DIMENSION            short;
+define field RDB$DIMENSIONS           short;
+define field RDB$EDIT_STRING          varying [125];
+define field RDB$EXTERNAL_DESCRIPTION blob segment_length 80 sub_type 7;
+define field RDB$EXTERNAL_NAME        char [31];
+define field RDB$FIELD_ID             short;
+define field RDB$FIELD_LENGTH         short;
+define field RDB$FIELD_NAME           char [31];
+define field RDB$FIELD_POSITION       short;
+define field RDB$FIELD_SCALE          short;
+define field RDB$FIELD_SUB_TYPE       short;
+define field RDB$FIELD_TYPE           short;
+define field RDB$FILE_FLAGS           short;
+define field RDB$FILE_LENGTH          long;
+define field RDB$FILE_NAME            varying [125];
+define field RDB$FILE_SEQUENCE        short;
+define field RDB$FILE_START           long;
+define field RDB$FORMAT               short;
+define field RDB$FUNCTION_NAME        char [31];
+define field RDB$FUNCTION_TYPE        short;
+define field RDB$GENERATOR_ID         short;
+define field RDB$GENERATOR_NAME       char [31];
+define field RDB$GENERIC_NAME         char [31];
+define field RDB$GENERIC_TYPE         short;
+define field RDB$INDEX_ID             short;
+define field RDB$INDEX_NAME           char [31];
+define field RDB$MECHANISM            short;
+define field RDB$MESSAGE              varying [78];
+define field RDB$MESSAGE_NUMBER       short;
+define field RDB$PAGE_NUMBER          long;
+define field RDB$PAGE_SEQUENCE        long;
+define field RDB$PAGE_TYPE            short;
+define field RDB$PRIVILEGE            char [6];
+define field RDB$QUERY_HEADER         blob segment_length 80 sub_type text;
+define field RDB$RELATION_ID          short;
+define field RDB$RELATION_NAME        char [31];
+define field RDB$RUNTIME              blob segment_length 80 sub_type 5;
+define field RDB$SECURITY_CLASS       char [31];
+define field RDB$SEGMENT_COUNT        short;
+define field RDB$SEGMENT_LENGTH       short;
+define field RDB$SHADOW_NUMBER        short;
+define field RDB$SOURCE               blob segment_length 80 sub_type text;
+define field RDB$STATISTICS           double;
+define field RDB$SYSTEM_FLAG          short;
+define field RDB$TIMESTAMP            date;
+define field RDB$TRANSACTION_DESCRIPTION blob segment_length 80 sub_type 7;
+define field RDB$TRANSACTION_ID       long;
+define field RDB$TRANSACTION_STATE    short;
+define field RDB$TRIGGER_BLR          blob segment_length 80 sub_type BLR;
+define field RDB$TRIGGER_NAME         char [31];
+define field RDB$TRIGGER_SEQUENCE     short;
+define field RDB$TRIGGER_TYPE         short;
+define field RDB$TYPE_NAME            char [31];
+define field RDB$USER                 char [31];
+define field RDB$VALIDATION_BLR       blob segment_length 80 sub_type BLR;
+define field RDB$VIEW_BLR             blob segment_length 80 sub_type BLR;
+define field RDB$VIEW_CONTEXT         short;
+
+
+/*	Relation Definitions	*/
+
+
+define relation RDB$PAGES
+    RDB$PAGE_NUMBER                                     position 0,
+    RDB$RELATION_ID                                     position 1,
+    RDB$PAGE_SEQUENCE                                   position 2,
+    RDB$PAGE_TYPE                                       position 3;
+
+define relation RDB$DATABASE
+    RDB$DESCRIPTION                                     position 0,
+    RDB$RELATION_ID                                     position 1,
+    RDB$SECURITY_CLASS                                  position 2;
+
+define relation RDB$FIELDS
+    RDB$FIELD_NAME                                      position 0,
+    RDB$QUERY_NAME         based on RDB$FIELD_NAME      position 1,
+    RDB$VALIDATION_BLR                                  position 2,
+    RDB$VALIDATION_SOURCE  based on RDB$SOURCE          position 3,
+    RDB$COMPUTED_BLR       based on RDB$DEFAULT_VALUE   position 4,
+    RDB$COMPUTED_SOURCE    based on RDB$SOURCE          position 5,
+    RDB$DEFAULT_VALUE                                   position 6,
+    RDB$FIELD_LENGTH                                    position 7,
+    RDB$FIELD_SCALE                                     position 8,
+    RDB$FIELD_TYPE                                      position 9,
+    RDB$FIELD_SUB_TYPE                                  position 10,
+    RDB$MISSING_VALUE      based on RDB$DEFAULT_VALUE   position 11,
+    RDB$DESCRIPTION                                     position 12,
+    RDB$SYSTEM_FLAG                                     position 13,
+    RDB$QUERY_HEADER                                    position 14,
+    RDB$SEGMENT_LENGTH                                  position 15,
+    RDB$EDIT_STRING                                     position 16,
+    RDB$EXTERNAL_LENGTH    based on RDB$FIELD_LENGTH    position 17,
+    RDB$EXTERNAL_SCALE     based on RDB$FIELD_SCALE     position 18,
+    RDB$EXTERNAL_TYPE      based on RDB$FIELD_TYPE      position 19,
+    RDB$DIMENSIONS                                      position 20;
+
+define relation RDB$INDEX_SEGMENTS
+    RDB$INDEX_NAME                                      position 0,
+    RDB$FIELD_NAME                                      position 1,
+    RDB$FIELD_POSITION                                  position 2;
+
+define relation RDB$INDICES
+    RDB$INDEX_NAME                                      position 0,
+    RDB$RELATION_NAME                                   position 1,
+    RDB$INDEX_ID                                        position 2,
+    RDB$UNIQUE_FLAG        based on RDB$SYSTEM_FLAG     position 3,
+    RDB$DESCRIPTION                                     position 4,
+    RDB$SEGMENT_COUNT                                   position 5,
+    RDB$INDEX_INACTIVE     based on RDB$SYSTEM_FLAG     position 6,
+    RDB$INDEX_TYPE         based on RDB$SYSTEM_FLAG     position 7,
+    RDB$FOREIGN_KEY        based on RDB$RELATION_NAME   position 8,
+    RDB$SYSTEM_FLAG                                     position 9,
+    RDB$STATISTICS                                      position 10;
+
+define relation RDB$RELATION_FIELDS
+    RDB$FIELD_NAME                                      position 0,
+    RDB$RELATION_NAME                                   position 1,
+    RDB$FIELD_SOURCE       based on RDB$FIELD_NAME      position 2,
+    RDB$QUERY_NAME         based on RDB$FIELD_NAME      position 3,
+    RDB$BASE_FIELD         based on RDB$FIELD_NAME      position 4,
+    RDB$EDIT_STRING                                     position 5,
+    RDB$FIELD_POSITION                                  position 6,
+    RDB$QUERY_HEADER                                    position 7,
+    RDB$UPDATE_FLAG        based on RDB$SYSTEM_FLAG     position 8,
+    RDB$FIELD_ID                                        position 9,
+    RDB$VIEW_CONTEXT                                    position 10,
+    RDB$DESCRIPTION                                     position 11,
+    RDB$DEFAULT_VALUE                                   position 12,
+    RDB$SYSTEM_FLAG                                     position 13,
+    RDB$SECURITY_CLASS                                  position 14,
+    RDB$COMPLEX_NAME       based on RDB$FIELD_NAME      position 15;
+
+define relation RDB$RELATIONS
+    RDB$VIEW_BLR                                        position 0,
+    RDB$VIEW_SOURCE        based on RDB$SOURCE          position 1,
+    RDB$DESCRIPTION                                     position 2,
+    RDB$RELATION_ID                                     position 3,
+    RDB$SYSTEM_FLAG                                     position 4,
+    RDB$DBKEY_LENGTH                                    position 5,
+    RDB$FORMAT                                          position 6,
+    RDB$FIELD_ID                                        position 7,
+    RDB$RELATION_NAME                                   position 8,
+    RDB$SECURITY_CLASS                                  position 9,
+    RDB$EXTERNAL_FILE      based on RDB$FILE_NAME       position 10,
+    RDB$RUNTIME                                         position 11,
+    RDB$EXTERNAL_DESCRIPTION                            position 12,
+    RDB$OWNER_NAME         based on RDB$USER            position 13,
+    RDB$DEFAULT_CLASS      based on RDB$SECURITY_CLASS  position 14;
+
+define relation RDB$VIEW_RELATIONS
+    RDB$VIEW_NAME          based on RDB$RELATION_NAME   position 0,
+    RDB$RELATION_NAME                                   position 1,
+    RDB$VIEW_CONTEXT                                    position 2,
+    RDB$CONTEXT_NAME                                    position 3;
+
+define relation RDB$FORMATS
+    RDB$RELATION_ID                                     position 0,
+    RDB$FORMAT                                          position 1,
+    RDB$DESCRIPTOR                                      position 2;
+
+define relation RDB$SECURITY_CLASSES
+    RDB$SECURITY_CLASS                                  position 0,
+    RDB$ACL                                             position 1,
+    RDB$DESCRIPTION                                     position 2;
+
+define relation RDB$FILES
+    RDB$FILE_NAME                                       position 0,
+    RDB$FILE_SEQUENCE                                   position 1,
+    RDB$FILE_START                                      position 2,
+    RDB$FILE_LENGTH                                     position 3,
+    RDB$FILE_FLAGS                                      position 4,
+    RDB$SHADOW_NUMBER                                   position 5;
+
+define relation RDB$TYPES
+    RDB$FIELD_NAME                                      position 0,
+    RDB$TYPE               based on RDB$GENERIC_TYPE    position 1,
+    RDB$TYPE_NAME                                       position 2,
+    RDB$DESCRIPTION                                     position 3,
+    RDB$SYSTEM_FLAG                                     position 4;
+
+define relation RDB$TRIGGERS
+    RDB$TRIGGER_NAME                                    position 0,
+    RDB$RELATION_NAME                                   position 1,
+    RDB$TRIGGER_SEQUENCE                                position 2,
+    RDB$TRIGGER_TYPE                                    position 3,
+    RDB$TRIGGER_SOURCE     based on RDB$SOURCE          position 4,
+    RDB$TRIGGER_BLR                                     position 5,
+    RDB$DESCRIPTION                                     position 6,
+    RDB$TRIGGER_INACTIVE   based on RDB$SYSTEM_FLAG     position 7,
+    RDB$SYSTEM_FLAG                                     position 8;
+
+define relation RDB$DEPENDENCIES
+    RDB$OBJECT_NAME        based on RDB$GENERIC_NAME    position 0,
+    RDB$RELATION_NAME                                   position 1,
+    RDB$FIELD_NAME                                      position 2,
+    RDB$DEPENDENCY_TYPE                                 position 3;
+
+define relation RDB$FUNCTIONS
+    RDB$FUNCTION_NAME                                   position 0,
+    RDB$FUNCTION_TYPE                                   position 1,
+    RDB$QUERY_NAME         based on RDB$FIELD_NAME      position 2,
+    RDB$DESCRIPTION                                     position 3,
+    RDB$MODULE_NAME        based on RDB$FILE_NAME       position 4,
+    RDB$ENTRYPOINT         based on RDB$EXTERNAL_NAME   position 5,
+    RDB$RETURN_ARGUMENT    based on RDB$FIELD_POSITION  position 6,
+    RDB$SYSTEM_FLAG                                     position 7;
+
+define relation RDB$FUNCTION_ARGUMENTS
+    RDB$FUNCTION_NAME                                   position 0,
+    RDB$ARGUMENT_POSITION  based on RDB$FIELD_POSITION  position 1,
+    RDB$MECHANISM                                       position 2,
+    RDB$FIELD_TYPE                                      position 3,
+    RDB$FIELD_SCALE                                     position 4,
+    RDB$FIELD_LENGTH                                    position 5,
+    RDB$FIELD_SUB_TYPE                                  position 6;
+
+define relation RDB$FILTERS
+    RDB$FUNCTION_NAME                                   position 0,
+    RDB$DESCRIPTION                                     position 1,
+    RDB$MODULE_NAME        based on RDB$FILE_NAME       position 2,
+    RDB$ENTRYPOINT         based on RDB$EXTERNAL_NAME   position 3,
+    RDB$INPUT_SUB_TYPE     based on RDB$FIELD_SUB_TYPE  position 4,
+    RDB$OUTPUT_SUB_TYPE    based on RDB$FIELD_SUB_TYPE  position 5,
+    RDB$SYSTEM_FLAG                                     position 6;
+
+define relation RDB$TRIGGER_MESSAGES
+    RDB$TRIGGER_NAME                                    position 0,
+    RDB$MESSAGE_NUMBER                                  position 1,
+    RDB$MESSAGE                                         position 2;
+
+define relation RDB$USER_PRIVILEGES
+    RDB$USER                                            position 0,
+    RDB$GRANTOR            based on RDB$USER            position 1,
+    RDB$PRIVILEGE                                       position 2,
+    RDB$GRANT_OPTION       based on RDB$SYSTEM_FLAG     position 3,
+    RDB$RELATION_NAME                                   position 4,
+    RDB$FIELD_NAME                                      position 5;
+
+define relation RDB$TRANSACTIONS
+    RDB$TRANSACTION_ID                                  position 0,
+    RDB$TRANSACTION_STATE                               position 1,
+    RDB$TIMESTAMP                                       position 2,
+    RDB$TRANSACTION_DESCRIPTION                         position 3;
+
+define relation RDB$GENERATORS
+    RDB$GENERATOR_NAME                                  position 0,
+    RDB$GENERATOR_ID                                    position 1,
+    RDB$SYSTEM_FLAG                                     position 2;
+
+define relation RDB$FIELD_DIMENSIONS
+    RDB$FIELD_NAME                                      position 0,
+    RDB$DIMENSION                                       position 1,
+    RDB$LOWER_BOUND        based on RDB$BOUND           position 2,
+    RDB$UPPER_BOUND        based on RDB$BOUND           position 3;
+
+
+/*	Index Definitions	*/
+
+
+define index RDB$INDEX_0 for RDB$RELATIONS unique
+	RDB$RELATION_NAME;
+
+define index RDB$INDEX_1 for RDB$RELATIONS 
+	RDB$RELATION_ID;
+
+define index RDB$INDEX_2 for RDB$FIELDS unique
+	RDB$FIELD_NAME;
+
+define index RDB$INDEX_3 for RDB$RELATION_FIELDS 
+	RDB$FIELD_SOURCE;
+
+define index RDB$INDEX_4 for RDB$RELATION_FIELDS 
+	RDB$RELATION_NAME;
+
+define index RDB$INDEX_5 for RDB$INDICES unique
+	RDB$INDEX_NAME;
+
+define index RDB$INDEX_6 for RDB$INDEX_SEGMENTS 
+	RDB$INDEX_NAME;
+
+define index RDB$INDEX_7 for RDB$SECURITY_CLASSES unique
+	RDB$SECURITY_CLASS;
+
+define index RDB$INDEX_8 for RDB$TRIGGERS unique
+	RDB$TRIGGER_NAME;
+
+define index RDB$INDEX_9 for RDB$FUNCTIONS unique
+	RDB$FUNCTION_NAME;
+
+define index RDB$INDEX_10 for RDB$FUNCTION_ARGUMENTS 
+	RDB$FUNCTION_NAME;
+
+define index RDB$INDEX_11 for RDB$GENERATORS unique
+	RDB$GENERATOR_NAME;
+
+define index RDB$INDEX_12 for RDB$RELATION_FIELDS unique
+	RDB$FIELD_NAME,
+	RDB$RELATION_NAME;
+
+define index RDB$INDEX_13 for RDB$FORMATS 
+	RDB$RELATION_ID,
+	RDB$FORMAT;
+
+define index RDB$INDEX_14 for RDB$FILTERS 
+	RDB$INPUT_SUB_TYPE,
+	RDB$OUTPUT_SUB_TYPE;
+
+define index RDB$INDEX_15 for RDB$FILES unique
+	RDB$FILE_NAME;
+
+
+/*	Generator Definitions	*/
+
+
+define generator RDB$SECURITY_CLASS;
+define generator SQL$DEFAULT;
+
+/*	Trigger Definitions	*/
+
+
+
+define trigger RDB$TRIGGER_1 for RDB$USER_PRIVILEGES
+	pre modify 0:
+	end_trigger 
+	message  0:  'cannot modify an existing user privilege';
+
+define trigger RDB$TRIGGER_2 for RDB$TRIGGERS
+	pre modify 0:
+	end_trigger 
+	message  0:  'cannot modify or erase a system trigger';
+
+define trigger RDB$TRIGGER_3 for RDB$TRIGGERS
+	pre erase 0:
+	end_trigger 
+	message  0:  'cannot modify or erase a system trigger';
+
+define trigger RDB$TRIGGER_4 for RDB$RELATIONS
+	pre store 0:
+	end_trigger;
+
+define trigger RDB$TRIGGER_5 for RDB$RELATIONS
+	pre modify 0:
+	end_trigger 
+	message  0:  'only the owner of a relation may reassign ownership';
+
+define trigger RDB$TRIGGER_6 for RDB$GENERATORS
+	pre store 0:
+	end_trigger;
+
+define trigger RDB$TRIGGER_8 for RDB$USER_PRIVILEGES
+	pre erase 0:
+	end_trigger;
+
+define trigger RDB$TRIGGER_9 for RDB$USER_PRIVILEGES
+	pre store 0:
+	end_trigger 
+	message  0:  'could not find relation for GRANT',
+	message  1:  'could not find field for GRANT',
+	message  2:  'user does not have GRANT privileges for operation',
+	message  3:  'relation has non-SQL security class defined',
+	message  4:  'field has non-SQL security class defined';

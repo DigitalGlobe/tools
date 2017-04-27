@@ -1,0 +1,1270 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		186EF5700B1CE22D00F7886A /* ossim.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 186EF4F60B1CE11D00F7886A /* ossim.framework */; };
+		43A9A9E20D59FCE500E97FA2 /* ossimPredatorExport.h in Headers */ = {isa = PBXBuildFile; fileRef = 43A9A9E10D59FCE500E97FA2 /* ossimPredatorExport.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8D07F2C00486CC7A007CD1D0 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
+		EE3F86980D0DBB5200DFD3DF /* ffmpegApi.h in Headers */ = {isa = PBXBuildFile; fileRef = EE3F86900D0DBB5200DFD3DF /* ffmpegApi.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EE3F86990D0DBB5200DFD3DF /* ossimPredatorApi.h in Headers */ = {isa = PBXBuildFile; fileRef = EE3F86910D0DBB5200DFD3DF /* ossimPredatorApi.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EE3F869A0D0DBB5200DFD3DF /* ossimPredatorKlvTable.h in Headers */ = {isa = PBXBuildFile; fileRef = EE3F86920D0DBB5200DFD3DF /* ossimPredatorKlvTable.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EE3F869B0D0DBB5200DFD3DF /* ossimPredatorLoader.h in Headers */ = {isa = PBXBuildFile; fileRef = EE3F86930D0DBB5200DFD3DF /* ossimPredatorLoader.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EE3F869C0D0DBB5200DFD3DF /* ossimPredatorProjectionFactory.h in Headers */ = {isa = PBXBuildFile; fileRef = EE3F86940D0DBB5200DFD3DF /* ossimPredatorProjectionFactory.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EE3F869D0D0DBB5200DFD3DF /* ossimPredatorThread.h in Headers */ = {isa = PBXBuildFile; fileRef = EE3F86950D0DBB5200DFD3DF /* ossimPredatorThread.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EE3F869E0D0DBB5200DFD3DF /* ossimPredatorUavProjection.h in Headers */ = {isa = PBXBuildFile; fileRef = EE3F86960D0DBB5200DFD3DF /* ossimPredatorUavProjection.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EE3F869F0D0DBB5200DFD3DF /* ossimPredatorVideo.h in Headers */ = {isa = PBXBuildFile; fileRef = EE3F86970D0DBB5200DFD3DF /* ossimPredatorVideo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EE3F87A50D0DBECC00DFD3DF /* Openthreads.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EE3F87A40D0DBECC00DFD3DF /* Openthreads.framework */; };
+		EEB5EBEB0D0DD8AB000CF6B2 /* ossimPredatorThread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EE3F86A20D0DBB9000DFD3DF /* ossimPredatorThread.cpp */; };
+		EEB5EC7B0D0F0791000CF6B2 /* ossimPredatorKlvTable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EEB5EC7A0D0F0790000CF6B2 /* ossimPredatorKlvTable.cpp */; };
+		EEB5EC8C0D0F08A0000CF6B2 /* ossimPredatorVideo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EEB5EC8B0D0F08A0000CF6B2 /* ossimPredatorVideo.cpp */; };
+		EEB5EE290D102E08000CF6B2 /* ossimPredatorInit.h in Headers */ = {isa = PBXBuildFile; fileRef = EEB5EE280D102E08000CF6B2 /* ossimPredatorInit.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EEB5EE2B0D102E25000CF6B2 /* ossimPredatorInit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = EEB5EE2A0D102E25000CF6B2 /* ossimPredatorInit.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		186EF4F50B1CE11D00F7886A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8D07F2C80486CC7A007CD1D0;
+			remoteInfo = ossim;
+		};
+		4301391E10583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628031042E368002A87C7;
+			remoteInfo = "template-app";
+		};
+		4301392010583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628151042E3B0002A87C7;
+			remoteInfo = "ossim-adrg-dump";
+		};
+		4301392210583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628371042E3F6002A87C7;
+			remoteInfo = "ossim-applanix2ogeom";
+		};
+		4301392410583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628551042E461002A87C7;
+			remoteInfo = "ossim-band-merge";
+		};
+		4301392610583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628741042E4AC002A87C7;
+			remoteInfo = "ossim-btoa";
+		};
+		4301392810583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628861042E4D1002A87C7;
+			remoteInfo = "ossim-chgkwval";
+		};
+		4301392A10583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4336289F1042E52A002A87C7;
+			remoteInfo = "ossim-cmm";
+		};
+		4301392C10583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628B91042E560002A87C7;
+			remoteInfo = "ossim-computeSrtmStats";
+		};
+		4301392E10583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628D61042E59C002A87C7;
+			remoteInfo = "ossim-correl";
+		};
+		4301393010583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628F11042E5D1002A87C7;
+			remoteInfo = "ossim-create-cg";
+		};
+		4301393210583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4336290B1042E607002A87C7;
+			remoteInfo = "ossim-create-histo";
+		};
+		4301393410583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433629811042E712002A87C7;
+			remoteInfo = "ossim-dms2deg";
+		};
+		4301393610583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4336299D1042E759002A87C7;
+			remoteInfo = "ossim-dump-ocg";
+		};
+		4301393810583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433629B51042E77C002A87C7;
+			remoteInfo = "ossim-ecg2ocg";
+		};
+		4301393A10583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433629D01042E7B1002A87C7;
+			remoteInfo = "ossim-extract-vertices";
+		};
+		4301393C10583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433629E41042E807002A87C7;
+			remoteInfo = "ossim-foo";
+		};
+		4301393E10583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362A2D1042E88F002A87C7;
+			remoteInfo = "ossim-height";
+		};
+		4301394010583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362A4B1042E8BD002A87C7;
+			remoteInfo = "ossim-icp";
+		};
+		4301394210583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362A631042E8EE002A87C7;
+			remoteInfo = "ossim-igen";
+		};
+		4301394410583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362A7D1042E914002A87C7;
+			remoteInfo = "ossim-img2md";
+		};
+		4301394610583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362A9A1042E955002A87C7;
+			remoteInfo = "ossim-img2rr";
+		};
+		4301394810583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362AB41042E981002A87C7;
+			remoteInfo = "ossim-info";
+		};
+		4301394A10583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362AD21042EA43002A87C7;
+			remoteInfo = "ossim-modopt";
+		};
+		4301394C10583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362AEF1042EA81002A87C7;
+			remoteInfo = "ossim-mosaic";
+		};
+		4301394E10583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362B471042EB45002A87C7;
+			remoteInfo = "ossim-ogeom2ogeom";
+		};
+		4301395010583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362B641042EB70002A87C7;
+			remoteInfo = "ossim-orthoigen";
+		};
+		4301395210583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362B801042EB9B002A87C7;
+			remoteInfo = "ossim-pixelflip";
+		};
+		4301395410583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362B9B1042EBCE002A87C7;
+			remoteInfo = "ossim-prune";
+		};
+		4301395610583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362BD21042EC26002A87C7;
+			remoteInfo = "ossim-rejout";
+		};
+		4301395810583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362BEE1042EC50002A87C7;
+			remoteInfo = "ossim-senint";
+		};
+		4301395A10583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362C081042EC80002A87C7;
+			remoteInfo = "ossim-space-imaging";
+		};
+		4301395C10583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362C221042ECAF002A87C7;
+			remoteInfo = "ossim-swapbytes";
+		};
+		4301395E10583E47009BF7EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362C3C1042ECD6002A87C7;
+			remoteInfo = "ossim-tfw2ogeom";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		089C1667FE841158C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		186EECAE0B1CDEF300F7886A /* common_settings.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = common_settings.xcconfig; path = ../../../ossim/xcode/ossim/common_settings.xcconfig; sourceTree = SOURCE_ROOT; };
+		186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ossim.xcodeproj; path = ../../../ossim/xcode/ossim/ossim.xcodeproj; sourceTree = SOURCE_ROOT; };
+		43333DB310FD12E000A5B432 /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = ../../../ossim_dependencies/lib/libavcodec.a; sourceTree = SOURCE_ROOT; };
+		43333DB410FD12E000A5B432 /* libavdevice.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavdevice.a; path = ../../../ossim_dependencies/lib/libavdevice.a; sourceTree = SOURCE_ROOT; };
+		43333DB510FD12E000A5B432 /* libavformat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavformat.a; path = ../../../ossim_dependencies/lib/libavformat.a; sourceTree = SOURCE_ROOT; };
+		43333DB610FD12E000A5B432 /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavutil.a; path = ../../../ossim_dependencies/lib/libavutil.a; sourceTree = SOURCE_ROOT; };
+		43333DB710FD12E000A5B432 /* libswscale.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswscale.a; path = ../../../ossim_dependencies/lib/libswscale.a; sourceTree = SOURCE_ROOT; };
+		43A9A9E10D59FCE500E97FA2 /* ossimPredatorExport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ossimPredatorExport.h; sourceTree = "<group>"; };
+		8D07F2C70486CC7A007CD1D0 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		EE3F868B0D0DBB2300DFD3DF /* ossimPredator.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ossimPredator.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		EE3F86900D0DBB5200DFD3DF /* ffmpegApi.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ffmpegApi.h; sourceTree = "<group>"; };
+		EE3F86910D0DBB5200DFD3DF /* ossimPredatorApi.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPredatorApi.h; sourceTree = "<group>"; };
+		EE3F86920D0DBB5200DFD3DF /* ossimPredatorKlvTable.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPredatorKlvTable.h; sourceTree = "<group>"; };
+		EE3F86930D0DBB5200DFD3DF /* ossimPredatorLoader.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPredatorLoader.h; sourceTree = "<group>"; };
+		EE3F86940D0DBB5200DFD3DF /* ossimPredatorProjectionFactory.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPredatorProjectionFactory.h; sourceTree = "<group>"; };
+		EE3F86950D0DBB5200DFD3DF /* ossimPredatorThread.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPredatorThread.h; sourceTree = "<group>"; };
+		EE3F86960D0DBB5200DFD3DF /* ossimPredatorUavProjection.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPredatorUavProjection.h; sourceTree = "<group>"; };
+		EE3F86970D0DBB5200DFD3DF /* ossimPredatorVideo.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPredatorVideo.h; sourceTree = "<group>"; };
+		EE3F86A20D0DBB9000DFD3DF /* ossimPredatorThread.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPredatorThread.cpp; sourceTree = "<group>"; };
+		EE3F87A40D0DBECC00DFD3DF /* Openthreads.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Openthreads.framework; path = ../../../ossim_dependencies/Frameworks/Openthreads.framework; sourceTree = SOURCE_ROOT; };
+		EEB5EC7A0D0F0790000CF6B2 /* ossimPredatorKlvTable.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPredatorKlvTable.cpp; sourceTree = "<group>"; };
+		EEB5EC8B0D0F08A0000CF6B2 /* ossimPredatorVideo.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPredatorVideo.cpp; sourceTree = "<group>"; };
+		EEB5EE280D102E08000CF6B2 /* ossimPredatorInit.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = ossimPredatorInit.h; sourceTree = "<group>"; };
+		EEB5EE2A0D102E25000CF6B2 /* ossimPredatorInit.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = ossimPredatorInit.cpp; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8D07F2C30486CC7A007CD1D0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EE3F87A50D0DBECC00DFD3DF /* Openthreads.framework in Frameworks */,
+				186EF5700B1CE22D00F7886A /* ossim.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		034768DDFF38A45A11DB9C8B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				EE3F868B0D0DBB2300DFD3DF /* ossimPredator.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0867D691FE84028FC02AAC07 /* ossimPlanet */ = {
+			isa = PBXGroup;
+			children = (
+				08FB77ACFE841707C02AAC07 /* Source */,
+				089C1665FE841158C02AAC07 /* Resources */,
+				1862497F0B2070A20021FDF7 /* External Projects */,
+				0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */,
+				034768DDFF38A45A11DB9C8B /* Products */,
+			);
+			name = ossimPlanet;
+			sourceTree = "<group>";
+		};
+		0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				43333DB310FD12E000A5B432 /* libavcodec.a */,
+				43333DB410FD12E000A5B432 /* libavdevice.a */,
+				43333DB510FD12E000A5B432 /* libavformat.a */,
+				43333DB610FD12E000A5B432 /* libavutil.a */,
+				43333DB710FD12E000A5B432 /* libswscale.a */,
+			);
+			name = "External Frameworks and Libraries";
+			sourceTree = "<group>";
+		};
+		089C1665FE841158C02AAC07 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				8D07F2C70486CC7A007CD1D0 /* Info.plist */,
+				089C1666FE841158C02AAC07 /* InfoPlist.strings */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		08FB77ACFE841707C02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				186EECAE0B1CDEF300F7886A /* common_settings.xcconfig */,
+				186EECB10B1CDF1400F7886A /* ossimPredator */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		1862497F0B2070A20021FDF7 /* External Projects */ = {
+			isa = PBXGroup;
+			children = (
+				EE3F87A40D0DBECC00DFD3DF /* Openthreads.framework */,
+				186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */,
+			);
+			name = "External Projects";
+			sourceTree = "<group>";
+		};
+		186EECB10B1CDF1400F7886A /* ossimPredator */ = {
+			isa = PBXGroup;
+			children = (
+				186EECB20B1CDF1400F7886A /* include */,
+				186EECF10B1CDF1400F7886A /* src */,
+			);
+			name = ossimPredator;
+			path = ../..;
+			sourceTree = SOURCE_ROOT;
+		};
+		186EECB20B1CDF1400F7886A /* include */ = {
+			isa = PBXGroup;
+			children = (
+				EE3F868F0D0DBB5200DFD3DF /* ossimPredator */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		186EECF10B1CDF1400F7886A /* src */ = {
+			isa = PBXGroup;
+			children = (
+				EEB5EE2A0D102E25000CF6B2 /* ossimPredatorInit.cpp */,
+				EEB5EC8B0D0F08A0000CF6B2 /* ossimPredatorVideo.cpp */,
+				EEB5EC7A0D0F0790000CF6B2 /* ossimPredatorKlvTable.cpp */,
+				EE3F86A20D0DBB9000DFD3DF /* ossimPredatorThread.cpp */,
+			);
+			path = src;
+			sourceTree = "<group>";
+		};
+		186EF4B50B1CE11D00F7886A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				186EF4F60B1CE11D00F7886A /* ossim.framework */,
+				4301391F10583E47009BF7EC /* template-app */,
+				4301392110583E47009BF7EC /* ossim-adrg-dump */,
+				4301392310583E47009BF7EC /* ossim-applanix2ogeom */,
+				4301392510583E47009BF7EC /* ossim-band-merge */,
+				4301392710583E47009BF7EC /* ossim-btoa */,
+				4301392910583E47009BF7EC /* template-app */,
+				4301392B10583E47009BF7EC /* ossim-cmm */,
+				4301392D10583E47009BF7EC /* ossim-computeSrtmStats */,
+				4301392F10583E47009BF7EC /* ossim-correl */,
+				4301393110583E47009BF7EC /* ossim-create-cg */,
+				4301393310583E47009BF7EC /* ossim-create-histo */,
+				4301393510583E47009BF7EC /* ossim-dms2deg */,
+				4301393710583E47009BF7EC /* ossim-dump-ocg */,
+				4301393910583E47009BF7EC /* ossim-ecg2ocg */,
+				4301393B10583E47009BF7EC /* ossim-extract-vertices */,
+				4301393D10583E47009BF7EC /* ossim-foo */,
+				4301393F10583E47009BF7EC /* ossim-height */,
+				4301394110583E47009BF7EC /* ossim-icp */,
+				4301394310583E47009BF7EC /* ossim-igen */,
+				4301394510583E47009BF7EC /* ossim-img2md */,
+				4301394710583E47009BF7EC /* ossim-img2rr */,
+				4301394910583E47009BF7EC /* ossim-info */,
+				4301394B10583E47009BF7EC /* ossim-modopt */,
+				4301394D10583E47009BF7EC /* ossim-mosaic */,
+				4301394F10583E47009BF7EC /* ossim-ogeom2ogeom */,
+				4301395110583E47009BF7EC /* ossim-orthoigen */,
+				4301395310583E47009BF7EC /* ossim-pixelflip */,
+				4301395510583E47009BF7EC /* ossim-prune */,
+				4301395710583E47009BF7EC /* ossim-rejout */,
+				4301395910583E47009BF7EC /* ossim-senint */,
+				4301395B10583E47009BF7EC /* ossim-space-imaging */,
+				4301395D10583E47009BF7EC /* ossim-swapbytes */,
+				4301395F10583E47009BF7EC /* ossim-tfw2ogeom */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		EE3F868F0D0DBB5200DFD3DF /* ossimPredator */ = {
+			isa = PBXGroup;
+			children = (
+				43A9A9E10D59FCE500E97FA2 /* ossimPredatorExport.h */,
+				EEB5EE280D102E08000CF6B2 /* ossimPredatorInit.h */,
+				EE3F86900D0DBB5200DFD3DF /* ffmpegApi.h */,
+				EE3F86910D0DBB5200DFD3DF /* ossimPredatorApi.h */,
+				EE3F86920D0DBB5200DFD3DF /* ossimPredatorKlvTable.h */,
+				EE3F86930D0DBB5200DFD3DF /* ossimPredatorLoader.h */,
+				EE3F86940D0DBB5200DFD3DF /* ossimPredatorProjectionFactory.h */,
+				EE3F86950D0DBB5200DFD3DF /* ossimPredatorThread.h */,
+				EE3F86960D0DBB5200DFD3DF /* ossimPredatorUavProjection.h */,
+				EE3F86970D0DBB5200DFD3DF /* ossimPredatorVideo.h */,
+			);
+			path = ossimPredator;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		8D07F2BD0486CC7A007CD1D0 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EE3F86980D0DBB5200DFD3DF /* ffmpegApi.h in Headers */,
+				EE3F86990D0DBB5200DFD3DF /* ossimPredatorApi.h in Headers */,
+				EE3F869A0D0DBB5200DFD3DF /* ossimPredatorKlvTable.h in Headers */,
+				EE3F869B0D0DBB5200DFD3DF /* ossimPredatorLoader.h in Headers */,
+				EE3F869C0D0DBB5200DFD3DF /* ossimPredatorProjectionFactory.h in Headers */,
+				EE3F869D0D0DBB5200DFD3DF /* ossimPredatorThread.h in Headers */,
+				EE3F869E0D0DBB5200DFD3DF /* ossimPredatorUavProjection.h in Headers */,
+				EE3F869F0D0DBB5200DFD3DF /* ossimPredatorVideo.h in Headers */,
+				EEB5EE290D102E08000CF6B2 /* ossimPredatorInit.h in Headers */,
+				43A9A9E20D59FCE500E97FA2 /* ossimPredatorExport.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		8D07F2BC0486CC7A007CD1D0 /* ossimPredator */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4FADC24208B4156D00ABE55E /* Build configuration list for PBXNativeTarget "ossimPredator" */;
+			buildPhases = (
+				8D07F2BD0486CC7A007CD1D0 /* Headers */,
+				8D07F2BF0486CC7A007CD1D0 /* Resources */,
+				8D07F2C10486CC7A007CD1D0 /* Sources */,
+				8D07F2C30486CC7A007CD1D0 /* Frameworks */,
+				8D07F2C50486CC7A007CD1D0 /* Rez */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ossimPredator;
+			productInstallPath = "$(HOME)/Library/Frameworks";
+			productName = ossimPlanet;
+			productReference = EE3F868B0D0DBB2300DFD3DF /* ossimPredator.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0867D690FE84028FC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 4FADC24608B4156D00ABE55E /* Build configuration list for PBXProject "ossimPredator" */;
+			compatibilityVersion = "Xcode 2.4";
+			developmentRegion = English;
+			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+				da,
+				Dutch,
+				fi,
+				Italian,
+				ko,
+				no,
+				pl,
+				pt,
+				pt_PT,
+				ru,
+				Spanish,
+				sv,
+				zh_CN,
+				zh_TW,
+				de,
+				en,
+				es,
+				nl,
+			);
+			mainGroup = 0867D691FE84028FC02AAC07 /* ossimPlanet */;
+			productRefGroup = 034768DDFF38A45A11DB9C8B /* Products */;
+			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 186EF4B50B1CE11D00F7886A /* Products */;
+					ProjectRef = 186EF4B40B1CE11D00F7886A /* ossim.xcodeproj */;
+				},
+			);
+			projectRoot = "";
+			targets = (
+				8D07F2BC0486CC7A007CD1D0 /* ossimPredator */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		186EF4F60B1CE11D00F7886A /* ossim.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = ossim.framework;
+			remoteRef = 186EF4F50B1CE11D00F7886A /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301391F10583E47009BF7EC /* template-app */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "template-app";
+			remoteRef = 4301391E10583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301392110583E47009BF7EC /* ossim-adrg-dump */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-adrg-dump";
+			remoteRef = 4301392010583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301392310583E47009BF7EC /* ossim-applanix2ogeom */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-applanix2ogeom";
+			remoteRef = 4301392210583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301392510583E47009BF7EC /* ossim-band-merge */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-band-merge";
+			remoteRef = 4301392410583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301392710583E47009BF7EC /* ossim-btoa */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-btoa";
+			remoteRef = 4301392610583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301392910583E47009BF7EC /* template-app */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "template-app";
+			remoteRef = 4301392810583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301392B10583E47009BF7EC /* ossim-cmm */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-cmm";
+			remoteRef = 4301392A10583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301392D10583E47009BF7EC /* ossim-computeSrtmStats */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-computeSrtmStats";
+			remoteRef = 4301392C10583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301392F10583E47009BF7EC /* ossim-correl */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-correl";
+			remoteRef = 4301392E10583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301393110583E47009BF7EC /* ossim-create-cg */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-create-cg";
+			remoteRef = 4301393010583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301393310583E47009BF7EC /* ossim-create-histo */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-create-histo";
+			remoteRef = 4301393210583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301393510583E47009BF7EC /* ossim-dms2deg */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-dms2deg";
+			remoteRef = 4301393410583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301393710583E47009BF7EC /* ossim-dump-ocg */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-dump-ocg";
+			remoteRef = 4301393610583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301393910583E47009BF7EC /* ossim-ecg2ocg */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-ecg2ocg";
+			remoteRef = 4301393810583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301393B10583E47009BF7EC /* ossim-extract-vertices */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-extract-vertices";
+			remoteRef = 4301393A10583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301393D10583E47009BF7EC /* ossim-foo */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-foo";
+			remoteRef = 4301393C10583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301393F10583E47009BF7EC /* ossim-height */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-height";
+			remoteRef = 4301393E10583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301394110583E47009BF7EC /* ossim-icp */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-icp";
+			remoteRef = 4301394010583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301394310583E47009BF7EC /* ossim-igen */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-igen";
+			remoteRef = 4301394210583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301394510583E47009BF7EC /* ossim-img2md */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-img2md";
+			remoteRef = 4301394410583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301394710583E47009BF7EC /* ossim-img2rr */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-img2rr";
+			remoteRef = 4301394610583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301394910583E47009BF7EC /* ossim-info */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-info";
+			remoteRef = 4301394810583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301394B10583E47009BF7EC /* ossim-modopt */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-modopt";
+			remoteRef = 4301394A10583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301394D10583E47009BF7EC /* ossim-mosaic */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-mosaic";
+			remoteRef = 4301394C10583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301394F10583E47009BF7EC /* ossim-ogeom2ogeom */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-ogeom2ogeom";
+			remoteRef = 4301394E10583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301395110583E47009BF7EC /* ossim-orthoigen */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-orthoigen";
+			remoteRef = 4301395010583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301395310583E47009BF7EC /* ossim-pixelflip */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-pixelflip";
+			remoteRef = 4301395210583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301395510583E47009BF7EC /* ossim-prune */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-prune";
+			remoteRef = 4301395410583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301395710583E47009BF7EC /* ossim-rejout */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-rejout";
+			remoteRef = 4301395610583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301395910583E47009BF7EC /* ossim-senint */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-senint";
+			remoteRef = 4301395810583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301395B10583E47009BF7EC /* ossim-space-imaging */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-space-imaging";
+			remoteRef = 4301395A10583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301395D10583E47009BF7EC /* ossim-swapbytes */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-swapbytes";
+			remoteRef = 4301395C10583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4301395F10583E47009BF7EC /* ossim-tfw2ogeom */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-tfw2ogeom";
+			remoteRef = 4301395E10583E47009BF7EC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8D07F2BF0486CC7A007CD1D0 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D07F2C00486CC7A007CD1D0 /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXRezBuildPhase section */
+		8D07F2C50486CC7A007CD1D0 /* Rez */ = {
+			isa = PBXRezBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXRezBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8D07F2C10486CC7A007CD1D0 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				EEB5EBEB0D0DD8AB000CF6B2 /* ossimPredatorThread.cpp in Sources */,
+				EEB5EC7B0D0F0791000CF6B2 /* ossimPredatorKlvTable.cpp in Sources */,
+				EEB5EC8C0D0F08A0000CF6B2 /* ossimPredatorVideo.cpp in Sources */,
+				EEB5EE2B0D102E25000CF6B2 /* ossimPredatorInit.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		089C1666FE841158C02AAC07 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				089C1667FE841158C02AAC07 /* English */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		18A9BCBE0CDA158B00F4581A /* DebugNativeLeopard */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 186EECAE0B1CDEF300F7886A /* common_settings.xcconfig */;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH)";
+				GCC_MODEL_TUNING = "";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(DEV_HOME_PATH)/ossim/include",
+					"$(SRCROOT)/../../include",
+				);
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				OTHER_CFLAGS = "";
+				OTHER_CPLUSPLUSFLAGS = "";
+				PREBINDING = NO;
+				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
+			};
+			name = DebugNativeLeopard;
+		};
+		18A9BCBF0CDA158B00F4581A /* DebugNativeLeopard */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 186EECAE0B1CDEF300F7886A /* common_settings.xcconfig */;
+			buildSettings = {
+				ARCHS = "$(inherited)";
+				COPY_PHASE_STRIP = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_1)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_2)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_3)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_3 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\"$(SYSTEM_LIBRARY_DIR)/CoreServices/Menu Extras/TextInput.menu/Contents/SharedFrameworks\"";
+				FRAMEWORK_VERSION = A;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = "";
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "";
+				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
+				GCC_PREPROCESSOR_DEFINITIONS_QUOTED_1 = "EXTRA_INFO_STRING_FOR_MENU=\\\"Version\\";
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(UNIV_STATICLIB_DEP)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SYSTEM_LIBRARY_DIR)/CoreServices/Encodings\"";
+				LIBRARY_STYLE = DYNAMIC;
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = "$(inherited)";
+				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = (
+					/usr/lib/libz.dylib,
+					"-L$UNIV_STATICLIB_DEP",
+					"-lavformat",
+					"-lavcodec",
+					"-lavutil",
+				);
+				PRODUCT_NAME = ossimPredator;
+				REZ_SEARCH_PATHS = (
+					"$(OSSIM_HOME_PATH)/xcode/ossim/Resources",
+					"$(REZ_SEARCH_PATHS)/**",
+				);
+				USER_HEADER_SEARCH_PATHS = "$(OSSIM_HOME_PATH)/include $(DEV_HOME_PATH)/libwms/include $(DEV_HOME_PATH)/ossimPlanet/include $(UNIV_HEADER_DEP) /usr/X11R6/include/freetype2 /usr/X11R6/include";
+				WARNING_CFLAGS = "-Wall";
+				WRAPPER_EXTENSION = framework;
+				ZERO_LINK = YES;
+			};
+			name = DebugNativeLeopard;
+		};
+		18B28C4F0CD57AB3008F45B2 /* ReleaseLeopard */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 186EECAE0B1CDEF300F7886A /* common_settings.xcconfig */;
+			buildSettings = {
+				ARCHS = (
+					i386,
+					ppc,
+				);
+				GCC_MODEL_TUNING = "";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(DEV_HOME_PATH)/ossim/include",
+					"$(SRCROOT)/../../include",
+				);
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				OTHER_CFLAGS = "";
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
+				PREBINDING = NO;
+				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
+			};
+			name = ReleaseLeopard;
+		};
+		18B28C500CD57AB3008F45B2 /* ReleaseLeopard */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(inherited)";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_1)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_2)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_3)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_3 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\"$(SYSTEM_LIBRARY_DIR)/CoreServices/Menu Extras/TextInput.menu/Contents/SharedFrameworks\"";
+				FRAMEWORK_VERSION = A;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = "";
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "";
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(UNIV_STATICLIB_DEP)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SYSTEM_LIBRARY_DIR)/CoreServices/Encodings\"";
+				LIBRARY_STYLE = DYNAMIC;
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = "$(inherited)";
+				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = (
+					/usr/lib/libz.dylib,
+					"-L$UNIV_STATICLIB_DEP",
+					"-lavformat",
+					"-lavcodec",
+					"-lavutil",
+				);
+				PRODUCT_NAME = ossimPredator;
+				REZ_SEARCH_PATHS = (
+					"$(OSSIM_HOME_PATH)/xcode/ossim/Resources",
+					"$(REZ_SEARCH_PATHS)/**",
+				);
+				USER_HEADER_SEARCH_PATHS = "$(DEV_HOME_PATH)/ossim/include $(DEV_HOME_PATH)/libwms/include $(DEV_HOME_PATH)/ossimPlanet/include $(UNIV_HEADER_DEP)";
+				WARNING_CFLAGS = "-Wall";
+				WRAPPER_EXTENSION = framework;
+			};
+			name = ReleaseLeopard;
+		};
+		18E4E5560BE7802B00C8442B /* DebugNative */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 186EECAE0B1CDEF300F7886A /* common_settings.xcconfig */;
+			buildSettings = {
+				ARCHS = "$(inherited)";
+				COPY_PHASE_STRIP = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_1)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_2)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_3)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_3 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\"$(SYSTEM_LIBRARY_DIR)/CoreServices/Menu Extras/TextInput.menu/Contents/SharedFrameworks\"";
+				FRAMEWORK_VERSION = A;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = "";
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "";
+				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
+				GCC_PREPROCESSOR_DEFINITIONS_QUOTED_1 = "EXTRA_INFO_STRING_FOR_MENU=\\\"Version\\";
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(UNIV_STATICLIB_DEP)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SYSTEM_LIBRARY_DIR)/CoreServices/Encodings\"";
+				LIBRARY_STYLE = DYNAMIC;
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = "$(inherited)";
+				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = (
+					/usr/lib/libz.dylib,
+					"-L$UNIV_STATICLIB_DEP",
+					"-lavformat",
+					"-lavcodec",
+					"-lavutil",
+				);
+				PRODUCT_NAME = ossimPredator;
+				REZ_SEARCH_PATHS = (
+					"$(OSSIM_HOME_PATH)/xcode/ossim/Resources",
+					"$(REZ_SEARCH_PATHS)/**",
+				);
+				USER_HEADER_SEARCH_PATHS = "$(OSSIM_HOME_PATH)/include $(DEV_HOME_PATH)/libwms/include $(DEV_HOME_PATH)/ossimPlanet/include $(UNIV_HEADER_DEP) /usr/X11R6/include/freetype2 /usr/X11R6/include";
+				WARNING_CFLAGS = "-Wall";
+				WRAPPER_EXTENSION = framework;
+				ZERO_LINK = YES;
+			};
+			name = DebugNative;
+		};
+		18E4E5570BE7802B00C8442B /* DebugNative */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 186EECAE0B1CDEF300F7886A /* common_settings.xcconfig */;
+			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH)";
+				GCC_MODEL_TUNING = "";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(DEV_HOME_PATH)/ossim/include",
+					"$(SRCROOT)/../../include",
+				);
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				OTHER_CFLAGS = "";
+				OTHER_CPLUSPLUSFLAGS = "";
+				PREBINDING = NO;
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+			};
+			name = DebugNative;
+		};
+		4FADC24308B4156D00ABE55E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 186EECAE0B1CDEF300F7886A /* common_settings.xcconfig */;
+			buildSettings = {
+				ARCHS = "$(inherited)";
+				COPY_PHASE_STRIP = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_1)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_2)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_3)",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_3 = "\"$(SYSTEM_LIBRARY_DIR)/CoreServices/Menu Extras/TextInput.menu/Contents/SharedFrameworks\"";
+				FRAMEWORK_VERSION = A;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = "";
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"$(GCC_PREPROCESSOR_DEFINITIONS_QUOTED_1)",
+				);
+				GCC_PREPROCESSOR_DEFINITIONS_QUOTED_1 = "EXTRA_INFO_STRING_FOR_MENU=\\\"Version\\";
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(UNIV_STATICLIB_DEP)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SYSTEM_LIBRARY_DIR)/CoreServices/Encodings\"";
+				LIBRARY_STYLE = DYNAMIC;
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = "$(inherited)";
+				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = (
+					/usr/lib/libz.dylib,
+					"-L$UNIV_STATICLIB_DEP",
+					"-lavformat",
+					"-lavcodec",
+					"-lavutil",
+				);
+				PRODUCT_NAME = ossimPredator;
+				REZ_SEARCH_PATHS = (
+					"$(OSSIM_HOME_PATH)/xcode/ossim/Resources",
+					"$(REZ_SEARCH_PATHS)/**",
+				);
+				USER_HEADER_SEARCH_PATHS = "$(OSSIM_HOME_PATH)/include $(DEV_HOME_PATH)/libwms/include $(DEV_HOME_PATH)/ossimPlanet/include $(UNIV_HEADER_DEP) /usr/X11R6/include/freetype2 /usr/X11R6/include";
+				WARNING_CFLAGS = "-Wall";
+				WRAPPER_EXTENSION = framework;
+				ZERO_LINK = YES;
+			};
+			name = Debug;
+		};
+		4FADC24408B4156D00ABE55E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(inherited)";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_1)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_2)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_3)",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_1 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_2 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\"$(SRCROOT)/../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_3 = "\"$(SYSTEM_LIBRARY_DIR)/CoreServices/Menu Extras/TextInput.menu/Contents/SharedFrameworks\"";
+				FRAMEWORK_VERSION = A;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_MODEL_TUNING = "";
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_PREFIX_HEADER = "";
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(UNIV_STATICLIB_DEP)",
+					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+				);
+				LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SYSTEM_LIBRARY_DIR)/CoreServices/Encodings\"";
+				LIBRARY_STYLE = DYNAMIC;
+				MACH_O_TYPE = mh_dylib;
+				OTHER_CFLAGS = "$(inherited)";
+				OTHER_CPLUSPLUSFLAGS = "$(inherited)";
+				OTHER_LDFLAGS = "$(inherited)";
+				PRODUCT_NAME = ossimPredator;
+				REZ_SEARCH_PATHS = (
+					"$(OSSIM_HOME_PATH)/xcode/ossim/Resources",
+					"$(REZ_SEARCH_PATHS)/**",
+				);
+				USER_HEADER_SEARCH_PATHS = "$(DEV_HOME_PATH)/ossim/include $(DEV_HOME_PATH)/libwms/include $(DEV_HOME_PATH)/ossimPlanet/include $(UNIV_HEADER_DEP)";
+				WARNING_CFLAGS = "-Wall";
+				WRAPPER_EXTENSION = framework;
+			};
+			name = Release;
+		};
+		4FADC24708B4156D00ABE55E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 186EECAE0B1CDEF300F7886A /* common_settings.xcconfig */;
+			buildSettings = {
+				ARCHS = (
+					ppc,
+					i386,
+				);
+				GCC_MODEL_TUNING = "";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(DEV_HOME_PATH)/ossim/include",
+					"$(SRCROOT)/../../include",
+				);
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				OTHER_CFLAGS = "";
+				OTHER_CPLUSPLUSFLAGS = "";
+				PREBINDING = NO;
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+			};
+			name = Debug;
+		};
+		4FADC24808B4156D00ABE55E /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 186EECAE0B1CDEF300F7886A /* common_settings.xcconfig */;
+			buildSettings = {
+				ARCHS = "$(inherited)";
+				GCC_MODEL_TUNING = "";
+				GCC_VERSION = "$(inherited)";
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(DEV_HOME_PATH)/ossim/include",
+					"$(SRCROOT)/../../include",
+				);
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				OTHER_CFLAGS = "";
+				OTHER_CPLUSPLUSFLAGS = "";
+				OTHER_LDFLAGS = (
+					"-lavdevice",
+					"-lavformat",
+					"-lavcodec",
+					"-lavutil",
+					"-lswscale",
+					"-lz",
+					"-lbz2",
+					"-lm",
+				);
+				PREBINDING = NO;
+				SDKROOT = "$(inherited)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4FADC24208B4156D00ABE55E /* Build configuration list for PBXNativeTarget "ossimPredator" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4FADC24308B4156D00ABE55E /* Debug */,
+				18E4E5560BE7802B00C8442B /* DebugNative */,
+				18A9BCBF0CDA158B00F4581A /* DebugNativeLeopard */,
+				4FADC24408B4156D00ABE55E /* Release */,
+				18B28C500CD57AB3008F45B2 /* ReleaseLeopard */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4FADC24608B4156D00ABE55E /* Build configuration list for PBXProject "ossimPredator" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4FADC24708B4156D00ABE55E /* Debug */,
+				18E4E5570BE7802B00C8442B /* DebugNative */,
+				18A9BCBE0CDA158B00F4581A /* DebugNativeLeopard */,
+				4FADC24808B4156D00ABE55E /* Release */,
+				18B28C4F0CD57AB3008F45B2 /* ReleaseLeopard */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 0867D690FE84028FC02AAC07 /* Project object */;
+}

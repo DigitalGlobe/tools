@@ -1,0 +1,13 @@
+# ------------------------------
+# List of known database aliases
+# ------------------------------
+
+#
+# Example Database:
+#
+employee.fdb = @FB_SAMPLEDBDIR@/employee.fdb
+employee = @FB_SAMPLEDBDIR@/employee.fdb
+
+#
+# Live Databases:
+#

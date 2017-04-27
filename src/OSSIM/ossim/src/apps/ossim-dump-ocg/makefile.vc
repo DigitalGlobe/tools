@@ -1,0 +1,11 @@
+###
+# $Id: makefile.vc 14839 2009-07-12 15:50:34Z dburken $
+# 
+# nmake makefile
+#
+# Typical usage:  nmake /f makefile.vc
+###
+
+PROGRAM=ossim-dump-ocg
+
+!include ..\makefile.inc

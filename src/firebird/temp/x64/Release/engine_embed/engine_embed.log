@@ -1,0 +1,256 @@
+﻿  alt.cpp
+  blb.cpp
+  blob_filter.cpp
+  btn.cpp
+..\..\..\src\jrd\alt.cpp(89): warning C4267: '+=': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\src\jrd\alt.cpp(943): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\jrd\alt.cpp(957): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\jrd\alt.cpp(972): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\jrd\alt.cpp(986): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\jrd\alt.cpp(1140): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\jrd\alt.cpp(1154): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\jrd\alt.cpp(1168): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\jrd\alt.cpp(1182): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  btr.cpp
+  builtin.cpp
+  cch.cpp
+c:\tools\src\firebird\src\jrd\../jrd/CsConvert.h(73): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\src\jrd\blob_filter.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/CsConvert.h(73): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\src\jrd\blb.cpp)
+..\..\..\src\jrd\blb.cpp(160): warning C4267: 'argument': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\src\jrd\blb.cpp(172): warning C4267: '=': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\src\jrd\blb.cpp(680): warning C4267: 'initializing': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\blb.cpp(680): warning C4267: 'initializing': conversion from 'size_t' to 'const USHORT', possible loss of data
+..\..\..\src\jrd\blb.cpp(1068): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\blb.cpp(1119): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\blb.cpp(1146): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\blb.cpp(1197): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\blb.cpp(1461): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\blb.cpp(1592): warning C4267: 'initializing': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\blb.cpp(1592): warning C4267: 'initializing': conversion from 'size_t' to 'const USHORT', possible loss of data
+..\..\..\src\jrd\blb.cpp(1970): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\blb.cpp(2439): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\blb.cpp(2467): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\blb.cpp(2547): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\blb.cpp(2653): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\blb.cpp(2660): warning C4267: 'argument': conversion from 'size_t' to 'SLONG', possible loss of data
+c:\tools\src\firebird\src\jrd\../jrd/CsConvert.h(73): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\src\jrd\btr.cpp)
+..\..\..\src\jrd\btr.cpp(1515): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\btr.cpp(1520): warning C4267: 'return': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\btr.cpp(1552): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\btr.cpp(1559): warning C4267: 'return': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\btr.cpp(2721): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\btr.cpp(3417): warning C4267: '=': conversion from 'size_t' to 'UCHAR', possible loss of data
+..\..\..\src\jrd\btr.cpp(3705): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+  ..\..\..\src\jrd\btr.cpp(4408):Strange logic here, please review
+..\..\..\src\jrd\btr.cpp(5692): warning C4267: '=': conversion from 'size_t' to 'UCHAR', possible loss of data
+..\..\..\src\jrd\btr.cpp(5964): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\btr.cpp(6019): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\btr.cpp(6340): warning C4267: '=': conversion from 'size_t' to 'UCHAR', possible loss of data
+..\..\..\src\jrd\btr.cpp(6540): warning C4267: '=': conversion from 'size_t' to 'UCHAR', possible loss of data
+..\..\..\src\jrd\btr.cpp(6606): warning C4267: '=': conversion from 'size_t' to 'UCHAR', possible loss of data
+..\..\..\src\jrd\btr.cpp(6841): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+  CharSet.cpp
+..\..\..\src\jrd\cch.cpp(2547): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\cch.cpp(5719): warning C4267: '=': conversion from 'size_t' to 'SLONG', possible loss of data
+  cmp.cpp
+  Collation.cpp
+c:\tools\src\firebird\src\jrd\../jrd/CsConvert.h(73): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\src\jrd\CharSet.cpp)
+  cvt.cpp
+  cvt2.cpp
+c:\tools\src\firebird\src\jrd\../jrd/CsConvert.h(73): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/CsConvert.h(73): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\src\jrd\cmp.cpp)
+..\..\..\src\jrd\Collation.cpp(712): warning C4267: 'return': conversion from 'size_t' to 'ULONG', possible loss of data
+  ..\..\..\src\jrd\Collation.cpp(614): note: while compiling class template member function 'ULONG `anonymous-namespace'::SleuthMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::actualMerge(Jrd::TextType *,const CharType *,SLONG,const CharType *,SLONG,CharType *)'
+          with
+          [
+              CharType=ULONG
+          ]
+  ..\..\..\src\jrd\Collation.cpp(422): note: see reference to function template instantiation 'ULONG `anonymous-namespace'::SleuthMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::actualMerge(Jrd::TextType *,const CharType *,SLONG,const CharType *,SLONG,CharType *)' being compiled
+          with
+          [
+              CharType=ULONG
+          ]
+  ..\..\..\src\jrd\Collation.cpp(747): note: see reference to class template instantiation '`anonymous-namespace'::SleuthMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>' being compiled
+  ..\..\..\src\jrd\Collation.cpp(746): note: while compiling class template member function 'ULONG `anonymous-namespace'::CollationImpl<`anonymous-namespace'::StartsMatcherUCharCanonical,`anonymous-namespace'::ContainsMatcherULongCanonical,`anonymous-namespace'::LikeMatcherULongCanonical,`anonymous-namespace'::SimilarToMatcherULongCanonical,`anonymous-namespace'::MatchesMatcherULongCanonical,`anonymous-namespace'::SleuthMatcherULongCanonical>::sleuthMerge(Firebird::MemoryPool &,const UCHAR *,SLONG,const UCHAR *,SLONG,UCHAR *)'
+  ..\..\..\src\jrd\Collation.cpp(877): note: see reference to class template instantiation '`anonymous-namespace'::CollationImpl<`anonymous-namespace'::StartsMatcherUCharCanonical,`anonymous-namespace'::ContainsMatcherULongCanonical,`anonymous-namespace'::LikeMatcherULongCanonical,`anonymous-namespace'::SimilarToMatcherULongCanonical,`anonymous-namespace'::MatchesMatcherULongCanonical,`anonymous-namespace'::SleuthMatcherULongCanonical>' being compiled
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(388): warning C4267: 'initializing': conversion from 'size_t' to 'SLONG', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+  c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(386): note: while compiling class template member function 'bool Firebird::SimilarToMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::Evaluator::getResult(void)' (compiling source file ..\..\..\src\jrd\Collation.cpp)
+  c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(310): note: see reference to function template instantiation 'bool Firebird::SimilarToMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::Evaluator::getResult(void)' being compiled (compiling source file ..\..\..\src\jrd\Collation.cpp)
+  c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(314): note: see reference to class template instantiation 'Firebird::SimilarToMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::Evaluator' being compiled (compiling source file ..\..\..\src\jrd\Collation.cpp)
+  ..\..\..\src\jrd\Collation.cpp(785): note: see reference to class template instantiation 'Firebird::SimilarToMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>' being compiled
+  ..\..\..\src\jrd\Collation.cpp(784): note: while compiling class template member function 'Jrd::PatternMatcher *`anonymous-namespace'::CollationImpl<`anonymous-namespace'::StartsMatcherUCharCanonical,`anonymous-namespace'::ContainsMatcherULongCanonical,`anonymous-namespace'::LikeMatcherULongCanonical,`anonymous-namespace'::SimilarToMatcherULongCanonical,`anonymous-namespace'::MatchesMatcherULongCanonical,`anonymous-namespace'::SleuthMatcherULongCanonical>::createSimilarToMatcher(Firebird::MemoryPool &,const UCHAR *,SLONG,const UCHAR *,SLONG)'
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(459): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+  c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(444): note: while compiling class template member function 'void Firebird::SimilarToMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::Evaluator::parseExpr(int *)' (compiling source file ..\..\..\src\jrd\Collation.cpp)
+  c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(366): note: see reference to function template instantiation 'void Firebird::SimilarToMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::Evaluator::parseExpr(int *)' being compiled (compiling source file ..\..\..\src\jrd\Collation.cpp)
+  c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(323): note: while compiling class template member function 'Firebird::SimilarToMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::Evaluator::Evaluator(Firebird::MemoryPool &,Firebird::SimilarToMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::TextType *,const UCHAR *,SLONG,CharType,bool)'
+          with
+          [
+              CharType=ULONG
+          ] (compiling source file ..\..\..\src\jrd\Collation.cpp)
+  c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(307): note: see reference to function template instantiation 'Firebird::SimilarToMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::Evaluator::Evaluator(Firebird::MemoryPool &,Firebird::SimilarToMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::TextType *,const UCHAR *,SLONG,CharType,bool)' being compiled
+          with
+          [
+              CharType=ULONG
+          ] (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(468): warning C4267: 'argument': conversion from 'size_t' to 'const int', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(472): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(478): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(1189): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+  c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(1178): note: while compiling class template member function 'bool Firebird::SimilarToMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::Evaluator::match(void)' (compiling source file ..\..\..\src\jrd\Collation.cpp)
+  c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(401): note: see reference to function template instantiation 'bool Firebird::SimilarToMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::Evaluator::match(void)' being compiled (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(1379): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(1413): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(514): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+  c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(513): note: while compiling class template member function 'void Firebird::SimilarToMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::Evaluator::parseFactor(int *)' (compiling source file ..\..\..\src\jrd\Collation.cpp)
+  c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(495): note: see reference to function template instantiation 'void Firebird::SimilarToMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::Evaluator::parseFactor(int *)' being compiled (compiling source file ..\..\..\src\jrd\Collation.cpp)
+  c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(484): note: while compiling class template member function 'void Firebird::SimilarToMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::Evaluator::parseTerm(int *)' (compiling source file ..\..\..\src\jrd\Collation.cpp)
+  c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(464): note: see reference to function template instantiation 'void Firebird::SimilarToMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::Evaluator::parseTerm(int *)' being compiled (compiling source file ..\..\..\src\jrd\Collation.cpp)
+  c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(444): note: while compiling class template member function 'void Firebird::SimilarToMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::Evaluator::parseExpr(int *)' (compiling source file ..\..\..\src\jrd\Collation.cpp)
+  c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(366): note: see reference to function template instantiation 'void Firebird::SimilarToMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::Evaluator::parseExpr(int *)' being compiled (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(542): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(556): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(557): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(564): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(570): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(631): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(711): warning C4267: 'argument': conversion from 'size_t' to 'SLONG', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+  c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(643): note: while compiling class template member function 'void Firebird::SimilarToMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::Evaluator::parsePrimary(int *)' (compiling source file ..\..\..\src\jrd\Collation.cpp)
+  c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(517): note: see reference to function template instantiation 'void Firebird::SimilarToMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::Evaluator::parsePrimary(int *)' being compiled (compiling source file ..\..\..\src\jrd\Collation.cpp)
+  c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(513): note: while compiling class template member function 'void Firebird::SimilarToMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::Evaluator::parseFactor(int *)' (compiling source file ..\..\..\src\jrd\Collation.cpp)
+  c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(495): note: see reference to function template instantiation 'void Firebird::SimilarToMatcher<Jrd::CanonicalConverter<Jrd::NullStrConverter>,ULONG>::Evaluator::parseFactor(int *)' being compiled (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(715): warning C4267: '=': conversion from 'size_t' to 'SLONG', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(719): warning C4267: 'argument': conversion from 'size_t' to 'SLONG', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(724): warning C4267: '=': conversion from 'size_t' to 'SLONG', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(788): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(796): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(799): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(827): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(827): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(865): warning C4267: 'argument': conversion from 'size_t' to 'SLONG', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(869): warning C4267: '=': conversion from 'size_t' to 'SLONG', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(873): warning C4267: 'argument': conversion from 'size_t' to 'SLONG', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/SimilarToMatcher.h(878): warning C4267: '=': conversion from 'size_t' to 'SLONG', possible loss of data (compiling source file ..\..\..\src\jrd\Collation.cpp)
+..\..\..\src\jrd\cmp.cpp(1948): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\jrd\cmp.cpp(2109): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\cmp.cpp(2113): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\cmp.cpp(3574): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\cmp.cpp(3587): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\cmp.cpp(3932): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\cmp.cpp(4752): warning C4267: 'initializing': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\cmp.cpp(4992): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+c:\tools\src\firebird\src\jrd\../jrd/CsConvert.h(73): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\src\jrd\cvt2.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/CsConvert.h(73): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\src\jrd\cvt.cpp)
+  Database.cpp
+..\..\..\src\jrd\cvt2.cpp(606): warning C4267: 'argument': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\src\jrd\cvt2.cpp(607): warning C4267: 'argument': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\src\jrd\cvt2.cpp(625): warning C4267: 'argument': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\src\jrd\cvt2.cpp(628): warning C4267: 'argument': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\src\jrd\cvt2.cpp(675): warning C4267: 'argument': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\src\jrd\cvt2.cpp(680): warning C4267: 'argument': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\src\jrd\cvt2.cpp(745): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\cvt2.cpp(788): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+  DatabaseSnapshot.cpp
+  DataTypeUtil.cpp
+..\..\..\src\jrd\DatabaseSnapshot.cpp(329): warning C4267: 'return': conversion from 'size_t' to 'ULONG', possible loss of data
+  DebugInterface.cpp
+  dfw.cpp
+c:\tools\src\firebird\src\jrd\../jrd/CsConvert.h(73): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\src\jrd\DataTypeUtil.cpp)
+..\..\..\src\jrd\DataTypeUtil.cpp(260): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\DataTypeUtil.cpp(294): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+  divorce.cpp
+  dpm.cpp
+  dsc.cpp
+  dyn.cpp
+c:\tools\src\firebird\src\jrd\../jrd/CsConvert.h(73): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\gen\x64\jrd\dfw.cpp)
+..\..\..\gen\x64\jrd\dfw.cpp(1297): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\gen\x64\jrd\dfw.cpp(4032): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\gen\x64\jrd\dfw.cpp(6151): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+  dyn_def.cpp
+..\..\..\gen\x64\jrd\dpm.cpp(295): warning C4267: '+=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\gen\x64\jrd\dpm.cpp(326): warning C4267: 'initializing': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\gen\x64\jrd\dpm.cpp(326): warning C4267: 'initializing': conversion from 'size_t' to 'const USHORT', possible loss of data
+..\..\..\gen\x64\jrd\dpm.cpp(442): warning C4267: 'initializing': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\gen\x64\jrd\dpm.cpp(517): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\gen\x64\jrd\dpm.cpp(1588): warning C4267: 'initializing': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\gen\x64\jrd\dpm.cpp(1588): warning C4267: 'initializing': conversion from 'size_t' to 'const USHORT', possible loss of data
+..\..\..\gen\x64\jrd\dpm.cpp(2082): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\gen\x64\jrd\dpm.cpp(2140): warning C4267: 'initializing': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\gen\x64\jrd\dpm.cpp(2146): warning C4267: 'initializing': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\gen\x64\jrd\dpm.cpp(2146): warning C4267: 'initializing': conversion from 'size_t' to 'const SLONG', possible loss of data
+..\..\..\gen\x64\jrd\dpm.cpp(2234): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\gen\x64\jrd\dpm.cpp(2398): warning C4267: 'initializing': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\gen\x64\jrd\dpm.cpp(2437): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\gen\x64\jrd\dpm.cpp(2977): warning C4267: '+=': conversion from 'size_t' to 'SSHORT', possible loss of data
+..\..\..\gen\x64\jrd\dpm.cpp(3077): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\gen\x64\jrd\dpm.cpp(3082): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\gen\x64\jrd\dpm.cpp(3130): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\gen\x64\jrd\dpm.cpp(3416): warning C4267: 'initializing': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\gen\x64\jrd\dpm.cpp(3416): warning C4267: 'initializing': conversion from 'size_t' to 'const USHORT', possible loss of data
+..\..\..\gen\x64\jrd\dpm.cpp(3431): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+c:\tools\src\firebird\src\jrd\../jrd/CsConvert.h(73): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\gen\x64\jrd\dyn.cpp)
+..\..\..\gen\x64\jrd\dyn.cpp(867): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\gen\x64\jrd\dyn.cpp(909): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\gen\x64\jrd\dyn.cpp(950): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\gen\x64\jrd\dyn.cpp(988): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\gen\x64\jrd\dyn.cpp(992): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\gen\x64\jrd\dyn.cpp(1031): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\gen\x64\jrd\dyn.cpp(1145): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+  dyn_del.cpp
+  dyn_mod.cpp
+c:\tools\src\firebird\src\jrd\../jrd/CsConvert.h(73): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\gen\x64\jrd\dyn_def.cpp)
+..\..\..\gen\x64\jrd\dyn_def.cpp(842): warning C4267: 'initializing': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\gen\x64\jrd\dyn_def.cpp(848): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\gen\x64\jrd\dyn_def.cpp(904): warning C4267: 'initializing': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\gen\x64\jrd\dyn_def.cpp(910): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\gen\x64\jrd\dyn_def.cpp(951): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\gen\x64\jrd\dyn_def.cpp(953): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\gen\x64\jrd\dyn_def.cpp(995): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\gen\x64\jrd\dyn_def.cpp(1467): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\gen\x64\jrd\dyn_def.cpp(3797): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\gen\x64\jrd\dyn_def.cpp(5673): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+  dyn_util.cpp
+c:\tools\src\firebird\src\jrd\../jrd/CsConvert.h(73): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\gen\x64\jrd\dyn_del.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/CsConvert.h(73): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\gen\x64\jrd\dyn_mod.cpp)
+c:\tools\src\firebird\src\jrd\../jrd/CsConvert.h(73): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\gen\x64\jrd\dyn_util.cpp)
+..\..\..\gen\x64\jrd\dyn_util.cpp(265): warning C4267: '=': conversion from 'size_t' to 'UCHAR', possible loss of data
+  enc.cpp
+  err.cpp
+  event.cpp
+  evl.cpp
+..\..\..\src\jrd\event.cpp(1071): warning C4018: '>': signed/unsigned mismatch
+  exe.cpp
+c:\tools\src\firebird\src\jrd\../jrd/CsConvert.h(73): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\src\jrd\evl.cpp)
+..\..\..\src\jrd\evl.cpp(1064): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\evl.cpp(1084): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\evl.cpp(1310): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\evl.cpp(1333): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+  execute_statement.cpp
+..\..\..\src\jrd\evl.cpp(3255): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\evl.cpp(3259): warning C4267: 'argument': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\src\jrd\evl.cpp(3276): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\evl.cpp(3280): warning C4267: 'argument': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\src\jrd\evl.cpp(4066): warning C4267: 'argument': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\src\jrd\evl.cpp(4893): warning C4267: 'argument': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\src\jrd\evl.cpp(4945): warning C4267: 'argument': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\src\jrd\evl.cpp(5300): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\src\jrd\evl.cpp(5324): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\src\jrd\evl.cpp(5362): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+c:\tools\src\firebird\src\jrd\../jrd/CsConvert.h(73): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\src\jrd\exe.cpp)
+  ext.cpp
+..\..\..\src\jrd\exe.cpp(631): warning C4267: 'initializing': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\exe.cpp(631): warning C4267: 'initializing': conversion from 'size_t' to 'const USHORT', possible loss of data
+c:\tools\src\firebird\src\jrd\../jrd/CsConvert.h(73): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\src\jrd\execute_statement.cpp)
+  ExtDS.cpp
+  filters.cpp
+  flu.cpp
+c:\tools\src\firebird\src\jrd\../jrd/CsConvert.h(73): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\src\jrd\filters.cpp)
+..\..\..\src\jrd\filters.cpp(291): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\filters.cpp(414): warning C4267: 'initializing': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\filters.cpp(1235): warning C4267: 'initializing': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\jrd\filters.cpp(1235): warning C4267: 'initializing': conversion from 'size_t' to 'const USHORT', possible loss of data
+  fun.cpp
+c:\tools\src\firebird\src\jrd\../jrd/CsConvert.h(73): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\src\jrd\extds\ExtDS.cpp)
+..\..\..\src\jrd\extds\ExtDS.cpp(1262): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\jrd\extds\ExtDS.cpp(1262): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
+..\..\..\src\jrd\extds\ExtDS.cpp(1470): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+  functions.cpp

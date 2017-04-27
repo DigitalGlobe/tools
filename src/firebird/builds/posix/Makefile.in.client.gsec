@@ -1,0 +1,55 @@
+# The contents of this file are subject to the Initial
+# Developer's Public License Version 1.0 (the "License");
+# you may not use this file except in compliance with the
+# License. You may obtain a copy of the License at
+# http://www.ibphoenix.com/main.nfs?a=ibphoenix&page=ibp_idpl.
+#
+# Software distributed under the License is distributed AS IS,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied.
+# See the License for the specific language governing rights
+# and limitations under the License.
+#
+# The Original Code was created by Alexander Peshkoff
+# for the Firebird Open Source RDBMS project.
+#
+# Copyright (c) 2004 Alexander Peshkoff <peshkoff@mail.ru>
+# and all contributors signed below.
+#
+# All Rights Reserved.
+# Contributor(s): ______________________________________.
+#
+#
+ROOT=..
+ObjModuleType=std
+
+include     $(ROOT)/gen/make.defaults
+include     $(ROOT)/gen/make.platform
+include     $(ROOT)/gen/make.rules
+include     $(ROOT)/gen/make.shared.variables
+
+@SET_MAKE@
+
+GSEC_Other_Sources = jrd/isc_file.cpp jrd/ThreadData.cpp common/UtilSvc.cpp jrd/enc.cpp \
+					 jrd/sha.cpp jrd/guid.cpp
+GSEC_Files =  gsec.cpp call_service.cpp gsecMain.cpp security.cpp
+GSEC_Sources = $(addprefix utilities/gsec/, $(GSEC_Files)) $(GSEC_Other_Sources)
+GSEC_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(GSEC_Sources))))
+
+AllObjects = $(GSEC_Objects) $(FBCONFIG_Objects) $(COMMON_Objects) \
+			 $(CLUMPLETS_Objects) $(OS_SPECIFIC_Objects) 
+
+Dependencies = $(AllObjects:.o=.d) 
+
+
+.PHONY: all gsec 
+
+all: gsec
+
+gsec: $(LIBFBCLIENT_SO) $(GSEC)
+
+$(GSEC):	$(AllObjects)
+	$(EXE_LINK) $(LINK_EMPTY_SYMBOLS) $(LINK_OPTS) $^ -o $@ -L$(LIB) -lfbclient $(LINK_LIBS)
+
+include $(ROOT)/gen/make.shared.targets
+
+-include $(Dependencies)

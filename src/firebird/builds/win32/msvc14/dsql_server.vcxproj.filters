@@ -1,0 +1,184 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="DSQL files">
+      <UniqueIdentifier>{ebcd11ff-9e7c-4946-9f68-63d6c72e4b34}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="DSQL files\epp files">
+      <UniqueIdentifier>{76c3f167-a162-4808-af19-bcacdc3b96a3}</UniqueIdentifier>
+      <Extensions>epp</Extensions>
+    </Filter>
+    <Filter Include="DSQL files\Generated files">
+      <UniqueIdentifier>{961a9955-6f60-48bf-83ac-9d719a5a3e77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GPRE files">
+      <UniqueIdentifier>{c84f47cf-822d-4479-91e7-ab094d6d1add}</UniqueIdentifier>
+      <Extensions>c</Extensions>
+    </Filter>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{a71b2a7b-8501-4c9b-970b-9fc5219b2e6f}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\dsql\ddl.cpp">
+      <Filter>DSQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dsql\dsql.cpp">
+      <Filter>DSQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dsql\errd.cpp">
+      <Filter>DSQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dsql\gen.cpp">
+      <Filter>DSQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dsql\hsh.cpp">
+      <Filter>DSQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dsql\keywords.cpp">
+      <Filter>DSQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dsql\make.cpp">
+      <Filter>DSQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dsql\misc_func.cpp">
+      <Filter>DSQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dsql\movd.cpp">
+      <Filter>DSQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dsql\parse.cpp">
+      <Filter>DSQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dsql\Parser.cpp">
+      <Filter>DSQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dsql\pass1.cpp">
+      <Filter>DSQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dsql\preparse.cpp">
+      <Filter>DSQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dsql\StmtNodes.cpp">
+      <Filter>DSQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dsql\user_dsql.cpp">
+      <Filter>DSQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dsql\utld.cpp">
+      <Filter>DSQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gen\$(Platform)\dsql\array.cpp">
+      <Filter>DSQL files\Generated files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gen\$(Platform)\dsql\blob.cpp">
+      <Filter>DSQL files\Generated files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gen\$(Platform)\dsql\DdlNodes.cpp">
+      <Filter>DSQL files\Generated files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gen\$(Platform)\dsql\metd.cpp">
+      <Filter>DSQL files\Generated files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\pretty.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\src\dsql\array.epp">
+      <Filter>DSQL files\epp files</Filter>
+    </None>
+    <None Include="..\..\..\src\dsql\blob.epp">
+      <Filter>DSQL files\epp files</Filter>
+    </None>
+    <None Include="..\..\..\src\dsql\DdlNodes.epp">
+      <Filter>DSQL files\epp files</Filter>
+    </None>
+    <None Include="..\..\..\src\dsql\metd.epp">
+      <Filter>DSQL files\epp files</Filter>
+    </None>
+    <None Include="..\..\..\src\dsql\parse.y" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\dsql\array_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\blob_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\chars.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\ddl_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\DdlNodes.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\dsql.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\dsql_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\errd_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\gen_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\hsh_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\keywords.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\make_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\metd_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\misc_func.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\movd_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\node.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\Nodes.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\parse_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\Parser.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\pass1_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\prepa_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\sqlda.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\StmtNodes.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\sym.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\user__proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dsql\utld_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

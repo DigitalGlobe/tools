@@ -1,0 +1,427 @@
+/*
+ * The contents of this file are subject to the Interbase Public
+ * License Version 1.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy
+ * of the License at http://www.Inprise.com/IPL.html
+ *
+ * Software distributed under the License is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+ * or implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code was created by Inprise Corporation
+ * and its predecessors. Portions created by Inprise Corporation are
+ * Copyright (C) Inprise Corporation.
+ *
+ * All Rights Reserved.
+ * Contributor(s): ______________________________________.
+ */
+/*
+ *	This file documents the difference between
+ *	InterBase Version 3.3D ODS 7.2 metadata structure.
+ *	and
+ *	InterBase Version 4.0 ODS 8.0 metadata structure.
+ *
+ *******IMPORTANT****** Do not actually run this script, it will
+ *                      Create a database which cannot be accessed
+ *			by either V3 or V4!
+ *
+ *	This script can be used to re-create the development
+ *	tool yachts.fdb, but must be edited as follows:
+ *	   - Delete all DELETE's of global fields.
+ *	   - Delete all MODIFY's of global fields.
+ *	   - Delete all DROP/ADD (modify) pairs in MODIFY RELATION's
+ *	   - Delete all DROP fields in MODIFY RELATIONS's
+ *	   - Delete all "position **" parts in MODIFY RELATION's
+ *	   - Delete all "DROP INDEX"
+ *	Also, it is not necessary to keep any
+ *	   - CREATE INDEX
+ *	   - DEFINE TRIGGER
+ *
+ *	Sorting as as follows:
+ *		Global fields:	Name
+ *		Relations:	Relation ID
+ *		Indices:	Created order
+ *		Generators:	Created order
+ *		Triggers:	Created order
+ *
+ *	Note: Sources for system triggers are missing, but many
+ *	      can be found in jrd/grant.gdl.  The compiled
+ *	      blr versions are in jrd/trig.h.  Note that the compiled
+ *	      blr has been hand-edited in a few places.
+ *
+ *	Note: You can run this script by globally replacing "RDB$"
+ *	      with "XRDB$", it will then make user relations
+ *            with the specified system structure.
+ *
+ *	      This script was tested by 
+ *		a) running ods72.gdl (after replacing RDB -> XRDB)
+ *		b) running ods80chg.gdl
+ *		c) extracting the resulting data
+ *		d) running ods80.gdl
+ *		e) extracting and comparing against step c).
+ *
+ */
+
+modify database "v33d_ods72.fdb";
+
+
+/*	Global Field Definitions	*/
+
+/*
+ *	Note: Most text fields in system relations have been changed to:
+ *		Character set: UNICODE_FSS
+ *		Subtype:       3		(Metadata)
+ */
+
+/* --- needs to be performed in a separate gdef invoke --- */
+/* delete field RDB$DEFAULT_VALUE;
+ * delete field RDB$DEPENDENCY_TYPE;
+ */
+
+/* EXTERNAL_DESCRIPTION was subtype 7      in V3.3 */
+/* FILE_NAME            was 123 characters in V3.3 */
+
+modify field RDB$EXTERNAL_DESCRIPTION blob segment_length 80 sub_type 8;
+modify field RDB$FILE_NAME            varying [253];
+
+
+define field RDB$CHARACTER_SET_ID     short;
+define field RDB$CHARACTER_SET_NAME   char [31];
+define field RDB$COLLATION_ID         short;
+define field RDB$COLLATION_NAME       char [31];
+define field RDB$CONSTRAINT_NAME      char [31];
+define field RDB$CONSTRAINT_TYPE      char [11];
+define field RDB$DEFERRABLE           char [3];
+define field RDB$EXCEPTION_NAME       char [31];
+define field RDB$EXCEPTION_NUMBER     long;
+define field RDB$FILE_PARTITIONS      short;
+define field RDB$FILE_P_OFFSET        long;
+define field RDB$MATCH_OPTION         char [7];
+define field RDB$NULL_FLAG            short;
+define field RDB$NUMBER_OF_CHARACTERS long;
+define field RDB$OBJECT_TYPE          short;
+define field RDB$PARAMETER_NAME       char [31];
+define field RDB$PARAMETER_NUMBER     short;
+define field RDB$PARAMETER_TYPE       short;
+define field RDB$PROCEDURE_BLR        blob segment_length 80 sub_type BLR;
+define field RDB$PROCEDURE_ID         short;
+define field RDB$PROCEDURE_NAME       char [31];
+define field RDB$PROCEDURE_PARAMETERS short;
+define field RDB$RULE                 char [11];
+define field RDB$VALUE                blob segment_length 80 sub_type BLR;
+
+
+/*	Relation Definitions	*/
+
+/* Notes:
+ *	Not all changes to relation fields due to "based on" are
+ *	tracked in this list.
+ *
+ *	Not all changes due to position are tracked.
+ */
+
+
+modify relation RDB$DATABASE
+    add field RDB$CHARACTER_SET_NAME                    position 3;
+
+modify relation RDB$FIELDS
+    drop field RDB$COMPUTED_BLR,
+    add  field RDB$COMPUTED_BLR      based on RDB$VALUE          position 4,
+    drop field RDB$DEFAULT_VALUE,
+    add  field RDB$DEFAULT_VALUE     based on RDB$VALUE          position 6,
+    drop field RDB$MISSING_VALUE,
+    add  field RDB$MISSING_VALUE     based on RDB$VALUE          position 11,
+
+    add field RDB$DEFAULT_SOURCE     based on RDB$SOURCE         position 7,
+    add field RDB$MISSING_SOURCE     based on RDB$SOURCE         position 13,
+    add field RDB$NULL_FLAG                                       position 23,
+    add field RDB$CHARACTER_LENGTH   based on RDB$FIELD_LENGTH   position 24,
+    add field RDB$COLLATION_ID                                    position 25,
+    add field RDB$CHARACTER_SET_ID                                position 26;
+
+modify relation RDB$INDICES
+    add field RDB$EXPRESSION_BLR     based on RDB$VALUE,
+    add field RDB$EXPRESSION_SOURCE  based on RDB$SOURCE;
+
+modify relation RDB$RELATION_FIELDS
+    drop field RDB$DEFAULT_VALUE,
+    add  field RDB$DEFAULT_VALUE    based on RDB$VALUE  position 12,
+
+    add field RDB$NULL_FLAG                             position 16,
+    add field RDB$DEFAULT_SOURCE    based on RDB$SOURCE position 17,
+    add field RDB$COLLATION_ID                          position 18;
+
+modify relation RDB$RELATIONS
+    add field RDB$FLAGS    based on RDB$SYSTEM_FLAG     position 15;
+
+
+modify relation RDB$TRIGGERS
+    add field RDB$FLAGS              based on RDB$SYSTEM_FLAG     position 9;
+
+modify relation RDB$DEPENDENCIES
+    drop field RDB$OBJECT_NAME,
+    drop field RDB$RELATION_NAME,
+    drop field RDB$DEPENDENCY_TYPE,
+    add field RDB$DEPENDENT_NAME     based on RDB$GENERIC_NAME    position 0,
+    add field RDB$DEPENDED_ON_NAME   based on RDB$GENERIC_NAME    position 1,
+    add field RDB$DEPENDENT_TYPE     based on RDB$OBJECT_TYPE     position 3,
+    add field RDB$DEPENDED_ON_TYPE   based on RDB$OBJECT_TYPE     position 4;
+
+modify relation RDB$FUNCTION_ARGUMENTS
+    add field RDB$CHARACTER_SET_ID                                position 7;
+
+modify relation RDB$USER_PRIVILEGES
+    add field RDB$USER_TYPE          based on RDB$OBJECT_TYPE     position 6,
+    add field RDB$OBJECT_TYPE                                     position 7;
+
+define relation RDB$RELATION_CONSTRAINTS
+    RDB$CONSTRAINT_NAME                                 position 0,
+    RDB$CONSTRAINT_TYPE                                 position 1,
+    RDB$RELATION_NAME                                   position 2,
+    RDB$DEFERRABLE                                      position 3,
+    RDB$INITIALLY_DEFERRED based on RDB$DEFERRABLE      position 4,
+    RDB$INDEX_NAME                                      position 5;
+
+define relation RDB$REF_CONSTRAINTS
+    RDB$CONSTRAINT_NAME                                 position 0,
+    RDB$CONST_NAME_UQ      based on RDB$CONSTRAINT_NAME position 1,
+    RDB$MATCH_OPTION                                    position 2,
+    RDB$UPDATE_RULE        based on RDB$RULE            position 3,
+    RDB$DELETE_RULE        based on RDB$RULE            position 4;
+
+define relation RDB$CHECK_CONSTRAINTS
+    RDB$CONSTRAINT_NAME                                 position 0,
+    RDB$TRIGGER_NAME                                    position 1;
+
+define relation RDB$LOG_FILES
+    RDB$FILE_NAME                                       position 0,
+    RDB$FILE_SEQUENCE                                   position 1,
+    RDB$FILE_LENGTH                                     position 2,
+    RDB$FILE_PARTITIONS                                 position 3,
+    RDB$FILE_P_OFFSET                                   position 4,
+    RDB$FILE_FLAGS                                      position 5;
+
+define relation RDB$PROCEDURES
+    RDB$PROCEDURE_NAME                                  position 0,
+    RDB$PROCEDURE_ID                                    position 1,
+    RDB$PROCEDURE_INPUTS   based on RDB$PROCEDURE_PARAMETERS position 2,
+    RDB$PROCEDURE_OUTPUTS  based on RDB$PROCEDURE_PARAMETERS position 3,
+    RDB$DESCRIPTION                                     position 4,
+    RDB$PROCEDURE_SOURCE   based on RDB$SOURCE          position 5,
+    RDB$PROCEDURE_BLR                                   position 6,
+    RDB$SECURITY_CLASS                                  position 7,
+    RDB$OWNER_NAME         based on RDB$USER            position 8,
+    RDB$RUNTIME                                         position 9,
+    RDB$SYSTEM_FLAG                                     position 10;
+
+define relation RDB$PROCEDURE_PARAMETERS
+    RDB$PARAMETER_NAME                                  position 0,
+    RDB$PROCEDURE_NAME                                  position 1,
+    RDB$PARAMETER_NUMBER                                position 2,
+    RDB$PARAMETER_TYPE                                  position 3,
+    RDB$FIELD_SOURCE       based on RDB$FIELD_NAME      position 4,
+    RDB$DESCRIPTION                                     position 5,
+    RDB$SYSTEM_FLAG                                     position 6;
+
+define relation RDB$CHARACTER_SETS
+    RDB$CHARACTER_SET_NAME                              position 0,
+    RDB$FORM_OF_USE        based on RDB$GENERIC_NAME    position 1,
+    RDB$NUMBER_OF_CHARACTERS                            position 2,
+    RDB$DEFAULT_COLLATE_NAME based on RDB$COLLATION_NAME  position 3,
+    RDB$CHARACTER_SET_ID                                position 4,
+    RDB$SYSTEM_FLAG                                     position 5,
+    RDB$DESCRIPTION                                     position 6,
+    RDB$FUNCTION_NAME                                   position 7,
+    RDB$BYTES_PER_CHARACTER based on RDB$FIELD_LENGTH   position 8;
+
+define relation RDB$COLLATIONS
+    RDB$COLLATION_NAME                                  position 0,
+    RDB$COLLATION_ID                                    position 1,
+    RDB$CHARACTER_SET_ID                                position 2,
+    RDB$COLLATION_ATTRIBUTES based on RDB$GENERIC_TYPE  position 3,
+    RDB$SYSTEM_FLAG                                     position 4,
+    RDB$DESCRIPTION                                     position 5,
+    RDB$FUNCTION_NAME                                   position 6;
+
+define relation RDB$EXCEPTIONS
+    RDB$EXCEPTION_NAME                                  position 0,
+    RDB$EXCEPTION_NUMBER                                position 1,
+    RDB$MESSAGE                                         position 2,
+    RDB$DESCRIPTION                                     position 3,
+    RDB$SYSTEM_FLAG                                     position 4;
+
+
+/*	Index Definitions	*/
+
+/* Several V3.3 Indices changed number for V4: 
+ *	12	-> 15
+ *	13	-> 16
+ *	14	-> 17
+ */
+
+drop   index RDB$INDEX_15;
+
+define index RDB$INDEX_12_v4 for RDB$RELATION_CONSTRAINTS unique
+	RDB$CONSTRAINT_NAME;
+
+define index RDB$INDEX_13_v4 for RDB$REF_CONSTRAINTS unique
+	RDB$CONSTRAINT_NAME;
+
+define index RDB$INDEX_14_v4 for RDB$CHECK_CONSTRAINTS 
+	RDB$CONSTRAINT_NAME;
+
+define index RDB$INDEX_18 for RDB$PROCEDURE_PARAMETERS unique
+	RDB$PROCEDURE_NAME,
+	RDB$PARAMETER_NAME;
+
+define index RDB$INDEX_19 for RDB$CHARACTER_SETS unique
+	RDB$CHARACTER_SET_NAME;
+
+define index RDB$INDEX_20 for RDB$COLLATIONS unique
+	RDB$COLLATION_NAME;
+
+define index RDB$INDEX_21 for RDB$PROCEDURES unique
+	RDB$PROCEDURE_NAME;
+
+define index RDB$INDEX_22 for RDB$PROCEDURES 
+	RDB$PROCEDURE_ID;
+
+define index RDB$INDEX_23 for RDB$EXCEPTIONS unique
+	RDB$EXCEPTION_NAME;
+
+define index RDB$INDEX_24 for RDB$EXCEPTIONS 
+	RDB$EXCEPTION_NUMBER;
+
+define index RDB$INDEX_25 for RDB$CHARACTER_SETS unique
+	RDB$CHARACTER_SET_ID;
+
+define index RDB$INDEX_26 for RDB$COLLATIONS unique
+	RDB$COLLATION_ID,
+	RDB$CHARACTER_SET_ID;
+
+
+/*	Generator Definitions	*/
+
+
+define generator RDB$PROCEDURES;
+define generator RDB$EXCEPTIONS;
+define generator RDB$CONSTRAINT_NAME;
+define generator RDB$FIELD_NAME;
+define generator RDB$INDEX_NAME;
+define generator RDB$TRIGGER_NAME;
+
+/*	Trigger Definitions	*/
+
+/*
+ * Trigger Messages for all V4 system triggers have been modified
+ * to the name of the system error to report.
+ *
+ * This section does not document changes to trigger implementation,
+ * just the set of system triggers added for V4.
+ */
+
+
+define trigger RDB$TRIGGER_26 for RDB$RELATION_CONSTRAINTS
+	pre store 0:
+	end_trigger 
+	message  1:  'constaint_on_view',
+	message  2:  'invld_cnstrnt_type',
+	message  3:  'primary_key_exists';
+
+define trigger RDB$TRIGGER_25 for RDB$RELATION_CONSTRAINTS
+	pre modify 0:
+	end_trigger 
+	message  1:  'rel_cnstrnt_update';
+
+define trigger RDB$TRIGGER_10 for RDB$RELATION_CONSTRAINTS
+	pre erase 0:
+	end_trigger 
+	message  1:  'primary_key_ref',
+	message  2:  'primary_key_notnull';
+
+define trigger RDB$TRIGGER_11 for RDB$RELATION_CONSTRAINTS
+	post erase 0:
+	end_trigger;
+
+define trigger RDB$TRIGGER_12 for RDB$REF_CONSTRAINTS
+	pre store 0:
+	end_trigger 
+	message  1:  'ref_cnstrnt_notfound',
+	message  2:  'foreign_key_notfound';
+
+define trigger RDB$TRIGGER_13 for RDB$REF_CONSTRAINTS
+	pre modify 0:
+	end_trigger 
+	message  1:  'ref_cnstrnt_update';
+
+define trigger RDB$TRIGGER_14 for RDB$CHECK_CONSTRAINTS
+	pre modify 0:
+	end_trigger 
+	message  1:  'check_cnstrnt_update';
+
+define trigger RDB$TRIGGER_15 for RDB$CHECK_CONSTRAINTS
+	pre erase 0:
+	end_trigger 
+	message  1:  'check_cnstrnt_del';
+
+define trigger RDB$TRIGGER_16 for RDB$CHECK_CONSTRAINTS
+	post erase 0:
+	end_trigger;
+
+define trigger RDB$TRIGGER_17 for RDB$INDEX_SEGMENTS
+	pre erase 0:
+	end_trigger 
+	message  1:  'integ_index_seg_del';
+
+define trigger RDB$TRIGGER_18 for RDB$INDEX_SEGMENTS
+	pre modify 0:
+	end_trigger 
+	message  1:  'integ_index_seg_mod';
+
+define trigger RDB$TRIGGER_19 for RDB$INDICES
+	pre erase 0:
+	end_trigger 
+	message  1:  'integ_index_del';
+
+define trigger RDB$TRIGGER_20 for RDB$INDICES
+	pre modify 0:
+	end_trigger 
+	message  1:  'integ_index_mod';
+
+define trigger RDB$TRIGGER_21 for RDB$TRIGGERS
+	pre erase 0:
+	end_trigger 
+	message  1:  'check_trig_del';
+
+define trigger RDB$TRIGGER_22 for RDB$TRIGGERS
+	pre modify 0:
+	end_trigger 
+	message  1:  'check_trig_update';
+
+define trigger RDB$TRIGGER_23 for RDB$RELATION_FIELDS
+	pre erase 0:
+	end_trigger 
+	message  1:  'cnstrnt_fld_del';
+
+define trigger RDB$TRIGGER_24 for RDB$RELATION_FIELDS
+	pre modify 0:
+	end_trigger 
+	message  1:  'cnstrnt_fld_rename';
+
+define trigger RDB$TRIGGER_27 for RDB$RELATION_FIELDS
+	post erase 0:
+	end_trigger;
+
+define trigger RDB$TRIGGER_28 for RDB$PROCEDURES
+	pre store 0:
+	end_trigger;
+
+define trigger RDB$TRIGGER_29 for RDB$PROCEDURES
+	pre modify 0:
+	end_trigger;
+
+define trigger RDB$TRIGGER_30 for RDB$EXCEPTIONS
+	pre store 0:
+	end_trigger;
+

@@ -1,0 +1,74 @@
+
+
+#   The contents of this file are subject to the Initial
+#   Developer's Public License Version 1.0 (the "License");
+#   you may not use this file except in compliance with the
+#   License. You may obtain a copy of the License at
+#   http://www.ibphoenix.com/main.nfs?a=ibphoenix&page=ibp_idpl.
+# 
+#   Software distributed under the License is distributed AS IS,
+#   WITHOUT WARRANTY OF ANY KIND, either express or implied.
+#   See the License for the specific language governing rights
+#   and limitations under the License.
+# 
+#   The Original Code was created by Nickolay Samofatov
+#   for the Firebird Open Source RDBMS project.
+# 
+#   Copyright (c) 2004 Nickolay Samofatov <nickolay@broadviewsoftware.com>
+#   and all contributors signed below.
+# 
+#   All Rights Reserved.
+#   Contributor(s): ______________________________________.
+# 
+#
+ROOT=..
+ObjModuleType=boot
+CPPFLAGS+= -DBOOT_BUILD
+
+include     $(ROOT)/gen/make.defaults
+include     $(ROOT)/gen/make.platform
+include     $(ROOT)/gen/make.rules
+include     $(ROOT)/gen/make.shared.variables
+
+@SET_MAKE@
+
+#____________________________________________________________________________
+#
+# Rebuild the codes generates in the src/include/gen directory
+# this target updates the values stored in the source path if they are
+# different to the newly generated entries.
+#
+# There are also blrtable.h and ids.h which are generated as well.
+
+.PHONY: generated_headers
+
+#CODES_OutFiles= gds_codes.pas gds_codes.ftn iberror.h codetext.h \
+#                msgs.h rdb_codes.h sql_code.h msg_facs.h
+#CODES_Results=$(addprefix include/gen/, $(CODES_OutFiles))
+CODES_Sources = misc/codes.epp
+CODES_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(CODES_Sources))))
+
+AllObjects = $(CODES_Objects)
+Dependencies = $(AllObjects:.o=.d)
+
+generated_headers: build_codes $(SRC_ROOT)/include/gen/ids.h
+
+# Rebuild error codes
+
+build_codes: $(BIN)/codes$(EXEC_EXT) msg.fdb
+	$(BIN)/codes$(EXEC_EXT) $(SRC_ROOT)/include/gen $(LNG_ROOT)
+
+$(SRC_ROOT)/misc/codes.cpp: $(SRC_ROOT)/misc/codes.epp
+	$(GPRE_CURRENT) $(GPRE_FLAGS) $< $@
+
+$(BIN)/codes$(EXEC_EXT): $(CODES_Objects) $(COMMON_Objects) $(LIBFBSTATIC_A)
+	$(STATICEXE_LINK) $(LINK_OPTS) $^ -o $@ -L$(LIB) $(LINK_LIBS) $(ICU_LIBS)
+
+
+# Rebuild ids.h
+$(SRC_ROOT)/include/gen/ids.h:	$(SRC_ROOT)/misc/ids.m $(SRC_ROOT)/jrd/relations.h
+	m4 $< > $(SRC_ROOT)/include/gen/ids.h
+
+include $(ROOT)/gen/make.shared.targets
+
+-include $(Dependencies)

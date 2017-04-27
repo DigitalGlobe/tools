@@ -1,0 +1,89 @@
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+# You may obtain a copy of the Licence at
+# http://www.gnu.org/licences/lgpl.html
+# 
+# As a special exception this file can also be included in modules
+# with other source code as long as that source code has been 
+# released under an Open Source Initiative certificed licence.  
+# More information about OSI certification can be found at: 
+# http://www.opensource.org 
+# 
+# This module is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public Licence for more details.
+# 
+# This module was created by members of the firebird development 
+# team.  All individual contributions remain the Copyright (C) of 
+# those individuals and all rights are reserved.  Contributors to 
+# this file are either listed below or can be obtained from a CVS 
+# history command.
+#
+#  Created by:  Mark O'Donohue <mark.odonohue@ludwig.edu.au>
+#
+#  Contributor(s):
+# 
+#
+#
+ROOT=..
+ObjModuleType=superclient
+CPPFLAGS+= -DSUPERCLIENT
+
+include     $(ROOT)/gen/make.defaults
+include     $(ROOT)/gen/make.platform
+include     $(ROOT)/gen/make.rules
+include     $(ROOT)/gen/make.shared.variables
+
+@SET_MAKE@
+
+
+
+INTL_Files1=	ld.cpp       cv_narrow.cpp \
+		cs_narrow.cpp  lc_ascii.cpp lc_narrow.cpp lc_iso8859_1.cpp \
+		lc_iso8859_2.cpp lc_iso8859_13.cpp lc_dos.cpp \
+		cs_unicode_ucs2.cpp lc_unicode_ucs2.cpp \
+		cs_unicode_fss.cpp cv_unicode_fss.cpp \
+		cs_big5.cpp    cv_big5.cpp   lc_big5.cpp \
+		cs_gb2312.cpp  cv_gb2312.cpp lc_gb2312.cpp \
+		cs_jis.cpp     cv_jis.cpp    lc_jis.cpp \
+		cs_ksc.cpp     cv_ksc.cpp    lc_ksc.cpp \
+		cs_icu.cpp     cv_icu.cpp    lc_icu.cpp
+
+# use INTL_Files2 in prefix file for host-specific additional files
+INTL_Sources= $(addprefix intl/, $(INTL_Files1)) $(INTL_Files2) \
+	jrd/IntlUtil.cpp jrd/unicode_util.cpp jrd/CharSet.cpp jrd/mod_loader.cpp jrd/path_utils.cpp
+
+INTL_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(INTL_Sources))))
+
+# SD: Shared variables are overriden to exclude extra files and
+# this way fix 'unresolved symbol' errors when some unused routines call
+# other routines from not included modules
+FBCLASSES_ClientFiles=alloc.cpp locks.cpp fb_string.cpp timestamp.cpp
+
+
+AllObjects = $(INTL_Objects)
+Dependencies = $(AllObjects:.o=.d)
+
+
+.PHONY: all libfbintl
+
+
+all : libfbintl
+
+# In the following the rpath variable probably wants to be different
+# if it's going to be installed in fb specific path.
+# Also the dynamic link process used in fb, will fall over if it finds
+# links etc in the intl directory MOD 28-July-2002
+
+libfbintl : $(LIBFBINTL_SO)
+
+$(LIBFBINTL_SO):	$(INTL_Objects) $(FBCOMMON_ClientObjects) $(FBCLASSES_ClientObjects)
+	$(LINK_INTL) -o $@ $^ $(LINK_INTL_LIBS)
+
+
+include $(ROOT)/gen/make.shared.targets
+
+-include $(Dependencies)

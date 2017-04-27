@@ -1,0 +1,192 @@
+
+{
+	"sources" : 
+	[
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/include/opencv2/stitching.hpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/include/opencv2/stitching/warpers.hpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/include/opencv2/stitching/detail/autocalib.hpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/include/opencv2/stitching/detail/blenders.hpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/include/opencv2/stitching/detail/camera.hpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/include/opencv2/stitching/detail/exposure_compensate.hpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/include/opencv2/stitching/detail/matchers.hpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/include/opencv2/stitching/detail/motion_estimators.hpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/include/opencv2/stitching/detail/seam_finders.hpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/include/opencv2/stitching/detail/timelapsers.hpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/include/opencv2/stitching/detail/util.hpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/include/opencv2/stitching/detail/util_inl.hpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/include/opencv2/stitching/detail/warpers.hpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/include/opencv2/stitching/detail/warpers_inl.hpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/src/autocalib.cpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/src/blenders.cpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/src/camera.cpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/src/exposure_compensate.cpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/src/matchers.cpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/src/motion_estimators.cpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/src/seam_finders.cpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/src/stitcher.cpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/src/timelapsers.cpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/src/util.cpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/src/warpers.cpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/src/warpers_cuda.cpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/src/opencl/multibandblend.cl",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/src/opencl/warpers.cl",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/opencl_kernels_stitching.cpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/opencl_kernels_stitching.hpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/src/precomp.hpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/src/util_log.hpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/cvconfig.h"
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/opencv2/opencv_modules.hpp"
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/opencv_stitching_pch.cpp",
+			"labels" : [ "Main", "opencv_stitching", "Module" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/CMakeLists.txt"
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/CMakeFiles/c1ff318bc17d6d43139875385ecc2d91/opencl_kernels_stitching.cpp.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : [ "Main", "opencv_stitching", "Module" ],
+		"name" : "opencv_stitching"
+	}
+}

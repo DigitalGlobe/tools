@@ -1,0 +1,104 @@
+
+===================================
+Firebird $MAJOR.$MINOR.$RELEASE   (Windows Build)
+===================================
+
+
+o Introducción
+o A quién está destinada esta versión
+o Problemas Conocidos
+o Características de esta versión (todas
+  las plataformas)
+o Instalación
+o Informe de Errores
+
+
+Introducción
+============
+
+Bienvenido a Firebird $MAJOR.$MINOR.
+
+
+A quién está destinada esta versión
+===================================
+
+Firebird $MAJOR.$MINOR.$RELEASE ha sido 
+intensivamente probado y está listo para usarse 
+en ambientes de producción. De todas maneras, 
+se recomienda a los usuarios que sigan los 
+procedimientos habituales antes de instalar 
+esta versión en un servidor de producción, es decir:
+
+ o Asegúrese de leer el documento de instalación
+   y las notas de la versión.
+
+ o Realice una copia de seguridad de los datos
+   que considere importantes antes de de instalar
+   esta versión.
+
+ o Se recomienda que desinstale cualquier versión
+   anterior antes de realizar la instalación. El
+   proceso de desinstalación no elimina los
+   archivos de configuración ni los logs.
+
+ o Se recomienda que realice sus propias pruebas
+   en un ambiente de desarrollo antes de
+   implementar esta versión en producción.
+
+
+
+Problemas Conocidos
+===================
+
+Windows Vista - El instalador es incapaz de iniciar
+Firebird como servicio durante la instalación; sin
+embargo, el servicio se inicia correctamente luego de
+reiniciar. Como alternativa, puede hacer un Shift +
+click derecho en el applet de Firebird en el panel de
+control, seleccionar 'Ejecutar como...' e iniciar el
+servicio desde allí.
+
+
+Características de esta versión
+===============================
+
+Por favor, lea las notas de la versión para concer los
+detalles sobre las nuevas características.
+
+
+Instalación
+===========
+
+Las particularidades de la instalación están cubiertas
+en detalle en la Guía de Instalación, disponible en la
+carpeta doc luego de completada la instalación. Un
+breve sumario sobre el mismo tema puede hallarse en el
+archivo leame_instalacion.txt, también disponible en la
+carpeta doc luego de la instalación.
+
+
+Informe de Errores
+==================
+
+Antes de reportar un error:
+
+ o Asegúrese de conocer cómo funciona Firebird. Quizá
+   no sea un error, después de todo.
+
+o ¿Quizá alguien ya lo haya reportado? Consulte los
+  reportes de errores aquí:
+
+	http://tracker.firebirdsql.org/browse/CORE
+
+o Si tiene dudas, ¿por qué no discutir el problema en
+  la lista de desarrollo Firebird-devel? Puede
+  suscribirse aquí:
+
+	http://lists.sourceforge.net/lists/listinfo/firebird-devel
+
+  y puede ver los mensajes de la lista utilizando grupos de
+  noticias (newsgroups) aquí:
+
+	news://news.atkin.com/
+
+

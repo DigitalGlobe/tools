@@ -1,0 +1,105 @@
+#!/bin/sh
+#
+#  The contents of this file are subject to the Initial
+#  Developer's Public License Version 1.0 (the "License");
+#  you may not use this file except in compliance with the
+#  License. You may obtain a copy of the License at
+#  http://www.ibphoenix.com/main.nfs?a=ibphoenix&page=ibp_idpl.
+#
+#  Software distributed under the License is distributed AS IS,
+#  WITHOUT WARRANTY OF ANY KIND, either express or implied.
+#  See the License for the specific language governing rights
+#  and limitations under the License.
+#
+#  The Original Code was created by Mark O'Donohue
+#  for the Firebird Open Source RDBMS project.
+#
+#  Copyright (c) Mark O'Donohue <mark.odonohue@ludwig.edu.au>
+#  and all contributors signed below.
+#
+#  All Rights Reserved.
+#  Contributor(s): ______________________________________.
+#		Alex Peshkoff
+#
+
+# This script allows the user to change the link on classic for the 
+# client library from 
+#
+#  a) libfbembed.so  original classic direct connection
+#  b) libfbclient.so multithreaded client connection
+#
+
+#------------------------------------------------------------------------
+#  quitIfRealFile
+# Quit if library is real file, not link somewhere
+
+quitIfRealFile() {
+
+    fileToCheck=$1
+
+    # Don't worry about symbolic links
+    if [ -L $fileToCheck ]
+      then
+        return
+    fi
+
+    if [ -f $fileToCheck ]
+      then
+        echo "The file $fileToCheck is a real file not just a link to an "
+        echo "existing file.  It therefore may be from a"
+        echo "previous firebird or InterBase(r) installation"
+        echo "You will need to manually check the status of this file"
+        echo "and remove it before running this script again"
+        exit
+    fi
+}
+
+
+#------------------------------------------------------------------------
+#  printStatus
+
+printStatus() {
+    printStatus=`ls -l @libdir@/libgds.so | sed 's@^.* /usr@/usr@'`
+    echo $printStatus
+
+}
+    
+
+#= Main ====================================================================
+
+
+cat <<EOF
+For classic server there are two optional backward compatible client libraries.
+These are libfbclient.so and libfbembed.so.  
+
+libfbclient.so) enables your client to be multithreaded but must connect to a 
+                database via a server.  
+libfbembed.so)  allows the client to directly open the database file, but does
+                not support multithreaded access
+
+Your current setting is:
+EOF
+    printStatus
+
+    echo ""
+
+    quitIfRealFile @libdir@/libgds.so
+    quitIfRealFile @libdir@/libgds.so.0
+
+    
+    AskQuestion "Which option would you like to choose (client|embed|remove) [client] " "client"
+
+    case $Answer in
+    embed) 
+        createLinksForBackCompatibility libfbembed.so
+        ;;
+    client)
+        createLinksForBackCompatibility libfbclient.so
+        ;;
+    remove)
+        removeLinksForBackCompatibility
+        ;;
+    *)
+        echo "Unknown option $Answer chosen"
+        ;;
+    esac

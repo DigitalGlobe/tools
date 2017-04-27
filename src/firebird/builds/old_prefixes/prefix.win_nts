@@ -1,0 +1,182 @@
+# The contents of this file are subject to the Interbase Public
+# License Version 1.0 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy
+# of the License at http://www.Inprise.com/IPL.html
+#
+# Software distributed under the License is distributed on an
+# "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+# or implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code was created by Inprise Corporation
+# and its predecessors. Portions created by Inprise Corporation are
+# Copyright (C) Inprise Corporation.
+#
+# All Rights Reserved.
+# Contributor(s): ______________________________________.
+# Borland C
+BC4_CC=			bcc32
+BC4_LINK=		tlink32
+BC4_IMPLIB=		echo tlib
+BC4_CFLAGS=		-g0 -4 -pc -N -a -WM -WD $(SERVER_MODEL)
+BC4_DEBUG_LINK_OPTS=	-v
+BC4_O_OBJ_SWITCH=	-o
+BC4_O_EXE_SWITCH=	-e
+BC4_DLLENTRY=
+BC4_CONLIBSDLL=		
+BC4_ADVAPILIB=
+BC4_MPRLIB=
+BC4_WSOCKLIB=
+# Microsoft C
+MS_CC=			cl
+MS_LINK=		link -machine:i386
+MS_IMPLIB=		lib -machine:i386
+MS_CFLAGS=		-W3 -G4 -Gd -D_MT -D_DLL -DWIN32 $(SERVER_MODEL) -DWIN32_LEAN_AND_MEAN
+MS_DEBUG_LINK_OPTS=	-Zi
+MS_O_OBJ_SWITCH=	-Fo
+MS_O_EXE_SWITCH=	-o
+MS_DLLENTRY=		@12
+MS_CONLIBSDLL=		msvcrt.lib kernel32.lib
+MS_ADVAPILIB=		advapi32.lib
+MS_MPRLIB=		mpr.lib
+MS_WSOCKLIB=		wsock32.lib
+
+CC=			$($(COMPILER)_CC)
+LINK=			$($(COMPILER)_LINK)
+IMPLIB=			$($(COMPILER)_IMPLIB)
+O_OBJ_SWITCH=		$($(COMPILER)_O_OBJ_SWITCH)
+O_EXE_SWITCH=		$($(COMPILER)_O_EXE_SWITCH)
+DLLENTRY=		$($(COMPILER)_DLLENTRY)
+CONLIBSDLL=		$($(COMPILER)_CONLIBSDLL)
+ADVAPILIB=		$($(COMPILER)_ADVAPILIB)
+MPRLIB=			$($(COMPILER)_MPRLIB)
+WSOCKLIB=		$($(COMPILER)_WSOCKLIB)
+
+.SUFFIXES: .c .e
+.e.c:
+	$(EXPAND_DBNAME) $<
+	$(GPRE) $(GPRE_FLAGS) $<
+	$(COMPRESS_DBNAME) $<
+	$(TOUCH) $*.c
+.SUFFIXES: .bin .o .c
+.c.o:
+	$(CC) -c $(CFLAGS) $(VERSION_FLAG) $<
+.c.bin:
+	$(CC) -c $(PIC_FLAGS) $(VERSION_FLAG) $(O_OBJ_SWITCH)$*.bin $<
+
+# Borland C
+BC4_PROD_CFLAGS=	? -DFLINTSTONE
+BC4_PROD_LINK_OPTS=	-WM
+BC4_PROD_LD_OPTS=
+BC4_DEV_CFLAGS=		-v
+BC4_DEV_LINK_OPTS=	$(BC4_DEBUG_LINK_OPTS) -WM
+BC4_DEV_LD_OPTS=	-v
+BC4_GDSSHR=		gds32_nt_bc4.dll
+BC4_SS_GDSSHR=		gds32_nt_bc4_ss.dll
+BC4_GDSSHR_LINK=	source/interbase/lib/gds32.lib
+BC4_GDSSHR_SS_LINK=	source/interbase/lib/gds32_ss.lib
+BC4_GDSINTL=		gdsintl_nt_bc4.dll
+# Microsoft C
+MS_PROD_CFLAGS=		-Ob2gtp -DFLINTSTONE
+MS_PROD_LINK_OPTS=
+MS_PROD_LD_OPTS=
+MS_DEV_CFLAGS=		-Op -Zi
+MS_DEV_LINK_OPTS=	$(MS_DEBUG_LINK_OPTS)
+MS_DEV_LD_OPTS=		-debug:full -debugtype:cv
+MS_GDSSHR=		gds32_nt_ms.dll
+MS_SS_GDSSHR=		gds32_nt_ms_ss.dll
+MS_GDSSHR_LINK=		source/interbase/lib/gds32_ms.lib
+MS_GDSSHR_SS_LINK=	source/interbase/lib/gds32mss.lib
+MS_GDSINTL=		gdsintl_nt_ms.dll
+
+PROD_DEBUG_OBJECTS=	nodebug.o
+PROD_SHRLIB_LINK=	$($(COMPILER)_GDSSHR_LINK)
+PROD_SHRLIB_SS_LINK=	$($(COMPILER)_GDSSHR_SS_LINK)
+PROD_VERSION_FLAG=	-DPROD_BUILD
+PROD_CFLAGS=		$($(COMPILER)_PROD_CFLAGS) $($(COMPILER)_CFLAGS)
+PROD_LINK_OPTS=		$($(COMPILER)_PROD_LINK_OPTS)
+PROD_LD_OPTS=		$($(COMPILER)_PROD_LD_OPTS)
+
+DEV_DEBUG_OBJECTS=	grammar.o dbg.o dbt.o dmp.o
+DEV_DEBUG_OBJECTS=	nodebug.o
+DEV_SHRLIB_LINK=	$($(COMPILER)_GDSSHR_LINK)
+DEV_SHRLIB_SS_LINK=	$($(COMPILER)_GDSSHR_SS_LINK)
+DEV_VERSION_FLAG=	-DDEV_BUILD
+DEV_CFLAGS=		$($(COMPILER)_DEV_CFLAGS) $($(COMPILER)_CFLAGS)
+DEV_LINK_OPTS=		$($(COMPILER)_DEV_LINK_OPTS)
+DEV_LD_OPTS=		$($(COMPILER)_DEV_LD_OPTS)
+
+DEBUG_OBJECTS=		$($(VERSION)_DEBUG_OBJECTS)
+SHRLIB_LINK=		$($(VERSION)_SHRLIB_LINK)
+SHRLIB_SS_LINK=		$($(VERSION)_SHRLIB_SS_LINK)
+VERSION_FLAG=		$($(VERSION)_VERSION_FLAG)
+CFLAGS=			$($(VERSION)_CFLAGS) -DNOMSG -D_X86_=1
+LINK_OPTS=		$($(VERSION)_LINK_OPTS)
+LD_OPTS=		$($(VERSION)_LD_OPTS)
+
+ACCESS_METHOD=		gdslib.win_nt
+BIN_PATH=		
+BURP_REMOTE_LINK=	source/remote/xdr.o
+CHMOD_VAL=		777
+COMPRESS_DBNAME=	source\compress_dbs
+EXAMPLES_DBS=		$(DB_DIR)/examples/
+EXPAND_DBNAME=		source\expand_dbs
+FORM_OBJECTS=		noform.o
+GDS_LINK=		$(GDSSHR_LINK)
+GDSLIB_BACKEND=		source/jrd/gds_b.lib
+GDSLIB_LINK=		source/jrd/gds_b.lib $(CONLIBSDLL) $(WSOCKLIB) $(ADVAPILIB) $(MPRLIB)
+GDSSHR=			source/interbase/bin/gds32.dll
+WIN_NT_GDSSHR=		$($(COMPILER)_GDSSHR)
+WIN_NT_GDSINTL=		$($(COMPILER)_GDSINTL)
+WIN_NT_SS_GDSSHR=	$($(COMPILER)_SS_GDSSHR)
+GDSSHR_LINK=		$(SHRLIB_LINK) $(CONLIBSDLL)
+GDSSHR_SS_LINK=		$(SHRLIB_SS_LINK) $(CONLIBSDLL)
+HLPDIR=			$(DB_DIR)/qli/
+INTL=			intl
+INTL_CFLAGS=		$(CFLAGS)
+INTL_MISC=		$(INTL_OBJECTS)
+INTL_PIC_FLAGS=		$(PIC_FLAGS)
+INTL_TARGET=		gdsintl.dll
+IO_OBJECTS=		winnt.o
+JRNDIR=			$(DB_DIR)/journal/
+LANG_OBJECTS=		
+LANGUAGES=		cc vms_cxx make9 gdl1
+MSGSDIR=		$(DB_DIR)/msgs/
+NET_OBJECTS=		source/remote/wnet.o source/remote/xdr.o
+NT_EXAMPLES=		nt_examples
+NT_SERVER=		nt_server.exe
+PIC_FLAGS=		$(CFLAGS)
+REG_HELP=		isc_ins_hlp.dat
+REMOTE_GDSSHR=		$(GDSSHR)
+REMOTE_GDSSHR_LINK=	$(REMOTE_OBJECTS) $(JRD_LINK) $(JRD_LINK2) $(GDSSHR_SS_LINK) $(WSOCKLIB) $(ADVAPILIB) $(MPRLIB)
+SERVER_MODEL=		-DSUPERSERVER
+
+INET_SERVER_DEST=	source/interbase/bin/gds_inet_server.exe
+DNET_SERVER_DEST=	source/interbase/bin/gds_dnet_server.exe
+AMBX_SERVER_DEST=	source/interbase/bin/gds_server.exe
+NT_SERVER_DEST=		source/interbase/bin/gds_remote_server.exe
+INET_LIB_DEST=		source/interbase/lib/gds_inet_server.a
+DNET_LIB_DEST=		source/interbase/lib/gds_dnet_server.a
+
+SH=			echo sh
+RM=			del
+CHMOD=			echo chmod
+CHMOD_6=		echo chmod 666
+CHMOD_7=		echo chmod 777
+CHMOD_S7=		echo chmod 0677
+MV=			copy
+TOUCH=			touch
+CP=			copy
+ECHO=			echo
+QUIET_ECHO=		@echo
+CD=			cd
+CAT=                    cat
+AR=
+SPECIAL_OPT=		sh ../special_opt
+YACC=			echo
+
+ARCH_EXT=		.lib
+EXEC_EXT=		.exe
+
+V3PRINTER=		source/lock/printv3.o
+

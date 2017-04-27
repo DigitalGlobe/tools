@@ -1,0 +1,115 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="DUDLEY files">
+      <UniqueIdentifier>{179801f0-94f0-4a1d-882a-186c1b283389}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="JRD files">
+      <UniqueIdentifier>{d54bb396-dfd5-4409-acf1-f73d9663bb7a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GPRE files">
+      <UniqueIdentifier>{6fd4b44c-9ab4-4fc5-8a75-e7dc556a07f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{17948299-2dd7-4356-9a09-1ba5aa0facbd}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="Resource files">
+      <UniqueIdentifier>{35e94edb-f543-4bab-9f6d-d5680aadef82}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\dudley\ddl.cpp">
+      <Filter>DUDLEY files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gen\$(Platform)\dudley\exe.cpp">
+      <Filter>DUDLEY files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dudley\expand.cpp">
+      <Filter>DUDLEY files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dudley\expr.cpp">
+      <Filter>DUDLEY files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gen\$(Platform)\dudley\extract.cpp">
+      <Filter>DUDLEY files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\fb_exception.cpp">
+      <Filter>DUDLEY files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dudley\generate.cpp">
+      <Filter>DUDLEY files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dudley\hsh.cpp">
+      <Filter>DUDLEY files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dudley\lex.cpp">
+      <Filter>DUDLEY files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dudley\parse.cpp">
+      <Filter>DUDLEY files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dudley\trn.cpp">
+      <Filter>DUDLEY files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\isc.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\isc_file.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\status.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\pretty.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\os\win32\os_utils.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\dudley\ddl.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dudley\ddl_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dudley\exe_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dudley\expan_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dudley\expr_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dudley\extra_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dudley\gener_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dudley\hsh_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dudley\lex_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dudley\parse.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dudley\parse_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\dudley\trn_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\src\jrd\version.rc">
+      <Filter>Resource files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

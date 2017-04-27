@@ -1,0 +1,11 @@
+[geolocationRequestJS]
+*
+
+[macCopyUnicodeToClipboard]
+osx
+
+[getUserMediaRequest]
+windows
+
+[setHtmlWithImageResource]
+*

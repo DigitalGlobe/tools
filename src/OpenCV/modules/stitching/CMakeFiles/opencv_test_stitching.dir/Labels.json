@@ -1,0 +1,45 @@
+
+{
+	"sources" : 
+	[
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/test/ocl/test_warpers.cpp",
+			"labels" : [ "Main", "opencv_stitching", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/test/test_blenders.cpp",
+			"labels" : [ "Main", "opencv_stitching", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/test/test_main.cpp",
+			"labels" : [ "Main", "opencv_stitching", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/test/test_matchers.cpp",
+			"labels" : [ "Main", "opencv_stitching", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/test/test_precomp.hpp",
+			"labels" : [ "Main", "opencv_stitching", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/opencv_test_stitching_pch.cpp",
+			"labels" : [ "Main", "opencv_stitching", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/CMakeLists.txt"
+		}
+	],
+	"target" : 
+	{
+		"labels" : [ "Main", "opencv_stitching", "AccuracyTest" ],
+		"name" : "opencv_test_stitching"
+	}
+}

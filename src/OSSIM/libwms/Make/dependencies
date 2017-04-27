@@ -1,0 +1,9 @@
+################################################################
+# Dependency library which have been installed on this system
+
+##########################################
+#
+# For any getCapabilities parsing expat must be installed
+# on your system.
+#
+EXPAT_INSTALLED = yes

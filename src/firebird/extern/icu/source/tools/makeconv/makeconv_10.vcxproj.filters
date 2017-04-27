@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{e86af3ba-7ccc-4ffc-b30f-3d014e8a4183}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{91a72954-6738-4bec-b923-25f4b681e8f9}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{8f2eef85-8eb9-4fcd-9cc1-ae3cb7484c06}</UniqueIdentifier>
+      <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="gencnvex.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="genmbcs.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="makeconv.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ucnvstat.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="genmbcs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="makeconv.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

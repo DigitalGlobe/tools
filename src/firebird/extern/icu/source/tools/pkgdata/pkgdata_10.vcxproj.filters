@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{e62ec993-49ba-46c1-8bc6-741223dc890a}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{0eb13dfd-2c4f-4ea0-a5f5-2615e6d7e7f9}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{5298dd28-fbfb-4679-9a9c-66e59aeaf35d}</UniqueIdentifier>
+      <Extensions>ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="filemode.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="make.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pkgdata.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pkgtypes.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sttcmode.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="winmode.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="makefile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pkgtypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

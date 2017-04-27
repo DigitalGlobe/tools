@@ -1,0 +1,4 @@
+﻿     Creating library Win32\Release\uconv.lib and object Win32\Release\uconv.exp
+  uconv_14.vcxproj -> C:\tools\src\firebird\extern\icu\source\extra\uconv\Win32\Release\uconv.exe
+  uconv_14.vcxproj -> Win32\Release\uconv.pdb (Full PDB)
+          1 file(s) copied.

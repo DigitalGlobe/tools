@@ -1,0 +1,57 @@
+/*
+ * The contents of this file are subject to the Interbase Public
+ * License Version 1.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy
+ * of the License at http://www.Inprise.com/IPL.html
+ *
+ * Software distributed under the License is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+ * or implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code was created by Inprise Corporation
+ * and its predecessors. Portions created by Inprise Corporation are
+ * Copyright (C) Inprise Corporation.
+ *
+ * All Rights Reserved.
+ * Contributor(s): ______________________________________.
+ */
+modify database "isc.fdb";
+
+/*
+	NOTE:  This file sets up the the platform specific
+	       security classes in the isc_tmp database which
+	       will ultimately get shipped as isc.gbak in the 
+	       interbase/bin directory.  This file is part two of a 
+	       two step process.  The reason for this is that gdef
+	       cannot handle security classes correctly over
+	       different platforms, i.e. apollo, unix, and vms.
+	       The basic database is created using the isc.gdl file
+	       on all platforms for ease of maintenance while the
+	       security classes are added by platform specific gdl
+	       files i.e.
+		   
+		   apollo = scrty_apollo.gdl
+		   unix   = scrty_unix.gdl
+		   vms    = scrty_vms.gdl
+		   mpexl  = scrty_xl.gdl
+
+	       Any changes made to the security class definitions
+	       in one of these files must be made to all of them.
+*/
+
+/*	Add Security Classes to Defined Objects	*/
+
+
+
+modify relation USERS
+	security_class USER_SECURITY;
+
+
+/*	Security Class Definitions / GRANT statements	*/
+
+
+define security_class USER_SECURITY                  
+	<1,4> CDRWP,
+	<*,*> R;
+

@@ -1,0 +1,91 @@
+=================================================
+Firebird $MAJOR.$MINOR.$RELEASE       (Wersja Windows)
+=================================================
+
+o Wprowadzenie
+o Docelowi u¿ytkownicy
+o Cechy tego wydania (wszystkie platformy)
+o B³êdy poprawione w tym wydaniu
+o Instalacja
+o Znane problemy
+o Zg³aszanie b³êdów
+o Propozycje nowych funkcjonalnoœci
+
+
+Wprowadzenie
+============
+
+Witamy w Firebird $MAJOR.$MINOR.$RELEASE
+
+
+Docelowi u¿ytkownicy
+====================
+
+Firebird $MAJOR.$MINOR.$RELEASE przeszed³ intensywne testy i jest przeznaczony
+do szerokich zastosowañ produkcyjnych. Aczkolwiek zaleca siê,
+aby u¿ytkownicy zachowali nastêpuj¹ce standardowe praktyki
+przed uruchomieniem tego wydania na serwerze produkcyjnym:
+
+ o Proszê siê upewniæ, ¿e przeczyta³eœ "czytajto"
+   dotycz¹ce instalacji i informacje o wydaniu.
+
+ o Jeœli posiadasz cenne dane to pamiêtaj o zrobieniu
+   ich kopii, przez zainstalowaniem tej wersji.
+
+ o Zaleca siê usuniêcie wczeœniejszych wersji serwera
+   przed przeprowadzeniem instalacji. Deinstalacja
+   zachowuje pliki konfiguracyjne i pliki logów.
+
+ o Zaleca siê przeprowadzenie w³asnych testów
+   w œrodowisku deweloperskim, przez uruchomieniem
+   w œrodowisku produkcyjnym.
+
+
+Cechy tego wydania (wszystkie platformy)
+========================================
+
+Zobacz doc/Firebird_v2.5.0.ReleaseNotes.pdf w celu uzyskania dodatkowych informacji.
+
+
+B³êdy poprawione w tym wydaniu (wszystkie platformy)
+===================================================
+
+Zobacz doc/Firebird_v$MAJOR.$MINOR.$RELEASE.ReleaseNotes.pdf w celu uzyskania dodatkowych informacji.
+
+
+Instalowanie samouruchamiaj¹cego siê programu
+==============================================
+
+Proszê uruchomiæ wersje wykonywaln¹ programu i przeczytaæ za³¹czone instrukcje
+instalacji, znajduj¹ce siê w kreatorze instalacji
+
+
+
+Zg³aszanie b³êdów
+=================
+
+o Jesteœ pewny, ¿e rozumiesz jak dzia³a Firebird ?
+
+  Byæ mo¿e obserwujesz poprawne zachowanie, a tak naprawdê masz pytanie
+  o pomoc. W takim przypadku szukaj pomocy na liœcie mailingowej ib-support
+
+  Mo¿esz zapisaæ siê tu:
+
+	mailto:firebird-support-subscribe@yahoogroups.com
+
+
+o Ci¹gle myœlisz, ¿e to b³¹d ?
+
+  SprawdŸ listê Otwartych B³êdów. Mo¿esz j¹ znaleŸæ tu:
+
+	http://tracker.firebirdsql.org/browse/CORE
+
+Proszê nie u¿ywaæ trackera w celu uzyskania pomocy technicznej.
+Jeœli masz w¹tpliwoœci, to zapisz siê najpierw na listê wsparcia technicznego:
+
+  mailto:firebird-support-subscribe@yahoogroups.com
+
+i tam zadawaj pytania.
+
+
+

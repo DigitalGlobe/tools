@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioPropertySheet
+    ProjectType="Visual C++"
+    Version="8.00"
+    Name="firebird2debug"
+    >
+    <Tool
+        Name="VCCLCompilerTool"
+        Optimization="0"
+        BasicRuntimeChecks="3"
+        RuntimeLibrary="3"
+        BrowseInformation="1"
+        Detect64BitPortabilityProblems="true"
+    />
+    <Tool
+        Name="VCLinkerTool"
+        GenerateDebugInformation="true"
+        LinkIncremental="2"
+    />
+</VisualStudioPropertySheet>

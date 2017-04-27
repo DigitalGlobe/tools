@@ -1,0 +1,439 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{F55ACA54-70DF-4343-8E16-FA97C757CCF6}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+    <Import Project="firebird2.props" />
+    <Import Project="firebird2debug.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+    <Import Project="firebird2.props" />
+    <Import Project="firebird2release.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+    <Import Project="firebird2.props" />
+    <Import Project="firebird2debug.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+    <Import Project="firebird2.props" />
+    <Import Project="firebird2release.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <AdditionalIncludeDirectories>../../../src/include;../../../src/include/gen;../../../extern/icu/include;../../../src/vulcan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_LIB;EMBEDDED;NAMESPACE=Vulcan;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0419</Culture>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>../../../src/include;../../../src/include/gen;../../../extern/icu/include;../../../src/vulcan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_LIB;DEV_BUILD;EMBEDDED;NAMESPACE=Vulcan;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0419</Culture>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+    </Midl>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <AdditionalIncludeDirectories>../../../src/include;../../../src/include/gen;../../../extern/icu/include;../../../src/vulcan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_LIB;EMBEDDED;NAMESPACE=Vulcan;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0419</Culture>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>../../../src/include;../../../src/include/gen;../../../extern/icu/include;../../../src/vulcan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_LIB;DEV_BUILD;EMBEDDED;NAMESPACE=Vulcan;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0419</Culture>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\jrd\alt.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\blb.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\blob_filter.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\btn.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\btr.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\builtin.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\cch.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\CharSet.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\cmp.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\Collation.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\cvt.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\cvt2.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\Database.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\DatabaseSnapshot.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\DataTypeUtil.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\DebugInterface.cpp" />
+    <ClCompile Include="..\..\..\gen\$(Platform)\jrd\dfw.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\divorce.cpp" />
+    <ClCompile Include="..\..\..\gen\$(Platform)\jrd\dpm.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\dsc.cpp" />
+    <ClCompile Include="..\..\..\gen\$(Platform)\jrd\dyn.cpp" />
+    <ClCompile Include="..\..\..\gen\$(Platform)\jrd\dyn_def.cpp" />
+    <ClCompile Include="..\..\..\gen\$(Platform)\jrd\dyn_del.cpp" />
+    <ClCompile Include="..\..\..\gen\$(Platform)\jrd\dyn_mod.cpp" />
+    <ClCompile Include="..\..\..\gen\$(Platform)\jrd\dyn_util.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\enc.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\err.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\event.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\evl.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\exe.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\execute_statement.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\ext.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\extds\ExtDS.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\filters.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\flu.cpp" />
+    <ClCompile Include="..\..\..\gen\$(Platform)\jrd\fun.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\functions.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\gds.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\GlobalRWLock.cpp" />
+    <ClCompile Include="..\..\..\gen\$(Platform)\jrd\grant.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\os\win32\guid.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\idx.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\inf.cpp" />
+    <ClCompile Include="..\..\..\gen\$(Platform)\jrd\ini.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\extds\InternalDS.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\intl.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\intl_builtin.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\IntlManager.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\IntlUtil.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\isc.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\isc_file.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\os\win32\isc_ipc.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\isc_sync.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\extds\IscDS.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\jrd.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\lck.cpp" />
+    <ClCompile Include="..\..\..\gen\$(Platform)\jrd\met.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\mov.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\nav.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\nbak.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\nodebug.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\ods.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\opt.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\Optimizer.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\os\win32\os_utils.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\pag.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\par.cpp" />
+    <ClCompile Include="..\..\..\gen\$(Platform)\jrd\pcmet.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\PreparedStatement.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\pwd.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\RandomGenerator.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\RecordBuffer.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\Relation.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\ResultSet.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\rlck.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\rpb_chain.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\rse.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\RuntimeStatistics.cpp" />
+    <ClCompile Include="..\..\..\gen\$(Platform)\jrd\scl.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\sdl.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\sdw.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\sha.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\shut.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\sort.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\sqz.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\status.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\svc.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\SysFunction.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\TempSpace.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\TextType.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\os\win32\thd_priority.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\ThreadData.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\ThreadStart.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\tpc.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\tra.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\trace\TraceConfigStorage.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\trace\TraceLog.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\trace\TraceManager.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\trace\TraceObjects.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\unicode_util.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\UserManagement.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\utl.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\validation.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\vio.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\VirtualTable.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\why.cpp" />
+    <ClCompile Include="..\..\..\src\jrd\os\win32\winnt.cpp" />
+    <ClCompile Include="..\..\..\src\gpre\pretty.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\jrd\acl.h" />
+    <ClInclude Include="..\..\..\src\jrd\align.h" />
+    <ClInclude Include="..\..\..\src\jrd\blb.h" />
+    <ClInclude Include="..\..\..\src\jrd\blb_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\blf_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\blob_filter.h" />
+    <ClInclude Include="..\..\..\src\jrd\blp.h" />
+    <ClInclude Include="..\..\..\src\jrd\blr.h" />
+    <ClInclude Include="..\..\..\src\jrd\BlrReader.h" />
+    <ClInclude Include="..\..\..\src\include\gen\blrtable.h" />
+    <ClInclude Include="..\..\..\src\jrd\btn.h" />
+    <ClInclude Include="..\..\..\src\jrd\btr.h" />
+    <ClInclude Include="..\..\..\src\jrd\btr_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\build_no.h" />
+    <ClInclude Include="..\..\..\src\jrd\cch.h" />
+    <ClInclude Include="..\..\..\src\jrd\cch_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\CharSet.h" />
+    <ClInclude Include="..\..\..\src\jrd\cmp_proto.h" />
+    <ClInclude Include="..\..\..\src\include\gen\codetext.h" />
+    <ClInclude Include="..\..\..\src\jrd\Collation.h" />
+    <ClInclude Include="..\..\..\src\jrd\common.h" />
+    <ClInclude Include="..\..\..\src\jrd\constants.h" />
+    <ClInclude Include="..\..\..\src\jrd\CsConvert.h" />
+    <ClInclude Include="..\..\..\src\jrd\cvt2_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\cvt_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\Database.h" />
+    <ClInclude Include="..\..\..\src\jrd\DatabaseSnapshot.h" />
+    <ClInclude Include="..\..\..\src\jrd\DataTypeUtil.h" />
+    <ClInclude Include="..\..\..\src\jrd\dbg.h" />
+    <ClInclude Include="..\..\..\src\jrd\dbg_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\DebugInterface.h" />
+    <ClInclude Include="..\..\..\src\jrd\dflt.h" />
+    <ClInclude Include="..\..\..\src\jrd\dfw_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\divorce.h" />
+    <ClInclude Include="..\..\..\src\jrd\dmp_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\dpm_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\drq.h" />
+    <ClInclude Include="..\..\..\src\jrd\dsc.h" />
+    <ClInclude Include="..\..\..\src\jrd\dsc_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\dsc_pub.h" />
+    <ClInclude Include="..\..\..\src\jrd\dyn.h" />
+    <ClInclude Include="..\..\..\src\jrd\dyn_df_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\dyn_dl_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\dyn_md_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\dyn_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\dyn_ut_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\enc_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\entry.h" />
+    <ClInclude Include="..\..\..\src\jrd\err_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\event.h" />
+    <ClInclude Include="..\..\..\src\jrd\event_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\evl_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\exe.h" />
+    <ClInclude Include="..\..\..\src\jrd\exe_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\execute_statement.h" />
+    <ClInclude Include="..\..\..\src\jrd\ext.h" />
+    <ClInclude Include="..\..\..\src\jrd\ext_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\extds\ExtDS.h" />
+    <ClInclude Include="..\..\..\src\include\fb_api_proto.h" />
+    <ClInclude Include="..\..\..\src\include\fb_blk.h" />
+    <ClInclude Include="..\..\..\src\jrd\fields.h" />
+    <ClInclude Include="..\..\..\src\jrd\fil.h" />
+    <ClInclude Include="..\..\..\src\jrd\file_params.h" />
+    <ClInclude Include="..\..\..\src\jrd\filte_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\flags.h" />
+    <ClInclude Include="..\..\..\src\jrd\flu.h" />
+    <ClInclude Include="..\..\..\src\jrd\flu_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\fun_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\gds_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\gdsassert.h" />
+    <ClInclude Include="..\..\..\src\jrd\GlobalRWLock.h" />
+    <ClInclude Include="..\..\..\src\jrd\grant_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\os\guid.h" />
+    <ClInclude Include="..\..\..\src\jrd\ibase.h" />
+    <ClInclude Include="..\..\..\src\include\gen\iberror.h" />
+    <ClInclude Include="..\..\..\src\jrd\ibsetjmp.h" />
+    <ClInclude Include="..\..\..\src\include\gen\ids.h" />
+    <ClInclude Include="..\..\..\src\jrd\idx.h" />
+    <ClInclude Include="..\..\..\src\jrd\idx_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\inf_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\inf_pub.h" />
+    <ClInclude Include="..\..\..\src\jrd\ini.h" />
+    <ClInclude Include="..\..\..\src\jrd\ini_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\extds\InternalDS.h" />
+    <ClInclude Include="..\..\..\src\jrd\intl.h" />
+    <ClInclude Include="..\..\..\src\jrd\intl_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\IntlManager.h" />
+    <ClInclude Include="..\..\..\src\jrd\intlnames.h" />
+    <ClInclude Include="..\..\..\src\jrd\intlobj_new.h" />
+    <ClInclude Include="..\..\..\src\jrd\IntlUtil.h" />
+    <ClInclude Include="..\..\..\src\jrd\irq.h" />
+    <ClInclude Include="..\..\..\src\jrd\isc.h" />
+    <ClInclude Include="..\..\..\src\jrd\isc_f_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\os\isc_i_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\isc_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\isc_s_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\extds\IscDS.h" />
+    <ClInclude Include="..\..\..\src\jrd\jrd.h" />
+    <ClInclude Include="..\..\..\src\jrd\jrd_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\jrd_pwd.h" />
+    <ClInclude Include="..\..\..\src\intl\kanji.h" />
+    <ClInclude Include="..\..\..\src\intl\kanji_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\lck.h" />
+    <ClInclude Include="..\..\..\src\jrd\lck_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\license.h" />
+    <ClInclude Include="..\..\..\src\jrd\lls.h" />
+    <ClInclude Include="..\..\..\src\jrd\met.h" />
+    <ClInclude Include="..\..\..\src\jrd\met_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\misc_func_ids.h" />
+    <ClInclude Include="..\..\..\src\jrd\mov_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\msg.h" />
+    <ClInclude Include="..\..\..\src\jrd\msg_encode.h" />
+    <ClInclude Include="..\..\..\src\include\gen\msg_facs.h" />
+    <ClInclude Include="..\..\..\src\include\gen\msgs.h" />
+    <ClInclude Include="..\..\..\src\jrd\names.h" />
+    <ClInclude Include="..\..\..\src\jrd\nav_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\nbak.h" />
+    <ClInclude Include="..\..\..\src\jrd\nod.h" />
+    <ClInclude Include="..\..\..\src\jrd\obj.h" />
+    <ClInclude Include="..\..\..\src\jrd\ods.h" />
+    <ClInclude Include="..\..\..\src\jrd\ods_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\opt_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\Optimizer.h" />
+    <ClInclude Include="..\..\..\src\jrd\os\os_utils.h" />
+    <ClInclude Include="..\..\..\src\jrd\pag.h" />
+    <ClInclude Include="..\..\..\src\jrd\pag_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\par_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\pcmet_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\perf.h" />
+    <ClInclude Include="..\..\..\src\jrd\perf_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\os\pio.h" />
+    <ClInclude Include="..\..\..\src\jrd\os\pio_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\PreparedStatement.h" />
+    <ClInclude Include="..\..\..\src\jrd\quad.h" />
+    <ClInclude Include="..\..\..\src\jrd\quad_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\que.h" />
+    <ClInclude Include="..\..\..\src\jrd\RandomGenerator.h" />
+    <ClInclude Include="..\..\..\src\jrd\RecordBuffer.h" />
+    <ClInclude Include="..\..\..\src\jrd\Relation.h" />
+    <ClInclude Include="..\..\..\src\jrd\relations.h" />
+    <ClInclude Include="..\..\..\src\jrd\req.h" />
+    <ClInclude Include="..\..\..\src\jrd\ResultSet.h" />
+    <ClInclude Include="..\..\..\src\jrd\rlck_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\rpb_chain.h" />
+    <ClInclude Include="..\..\..\src\jrd\rse.h" />
+    <ClInclude Include="..\..\..\src\jrd\rse_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\RuntimeStatistics.h" />
+    <ClInclude Include="..\..\..\src\jrd\sbm.h" />
+    <ClInclude Include="..\..\..\src\jrd\scl.h" />
+    <ClInclude Include="..\..\..\src\jrd\scl_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\scroll_cursors.h" />
+    <ClInclude Include="..\..\..\src\jrd\sdl.h" />
+    <ClInclude Include="..\..\..\src\jrd\sdl_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\sdw.h" />
+    <ClInclude Include="..\..\..\src\jrd\sdw_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\sha.h" />
+    <ClInclude Include="..\..\..\src\jrd\shut_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\sort.h" />
+    <ClInclude Include="..\..\..\src\jrd\sort_proto.h" />
+    <ClInclude Include="..\..\..\src\include\gen\sql_code.h" />
+    <ClInclude Include="..\..\..\src\jrd\sqz.h" />
+    <ClInclude Include="..\..\..\src\jrd\sqz_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\svc.h" />
+    <ClInclude Include="..\..\..\src\jrd\svc_undoc.h" />
+    <ClInclude Include="..\..\..\src\jrd\SysFunction.h" />
+    <ClInclude Include="..\..\..\src\jrd\TempSpace.h" />
+    <ClInclude Include="..\..\..\src\jrd\TextType.h" />
+    <ClInclude Include="..\..\..\src\jrd\tpc.h" />
+    <ClInclude Include="..\..\..\src\jrd\tpc_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\tra.h" />
+    <ClInclude Include="..\..\..\src\jrd\tra_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\trace\TraceConfigStorage.h" />
+    <ClInclude Include="..\..\..\src\jrd\trace\TraceDSQLHelpers.h" />
+    <ClInclude Include="..\..\..\src\jrd\trace\TraceJrdHelpers.h" />
+    <ClInclude Include="..\..\..\src\jrd\trace\TraceLog.h" />
+    <ClInclude Include="..\..\..\src\jrd\trace\TraceManager.h" />
+    <ClInclude Include="..\..\..\src\jrd\trace\TraceObjects.h" />
+    <ClInclude Include="..\..\..\src\jrd\trace\TraceSession.h" />
+    <ClInclude Include="..\..\..\src\jrd\trig.h" />
+    <ClInclude Include="..\..\..\src\jrd\types.h" />
+    <ClInclude Include="..\..\..\src\jrd\unicode_util.h" />
+    <ClInclude Include="..\..\..\src\jrd\utl_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\val.h" />
+    <ClInclude Include="..\..\..\src\jrd\val_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\vio_debug.h" />
+    <ClInclude Include="..\..\..\src\jrd\vio_proto.h" />
+    <ClInclude Include="..\..\..\src\jrd\VirtualTable.h" />
+    <ClInclude Include="..\..\..\src\jrd\why_proto.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

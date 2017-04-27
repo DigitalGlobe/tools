@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioProject ProjectType="Visual C++" Version="7.10" Name="ctestfw" ProjectGUID="{ECA6B435-B4FA-4F9F-BF95-F451D078FC47}">
+  <Platforms>
+    <Platform Name="Win32" />
+  </Platforms>
+  <ToolFiles>
+  </ToolFiles>
+  <Configurations>
+    <Configuration Name="Release|Win32" OutputDirectory=".\..\..\..\$(PlatformName)\$(ConfigurationName)\lib" ConfigurationType="2" UseOfMFC="0" ATLMinimizesCRunTimeLibraryUsage="false" CharacterSet="2" IntermediateDirectory="$(PlatformName)\$(ConfigurationName)">
+      <Tool Name="VCPreBuildEventTool" />
+      <Tool Name="VCCustomBuildTool" />
+      <Tool Name="VCXMLDataGeneratorTool" />
+      <Tool Name="VCWebServiceProxyGeneratorTool" />
+      <Tool Name="VCMIDLTool" PreprocessorDefinitions="NDEBUG" MkTypLibCompatible="true" TargetEnvironment="1" />
+      <Tool Name="VCCLCompilerTool" AdditionalIncludeDirectories="..\..\..\include,..\..\common" PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;CTESTFW_EXPORTS;T_CTEST_IMPLEMENTATION" CompileAs="0" EnableFunctionLevelLinking="false" DisableLanguageExtensions="true" WarningLevel="3" DebugInformationFormat="3" InlineFunctionExpansion="2" />
+      <Tool Name="VCManagedResourceCompilerTool" />
+      <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
+      <Tool Name="VCPreLinkEventTool" />
+      <Tool Name="VCLinkerTool" AdditionalOptions="/MACHINE:I386" OutputFile="..\..\..\$(PlatformName)\$(ConfigurationName)\bin\icutest.dll" ProgramDatabaseFile="$(OutDir)/icutest.pdb" ImportLibrary="$(OutDir)/icutest.lib" LinkIncremental="1" IgnoreDefaultLibraryNames="msvcrt.lib" />
+      <Tool Name="VCALinkTool" />
+      <Tool Name="VCManifestTool" />
+      <Tool Name="VCXDCMakeTool" />
+      <Tool Name="VCBscMakeTool" />
+      <Tool Name="VCFxCopTool" />
+      <Tool Name="VCAppVerifierTool" />
+      <Tool Name="VCWebDeploymentTool" />
+      <Tool Name="VCPostBuildEventTool" />
+    </Configuration>
+    <Configuration Name="Debug|Win32" OutputDirectory=".\..\..\..\$(PlatformName)\$(ConfigurationName)\lib" ConfigurationType="2" UseOfMFC="0" ATLMinimizesCRunTimeLibraryUsage="false" CharacterSet="2" IntermediateDirectory="$(PlatformName)\$(ConfigurationName)">
+      <Tool Name="VCPreBuildEventTool" />
+      <Tool Name="VCCustomBuildTool" />
+      <Tool Name="VCXMLDataGeneratorTool" />
+      <Tool Name="VCWebServiceProxyGeneratorTool" />
+      <Tool Name="VCMIDLTool" PreprocessorDefinitions="_DEBUG" MkTypLibCompatible="true" TargetEnvironment="1" />
+      <Tool Name="VCCLCompilerTool" AdditionalIncludeDirectories="..\..\..\include,..\..\common" PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;CTESTFW_EXPORTS;T_CTEST_IMPLEMENTATION" DebugInformationFormat="4" CompileAs="0" EnableFunctionLevelLinking="false" DisableLanguageExtensions="true" WarningLevel="3" Optimization="0" BasicRuntimeChecks="3" RuntimeLibrary="1" BrowseInformation="1" Detect64BitPortabilityProblems="true" />
+      <Tool Name="VCManagedResourceCompilerTool" />
+      <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
+      <Tool Name="VCPreLinkEventTool" />
+      <Tool Name="VCLinkerTool" OutputFile="..\..\..\$(PlatformName)\$(ConfigurationName)\bin\icutestd.dll" ProgramDatabaseFile="$(OutDir)/icutestd.pdb" ImportLibrary="$(OutDir)/icutestd.lib" GenerateDebugInformation="true" LinkIncremental="2" />
+      <Tool Name="VCALinkTool" />
+      <Tool Name="VCManifestTool" />
+      <Tool Name="VCXDCMakeTool" />
+      <Tool Name="VCBscMakeTool" />
+      <Tool Name="VCFxCopTool" />
+      <Tool Name="VCAppVerifierTool" />
+      <Tool Name="VCWebDeploymentTool" />
+      <Tool Name="VCPostBuildEventTool" />
+    </Configuration>
+  </Configurations>
+  <References>
+  </References>
+  <Files>
+    <Filter Name="Source Files" Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat">
+      <File RelativePath=".\ctest.c">
+      </File>
+      <File RelativePath=".\datamap.cpp">
+      </File>
+      <File RelativePath=".\testdata.cpp">
+      </File>
+      <File RelativePath=".\tstdtmod.cpp">
+      </File>
+    </Filter>
+    <Filter Name="Header Files" Filter="h;hpp;hxx;hm;inl">
+      <File RelativePath=".\unicode\ctest.h">
+      </File>
+      <File RelativePath=".\unicode\datamap.h">
+      </File>
+      <File RelativePath=".\unicode\testdata.h">
+      </File>
+      <File RelativePath=".\unicode\testlog.h">
+      </File>
+      <File RelativePath=".\unicode\testtype.h">
+      </File>
+      <File RelativePath=".\unicode\tstdtmod.h">
+      </File>
+    </Filter>
+    <Filter Name="Resource Files" Filter="ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
+    </Filter>
+  </Files>
+  <Globals>
+  </Globals>
+</VisualStudioProject>

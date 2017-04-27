@@ -1,0 +1,11 @@
+-IC:/tools/Qt/5.7/x86/include
+-IC:/tools/Qt/5.7/x86/include/QtCore
+-IC:/tools/Qt/5.7/x86/./mkspecs/win32-msvc2015
+-IC:/tools/src/QuaZIP/quazip/quazip
+-IC:/tools/src/QuaZIP/quazip/quazip
+-I/../../src/3rdparty/zlib
+-DQUAZIP_BUILD
+-DWIN32
+-o
+C:/tools/src/QuaZIP/quazip/quazip/moc_quaziodevice.cpp
+C:/tools/src/QuaZIP/quazip/quazip/quaziodevice.h

@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ALICE files">
+      <UniqueIdentifier>{0a164d0a-66fc-497a-a94d-213fe9fe2d84}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="JRD files">
+      <UniqueIdentifier>{8c8b542f-02e3-400c-8e05-c1e16998e628}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{cdd9e6e0-56b2-4f3e-b271-afd54aa8180e}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="Resource files">
+      <UniqueIdentifier>{5b2d6605-6c8c-4bf6-b442-8956bcae757b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\alice\alice.cpp">
+      <Filter>ALICE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gen\$(Platform)\alice\alice_meta.cpp">
+      <Filter>ALICE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\alice\aliceMain.cpp">
+      <Filter>ALICE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\alice\exe.cpp">
+      <Filter>ALICE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\fb_exception.cpp">
+      <Filter>ALICE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\alice\tdr.cpp">
+      <Filter>ALICE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\classes\alloc.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\isc.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\classes\locks.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\ThreadData.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\os\win32\os_utils.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\alice\alice.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\alice\alice_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\alice\aliceswi.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\alice\exe_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\alice\tdr_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\src\jrd\version.rc">
+      <Filter>Resource files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

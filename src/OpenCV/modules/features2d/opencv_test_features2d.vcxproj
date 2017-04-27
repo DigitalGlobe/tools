@@ -1,0 +1,249 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGUID>{55033DB5-0ABD-3DED-BC92-3E436EAEA3A3}</ProjectGUID>
+    <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
+    <Keyword>Win32Proj</Keyword>
+    <Platform>Win32</Platform>
+    <ProjectName>opencv_test_features2d</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+    <PropertyGroup>
+      <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+      <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\tools\src\OpenCV\bin\Debug\</OutDir>
+      <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">opencv_test_features2d.dir\Debug\</IntDir>
+      <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">opencv_test_features2dd</TargetName>
+      <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.exe</TargetExt>
+      <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+      <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</GenerateManifest>
+      <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\tools\src\OpenCV\bin\Release\</OutDir>
+      <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">opencv_test_features2d.dir\Release\</IntDir>
+      <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">opencv_test_features2d</TargetName>
+      <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.exe</TargetExt>
+      <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+      <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</GenerateManifest>
+    </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <AdditionalOptions> /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>C:\tools\src\OpenCV\3rdparty\ippicv\unpack\ippicv_win\include;C:\tools\src\OpenCV;C:\tools\src\OpenCV\modules\ts\include;C:\tools\src\OpenCV\modules\features2d\include;C:\tools\src\OpenCV\modules\imgcodecs\include;C:\tools\src\OpenCV\modules\videoio\include;C:\tools\src\OpenCV\modules\core\include;C:\tools\src\OpenCV\modules\flann\include;C:\tools\src\OpenCV\modules\imgproc\include;C:\tools\src\OpenCV\modules\ml\include;C:\tools\src\OpenCV\modules\highgui\include;C:\tools\src\OpenCV\modules\features2d\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>Debug/</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4251;4324;4275;4589</DisableSpecificWarnings>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <ForcedIncludeFiles>C:/tools/src/OpenCV/modules/features2d/test/test_precomp.hpp</ForcedIncludeFiles>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>C:/tools/src/OpenCV/modules/features2d/test/test_precomp.hpp</PrecompiledHeaderFile>
+      <ProcessorNumber>4</ProcessorNumber>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level4</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;_DEBUG;_VARIADIC_MAX=10;__OPENCV_BUILD=1;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;_DEBUG;_VARIADIC_MAX=10;__OPENCV_BUILD=1;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\tools\src\OpenCV\3rdparty\ippicv\unpack\ippicv_win\include;C:\tools\src\OpenCV;C:\tools\src\OpenCV\modules\ts\include;C:\tools\src\OpenCV\modules\features2d\include;C:\tools\src\OpenCV\modules\imgcodecs\include;C:\tools\src\OpenCV\modules\videoio\include;C:\tools\src\OpenCV\modules\core\include;C:\tools\src\OpenCV\modules\flann\include;C:\tools\src\OpenCV\modules\imgproc\include;C:\tools\src\OpenCV\modules\ml\include;C:\tools\src\OpenCV\modules\highgui\include;C:\tools\src\OpenCV\modules\features2d\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\tools\src\OpenCV\3rdparty\ippicv\unpack\ippicv_win\include;C:\tools\src\OpenCV;C:\tools\src\OpenCV\modules\ts\include;C:\tools\src\OpenCV\modules\features2d\include;C:\tools\src\OpenCV\modules\imgcodecs\include;C:\tools\src\OpenCV\modules\videoio\include;C:\tools\src\OpenCV\modules\core\include;C:\tools\src\OpenCV\modules\flann\include;C:\tools\src\OpenCV\modules\imgproc\include;C:\tools\src\OpenCV\modules\ml\include;C:\tools\src\OpenCV\modules\highgui\include;C:\tools\src\OpenCV\modules\features2d\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalOptions> /machine:X86 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;..\..\lib\Debug\opencv_ts310d.lib;..\..\lib\Debug\opencv_features2d310d.lib;..\..\lib\Debug\opencv_flann310d.lib;..\..\lib\Debug\opencv_ml310d.lib;..\..\lib\Debug\opencv_highgui310d.lib;..\..\3rdparty\ippicv\unpack\ippicv_win\lib\ia32\ippicvmt.lib;..\..\lib\Debug\opencv_videoio310d.lib;..\..\lib\Debug\opencv_imgcodecs310d.lib;..\..\lib\Debug\opencv_imgproc310d.lib;..\..\lib\Debug\opencv_core310d.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>Debug</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>C:/tools/src/OpenCV/bin/Debug/opencv_test_features2dd.lib</ImportLibrary>
+      <ProgramDataBaseFile>C:/tools/src/OpenCV/bin/Debug/opencv_test_features2dd.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+      <Version></Version>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalOptions> /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>C:\tools\src\OpenCV\3rdparty\ippicv\unpack\ippicv_win\include;C:\tools\src\OpenCV;C:\tools\src\OpenCV\modules\ts\include;C:\tools\src\OpenCV\modules\features2d\include;C:\tools\src\OpenCV\modules\imgcodecs\include;C:\tools\src\OpenCV\modules\videoio\include;C:\tools\src\OpenCV\modules\core\include;C:\tools\src\OpenCV\modules\flann\include;C:\tools\src\OpenCV\modules\imgproc\include;C:\tools\src\OpenCV\modules\ml\include;C:\tools\src\OpenCV\modules\highgui\include;C:\tools\src\OpenCV\modules\features2d\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>Release/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4251;4324;4275;4589</DisableSpecificWarnings>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <ForcedIncludeFiles>C:/tools/src/OpenCV/modules/features2d/test/test_precomp.hpp</ForcedIncludeFiles>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>C:/tools/src/OpenCV/modules/features2d/test/test_precomp.hpp</PrecompiledHeaderFile>
+      <ProcessorNumber>4</ProcessorNumber>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level4</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;NDEBUG;_VARIADIC_MAX=10;__OPENCV_BUILD=1;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;NDEBUG;_VARIADIC_MAX=10;__OPENCV_BUILD=1;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\tools\src\OpenCV\3rdparty\ippicv\unpack\ippicv_win\include;C:\tools\src\OpenCV;C:\tools\src\OpenCV\modules\ts\include;C:\tools\src\OpenCV\modules\features2d\include;C:\tools\src\OpenCV\modules\imgcodecs\include;C:\tools\src\OpenCV\modules\videoio\include;C:\tools\src\OpenCV\modules\core\include;C:\tools\src\OpenCV\modules\flann\include;C:\tools\src\OpenCV\modules\imgproc\include;C:\tools\src\OpenCV\modules\ml\include;C:\tools\src\OpenCV\modules\highgui\include;C:\tools\src\OpenCV\modules\features2d\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\tools\src\OpenCV\3rdparty\ippicv\unpack\ippicv_win\include;C:\tools\src\OpenCV;C:\tools\src\OpenCV\modules\ts\include;C:\tools\src\OpenCV\modules\features2d\include;C:\tools\src\OpenCV\modules\imgcodecs\include;C:\tools\src\OpenCV\modules\videoio\include;C:\tools\src\OpenCV\modules\core\include;C:\tools\src\OpenCV\modules\flann\include;C:\tools\src\OpenCV\modules\imgproc\include;C:\tools\src\OpenCV\modules\ml\include;C:\tools\src\OpenCV\modules\highgui\include;C:\tools\src\OpenCV\modules\features2d\test;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Link>
+      <AdditionalOptions> /machine:X86 %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib;..\..\lib\Release\opencv_ts310.lib;..\..\lib\Release\opencv_features2d310.lib;..\..\lib\Release\opencv_flann310.lib;..\..\lib\Release\opencv_ml310.lib;..\..\lib\Release\opencv_highgui310.lib;..\..\3rdparty\ippicv\unpack\ippicv_win\lib\ia32\ippicvmt.lib;..\..\lib\Release\opencv_videoio310.lib;..\..\lib\Release\opencv_imgcodecs310.lib;..\..\lib\Release\opencv_imgproc310.lib;..\..\lib\Release\opencv_core310.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>Debug</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>C:/tools/src/OpenCV/bin/Release/opencv_test_features2d.lib</ImportLibrary>
+      <ProgramDataBaseFile>C:/tools/src/OpenCV/bin/Release/opencv_test_features2d.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+      <Version></Version>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\tools\src\OpenCV\modules\features2d\CMakeLists.txt">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building Custom Rule C:/tools/src/OpenCV/modules/features2d/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -HC:/tools/src/OpenCV -BC:/tools/src/OpenCV --check-stamp-file C:\tools\src\OpenCV\modules\features2d\CMakeFiles\generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:/tools/src/OpenCV/modules/features2d/CMakeLists.txt;C:\tools\src\OpenCV\modules\features2d\CMakeLists.txt;C:\tools\src\OpenCV\modules\features2d\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\tools\src\OpenCV\modules\features2d\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building Custom Rule C:/tools/src/OpenCV/modules/features2d/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -HC:/tools/src/OpenCV -BC:/tools/src/OpenCV --check-stamp-file C:\tools\src\OpenCV\modules\features2d\CMakeFiles\generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:/tools/src/OpenCV/modules/features2d/CMakeLists.txt;C:\tools\src\OpenCV\modules\features2d\CMakeLists.txt;C:\tools\src\OpenCV\modules\features2d\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\tools\src\OpenCV\modules\features2d\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\tools\src\OpenCV\modules\features2d\test\test_precomp.hpp" />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\features2d\test\ocl\test_brute_force_matcher.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\features2d\test\test_agast.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\features2d\test\test_brisk.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\features2d\test\test_descriptors_regression.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\features2d\test\test_detectors_regression.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\features2d\test\test_fast.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\features2d\test\test_keypoints.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\features2d\test\test_main.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\features2d\test\test_matchers_algorithmic.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\features2d\test\test_mser.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\features2d\test\test_nearestneighbors.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\features2d\test\test_orb.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\features2d\test\test_rotation_and_scale_invariance.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\features2d\opencv_test_features2d_pch.cpp" >
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:/tools/src/OpenCV/modules/features2d/test/test_precomp.hpp</PrecompiledHeaderFile>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:/tools/src/OpenCV/modules/features2d/test/test_precomp.hpp</PrecompiledHeaderFile>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="C:/tools/src/OpenCV/ZERO_CHECK.vcxproj">
+      <Project>E0284986-3AE0-3E66-BB73-8BA76038446D</Project>
+    </ProjectReference>
+    <ProjectReference Include="C:/tools/src/OpenCV/modules/core/opencv_core.vcxproj">
+      <Project>751858DB-4725-3E1E-9E71-0347984EEFD2</Project>
+    </ProjectReference>
+    <ProjectReference Include="C:/tools/src/OpenCV/modules/features2d/opencv_features2d.vcxproj">
+      <Project>E5984565-6077-3240-9FA6-CAC509FE9EC8</Project>
+    </ProjectReference>
+    <ProjectReference Include="C:/tools/src/OpenCV/modules/flann/opencv_flann.vcxproj">
+      <Project>CF05D556-B032-34E3-A1EB-EA0E86B714D2</Project>
+    </ProjectReference>
+    <ProjectReference Include="C:/tools/src/OpenCV/modules/highgui/opencv_highgui.vcxproj">
+      <Project>1655D10E-ECE4-385B-B5A1-54718AEFD82E</Project>
+    </ProjectReference>
+    <ProjectReference Include="C:/tools/src/OpenCV/modules/imgcodecs/opencv_imgcodecs.vcxproj">
+      <Project>34A024A1-AE36-3219-BF48-845CB687E220</Project>
+    </ProjectReference>
+    <ProjectReference Include="C:/tools/src/OpenCV/modules/imgproc/opencv_imgproc.vcxproj">
+      <Project>70E329C4-80EA-3253-8A3D-3FC1C719A354</Project>
+    </ProjectReference>
+    <ProjectReference Include="C:/tools/src/OpenCV/modules/ml/opencv_ml.vcxproj">
+      <Project>3FA8D25D-41C4-3F1B-BD6F-D4743B7D2911</Project>
+    </ProjectReference>
+    <ProjectReference Include="C:/tools/src/OpenCV/modules/ts/opencv_ts.vcxproj">
+      <Project>277B6B18-FCE5-3AE9-8AB2-49A8373973D7</Project>
+    </ProjectReference>
+    <ProjectReference Include="C:/tools/src/OpenCV/modules/videoio/opencv_videoio.vcxproj">
+      <Project>C89267DE-EE1D-3E20-83EE-F7DA64333880</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

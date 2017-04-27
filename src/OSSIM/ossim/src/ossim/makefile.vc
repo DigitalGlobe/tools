@@ -1,0 +1,157 @@
+###
+# $Id: makefile.vc 16741 2010-02-28 16:02:10Z dburken $
+#
+# Windows nmake make file.
+#
+###
+OSSIM_ROOT	=	..\..
+!INCLUDE $(OSSIM_ROOT)\nmake.opt
+
+###
+# Note: EMBED_MANIFEST variable is set in nmake.opt so make sure it is included
+# before this test.
+###
+!if "$(EMBED_MANIFEST)" == "1"
+!include ..\makefile.inc
+OSSIM_VC_MANIFEST_EMBED_DLL=$(_VC_MANIFEST_EMBED_DLL)
+OSSIM_VC_MANIFEST_CLEAN=$(_VC_MANIFEST_CLEAN)
+!else
+OSSIM_VC_MANIFEST_EMBED_DLL=
+OSSIM_VC_MANIFEST_CLEAN=
+!endif
+
+# Path to ossimVersion.h
+VERSION_FILE=$(OSSIM_ROOT)\include\ossim\ossimVersion.h
+
+OBJ 	= 	dll_main\ossimDllMain.obj \
+		$(LIB_BASE_DIR)\*.obj \
+		$(LIB_ELEVATION_DIR)\*.obj \
+		$(LIB_FONT_DIR)\*.obj \
+		$(LIB_IMAGING_DIR)\*.obj \
+		$(LIB_INIT_DIR)\*.obj \
+		$(LIB_KBOOL_DIR)\*.obj \
+		$(LIB_MATRIX_DIR)\*.obj \
+		$(LIB_PARALLEL_DIR)\*.obj \
+		$(LIB_PLUGIN_DIR)\*.obj \
+		$(LIB_PROJECTION_DIR)\*.obj \
+		$(LIB_SUPPORT_DATA_DIR)\*.obj \
+		$(LIB_VEC_DIR)\*.obj \
+		$(LIB_VPF_DIR)\*.obj
+
+default:	version-config.exe base elevation font imaging init kbool\
+                matrix parallel plugin projection support_data vec vpfutil
+	.\version-config.exe $(VERSION_FILE) $(VERSION_STRING)
+	cd dll_main
+	$(MAKE) /f makefile.vc
+	cd ..
+	cd base
+	$(MAKE) /f makefile.vc
+	cd ..
+	cd elevation
+	$(MAKE) /f makefile.vc
+	cd ..
+	cd font
+	$(MAKE) /f makefile.vc
+	cd ..
+	cd imaging
+	$(MAKE) /f makefile.vc
+	cd ..
+	cd init
+	$(MAKE) /f makefile.vc
+	cd ..
+	cd kbool
+	$(MAKE) /f makefile.vc
+	cd ..	
+	cd matrix
+	$(MAKE) /f makefile.vc
+	cd ..
+	cd parallel
+	$(MAKE) /f makefile.vc
+	cd ..
+	cd plugin
+	$(MAKE) /f makefile.vc
+	cd ..
+	cd projection
+	$(MAKE) /f makefile.vc
+	cd ..
+	cd support_data
+	$(MAKE) /f makefile.vc
+	cd ..
+	cd vec
+	$(MAKE) /f makefile.vc
+	cd ..
+	cd vpfutil
+	$(MAKE) /f makefile.vc
+	cd ..
+	link /NOLOGO /VERSION:$(VERSION_STRING) /NODEFAULTLIB:libcmtd /RELEASE  /DLL /OUT:"$(LIB_DIR)\ossim.dll" /IMPLIB:"$(LIB_DIR)\ossim.lib" $(OBJ) $(OSSIM_LIB_LINK)
+	$(OSSIM_VC_MANIFEST_EMBED_DLL)
+
+
+# 	link /NOLOGO /VERSION:$(VERSION_STRING) /RELEASE /DLL /NODEFAULTLIB:libc /NODEFAULTLIB:libcd /OUT:"$(LIB_DIR)\ossim.dll" /IMPLIB:"$(LIB_DIR)\ossim.lib" $(OBJ) $(OSSIM_LIB_LINK)
+
+# This assumes all the objects are built so use with caution.
+dll:
+	link /NOLOGO /VERSION:$(VERSION_STRING) /RELEASE /DLL /OUT:"$(LIB_DIR)\ossim.dll" /IMPLIB:"$(LIB_DIR)\ossim.lib" $(OBJ) $(OSSIM_LIB_LINK)
+	$(OSSIM_VC_MANIFEST_EMBED_DLL)
+
+version-config.exe:
+	$(RM) version-config.exe
+	$(RM) version-config.obj
+	$(CP) $(OSSIM_ROOT)\include\ossim\ossimConfig.h.vc $(OSSIM_ROOT)\include\ossim\ossimConfig.h
+	$(CC) /MD /EHsc -I$(OSSIM_ROOT)\include version-config.cpp
+
+
+# 	link /NOLOGO /VERSION:$(VERSION_STRING) /RELEASE /DLL /NODEFAULTLIB:libc /NODEFAULTLIB:libcd /OUT:"$(LIB_DIR)\ossim.dll" /IMPLIB:"$(LIB_DIR)\ossim.lib" $(OBJ) $(OSSIM_LIB_LINK)
+
+clean:
+	$(RM) version-config.exe
+	$(RM) version-config.obj
+	cd dll_main
+	$(MAKE) /f makefile.vc clean
+	cd ..
+	cd base
+	$(MAKE) /f makefile.vc clean
+	cd ..
+	cd elevation
+	$(MAKE) /f makefile.vc clean
+	cd ..
+	cd font
+	$(MAKE) /f makefile.vc clean
+	cd ..
+	cd imaging
+	$(MAKE) /f makefile.vc clean
+	cd ..
+	cd init
+	$(MAKE) /f makefile.vc clean
+	cd ..
+	cd kbool
+	$(MAKE) /f makefile.vc clean
+	cd ..
+	cd matrix
+	$(MAKE) /f makefile.vc clean
+	cd ..
+	cd parallel
+	$(MAKE) /f makefile.vc clean
+	cd ..
+	cd plugin
+	$(MAKE) /f makefile.vc clean
+	cd ..
+	cd projection
+	$(MAKE) /f makefile.vc clean
+	cd ..
+	cd support_data
+	$(MAKE) /f makefile.vc clean
+	cd ..
+	cd vec
+	$(MAKE) /f makefile.vc clean
+	cd ..
+	cd vpfutil
+	$(MAKE) /f makefile.vc clean
+	cd ..
+	$(RM) $(LIB_DIR)\ossim.*
+	$(OSSIM_VC_MANIFEST_CLEAN)
+
+
+!if "$(EMBED_MANIFEST)" == "1"
+!include ..\makefile.targ.inc
+!endif

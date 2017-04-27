@@ -1,0 +1,77 @@
+# The contents of this file are subject to the Interbase Public
+# License Version 1.0 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy
+# of the License at http://www.Inprise.com/IPL.html
+#
+# Software distributed under the License is distributed on an
+# "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+# or implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code was created by Inprise Corporation
+# and its predecessors. Portions created by Inprise Corporation are
+# Copyright (C) Inprise Corporation.
+#
+# All Rights Reserved.
+# Contributor(s): ______________________________________.
+
+# -------------------------- makefile ----------------------------
+#
+# This makefile will build the examples supplied with InterBase 5.0.
+# See the Programmer's Guide for information about the example
+# databases and example programs.
+#
+# You should edit the IBASE definition in this file to point to the
+# directory where InterBase was installed. Or you can specify the
+# definition on the command-line of make.
+#
+# To build all the examples use the 'all' target, by issuing the 
+# following command:
+#
+#   	make all
+# or
+#	make IBASE=/usr/interbase all
+#
+# To build any one individual target, use the following command:
+#
+#  	make 'target'
+# or
+#	make IBASE=/usr/interbase 'target'
+#
+# where target 'target' is one of the following:
+#	employe2.gdb, api1, api2, api3, api4, api5, api6, api7, 
+#	api8, api9, api9f, api10, api11, api12, api13, api14, 
+#	api15, api16, api16t, apifull, dyn1, dyn2, dyn3, dyn4, 
+#	dyn5, dynfull, stat1, stat2, stat3, stat4, stat5, 
+#	stat6, stat7, stat8, stat9, stat10, stat11, stat12, 
+#	stat12t, udflib
+#
+# ---------------------------------------------------------------------
+
+# ---------------------------------------------------------------------
+# InterBase Installation Directory
+#
+# CHANGE this definition to point to your InterBase installation directory
+# ---------------------------------------------------------------------
+IBASE=		/usr/interbase
+
+# ---------------------------------------------------------------------
+# General InterBase Defines for SCO Superserver
+# ---------------------------------------------------------------------
+GPRE=   	$(IBASE)/bin/gpre -c -n
+GPRE_M=   	$(IBASE)/bin/gpre -c -n -m
+ISQL=		$(IBASE)/bin/isql 
+DB=		employee.gdb
+
+# ---------------------------------------------------------------------
+# General Compiler and linker Defines for SCO Superserver
+# ---------------------------------------------------------------------
+CC=		gcc
+LINK=		gcc
+LIB_LINK=	ld
+CFLAGS=		-c -w -I$(IBASE)/include -o
+LIB_CFLAGS=	-fPIC -melf $(CFLAGS)
+LINK_FLAGS=	-melf -lgds -lsocket 
+LIB_LINK_FLAGS=	-G -belf -Bsymbolic -lgds -lsocket -lc -lcrypt -lm
+RM=		rm -f
+

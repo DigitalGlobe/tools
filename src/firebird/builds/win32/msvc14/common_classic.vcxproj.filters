@@ -1,0 +1,184 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="MEMORY files">
+      <UniqueIdentifier>{6ac136e7-c10b-4641-97a1-3c92c919b819}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="EXCEPTION files">
+      <UniqueIdentifier>{bb59d8c9-f310-427f-8aa1-3106ff9c874d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="CONFIG files">
+      <UniqueIdentifier>{7bcf6b0f-3463-40fa-a919-0440d52844a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OTHER files">
+      <UniqueIdentifier>{f31b1b07-c4bd-4c15-a358-b7dce98826c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{85fb4757-ac65-46f6-9444-5a07e44c0b29}</UniqueIdentifier>
+      <Extensions>h</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\common\classes\alloc.cpp">
+      <Filter>MEMORY files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\classes\locks.cpp">
+      <Filter>MEMORY files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\fb_exception.cpp">
+      <Filter>EXCEPTION files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\StatusHolder.cpp">
+      <Filter>EXCEPTION files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\config\config.cpp">
+      <Filter>CONFIG files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\config\config_file.cpp">
+      <Filter>CONFIG files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\os\win32\config_root.cpp">
+      <Filter>CONFIG files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\config\dir_list.cpp">
+      <Filter>CONFIG files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\classes\BaseStream.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\classes\ClumpletReader.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\classes\ClumpletWriter.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\cvt.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\db_alias.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\dllinst.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\classes\fb_string.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\os\win32\fbsyslog.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\classes\init.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\classes\MetaName.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\os\win32\mod_loader.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\classes\MsgPrint.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\os\win32\path_utils.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\classes\PublicHandle.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\classes\SafeArg.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\StatusArg.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\classes\TempFile.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\thd.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\classes\timestamp.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\classes\UserBlob.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\utils.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\UtilSvc.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\common\classes\alloc.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\classes\array.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\classes\BaseStream.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\classes\ClumpletReader.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\classes\ClumpletWriter.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\classes\condition.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\config\config.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\config\config_file.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\config\config_impl.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\os\config_root.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\cvt.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\db_alias.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\config\dir_list.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\classes\GenericMap.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\classes\MetaName.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\classes\MsgPrint.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\classes\SafeArg.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\StatusArg.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\StatusHolder.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\classes\TempFile.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\classes\timestamp.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\classes\UserBlob.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\utils_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioPropertySheet
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="firebird2intl"
+	OutputDirectory="$(PlatformName)\$(ConfigurationName)"
+	IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+	>
+	<Tool
+		Name="VCCLCompilerTool"
+		EnableFunctionLevelLinking="false"
+		DisableLanguageExtensions="true"
+		WarningLevel="3"
+		DebugInformationFormat="3"
+		PreprocessorDefinitions="_CRT_SECURE_NO_WARNINGS"
+	/>
+</VisualStudioPropertySheet>

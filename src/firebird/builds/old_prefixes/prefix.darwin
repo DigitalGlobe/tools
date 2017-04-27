@@ -1,0 +1,194 @@
+# The contents of this file are subject to the Interbase Public
+# License Version 1.0 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy
+# of the License at http://www.Inprise.com/IPL.html
+#
+# Software distributed under the License is distributed on an
+# "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+# or implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code was created by Inprise Corporation
+# and its predecessors. Portions created by Inprise Corporation are
+#
+# Copyright (C) 2000 Inprise Corporation
+# All Rights Reserved.
+# Contributor(s): ______________________________________.
+# Start of file prefix.darwin:	$(VERSION)	@PLATFORM@
+#
+
+.SUFFIXES: .bin .o .cpp .c
+.cpp.o:
+	$(CXX) -c $(CFLAGS) $(CXX_INCLUDE_DIRS) $(VERSION_FLAG) $<
+.cpp.bin:
+	$(CXX) -c $(PIC_FLAGS) $(CXX_INCLUDE_DIRS) $(VERSION_FLAG) -o $*.bin $<
+.c.o:
+	$(CC) -c $(CFLAGS) $(CXX_INCLUDE_DIRS) $(VERSION_FLAG) $<
+.c.bin:
+	$(CC) -c $(PIC_FLAGS) $(CXX_INCLUDE_DIRS) $(VERSION_FLAG) -o $*.bin $<
+
+
+PROD_DEBUG_OBJECTS=	nodebug.o
+PROD_SHRLIB_DIR=	
+PROD_VERSION_FLAG=	-DPROD_BUILD
+PROD_CFLAGS=            -O3
+
+
+DEV_DEBUG_OBJECTS=	grammar.o dbg.o dbt.o dmp.o
+DEV_SHRLIB_DIR=		
+DEV_VERSION_FLAG=	-DDEV_BUILD
+DEV_CFLAGS=		-ggdb
+
+FBFW_PREFIX=		Firebird2
+FW_NAME=		$(FBFW_PREFIX).framework
+FW_PATH=		$(OBJS)/firebird
+FB_FRAMEWORK=		$(FW_PATH)/$(FW_NAME)
+FW_VERS=		1.1.0
+FW_COMPAT_VERS=		1.0.0
+PHASE2_SHLIB_PATH=	unset INTERBASE; export DYLD_FRAMEWORK_PATH=$(OBJS)/firebird;
+POST_BUILD_TARGET=	darwin_framework
+SS_POST_BUILD_TARGET=	ss_darwin_framework
+
+DEBUG_OBJECTS=		$($(VERSION)_DEBUG_OBJECTS)
+SHRLIB_DIR=		$($(VERSION)_SHRLIB_DIR)
+SHRLIB_EXT=		.dylib
+VERSION_FLAG=		$($(VERSION)_VERSION_FLAG)
+CFLAGS_COMMON=		$($(VERSION)_CFLAGS) -w -F$(FW_PATH)
+#CFLAGS=		$(CFLAGS_COMMON) $(SUPER_FLAG)
+PIC_J_CFLAGS=		$(CFLAGS_COMMON) -DPIPE_IS_SHRLIB -dynamic -fno-common
+SPECIAL_OBJECTS=	j
+UDF_LINK_CMD=		libtool
+UDF_CFLAGS=         	-dynamic -fno-common
+UDF_LFLAGS=         	-dynamic
+UDF_SHRLIBS=        	-lcc_dynamic -framework System
+
+#NOTE: PIC_J_CFLAGS is special CFLAGS used to build PIPD_IS_SHRLIB modules
+#      to workaround the Solaris threading problems with signals
+
+
+#NOTE: -Xt is ANSI C transition mode (default)
+#      -DBDS_COMP is for BSD Compatibility package and is used in <sys/ioctl.h>
+
+ACCESS_METHOD=		gdslib.dylib pipe
+BACKEND_BRIDGE_MISC=	$(OBJS)/pipe/head5.o $(OBJS)/pipe/allp.o
+BIN_PATH=		/usr/isc/bin
+BRIDGE_MISC=		$(OBJS)/pipe/head5.o $(OBJS)/pipe/allp.o
+CHMOD_VAL=		666
+CURSES_LIB=             
+DSQL_P_OBJS=		dsql_p_objects
+FORM_OBJECTS=		form.o
+FORM_TRN_OBJECTS=	form_trn.o
+FUNCTIONS=		functions.bin
+FUNCSHR=		$(OBJS)/firebird/lib/gdsf.so
+DROP_LINK=		$(GDS_LINK)
+GDS_LINK=		$(GDSSHR_LINK)
+GDS_PYXIS=		gds_pyxis.a
+GDSLIB_BACKEND=		$(OBJS)/firebird/lib/gds_b.a
+GDSLIB_LINK=		-L$(OBJS)/jrd -lgds_b
+#LINK_OPTS=		-F$(FW_PATH) -framework $(FBFW_PREFIX)
+#SS_LINK_OPTS=		-F$(FW_PATH)
+GPRE_BOOT_LINK_OPTS=	
+PLATFORM_INSTALLER=	darwin_installer
+SUPER_PLATFORM_INSTALLER= super_darwin_installer
+
+GDSSHR_DEST=		$(OBJS)/firebird/lib/gds.dylib
+GDSSHR=			gds.dylib
+#LINUX_GDSSHR=		$(GDSSHR)
+GDSSHR_LINK=		-F$(FW_PATH) -framework $(FBFW_PREFIX)
+#GDSSHR_LINK=		$(SHRLIB_DIR) -lgds_pyxis
+#PIPE_GDSSHR=		$(OBJS)/firebird/lib/gds.so.0
+#PIPE_GDSSHR_LINK=	$(SHRLIB_DIR) -lgds_pyxis
+PIPE_GDSSHR_LINK=	$(SHRLIB_DIR)
+HLPDIR=			$(SOURCE)/qli/
+HOSTNAME=		`hostname | cut -d'.' -f1`
+INCLUDES=		include_so include_so_ada include_darwin
+INTL=			intl
+
+INTL_CFLAGS=		-bundle $(CFLAGS)
+INTL_LD_LINE=		cc -bundle -o gdsintl -F$(OBJS)/firebird -framework $(FBFW_PREFIX)
+INTL_PIC_FLAGS=		-bundle $(PIC_FLAGS)
+INTL_TARGET=		intl_shr_objs
+IO_OBJECTS=		unix.o
+IO_P_OBJECTS=		unix.bin
+JRD_MISC_OBJECTS=	
+JRD_J_MISC_OBJECTS=
+#JRD_P_MISC_OBJECTS=	$(OBJS)/jrd/nodebug.bin
+JRD_P_MISC_OBJECTS=	
+LANG_OBJECTS=		ada.o ftn.o cob.o
+LANGUAGES=		cc cxx ada microfocus_cob make16 gdl1
+LD_LIBS=		-lcc_dynamic
+LD_LIBS_J=		
+LD_OPTS=		-dylib
+LOCK_JRD_MISC=		
+LOCK_MANAGER=		
+MARION_DB=		-d source/marion.gdb
+MUISQL=			muisql
+#MUISQL_MU_LIB=		-L /usr/gds.$(HOSTNAME)/qa_tools/lib -lmu
+MUISQL_MU_LIB=		-L /usr/gds.$(HOSTNAME)/qa_tools/lib -lmu
+MUISQL_LINK_OPTS=	$(MUISQL_MU_LIB) $(PIPE_GDSSHR_LINK)
+PIC_FLAGS=		$(CFLAGS) -dynamic -fno-common
+PIPE=			gds.a gds_pipe
+PYXIS=			pyxis
+PYXIS_MISC_OBJS=	$(PYXIS_MISC)
+PYXIS_P_MISC_OBJS=	$(PYXIS_P_MISC)
+PYXIS_OBJECTS=		pyxis_objects
+PYXIS_MISC_OBJECTS=	$(PYXDIR)cdm.o $(PYXDIR)vt100.o
+REG_HELP=		isc_ins_hlp.dat
+REMOTE_GDSSHR=		$(GDSSHR)
+REMOTE_GDSSHR_LINK=	$(SERVER_LINK)
+REMOTE_P_OBJS=		rem_p_objects
+SCREEN_LIBS=		
+SERVER_LINK=		$(GDSSHR_LINK)
+SETUP_ISC=              ISC_USER=sysdba; ISC_PASSWORD=masterkey; export ISC_USER ISC_PASSWORD;
+#SPECIAL_OPT=		$(SOURCE)/special_opt
+SPECIAL_OPT=		
+NETWORK_LIB=		
+SOCKET_LIB=		
+THREAD_LIB=		-lpthread
+SUN_FUNCSHR=		$(FUNCSHR)
+DARWIN_SUPER_GDSSHR=		$(OBJS)/firebird/lib/gds.dylib.1
+SUPER_CLIENT_GDSSHR=    $(DARWIN_SUPER_GDSSHR)
+SUPER_BACKEND=		$(OBJS)/jrd/gds_ss.a
+SUPER_LINK=		-L$(OBJS)/jrd -lgds_ss -framework System -framework Foundation
+SUPER_SERVER=	
+UTILITIES=		
+WAL_P_OBJS=		wal_p_objects
+
+SU_EXEC=		$(SOURCE)/su_exec.sh
+
+
+SUPER_SERVER_DEST=	$(OBJS)/firebird/bin/ibserver
+INET_SERVER_DEST=	$(OBJS)/firebird/bin/gds_inet_server
+DNET_SERVER_DEST=	$(OBJS)/firebird/bin/gds_dnet_server
+AMBX_SERVER_DEST=	$(OBJS)/firebird/bin/gds_server
+INET_LIB_DEST=		$(OBJS)/firebird/lib/gds_inet_server.a
+DNET_LIB_DEST=		$(OBJS)/firebird/lib/gds_dnet_server.a
+
+SH=			sh -c
+RM=			rm -f
+CHMOD=			chmod
+CHMOD_6=		chmod 666
+CHMOD_7=		chmod 777
+CHMOD_S7=		chmod 06777 
+MV=			mv -f
+TOUCH=			touch
+CP=			cp
+ECHO=			echo
+QUIET_ECHO=		@echo
+CD=			cd
+CAT=			cat
+AR=			ar r
+EXPAND_DBNAME=		@echo No need to expand...
+COMPRESS_DBNAME=	@echo No need to compress...
+
+ARCH_EXT=		.a
+EXEC_EXT=
+
+V3PRINTER=		$(OBJS)/lock/printv3.o
+
+MSG_INSTALL_CMD=	$(CP) $(OBJS)/firebird/interbase.msg $(FB_FRAMEWORK)/Resources/English.lproj
+CARBONCORE_DIR_FLAG=	-F/System/Library/Frameworks/CoreServices.framework/Frameworks
+COREFOUNDATION_LINK=	-framework CoreFoundation
+FOUNDATION_LINK=	-framework Foundation
+
+#   End of file prefix.darwin:	$(VERSION)	$(PLATFORM)

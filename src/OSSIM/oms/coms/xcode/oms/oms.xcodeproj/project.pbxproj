@@ -1,0 +1,1168 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		43530F3D10436C2E004A4474 /* WmsView.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43530F2910436C2E004A4474 /* WmsView.cpp */; };
+		43530F3E10436C2E004A4474 /* Util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43530F2A10436C2E004A4474 /* Util.cpp */; };
+		43530F3F10436C2E004A4474 /* Source.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43530F2B10436C2E004A4474 /* Source.cpp */; };
+		43530F4010436C2E004A4474 /* SingleImageChain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43530F2C10436C2E004A4474 /* SingleImageChain.cpp */; };
+		43530F4110436C2E004A4474 /* CoordinateUtility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43530F2D10436C2E004A4474 /* CoordinateUtility.cpp */; };
+		43530F4210436C2E004A4474 /* ImageData.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43530F2E10436C2E004A4474 /* ImageData.cpp */; };
+		43530F4310436C2E004A4474 /* Info.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43530F2F10436C2E004A4474 /* Info.cpp */; };
+		43530F4410436C2E004A4474 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = 43530F3010436C2E004A4474 /* Makefile */; };
+		43530F4510436C2E004A4474 /* ChainUtility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43530F3110436C2E004A4474 /* ChainUtility.cpp */; };
+		43530F4610436C2E004A4474 /* Init.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43530F3210436C2E004A4474 /* Init.cpp */; };
+		43530F4710436C2E004A4474 /* WmsMap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43530F3310436C2E004A4474 /* WmsMap.cpp */; };
+		43530F4810436C2E004A4474 /* ImageModel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43530F3410436C2E004A4474 /* ImageModel.cpp */; };
+		43530F4910436C2E004A4474 /* Mosaic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43530F3510436C2E004A4474 /* Mosaic.cpp */; };
+		43530F4A10436C2E004A4474 /* DataInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43530F3610436C2E004A4474 /* DataInfo.cpp */; };
+		43530F4B10436C2E004A4474 /* Projection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43530F3710436C2E004A4474 /* Projection.cpp */; };
+		43530F4C10436C2E004A4474 /* OutputSource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43530F3810436C2E004A4474 /* OutputSource.cpp */; };
+		43530F4D10436C2E004A4474 /* ImageStager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43530F3910436C2E004A4474 /* ImageStager.cpp */; };
+		43530F4E10436C2E004A4474 /* ImageOutputFormat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43530F3A10436C2E004A4474 /* ImageOutputFormat.cpp */; };
+		43530F4F10436C2E004A4474 /* Object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43530F3B10436C2E004A4474 /* Object.cpp */; };
+		43530F5010436C2E004A4474 /* Video.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43530F3C10436C2E004A4474 /* Video.cpp */; };
+		43530F6410436C3F004A4474 /* ImageData.h in Headers */ = {isa = PBXBuildFile; fileRef = 43530F5110436C3F004A4474 /* ImageData.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43530F6510436C3F004A4474 /* Mosaic.h in Headers */ = {isa = PBXBuildFile; fileRef = 43530F5210436C3F004A4474 /* Mosaic.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43530F6610436C3F004A4474 /* Util.h in Headers */ = {isa = PBXBuildFile; fileRef = 43530F5310436C3F004A4474 /* Util.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43530F6710436C3F004A4474 /* ImageStager.h in Headers */ = {isa = PBXBuildFile; fileRef = 43530F5410436C3F004A4474 /* ImageStager.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43530F6810436C3F004A4474 /* OutputSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 43530F5510436C3F004A4474 /* OutputSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43530F6910436C3F004A4474 /* Info.h in Headers */ = {isa = PBXBuildFile; fileRef = 43530F5610436C3F004A4474 /* Info.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43530F6A10436C3F004A4474 /* Projection.h in Headers */ = {isa = PBXBuildFile; fileRef = 43530F5710436C3F004A4474 /* Projection.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43530F6B10436C3F004A4474 /* Source.h in Headers */ = {isa = PBXBuildFile; fileRef = 43530F5810436C3F004A4474 /* Source.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43530F6C10436C3F004A4474 /* Object.h in Headers */ = {isa = PBXBuildFile; fileRef = 43530F5910436C3F004A4474 /* Object.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43530F6D10436C3F004A4474 /* WmsMap.h in Headers */ = {isa = PBXBuildFile; fileRef = 43530F5A10436C3F004A4474 /* WmsMap.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43530F6E10436C3F004A4474 /* CoordinateUtility.h in Headers */ = {isa = PBXBuildFile; fileRef = 43530F5B10436C3F004A4474 /* CoordinateUtility.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43530F6F10436C3F004A4474 /* ImageOutputFormat.h in Headers */ = {isa = PBXBuildFile; fileRef = 43530F5C10436C3F004A4474 /* ImageOutputFormat.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43530F7010436C3F004A4474 /* Video.h in Headers */ = {isa = PBXBuildFile; fileRef = 43530F5D10436C3F004A4474 /* Video.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43530F7110436C3F004A4474 /* ImageModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 43530F5E10436C3F004A4474 /* ImageModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43530F7210436C3F004A4474 /* SingleImageChain.h in Headers */ = {isa = PBXBuildFile; fileRef = 43530F5F10436C3F004A4474 /* SingleImageChain.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43530F7310436C3F004A4474 /* Constants.h in Headers */ = {isa = PBXBuildFile; fileRef = 43530F6010436C3F004A4474 /* Constants.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43530F7410436C3F004A4474 /* DataInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 43530F6110436C3F004A4474 /* DataInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43530F7510436C3F004A4474 /* Init.h in Headers */ = {isa = PBXBuildFile; fileRef = 43530F6210436C3F004A4474 /* Init.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43530F7610436C3F004A4474 /* WmsView.h in Headers */ = {isa = PBXBuildFile; fileRef = 43530F6310436C3F004A4474 /* WmsView.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43531126104457F0004A4474 /* WktUtility.h in Headers */ = {isa = PBXBuildFile; fileRef = 43531125104457F0004A4474 /* WktUtility.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		4353113710445801004A4474 /* WktUtility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4353113610445801004A4474 /* WktUtility.cpp */; };
+		4386B3090DF060F9007011FB /* ossim.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4386B2A20DF060CF007011FB /* ossim.framework */; };
+		43ED18130DF854C50077F54B /* ossimPredator.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43ED17570DF8386E0077F54B /* ossimPredator.framework */; };
+		8DC2EF530486A6940098B216 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
+		EE05E6D70E23BDCA005A64BC /* OpenThreads.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EE05E6D60E23BDCA005A64BC /* OpenThreads.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		43530ED710436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628031042E368002A87C7;
+			remoteInfo = "template-app";
+		};
+		43530ED910436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628151042E3B0002A87C7;
+			remoteInfo = "ossim-adrg-dump";
+		};
+		43530EDB10436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628371042E3F6002A87C7;
+			remoteInfo = "ossim-applanix2ogeom";
+		};
+		43530EDD10436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628551042E461002A87C7;
+			remoteInfo = "ossim-band-merge";
+		};
+		43530EDF10436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628741042E4AC002A87C7;
+			remoteInfo = "ossim-btoa";
+		};
+		43530EE110436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628861042E4D1002A87C7;
+			remoteInfo = "ossim-chgkwval";
+		};
+		43530EE310436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4336289F1042E52A002A87C7;
+			remoteInfo = "ossim-cmm";
+		};
+		43530EE510436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628B91042E560002A87C7;
+			remoteInfo = "ossim-computeSrtmStats";
+		};
+		43530EE710436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628D61042E59C002A87C7;
+			remoteInfo = "ossim-correl";
+		};
+		43530EE910436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433628F11042E5D1002A87C7;
+			remoteInfo = "ossim-create-cg";
+		};
+		43530EEB10436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4336290B1042E607002A87C7;
+			remoteInfo = "ossim-create-histo";
+		};
+		43530EF310436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433629811042E712002A87C7;
+			remoteInfo = "ossim-dms2deg";
+		};
+		43530EF510436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4336299D1042E759002A87C7;
+			remoteInfo = "ossim-dump-ocg";
+		};
+		43530EF710436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433629B51042E77C002A87C7;
+			remoteInfo = "ossim-ecg2ocg";
+		};
+		43530EF910436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433629D01042E7B1002A87C7;
+			remoteInfo = "ossim-extract-vertices";
+		};
+		43530EFB10436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 433629E41042E807002A87C7;
+			remoteInfo = "ossim-foo";
+		};
+		43530EFF10436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362A2D1042E88F002A87C7;
+			remoteInfo = "ossim-height";
+		};
+		43530F0110436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362A4B1042E8BD002A87C7;
+			remoteInfo = "ossim-icp";
+		};
+		43530F0310436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362A631042E8EE002A87C7;
+			remoteInfo = "ossim-igen";
+		};
+		43530F0510436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362A7D1042E914002A87C7;
+			remoteInfo = "ossim-img2md";
+		};
+		43530F0710436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362A9A1042E955002A87C7;
+			remoteInfo = "ossim-img2rr";
+		};
+		43530F0910436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362AB41042E981002A87C7;
+			remoteInfo = "ossim-info";
+		};
+		43530F0B10436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362AD21042EA43002A87C7;
+			remoteInfo = "ossim-modopt";
+		};
+		43530F0D10436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362AEF1042EA81002A87C7;
+			remoteInfo = "ossim-mosaic";
+		};
+		43530F1310436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362B471042EB45002A87C7;
+			remoteInfo = "ossim-ogeom2ogeom";
+		};
+		43530F1510436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362B641042EB70002A87C7;
+			remoteInfo = "ossim-orthoigen";
+		};
+		43530F1710436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362B801042EB9B002A87C7;
+			remoteInfo = "ossim-pixelflip";
+		};
+		43530F1910436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362B9B1042EBCE002A87C7;
+			remoteInfo = "ossim-prune";
+		};
+		43530F1D10436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362BD21042EC26002A87C7;
+			remoteInfo = "ossim-rejout";
+		};
+		43530F1F10436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362BEE1042EC50002A87C7;
+			remoteInfo = "ossim-senint";
+		};
+		43530F2110436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362C081042EC80002A87C7;
+			remoteInfo = "ossim-space-imaging";
+		};
+		43530F2310436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362C221042ECAF002A87C7;
+			remoteInfo = "ossim-swapbytes";
+		};
+		43530F2510436C13004A4474 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43362C3C1042ECD6002A87C7;
+			remoteInfo = "ossim-tfw2ogeom";
+		};
+		4386B2A10DF060CF007011FB /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8D07F2C80486CC7A007CD1D0;
+			remoteInfo = ossim;
+		};
+		43ED17560DF8386E0077F54B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 43ED17520DF8386E0077F54B /* ossimPredator.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = EE3F868B0D0DBB2300DFD3DF;
+			remoteInfo = ossimPredator;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		089C1667FE841158C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		43530F2910436C2E004A4474 /* WmsView.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = WmsView.cpp; path = ../../src/oms/WmsView.cpp; sourceTree = SOURCE_ROOT; };
+		43530F2A10436C2E004A4474 /* Util.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Util.cpp; path = ../../src/oms/Util.cpp; sourceTree = SOURCE_ROOT; };
+		43530F2B10436C2E004A4474 /* Source.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Source.cpp; path = ../../src/oms/Source.cpp; sourceTree = SOURCE_ROOT; };
+		43530F2C10436C2E004A4474 /* SingleImageChain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SingleImageChain.cpp; path = ../../src/oms/SingleImageChain.cpp; sourceTree = SOURCE_ROOT; };
+		43530F2D10436C2E004A4474 /* CoordinateUtility.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CoordinateUtility.cpp; path = ../../src/oms/CoordinateUtility.cpp; sourceTree = SOURCE_ROOT; };
+		43530F2E10436C2E004A4474 /* ImageData.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ImageData.cpp; path = ../../src/oms/ImageData.cpp; sourceTree = SOURCE_ROOT; };
+		43530F2F10436C2E004A4474 /* Info.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Info.cpp; path = ../../src/oms/Info.cpp; sourceTree = SOURCE_ROOT; };
+		43530F3010436C2E004A4474 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; name = Makefile; path = ../../src/oms/Makefile; sourceTree = SOURCE_ROOT; };
+		43530F3110436C2E004A4474 /* ChainUtility.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ChainUtility.cpp; path = ../../src/oms/ChainUtility.cpp; sourceTree = SOURCE_ROOT; };
+		43530F3210436C2E004A4474 /* Init.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Init.cpp; path = ../../src/oms/Init.cpp; sourceTree = SOURCE_ROOT; };
+		43530F3310436C2E004A4474 /* WmsMap.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = WmsMap.cpp; path = ../../src/oms/WmsMap.cpp; sourceTree = SOURCE_ROOT; };
+		43530F3410436C2E004A4474 /* ImageModel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ImageModel.cpp; path = ../../src/oms/ImageModel.cpp; sourceTree = SOURCE_ROOT; };
+		43530F3510436C2E004A4474 /* Mosaic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Mosaic.cpp; path = ../../src/oms/Mosaic.cpp; sourceTree = SOURCE_ROOT; };
+		43530F3610436C2E004A4474 /* DataInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DataInfo.cpp; path = ../../src/oms/DataInfo.cpp; sourceTree = SOURCE_ROOT; };
+		43530F3710436C2E004A4474 /* Projection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Projection.cpp; path = ../../src/oms/Projection.cpp; sourceTree = SOURCE_ROOT; };
+		43530F3810436C2E004A4474 /* OutputSource.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = OutputSource.cpp; path = ../../src/oms/OutputSource.cpp; sourceTree = SOURCE_ROOT; };
+		43530F3910436C2E004A4474 /* ImageStager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ImageStager.cpp; path = ../../src/oms/ImageStager.cpp; sourceTree = SOURCE_ROOT; };
+		43530F3A10436C2E004A4474 /* ImageOutputFormat.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ImageOutputFormat.cpp; path = ../../src/oms/ImageOutputFormat.cpp; sourceTree = SOURCE_ROOT; };
+		43530F3B10436C2E004A4474 /* Object.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Object.cpp; path = ../../src/oms/Object.cpp; sourceTree = SOURCE_ROOT; };
+		43530F3C10436C2E004A4474 /* Video.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Video.cpp; path = ../../src/oms/Video.cpp; sourceTree = SOURCE_ROOT; };
+		43530F5110436C3F004A4474 /* ImageData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ImageData.h; path = ../../include/oms/ImageData.h; sourceTree = SOURCE_ROOT; };
+		43530F5210436C3F004A4474 /* Mosaic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Mosaic.h; path = ../../include/oms/Mosaic.h; sourceTree = SOURCE_ROOT; };
+		43530F5310436C3F004A4474 /* Util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Util.h; path = ../../include/oms/Util.h; sourceTree = SOURCE_ROOT; };
+		43530F5410436C3F004A4474 /* ImageStager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ImageStager.h; path = ../../include/oms/ImageStager.h; sourceTree = SOURCE_ROOT; };
+		43530F5510436C3F004A4474 /* OutputSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OutputSource.h; path = ../../include/oms/OutputSource.h; sourceTree = SOURCE_ROOT; };
+		43530F5610436C3F004A4474 /* Info.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Info.h; path = ../../include/oms/Info.h; sourceTree = SOURCE_ROOT; };
+		43530F5710436C3F004A4474 /* Projection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Projection.h; path = ../../include/oms/Projection.h; sourceTree = SOURCE_ROOT; };
+		43530F5810436C3F004A4474 /* Source.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Source.h; path = ../../include/oms/Source.h; sourceTree = SOURCE_ROOT; };
+		43530F5910436C3F004A4474 /* Object.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Object.h; path = ../../include/oms/Object.h; sourceTree = SOURCE_ROOT; };
+		43530F5A10436C3F004A4474 /* WmsMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WmsMap.h; path = ../../include/oms/WmsMap.h; sourceTree = SOURCE_ROOT; };
+		43530F5B10436C3F004A4474 /* CoordinateUtility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CoordinateUtility.h; path = ../../include/oms/CoordinateUtility.h; sourceTree = SOURCE_ROOT; };
+		43530F5C10436C3F004A4474 /* ImageOutputFormat.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ImageOutputFormat.h; path = ../../include/oms/ImageOutputFormat.h; sourceTree = SOURCE_ROOT; };
+		43530F5D10436C3F004A4474 /* Video.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Video.h; path = ../../include/oms/Video.h; sourceTree = SOURCE_ROOT; };
+		43530F5E10436C3F004A4474 /* ImageModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ImageModel.h; path = ../../include/oms/ImageModel.h; sourceTree = SOURCE_ROOT; };
+		43530F5F10436C3F004A4474 /* SingleImageChain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SingleImageChain.h; path = ../../include/oms/SingleImageChain.h; sourceTree = SOURCE_ROOT; };
+		43530F6010436C3F004A4474 /* Constants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Constants.h; path = ../../include/oms/Constants.h; sourceTree = SOURCE_ROOT; };
+		43530F6110436C3F004A4474 /* DataInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DataInfo.h; path = ../../include/oms/DataInfo.h; sourceTree = SOURCE_ROOT; };
+		43530F6210436C3F004A4474 /* Init.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Init.h; path = ../../include/oms/Init.h; sourceTree = SOURCE_ROOT; };
+		43530F6310436C3F004A4474 /* WmsView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WmsView.h; path = ../../include/oms/WmsView.h; sourceTree = SOURCE_ROOT; };
+		43531125104457F0004A4474 /* WktUtility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WktUtility.h; path = ../../include/oms/WktUtility.h; sourceTree = SOURCE_ROOT; };
+		4353113610445801004A4474 /* WktUtility.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = WktUtility.cpp; path = ../../src/oms/WktUtility.cpp; sourceTree = SOURCE_ROOT; };
+		4386B25E0DF060A3007011FB /* common_settings.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = common_settings.xcconfig; path = ../../../../ossim/xcode/ossim/common_settings.xcconfig; sourceTree = SOURCE_ROOT; };
+		4386B2610DF060CF007011FB /* ossim.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ossim.xcodeproj; path = ../../../../ossim/xcode/ossim/ossim.xcodeproj; sourceTree = SOURCE_ROOT; };
+		43ED17520DF8386E0077F54B /* ossimPredator.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = ossimPredator.xcodeproj; path = ../../../../ossimPredator/xcode/ossimPredator/ossimPredator.xcodeproj; sourceTree = SOURCE_ROOT; };
+		8DC2EF5A0486A6940098B216 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8DC2EF5B0486A6940098B216 /* oms.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = oms.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		EE05E6D60E23BDCA005A64BC /* OpenThreads.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenThreads.framework; path = ../../../../ossim_dependencies/Frameworks/OpenThreads.framework; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8DC2EF560486A6940098B216 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				43ED18130DF854C50077F54B /* ossimPredator.framework in Frameworks */,
+				4386B3090DF060F9007011FB /* ossim.framework in Frameworks */,
+				EE05E6D70E23BDCA005A64BC /* OpenThreads.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		034768DFFF38A50411DB9C8B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8DC2EF5B0486A6940098B216 /* oms.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0867D691FE84028FC02AAC07 /* oms */ = {
+			isa = PBXGroup;
+			children = (
+				4386B30F0DF06194007011FB /* Source */,
+				4386B25E0DF060A3007011FB /* common_settings.xcconfig */,
+				08FB77AEFE84172EC02AAC07 /* Classes */,
+				32C88DFF0371C24200C91783 /* Other Sources */,
+				089C1665FE841158C02AAC07 /* Resources */,
+				0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */,
+				034768DFFF38A50411DB9C8B /* Products */,
+			);
+			name = oms;
+			sourceTree = "<group>";
+		};
+		0867D69AFE84028FC02AAC07 /* External Frameworks and Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				1058C7B0FEA5585E11CA2CBB /* Linked Frameworks */,
+				1058C7B2FEA5585E11CA2CBB /* Other Frameworks */,
+			);
+			name = "External Frameworks and Libraries";
+			sourceTree = "<group>";
+		};
+		089C1665FE841158C02AAC07 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				8DC2EF5A0486A6940098B216 /* Info.plist */,
+				089C1666FE841158C02AAC07 /* InfoPlist.strings */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+		08FB77AEFE84172EC02AAC07 /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Classes;
+			sourceTree = "<group>";
+		};
+		1058C7B0FEA5585E11CA2CBB /* Linked Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				43ED17520DF8386E0077F54B /* ossimPredator.xcodeproj */,
+				4386B2610DF060CF007011FB /* ossim.xcodeproj */,
+			);
+			name = "Linked Frameworks";
+			sourceTree = "<group>";
+		};
+		1058C7B2FEA5585E11CA2CBB /* Other Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				EE05E6D60E23BDCA005A64BC /* OpenThreads.framework */,
+			);
+			name = "Other Frameworks";
+			sourceTree = "<group>";
+		};
+		32C88DFF0371C24200C91783 /* Other Sources */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "Other Sources";
+			sourceTree = "<group>";
+		};
+		4386B2620DF060CF007011FB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4386B2A20DF060CF007011FB /* ossim.framework */,
+				43530ED810436C13004A4474 /* template-app */,
+				43530EDA10436C13004A4474 /* ossim-adrg-dump */,
+				43530EDC10436C13004A4474 /* ossim-applanix2ogeom */,
+				43530EDE10436C13004A4474 /* ossim-band-merge */,
+				43530EE010436C13004A4474 /* ossim-btoa */,
+				43530EE210436C13004A4474 /* template-app */,
+				43530EE410436C13004A4474 /* ossim-cmm */,
+				43530EE610436C13004A4474 /* ossim-computeSrtmStats */,
+				43530EE810436C13004A4474 /* ossim-correl */,
+				43530EEA10436C13004A4474 /* ossim-create-cg */,
+				43530EEC10436C13004A4474 /* ossim-create-histo */,
+				43530EF410436C13004A4474 /* ossim-dms2deg */,
+				43530EF610436C13004A4474 /* ossim-dump-ocg */,
+				43530EF810436C13004A4474 /* ossim-ecg2ocg */,
+				43530EFA10436C13004A4474 /* ossim-extract-vertices */,
+				43530EFC10436C13004A4474 /* ossim-foo */,
+				43530F0010436C13004A4474 /* ossim-height */,
+				43530F0210436C13004A4474 /* ossim-icp */,
+				43530F0410436C13004A4474 /* ossim-igen */,
+				43530F0610436C13004A4474 /* ossim-img2md */,
+				43530F0810436C13004A4474 /* ossim-img2rr */,
+				43530F0A10436C13004A4474 /* ossim-info */,
+				43530F0C10436C13004A4474 /* ossim-modopt */,
+				43530F0E10436C13004A4474 /* ossim-mosaic */,
+				43530F1410436C13004A4474 /* ossim-ogeom2ogeom */,
+				43530F1610436C13004A4474 /* ossim-orthoigen */,
+				43530F1810436C13004A4474 /* ossim-pixelflip */,
+				43530F1A10436C13004A4474 /* ossim-prune */,
+				43530F1E10436C13004A4474 /* ossim-rejout */,
+				43530F2010436C13004A4474 /* ossim-senint */,
+				43530F2210436C13004A4474 /* ossim-space-imaging */,
+				43530F2410436C13004A4474 /* ossim-swapbytes */,
+				43530F2610436C13004A4474 /* ossim-tfw2ogeom */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4386B30F0DF06194007011FB /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				4386B3100DF0619A007011FB /* Headers */,
+				4386B3110DF061A4007011FB /* src */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		4386B3100DF0619A007011FB /* Headers */ = {
+			isa = PBXGroup;
+			children = (
+				43531125104457F0004A4474 /* WktUtility.h */,
+				43530F5110436C3F004A4474 /* ImageData.h */,
+				43530F5210436C3F004A4474 /* Mosaic.h */,
+				43530F5310436C3F004A4474 /* Util.h */,
+				43530F5410436C3F004A4474 /* ImageStager.h */,
+				43530F5510436C3F004A4474 /* OutputSource.h */,
+				43530F5610436C3F004A4474 /* Info.h */,
+				43530F5710436C3F004A4474 /* Projection.h */,
+				43530F5810436C3F004A4474 /* Source.h */,
+				43530F5910436C3F004A4474 /* Object.h */,
+				43530F5A10436C3F004A4474 /* WmsMap.h */,
+				43530F5B10436C3F004A4474 /* CoordinateUtility.h */,
+				43530F5C10436C3F004A4474 /* ImageOutputFormat.h */,
+				43530F5D10436C3F004A4474 /* Video.h */,
+				43530F5E10436C3F004A4474 /* ImageModel.h */,
+				43530F5F10436C3F004A4474 /* SingleImageChain.h */,
+				43530F6010436C3F004A4474 /* Constants.h */,
+				43530F6110436C3F004A4474 /* DataInfo.h */,
+				43530F6210436C3F004A4474 /* Init.h */,
+				43530F6310436C3F004A4474 /* WmsView.h */,
+			);
+			name = Headers;
+			sourceTree = "<group>";
+		};
+		4386B3110DF061A4007011FB /* src */ = {
+			isa = PBXGroup;
+			children = (
+				4353113610445801004A4474 /* WktUtility.cpp */,
+				43530F2910436C2E004A4474 /* WmsView.cpp */,
+				43530F2A10436C2E004A4474 /* Util.cpp */,
+				43530F2B10436C2E004A4474 /* Source.cpp */,
+				43530F2C10436C2E004A4474 /* SingleImageChain.cpp */,
+				43530F2D10436C2E004A4474 /* CoordinateUtility.cpp */,
+				43530F2E10436C2E004A4474 /* ImageData.cpp */,
+				43530F2F10436C2E004A4474 /* Info.cpp */,
+				43530F3010436C2E004A4474 /* Makefile */,
+				43530F3110436C2E004A4474 /* ChainUtility.cpp */,
+				43530F3210436C2E004A4474 /* Init.cpp */,
+				43530F3310436C2E004A4474 /* WmsMap.cpp */,
+				43530F3410436C2E004A4474 /* ImageModel.cpp */,
+				43530F3510436C2E004A4474 /* Mosaic.cpp */,
+				43530F3610436C2E004A4474 /* DataInfo.cpp */,
+				43530F3710436C2E004A4474 /* Projection.cpp */,
+				43530F3810436C2E004A4474 /* OutputSource.cpp */,
+				43530F3910436C2E004A4474 /* ImageStager.cpp */,
+				43530F3A10436C2E004A4474 /* ImageOutputFormat.cpp */,
+				43530F3B10436C2E004A4474 /* Object.cpp */,
+				43530F3C10436C2E004A4474 /* Video.cpp */,
+			);
+			name = src;
+			sourceTree = "<group>";
+		};
+		43ED17530DF8386E0077F54B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				43ED17570DF8386E0077F54B /* ossimPredator.framework */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		8DC2EF500486A6940098B216 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				43530F6410436C3F004A4474 /* ImageData.h in Headers */,
+				43530F6510436C3F004A4474 /* Mosaic.h in Headers */,
+				43530F6610436C3F004A4474 /* Util.h in Headers */,
+				43530F6710436C3F004A4474 /* ImageStager.h in Headers */,
+				43530F6810436C3F004A4474 /* OutputSource.h in Headers */,
+				43530F6910436C3F004A4474 /* Info.h in Headers */,
+				43530F6A10436C3F004A4474 /* Projection.h in Headers */,
+				43530F6B10436C3F004A4474 /* Source.h in Headers */,
+				43530F6C10436C3F004A4474 /* Object.h in Headers */,
+				43530F6D10436C3F004A4474 /* WmsMap.h in Headers */,
+				43530F6E10436C3F004A4474 /* CoordinateUtility.h in Headers */,
+				43530F6F10436C3F004A4474 /* ImageOutputFormat.h in Headers */,
+				43530F7010436C3F004A4474 /* Video.h in Headers */,
+				43530F7110436C3F004A4474 /* ImageModel.h in Headers */,
+				43530F7210436C3F004A4474 /* SingleImageChain.h in Headers */,
+				43530F7310436C3F004A4474 /* Constants.h in Headers */,
+				43530F7410436C3F004A4474 /* DataInfo.h in Headers */,
+				43530F7510436C3F004A4474 /* Init.h in Headers */,
+				43530F7610436C3F004A4474 /* WmsView.h in Headers */,
+				43531126104457F0004A4474 /* WktUtility.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		8DC2EF4F0486A6940098B216 /* oms */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1DEB91AD08733DA50010E9CD /* Build configuration list for PBXNativeTarget "oms" */;
+			buildPhases = (
+				8DC2EF500486A6940098B216 /* Headers */,
+				8DC2EF520486A6940098B216 /* Resources */,
+				8DC2EF540486A6940098B216 /* Sources */,
+				8DC2EF560486A6940098B216 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = oms;
+			productInstallPath = "$(HOME)/Library/Frameworks";
+			productName = oms;
+			productReference = 8DC2EF5B0486A6940098B216 /* oms.framework */;
+			productType = "com.apple.product-type.framework";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0867D690FE84028FC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 1DEB91B108733DA50010E9CD /* Build configuration list for PBXProject "oms" */;
+			compatibilityVersion = "Xcode 2.4";
+			hasScannedForEncodings = 1;
+			mainGroup = 0867D691FE84028FC02AAC07 /* oms */;
+			productRefGroup = 034768DFFF38A50411DB9C8B /* Products */;
+			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 4386B2620DF060CF007011FB /* Products */;
+					ProjectRef = 4386B2610DF060CF007011FB /* ossim.xcodeproj */;
+				},
+				{
+					ProductGroup = 43ED17530DF8386E0077F54B /* Products */;
+					ProjectRef = 43ED17520DF8386E0077F54B /* ossimPredator.xcodeproj */;
+				},
+			);
+			projectRoot = "";
+			targets = (
+				8DC2EF4F0486A6940098B216 /* oms */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		43530ED810436C13004A4474 /* template-app */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "template-app";
+			remoteRef = 43530ED710436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530EDA10436C13004A4474 /* ossim-adrg-dump */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-adrg-dump";
+			remoteRef = 43530ED910436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530EDC10436C13004A4474 /* ossim-applanix2ogeom */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-applanix2ogeom";
+			remoteRef = 43530EDB10436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530EDE10436C13004A4474 /* ossim-band-merge */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-band-merge";
+			remoteRef = 43530EDD10436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530EE010436C13004A4474 /* ossim-btoa */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-btoa";
+			remoteRef = 43530EDF10436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530EE210436C13004A4474 /* template-app */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "template-app";
+			remoteRef = 43530EE110436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530EE410436C13004A4474 /* ossim-cmm */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-cmm";
+			remoteRef = 43530EE310436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530EE610436C13004A4474 /* ossim-computeSrtmStats */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-computeSrtmStats";
+			remoteRef = 43530EE510436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530EE810436C13004A4474 /* ossim-correl */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-correl";
+			remoteRef = 43530EE710436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530EEA10436C13004A4474 /* ossim-create-cg */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-create-cg";
+			remoteRef = 43530EE910436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530EEC10436C13004A4474 /* ossim-create-histo */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-create-histo";
+			remoteRef = 43530EEB10436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530EF410436C13004A4474 /* ossim-dms2deg */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-dms2deg";
+			remoteRef = 43530EF310436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530EF610436C13004A4474 /* ossim-dump-ocg */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-dump-ocg";
+			remoteRef = 43530EF510436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530EF810436C13004A4474 /* ossim-ecg2ocg */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-ecg2ocg";
+			remoteRef = 43530EF710436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530EFA10436C13004A4474 /* ossim-extract-vertices */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-extract-vertices";
+			remoteRef = 43530EF910436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530EFC10436C13004A4474 /* ossim-foo */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-foo";
+			remoteRef = 43530EFB10436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530F0010436C13004A4474 /* ossim-height */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-height";
+			remoteRef = 43530EFF10436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530F0210436C13004A4474 /* ossim-icp */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-icp";
+			remoteRef = 43530F0110436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530F0410436C13004A4474 /* ossim-igen */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-igen";
+			remoteRef = 43530F0310436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530F0610436C13004A4474 /* ossim-img2md */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-img2md";
+			remoteRef = 43530F0510436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530F0810436C13004A4474 /* ossim-img2rr */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-img2rr";
+			remoteRef = 43530F0710436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530F0A10436C13004A4474 /* ossim-info */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-info";
+			remoteRef = 43530F0910436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530F0C10436C13004A4474 /* ossim-modopt */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-modopt";
+			remoteRef = 43530F0B10436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530F0E10436C13004A4474 /* ossim-mosaic */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-mosaic";
+			remoteRef = 43530F0D10436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530F1410436C13004A4474 /* ossim-ogeom2ogeom */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-ogeom2ogeom";
+			remoteRef = 43530F1310436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530F1610436C13004A4474 /* ossim-orthoigen */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-orthoigen";
+			remoteRef = 43530F1510436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530F1810436C13004A4474 /* ossim-pixelflip */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-pixelflip";
+			remoteRef = 43530F1710436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530F1A10436C13004A4474 /* ossim-prune */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-prune";
+			remoteRef = 43530F1910436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530F1E10436C13004A4474 /* ossim-rejout */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-rejout";
+			remoteRef = 43530F1D10436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530F2010436C13004A4474 /* ossim-senint */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-senint";
+			remoteRef = 43530F1F10436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530F2210436C13004A4474 /* ossim-space-imaging */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-space-imaging";
+			remoteRef = 43530F2110436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530F2410436C13004A4474 /* ossim-swapbytes */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-swapbytes";
+			remoteRef = 43530F2310436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43530F2610436C13004A4474 /* ossim-tfw2ogeom */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = "ossim-tfw2ogeom";
+			remoteRef = 43530F2510436C13004A4474 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4386B2A20DF060CF007011FB /* ossim.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = ossim.framework;
+			remoteRef = 4386B2A10DF060CF007011FB /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43ED17570DF8386E0077F54B /* ossimPredator.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = ossimPredator.framework;
+			remoteRef = 43ED17560DF8386E0077F54B /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8DC2EF520486A6940098B216 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8DC2EF530486A6940098B216 /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8DC2EF540486A6940098B216 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				43530F3D10436C2E004A4474 /* WmsView.cpp in Sources */,
+				43530F3E10436C2E004A4474 /* Util.cpp in Sources */,
+				43530F3F10436C2E004A4474 /* Source.cpp in Sources */,
+				43530F4010436C2E004A4474 /* SingleImageChain.cpp in Sources */,
+				43530F4110436C2E004A4474 /* CoordinateUtility.cpp in Sources */,
+				43530F4210436C2E004A4474 /* ImageData.cpp in Sources */,
+				43530F4310436C2E004A4474 /* Info.cpp in Sources */,
+				43530F4410436C2E004A4474 /* Makefile in Sources */,
+				43530F4510436C2E004A4474 /* ChainUtility.cpp in Sources */,
+				43530F4610436C2E004A4474 /* Init.cpp in Sources */,
+				43530F4710436C2E004A4474 /* WmsMap.cpp in Sources */,
+				43530F4810436C2E004A4474 /* ImageModel.cpp in Sources */,
+				43530F4910436C2E004A4474 /* Mosaic.cpp in Sources */,
+				43530F4A10436C2E004A4474 /* DataInfo.cpp in Sources */,
+				43530F4B10436C2E004A4474 /* Projection.cpp in Sources */,
+				43530F4C10436C2E004A4474 /* OutputSource.cpp in Sources */,
+				43530F4D10436C2E004A4474 /* ImageStager.cpp in Sources */,
+				43530F4E10436C2E004A4474 /* ImageOutputFormat.cpp in Sources */,
+				43530F4F10436C2E004A4474 /* Object.cpp in Sources */,
+				43530F5010436C2E004A4474 /* Video.cpp in Sources */,
+				4353113710445801004A4474 /* WktUtility.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		089C1666FE841158C02AAC07 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				089C1667FE841158C02AAC07 /* English */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		18963C0C0E75F0F400E5C8F9 /* DebugNative */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4386B25E0DF060A3007011FB /* common_settings.xcconfig */;
+			buildSettings = {
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				PREBINDING = NO;
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+			};
+			name = DebugNative;
+		};
+		18963C0D0E75F0F400E5C8F9 /* DebugNative */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_VERSION = A;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = oms_Prefix.pch;
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Library/Frameworks";
+				PRODUCT_NAME = oms;
+				WRAPPER_EXTENSION = framework;
+				ZERO_LINK = YES;
+			};
+			name = DebugNative;
+		};
+		18963C0E0E75F10000E5C8F9 /* DebugNativeLeopard */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4386B25E0DF060A3007011FB /* common_settings.xcconfig */;
+			buildSettings = {
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				PREBINDING = NO;
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+			};
+			name = DebugNativeLeopard;
+		};
+		18963C0F0E75F10000E5C8F9 /* DebugNativeLeopard */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_VERSION = A;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = oms_Prefix.pch;
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Library/Frameworks";
+				PRODUCT_NAME = oms;
+				WRAPPER_EXTENSION = framework;
+				ZERO_LINK = YES;
+			};
+			name = DebugNativeLeopard;
+		};
+		18963C100E75F10C00E5C8F9 /* ReleaseLeopard */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4386B25E0DF060A3007011FB /* common_settings.xcconfig */;
+			buildSettings = {
+				ARCHS = (
+					ppc,
+					i386,
+				);
+				FRAMEWORK_SEARCH_PATHS = "$(UNIV_DEP)/Frameworks";
+				GCC_ENABLE_SYMBOL_SEPARATION = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(UNIV_HEADER_DEP)",
+					"$(DEV_HOME_PATH)/oms/coms/include",
+				);
+				OTHER_CFLAGS = "-DOSSIM_PREDATOR_VIDEO_ENABLED=1";
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
+				PREBINDING = NO;
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+			};
+			name = ReleaseLeopard;
+		};
+		18963C110E75F10C00E5C8F9 /* ReleaseLeopard */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_VERSION = A;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_PREFIX_HEADER = "$(inherited)";
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Library/Frameworks";
+				PRODUCT_NAME = oms;
+				WRAPPER_EXTENSION = framework;
+			};
+			name = ReleaseLeopard;
+		};
+		1DEB91AE08733DA50010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_VERSION = A;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = oms_Prefix.pch;
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "$(HOME)/Library/Frameworks";
+				PRODUCT_NAME = oms;
+				WRAPPER_EXTENSION = framework;
+				ZERO_LINK = YES;
+			};
+			name = Debug;
+		};
+		1DEB91AF08733DA50010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)/../../../../ossim_dependencies/Frameworks\"";
+				FRAMEWORK_VERSION = A;
+				GCC_MODEL_TUNING = G5;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_PREFIX_HEADER = "$(inherited)";
+				INFOPLIST_FILE = Info.plist;
+				INSTALL_PATH = "@executable_path/../Frameworks";
+				OTHER_CFLAGS = (
+					"-DOSSIM_PREDATOR_VIDEO_ENABLED=1",
+					"-g",
+				);
+				PRODUCT_NAME = oms;
+				WRAPPER_EXTENSION = framework;
+			};
+			name = Release;
+		};
+		1DEB91B208733DA50010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4386B25E0DF060A3007011FB /* common_settings.xcconfig */;
+			buildSettings = {
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				PREBINDING = NO;
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+			};
+			name = Debug;
+		};
+		1DEB91B308733DA50010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4386B25E0DF060A3007011FB /* common_settings.xcconfig */;
+			buildSettings = {
+				ARCHS = "$(inherited)";
+				FRAMEWORK_SEARCH_PATHS = "$(UNIV_DEP)/Frameworks";
+				GCC_ENABLE_SYMBOL_SEPARATION = NO;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(UNIV_HEADER_DEP)",
+					"$(DEV_HOME_PATH)/oms/coms/include",
+				);
+				OTHER_CFLAGS = "-DOSSIM_PREDATOR_VIDEO_ENABLED=1";
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
+				PREBINDING = NO;
+				SDKROOT = "$(inherited)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB91AD08733DA50010E9CD /* Build configuration list for PBXNativeTarget "oms" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB91AE08733DA50010E9CD /* Debug */,
+				18963C0D0E75F0F400E5C8F9 /* DebugNative */,
+				18963C0F0E75F10000E5C8F9 /* DebugNativeLeopard */,
+				1DEB91AF08733DA50010E9CD /* Release */,
+				18963C110E75F10C00E5C8F9 /* ReleaseLeopard */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1DEB91B108733DA50010E9CD /* Build configuration list for PBXProject "oms" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB91B208733DA50010E9CD /* Debug */,
+				18963C0C0E75F0F400E5C8F9 /* DebugNative */,
+				18963C0E0E75F10000E5C8F9 /* DebugNativeLeopard */,
+				1DEB91B308733DA50010E9CD /* Release */,
+				18963C100E75F10C00E5C8F9 /* ReleaseLeopard */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 0867D690FE84028FC02AAC07 /* Project object */;
+}

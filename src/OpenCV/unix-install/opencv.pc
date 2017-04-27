@@ -1,0 +1,14 @@
+# Package Information for pkg-config
+
+prefix=C:/tools/src/OpenCV/install
+exec_prefix=${prefix}
+libdir=${exec_prefix}/x86/vc14/lib
+includedir_old=${prefix}/include/opencv
+includedir_new=${prefix}/include
+
+Name: OpenCV
+Description: Open Source Computer Vision Library
+Version: 3.1.0
+Libs: -L${exec_prefix}/x86/vc14/lib -lopencv_shape310 -lopencv_stitching310 -lopencv_objdetect310 -lopencv_superres310 -lopencv_videostab310 -lopencv_calib3d310 -lopencv_features2d310 -lopencv_highgui310 -lopencv_videoio310 -lopencv_imgcodecs310 -lopencv_video310 -lopencv_photo310 -lopencv_ml310 -lopencv_imgproc310 -lopencv_flann310 -lopencv_core310
+Libs.private: -lcomctl32 -lgdi32 -lole32 -lsetupapi -lws2_32 -lvfw32
+Cflags: -I${includedir_old} -I${includedir_new}

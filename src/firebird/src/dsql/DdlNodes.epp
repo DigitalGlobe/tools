@@ -1,0 +1,112 @@
+/*
+ * The contents of this file are subject to the Interbase Public
+ * License Version 1.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy
+ * of the License at http://www.Inprise.com/IPL.html
+ *
+ * Software distributed under the License is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+ * or implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code was created by Inprise Corporation
+ * and its predecessors. Portions created by Inprise Corporation are
+ * Copyright (C) Inprise Corporation.
+ *
+ * All Rights Reserved.
+ * Contributor(s): ______________________________________.
+ * Adriano dos Santos Fernandes - refactored from pass1.cpp, ddl.cpp, dyn*.epp
+ */
+
+#include "firebird.h"
+#include "../jrd/common.h"
+#include "../dsql/DdlNodes.h"
+#include "../jrd/jrd.h"
+#include "../jrd/cmp_proto.h"
+#include "../jrd/exe_proto.h"
+#include "../jrd/met_proto.h"
+#include "../dsql/metd_proto.h"
+
+using namespace Firebird;
+
+namespace Jrd {
+
+
+DATABASE DB = STATIC "ODS.RDB";
+
+
+void AlterCharSetNode::print(string& text, Array<dsql_nod*>& /*nodes*/) const
+{
+	text.printf(
+		"alter character set\n"
+		"	charSet: %s\n"
+		"	defaultCollation: %s\n",
+		charSet.c_str(), defaultCollation.c_str());
+}
+
+
+void AlterCharSetNode::execute(thread_db* tdbb, jrd_tra* transaction)
+{
+	if (compiledStatement && compiledStatement->req_dbb)	// do not run in CREATE DATABASE
+	{
+		METD_drop_charset(compiledStatement, charSet);
+		MET_dsql_cache_release(tdbb, SYM_intlsym_charset, charSet);
+	}
+
+	Database* dbb = tdbb->getDatabase();
+	bool charSetFound = false;
+	bool collationFound = false;
+
+	jrd_req* request1 = CMP_find_request(tdbb, drq_m_charset, DYN_REQUESTS);
+
+	FOR (REQUEST_HANDLE request1 TRANSACTION_HANDLE transaction)
+		CS IN RDB$CHARACTER_SETS
+		WITH CS.RDB$CHARACTER_SET_NAME EQ charSet.c_str()
+
+		charSetFound = true;
+
+		if (!DYN_REQUEST(drq_m_charset))
+			DYN_REQUEST(drq_m_charset) = request1;
+
+		jrd_req* request2 = CMP_find_request(tdbb, drq_l_collation, DYN_REQUESTS);
+
+		FOR (REQUEST_HANDLE request2 TRANSACTION_HANDLE transaction)
+			COLL IN RDB$COLLATIONS
+			WITH COLL.RDB$CHARACTER_SET_ID EQ CS.RDB$CHARACTER_SET_ID AND
+				COLL.RDB$COLLATION_NAME EQ defaultCollation.c_str()
+
+			if (!DYN_REQUEST(drq_l_collation))
+				DYN_REQUEST(drq_l_collation) = request2;
+
+			collationFound = true;
+		END_FOR
+
+		if (!DYN_REQUEST(drq_l_collation))
+			DYN_REQUEST(drq_l_collation) = request2;
+
+		if (collationFound)
+		{
+			MODIFY CS
+				CS.RDB$DEFAULT_COLLATE_NAME.NULL = FALSE;
+				strcpy(CS.RDB$DEFAULT_COLLATE_NAME, defaultCollation.c_str());
+			END_MODIFY
+		}
+	END_FOR
+
+	if (!DYN_REQUEST(drq_m_charset))
+		DYN_REQUEST(drq_m_charset) = request1;
+
+	if (!charSetFound)
+	{
+		status_exception::raise(Arg::Gds(isc_charset_not_found) << Arg::Str(charSet));
+	}
+
+	if (!collationFound)
+	{
+		status_exception::raise(Arg::Gds(isc_collation_not_found) << Arg::Str(defaultCollation) <<
+																	 Arg::Str(charSet));
+	}
+}
+
+
+}	// namespace Jrd

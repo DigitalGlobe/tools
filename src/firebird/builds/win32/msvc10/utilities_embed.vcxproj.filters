@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="UTILITIES files">
+      <UniqueIdentifier>{4b7d9bd2-4fe4-4181-9395-244099535a41}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="UTILITIES files\epp files">
+      <UniqueIdentifier>{de5db480-d395-4000-ab69-00033f5119b6}</UniqueIdentifier>
+      <Extensions>epp</Extensions>
+    </Filter>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{58baf664-d0c9-4f97-91a4-6f2af0930d79}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\utilities\gsec\call_service.cpp">
+      <Filter>UTILITIES files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\src\utilities\gstat.epp">
+      <Filter>UTILITIES files\epp files</Filter>
+    </None>
+    <None Include="..\..\..\src\utilities\rmet.epp">
+      <Filter>UTILITIES files\epp files</Filter>
+    </None>
+    <None Include="..\..\..\src\utilities\rstore.epp">
+      <Filter>UTILITIES files\epp files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\utilities\gsec\gsec.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\utilities\install\registry.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

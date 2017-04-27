@@ -1,0 +1,85 @@
+/*
+ * The contents of this file are subject to the Interbase Public
+ * License Version 1.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy
+ * of the License at http://www.Inprise.com/IPL.html
+ *
+ * Software distributed under the License is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+ * or implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code was created by Inprise Corporation
+ * and its predecessors. Portions created by Inprise Corporation are
+ * Copyright (C) Inprise Corporation.
+ *
+ * All Rights Reserved.
+ * Contributor(s): ______________________________________.
+ */
+define database "isc.fdb"
+	page_size 1024;
+
+/*
+	NOTE:  This file sets up the the isc_tmp.fdb database that
+	       will ultimately get shipped as isc.gbak in the 
+	       interbase/bin directory.  This file is part one of a 
+	       two step process.  The reason for this is that gdef
+	       cannot handle security classes correctly over
+	       different platforms, i.e. apollo, unix, and vms.
+	       The basic database is created using this file
+	       on all platforms for ease of maintenance while the
+	       security classes are added by platform specific gdl
+	       files i.e.
+		   
+		   apollo = scrty_apollo.gdl
+		   unix   = scrty_unix.gdl
+		   vms    = scrty_vms.gdl
+		   mpexl  = scrty_xl.gdl
+
+	       Any changes made to the security class definitions
+	       in one of these files must be made to all of them.
+*/
+
+/*	Global Field Definitions	*/
+
+define field COMMENT blob segment_length 80 sub_type text;
+define field FIRST_NAME varying [16];
+define field GID long;
+define field HOST_KEY char [20];
+define field HOST_NAME char [20];
+define field LAST_NAME varying [16];
+define field MIDDLE_NAME varying [16];
+define field ORGANIZATION varying [32];
+define field PASSWORD varying [32];
+define field PROJECT varying [32];
+define field UID long;
+define field USER_NAME varying [128];
+
+
+/*	Relation Definitions	*/
+
+
+define relation HOST_INFO
+    HOST_NAME	position 1,
+    HOST_KEY	position 2;
+
+define relation USERS
+    USER_NAME	position 1,
+    UID	position 2,
+    GID	position 3,
+    PROJECT	position 4,
+    ORGANIZATION	position 5,
+    PASSWORD	position 6,
+    COMMENT	position 7,
+    FIRST_NAME	position 9,
+    MIDDLE_NAME	position 10,
+    LAST_NAME	position 11,
+    FULL_NAME computed by (first_name | " " | middle_name | " " | last_name);
+
+
+/*	Index Definitions	*/
+
+
+define index USER_NAME_INDEX for USERS unique
+	USER_NAME;
+

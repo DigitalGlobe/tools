@@ -1,0 +1,408 @@
+
+Setup Command Line Parameters
+=============================
+
+Contents
+o Summary
+o Setup Command Line Parameters
+o Parameters specific to Firebird installs
+o Setup exit codes
+o Uninstall Command Line Parameters
+o Parameters specific to Firebird uninstalls
+o Uninstaller Exit Codes
+
+
+(These notes are taken directly from the InnoSetup 5.1.12 documentation,
+except for Firebird specific parameters.)
+
+Quick summary of available parameters
+-------------------------------
+
+Setup parameters specific to the Firebird Installer
+
+/? | /h | /HELP
+/FORCE
+/NOCPL
+/NOGDS32
+/COPYFBCLIENT
+/COMPONENTS="comma separated list of component names"
+/TASKS="comma separated list of task names"
+/MERGETASKS="comma separated list of task names"
+
+Setup parameters specific to the Firebird Uninstaller
+/CLEAN
+
+General parameters available to all InnoSetup based installers
+/SP-
+/SILENT | /VERYSILENT [/SUPPRESSMSGBOXES]
+/LOG[="filename"]
+/NOCANCEL
+/NORESTART
+/RESTARTEXITCODE=exit code
+/LOADINF="filename"
+/SAVEINF="filename"
+/LANG=language
+/DIR="x:\dirname"
+/GROUP="folder name"
+/NOICONS
+
+
+Setup Command Line Parameters
+-----------------------------
+
+The Setup program accepts optional command line parameters. These can be
+useful to system administrators, and to other programs calling the Setup
+program.
+
+/SP-
+  Disables the "This will install... Do you wish to continue?" prompt
+  at the beginning of Setup. Of course, this will have no effect if the
+  DisableStartupPrompt [Setup] section directive was set to yes.
+
+/SILENT, /VERYSILENT
+  Instructs Setup to be silent or very silent. When Setup is silent the
+  wizard and the background window are not displayed but the installation
+  progress window is. When a setup is very silent this installation
+  progress window is not displayed. Everything else is normal so for
+  example error messages during installation are displayed and the startup
+  prompt is (if you haven't disabled it with DisableStartupPrompt or the
+  '/SP-' command line option explained above).
+
+  If a restart is necessary and the '/NORESTART' command isn't used (see
+  below) and Setup is silent, it will display a "Reboot now?" message box.
+  If it's very silent it will reboot without asking.
+
+/SUPPRESSMSGBOXES
+  Instructs Setup to suppress message boxes. Only has an effect when
+  combined with '/SILENT' and '/VERYSILENT'.
+
+  The default response in situations where there's a choice is:
+
+    Yes in a 'Keep newer file?' situation.
+
+    No in a 'File exists, confirm overwrite.' situation.
+
+    Abort in Abort/Retry situations.
+
+    Cancel in Retry/Cancel situations.
+
+    Yes (=continue) in a DiskSpaceWarning/DirExists/DirDoesntExist/
+      NoUninstallWarning/ExitSetupMessage/ConfirmUninstall situation.
+
+    Yes (=restart) in a FinishedRestartMessage/UninstalledAndNeedsRestart situation.
+
+  5 message boxes are not suppressible:
+
+    The About Setup message box.
+
+    The Exit Setup? message box.
+
+    The FileNotInDir2 message box displayed when Setup requires a
+        new disk to be inserted and the disk was not found.
+
+    Any (error) message box displayed before Setup (or Uninstall)
+        could read the command line parameters.
+
+    Any message box displayed by [Code] support function MsgBox.
+
+/LOG
+  Causes Setup to create a log file in the user's TEMP directory detailing
+  file installation and [Run] actions taken during the installation
+  process. This can be a helpful debugging aid. For example, if you
+  suspect a file isn't being replaced when you believe it should be (or
+  vice versa), the log file will tell you if the file was really skipped,
+  and why.
+
+  The log file is created with a unique name based on the current date.
+  (It will not overwrite or append to existing files.)
+
+  The information contained in the log file is technical in nature and
+  therefore not intended to be understandable by end users. Nor is it
+  designed to be machine-parseable; the format of the file is subject to
+  change without notice.
+
+/LOG="filename"
+  Same as /LOG, except it allows you to specify a fixed path/filename to
+  use for the log file. If a file with the specified name already exists
+  it will be overwritten. If the file cannot be created, Setup will abort
+  with an error message.
+
+/NOCANCEL
+  Prevents the user from cancelling during the installation process, by
+  disabling the Cancel button and ignoring clicks on the close button.
+  Useful along with '/SILENT' or '/VERYSILENT'.
+
+/NORESTART
+  Instructs Setup not to reboot even if it's necessary.
+
+/RESTARTEXITCODE=exit code
+  Specifies the custom exit code that Setup is to return when a restart is
+  needed. Useful along with '/NORESTART'. Also see Setup Exit Codes.
+
+/LOADINF="filename"
+  Instructs Setup to load the settings from the specified file after
+  having checked the command line. This file can be prepared using the
+  '/SAVEINF=' command as explained below.
+
+  Don't forget to use quotes if the filename contains spaces.
+
+/SAVEINF="filename"
+  Instructs Setup to save installation settings to the specified file.
+
+  Don't forget to use quotes if the filename contains spaces.
+
+/LANG=language
+  Specifies the language to use. language specifies the internal name of
+  the language as specified in a [Languages] section entry.
+
+  When a valid /LANG parameter is used, the Select Language dialog will be
+  suppressed.
+
+/DIR="x:\dirname"
+  Overrides the default directory name displayed on the Select Destination
+  Location wizard page. A fully qualified pathname must be specified.
+
+/GROUP="folder name"
+  Overrides the default folder name displayed on the Select Start Menu
+  Folder wizard page. If the [Setup] section directive
+  DisableProgramGroupPage was set to yes, this command line parameter is
+  ignored.
+
+/NOICONS
+  Instructs Setup to initially check the Don't create a Start Menu folder
+  check box on the Select Start Menu Folder wizard page.
+
+
+Parameters specific to Firebird installs
+----------------------------------------
+
+/? | /h | /HELP
+  Invoke this file as a help screen at installation time.
+
+/COMPONENTS="comma separated list of component names"
+
+  Choose from - ServerComponent\SuperServerComponent,
+                ServerComponent\ClassicServerComponent,
+                ServerComponent,
+                DevAdminComponent and
+                ClientComponent
+
+  Overrides the default components settings. Using this command line
+  parameter causes Setup to automatically select a custom type. A full
+  install requires combining components. For example:
+
+  /COMPONENTS="ServerComponent\SuperServerComponent,ServerComponent,DevAdminComponent,ClientComponent"
+
+  would be required for a full install.
+
+/TASKS="comma separated list of task names"
+
+  Specifies a list of tasks that should be initially selected or
+  deselected. To deselect a task, prefix its name with a "!" character.
+
+  Choose from - UseGuardianTask
+                UseApplicationTask
+                UseServiceTask
+                AutoStartTask
+                InstallCPLAppletTask
+                MenuGroupTask
+                CopyFbClientToSysTask
+                CopyFbClientAsGds32Task
+
+  Only the specified tasks (and their children) will be selected; the rest
+  will be deselected. Use the /MERGETASKS parameter instead if you want to
+  keep the default set of tasks and only select/deselect some of them.
+
+  By default the following tasks are run:
+
+    UseGuardianTask
+    UseServiceTask
+    AutoStartTask
+    InstallCPLAppletTask
+    MenuGroupTask
+    CopyFbClientAsGds32Task
+
+  The /TASKS option is not recommended for use with the /NOCPL, NOGDS32
+  or /COPYFBCLIENT.
+
+
+/MERGETASKS="comma separated list of task names"
+
+  Like the /TASKS parameter, except the specified tasks will be merged
+  with the set of tasks that would have otherwise been selected by
+  default.
+
+  If UsePreviousTasks is set to yes, the specified tasks will be
+  selected/deselected after any previous tasks are restored.
+
+
+/FORCE
+
+  Tells the installer to ignore its analysis of the existing
+  environment. It will attempt to install and configure Firebird 2.1 as
+  if no previous version of Firebird or InterBase was installed.
+
+  This can be useful if you have a seriously broken installation that
+  you cannot uninstall. Or it could be another way to aggravate your
+  users by breaking a perfectly good working install of InterBase. Its
+  your choice.
+
+
+/NOCPL
+
+  Don't install the Control Panel Applet. This is useful for two
+  reasons:
+
+  o Installing/Uninstalling the CPL applet requires a system
+    restart on Windows 2000 (and perhaps some other platforms.)
+
+  o You may wish to use an alternative cpl applet.
+
+  (This option is not intended to be used with the /TASKS parameter.)
+
+
+/NOGDS32
+
+  Don't install a copy of the client library into the system directory,
+  even if installation analysis concludes it is OK to do so.
+
+  (This option is not intended to be used with the /TASKS parameter.)
+
+
+/COPYFBCLIENT
+
+  Copy the fbclient.dll to the system directory. This is recommended
+  for client installs if you are sure that you will only ever be
+  accessing a single server version. If your client applications are
+  likely to take advantage of accessing different server versions this
+  is not recommended. See
+    doc/README.Win32LibraryInstallation.txt
+  for more information.
+
+  (This option is not intended to be used with the /TASKS parameter.)
+
+
+Setup Exit Codes
+----------------
+
+The Setup program may return one of the following exit codes:
+
+  0 Setup was successfully run to completion.
+
+
+  1 Setup failed to initialize.
+
+  2 The user clicked Cancel in the wizard before the actual installation
+    started, or chose "No" on the opening "This will install..." message
+    box.
+
+  3 A fatal error occurred while preparing to move to the next
+    installation phase (for example, from displaying the pre-installation
+    wizard pages to the actual installation process). This should never
+    happen except under the most unusual of circumstances, such as running
+    out of memory or Windows resources.
+
+  4 A fatal error occurred during the actual installation process.
+
+    Note: Errors that cause an Abort-Retry-Ignore box to be displayed are
+    not fatal errors. If the user chooses Abort at such a message box, exit
+    code 5 will be returned.
+
+  5 The user clicked Cancel during the actual installation process, or
+    chose Abort at an Abort-Retry-Ignore box.
+
+  6 The Setup process was forcefully terminated by the debugger (Run |
+    Terminate was used in the IDE).
+
+
+  Before returning an exit code of 1, 3, or 4, an error message explaining
+  the problem will normally be displayed.
+
+  Future versions of Inno Setup may return additional exit codes, so
+  applications checking the exit code should be programmed to handle
+  unexpected exit codes gracefully. Any non-zero exit code indicates that
+  Setup was not run to completion.
+
+
+Uninstaller Command Line Parameters
+===================================
+
+The uninstaller program (unins???.exe) accepts optional command line
+parameters. These can be useful to system administrators, and to other
+programs calling the uninstaller program.
+
+/SILENT, /VERYSILENT
+  When specified, the uninstaller will not ask the user for startup
+  confirmation or display a message stating that uninstall is complete.
+  Shared files that are no longer in use are deleted automatically without
+  prompting. Any critical error messages will still be shown on the
+  screen. When '/VERYSILENT' is specified, the uninstallation progress
+  window is not displayed.
+
+  If a restart is necessary and the '/NORESTART' command isn't used (see
+  below) and '/VERYSILENT' is specified, the uninstaller will reboot
+  without asking.
+
+/SUPPRESSMSGBOXES
+  Instructs the uninstaller to suppress message boxes. Only has an effect
+  when combined with '/SILENT' and '/VERYSILENT'. See '/SUPPRESSMSGBOXES'
+  under Setup Command Line Parameters for more details.
+
+/LOG
+  Causes Uninstall to create a log file in the user's TEMP directory
+  detailing file uninstallation and [UninstallRun] actions taken during
+  the uninstallation process. This can be a helpful debugging aid.
+
+  The log file is created with a unique name based on the current date.
+  (It will not overwrite or append to existing files.)
+
+  The information contained in the log file is technical in nature and
+  therefore not intended to be understandable by end users. Nor is it
+  designed to be machine-parseable; the format of the file is subject to
+  change without notice.
+
+/LOG="filename"
+  Same as /LOG, except it allows you to specify a fixed path/filename to
+  use for the log file. If a file with the specified name already exists
+  it will be overwritten. If the file cannot be created, Uninstall will
+  abort with an error message.
+
+/NORESTART
+  Instructs the uninstaller not to reboot even if it's necessary.
+
+
+Parameters specific to Firebird uninstalls
+------------------------------------------
+
+/CLEAN
+
+  Uninstallation has always left the following files in place after
+  the uninstallation process hase completed:
+
+    firebird.conf
+    aliases.conf
+    firebird.log
+    security2.fdb
+
+  The assumption is that these files will be useful to users
+  re-installing or upgrading Firebird. Starting with Firebird 2.1
+  (using InnoSetup 5 to build the installation package) it is now
+  possible to pass the /clean option to remove these files.
+
+Uninstaller Exit Codes
+----------------------
+
+  The uninstaller will return a non-zero exit code if the user cancels or
+  a fatal error is encountered. Programs checking the exit code to detect
+  failure should not check for a specific non-zero value; any non-zero
+  exit code indicates that the uninstaller was not run to completion.
+
+  Note that at the moment you get an exit code back from the uninstaller,
+  some code related to uninstallation might still be running. Because
+  Windows doesn't allow programs to delete their own EXEs, the uninstaller
+  creates and spawns a copy of itself in the TEMP directory. This "clone"
+  performs the actual uninstallation, and at the end, terminates the
+  original uninstaller EXE (at which point you get an exit code back),
+  deletes it, then displays the "uninstall complete" message box (if it
+  hasn't been suppressed with /SILENT or /VERYSILENT).
+

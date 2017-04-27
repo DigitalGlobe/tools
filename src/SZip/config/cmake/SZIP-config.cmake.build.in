@@ -1,0 +1,26 @@
+#-----------------------------------------------------------------------------
+# SZIP Config file for compiling against SZIP build directory
+#-----------------------------------------------------------------------------
+GET_FILENAME_COMPONENT (SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+#-----------------------------------------------------------------------------
+# Directories
+#-----------------------------------------------------------------------------
+
+SET (SZIP_INCLUDE_DIRS "@SZIP_INCLUDES_BUILD_TIME@")
+
+#-----------------------------------------------------------------------------
+# Version Strings
+#-----------------------------------------------------------------------------
+SET (SZIP_VERSION_STRING @SZIP_VERSION_STRING@)
+SET (SZIP_VERSION_MAJOR  @SZIP_VERSION_MAJOR@)
+SET (SZIP_VERSION_MINOR  @SZIP_VERSION_MINOR@)
+
+#-----------------------------------------------------------------------------
+# Don't include targets if this file is being picked up by another
+# project which has already build SZIP as a subproject
+#-----------------------------------------------------------------------------
+IF (NOT TARGET "SZIP")
+  INCLUDE (${SELF_DIR}/SZIP-targets.cmake)
+  SET (SZIP_LIBRARIES "@SZIP_LIBRARIES_TO_EXPORT@")
+ENDIF (NOT TARGET "SZIP")

@@ -1,0 +1,490 @@
+Source: qgis
+Maintainer: QGIS developers <qgis-developer@lists.osgeo.org>
+Uploaders: Jürgen E. Fischer <jef@norbit.de>
+Section: science
+Priority: optional
+Build-Depends:
+ bison,
+ cmake (>= 2.8),
+#wily# cmake (<< 3.3.2),
+#sid stretch jessie wheezy trusty wily xenial# debhelper (>= 9),
+#sid stretch jessie trusty wily xenial# dh-python,
+#precise# debhelper (>= 7),
+ flex,
+ grass-dev,
+ libexpat1-dev,
+ libfcgi-dev,
+#sid stretch jessie trusty wily xenial# libgdal-dev (>= 1.10.1-0~),
+#precise# libgdal-dev (>= 1.9.0) | libgdal1-dev (<< 1.9.0),
+#wheezy# libgdal1-dev,
+ gdal-bin,
+ python-gdal,
+ libgeos-dev (>= 3.0.0),
+#jessie wheezy precise trusty wily# libgsl0-dev,
+#sid stretch xenial# libgsl-dev,
+ libpq-dev,
+ libproj-dev,
+ libqt4-dev (>= 4.7.0),
+ libqt4-opengl-dev,
+ libqca2-dev,
+ libqca2-plugin-ossl,
+#wheezy jessie precise trusty utopic vivid wily# libqtwebkit-dev,
+#stretch jessie wheezy# libqwt-dev,
+#precise trusty wily xenial sid# libqwt5-qt4-dev,
+#sid stretch jessie wheezy trusty wily xenial# libqjson-dev,
+ libspatialite-dev,
+ libsqlite3-dev,
+ libspatialindex-dev,
+ pkg-config,
+ pyqt4-dev-tools,
+ python-qscintilla2,
+ python-qt4 (>= 4.1.0),
+ python-qt4-dev,
+ python-qt4-sql,
+ python-yaml, python-mock,
+#stretch sid wily xenial# python-future,
+#precise wheezy# python,
+#precise# python-central (>= 0.5),
+#wheezy# python-dev,
+#sid stretch jessie trusty wily xenial# python-all (>= 2.6.6-3~), python-all-dev (>= 2.6.6-3~),
+#sid stretch jessie wily xenial# pyqt4.qsci-dev,
+#sid stretch jessie trusty wily xenial# python-pyspatialite,
+#sid wheezy jessie stretch trusty wily xenial# python-nose2,
+ python-sip (>= 4.5.0),
+ python-sip-dev (>= 4.5.0),
+ libosgearth-dev,
+ libopenscenegraph-dev,
+ libqscintilla2-dev,
+ git,
+ doxygen,
+ graphviz,
+ txt2tags,
+ xvfb, xauth,
+ xfonts-base, xfonts-100dpi, xfonts-75dpi, xfonts-scalable,
+#oracle# oracle-instantclient12.1-devel,
+ spawn-fcgi, lighttpd, poppler-utils, locales, qt4-doc-html,
+ qt4-dev-tools,
+ libqt4-sql-sqlite, python-psycopg2
+Build-Conflicts: libqgis-dev, qgis-dev
+#sid stretch xenial#Standards-Version: 3.9.7
+#jessie wily#Standards-Version: 3.9.6
+#wheezy#Standards-Version: 3.9.3
+#precise trusty#Standards-Version: 3.8.4
+#sid stretch jessie#X-Python-Version: >= 2.7, << 2.8
+#wheezy precise trusty wily xenial#XS-Python-Version: current
+Vcs-Browser: https://github.com/qgis/QGIS/
+Vcs-Git: https://github.com/qgis/QGIS.git
+Homepage: http://qgis.org/
+
+Package: qgis
+Architecture: any
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends},
+ python-qgis (= ${binary:Version}),
+ qgis-providers (= ${binary:Version}),
+ qgis-common (= ${source:Version})
+Recommends:
+#globe# qgis-plugin-globe,
+ qgis-plugin-grass,
+ qgis-provider-grass
+Suggests: gpsbabel
+Conflicts: uim-qt3
+Description: Geographic Information System (GIS)
+ A Geographic Information System (GIS) manages, analyzes, and displays
+ databases of geographic information. QGIS supports shape file viewing and
+ editing, spatial data storage with PostgreSQL/PostGIS, projection on-the-fly,
+ map composition, and a number of other features via a plugin interface. QGIS
+ also supports display of various georeferenced raster and Digital Elevation
+ Model (DEM) formats including GeoTIFF, Arc/Info ASCII Grid, and USGS ASCII
+ DEM.
+
+Package: qgis-common
+Architecture: all
+Depends:
+  libjs-jquery,
+  libjs-leaflet,
+  ${misc:Depends}
+Description: QGIS - architecture-independent data
+ QGIS is a Geographic Information System (GIS) which manages, analyzes and
+ display databases of geographic information.
+ .
+ This package contains architecture-independent supporting data files for use
+ with QGIS.
+
+Package: libqgis-app{QGIS_ABI}
+Architecture: any
+Section: libs
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends}
+Replaces: libqgis{QGIS_ABI}
+Description: QGIS - shared app library
+ QGIS is a Geographic Information System (GIS) which manages, analyzes and
+ display databases of geographic information.
+ .
+ This package contains the shared app library.
+
+Package: libqgis-core{QGIS_ABI}
+Architecture: any
+Section: libs
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends}
+Replaces: libqgis{QGIS_ABI}
+Description: QGIS - shared core library
+ QGIS is a Geographic Information System (GIS) which manages, analyzes and
+ display databases of geographic information.
+ .
+ This package contains the shared core library.
+
+Package: libqgis-gui{QGIS_ABI}
+Architecture: any
+Section: libs
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends}
+Replaces: libqgis{QGIS_ABI}
+Description: QGIS - shared gui library
+ QGIS is a Geographic Information System (GIS) which manages, analyzes and
+ display databases of geographic information.
+ .
+ This package contains the shared gui library.
+
+Package: libqgis-analysis{QGIS_ABI}
+Architecture: any
+Section: libs
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends}
+Replaces: libqgis{QGIS_ABI}
+Description: QGIS - shared analysis library
+ QGIS is a Geographic Information System (GIS) which manages, analyzes and
+ display databases of geographic information.
+ .
+ This package contains the shared analysis library.
+
+Package: libqgis-networkanalysis{QGIS_ABI}
+Architecture: any
+Section: libs
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends}
+Replaces: libqgis{QGIS_ABI}
+Description: QGIS - shared network analysis library
+ QGIS is a Geographic Information System (GIS) which manages, analyzes and
+ display databases of geographic information.
+ .
+ This package contains the shared network analysis library.
+
+Package: libqgisgrass{GRASSVER}-{QGIS_ABI}
+Architecture: any
+Section: libs
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends}
+Replaces: libqgis{QGIS_ABI}, libqgisgrass{QGIS_ABI}
+Description: QGIS - shared grass library
+ QGIS is a Geographic Information System (GIS) which manages, analyzes and
+ display databases of geographic information.
+ .
+ This package contains the shared grass library.
+
+Package: libqgispython{QGIS_ABI}
+Architecture: any
+Section: libs
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends}
+Replaces: libqgis{QGIS_ABI}
+Description: QGIS - shared Python library
+ QGIS is a Geographic Information System (GIS) which manages, analyzes and
+ display databases of geographic information.
+ .
+ This package contains the shared Python library.
+
+Package: libqgis-customwidgets
+Architecture: any
+Depends:
+ qt4-designer,
+ ${shlibs:Depends},
+ ${misc:Depends}
+Replaces:
+ libqgis-customwidgets2.4.0,
+ libqgis-customwidgets2.6.0,
+ libqgis-customwidgets2.6.1
+Conflicts:
+ libqgis-customwidgets2.4.0,
+ libqgis-customwidgets2.6.0,
+ libqgis-customwidgets2.6.1
+Provides:
+ libqgis-customwidgets2.4.0,
+ libqgis-customwidgets2.6.0,
+ libqgis-customwidgets2.6.1
+Description: QGIS custom widgets for Qt Designer
+ QGIS is a Geographic Information System (GIS) which manages, analyzes and
+ display databases of geographic information.
+ .
+ This package contains a library to use specific QGIS widgets in Qt Designer.
+
+Package: libqgis-server{QGIS_ABI}
+Architecture: any
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends}
+Description: QGIS - shared server library
+ QGIS is a Geographic Information System (GIS) which manages, analyzes and
+ display databases of geographic information.
+ .
+ This package contains the shared server library.
+
+Package: libqgis-dev
+Architecture: any
+Section: libdevel
+Depends:
+ grass-dev,
+ libexpat1-dev,
+#sid stretch jessie trusty wily xenial# libgdal-dev (>= 1.10.1-0~),
+#precise# libgdal-dev (>= 1.9.0) | libgdal1-dev (<< 1.9.0),
+#wheezy# libgdal1-dev,
+ libgeos-dev (>= 3.0.0),
+#jessie wheezy precise trusty wily# libgsl0-dev,
+#sid stretch xenial# libgsl-dev,
+ libpq-dev,
+ libproj-dev,
+ libqgis-app{QGIS_ABI} (= ${binary:Version}),
+ libqgis-core{QGIS_ABI} (= ${binary:Version}),
+ libqgis-gui{QGIS_ABI} (= ${binary:Version}),
+ libqgis-analysis{QGIS_ABI} (= ${binary:Version}),
+ libqgis-networkanalysis{QGIS_ABI} (= ${binary:Version}),
+ libqgis-server{QGIS_ABI} (= ${binary:Version}),
+ libqgisgrass{GRASSVER}-{QGIS_ABI} (= ${binary:Version}),
+ libqgispython{QGIS_ABI} (= ${binary:Version}),
+ libqt4-dev (>= 4.7.0),
+ libsqlite3-dev,
+ python-qt4 (>= 4.1.0),
+ python-qt4-dev (>= 4.1.0),
+ python-qt4-sql,
+ qt4-designer,
+ ${misc:Depends}
+Recommends: libqgis-customwidgets
+Provides: qgis-dev
+Replaces:
+ libqgis1-dev
+Description: QGIS - development files
+ QGIS is a Geographic Information System (GIS) which manages, analyzes and
+ display databases of geographic information.
+ .
+ This package contains the headers and libraries needed to develop plugins for
+ QGIS.
+
+Package: qgis-dbg
+Architecture: any
+Section: debug
+Priority: extra
+Depends:
+ libqgis-app{QGIS_ABI} (= ${binary:Version}),
+ libqgis-core{QGIS_ABI} (= ${binary:Version}),
+ libqgis-gui{QGIS_ABI} (= ${binary:Version}),
+ libqgis-analysis{QGIS_ABI} (= ${binary:Version}),
+ libqgis-networkanalysis{QGIS_ABI} (= ${binary:Version}),
+ libqgis-server{QGIS_ABI} (= ${binary:Version}),
+ libqgisgrass{GRASSVER}-{QGIS_ABI} (= ${binary:Version}),
+ libqgispython{QGIS_ABI} (= ${binary:Version}),
+ ${misc:Depends}
+Suggests: gdb
+Description: QGIS - debugging symbols
+ QGIS is a Geographic Information System (GIS) which manages, analyzes and
+ display databases of geographic information.
+ .
+ This package contains debugging symbols.
+
+Package: qgis-provider-grass
+Architecture: any
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends}
+Description: GRASS provider for QGIS
+ QGIS is a Geographic Information System (GIS) which manages, analyzes and
+ display databases of geographic information.
+ .
+ This provider enables GRASS data access in QGIS.
+
+Package: qgis-plugin-grass
+Architecture: any
+Depends:
+ qgis (= ${binary:Version}),
+ qgis-plugin-grass-common (= ${source:Version}),
+ qgis-provider-grass (= ${binary:Version}),
+ ${shlibs:Depends},
+ ${misc:Depends},
+#!precise# grass-core
+#precise# grass
+Replaces: qgis-provider-grass (<< 1:2.11.0+git20151002)
+Conflicts: qgis-provider-grass (<< 1:2.11.0+git20151002)
+Description: GRASS plugin for QGIS
+ QGIS is a Geographic Information System (GIS) which manages, analyzes and
+ display databases of geographic information.
+ .
+ This plugin enables GRASS data access in QGIS.
+
+Package: qgis-plugin-grass-common
+Architecture: all
+Depends:
+ ${python:Depends},
+ ${misc:Depends}
+Breaks: qgis-common (<< 1.5)
+Replaces: qgis-common (<< 1.5)
+Description: GRASS plugin for QGIS - architecture-independent data
+ QGIS is a Geographic Information System (GIS) which manages, analyzes and
+ display databases of geographic information.
+ .
+ This package contains architecture-independent supporting data files for use
+ with the QGIS GRASS plugin.
+
+#globe#Package: qgis-plugin-globe
+#globe#Architecture: any
+#globe#Depends:
+#globe# qgis (= ${binary:Version}),
+#globe# qgis-plugin-globe-common (= ${source:Version}),
+#globe# openscenegraph-plugin-osgearth,
+#globe# ${shlibs:Depends},
+#globe# ${misc:Depends}
+#globe#Description: OSG globe plugin for QGIS
+#globe# QGIS is a Geographic Information System (GIS) which manages, analyzes and
+#globe# display databases of geographic information.
+#globe# .
+#globe# This plugin enables 3D viewing using OSG globe in the QGIS.
+#globe#
+#globe#Package: qgis-plugin-globe-common
+#globe#Architecture: all
+#globe#Depends:
+#globe# osgearth-data,
+#globe# ${misc:Depends}
+#globe#Description: OSG globe plugin for QGIS - architecture-independent data
+#globe# QGIS is a Geographic Information System (GIS) which manages, analyzes and
+#globe# display databases of geographic information.
+#globe# .
+#globe# This package contains architecture-independent supporting data files for use
+#globe# with the QGIS GLOBE plugin.
+#globe#
+Package: python-qgis
+Architecture: any
+Section: python
+Depends:
+ python-qt4,
+ python-qt4-sql,
+ python-sip,
+ python-qgis-common (= ${source:Version}),
+ python-psycopg2,
+ python-qscintilla2,
+ python-httplib2,
+ python-jinja2,
+ python-markupsafe,
+ python-pygments,
+ python-dateutil,
+ python-tz,
+ python-six,
+ python-yaml,
+#stretch sid wily xenial# python-future,
+#sid stretch jessie trusty wily xenial# python-pyspatialite,
+ libqgispython{QGIS_ABI},
+ ${shlibs:Depends},
+ ${python:Depends},
+ ${misc:Depends},
+ ${sip:Depends}
+Provides: ${python:Provides}
+Recommends: liblwgeom-dev
+#wheezy precise#XB-Python-Version: ${python:Versions}
+Description: Python bindings to QGIS
+ QGIS is a Geographic Information System (GIS) which manages, analyzes and
+ display databases of geographic information.
+ .
+ This package contains the files for the Python support.
+
+Package: python-qgis-common
+Architecture: all
+Section: python
+Provides: ${python:Provides}
+Depends:
+ gdal-bin,
+ python-gdal,
+ python-matplotlib,
+ python-shapely,
+ libqgis-customwidgets,
+ ${misc:Depends}
+XB-Python-Version: ${python:Versions}
+Description: Python bindings to QGIS - architecture-independent files
+ QGIS is a Geographic Information System (GIS) which manages, analyzes and
+ display databases of geographic information.
+ .
+ This package contains architecture-independent files for the QGIS Python
+ bindings.
+
+Package: qgis-providers
+Architecture: any
+Pre-Depends: ${misc:Pre-Depends}
+Depends:
+ qgis-providers-common (= ${source:Version}),
+ libqt4-sql-sqlite,
+ libqca2-plugin-ossl,
+ ${shlibs:Depends},
+ ${misc:Depends}
+Breaks: qgis (<= 1.6)
+Replaces: qgis (<= 1.6)
+Description: collection of data providers to QGIS
+ QGIS is a Geographic Information System (GIS) which manages, analyzes and
+ display databases of geographic information.
+ .
+ This package contains the provider plugins for QGIS.
+
+Package: qgis-providers-common
+Architecture: all
+Depends: ${misc:Depends}
+Breaks: qgis-common (<= 1.6)
+Replaces: qgis-common (<= 1.6)
+Description: collection of data providers to QGIS - architecture-independent files
+ QGIS is a Geographic Information System (GIS) which manages, analyzes and
+ display databases of geographic information.
+ .
+ This package contains architecture-independent files for the QGIS providers.
+
+Package: qgis-server
+Architecture: any
+Depends:
+ qgis-providers (= ${binary:Version}),
+ ${shlibs:Depends},
+ ${misc:Depends}
+Conflicts: qgis-mapserver
+Provides: qgis-mapserver
+Replaces: qgis-mapserver
+Description: QGIS server providing various OGC services
+ QGIS is a Geographic Information System (GIS) which manages, analyzes and
+ display databases of geographic information.
+ .
+ This package contains the QGIS server.
+
+Package: qgis-api-doc
+Architecture: all
+Section: doc
+Depends:
+ libjs-jquery,
+ ${misc:Depends}
+Recommends:
+ qt4-doc-html
+Description: QGIS API documentation
+ QGIS is a Geographic Information System (GIS) which manages, analyzes and
+ display databases of geographic information.
+ .
+ This package contains the QGIS API documentation.
+
+#oracle#Package: qgis-oracle-provider
+#oracle#Architecture: any
+#oracle#Depends: ${shlibs:Depends}, ${misc:Depends}
+#oracle#Section: contrib/database
+#oracle#Description: QGIS oracle provider
+#oracle# QGIS is a Geographic Information System (GIS) which manages, analyzes and
+#oracle# display databases of geographic information.
+#oracle# .
+#oracle# This package contains the QGIS oracle provider.
+#oracle#

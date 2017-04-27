@@ -1,0 +1,712 @@
+/*
+ * The contents of this file are subject to the Interbase Public
+ * License Version 1.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy
+ * of the License at http://www.Inprise.com/IPL.html
+ *
+ * Software distributed under the License is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+ * or implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code was created by Inprise Corporation
+ * and its predecessors. Portions created by Inprise Corporation are
+ * Copyright (C) Inprise Corporation.
+ *
+ * All Rights Reserved.
+ * Contributor(s): ______________________________________.
+ */
+define database "bar.fdb";
+
+/*
+define generator RDB$SECURITY_CLASS;
+define generator SQL$DEFAULT;
+define generator RDB$PROCEDURES;
+define generator RDB$EXCEPTIONS;
+*/
+
+/*
+ * The SYSDBA_USER_NAME name is assumed to be "SYSDBA" in the
+ * below trigger
+ */
+define trigger grant_trigger for rdb$user_privileges pre store 0
+    begin
+	if new.rdb$object_type = 0
+	    begin
+	    if not any rel in rdb$relations
+	        with rel.rdb$relation_name eq new.rdb$relation_name
+		abort 0;
+	    if new.rdb$field_name not missing
+		if not any rlf in rdb$relation_fields
+		    with rlf.rdb$relation_name eq new.rdb$relation_name and
+		    rlf.rdb$field_name eq new.rdb$field_name
+		    abort 1;
+	    end;
+	if new.rdb$object_type = 5 and
+	   not any prc in rdb$procedures
+	     with prc.rdb$procedure_name eq new.rdb$relation_name
+	    abort 0;
+
+	if new.rdb$user_type = 0  or new.rdb$user_type = 3  or
+	   new.rdb$user_type = 4  or new.rdb$user_type = 6  or
+	   new.rdb$user_type = 7  or new.rdb$user_type = 8  or
+	   new.rdb$user_type = 9  or new.rdb$user_type = 10 or
+	   new.rdb$user_type = 11 or new.rdb$user_type = 12
+	    new.rdb$user = UPPERCASE (new.rdb$user);
+
+	if new.rdb$grantor missing
+	    new.rdb$grantor = UPPERCASE (rdb$user_name);
+	if new.rdb$object_type = 0
+	    begin
+	    /* Verify that the grantor has the 'grant option'. */
+	    for rel in rdb$relations
+	        with rel.rdb$relation_name eq new.rdb$relation_name
+		/* As part of the creation of a table/view, the creator gets
+		   records that gives him/her all privileges. */
+		if rel.rdb$owner_name eq UPPERCASE (rdb$user_name) and
+		   rel.rdb$owner_name eq new.rdb$grantor and
+		   rel.rdb$owner_name eq new.rdb$user or
+		   UPPERCASE (rdb$user_name) eq "SYSDBA"
+		    begin
+		    end
+		else
+		/* The owner always has the grant option.  
+		   A non-owner should have the grant option explicitely granted. */
+		if rel.rdb$owner_name ne UPPERCASE (rdb$user_name)
+		    begin
+		    if not any priv in rdb$user_privileges 
+			with priv.rdb$relation_name eq new.rdb$relation_name and
+			     priv.rdb$object_type   eq 0 and
+			     priv.rdb$privilege     eq new.rdb$privilege and
+			     priv.rdb$user          eq new.rdb$grantor and
+			     priv.rdb$user_type     eq 8 and
+			     priv.rdb$grant_option ne 0 and
+			     (priv.rdb$field_name missing or 
+                    	      priv.rdb$field_name eq new.rdb$field_name)
+			abort 2;
+		    end
+		else
+		/* If a view-owner is granting privileges on his/her view, then
+		   verify that the view owner has the grant option on the base table/view. */
+		if new.rdb$field_name not missing
+		    begin
+		    for fld in rdb$relation_fields cross
+			view in rdb$view_relations cross
+			rel2 in rdb$relations
+			with fld.rdb$field_name eq new.rdb$field_name and
+			     fld.rdb$relation_name eq new.rdb$relation_name and
+			     fld.rdb$base_field not missing and
+			     view.rdb$view_name eq fld.rdb$relation_name and
+			     view.rdb$view_context eq fld.rdb$view_context and
+			     view.rdb$relation_name eq rel2.rdb$relation_name
+			if rel2.rdb$owner_name ne rel.rdb$owner_name
+			   and UPPERCASE (rdb$user_name) ne "SYSDBA"
+			    begin
+			    if not any priv in rdb$user_privileges
+				with priv.rdb$relation_name eq rel2.rdb$relation_name and
+				     priv.rdb$object_type   eq 0 and
+				     priv.rdb$privilege     eq new.rdb$privilege and
+				     priv.rdb$user          eq rel.rdb$owner_name and
+				     priv.rdb$user_type     eq 8 and
+				     priv.rdb$grant_option ne 0 and
+				     (priv.rdb$field_name missing or
+				      priv.rdb$field_name eq fld.rdb$base_field)
+				abort 5;
+			    end;
+		    end_for;
+		    end
+		else
+		    begin
+		    for view in rdb$view_relations cross
+			rel2 in rdb$relations
+			with view.rdb$view_name eq new.rdb$relation_name and
+			     view.rdb$relation_name eq rel2.rdb$relation_name
+			if rel2.rdb$owner_name ne rel.rdb$owner_name
+			   and UPPERCASE (rdb$user_name) ne "SYSDBA"
+			    begin
+			    if not any priv in rdb$user_privileges
+				with priv.rdb$relation_name eq rel2.rdb$relation_name and
+				     priv.rdb$object_type   eq 0 and
+				     priv.rdb$privilege     eq new.rdb$privilege and
+				     priv.rdb$user          eq rel.rdb$owner_name and
+				     priv.rdb$user_type     eq 8 and
+				     priv.rdb$grant_option ne 0 and
+				     priv.rdb$field_name missing
+				abort 5;
+			    end;
+		    end_for;
+		    end
+		if rel.rdb$security_class missing
+		    modify rel
+			rel.rdb$security_class = "SQL$" | gen_id (RDB$SECURITY_CLASS, 1);
+		    end_modify
+		else if rel.rdb$security_class not starting "SQL$"
+		    abort 3;
+	    end_for;
+	    if new.rdb$field_name not missing
+		for rfl in rdb$relation_fields
+		    with rfl.rdb$relation_name eq new.rdb$relation_name and
+		    rfl.rdb$field_name eq new.rdb$field_name
+		    if rfl.rdb$security_class missing
+			modify rfl
+			    rfl.rdb$security_class = "SQL$GRANT" | gen_id (RDB$SECURITY_CLASS, 1);
+			end_modify;
+		    else if rfl.rdb$security_class not starting "SQL$GRANT"
+			abort 4;
+		end_for;
+	    end
+	else if new.rdb$object_type = 5
+	    for prc in rdb$procedures
+	        with prc.rdb$procedure_name eq new.rdb$relation_name
+		if prc.rdb$owner_name ne UPPERCASE (rdb$user_name)
+			   and UPPERCASE (rdb$user_name) ne "SYSDBA"
+		    if not any priv in rdb$user_privileges 
+			with priv.rdb$relation_name eq new.rdb$relation_name and
+			     priv.rdb$object_type   eq 5 and
+			     priv.rdb$privilege     eq new.rdb$privilege and
+			     priv.rdb$user          eq new.rdb$grantor and
+			     priv.rdb$user_type     eq 8 and
+			     priv.rdb$grant_option ne 0 and
+			     (priv.rdb$field_name missing or 
+                    	      priv.rdb$field_name eq new.rdb$field_name)
+			abort 2;
+		if prc.rdb$security_class missing
+		    modify prc
+			prc.rdb$security_class = "SQL$" | gen_id (RDB$SECURITY_CLASS, 1);
+		    end_modify
+		else if prc.rdb$security_class not starting "SQL$"
+		    abort 3;
+	    end_for;
+    end;
+end_trigger;
+
+/***
+define trigger revoke_trigger for rdb$user_privileges pre erase 0
+    if old.rdb$grantor ne UPPERCASE (rdb$user_name)
+	abort 0;
+end_trigger;
+***/
+
+define trigger revoke_trigger for rdb$user_privileges pre erase 0
+    if old.rdb$field_name not missing
+        for rf in rdb$relation_fields
+  	    with rf.rdb$relation_name eq old.rdb$relation_name and
+	         rf.rdb$field_name eq old.rdb$field_name
+            if rf.rdb$security_class starting "SQL$GRANT"
+		begin
+		    for sec in rdb$security_classes
+			  with sec.rdb$security_class eq rf.rdb$security_class
+			erase sec;
+		    end_for;
+	            modify rf
+                        rf.rdb$security_class = null;
+	            end_modify;
+		end;
+        end_for;
+end_trigger;
+
+define trigger grant_revoke for rdb$user_privileges pre modify 0
+    abort 0;
+end_trigger;
+
+define trigger system_protection_1 for rdb$triggers pre modify 0
+    if old.rdb$system_flag = 1
+	abort 0;
+end_trigger;
+
+define trigger system_protection_2 for rdb$triggers pre erase 0
+    if old.rdb$system_flag = 1
+	abort 0;
+end_trigger;
+
+define trigger system_protection_3 for rdb$relations pre store 0
+    if new.rdb$owner_name missing
+	new.rdb$owner_name = UPPERCASE (rdb$user_name);
+end_trigger;
+
+define trigger system_protection_4 for rdb$relations pre modify 0
+    if old.rdb$owner_name ne new.rdb$owner_name and
+       old.rdb$owner_name ne UPPERCASE (rdb$user_name)
+	abort 0;
+end_trigger;
+
+/* triggers for integrity constraints           */
+
+define trigger add_constraint for rdb$relation_constraints
+pre store:
+begin
+	if any r in rdb$relations with 
+           r.rdb$relation_name = new.rdb$relation_name
+	   and r.rdb$view_source not missing 
+              abort 1;
+
+        if NOT (new.RDB$CONSTRAINT_TYPE = 'UNIQUE' OR  
+	   new.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY' OR
+	   new.RDB$CONSTRAINT_TYPE = 'FOREIGN KEY' OR
+	   new.RDB$CONSTRAINT_TYPE = 'NOT NULL' OR
+	   new.RDB$CONSTRAINT_TYPE = 'CHECK')
+	abort 2;
+
+	if (new.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY')
+	begin
+	 if ANY r in rdb$relation_constraints with 
+                 r.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY'
+	         and r.rdb$relation_name = new.rdb$relation_name
+	 abort 3;
+	end;
+	
+end;
+end_trigger
+message 1: "Cannot define constraints on VIEWS", 
+message 2: "internal gds software consistency check (Invalid RDB$CONSTRAINT_TYPE)",
+message 3: "Attempt to define a second primary key for the same relation";
+
+define trigger update_constraint for rdb$relation_constraints
+pre modify:
+begin
+    abort 1;
+end;
+end_trigger
+message 1: "Can't update constraints (RDB$RELATION_CONSTRAINTS).";
+
+define trigger pre_delete_constraint for rdb$relation_constraints
+pre erase:
+begin
+	if old.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY' OR
+           old.RDB$CONSTRAINT_TYPE = 'UNIQUE'
+	begin
+	 if ANY r in rdb$ref_constraints with 
+	        r.rdb$CONST_NAME_UQ = old.rdb$constraint_name
+	 abort 1;
+	end;
+     
+	if old.RDB$CONSTRAINT_TYPE = 'FOREIGN KEY'
+	begin
+	  for c in RDB$REF_CONSTRAINTS
+		with old.RDB$CONSTRAINT_NAME = c.RDB$CONSTRAINT_NAME
+                erase c;
+          end_for;
+        end;
+
+        if old.RDB$CONSTRAINT_TYPE = 'NOT NULL'
+        begin
+          for chk in RDB$CHECK_CONSTRAINTS cross
+              fld in RDB$RELATION_FIELDS cross
+              idx in RDB$INDICES cross
+              ids in RDB$INDEX_SEGMENTS with
+              old.RDB$CONSTRAINT_NAME = chk.RDB$CONSTRAINT_NAME AND
+              fld.RDB$FIELD_NAME = chk.RDB$TRIGGER_NAME AND
+              fld.RDB$RELATION_NAME = old.RDB$RELATION_NAME AND
+              fld.RDB$FIELD_NAME = ids.RDB$FIELD_NAME AND
+              idx.RDB$RELATION_NAME = old.RDB$RELATION_NAME AND
+              idx.RDB$INDEX_NAME = ids.RDB$INDEX_NAME
+              if any const in RDB$RELATION_CONSTRAINTS with
+                 const.RDB$INDEX_NAME = ids.RDB$INDEX_NAME AND
+                 (const.RDB$CONSTRAINT_TYPE = 'UNIQUE' OR
+                  const.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY')
+           abort 2;
+           end_for;
+         end;
+end;
+end_trigger
+message 1: "Cannot delete PRIMARY KEY being used in FOREIGN KEY definition.",
+message 2: "Cannot drop NOT NULL constraint for fields in PRIMARY/UNIQUE constraints.";
+
+
+define trigger post_delete_constraint for rdb$relation_constraints
+post erase:
+begin
+	if old.RDB$CONSTRAINT_TYPE = 'FOREIGN KEY' OR
+	   old.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY' OR
+	   old.RDB$CONSTRAINT_TYPE = 'UNIQUE'     
+        begin
+	  for i in RDB$INDICES with old.RDB$INDEX_NAME = i.RDB$INDEX_NAME 
+	        erase i;
+                for is in RDB$INDEX_SEGMENTS 
+		   with is.RDB$INDEX_NAME = i.RDB$INDEX_NAME erase is;
+		end_for;
+	  end_for;
+	end;
+     
+        if old.RDB$CONSTRAINT_TYPE = 'NOT NULL'
+        begin
+          for c in  RDB$CHECK_CONSTRAINTS cross
+              f in rdb$relation_fields with
+                 old.RDB$CONSTRAINT_NAME = c.RDB$CONSTRAINT_NAME and
+                    f.RDB$RELATION_NAME = old.RDB$RELATION_NAME and
+                    f.RDB$FIELD_NAME = c.RDB$TRIGGER_NAME
+                    erase c;
+                    modify f using
+                      f.RDB$NULL_FLAG = 0;
+                    end_modify;
+          end_for;
+        end;
+
+        if old.RDB$CONSTRAINT_TYPE = 'CHECK'
+        begin
+            for chk in  RDB$CHECK_CONSTRAINTS
+                with old.RDB$CONSTRAINT_NAME = chk.RDB$CONSTRAINT_NAME
+              erase chk;
+              for t in RDB$TRIGGERS
+               with t.RDB$TRIGGER_NAME = chk.RDB$TRIGGER_NAME and
+                    t.RDB$RELATION_NAME = old.RDB$RELATION_NAME
+               erase t;
+              end_for;
+          end_for;
+        end;
+
+
+end;
+end_trigger;
+
+define trigger add_ref_constraint for rdb$ref_constraints
+pre store:
+begin
+	if NOT ANY r in rdb$relation_constraints with 
+		    r.RDB$CONSTRAINT_NAME = new.RDB$CONSTRAINT_NAME and
+		 r.RDB$CONSTRAINT_TYPE = 'FOREIGN KEY'
+	   abort 1;
+
+	if NOT ANY r in rdb$relation_constraints with
+		    r. RDB$CONSTRAINT_NAME = new.RDB$CONST_NAME_UQ and
+		    (r.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY' OR 
+                     r.RDB$CONSTRAINT_TYPE = 'UNIQUE')
+	   abort 2;
+end;
+end_trigger
+message 1: "Name of Referential Constraint not defined in constraints relation.",
+message 2: "Non-existent Primary or Unique key specifed for Foreign Key.";
+
+define trigger update_ref_constraint for rdb$ref_constraints
+pre modify:
+begin
+    abort 1;
+end;
+end_trigger
+message 1: "Can't update constraints (RDB$REF_CONSTRAINTS).";
+
+define trigger update_check_constraint for rdb$check_constraints
+pre modify:
+begin
+    abort 1;
+end;
+end_trigger
+message 1: "Can't update constraints (RDB$CHECK_CONSTRAINTS).";
+
+define trigger pre_delete_check_constraint for rdb$check_constraints
+pre erase:
+begin
+
+        if any c in RDB$RELATION_CONSTRAINTS with
+           c.RDB$CONSTRAINT_NAME = old.RDB$CONSTRAINT_NAME 
+           abort 2;
+end;
+end_trigger
+message 1: "Can't delete CHECK constraint entry (RDB$CHECK_CONSTRAINTS)";
+
+define trigger post_delete_check_constraint for rdb$check_constraints
+post erase:
+begin
+       for f in rdb$relation_fields cross
+            cnst in RDB$RELATION_CONSTRAINTS with
+            f.RDB$RELATION_NAME = cnst.RDB$RELATION_NAME and
+            cnst.RDB$CONSTRAINT_NAME = old.RDB$CONSTRAINT_NAME and
+            cnst.RDB$CONSTRAINT_TYPE = 'NOT NULL' and
+            f.RDB$FIELD_NAME = old.RDB$TRIGGER_NAME
+           modify f using
+              f.RDB$NULL_FLAG = 0;
+           end_modify;
+        end_for;
+
+        for t in RDB$TRIGGERS cross
+            cnst in RDB$RELATION_CONSTRAINTS with
+            cnst.RDB$CONSTRAINT_NAME = old.RDB$CONSTRAINT_NAME and
+            cnst.RDB$CONSTRAINT_TYPE = 'CHECK' and
+            t.RDB$RELATION_NAME = cnst.RDB$RELATION_NAME and
+            t.RDB$TRIGGER_NAME = old.RDB$TRIGGER_NAME
+            erase t;
+        end_for;
+
+end;
+end_trigger;
+
+define trigger delete_constraint_segs for rdb$index_segments
+pre erase:
+begin
+	if any c in RDB$RELATION_CONSTRAINTS with 
+	   c.RDB$INDEX_NAME = old.RDB$INDEX_NAME
+	abort 1;
+end;
+end_trigger
+message 1: "Can't delete index segment used by an Integrity Constraint";
+
+
+define trigger update_constraint_segs for rdb$index_segments
+pre modify:
+begin
+	if any c in RDB$RELATION_CONSTRAINTS with 
+	   c.RDB$INDEX_NAME = old.RDB$INDEX_NAME
+	abort 1;
+end;
+end_trigger
+message 1: "Can't update index segment used by an Integrity Constraint";
+
+define trigger delete_constraint_idx for rdb$indices
+pre erase:
+begin
+	if any c in RDB$RELATION_CONSTRAINTS with 
+	   c.RDB$INDEX_NAME = old.RDB$INDEX_NAME
+	abort 1;
+end;
+end_trigger
+message 1: "Can't delete index used by an Integrity Constraint";
+
+define trigger update_constraint_idx for rdb$indices
+pre modify :
+begin
+	if any c in RDB$RELATION_CONSTRAINTS with 
+	   c.RDB$INDEX_NAME = old.RDB$INDEX_NAME
+	begin
+	    if NOT (old.RDB$INDEX_NAME = new.RDB$INDEX_NAME AND
+	        old.RDB$RELATION_NAME = new.RDB$RELATION_NAME AND
+		old.RDB$INDEX_ID = new.RDB$INDEX_ID AND
+		old.RDB$SEGMENT_COUNT = new.RDB$SEGMENT_COUNT AND
+		old.RDB$FOREIGN_KEY = new.RDB$FOREIGN_KEY) 
+	    abort 1;
+	end;
+	for cnst in RDB$RELATION_CONSTRAINTS cross
+	    idx1 in RDB$INDICES cross
+	    idx2 in RDB$INDICES
+	    with
+		cnst.RDB$INDEX_NAME = old.RDB$INDEX_NAME and
+		idx1.RDB$INDEX_NAME = old.RDB$INDEX_NAME and
+		idx2.RDB$FOREIGN_KEY = old.RDB$INDEX_NAME and
+		new.RDB$INDEX_INACTIVE = 1 and
+		( old.RDB$INDEX_INACTIVE = 0 or
+		  old.RDB$INDEX_INACTIVE = null)
+		    abort 2;
+	end_for;
+	if any c in RDB$RELATION_CONSTRAINTS with 
+	   c.RDB$INDEX_NAME = old.RDB$INDEX_NAME and
+           ( c.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY' or
+             c.RDB$CONSTRAINT_TYPE = 'FOREIGN KEY')
+	begin
+	   if new.RDB$INDEX_INACTIVE = 1 and
+	      ( old.RDB$INDEX_INACTIVE = 0 or
+	        old.RDB$INDEX_INACTIVE = null)
+	      abort 3;
+        end;
+end;
+end_trigger
+message 1: "Can't modify index used by an Integrity Constraint",
+message 2: "Can't deactivate index used by an Integrity Constraint",
+message 3: "Can't deactivate a primary index";
+
+define trigger delete_constraint_trigger for rdb$triggers
+pre erase:
+begin
+        for chk in RDB$CHECK_CONSTRAINTS cross
+            cnst in RDB$RELATION_CONSTRAINTS with
+            chk.RDB$TRIGGER_NAME = old.RDB$TRIGGER_NAME and
+            cnst.RDB$CONSTRAINT_NAME = chk.RDB$CONSTRAINT_NAME and
+            cnst.RDB$CONSTRAINT_TYPE = 'CHECK'
+               abort 1;
+        end_for;
+
+end;
+end_trigger
+message 1: "Can't delete trigger used by an Integrity Constraint";
+
+define trigger update_constraint_trigger for rdb$triggers
+pre modify:
+begin
+        for chk in RDB$CHECK_CONSTRAINTS cross
+            cnst in RDB$RELATION_CONSTRAINTS with
+            chk.RDB$TRIGGER_NAME = old.RDB$TRIGGER_NAME and
+            cnst.RDB$CONSTRAINT_NAME = chk.RDB$CONSTRAINT_NAME and
+            cnst.RDB$CONSTRAINT_TYPE = 'CHECK'
+               abort 1;
+        end_for;
+
+end;
+end_trigger
+message 1: "Can't update trigger used by a CHECK Constraint";
+
+define trigger pre_delete_field for rdb$relation_fields
+pre erase:
+begin
+
+for idx in RDB$INDICES cross
+    cnst in RDB$RELATION_CONSTRAINTS cross
+    ids in RDB$INDEX_SEGMENTS with
+    idx.RDB$RELATION_NAME = old.RDB$RELATION_NAME AND
+    idx.RDB$INDEX_NAME = ids.RDB$INDEX_NAME AND
+    cnst.RDB$INDEX_NAME = ids.RDB$INDEX_NAME AND
+    ids.RDB$FIELD_NAME = old.RDB$FIELD_NAME AND
+    (cnst.RDB$CONSTRAINT_TYPE = 'UNIQUE' OR
+     cnst.RDB$CONSTRAINT_TYPE = 'FOREIGN KEY' OR
+     cnst.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY')
+     if any ids1 in RDB$INDEX_SEGMENTS with
+        ids1.RDB$INDEX_NAME = ids.RDB$INDEX_NAME AND
+        ids1.RDB$FIELD_NAME NE old.RDB$FIELD_NAME
+           abort 1
+     else
+        erase cnst;
+end_for;
+
+for cnst in RDB$RELATION_CONSTRAINTS cross
+	chk in RDB$CHECK_CONSTRAINTS over RDB$CONSTRAINT_NAME cross
+	dep in RDB$DEPENDENCIES with
+	cnst.RDB$RELATION_NAME = old.RDB$RELATION_NAME and 
+	cnst.RDB$CONSTRAINT_TYPE = 'CHECK' and
+	chk.RDB$TRIGGER_NAME = dep.RDB$DEPENDENT_NAME and 
+	dep.RDB$DEPENDENT_TYPE = 2 and
+	dep.RDB$DEPENDED_ON_TYPE = 0 and
+	dep.RDB$DEPENDED_ON_NAME = old.RDB$RELATION_NAME and
+	dep.RDB$FIELD_NAME = old.RDB$FIELD_NAME
+	
+	if any dep1 in RDB$DEPENDENCIES with
+		dep1.RDB$DEPENDENT_NAME = chk.RDB$TRIGGER_NAME and
+		dep1.RDB$DEPENDENT_TYPE = 2 and
+		dep1.RDB$DEPENDED_ON_TYPE = 0 and
+		dep1.RDB$DEPENDED_ON_NAME = old.RDB$RELATION_NAME and
+		dep1.RDB$FIELD_NAME NE old.RDB$FIELD_NAME
+			abort 1
+	else
+		erase cnst;
+end_for;
+
+end;
+end_trigger
+message 1: "Cannot delete field being used in an integrity constraint.";
+
+define trigger pre_modify_field for rdb$relation_fields
+pre modify:
+begin
+
+if old.rdb$field_name != new.rdb$field_name
+for idx in RDB$INDICES cross
+    cnst in RDB$RELATION_CONSTRAINTS cross
+    ids in RDB$INDEX_SEGMENTS with
+    idx.RDB$RELATION_NAME = old.RDB$RELATION_NAME AND
+    idx.RDB$INDEX_NAME = ids.RDB$INDEX_NAME AND
+    cnst.RDB$INDEX_NAME = ids.RDB$INDEX_NAME AND
+    ids.RDB$FIELD_NAME = old.RDB$FIELD_NAME AND
+    (cnst.RDB$CONSTRAINT_TYPE = 'UNIQUE' OR
+     cnst.RDB$CONSTRAINT_TYPE = 'FOREIGN KEY' OR
+     cnst.RDB$CONSTRAINT_TYPE = 'PRIMARY KEY')
+           abort 1;
+end_for;
+
+end;
+end_trigger
+message 1: "Cannot rename field being used in an integrity constraint.";
+
+define trigger post_delete_field for rdb$relation_fields
+post erase:
+begin
+
+for chk in RDB$CHECK_CONSTRAINTS cross
+    const in RDB$RELATION_CONSTRAINTS with
+    old.RDB$FIELD_NAME = chk.RDB$TRIGGER_NAME AND
+    const.RDB$CONSTRAINT_NAME = chk.RDB$CONSTRAINT_NAME AND
+    old.RDB$RELATION_NAME = const.RDB$RELATION_NAME AND
+    const.RDB$CONSTRAINT_TYPE = 'NOT NULL'
+
+    erase const;
+    erase chk;
+
+end_for;
+end;
+end_trigger;
+
+define trigger system_protection_5 for rdb$procedures pre store 0
+    begin
+    if new.rdb$owner_name missing
+	new.rdb$owner_name = UPPERCASE (rdb$user_name);
+    new.rdb$procedure_id = gen_id (RDB$PROCEDURES, 1);
+    end;
+end_trigger;
+
+define trigger system_protection_6 for rdb$procedures pre modify 0
+    if old.rdb$owner_name ne new.rdb$owner_name and
+       old.rdb$owner_name ne UPPERCASE (rdb$user_name)
+	abort 0;
+end_trigger;
+
+define trigger new_exception for rdb$exceptions pre store 0
+    begin
+    new.rdb$exception_number = gen_id (RDB$EXCEPTIONS, 1);
+    end;
+end_trigger;
+
+define trigger post_del_for_constraint for rdb$relation_constraints
+post erase:
+begin
+	/* To be able to drop foreign key constriants with 
+	   referential action. When this trigger fires, it
+	   runs without checking for any privileges. This is an ODS
+	   8.1 trigger */
+
+        if old.RDB$CONSTRAINT_TYPE = 'FOREIGN KEY'
+        begin
+            for chk in  RDB$CHECK_CONSTRAINTS
+                with old.RDB$CONSTRAINT_NAME = chk.RDB$CONSTRAINT_NAME
+              erase chk;
+
+              for t in RDB$TRIGGERS
+               with t.RDB$TRIGGER_NAME = chk.RDB$TRIGGER_NAME 
+               erase t;
+              end_for;
+          end_for;
+        end;
+
+end;
+end_trigger;
+
+define trigger post_del_check_for_constraint for rdb$check_constraints
+post erase:
+begin
+	/* To be able to drop foreign key constriants with 
+	   referential action.  When this trigger fires, it
+	   runs without checking for any privileges.  This is an ODS
+	   8.1 trigger */
+
+        for t in RDB$TRIGGERS cross
+            cnst in RDB$RELATION_CONSTRAINTS with
+            cnst.RDB$CONSTRAINT_NAME = old.RDB$CONSTRAINT_NAME and
+            cnst.RDB$CONSTRAINT_TYPE = 'FOREIGN KEY' and
+            t.RDB$TRIGGER_NAME = old.RDB$TRIGGER_NAME
+            erase t;
+        end_for;
+
+end;
+end_trigger;
+
+
+/* this trigger (grantor_check_trigger) was added as a fix to bug 8071.
+   the same trigger is defined for ON UPDATE and ON DELETE, in
+   addition to the ON INSERT (below). This is an ODS 8.1 trigger. 
+*/
+define trigger grantor_check_trigger for rdb$user_privileges pre store 0
+    begin
+	/* If grantor is missing, trigger grant_trigger will assign it to
+	   rdb$user_name.
+	   If the grantor is not the current user or SYSDBA, make sure
+	   the grantor is the owner of the table.
+	 */
+	if ( (new.rdb$grantor not missing) and
+	     (new.rdb$grantor ne UPPERCASE (rdb$user_name)) and
+	     (UPPERCASE (rdb$user_name) ne "SYSDBA")
+	   )
+	   begin
+	   for rel in rdb$relations with
+	       rel.rdb$relation_name = "RDB$DATABASE"
+	       if ( (rel.rdb$owner_name missing) or
+		    (rel.rdb$owner_name ne UPPERCASE(rdb$user_name)) )
+	           abort 0;
+	   end_for
+	   end
+    end;
+end_trigger;
+

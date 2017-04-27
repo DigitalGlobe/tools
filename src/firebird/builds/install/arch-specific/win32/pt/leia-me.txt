@@ -1,0 +1,93 @@
+
+========================================
+Firebird $MAJOR.$MINOR.$RELEASE (Windows Build)
+========================================
+
+
+o Introdução
+o Utilizadores Alvo
+o Questões Conhecidas
+o Funcionalidades desta versão (todas as plataformas)
+o Instalação
+o Reportar erros
+
+
+Introdução
+==========
+
+Bem-vindo ao Firebird $MAJOR.$MINOR.
+
+
+Utilizadores Alvo
+=================
+
+O Firebird $MAJOR.$MINOR foi sujeito a um intenso 
+programa de testes e está pronto para um uso massivo em 
+produção. Porem é recomendado que se apliquem as 
+práticas usuais antes de instalar esta versão num 
+servidor em produção, ie:
+
+ o Leia o "leia-me.txt" desta instalação e as notas de 
+   lançamento desta versão.
+
+ o Se tem dados a que dá valor lembre-se de fazer uma 
+   cópia de segurança antes de instalar esta versão.
+
+ o É recomendado que remova qualquer instalação 
+   anterior antes de prosseguir. A operação de remoção 
+   preserva os ficheiros de configuração e de logs.
+
+ o É recomendado que faça os seus próprios testes num 
+   ambiente de desenvolvimento antes de partir para um 
+   ambiente de produção.
+
+
+Questões Conhecidas
+===================================================
+
+Windows Vista - O instalador falha ao iniciar o 
+Firebird como serviço na altura da instalação, mas o 
+serviço inicia corretamente após reiniciar o sistema. 
+Para contornar este problema, poderá clicar com o lado 
+direito cobre a aplicação do Painel de Controlo, 
+escolher "Exceutar como..." e arrancar o serviço desse 
+local.
+
+Funcionalidades desta versão
+===================================================
+
+Por favor consulte as "Notas de Lançamento" para mais
+informações.
+
+
+Instalação
+==========
+
+As questões relacionadas com a instalação são 
+abordadas em detalhe no Guia de Instalação disponivel 
+na diretoria docs após a instalação. Um pequeno 
+sumário de questões relacionadas com a instalação podem 
+ser obtidas também no ficheiro instalacao_leia-me.txt, 
+tambem disponivel nessa mesma diretoria.
+
+Reportar Erros
+==============
+
+Antes de reportar um erro:
+
+o Tem a certeza que compreende como o Firebird funciona?
+  Pode ser que não se trate de um erro.
+
+o Talvez o erro já esteja reportado? Pode procurar os 
+  erros reportados aqui:
+
+    http://tracker.firebirdsql.org/browse/CORE
+
+o Em caso de dúvida porque não discute o problema na 
+  lista dos programadores do Firebird ? Pode subscrever 
+  a lista aqui:
+
+    http://lists.sourceforge.net/lists/listinfo/firebird-devel
+
+ 
+Equipa do Firebird

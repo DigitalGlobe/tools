@@ -1,0 +1,12 @@
+Microsoft (R) C/C++ Optimizing Compiler Version 19.00.24210 for x64
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+cl : Command line warning D9002 : ignoring unknown option '-Op'
+cl : Command line warning D9002 : ignoring unknown option '-G4'
+blrtable.cpp
+C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\INCLUDE\exception(359): warning C4577: 'noexcept' used with no exception handling mode specified; termination on exception is not guaranteed. Specify /EHsc
+Microsoft (R) Incremental Linker Version 14.00.24210.0
+Copyright (C) Microsoft Corporation.  All rights reserved.
+
+/out:blrtable.exe 
+blrtable.obj 

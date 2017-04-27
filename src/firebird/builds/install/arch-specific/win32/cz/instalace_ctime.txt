@@ -1,0 +1,160 @@
+Databázový server Firebird $MAJOR.$MINOR.$RELEASE
+==================================================
+
+
+Tento dokument je návod pro instalaci tohoto balíèku
+Firebird $MAJOR.$MINOR na platformì Windows. Zdejší poznámky
+odkazují spíše na balíèek samotný, než obecnì na
+Firebird $MAJOR.$MINOR. Navíc jsou tyto poznámky
+primárnì zamìøeny na uživatele spustitelného instalátoru.
+
+Pøedpokládá se, že ètenáø tohoto dokumentu je již
+obeznámen s Firebirdem 2.1. Pokud pøecházíte
+na Firebird $MAJOR.$MINOR pøímo z Fb 2.1, doporuèujeme
+vám shlédnout dokumentaci Fb $MAJOR.$MINOR pro zjištìní
+zmìn mezi verzí 2.1 a $MAJOR.$MINOR.
+
+
+Obsah
+-----
+
+o Pøed instalací
+o Problémy s instalací MS VC runtime knihoven
+o Známé problémy instalace
+o Odinstalace
+o Jiné poznámky
+o Instalace z dávkového souboru
+
+
+Pøed instalací
+--------------
+
+Doporuèuje se pøed instalací tohoto balíèku
+ODINSTALOVAT všechny pøedchozí verze Firebirdu
+èi InterBase. Je zvláštì dùležité zkontrolovat,
+že fbclient.dll a gds32.dll byly odstranìny
+ze složky <system32>.
+
+
+Problémy s instalací MS VC runtime knihoven
+-------------------------------------------
+
+Bylo uèinìno mnoho práce k zajištìní správné
+instalace bìhových knihoven MS Visual C instalátorem.
+Od verze v2.1.2 Firebird s lokálními instancemi bìhových
+knihoven. To usnadòuje zvláštì šíøení Firebird klienta
+èi embeded dll s vaší aplikací.
+
+Nicménì v pøípadì problémù mùže být nutné nasadit 
+oficiální vcredist.exe. Správnou verzi pro toto 
+sestavení Firebirdu naléznete zde:
+
+  http://www.microsoft.com/downloads/details.aspx?familyid=32BC1BEE-A3F9-4C13-9C99-220B62A191EE&displaylang=en
+
+   a x64 zde:
+
+  http://www.microsoft.com/downloads/details.aspx?familyid=90548130-4468-4BBC-9673-D6ACABD5D13B&displaylang=en
+
+
+Známé problémy instalace
+------------------------
+
+o Binární instalátor je možné použít pouze
+  k instalaci výchozí instance Firebird $MAJOR.$MINOR.
+  Pokud chcete instalovat další pojmenované
+  instance, musíte je nainstalovat ruènì
+  z instalaèního balíèku zip.
+
+o Bohužel, instalátor nedokáže spolehlivì detekovat
+  pøedchozí bìžící verzi Firebirdu, spuštìnou jako
+  Classic Server.
+
+o Existují známé oblasti pøekrytí mezi
+  32bitovou a 64bitovou instalací:
+
+  - Instalace služby (instsvc) používá stejný
+    výchozí název instance pro 32bitovou a 64bitovou
+    instalaci. To je zámìrné. Služby existují
+    v jediném jménném prostoru.
+
+  - Jsou-li 32bitový a 64bitový ovládací panel 
+    instalovány, budou oba ukazovat na stejnou výchozí 
+	instanci.
+
+o Pøi instalaci pod Vista nezapomeòte instalovat jako
+  správce. Tj., pokud použijete binární instalátor,
+  klepnìte pravým tlaèítkem myši a zvolte 'Spustit 
+  jako správce'. Jinak instalátor nebude schopen spustit
+  službu Firebird na konci instalace.
+
+o Jestliže nebyly správnì nainstalované bìhové knihovný 
+  MS, selže naètení knihoven uvolnìných pomocí 
+  instclient. V takovém pøípadfì by uživatel mìl 
+  nainstalovat pøíslušnou verzi vcredist.exe, jak bylo 
+  zmínìno výše.
+
+
+Odinstalace
+-----------
+
+o Je upøednostòované, aby tento balíèek byl
+  správnì odinstalován použitím dodávané
+  odinstalèní aplikace. Tato mùže být spuštìna
+  z Ovládacích panelù. Jinak mùže být odinstalován
+  spuštìním unins000.exe pøímo z instalaèní
+  složky.
+
+o Pokud Firebird bìží jako aplikace (místo jako
+  služba), je doporuèeno abyste pøed spuštením
+  odinstalátoru ruènì zastavili server.
+  To protože odinstalátor nemùže ukonèit bìžící
+  aplikaci. Pokud server bìhem odinstalace beží,
+  odinstalace skonèí chybou. Pozùstalé soubory
+  musíte vymazat ruènì.
+
+o Odinstalace v instalaèní složce zanechá
+  ètyri soubory:
+
+  - aliases.conf
+  - firebird.conf
+  - fbtrace.conf
+  - firebird.log
+  - security2.fdb
+
+  To je zámìr. Všechny tyto soubory jsou
+  potencionálnì pozmìnitelné uživatelem a
+  mohou být potøeba, pokud nìkdy v budoucnu
+  bude Firebird reinstalovaný. Pokud nejsou více
+  tøeba, mohou být odstranìny.
+
+o Nové funkce odinstalátoru je možnost spustit
+  jej s parametrem /CLEAN. To provede kontrolu
+  poèítadel sdílených souborù poèítá pro každý
+  z výše uvedených souborù. V pøípadì možnosti
+  budou odstranìny.
+
+o Odinstalace neodstraní bìhové knihovny MS VC
+  knihoveny ze systémové složky. Ty mohou být
+  odstranìny ruènì pomocí ovládacího panelu, ale
+  za normálních okolností to není potøeba.
+
+
+Jiné poznámky
+-------------
+
+  Firebird vyžaduje WinSock2. Všechny platformy
+  Win32 jej mají, vyjma Win95. Bìhem instalace
+  se na knihovnu WinSock2 provádí test. Pokud
+  není nalezena, instalace selže. Mùžete navštívit
+  tento odkaz:
+
+	http://support.microsoft.com/default.aspx?scid=kb;EN-US;q177719
+
+
+Instalace z dávkového souboru
+-----------------------------
+
+Instalaèní program lze spustit z dávkového souboru.
+Pro úplnou informaci se prosím pøeètìte dokument:
+
+	instalace_davkova.txt

@@ -1,0 +1,123 @@
+# The contents of this file are subject to the Interbase Public
+# License Version 1.0 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy
+# of the License at http://www.Inprise.com/IPL.html
+#
+# Software distributed under the License is distributed on an
+# "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+# or implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code was created by Inprise Corporation
+# and its predecessors. Portions created by Inprise Corporation are
+# Copyright (C) Inprise Corporation.
+#
+# All Rights Reserved.
+# Contributor(s): ______________________________________.
+.SUFFIXES: .c .e
+.e.c:
+	$(GPRE) $(GPRE_FLAGS) $<
+.SUFFIXES: .bin .o .c
+.c.o:
+	$(CC) -c $(CFLAGS) $(VERSION_FLAG) $<
+.c.bin:
+	$(CC) -c $(PIC_FLAGS) $(VERSION_FLAG) -o $*_temp.o $<
+	mv $*_temp.o $*.bin
+
+
+PROD_DEBUG_OBJECTS=	nodebug.o
+PROD_SHRLIB_DIR=
+PROD_VERSION_FLAG=	-DPROD_BUILD
+PROD_CFLAGS=		-O -DHADES
+PROD_GDSSHR_LINK=
+
+DEV_DEBUG_OBJECTS=	grammar.o dbg.o dbt.o dmp.o
+DEV_SHRLIB_DIR=		-L source/jrd
+DEV_VERSION_FLAG=	-DDEV_BUILD
+DEV_CFLAGS=		-g
+DEV_GDSSHR_LINK=	$(SHRLIB_DIR) -lgdsshr
+
+DEBUG_OBJECTS=		$($(VERSION)_DEBUG_OBJECTS)
+SHRLIB_DIR=		$($(VERSION)_SHRLIB_DIR)
+VERSION_FLAG=		$($(VERSION)_VERSION_FLAG)
+CFLAGS=			-qchars=signed $($(VERSION)_CFLAGS)
+
+ACCESS_METHOD=		gdslib.aix_ppc
+BACKEND_BRIDGE_MISC=	head5.o allp.o
+BIN_PATH=		/usr/gds/sbin
+BRIDGE_MISC=		head5.o allp.o
+CFLAGS_JRD_INI=		-qnoro
+CFLAGS_PYXIS=		-DNLS
+CHMOD_VAL=		666
+COPT_INTL_CS_JIS=	YES
+COPT_JRD_JRD=		NO
+COPT_JRD_SDW=		NO
+EXAMPLES_DBS=		source/examples/
+FORM_OBJECTS=		form.o
+FORM_TRN_OBJECTS=	form_trn.o
+FRED=			fred
+GDS_LINK=		$(GDSSHR_LINK)
+GDSLIB_BACKEND=		source/jrd/gds_b.a
+GDSLIB_LINK=		-L source/jrd -lgds_b -lcurses
+GDSSHR=			source/interbase/lib/gdsshr.a
+AIX_PPC_GDSSHR=		$(GDSSHR)
+GDSSHR_LINK=		$(SHRLIB_DIR) -lgdsshr
+HLPDIR=			source/qli/
+INCLUDES=		include_aix
+INTL=			intl
+INTL_CFLAGS=		$(CFLAGS)
+INTL_PIC_FLAGS=		$(INTL_CFLAGS) 
+INTL_LD_LINE=		cc -e LD_lookup $($(VERSION)_GDSSHR_LINK) -o gdsintl
+INTL_TARGET=		gdsintl.sl
+IO_OBJECTS=		unix.o
+LANG_OBJECTS=		cob.o ftn.o
+LANGUAGES=		cc microfocus_cob cxx make5 gdl2 aix_ftn
+LOCK_MANAGER=		manager
+MARION_DB=		-d source/marion.gdb
+MUISQL=                 muisql
+MUISQL_MU_LIB=          -L /usr/gds/lib -lmu
+PIC_FLAGS=		$(CFLAGS)
+PYXIS=			pyxis
+PYXIS_MISC_OBJS=	$(PYXIS_MISC)
+PYXIS_P_MISC_OBJS=	$(PYXIS_P_MISC)
+PYXIS_OBJECTS=		pyxis_objects
+PYXIS_MISC_OBJECTS=	$(PYXDIR)cdm.o $(PYXDIR)vt100.o
+PIPE=			gds.a gds_pipe
+REG_HELP=		isc_ins_hlp.dat
+REMOTE_GDSSHR=		$(GDSSHR)
+REMOTE_GDSSHR_LINK=	$(REMOTE_OBJECTS) $(JRD_LINK) $(SERVER_LINK)
+SCREEN_LIBS=		-lcurses
+SERVER_LINK=		$(GDSSHR_LINK)
+SETUP_ISC=		ISC_USER=sysdba; ISC_PASSWORD=masterkey; export ISC_USER ISC_PASSWORD;
+SPECIAL_OPT=		source/special_opt
+UTILITIES=		drop
+
+
+INET_SERVER_DEST=	source/interbase/bin/gds_inet_server
+DNET_SERVER_DEST=	source/interbase/bin/gds_dnet_server
+AMBX_SERVER_DEST=	source/interbase/bin/gds_server
+INET_LIB_DEST=		source/interbase/lib/gds_inet_server.a
+DNET_LIB_DEST=		source/interbase/lib/gds_dnet_server.a
+
+SH=			sh -c
+RM=			rm -f
+CHMOD=			chmod
+CHMOD_6=		chmod 666
+CHMOD_7=		chmod 777
+CHMOD_S7=		chmod 06777
+MV=			mv -f
+TOUCH=			touch
+CP=			cp
+ECHO=			echo
+QUIET_ECHO=		@echo
+CD=			cd
+CAT=			cat
+AR=			ar rl
+EXPAND_DBNAME=		@echo No need to expand...
+COMPRESS_DBNAME=	@echo No need to compress...
+
+ARCH_EXT=		.a
+EXEC_EXT=
+
+V3PRINTER=		source/lock/printv3.o
+

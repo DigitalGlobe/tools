@@ -1,0 +1,6 @@
+﻿C:\Projects\SURGE\DigitalGlobe\Projects\tools\src\AprUtil\xml\expat\lib\xml.vcxproj(91,5): warning MSB4011: "C:\Users\deatc\AppData\Local\Microsoft\MSBuild\v4.0\Microsoft.Cpp.Win32.user.props" cannot be imported again. It was already imported at "C:\Projects\SURGE\DigitalGlobe\Projects\tools\src\AprUtil\xml\expat\lib\xml.vcxproj (84,5)". This is most likely a build authoring error. This subsequent import will be ignored. 
+  xmlparse.c
+  xmlrole.c
+  xmltok.c
+  Generating Code...
+  xml.vcxproj -> C:\Projects\SURGE\DigitalGlobe\Projects\tools\src\AprUtil\xml\expat\lib\.\LibD\xml.lib

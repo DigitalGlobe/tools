@@ -1,0 +1,202 @@
+
+======================================
+Firebird $MAJOR.$MINOR.$RELEASE  (Windows Felépítés)
+======================================
+
+
+o Bevezetés
+o Felhasználás
+o Ezen verzió szolgáltatásai (minden platformon)
+o Ebben a verzióban javított hibák (minden platformon)
+o Telepítés
+o Ismert problémák
+o Az SQL Nyelv dokumentációja
+o Hibák jelentése
+o Új képességek igénylése
+
+
+Bevezetés
+=========
+
+Üdvözöljük a Firebird $MAJOR.$MINOR világában.
+
+
+Felhasználás
+============
+
+A Firebird $MAJOR.$MINOR alapos tesztelések során
+bizonyította, hogy alkalmas kiterjedt üzemi
+- éles - környezetben történõ felhasználásra. Ennek
+ellenére ajánlatos, a már ismert, általánosan
+alkalmazott telepítési procedúrát alkalmazni a termék
+- éles - környezetben történõ üzembehelyezése során.
+Ilyenek például:
+
+ o Tájékozódjon a termékrõl és az üzembehelyezésrõl
+   a telepítési segédletbõl valamint a kiadási
+   jegyzetbõl.
+
+ o Értékes adatait mindenképpen mentse le még a
+   telepítés megkezdése elõtt.
+
+ o Telepítés elõtt tanácsos eltávolítani minden
+   régebbi verziót. Az eltávolítás hátrahagyja a
+   konfigurációs állományokat és a naplófájlokat.
+
+ o Ajánlatos saját tesztelés végezni a fejlesztõi
+   rendszeren az új verzióval, mielõtt telepíti a
+   programot az üzemi rendszerre.
+
+
+Ezen verzió szolgáltatásai (minden platformon)
+==============================================
+
+További információkért tekintse meg a:
+doc/Firebird_v$MAJOR.$MINOR.$RELEASE.ReleaseNotes.pdf
+dokumentumot.
+
+
+Ebben a verzióban javított hibák (minden platformon)
+====================================================
+
+További információkért tekintse meg a:
+doc/Firebird_v$MAJOR.$MINOR.$RELEASE.ReleaseNotes.pdf
+dokumentumot.
+
+
+Telepítés öntelepítõ állományból
+================================
+
+Kérem futtassa a telepítõ programot, majd olvassa el a
+telepítõ varázsló által megjelenített telepítési
+segédletet.  A telepítés befejezése után ezt a
+dokumentumot a:
+.\doc\teklepitesi_segedlet.txt
+helyen találja. További részletes információk a
+"Firebird $MAJOR.$MINOR.$RELEASE - Újdonságok"
+(doc/Firebird_v$MAJOR.$MINOR.$RELEASE.ReleaseNotes.pdf)
+dokumentumban vannak.
+
+Telepítés zip csomagokból
+=========================
+
+Kövesse a:
+.\doc\README_installation.txt
+dokumentumban található utasításokat a zip csomagból
+történõ telepítéshez. (Ez a dokumentum csak a zip
+csomagolású terjesztés mellett található meg.)
+
+
+A beágyazott szerver telepítése
+===============================
+
+A beágyazott szerver úgy készült, hogy egy létezõ
+alkalmazás részeként üzemeljen. A beágyazott szerver
+telepítési leírásáért, valamint további információkért
+olvassa el a:
+.\doc\README_embedded.txt
+dokumentumot. (Ez a dokumentum csak a beágyazott
+szervert tartalmazó csomag mellett található meg.)
+
+
+Ismert problémák
+================
+
+ o A biztonsági adatbázis megváltozott Az új adatbázis
+   neve security2.fdb lett és megerõsített
+   jelszótitkosítási algoritmus került benne
+   alkalmazásra. További, az új biztonsági
+   funkciókkal kapcsolatos információkat a doc
+   mappában találhat. A régi verziókról áttérõ
+   felhasználó számára a elérhetõ egy áttérést segítõ
+   szkript a  misc/upgrade/security helyen. Ez a
+   szkript átalakítja a régi biztonsági adatbázist az
+   új formátumra.
+
+
+ o Néhány örökölt Windowsos program nem ismeri fel az
+   fbclient.dll kliens könyvtárat és/vagy nem találja
+   meg az  alapértelmezett helyén. Ez az
+   alapértelmezett hely most  a .\bin mappa
+   közvetlenül a Firebird gyökérkönyvtár  alatt.
+   Példának okáért a Borland IBConsole program nem
+   fog mûködni a fbclient.dll kliens könyvtárral
+   egészen addig, amíg azt át nem másolja a rendszer
+   <system> mappába és át nem nevezi "gds32.dll"-re.
+
+ o A Windows-os készlet tartalmaz egy instclient.exe
+   nevezetû programot, amely arra használhat, hogy az
+   örökölt programokkal kompatibilis gds32.dll fájlt
+   hozhat vele létre, és opcionálisan ezt a fájlt a
+   rendszer <system> mappában helyezheti el. Ebben az
+   esetben lényeges, hogy elolvassa a "Firebird 1.5 -
+   Újdonságok"  dokumentumot valamint a mellékelt:
+   .\doc\README_library_install.txt
+   dokumentumot, mielõtt végrehajtja ezeket a
+   változtatásokat.
+
+UDF-ek és BLOB Szûrõk
+---------------------
+A biztonsági beállításokban történt változtatás miatt
+ebben a verzióban elõfordulhat, hogy az egyedileg
+használt UDF könyvtárak elérhetetlenné válnak a
+szerver  számára, amíg az UDF könyvtárak elérési
+útjait meg nem  adja a firebird.conf konfigurációs
+állomány megfelelõ  szakaszában. További
+információkért olvassa el a  megjegyzéseket a
+firebird.conf konfigurációs állományban valamint a "
+Firebird $MAJOR.$MINOR.$RELEASE - Újdonságok" dokumentumban.
+
+
+Az SQL Nyelv dokumentációja
+===========================
+Új nyelvi szolgáltatások, kulcsszavak, kiterjesztések
+valamint korlátozások kerültek bevezetésre ebben a
+verzióban. A részletekrõl a "Firebird $MAJOR.$MINOR.$RELEASE -
+Újdonságok" dokumentumból tudhat meg  többet.
+
+
+Hibák jelentése
+===============
+
+o Biztosan érti, hogy hogyan mûködik a Firebird?
+
+  Például Önt a rendszer helyes viselkedése érdekli,
+  és igazából technikai támogatás jellegû kérdése van.
+  Ebben az esetben forduljon bizalommal a Firebird
+  technikai támogatást nyújtó listájához.
+
+  Feliratkozni a következõ helyen tud:
+
+	mailto:firebird-support-subscribe@yahoogroups.com
+
+  (e-mail küldésével)
+
+
+o Továbbra is úgy gondolja, hogy egy hibát talált?
+
+  Nézze át a még meglévõ hibák listáját. Ezt
+  megteheti a Firebird hibakövetõ rendszerében:
+
+	http://tracker.firebirdsql.org/browse/CORE
+
+Egyébként, ha Ön egészen biztos benne, hogy hibát
+talált, próbáljon meg felépíteni egy olyan
+teszthelyzetet ahol a hiba reprodukálható. Ennek
+részletes leírását már elküldheti a hibakövetõ
+rendszerbe.
+
+
+Új képességek igénylése
+=======================
+
+Mielõtt új képességekkel kapcsolatos igénylést nyújtana
+be, kérjük tekintse át a jelenlegi igényléseket. Az
+esély igen nagy, hogy valaki gondolt az Ön által is
+felvetett hiányosságra. Az alábbi linken
+megtekintheti a  már benyújtott igényléseket és új
+kérést nyújthat be,  amennyiben az valóban
+szükségszerû.
+
+  http://tracker.firebirdsql.org/browse/CORE
+

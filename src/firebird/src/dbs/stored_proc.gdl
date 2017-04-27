@@ -1,0 +1,50 @@
+/*
+ * The contents of this file are subject to the Interbase Public
+ * License Version 1.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy
+ * of the License at http://www.Inprise.com/IPL.html
+ *
+ * Software distributed under the License is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+ * or implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code was created by Inprise Corporation
+ * and its predecessors. Portions created by Inprise Corporation are
+ * Copyright (C) Inprise Corporation.
+ *
+ * All Rights Reserved.
+ * Contributor(s): ______________________________________.
+ */
+modify database 'yachts.fdb';
+
+define field RDB$PROCEDURE_BLR		blob sub_type 2;
+define field RDB$PROCEDURE_ID		short;
+define field RDB$PROCEDURE_NAME		char [31];
+define field RDB$PROCEDURE_PARAMETERS	short;
+
+define field RDB$PARAMETER_NAME		char [31];
+define field RDB$PARAMETER_NUMBER	short;
+define field RDB$PARAMETER_TYPE		short;
+
+define relation RDB$PARAMETERS
+    RDB$PARAMETER_NAME	position 0,
+    RDB$PROCEDURE_NAME	position 1,
+    RDB$PARAMETER_NUMBER	position 2,
+    RDB$PARAMETER_TYPE	position 3,
+    RDB$FIELD_SOURCE based on RDB$FIELD_NAME	position 4,
+    RDB$DESCRIPTION	position 5,
+    RDB$SYSTEM_FLAG	position 6;
+
+define relation RDB$PROCEDURES
+    RDB$PROCEDURE_NAME	position 0,
+    RDB$PROCEDURE_ID	position 1,
+    RDB$PROCEDURE_INPUTS based on RDB$PROCEDURE_PARAMETERS	position 2,
+    RDB$PROCEDURE_OUTPUTS based on RDB$PROCEDURE_PARAMETERS	position 3,
+    RDB$DESCRIPTION	position 4,
+    RDB$PROCEDURE_SOURCE based on RDB$SOURCE	position 5,
+    RDB$PROCEDURE_BLR	position 6,
+    RDB$SECURITY_CLASS	position 7,
+    RDB$OWNER_NAME based on RDB$USER	position 8,
+    RDB$RUNTIME	position 9,
+    RDB$SYSTEM_FLAG	position 10;

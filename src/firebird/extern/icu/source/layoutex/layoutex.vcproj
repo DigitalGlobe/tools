@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="Windows-1252"?>
+<VisualStudioProject ProjectType="Visual C++" Version="7.10" Name="layoutex" ProjectGUID="{37FC2C7F-1904-4811-8955-2F478830EAD1}">
+  <Platforms>
+    <Platform Name="Win32" />
+  </Platforms>
+  <ToolFiles>
+  </ToolFiles>
+  <Configurations>
+    <Configuration Name="Release|Win32" OutputDirectory=".\..\..\$(PlatformName)\$(ConfigurationName)\lib" ConfigurationType="2" UseOfMFC="0" ATLMinimizesCRunTimeLibraryUsage="false" CharacterSet="2" IntermediateDirectory="$(PlatformName)\$(ConfigurationName)">
+      <Tool Name="VCPreBuildEventTool" />
+      <Tool Name="VCCustomBuildTool" />
+      <Tool Name="VCXMLDataGeneratorTool" />
+      <Tool Name="VCWebServiceProxyGeneratorTool" />
+      <Tool Name="VCMIDLTool" PreprocessorDefinitions="NDEBUG" MkTypLibCompatible="true" TargetEnvironment="1" />
+      <Tool Name="VCCLCompilerTool" AdditionalIncludeDirectories="..\..\include,..\common" PreprocessorDefinitions="NDEBUG;WIN32;_WINDOWS;_USRDLL;U_LAYOUTEX_IMPLEMENTATION" CompileAs="0" EnableFunctionLevelLinking="false" DisableLanguageExtensions="true" WarningLevel="3" DebugInformationFormat="3" InlineFunctionExpansion="2" />
+      <Tool Name="VCManagedResourceCompilerTool" />
+      <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="NDEBUG" Culture="1033" />
+      <Tool Name="VCPreLinkEventTool" />
+      <Tool Name="VCLinkerTool" OutputFile="..\..\$(PlatformName)\$(ConfigurationName)\bin\iculx30.dll" ProgramDatabaseFile="$(IntDir)/iculx30.pdb" BaseAddress="0x4ac80000" ImportLibrary="$(OutDir)\iculx.lib" LinkIncremental="1" IgnoreDefaultLibraryNames="msvcrt.lib" />
+      <Tool Name="VCALinkTool" />
+      <Tool Name="VCManifestTool" />
+      <Tool Name="VCXDCMakeTool" />
+      <Tool Name="VCBscMakeTool" />
+      <Tool Name="VCFxCopTool" />
+      <Tool Name="VCAppVerifierTool" />
+      <Tool Name="VCWebDeploymentTool" />
+      <Tool Name="VCPostBuildEventTool" />
+    </Configuration>
+    <Configuration Name="Debug|Win32" OutputDirectory=".\..\..\$(PlatformName)\$(ConfigurationName)\lib" ConfigurationType="2" UseOfMFC="0" ATLMinimizesCRunTimeLibraryUsage="false" CharacterSet="2" IntermediateDirectory="$(PlatformName)\$(ConfigurationName)">
+      <Tool Name="VCPreBuildEventTool" />
+      <Tool Name="VCCustomBuildTool" />
+      <Tool Name="VCXMLDataGeneratorTool" />
+      <Tool Name="VCWebServiceProxyGeneratorTool" />
+      <Tool Name="VCMIDLTool" PreprocessorDefinitions="_DEBUG" MkTypLibCompatible="true" TargetEnvironment="1" />
+      <Tool Name="VCCLCompilerTool" AdditionalIncludeDirectories="..\..\include,..\common" PreprocessorDefinitions="_DEBUG;WIN32;_WINDOWS;_USRDLL;U_LAYOUTEX_IMPLEMENTATION" DebugInformationFormat="4" CompileAs="0" EnableFunctionLevelLinking="false" DisableLanguageExtensions="true" WarningLevel="3" Optimization="0" BasicRuntimeChecks="3" RuntimeLibrary="1" BrowseInformation="1" Detect64BitPortabilityProblems="true" />
+      <Tool Name="VCManagedResourceCompilerTool" />
+      <Tool Name="VCResourceCompilerTool" PreprocessorDefinitions="_DEBUG" Culture="1033" />
+      <Tool Name="VCPreLinkEventTool" />
+      <Tool Name="VCLinkerTool" OutputFile="..\..\$(PlatformName)\$(ConfigurationName)\bin\iculx30d.dll" ProgramDatabaseFile="$(IntDir)/iculx30d.pdb" BaseAddress="0x4ac80000" ImportLibrary="$(OutDir)\iculxd.lib" GenerateDebugInformation="true" LinkIncremental="2" />
+      <Tool Name="VCALinkTool" />
+      <Tool Name="VCManifestTool" />
+      <Tool Name="VCXDCMakeTool" />
+      <Tool Name="VCBscMakeTool" />
+      <Tool Name="VCFxCopTool" />
+      <Tool Name="VCAppVerifierTool" />
+      <Tool Name="VCWebDeploymentTool" />
+      <Tool Name="VCPostBuildEventTool" />
+    </Configuration>
+  </Configurations>
+  <References>
+  </References>
+  <Files>
+    <Filter Name="Source Files" Filter="cpp;c;cxx;rc;def;r;odl;idl;hpj;bat">
+      <File RelativePath="LXUtilities.cpp">
+      </File>
+      <File RelativePath=".\ParagraphLayout.cpp">
+      </File>
+      <File RelativePath=".\RunArrays.cpp">
+      </File>
+    </Filter>
+    <Filter Name="Header Files" Filter="h;hpp;hxx;hm;inl">
+      <File RelativePath="LXUtilities.h">
+      </File>
+      <File RelativePath=".\layout\ParagraphLayout.h">
+        <FileConfiguration Name="Release|Win32">
+          <Tool Name="VCCustomBuildTool" CommandLine="copy &quot;$(InputPath)&quot; ..\..\include\layout&#xD;&#xA;" Outputs="..\..\include\layout\$(InputFileName)" />
+        </FileConfiguration>
+        <FileConfiguration Name="Debug|Win32">
+          <Tool Name="VCCustomBuildTool" CommandLine="copy &quot;$(InputPath)&quot; ..\..\include\layout&#xD;&#xA;" Outputs="..\..\include\layout\$(InputFileName)" />
+        </FileConfiguration>
+      </File>
+      <File RelativePath=".\layout\RunArrays.h">
+        <FileConfiguration Name="Release|Win32">
+          <Tool Name="VCCustomBuildTool" CommandLine="copy &quot;$(InputPath)&quot; ..\..\include\layout&#xD;&#xA;" Outputs="..\..\include\layout\$(InputFileName)" />
+        </FileConfiguration>
+        <FileConfiguration Name="Debug|Win32">
+          <Tool Name="VCCustomBuildTool" CommandLine="copy &quot;$(InputPath)&quot; ..\..\include\layout&#xD;&#xA;" Outputs="..\..\include\layout\$(InputFileName)" />
+        </FileConfiguration>
+      </File>
+    </Filter>
+    <Filter Name="Resource Files" Filter="ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe">
+      <File RelativePath=".\layoutex.rc">
+        <FileConfiguration Name="Release|Win32">
+          <Tool Name="VCResourceCompilerTool" AdditionalIncludeDirectories="..\common;$(NoInherit)" />
+        </FileConfiguration>
+        <FileConfiguration Name="Debug|Win32">
+          <Tool Name="VCResourceCompilerTool" AdditionalIncludeDirectories="..\common;$(NoInherit)" />
+        </FileConfiguration>
+      </File>
+    </Filter>
+  </Files>
+  <Globals>
+  </Globals>
+</VisualStudioProject>

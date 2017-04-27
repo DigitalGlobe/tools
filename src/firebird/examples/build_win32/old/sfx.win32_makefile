@@ -1,0 +1,133 @@
+# The contents of this file are subject to the Interbase Public
+# License Version 1.0 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy
+# of the License at http://www.Inprise.com/IPL.html
+#
+# Software distributed under the License is distributed on an
+# "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+# or implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code was created by Inprise Corporation
+# and its predecessors. Portions created by Inprise Corporation are
+# Copyright (C) Inprise Corporation.
+#
+# All Rights Reserved.
+# Contributor(s): ______________________________________.
+api1.obj: api1.c example.h
+
+api2.obj: api2.c example.h
+
+api3.obj: api3.c example.h
+
+api4.obj: api4.c example.h
+
+api5.obj: api5.c example.h
+
+api6.obj: api6.c example.h
+
+api7.obj: api7.c example.h
+
+api8.obj: api8.c example.h
+
+api10.obj: api10.c example.h
+
+api11.obj: api11.c example.h
+
+api12.obj: api12.c example.h
+
+api13.obj: api13.c example.h
+
+api14.c:  api14.e
+
+api14.obj: api14.c example.h
+
+apifull.obj: apifull.c example.h align.h
+
+stat1.c: stat1.e
+
+stat1.obj: stat1.c example.h
+
+stat2.c: stat2.e
+
+stat2.obj: stat2.c example.h
+
+stat3.c: stat3.e
+
+stat3.obj: stat3.c example.h
+
+stat4.c: stat4.e
+
+stat4.obj: stat4.c example.h
+
+stat5.c: stat5.e
+
+stat5.obj: stat5.c example.h
+
+stat6.c: stat6.e
+
+stat6.obj: stat6.c example.h
+
+stat7.c: stat7.e
+
+stat7.obj: stat7.c example.h
+
+stat8.c: stat8.e
+
+stat8.obj: stat8.c example.h
+
+stat9.c: stat9.e
+
+stat9.obj: stat9.c example.h
+
+stat10.c: stat10.e
+	$(GPRE_M) $?
+
+stat10.obj: stat10.c example.h
+
+stat11.c: stat11.e
+	$(GPRE_M) $?
+
+stat11.obj: stat11.c example.h
+
+stat12.c: stat12.e
+	$(GPRE_M) $?
+
+stat12.obj: stat12.c example.h
+
+stat12t.c: stat12t.e
+	$(GPRE_M) $?
+
+stat12t.obj: stat12t.c example.h
+
+dyn1.c: dyn1.e
+	$(GPRE_M) $?
+
+dyn1.obj: dyn1.c example.h
+
+dyn2.c: dyn2.e
+	$(GPRE_M) $?
+
+dyn2.obj: dyn2.c example.h
+
+dyn3.c: dyn3.e
+	$(GPRE_M) $?
+
+dyn3.obj: dyn3.c example.h
+
+dyn4.c: dyn4.e
+	$(GPRE_M) $?
+
+dyn4.obj: dyn4.c example.h
+
+dyn5.c: dyn5.e
+	$(GPRE_M) $?
+
+dyn5.obj: dyn5.c example.h
+
+dynfull.c: dynfull.e
+	$(GPRE_M) $?
+
+dynfull.obj: dynfull.c example.h align.h
+
+

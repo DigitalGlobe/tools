@@ -1,0 +1,97 @@
+﻿  
+  Microsoft (R) Program Maintenance Utility Version 14.00.24210.0
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  
+  ICU data make path is C:\tools\src\firebird\extern\icu\source\data\
+  ICU root path is C:\tools\src\firebird\extern\icu
+  CFG is Win32\Release
+  Information: cannot find "ucmlocal.mk". Not building user-additional converter files.
+  Information: cannot find "reslocal.mk". Not building user-additional resource bundle files.
+  Information: cannot find "collocal.mk". Not building user-additional resource bundle files.
+  Information: cannot find "trnslocal.mk". Not building user-additional transliterator files.
+  Information: cannot find "misclocal.mk". Not building user-additional miscellaenous files.
+  Creating data file for Unicode Property Names
+  Creating data file for Unicode Character Properties
+  genprops: ignoring property Other_Math in PropList.txt
+  genprops: ignoring property Other_Alphabetic in PropList.txt
+  genprops: ignoring property Other_Lowercase in PropList.txt
+  genprops: ignoring property Other_Uppercase in PropList.txt
+  genprops: ignoring property Other_Grapheme_Extend in PropList.txt
+  genprops: ignoring property Other_Default_Ignorable_Code_Point in PropList.txt
+  genprops: ignoring property Other_ID_Start in PropList.txt
+  Creating data file for Unicode Names
+  size of all names in the database: 454118
+  number of named Unicode characters: 15076
+  number of words in the dictionary from these names: 7112
+  number of letters used in the names: 69
+  number of lead bytes: 5
+  number of single-byte tokens: 182
+  number of tokens: 1506
+  number of groups: 528
+  size of the Unicode Names data:
+  total data length 143324, token strings 11379, compressed strings 125422, algorithmic names 320
+  Creating data file for Unicode Normalization
+  	genbrk -c -r "C:\tools\src\firebird\extern\icu\source\data\brkitr\sent.txt" -o sent.brk -d"C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l" -i "C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l"
+  genbrk writes dummy sent.brk because of UCONFIG_NO_BREAK_ITERATION, see uconfig.h
+  	genbrk -c -r "C:\tools\src\firebird\extern\icu\source\data\brkitr\char.txt" -o char.brk -d"C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l" -i "C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l"
+  genbrk writes dummy char.brk because of UCONFIG_NO_BREAK_ITERATION, see uconfig.h
+  	genbrk -c -r "C:\tools\src\firebird\extern\icu\source\data\brkitr\line.txt" -o line.brk -d"C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l" -i "C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l"
+  genbrk writes dummy line.brk because of UCONFIG_NO_BREAK_ITERATION, see uconfig.h
+  	genbrk -c -r "C:\tools\src\firebird\extern\icu\source\data\brkitr\word.txt" -o word.brk -d"C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l" -i "C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l"
+  genbrk writes dummy word.brk because of UCONFIG_NO_BREAK_ITERATION, see uconfig.h
+  	genbrk -c -r "C:\tools\src\firebird\extern\icu\source\data\brkitr\title.txt" -o title.brk -d"C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l" -i "C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l"
+  genbrk writes dummy title.brk because of UCONFIG_NO_BREAK_ITERATION, see uconfig.h
+  	genbrk -c -r "C:\tools\src\firebird\extern\icu\source\data\brkitr\line_th.txt" -o line_th.brk -d"C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l" -i "C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l"
+  genbrk writes dummy line_th.brk because of UCONFIG_NO_BREAK_ITERATION, see uconfig.h
+  	genbrk -c -r "C:\tools\src\firebird\extern\icu\source\data\brkitr\word_th.txt" -o word_th.brk -d"C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l" -i "C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l"
+  genbrk writes dummy word_th.brk because of UCONFIG_NO_BREAK_ITERATION, see uconfig.h
+  Creating data file for Converter Aliases
+  Creating UCA data files
+  	echo Building icu data
+  Building icu data
+  	cd "C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l"
+  
+  Microsoft (R) Program Maintenance Utility Version 14.00.24210.0
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  
+  	"C:\tools\src\firebird\extern\icu\Win32\Release\bin\gencmn.exe" -C " Copyright (C) 2004, International Business Machines Corporation and others. All Rights Reserved. " -d "C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l"  -s "." -n "icudt30l" 0 C:\Users\TIMTIS~1\AppData\Local\Temp\nm2542.tmp
+  generating object code for C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l\icudt30l.dat
+  	link.exe /nologo /out:"C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l\icudt30.dll" /DLL /NOENTRY /base:"0x4ad00000" /implib:"C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l\icudt30.lib" /comment:" Copyright (C) 2004, International Business Machines Corporation and others. All Rights Reserved. " "C:\tools\src\firebird\extern\icu\source\data\out\tmp\icudt30l_dat.obj" "C:\tools\src\firebird\extern\icu\source\data\out\tmp\icudata.res"
+LINK : warning LNK4044: unrecognized option '/comment: Copyright (C) 2004, International Business Machines Corporation and others. All Rights Reserved.'; ignored
+     Creating library C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l\icudt30.lib and object C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l\icudt30.exp
+  # ICUROOT is C:\tools\src\firebird\extern\icu\Win32\Release\bin
+  # Reading pkgdatain.txt..
+  # Output .dll file: C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l\icudt30.dll
+  # Output file: C:\tools\src\firebird\extern\icu\source\data\out\build\icudt30l\icudt30l.dat
+  nmake  -f "C:\tools\src\firebird\extern\icu\source\data\out\tmp\icudt30l_dll.mak"    
+  	copy "icudt30.dll" "C:\tools\src\firebird\extern\icu\Win32\Release\bin"
+          1 file(s) copied.
+  	copy "icudt30l.dat" "C:\tools\src\firebird\extern\icu\source\data\out\icudt30l.dat"
+          1 file(s) copied.
+  building testdata...
+  	nmake /nologo /f "C:\tools\src\firebird\extern\icu\source\test\testdata\testdata.mk" TESTDATA=. ICUPBIN="C:\tools\src\firebird\extern\icu\Win32\Release\bin" ICUTOOLS="C:\tools\src\firebird\extern\icu\source\tools" ICUP="C:\tools\src\firebird\extern\icu" CFG=Win32\Release TESTDATAOUT="C:\tools\src\firebird\extern\icu\source\test\testdata\out" ICUDATA="C:\tools\src\firebird\extern\icu\source\data" TESTDATABLD="C:\tools\src\firebird\extern\icu\source\test\testdata\out\build"
+  	"C:\tools\src\firebird\extern\icu\source\tools\gentest\Win32\Release\gentest" -d"C:\tools\src\firebird\extern\icu\source\test\testdata\out\build"
+  	"C:\tools\src\firebird\extern\icu\source\tools\gentest\Win32\Release\gentest" -r -d"C:\tools\src\firebird\extern\icu\source\test\testdata\out\build"
+  C:\tools\src\firebird\extern\icu\source\test\testdata\out\build\testtable32.txt
+  Making Test Resource Bundle file for IDNA reference implementation
+  Building "C:\tools\src\firebird\extern\icu\source\test\testdata\out\build\testdata_nfscsi.spp"
+  Building "C:\tools\src\firebird\extern\icu\source\test\testdata\out\build\testdata_nfscss.spp"
+  Building "C:\tools\src\firebird\extern\icu\source\test\testdata\out\build\testdata_nfscis.spp"
+  Building "C:\tools\src\firebird\extern\icu\source\test\testdata\out\build\testdata_nfsmxs.spp"
+  Building "C:\tools\src\firebird\extern\icu\source\test\testdata\out\build\testdata_nfsmxp.spp"
+  Building test data
+          1 file(s) copied.
+          1 file(s) copied.
+          1 file(s) copied.
+  
+  Microsoft (R) Program Maintenance Utility Version 14.00.24210.0
+  Copyright (C) Microsoft Corporation.  All rights reserved.
+  
+  	"C:\tools\src\firebird\extern\icu\Win32\Release\bin\gencmn.exe" -C " Copyright (C) 2004, International Business Machines Corporation and others. All Rights Reserved. " -d "C:\tools\src\firebird\extern\icu\source\test\testdata\out" -E  -n "testdata" 0 C:\Users\TIMTIS~1\AppData\Local\Temp\nm2B0F.tmp
+EXEC : warning : Found path 'testdata_' in file name. Assuming compatibility (-E) mode.
+  # ICUROOT is C:\tools\src\firebird\extern\icu\Win32\Release\bin
+  # Reading C:\Users\TIMTIS~1\AppData\Local\Temp\nm2AEF.tmp..
+  # Output file: C:\tools\src\firebird\extern\icu\source\test\testdata\out\testdata.dat
+  nmake  -f "C:\tools\src\firebird\extern\icu\source\test\testdata\out\build\testdata_common.mak"    
+  Test data is built.
+  All targets are up to date

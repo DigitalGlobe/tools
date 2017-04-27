@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="BURP files">
+      <UniqueIdentifier>{7fe1c72f-0e18-4188-b05c-5da2cba685a9}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="BURP files\epp files">
+      <UniqueIdentifier>{e8967214-506a-43d4-9922-a3e69cd5c511}</UniqueIdentifier>
+      <Extensions>epp</Extensions>
+    </Filter>
+    <Filter Include="BURP files\Generated files">
+      <UniqueIdentifier>{ad833c28-4820-4ee9-941a-b4b7cc59c3a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="JRD files">
+      <UniqueIdentifier>{b73d0661-160d-4a98-bb6d-762694dd3a9e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="REMOTE files">
+      <UniqueIdentifier>{52b4c689-b37c-484c-9ba1-17e914660931}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="OTHER files">
+      <UniqueIdentifier>{d7c07a64-f6bb-4454-b646-68ba9ab46373}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{d291e8f8-ff4e-4d01-9129-33163f30f66d}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="Resource files">
+      <UniqueIdentifier>{b24bcb22-b792-45b1-80c5-e6532d056d33}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\burp\burp.cpp">
+      <Filter>BURP files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\burp\burpMain.cpp">
+      <Filter>BURP files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\burp\canonical.cpp">
+      <Filter>BURP files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\burp\misc.cpp">
+      <Filter>BURP files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\burp\mvol.cpp">
+      <Filter>BURP files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gen\$(Platform)\burp\backup.cpp">
+      <Filter>BURP files\Generated files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gen\$(Platform)\burp\restore.cpp">
+      <Filter>BURP files\Generated files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\sdl.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\ThreadData.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\remote\xdr.cpp">
+      <Filter>REMOTE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\UtilSvc.cpp">
+      <Filter>OTHER files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\src\burp\backup.epp">
+      <Filter>BURP files\epp files</Filter>
+    </None>
+    <None Include="..\..\..\src\burp\restore.epp">
+      <Filter>BURP files\epp files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\jrd\sdl.h">
+      <Filter>JRD files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\sdl_proto.h">
+      <Filter>JRD files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\burp\backu_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\burp\burp.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\burp\burp_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\burp\burpswi.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\burp\canon_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\burp\misc_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\burp\mvol_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\burp\resto_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\src\jrd\version.rc">
+      <Filter>Resource files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

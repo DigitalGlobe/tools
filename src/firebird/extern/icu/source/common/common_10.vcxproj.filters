@@ -1,0 +1,740 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="bidi">
+      <UniqueIdentifier>{e4d21ba9-471f-4868-82a8-1f027b32d3a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="break iteration">
+      <UniqueIdentifier>{e3bfcd27-038a-410b-8243-925a4be3e731}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="collation">
+      <UniqueIdentifier>{f0c12ab3-fae9-4c9c-97ed-55d91a7f7fb8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="collections">
+      <UniqueIdentifier>{cc250f12-2f54-40c0-b1f0-521b86b68854}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="configuration">
+      <UniqueIdentifier>{8937fb33-e180-4ef8-b6d2-4db0ca1f9d4e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="conversion">
+      <UniqueIdentifier>{277f9fb0-bd54-43cc-8d68-e6072641d52c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="data &amp; memory">
+      <UniqueIdentifier>{2076b775-8c75-48ae-943c-2b99e6795950}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="formatting">
+      <UniqueIdentifier>{16002309-b3e5-4634-b969-3b94e5f479b9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="idna">
+      <UniqueIdentifier>{45648db2-cd2a-474f-966a-18af6e29e9ff}</UniqueIdentifier>
+      <Extensions>*.c,*.h</Extensions>
+    </Filter>
+    <Filter Include="locales &amp; resources">
+      <UniqueIdentifier>{3b57329d-4ed4-4646-9ed9-ac96a3d90f71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="normalization">
+      <UniqueIdentifier>{4bf6259f-ffd4-4999-887b-43ead8c5ab98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="properties &amp; sets">
+      <UniqueIdentifier>{b93c2bea-0c4a-4bb9-a60b-fb9eb1d56ccf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="registration">
+      <UniqueIdentifier>{5d326f46-0c0b-42dc-81a1-e06ee9756e76}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sprep">
+      <UniqueIdentifier>{ff593a48-b7d1-4ce2-b146-a3cdc46a57dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="strings">
+      <UniqueIdentifier>{745515bc-5bb0-4504-bfb6-dac6aab7a8e7}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ubidi.c">
+      <Filter>bidi</Filter>
+    </ClCompile>
+    <ClCompile Include="ubidiln.c">
+      <Filter>bidi</Filter>
+    </ClCompile>
+    <ClCompile Include="ubidiwrt.c">
+      <Filter>bidi</Filter>
+    </ClCompile>
+    <ClCompile Include="ushape.c">
+      <Filter>bidi</Filter>
+    </ClCompile>
+    <ClCompile Include="brkdict.cpp">
+      <Filter>break iteration</Filter>
+    </ClCompile>
+    <ClCompile Include="brkiter.cpp">
+      <Filter>break iteration</Filter>
+    </ClCompile>
+    <ClCompile Include="dbbi.cpp">
+      <Filter>break iteration</Filter>
+    </ClCompile>
+    <ClCompile Include="dbbi_tbl.cpp">
+      <Filter>break iteration</Filter>
+    </ClCompile>
+    <ClCompile Include="rbbi.cpp">
+      <Filter>break iteration</Filter>
+    </ClCompile>
+    <ClCompile Include="rbbidata.cpp">
+      <Filter>break iteration</Filter>
+    </ClCompile>
+    <ClCompile Include="rbbinode.cpp">
+      <Filter>break iteration</Filter>
+    </ClCompile>
+    <ClCompile Include="rbbirb.cpp">
+      <Filter>break iteration</Filter>
+    </ClCompile>
+    <ClCompile Include="rbbiscan.cpp">
+      <Filter>break iteration</Filter>
+    </ClCompile>
+    <ClCompile Include="rbbisetb.cpp">
+      <Filter>break iteration</Filter>
+    </ClCompile>
+    <ClCompile Include="rbbistbl.cpp">
+      <Filter>break iteration</Filter>
+    </ClCompile>
+    <ClCompile Include="rbbitblb.cpp">
+      <Filter>break iteration</Filter>
+    </ClCompile>
+    <ClCompile Include="ubrk.cpp">
+      <Filter>break iteration</Filter>
+    </ClCompile>
+    <ClCompile Include="ucol_swp.c">
+      <Filter>collation</Filter>
+    </ClCompile>
+    <ClCompile Include="uarrsort.c">
+      <Filter>collections</Filter>
+    </ClCompile>
+    <ClCompile Include="ucmp8.c">
+      <Filter>collections</Filter>
+    </ClCompile>
+    <ClCompile Include="uenum.c">
+      <Filter>collections</Filter>
+    </ClCompile>
+    <ClCompile Include="uhash.c">
+      <Filter>collections</Filter>
+    </ClCompile>
+    <ClCompile Include="uhash_us.cpp">
+      <Filter>collections</Filter>
+    </ClCompile>
+    <ClCompile Include="ustack.cpp">
+      <Filter>collections</Filter>
+    </ClCompile>
+    <ClCompile Include="ustrenum.cpp">
+      <Filter>collections</Filter>
+    </ClCompile>
+    <ClCompile Include="utrie.c">
+      <Filter>collections</Filter>
+    </ClCompile>
+    <ClCompile Include="uvector.cpp">
+      <Filter>collections</Filter>
+    </ClCompile>
+    <ClCompile Include="uvectr32.cpp">
+      <Filter>collections</Filter>
+    </ClCompile>
+    <ClCompile Include="filestrm.c">
+      <Filter>configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="locmap.c">
+      <Filter>configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="putil.c">
+      <Filter>configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="umemstrm.c">
+      <Filter>configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="umutex.c">
+      <Filter>configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="utrace.c">
+      <Filter>configuration</Filter>
+    </ClCompile>
+    <ClCompile Include="ucnv.c">
+      <Filter>conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="ucnv2022.c">
+      <Filter>conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="ucnv_bld.c">
+      <Filter>conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="ucnv_cb.c">
+      <Filter>conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="ucnv_cnv.c">
+      <Filter>conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="ucnv_err.c">
+      <Filter>conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="ucnv_ext.c">
+      <Filter>conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="ucnv_io.c">
+      <Filter>conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="ucnv_lmb.c">
+      <Filter>conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="ucnv_u16.c">
+      <Filter>conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="ucnv_u32.c">
+      <Filter>conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="ucnv_u7.c">
+      <Filter>conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="ucnv_u8.c">
+      <Filter>conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="ucnvbocu.c">
+      <Filter>conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="ucnvhz.c">
+      <Filter>conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="ucnvisci.c">
+      <Filter>conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="ucnvlat1.c">
+      <Filter>conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="ucnvmbcs.c">
+      <Filter>conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="ucnvscsu.c">
+      <Filter>conversion</Filter>
+    </ClCompile>
+    <ClCompile Include="cmemory.c">
+      <Filter>data &amp; memory</Filter>
+    </ClCompile>
+    <ClCompile Include="ucln_cmn.c">
+      <Filter>data &amp; memory</Filter>
+    </ClCompile>
+    <ClCompile Include="ucmndata.c">
+      <Filter>data &amp; memory</Filter>
+    </ClCompile>
+    <ClCompile Include="udata.c">
+      <Filter>data &amp; memory</Filter>
+    </ClCompile>
+    <ClCompile Include="udatamem.c">
+      <Filter>data &amp; memory</Filter>
+    </ClCompile>
+    <ClCompile Include="udataswp.c">
+      <Filter>data &amp; memory</Filter>
+    </ClCompile>
+    <ClCompile Include="umapfile.c">
+      <Filter>data &amp; memory</Filter>
+    </ClCompile>
+    <ClCompile Include="uobject.cpp">
+      <Filter>data &amp; memory</Filter>
+    </ClCompile>
+    <ClCompile Include="parsepos.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="ustrfmt.c">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="util.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="punycode.c">
+      <Filter>idna</Filter>
+    </ClCompile>
+    <ClCompile Include="uidna.cpp">
+      <Filter>idna</Filter>
+    </ClCompile>
+    <ClCompile Include="locbased.cpp">
+      <Filter>locales &amp; resources</Filter>
+    </ClCompile>
+    <ClCompile Include="locid.cpp">
+      <Filter>locales &amp; resources</Filter>
+    </ClCompile>
+    <ClCompile Include="resbund.cpp">
+      <Filter>locales &amp; resources</Filter>
+    </ClCompile>
+    <ClCompile Include="ucat.c">
+      <Filter>locales &amp; resources</Filter>
+    </ClCompile>
+    <ClCompile Include="uloc.c">
+      <Filter>locales &amp; resources</Filter>
+    </ClCompile>
+    <ClCompile Include="uresbund.c">
+      <Filter>locales &amp; resources</Filter>
+    </ClCompile>
+    <ClCompile Include="uresdata.c">
+      <Filter>locales &amp; resources</Filter>
+    </ClCompile>
+    <ClCompile Include="caniter.cpp">
+      <Filter>normalization</Filter>
+    </ClCompile>
+    <ClCompile Include="normlzr.cpp">
+      <Filter>normalization</Filter>
+    </ClCompile>
+    <ClCompile Include="unorm.cpp">
+      <Filter>normalization</Filter>
+    </ClCompile>
+    <ClCompile Include="unorm_it.c">
+      <Filter>normalization</Filter>
+    </ClCompile>
+    <ClCompile Include="propname.cpp">
+      <Filter>properties &amp; sets</Filter>
+    </ClCompile>
+    <ClCompile Include="ruleiter.cpp">
+      <Filter>properties &amp; sets</Filter>
+    </ClCompile>
+    <ClCompile Include="uchar.c">
+      <Filter>properties &amp; sets</Filter>
+    </ClCompile>
+    <ClCompile Include="unames.c">
+      <Filter>properties &amp; sets</Filter>
+    </ClCompile>
+    <ClCompile Include="unifilt.cpp">
+      <Filter>properties &amp; sets</Filter>
+    </ClCompile>
+    <ClCompile Include="unifunct.cpp">
+      <Filter>properties &amp; sets</Filter>
+    </ClCompile>
+    <ClCompile Include="uniset.cpp">
+      <Filter>properties &amp; sets</Filter>
+    </ClCompile>
+    <ClCompile Include="uprops.c">
+      <Filter>properties &amp; sets</Filter>
+    </ClCompile>
+    <ClCompile Include="usc_impl.c">
+      <Filter>properties &amp; sets</Filter>
+    </ClCompile>
+    <ClCompile Include="uscript.c">
+      <Filter>properties &amp; sets</Filter>
+    </ClCompile>
+    <ClCompile Include="uset.cpp">
+      <Filter>properties &amp; sets</Filter>
+    </ClCompile>
+    <ClCompile Include="usetiter.cpp">
+      <Filter>properties &amp; sets</Filter>
+    </ClCompile>
+    <ClCompile Include="iculserv.cpp">
+      <Filter>registration</Filter>
+    </ClCompile>
+    <ClCompile Include="icunotif.cpp">
+      <Filter>registration</Filter>
+    </ClCompile>
+    <ClCompile Include="icuserv.cpp">
+      <Filter>registration</Filter>
+    </ClCompile>
+    <ClCompile Include="usprep.cpp">
+      <Filter>sprep</Filter>
+    </ClCompile>
+    <ClCompile Include="chariter.cpp">
+      <Filter>strings</Filter>
+    </ClCompile>
+    <ClCompile Include="cstring.c">
+      <Filter>strings</Filter>
+    </ClCompile>
+    <ClCompile Include="cwchar.c">
+      <Filter>strings</Filter>
+    </ClCompile>
+    <ClCompile Include="schriter.cpp">
+      <Filter>strings</Filter>
+    </ClCompile>
+    <ClCompile Include="uchriter.cpp">
+      <Filter>strings</Filter>
+    </ClCompile>
+    <ClCompile Include="uiter.cpp">
+      <Filter>strings</Filter>
+    </ClCompile>
+    <ClCompile Include="unistr.cpp">
+      <Filter>strings</Filter>
+    </ClCompile>
+    <ClCompile Include="ustrcase.c">
+      <Filter>strings</Filter>
+    </ClCompile>
+    <ClCompile Include="ustring.c">
+      <Filter>strings</Filter>
+    </ClCompile>
+    <ClCompile Include="ustrtrns.c">
+      <Filter>strings</Filter>
+    </ClCompile>
+    <ClCompile Include="utf_impl.c">
+      <Filter>strings</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ubidiimp.h">
+      <Filter>bidi</Filter>
+    </ClInclude>
+    <ClInclude Include="brkdict.h">
+      <Filter>break iteration</Filter>
+    </ClInclude>
+    <ClInclude Include="dbbi_tbl.h">
+      <Filter>break iteration</Filter>
+    </ClInclude>
+    <ClInclude Include="rbbidata.h">
+      <Filter>break iteration</Filter>
+    </ClInclude>
+    <ClInclude Include="rbbinode.h">
+      <Filter>break iteration</Filter>
+    </ClInclude>
+    <ClInclude Include="rbbirb.h">
+      <Filter>break iteration</Filter>
+    </ClInclude>
+    <ClInclude Include="rbbirpt.h">
+      <Filter>break iteration</Filter>
+    </ClInclude>
+    <ClInclude Include="rbbiscan.h">
+      <Filter>break iteration</Filter>
+    </ClInclude>
+    <ClInclude Include="rbbisetb.h">
+      <Filter>break iteration</Filter>
+    </ClInclude>
+    <ClInclude Include="rbbitblb.h">
+      <Filter>break iteration</Filter>
+    </ClInclude>
+    <ClInclude Include="ucol_swp.h">
+      <Filter>collation</Filter>
+    </ClInclude>
+    <ClInclude Include="hash.h">
+      <Filter>collections</Filter>
+    </ClInclude>
+    <ClInclude Include="uarrsort.h">
+      <Filter>collections</Filter>
+    </ClInclude>
+    <ClInclude Include="ucmp8.h">
+      <Filter>collections</Filter>
+    </ClInclude>
+    <ClInclude Include="uenumimp.h">
+      <Filter>collections</Filter>
+    </ClInclude>
+    <ClInclude Include="uhash.h">
+      <Filter>collections</Filter>
+    </ClInclude>
+    <ClInclude Include="ustrenum.h">
+      <Filter>collections</Filter>
+    </ClInclude>
+    <ClInclude Include="utrie.h">
+      <Filter>collections</Filter>
+    </ClInclude>
+    <ClInclude Include="uvector.h">
+      <Filter>collections</Filter>
+    </ClInclude>
+    <ClInclude Include="uvectr32.h">
+      <Filter>collections</Filter>
+    </ClInclude>
+    <ClInclude Include="cpputils.h">
+      <Filter>configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="filestrm.h">
+      <Filter>configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="locmap.h">
+      <Filter>configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="mutex.h">
+      <Filter>configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="uassert.h">
+      <Filter>configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="umemstrm.h">
+      <Filter>configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="umutex.h">
+      <Filter>configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="utracimp.h">
+      <Filter>configuration</Filter>
+    </ClInclude>
+    <ClInclude Include="ucnv_bld.h">
+      <Filter>conversion</Filter>
+    </ClInclude>
+    <ClInclude Include="ucnv_cnv.h">
+      <Filter>conversion</Filter>
+    </ClInclude>
+    <ClInclude Include="ucnv_ext.h">
+      <Filter>conversion</Filter>
+    </ClInclude>
+    <ClInclude Include="ucnv_imp.h">
+      <Filter>conversion</Filter>
+    </ClInclude>
+    <ClInclude Include="ucnv_io.h">
+      <Filter>conversion</Filter>
+    </ClInclude>
+    <ClInclude Include="ucnvmbcs.h">
+      <Filter>conversion</Filter>
+    </ClInclude>
+    <ClInclude Include="cmemory.h">
+      <Filter>data &amp; memory</Filter>
+    </ClInclude>
+    <ClInclude Include="ucln.h">
+      <Filter>data &amp; memory</Filter>
+    </ClInclude>
+    <ClInclude Include="ucln_cmn.h">
+      <Filter>data &amp; memory</Filter>
+    </ClInclude>
+    <ClInclude Include="ucmndata.h">
+      <Filter>data &amp; memory</Filter>
+    </ClInclude>
+    <ClInclude Include="udatamem.h">
+      <Filter>data &amp; memory</Filter>
+    </ClInclude>
+    <ClInclude Include="udataswp.h">
+      <Filter>data &amp; memory</Filter>
+    </ClInclude>
+    <ClInclude Include="umapfile.h">
+      <Filter>data &amp; memory</Filter>
+    </ClInclude>
+    <ClInclude Include="ustrfmt.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="util.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="punycode.h">
+      <Filter>idna</Filter>
+    </ClInclude>
+    <ClInclude Include="locbased.h">
+      <Filter>locales &amp; resources</Filter>
+    </ClInclude>
+    <ClInclude Include="ulocimp.h">
+      <Filter>locales &amp; resources</Filter>
+    </ClInclude>
+    <ClInclude Include="uresdata.h">
+      <Filter>locales &amp; resources</Filter>
+    </ClInclude>
+    <ClInclude Include="uresimp.h">
+      <Filter>locales &amp; resources</Filter>
+    </ClInclude>
+    <ClInclude Include="unorm_it.h">
+      <Filter>normalization</Filter>
+    </ClInclude>
+    <ClInclude Include="unormimp.h">
+      <Filter>normalization</Filter>
+    </ClInclude>
+    <ClInclude Include="propname.h">
+      <Filter>properties &amp; sets</Filter>
+    </ClInclude>
+    <ClInclude Include="ruleiter.h">
+      <Filter>properties &amp; sets</Filter>
+    </ClInclude>
+    <ClInclude Include="uprops.h">
+      <Filter>properties &amp; sets</Filter>
+    </ClInclude>
+    <ClInclude Include="usc_impl.h">
+      <Filter>properties &amp; sets</Filter>
+    </ClInclude>
+    <ClInclude Include="iculserv.h">
+      <Filter>registration</Filter>
+    </ClInclude>
+    <ClInclude Include="icunotif.h">
+      <Filter>registration</Filter>
+    </ClInclude>
+    <ClInclude Include="icuserv.h">
+      <Filter>registration</Filter>
+    </ClInclude>
+    <ClInclude Include="sprpimpl.h">
+      <Filter>sprep</Filter>
+    </ClInclude>
+    <ClInclude Include="charstr.h">
+      <Filter>strings</Filter>
+    </ClInclude>
+    <ClInclude Include="cstring.h">
+      <Filter>strings</Filter>
+    </ClInclude>
+    <ClInclude Include="cwchar.h">
+      <Filter>strings</Filter>
+    </ClInclude>
+    <ClInclude Include="ustr_imp.h">
+      <Filter>strings</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="common.rc">
+      <Filter>configuration</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="unicode\ubidi.h">
+      <Filter>bidi</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\ushape.h">
+      <Filter>bidi</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\brkiter.h">
+      <Filter>break iteration</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\dbbi.h">
+      <Filter>break iteration</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\rbbi.h">
+      <Filter>break iteration</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\ubrk.h">
+      <Filter>break iteration</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\strenum.h">
+      <Filter>collections</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\uenum.h">
+      <Filter>collections</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\putil.h">
+      <Filter>configuration</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\pwin32.h">
+      <Filter>configuration</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\uconfig.h">
+      <Filter>configuration</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\udeprctd.h">
+      <Filter>configuration</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\udraft.h">
+      <Filter>configuration</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\umachine.h">
+      <Filter>configuration</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\uobslete.h">
+      <Filter>configuration</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\urename.h">
+      <Filter>configuration</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\utrace.h">
+      <Filter>configuration</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\utypes.h">
+      <Filter>configuration</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\uversion.h">
+      <Filter>configuration</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\ucnv.h">
+      <Filter>conversion</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\ucnv_cb.h">
+      <Filter>conversion</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\ucnv_err.h">
+      <Filter>conversion</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\uclean.h">
+      <Filter>data &amp; memory</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\udata.h">
+      <Filter>data &amp; memory</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\uobject.h">
+      <Filter>data &amp; memory</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\parseerr.h">
+      <Filter>formatting</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\parsepos.h">
+      <Filter>formatting</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\umisc.h">
+      <Filter>formatting</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\uidna.h">
+      <Filter>idna</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\locid.h">
+      <Filter>locales &amp; resources</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\resbund.h">
+      <Filter>locales &amp; resources</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\ucat.h">
+      <Filter>locales &amp; resources</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\uloc.h">
+      <Filter>locales &amp; resources</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\ures.h">
+      <Filter>locales &amp; resources</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\caniter.h">
+      <Filter>normalization</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\normlzr.h">
+      <Filter>normalization</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\unorm.h">
+      <Filter>normalization</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\symtable.h">
+      <Filter>properties &amp; sets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\uchar.h">
+      <Filter>properties &amp; sets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\unifilt.h">
+      <Filter>properties &amp; sets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\unifunct.h">
+      <Filter>properties &amp; sets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\unimatch.h">
+      <Filter>properties &amp; sets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\uniset.h">
+      <Filter>properties &amp; sets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\uscript.h">
+      <Filter>properties &amp; sets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\uset.h">
+      <Filter>properties &amp; sets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\usetiter.h">
+      <Filter>properties &amp; sets</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\usprep.h">
+      <Filter>sprep</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\chariter.h">
+      <Filter>strings</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\rep.h">
+      <Filter>strings</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\schriter.h">
+      <Filter>strings</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\uchriter.h">
+      <Filter>strings</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\uiter.h">
+      <Filter>strings</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\unistr.h">
+      <Filter>strings</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\urep.h">
+      <Filter>strings</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\ustring.h">
+      <Filter>strings</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\utf.h">
+      <Filter>strings</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\utf16.h">
+      <Filter>strings</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\utf32.h">
+      <Filter>strings</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\utf8.h">
+      <Filter>strings</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\utf_old.h">
+      <Filter>strings</Filter>
+    </CustomBuild>
+  </ItemGroup>
+</Project>

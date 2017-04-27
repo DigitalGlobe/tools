@@ -1,0 +1,130 @@
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+# You may obtain a copy of the Licence at
+# http://www.gnu.org/licences/lgpl.html
+# 
+# As a special exception this file can also be included in modules
+# with other source code as long as that source code has been 
+# released under an Open Source Initiative certificed licence.  
+# More information about OSI certification can be found at: 
+# http://www.opensource.org 
+# 
+# This module is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public Licence for more details.
+# 
+# This module was created by members of the firebird development 
+# team.  All individual contributions remain the Copyright (C) of 
+# those individuals and all rights are reserved.  Contributors to 
+# this file are either listed below or can be obtained from a CVS 
+# history command.
+#
+#  Created by:  Mark O'Donohue <mark.odonohue@ludwig.edu.au>
+#
+#  Contributor(s):
+# 
+#
+#
+ROOT=..
+ObjModuleType=boot
+CPPFLAGS+= -DBOOT_BUILD
+
+include     $(ROOT)/gen/make.defaults
+include     $(ROOT)/gen/make.platform
+include     $(ROOT)/gen/make.rules
+include     $(ROOT)/gen/make.shared.variables
+
+@SET_MAKE@
+
+# If we export the username/password we get an error because we can't connect
+# to security2.fdb!  So we won't export them while we make the databases...
+#
+unexport ISC_USER
+unexport ISC_PASSWORD
+export DYLD_FRAMEWORK_PATH
+DYLD_FRAMEWORK_PATH=	$(OBJS)/firebird
+export INTERBASE
+
+MSG_SCRIPTS = msg.sql facilities2.sql locales.sql sqlstates.sql history2.sql messages2.sql \
+              symbols2.sql system_errors2.sql transmsgs.fr_FR.sql transmsgs.de_DE.sql
+MSG_FILES = $(addprefix $(SRC_ROOT)/msgs/, $(MSG_SCRIPTS))
+
+.PHONY: empty_db refDatabases
+
+# This is where you are going to have trouble if there is one, at creating
+# the first empty database.  Things to watch out for, $INTERBASE variable
+# pointing in the wrong place, shared library path LD_LIBRARY_PATH
+# not pointing to new stuff (mind you this point it should be creating
+# using create_db statically linked).
+
+empty_db : empty.fdb yachts.lnk
+
+empty.fdb : $(CREATE_DB)
+	$(MAKE) -f $(GEN_ROOT)/Makefile.static.createdb
+	-$(RM) $@
+	$(BIN)/create_db $@
+	$(TOUCH) $@
+	$(CHMOD) 444 $@
+
+# Ok so Jim had/has a sailing theme, and the sample database that a lot
+# of .epp files require to compile is yachts.lnk. MOD 05-Aug-2002
+
+yachts.lnk: empty.fdb
+	$(RM) -f yachts.lnk
+	$(LN) -f empty.fdb yachts.lnk
+
+
+
+# These are the rest of the databases used to build the system.  We also build
+# the help database from here.
+
+.PHONY: ref_databases
+
+# Use msg.timestamp as a target to help dependency tracking work.
+
+ref_databases : msg.timestamp help.fdb metadata.fdb $(FIREBIRD)/security2.fdb 
+
+msg.timestamp:	$(MSG_FILES)
+	$(RM) -f msg.fdb
+	echo create database \'msg.fdb\'\; | $(ISQL_STATIC)
+	for sn in $(MSG_FILES); do (echo $$sn; $(ISQL_STATIC) -i $$sn msg.fdb) || exit; done
+#	$(CHMOD) 444 msg.fdb
+	$(TOUCH) $@
+
+help.fdb:	$(FIREBIRD)/help/help.fdb
+	$(RM) -f $@
+	$(LN) -f $^ $@
+
+$(FIREBIRD)/help/help.fdb:	$(BLD_ROOT)/misc/help.gbak
+	$(BIN)/gbak_static -MODE read_only -R $< $@
+	$(TOUCH) $@
+	$(CHMOD) 444 $@
+
+$(FIREBIRD)/security2.fdb:	security2.fdb
+	$(RM) -f $@
+	$(CP) -f $^ $@
+
+security2.fdb:	$(SRC_ROOT)/dbs/security.sql
+	$(RM) -f $@
+	echo create database \'$@\'\; | $(ISQL_STATIC)
+	$(ISQL_STATIC) -i $^ $@
+	$(CHMOD) a=rw $@
+
+metadata.fdb:	$(BLD_ROOT)/misc/metadata.gbak
+	$(BIN)/gbak_static -MODE read_only -R $< $@
+	$(TOUCH) $@
+	$(CHMOD) 444 $@
+
+# An alternative metadata creation method, this one is actually preferred
+# since it ensures the data is valid.
+
+metadata.fdb.x:	$(SRC_ROOT)/misc/metadata.sql
+	$(BIN)/isql -i $<
+	$(TOUCH) $@
+	$(CHMOD) 444 $@
+
+
+FORCE:

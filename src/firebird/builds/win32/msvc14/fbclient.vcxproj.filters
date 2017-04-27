@@ -1,0 +1,216 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="COMMON files">
+      <UniqueIdentifier>{7487683b-dc38-443d-95af-8ace729dc31d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="JRD files">
+      <UniqueIdentifier>{4af7264d-675b-4c18-8f65-5aba4f770220}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="DSQL files">
+      <UniqueIdentifier>{ab1095af-7b5d-410f-87a2-824e4ff86f5a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="REMOTE files">
+      <UniqueIdentifier>{736fc423-f6cf-47f4-9023-24f3f1a0d802}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UTILITIES files">
+      <UniqueIdentifier>{15bf993e-b3d2-4317-93d4-16e366e676c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{e3a2f54a-a219-45e8-bc12-a5b21ba2b658}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="Resource files">
+      <UniqueIdentifier>{82e53492-dd58-4c4c-8f86-699c2101ec28}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\common\classes\alloc.cpp">
+      <Filter>COMMON files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\config\config_file.cpp">
+      <Filter>COMMON files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\os\win32\config_root.cpp">
+      <Filter>COMMON files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\classes\init.cpp">
+      <Filter>COMMON files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\thd.cpp">
+      <Filter>COMMON files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\alt.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\dsc.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\enc.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\gds.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\os\win32\ibinitdll.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\isc.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\isc_file.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\os\win32\isc_ipc.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\os\win32\os_utils.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\perf.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\sdl.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\status.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\ThreadData.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\ThreadStart.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\utl.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\why.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gen\$(Platform)\dsql\array.cpp">
+      <Filter>DSQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gen\$(Platform)\dsql\blob.cpp">
+      <Filter>DSQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dsql\keywords.cpp">
+      <Filter>DSQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dsql\preparse.cpp">
+      <Filter>DSQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dsql\user_dsql.cpp">
+      <Filter>DSQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\dsql\utld.cpp">
+      <Filter>DSQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\auth\trusted\AuthSspi.cpp">
+      <Filter>REMOTE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\remote\inet.cpp">
+      <Filter>REMOTE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\remote\interface.cpp">
+      <Filter>REMOTE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\remote\merge.cpp">
+      <Filter>REMOTE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\remote\parser.cpp">
+      <Filter>REMOTE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\remote\protocol.cpp">
+      <Filter>REMOTE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\remote\remote.cpp">
+      <Filter>REMOTE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\remote\os\win32\wnet.cpp">
+      <Filter>REMOTE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\remote\xdr.cpp">
+      <Filter>REMOTE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\remote\xnet.cpp">
+      <Filter>REMOTE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\utilities\gsec\call_service.cpp">
+      <Filter>UTILITIES files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\utilities\gsec\call_service.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\cvt_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\dsc.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\dsc_pub.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\enc_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\err_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\flu.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\flu_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\gds_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\isc.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\isc_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\os\os_utils.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\perf.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\perf_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\sdl.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\sdl_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\thd.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\os\thd_priority.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\utl_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\why_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\src\jrd\version.rc">
+      <Filter>Resource files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\defs\fbclient.def">
+      <Filter>JRD files</Filter>
+    </None>
+  </ItemGroup>
+</Project>

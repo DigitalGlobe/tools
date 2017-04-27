@@ -1,0 +1,71 @@
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+# You may obtain a copy of the Licence at
+# http://www.gnu.org/licences/lgpl.html
+# 
+# As a special exception this file can also be included in modules
+# with other source code as long as that source code has been 
+# released under an Open Source Initiative certificed licence.  
+# More information about OSI certification can be found at: 
+# http://www.opensource.org 
+# 
+# This module is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public Licence for more details.
+# 
+# This module was created by members of the firebird development 
+# team.  All individual contributions remain the Copyright (C) of 
+# those individuals and all rights are reserved.  Contributors to 
+# this file are either listed below or can be obtained from a CVS 
+# history command.
+#
+#  Created by:  Mark O'Donohue <mark.odonohue@ludwig.edu.au>
+#
+#  Contributor(s):
+# 
+#
+ROOT=..
+ObjModuleType=superserver
+CPPFLAGS+= -DSUPERSERVER
+ArchType=super
+
+include     $(ROOT)/gen/make.defaults
+include     $(ROOT)/gen/make.platform
+include     $(ROOT)/gen/make.rules
+include     $(ROOT)/gen/make.shared.variables
+
+@SET_MAKE@
+
+SERVER_JrdFiles = ThreadData.cpp divorce.cpp dsc.cpp enc.cpp isc_file.cpp isc.cpp \
+sdl.cpp status.cpp 
+SERVER_Files = $(OS_ServerFiles) server.cpp server_stub.cpp
+SERVER_Other_sources = common/cvt.cpp 
+SERVER_Sources = $(addprefix remote/, $(SERVER_Files)) $(addprefix jrd/, $(SERVER_JrdFiles)) $(SERVER_Other_sources)
+
+REMOTE_CommonSources = $(addprefix remote/, $(REMOTE_CommonFiles))
+REMOTE_CommonObjects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(REMOTE_CommonSources))))
+
+
+SERVER_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(SERVER_Sources)))) \
+$(REMOTE_CommonObjects) $(COMMON_Objects) $(CLUMPLETS_Objects) \
+$(CONFIG_Objects) $(VULCAN_Objects) $(FBCONFIG_Objects) \
+$(OS_SPECIFIC_Objects)
+
+.PHONY: fb_smp_server
+
+
+fb_smp_server:	$(FB_DAEMON)
+
+$(FB_DAEMON):	$(SERVER_Objects)
+	$(EXE_LINK) $(LINK_EMPTY_SYMBOLS) $(LINK_OPTS) $^ -o $@ $(FBEMBED_LINK) $(LINK_LIBS)
+
+AllObjects = $(SERVER_Objects)
+
+Dependencies = $(AllObjects:.o=.d)
+
+include $(ROOT)/gen/make.shared.targets
+
+-include $(Dependencies)

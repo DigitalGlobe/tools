@@ -1,0 +1,58 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="GUARD files">
+      <UniqueIdentifier>{ac475f0b-7643-4529-b2f4-a2eb2aa7ec02}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="REMOTE files">
+      <UniqueIdentifier>{d4bcd4a6-85dc-4085-abc0-e04fc1280e90}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{737f99e0-14a0-4082-811b-dc6dded7c0aa}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="Resource files">
+      <UniqueIdentifier>{1ae5b513-c32d-43d4-b663-4ef77b4d2a4b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="COMMON files">
+      <UniqueIdentifier>{48f1ee46-aac3-4b76-8e8a-298fb8fed7c8}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\iscguard\cntl_guard.cpp">
+      <Filter>GUARD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\iscguard\iscguard.cpp">
+      <Filter>GUARD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\remote\os\win32\chop.cpp">
+      <Filter>REMOTE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\classes\alloc.cpp">
+      <Filter>COMMON files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\config\config_file.cpp">
+      <Filter>COMMON files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\os\win32\config_root.cpp">
+      <Filter>COMMON files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\iscguard\cntlg_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\iscguard\iscguard.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\misc\status.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\src\iscguard\iscguard.rc">
+      <Filter>Resource files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

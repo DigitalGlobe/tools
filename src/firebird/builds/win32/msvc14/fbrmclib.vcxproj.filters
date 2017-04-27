@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="COMMON files">
+      <UniqueIdentifier>{d6097675-1872-4d71-893b-898b472edd59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="JRD files">
+      <UniqueIdentifier>{3d12bb69-1ef3-4bd1-aaf9-0442bf9e22b5}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="FBRMCLIB files">
+      <UniqueIdentifier>{cc065966-eaac-49cf-bb4d-3f1fbb2c3a0f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{3b2ac8a0-7814-4d95-bc3e-827365de8f42}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="Resource files">
+      <UniqueIdentifier>{8801774d-6475-4c39-97a2-2db6d2afb7d3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\common\classes\alloc.cpp">
+      <Filter>COMMON files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\dllinst.cpp">
+      <Filter>COMMON files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\fb_exception.cpp">
+      <Filter>COMMON files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\classes\init.cpp">
+      <Filter>COMMON files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\classes\locks.cpp">
+      <Filter>COMMON files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\StatusArg.cpp">
+      <Filter>COMMON files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\thd.cpp">
+      <Filter>COMMON files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\os\win32\ibinitdll.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\fbrmclib.cpp">
+      <Filter>FBRMCLIB files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\common\classes\alloc.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\include\fb_exception.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\src\jrd\version.rc">
+      <Filter>Resource files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\defs\fbrmclib.def">
+      <Filter>JRD files</Filter>
+    </None>
+  </ItemGroup>
+</Project>

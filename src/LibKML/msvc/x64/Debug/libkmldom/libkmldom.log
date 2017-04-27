@@ -1,0 +1,58 @@
+﻿  abstractlatlonbox.cc
+  abstractview.cc
+  atom.cc
+  balloonstyle.cc
+  colorstyle.cc
+  container.cc
+  document.cc
+  element.cc
+  extendeddata.cc
+  feature.cc
+  folder.cc
+  geometry.cc
+..\src\kml\dom\geometry.cc(533): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+  gx_timeprimitive.cc
+  gx_tour.cc
+  hotspot.cc
+  iconstyle.cc
+  kml.cc
+  kml22.cc
+  kml_cast.cc
+  kml_factory.cc
+  Generating Code...
+  Compiling...
+  kml_handler.cc
+  kml_handler_ns.cc
+  labelstyle.cc
+  linestyle.cc
+  link.cc
+  liststyle.cc
+  model.cc
+  networklink.cc
+  networklinkcontrol.cc
+  object.cc
+  overlay.cc
+  parser.cc
+  placemark.cc
+  polystyle.cc
+  region.cc
+  schema.cc
+  serializer.cc
+  snippet.cc
+  style.cc
+  stylemap.cc
+  Generating Code...
+  Compiling...
+  styleselector.cc
+  substyle.cc
+  timeprimitive.cc
+  vec2.cc
+  visitor.cc
+  visitor_driver.cc
+  xal.cc
+  xml_serializer.cc
+  xsd.cc
+  stdafx.cpp
+  Generating Code...
+kml22.obj : warning LNK4221: This object file does not define any previously undefined public symbols, so it will not be used by any link operation that consumes this library
+  libkmldom.vcxproj -> C:\DigitalGlobe\LibKml\msvc\x64\Debug\libkmldom_d.lib

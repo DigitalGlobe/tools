@@ -1,0 +1,141 @@
+# The contents of this file are subject to the Interbase Public
+# License Version 1.0 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy
+# of the License at http://www.Inprise.com/IPL.html
+#
+# Software distributed under the License is distributed on an
+# "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+# or implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code was created by Inprise Corporation
+# and its predecessors. Portions created by Inprise Corporation are
+# Copyright (C) Inprise Corporation.
+#
+# All Rights Reserved.
+# Contributor(s): ______________________________________.
+.SUFFIXES: .c .e
+.e.c:
+	$(GPRE) $(GPRE_FLAGS) $<
+.SUFFIXES: .bin .o .c
+.c.o:
+	$(CC) -c $(CFLAGS) $(VERSION_FLAG) $<
+.c.bin:
+	$(CC) -c $(PIC_FLAGS) $(VERSION_FLAG) -o $*.bin $<
+
+
+PROD_DEBUG_OBJECTS=	nodebug.o
+PROD_SHRLIB_DIR=
+PROD_VERSION_FLAG=	-DPROD_BUILD
+PROD_CFLAGS=		-O -DHADES
+
+DEV_DEBUG_OBJECTS=	grammar.o dbg.o dbt.o dmp.o
+DEV_SHRLIB_DIR=		-Wl,+s -L source/jrd
+DEV_VERSION_FLAG=	-DDEV_BUILD
+DEV_CFLAGS=		-g
+
+DEBUG_OBJECTS=		$($(VERSION)_DEBUG_OBJECTS)
+SHRLIB_DIR=		$($(VERSION)_SHRLIB_DIR)
+VERSION_FLAG=		$($(VERSION)_VERSION_FLAG)
+CFLAGS=			$($(VERSION)_CFLAGS) -w -Isource/interbase/include -DHPUX -D_HPUX_SOURCE -Ae -z +DA1.0 +DS1.0 -D$(SYSTEM) -DEXACT_NUMERICS $(SUPER_FLAG)
+UDF_LINK_CMD=		ld
+UDF_CFLAGS= 		-O +z -Ae -D_HPUX_SOURCE
+UDF_SHRLIBS= 		-lm
+UDF_LFLAGS= 		-b
+SHRLIB_EXT=		.sl
+
+# Purify related flags
+PFLAGS  = -messages=first -leaks-at-exit=yes
+PDIR    = `purify -print-home-dir`
+PURIFY  = purify $(PFLAGS)
+PSTUBS  = $(PDIR)/purify_stubs.a
+
+ACCESS_METHOD=		gdslib.hp pipe
+BACKEND_BRIDGE_MISC=	head5.o allp.o
+BIN_PATH=		/usr/gds/sbin
+BLD_OPTS=		-b -c gds5.bind
+CHMOD_VAL=		777
+CURSES_LIB=		-lcurses
+DSQL_P_OBJS=		dsql_p_objects
+EXAMPLES_DBS=		source/examples/
+FORM_OBJECTS=		form.o
+FORM_TRN_OBJECTS=	form_trn.o
+FRED=			fred
+GDS_LINK=		$(GDSSHR_LINK)
+GDS_PYXIS=		gds_pyxis.a
+GDSLIB_BACKEND=		source/jrd/gds_b.a
+GDSLIB_LINK=		-L source/jrd -lgds_b -ldld
+GDSSHR=			source/interbase/lib/gds.sl
+HP_GDSSHR=		$(GDSSHR)
+HP_SUPER_GDSSHR=	source/interbase/lib/gds.sl.1	
+GDSSHR_LINK=		$(SHRLIB_DIR) -lgds_pyxis -lgds -ldld
+HLPDIR=			source/qli/
+INCLUDES=		include_hp include_hp_ada
+INTL=			intl
+INTL_CFLAGS=            $(CFLAGS)
+INTL_LD_LINE=		ld -b -o gdsintl
+INTL_PIC_FLAGS=		$(PIC_FLAGS)
+INTL_TARGET=		gdsintl.sl
+IO_OBJECTS=		unix.o
+IO_P_OBJECTS=		unix.bin
+LANG_OBJECTS=		ftn.o cob.o ada.o
+LANGUAGES=		cc cxx microfocus_cob make9 hp_ftn gdl1 hp_ada other_ada
+LD_OPTS=		-c gds.bind
+LIB_TYPE=		-a archive
+LOCK_MANAGER=		manager
+MARION_DB=		-d source/marion.gdb
+MUISQL=			muisql
+MUISQL_MU_LIB=		-L /usr/gds/qa_tools/lib -lmu
+PIC_FLAGS=		$(CFLAGS) +z
+PIPE=			gds.a gds_pipe
+PYXIS=			pyxis
+PYXIS_MISC_OBJS=	$(PYXIS_MISC)
+PYXIS_OBJECTS=		pyxis_objects
+PYXIS_MISC_OBJECTS=	$(PYXDIR)cdm.o $(PYXDIR)vt100.o
+REG_HELP=		isc_ins_hlp.dat
+REMOTE_GDSSHR=		$(GDSSHR)
+REMOTE_GDSSHR_LINK=	$(REMOTE_OBJECTS) $(JRD_LINK) $(SERVER_LINK)
+REMOTE_P_OBJS=		rem_p_objects
+SCREEN_LIBS=		-lcurses
+SERVER_LINK=		$(GDSSHR_LINK)
+SETUP_ISC=		ISC_USER=sysdba; ISC_PASSWORD=masterkey; export ISC_USER ISC_PASSWORD;
+SPECIAL_OPT=		source/special_opt
+SUPER_CLIENT_GDSSHR=	$(HP_SUPER_GDSSHR)
+SUPER_BACKEND=		source/jrd/gds_ss.a
+SUPER_LINK=		-Lsource/jrd -lgds_ss -lV3 -lcma -ldld
+SUPER_SERVER=
+UTILITIES=		
+WAL_P_OBJS=		wal_p_objects
+YFLAGS=			-Nc10000 -Ns5000
+UDF_LINK_OPTS=		-Wl,-E -Wl,+s
+
+
+SUPER_SERVER_DEST=	source/interbase/bin/ibserver
+INET_SERVER_DEST=	source/interbase/bin/gds_inet_server
+DNET_SERVER_DEST=	source/interbase/bin/gds_dnet_server
+AMBX_SERVER_DEST=	source/interbase/bin/gds_server
+INET_LIB_DEST=		source/interbase/lib/gds_inet_server.a
+DNET_LIB_DEST=		source/interbase/lib/gds_dnet_server.a
+
+SH=			sh -c
+RM=			rm -f
+CHMOD=			chmod
+CHMOD_6=		chmod 666
+CHMOD_7=		chmod 777
+CHMOD_S7=		chmod 06777
+MV=			mv -f
+TOUCH=			touch
+CP=			cp
+ECHO=			echo
+QUIET_ECHO=		@echo
+CD=			cd
+CAT=			cat
+AR=			ar r
+EXPAND_DBNAME=		@echo No need to expand...
+COMPRESS_DBNAME=	@echo No need to compress...
+
+ARCH_EXT=		.a
+EXEC_EXT=
+
+V3PRINTER=		source/lock/printv3.o
+

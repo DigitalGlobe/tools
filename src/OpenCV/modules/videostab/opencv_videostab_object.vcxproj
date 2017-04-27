@@ -1,0 +1,208 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGUID>{C5BB2612-12CB-307D-9671-510AD3931847}</ProjectGUID>
+    <WindowsTargetPlatformVersion>10.0.10586.0</WindowsTargetPlatformVersion>
+    <Keyword>Win32Proj</Keyword>
+    <Platform>Win32</Platform>
+    <ProjectName>opencv_videostab_object</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+    <PropertyGroup>
+      <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+      <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">opencv_videostab_object.dir\Debug\</OutDir>
+      <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">opencv_videostab_object.dir\Debug\</IntDir>
+      <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">opencv_videostab_object</TargetName>
+      <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.lib</TargetExt>
+      <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">opencv_videostab_object.dir\Release\</OutDir>
+      <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">opencv_videostab_object.dir\Release\</IntDir>
+      <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">opencv_videostab_object</TargetName>
+      <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.lib</TargetExt>
+    </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <AdditionalOptions> /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>C:\tools\src\OpenCV\3rdparty\ippicv\unpack\ippicv_win\include;C:\tools\src\OpenCV;C:\tools\src\OpenCV\modules\videostab\include;C:\tools\src\OpenCV\modules\videostab\src;C:\tools\src\OpenCV\modules\videostab;C:\tools\src\OpenCV\modules\core\include;C:\tools\src\OpenCV\modules\flann\include;C:\tools\src\OpenCV\modules\imgproc\include;C:\tools\src\OpenCV\modules\ml\include;C:\tools\src\OpenCV\modules\photo\include;C:\tools\src\OpenCV\modules\video\include;C:\tools\src\OpenCV\modules\imgcodecs\include;C:\tools\src\OpenCV\modules\videoio\include;C:\tools\src\OpenCV\modules\highgui\include;C:\tools\src\OpenCV\modules\features2d\include;C:\tools\src\OpenCV\modules\calib3d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>Debug/</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4251;4324;4275;4589</DisableSpecificWarnings>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <ProcessorNumber>4</ProcessorNumber>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level4</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;_DEBUG;CVAPI_EXPORTS;_VARIADIC_MAX=10;__OPENCV_BUILD=1;CMAKE_INTDIR="Debug";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;_DEBUG;CVAPI_EXPORTS;_VARIADIC_MAX=10;__OPENCV_BUILD=1;CMAKE_INTDIR=\"Debug\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\tools\src\OpenCV\3rdparty\ippicv\unpack\ippicv_win\include;C:\tools\src\OpenCV;C:\tools\src\OpenCV\modules\videostab\include;C:\tools\src\OpenCV\modules\videostab\src;C:\tools\src\OpenCV\modules\videostab;C:\tools\src\OpenCV\modules\core\include;C:\tools\src\OpenCV\modules\flann\include;C:\tools\src\OpenCV\modules\imgproc\include;C:\tools\src\OpenCV\modules\ml\include;C:\tools\src\OpenCV\modules\photo\include;C:\tools\src\OpenCV\modules\video\include;C:\tools\src\OpenCV\modules\imgcodecs\include;C:\tools\src\OpenCV\modules\videoio\include;C:\tools\src\OpenCV\modules\highgui\include;C:\tools\src\OpenCV\modules\features2d\include;C:\tools\src\OpenCV\modules\calib3d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\tools\src\OpenCV\3rdparty\ippicv\unpack\ippicv_win\include;C:\tools\src\OpenCV;C:\tools\src\OpenCV\modules\videostab\include;C:\tools\src\OpenCV\modules\videostab\src;C:\tools\src\OpenCV\modules\videostab;C:\tools\src\OpenCV\modules\core\include;C:\tools\src\OpenCV\modules\flann\include;C:\tools\src\OpenCV\modules\imgproc\include;C:\tools\src\OpenCV\modules\ml\include;C:\tools\src\OpenCV\modules\photo\include;C:\tools\src\OpenCV\modules\video\include;C:\tools\src\OpenCV\modules\imgcodecs\include;C:\tools\src\OpenCV\modules\videoio\include;C:\tools\src\OpenCV\modules\highgui\include;C:\tools\src\OpenCV\modules\features2d\include;C:\tools\src\OpenCV\modules\calib3d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions> /machine:X86 %(AdditionalOptions)</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalOptions> /bigobj %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>C:\tools\src\OpenCV\3rdparty\ippicv\unpack\ippicv_win\include;C:\tools\src\OpenCV;C:\tools\src\OpenCV\modules\videostab\include;C:\tools\src\OpenCV\modules\videostab\src;C:\tools\src\OpenCV\modules\videostab;C:\tools\src\OpenCV\modules\core\include;C:\tools\src\OpenCV\modules\flann\include;C:\tools\src\OpenCV\modules\imgproc\include;C:\tools\src\OpenCV\modules\ml\include;C:\tools\src\OpenCV\modules\photo\include;C:\tools\src\OpenCV\modules\video\include;C:\tools\src\OpenCV\modules\imgcodecs\include;C:\tools\src\OpenCV\modules\videoio\include;C:\tools\src\OpenCV\modules\highgui\include;C:\tools\src\OpenCV\modules\features2d\include;C:\tools\src\OpenCV\modules\calib3d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>Release/</AssemblerListingLocation>
+      <CompileAs>CompileAsCpp</CompileAs>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4251;4324;4275;4589</DisableSpecificWarnings>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <ExceptionHandling>Async</ExceptionHandling>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <ProcessorNumber>4</ProcessorNumber>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <WarningLevel>Level4</WarningLevel>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;NDEBUG;CVAPI_EXPORTS;_VARIADIC_MAX=10;__OPENCV_BUILD=1;CMAKE_INTDIR="Release";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_SCL_SECURE_NO_WARNINGS;NDEBUG;CVAPI_EXPORTS;_VARIADIC_MAX=10;__OPENCV_BUILD=1;CMAKE_INTDIR=\"Release\";%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\tools\src\OpenCV\3rdparty\ippicv\unpack\ippicv_win\include;C:\tools\src\OpenCV;C:\tools\src\OpenCV\modules\videostab\include;C:\tools\src\OpenCV\modules\videostab\src;C:\tools\src\OpenCV\modules\videostab;C:\tools\src\OpenCV\modules\core\include;C:\tools\src\OpenCV\modules\flann\include;C:\tools\src\OpenCV\modules\imgproc\include;C:\tools\src\OpenCV\modules\ml\include;C:\tools\src\OpenCV\modules\photo\include;C:\tools\src\OpenCV\modules\video\include;C:\tools\src\OpenCV\modules\imgcodecs\include;C:\tools\src\OpenCV\modules\videoio\include;C:\tools\src\OpenCV\modules\highgui\include;C:\tools\src\OpenCV\modules\features2d\include;C:\tools\src\OpenCV\modules\calib3d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>C:\tools\src\OpenCV\3rdparty\ippicv\unpack\ippicv_win\include;C:\tools\src\OpenCV;C:\tools\src\OpenCV\modules\videostab\include;C:\tools\src\OpenCV\modules\videostab\src;C:\tools\src\OpenCV\modules\videostab;C:\tools\src\OpenCV\modules\core\include;C:\tools\src\OpenCV\modules\flann\include;C:\tools\src\OpenCV\modules\imgproc\include;C:\tools\src\OpenCV\modules\ml\include;C:\tools\src\OpenCV\modules\photo\include;C:\tools\src\OpenCV\modules\video\include;C:\tools\src\OpenCV\modules\imgcodecs\include;C:\tools\src\OpenCV\modules\videoio\include;C:\tools\src\OpenCV\modules\highgui\include;C:\tools\src\OpenCV\modules\features2d\include;C:\tools\src\OpenCV\modules\calib3d\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions> /machine:X86 %(AdditionalOptions)</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\tools\src\OpenCV\modules\videostab\CMakeLists.txt">
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Building Custom Rule C:/tools/src/OpenCV/modules/videostab/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -HC:/tools/src/OpenCV -BC:/tools/src/OpenCV --check-stamp-file C:\tools\src\OpenCV\modules\videostab\CMakeFiles\generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:/tools/src/OpenCV/modules/videostab/CMakeLists.txt;C:\tools\src\OpenCV\modules\videostab\CMakeLists.txt;C:\tools\src\OpenCV\modules\videostab\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:\tools\src\OpenCV\modules\videostab\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Building Custom Rule C:/tools/src/OpenCV/modules/videostab/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -HC:/tools/src/OpenCV -BC:/tools/src/OpenCV --check-stamp-file C:\tools\src\OpenCV\modules\videostab\CMakeFiles\generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:/tools/src/OpenCV/modules/videostab/CMakeLists.txt;C:\tools\src\OpenCV\modules\videostab\CMakeLists.txt;C:\tools\src\OpenCV\modules\videostab\CMakeLists.txt;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:\tools\src\OpenCV\modules\videostab\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\tools\src\OpenCV\modules\videostab\include\opencv2\videostab.hpp" />
+    <ClInclude Include="C:\tools\src\OpenCV\modules\videostab\include\opencv2\videostab\deblurring.hpp" />
+    <ClInclude Include="C:\tools\src\OpenCV\modules\videostab\include\opencv2\videostab\fast_marching.hpp" />
+    <ClInclude Include="C:\tools\src\OpenCV\modules\videostab\include\opencv2\videostab\fast_marching_inl.hpp" />
+    <ClInclude Include="C:\tools\src\OpenCV\modules\videostab\include\opencv2\videostab\frame_source.hpp" />
+    <ClInclude Include="C:\tools\src\OpenCV\modules\videostab\include\opencv2\videostab\global_motion.hpp" />
+    <ClInclude Include="C:\tools\src\OpenCV\modules\videostab\include\opencv2\videostab\inpainting.hpp" />
+    <ClInclude Include="C:\tools\src\OpenCV\modules\videostab\include\opencv2\videostab\log.hpp" />
+    <ClInclude Include="C:\tools\src\OpenCV\modules\videostab\include\opencv2\videostab\motion_core.hpp" />
+    <ClInclude Include="C:\tools\src\OpenCV\modules\videostab\include\opencv2\videostab\motion_stabilizing.hpp" />
+    <ClInclude Include="C:\tools\src\OpenCV\modules\videostab\include\opencv2\videostab\optical_flow.hpp" />
+    <ClInclude Include="C:\tools\src\OpenCV\modules\videostab\include\opencv2\videostab\outlier_rejection.hpp" />
+    <ClInclude Include="C:\tools\src\OpenCV\modules\videostab\include\opencv2\videostab\ring_buffer.hpp" />
+    <ClInclude Include="C:\tools\src\OpenCV\modules\videostab\include\opencv2\videostab\stabilizer.hpp" />
+    <ClInclude Include="C:\tools\src\OpenCV\modules\videostab\include\opencv2\videostab\wobble_suppression.hpp" />
+    <ClInclude Include="C:\tools\src\OpenCV\modules\videostab\src\clp.hpp" />
+    <ClInclude Include="C:\tools\src\OpenCV\modules\videostab\src\precomp.hpp" />
+    <ClInclude Include="C:\tools\src\OpenCV\cvconfig.h" />
+    <ClInclude Include="C:\tools\src\OpenCV\opencv2\opencv_modules.hpp" />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\videostab\src\deblurring.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\videostab\src\fast_marching.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\videostab\src\frame_source.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\videostab\src\global_motion.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\videostab\src\inpainting.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\videostab\src\log.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\videostab\src\motion_stabilizing.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\videostab\src\optical_flow.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\videostab\src\outlier_rejection.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\videostab\src\stabilizer.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\videostab\src\wobble_suppression.cpp"  />
+    <ClCompile Include="C:\tools\src\OpenCV\modules\videostab\opencv_videostab_pch.cpp" >
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">C:/tools/src/OpenCV/modules/videostab/src/precomp.hpp</PrecompiledHeaderFile>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">C:/tools/src/OpenCV/modules/videostab/src/precomp.hpp</PrecompiledHeaderFile>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="C:/tools/src/OpenCV/ZERO_CHECK.vcxproj">
+      <Project>E0284986-3AE0-3E66-BB73-8BA76038446D</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

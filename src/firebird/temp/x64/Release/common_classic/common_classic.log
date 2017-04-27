@@ -1,0 +1,75 @@
+﻿  alloc.cpp
+  locks.cpp
+  fb_exception.cpp
+  StatusHolder.cpp
+  config.cpp
+..\..\..\src\common\classes\alloc.cpp(750): warning C4267: '=': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\src\common\classes\alloc.cpp(1286): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\common\classes\alloc.cpp(1300): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\common\classes\alloc.cpp(1316): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\common\classes\alloc.cpp(1316): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
+..\..\..\src\common\classes\alloc.cpp(1514): warning C4267: '-=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\common\classes\alloc.cpp(1524): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\common\classes\alloc.cpp(1602): warning C4267: '-=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\common\classes\alloc.cpp(1612): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\common\classes\alloc.cpp(1688): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\common\classes\alloc.cpp(1693): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\common\classes\alloc.cpp(1700): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\common\classes\alloc.cpp(1850): warning C4267: '+=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\common\classes\alloc.cpp(1865): warning C4267: '+=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\common\classes\alloc.cpp(1887): warning C4267: '+=': conversion from 'size_t' to 'USHORT', possible loss of data
+  config_file.cpp
+  config_root.cpp
+  dir_list.cpp
+  BaseStream.cpp
+  ClumpletReader.cpp
+..\..\..\src\common\classes\BaseStream.cpp(47): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+  ClumpletWriter.cpp
+  cvt.cpp
+  db_alias.cpp
+  dllinst.cpp
+..\..\..\src\common\cvt.cpp(440): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+  fb_string.cpp
+  fbsyslog.cpp
+  init.cpp
+..\..\..\src\common\classes\fb_string.cpp(136): warning C4267: '=': conversion from 'size_t' to 'Firebird::AbstractString::internal_size_type', possible loss of data
+..\..\..\src\common\classes\fb_string.cpp(145): warning C4267: '+=': conversion from 'size_t' to 'Firebird::AbstractString::internal_size_type', possible loss of data
+..\..\..\src\common\classes\fb_string.cpp(158): warning C4267: '+=': conversion from 'size_t' to 'Firebird::AbstractString::internal_size_type', possible loss of data
+..\..\..\src\common\classes\fb_string.cpp(166): warning C4267: '-=': conversion from 'size_t' to 'Firebird::AbstractString::internal_size_type', possible loss of data
+..\..\..\src\common\classes\fb_string.cpp(188): warning C4267: '=': conversion from 'size_t' to 'Firebird::AbstractString::internal_size_type', possible loss of data
+..\..\..\src\common\classes\fb_string.cpp(196): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\common\classes\fb_string.cpp(201): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\common\classes\fb_string.cpp(215): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\common\classes\fb_string.cpp(220): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\common\classes\fb_string.cpp(248): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\common\classes\fb_string.cpp(250): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\common\classes\fb_string.cpp(278): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\common\classes\fb_string.cpp(280): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\common\classes\fb_string.cpp(323): warning C4267: 'argument': conversion from 'size_t' to 'unsigned long', possible loss of data
+..\..\..\src\common\classes\fb_string.cpp(334): warning C4267: 'argument': conversion from 'size_t' to 'unsigned long', possible loss of data
+..\..\..\src\common\classes\fb_string.cpp(372): warning C4267: '=': conversion from 'size_t' to 'Firebird::AbstractString::internal_size_type', possible loss of data
+  MetaName.cpp
+  mod_loader.cpp
+  MsgPrint.cpp
+  path_utils.cpp
+..\..\..\src\common\classes\MetaName.cpp(43): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+..\..\..\src\common\classes\MetaName.cpp(64): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\common\classes\MetaName.cpp(119): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+  PublicHandle.cpp
+..\..\..\src\common\classes\MsgPrint.cpp(220): warning C4267: 'argument': conversion from 'size_t' to 'unsigned int', possible loss of data
+..\..\..\src\common\classes\MsgPrint.cpp(402): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+  SafeArg.cpp
+  StatusArg.cpp
+  TempFile.cpp
+  thd.cpp
+  timestamp.cpp
+..\..\..\src\common\classes\TempFile.cpp(293): warning C4267: 'argument': conversion from 'size_t' to 'DWORD', possible loss of data
+..\..\..\src\common\classes\TempFile.cpp(320): warning C4267: 'argument': conversion from 'size_t' to 'DWORD', possible loss of data
+  UserBlob.cpp
+  utils.cpp
+  UtilSvc.cpp
+..\..\..\src\common\utils.cpp(315): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\common\utils.cpp(315): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
+..\..\..\src\common\utils.cpp(361): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\common\utils.cpp(361): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
+  common_classic.vcxproj -> C:\tools\src\firebird\builds\win32\msvc14\..\..\..\temp\x64\Release\common_classic\common_classic.lib

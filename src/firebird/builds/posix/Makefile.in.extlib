@@ -1,0 +1,90 @@
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+# You may obtain a copy of the Licence at
+# http://www.gnu.org/licences/lgpl.html
+# 
+# As a special exception this file can also be included in modules
+# with other source code as long as that source code has been 
+# released under an Open Source Initiative certificed licence.  
+# More information about OSI certification can be found at: 
+# http://www.opensource.org 
+# 
+# This module is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public Licence for more details.
+# 
+# This module was created by members of the firebird development 
+# team.  All individual contributions remain the Copyright (C) of 
+# those individuals and all rights are reserved.  Contributors to 
+# this file are either listed below or can be obtained from a CVS 
+# history command.
+#
+#  Created by:  Mark O'Donohue <mark.odonohue@ludwig.edu.au>
+#
+#  Contributor(s):
+# 
+#
+#
+ROOT=..
+ObjModuleType=std
+
+include     $(ROOT)/gen/make.defaults
+include     $(ROOT)/gen/make.platform
+include     $(ROOT)/gen/make.rules
+include     $(ROOT)/gen/make.shared.variables
+
+@SET_MAKE@
+
+UDF=	$(FIREBIRD)/UDF
+
+
+UDF_Files = ib_udf.cpp
+UDF_Sources = $(addprefix extlib/, $(UDF_Files))
+UDF_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(UDF_Sources))))
+
+UTIL_Files = ib_util.cpp
+UTIL_Sources = $(addprefix extlib/, $(UTIL_Files))
+UTIL_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(UTIL_Sources))))
+
+
+AllObjects = $(UDF_Objects) $(UTIL_Objects) $(FBUDF_Objects)
+Dependencies = $(AllObjects:.o=.d)
+
+
+.PHONY: all lib_ib_udf lib_ib_util
+
+all: lib_ib_util lib_ib_udf
+
+
+# The libraries in this directory could do with a bit more work, since they
+# the previous code (presumably by John) that does the ar crv stuff, might
+# work still, even if the .o files have directory prefixes on them.
+# And the udf stuff doesn't want to do .$(SHRLIB_EXT).X.X.X extensions in UDF directory
+# or the loader gets confused with loading the links.
+# MOD 29-July-2002
+
+
+
+# ib_udf.$(SHRLIB_EXT)
+#
+# User defined functions.  (I've put the .$(SHRLIB_EXT) extension back onto the library)
+# 
+
+lib_ib_udf: $(LIBIBUTIL_SO) $(UDF)/ib_udf.$(SHRLIB_EXT)
+
+$(UDF)/ib_udf.$(SHRLIB_EXT): $(UDF_Objects)
+	$(call LINK_UDF,ib_udf) -o $@ $^ $(LINK_UDF_LIBS)
+
+# ib_util
+
+lib_ib_util: $(LIBIBUTIL_SO)
+
+$(LIBIBUTIL_SO): $(UTIL_Objects)
+	$(LINK_IB_UTIL) -o $@ $^ $(LINK_IB_UTIL_LIBS)
+
+include $(ROOT)/gen/make.shared.targets
+
+-include $(Dependencies)

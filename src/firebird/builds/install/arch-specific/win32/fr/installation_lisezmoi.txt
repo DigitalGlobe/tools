@@ -1,0 +1,158 @@
+Firebird Serveur Bases de données $MAJOR.$MINOR.$RELEASE
+==================================================
+
+
+** NOTE IMPORTANTE **
+
+Ce document est une traduction et malgré nos efforts,
+il peut ne pas correspondre exactement à la dernière
+version, seul le texte original en anglais
+(installation_readme.txt) est toujours à jour.
+
+**       FIN      **
+
+Ce document est un guide pour l'installation de
+Firebird $MAJOR.$MINOR sur une plateforme Windows. Ces notes
+concernent l'utilitaire d'installation, pas Firebird $MAJOR.$MINOR
+en général.
+
+Ce document s'adresse à des personnes connaissant déjà
+Firebird 2.5. Si vous utilisez Firebird 2.1, nous vous
+conseillons de lire d'abord la documentation de
+Firebird $MAJOR.$MINOR.
+
+Contenu
+--------
+
+o Avant l'installation
+o Problèmes avec l'installation des bibliothèques MS VC runtime
+o Problèmes connus d'installation
+o Desinstallation
+o Autres Notes
+o Installation depuis un fichier batch
+
+
+Avant l'installation
+--------------------
+
+Il est recommandé de désinstaller toutes les
+précédentes versions de Firebird  ou
+InterBase avant de commencer l'installation.
+Il est particulièrement important de vérifier que
+fbclient.dll et gds32.dll ont été retirés de <system32>.
+
+
+Problèmes avec l'installation des bibliothèques MS VC runtime
+-------------------------------------------------------------
+
+Tout est fait pour que les des bibliothèques MS VC runtime
+soient correctement installées par l'utilitaire d'installation.
+Toute fois, il est parfois ncessaire d'utiliser pour cela le
+programme officiel vcredist.exe. La version qui convient à cette
+version de Firebird se trouve ici (32b) :
+
+	http://www.microsoft.com/downloads/details.aspx?familyid=32BC1BEE-A3F9-4C13-9C99-220B62A191EE&displaylang=en
+
+  et x64 ici :
+
+	http://www.microsoft.com/downloads/details.aspx?familyid=90548130-4468-4BBC-9673-D6ACABD5D13B&displaylang=en
+
+
+
+Problèmes connus d'installation
+-------------------------------
+
+o Vous ne pouvez utiliser l'utilitaire d'installation
+  que pour installer l'instance par défaut de Firebird $MAJOR.$MINOR.
+  Si vous voulez en installer une deuxième en plus, ou une
+  instance nomée, vous devez le faire à partir de l'image
+  zip.
+
+o Malheureusement, l'utilitaire d'installation de peux
+  avec certitude détecter si une version précédente de
+  Firebird Classic server est en fonctionnement.
+
+o Il y a des chevauchements entre les installations
+  32-bit et 64-bit :
+
+  - L'installateur de service (instsvc) utilise
+	le même nom default instance pour les installations
+	32-bit et 64-bit. Les services existent
+	dans le même espace de nom.
+
+  - Si les deux applets 32-bit et 64-bit du panneau de configuration
+	sont installées, elles pointeront sur la même instance.
+
+o Sous Vista, faites l'installation en tant qu'administrateur
+  Sinon, l'utilitaire d'installation ne pourra pas démarrer
+  le service Firebird à la fin de l'installation.
+
+
+Désinstallation
+---------------
+
+o Il est préférable d'utiliser le programme de
+  désinstalation fourni.
+  Il peut être appelé depuis le panneau de
+  configuration. Vous pouvez aussi utiliser directement
+  unins000.exe depuis le répertoire d'installation.
+
+o Si Firebird est exécuté comme application (et non
+  comme service) il est recommendé d'arreter d'abord
+  le serveur avant de commencer la désinstalation. Ce
+  parce que le programme de desinstallation ne peut
+  arreter une application en cours. Si le serveur
+  fonctionne pendant la désinstallation, des erreurs
+  seront générées.
+  Vous devrez alors supprimer les fichiers restant
+  manuellement.
+
+o La desinstallation laisse cinq fichiers dans le
+  répertoire d'installation:
+
+  - aliases.conf
+  - firebird.conf
+  - fbtrace.conf
+  - firebird.log
+  - security2.fdb
+
+  Ceci est intentionnel. Ces fichiers sont tous
+  potentiellement modifiables par les utilisateurs et peuvent
+  être nécessaires si Firebird est reinstallé dans le futur. Ils
+  peuvent être effacés si nécessaire.
+
+o Une nouvelle fonctionnalité du desinstallateur existe
+  avec l'option /CLEAN. Cela vérifiera s'il existe les fichiers
+  mentionnées ci dessus et essaiera de les supprimer.
+
+o la desinstallation ne supprimera pas les bibliothèques MS VC runtime
+  libraries du répertoire systeme. Elles peuvent être supprimées
+  depuis le panneau de configuration, mais en général, ce n'est pas nécessaire.
+
+Autres Notes
+------------
+
+  Firebird necessite WinSock2. Toutes les plateformes
+  Win32 doivent l'avoir, sauf Win95. Un test de
+  l'existence de Winsock2 est fait durant
+  l'installation. S'il n'est pas concluant
+  l'installation echouera. Vous pouvez visiter cet
+  lien:
+
+	http://support.microsoft.com/default.aspx?scid=kb;EN-US;q177719
+
+  pour savoir comment faire la mise à jour.
+
+
+Installation depuis un fichier batch
+------------------------------------
+
+Le programme d'installation peut être utilisé depuis un
+fichier batch
+Lisez le document :
+
+	installation_scripted.txt
+
+pour plus de détails.
+
+

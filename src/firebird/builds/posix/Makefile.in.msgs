@@ -1,0 +1,181 @@
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+# You may obtain a copy of the Licence at
+# http://www.gnu.org/licences/lgpl.html
+# 
+# As a special exception this file can also be included in modules
+# with other source code as long as that source code has been 
+# released under an Open Source Initiative certificed licence.  
+# More information about OSI certification can be found at: 
+# http://www.opensource.org 
+# 
+# This module is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public Licence for more details.
+# 
+# This module was created by members of the firebird development 
+# team.  All individual contributions remain the Copyright (C) of 
+# those individuals and all rights are reserved.  Contributors to 
+# this file are either listed below or can be obtained from a CVS 
+# history command.
+#
+#  Created by:  Mark O'Donohue <mark.odonohue@ludwig.edu.au>
+#
+#  Contributor(s):
+# 
+#
+ROOT=..
+ObjModuleType=boot
+CPPFLAGS+= -DBOOT_BUILD
+
+include     $(ROOT)/gen/make.defaults
+include     $(ROOT)/gen/make.platform
+include     $(ROOT)/gen/make.rules
+include     $(ROOT)/gen/make.shared.variables
+
+@SET_MAKE@
+
+unexport ISC_USER
+unexport ISC_PASSWORD
+
+
+.PHONY: msgs
+
+
+
+CHECK_Files = check_msgs.epp
+CHECK_Sources = $(addprefix msgs/, $(CHECK_Files))
+CHECK_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(CHECK_Sources))))
+
+
+BUILD_Files = build_file.epp
+BUILD_Sources = $(addprefix msgs/, $(BUILD_Files))
+BUILD_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(BUILD_Sources))))
+
+ENTER_Files = enter_msgs.epp
+ENTER_Sources = $(addprefix msgs/, $(ENTER_Files))
+ENTER_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(ENTER_Sources))))
+
+MODIFY_Files = modify_msgs.epp
+MODIFY_Sources = $(addprefix msgs/, $(MODIFY_Files))
+MODIFY_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(MODIFY_Sources))))
+
+CHANGE_Files = change_msgs.epp
+CHANGE_Sources = $(addprefix msgs/, $(CHANGE_Files))
+CHANGE_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(CHANGE_Sources))))
+
+
+AllObjects = $(CHECK_Objects) $(BUILD_Objects) $(ENTER_Objects) \
+			 $(MODIFY_Objects) $(CHANGE_Objects)
+
+Dependencies = $(AllObjects:.o=.d)
+
+.PHONY: all msgs build_file check_messages enter_messages modify_messages change_messages
+
+
+Programs =		$(BUILD_FILE) #$(CHECK_MESSAGES) $(ENTER_MESSAGES) \
+#			$(CHECK_MESSAGES) $(MODIFY_MESSAGES) $(CHANGE_MESSAGES)
+
+all:	build_file check_messages enter_messages modify_messages change_messages 
+
+msgs:  $(Programs) message_file
+
+
+do_check: $(CHECK_MESSAGES) $(BUILD_FILE)
+	$(CHECK_MESSAGES) -d $(MSGSDIR)master_msg_db.lnk -l
+
+
+
+# it's important to note here that these programs are linked against the static
+# 'boot' libraries rather than the later embedded shared library.  
+# They could be linked against the embedded one, or client one, if required.
+# MOD 29-July-2002
+
+
+check_messages : $(CHECK_MESSAGES) 
+
+$(CHECK_MESSAGES):	$(CHECK_Objects) $(COMMON_Objects) $(LIBFBSTATIC_A)
+	$(STATICEXE_LINK) $(LINK_OPTS) $(CHECK_Objects) $(COMMON_Objects) -o $@ -L$(LIB) -lfbstatic $(LINK_LIBS) $(ICU_LIBS)
+	$(CHMOD_7) $@
+
+
+build_file : $(BUILD_FILE) 
+
+$(BUILD_FILE):	$(BUILD_Objects) $(COMMON_Objects) $(LIBFBSTATIC_A)
+	$(STATICEXE_LINK) $(LINK_OPTS) $(BUILD_Objects) $(COMMON_Objects) -o $@ -L$(LIB) -lfbstatic $(LINK_LIBS) $(ICU_LIBS)
+	$(CHMOD_7) $@
+
+
+enter_messages : $(ENTER_MESSAGES)
+
+$(ENTER_MESSAGES):	$(ENTER_Objects) $(LIBFBSTATIC_A)
+	$(STATICEXE_LINK) $(LINK_OPTS) $(ENTER_Objects) $(COMMON_Objects) -o $@ -L$(LIB) -lfbstatic $(LINK_LIBS) $(ICU_LIBS)
+	$(CHMOD_7) $@
+
+
+modify_messages: $(MODIFY_MESSAGES) 
+
+$(MODIFY_MESSAGES):	$(MODIFY_Objects) $(LIBFBSTATIC_A) 
+	$(STATICEXE_LINK) $(LINK_OPTS) $(MODIFY_Objects) $(COMMON_Objects) -o $@ -L$(LIB) -lfbstatic $(LINK_LIBS) $(ICU_LIBS)
+	$(CHMOD_7) $@
+
+
+change_messages: $(CHANGE_MESSAGES)
+
+$(CHANGE_MESSAGES):	$(CHANGE_Objects) $(COMMON_Objects) $(LIBFBSTATIC_A)
+	$(STATICEXE_LINK) $(LINK_OPTS) $(CHANGE_Objects) $(COMMON_Objects) -o $@ -L$(LIB) -lfbstatic $(LINK_LIBS) $(ICU_LIBS)
+	$(CHMOD_7) $@
+
+
+
+message_file : $(FIREBIRD_MSG)
+
+$(FIREBIRD_MSG) : $(BUILD_FILE) msg.timestamp
+	$(BUILD_FILE) -d $(MSGSDIR)msg.fdb -f $@
+	$(CHMOD_6) $@
+
+
+indicator.msg indicator.incl:
+	$(CHECK_MESSAGES) -d $(MSGSDIR)master_msg_db.lnk
+
+indicator.loc:
+	$(CHECK_MESSAGES) -d $(MSGSDIR)master_msg_db.lnk -l
+
+
+master_msg_db.lnk:
+	$(LN) -f msg.fdb master_msg_db.lnk
+
+
+
+
+# I know nother about these other than the default being set to none.  I 
+# assume that as we get into it someone will want to use them and fix the 
+# following.
+
+# potential locals are $(fr_FR_MSG) $(de_DE_MSG) $(ja_JP_MSG)
+
+LOCALES= $(fr_FR_MSG) $(de_DE_MSG)
+#LOCALES= 
+
+msgs_intl locales.msg:	$(LOCALES)
+
+
+$(fr_FR_MSG) : $(BUILD_FILE) msg.timestamp
+	$(BUILD_FILE) -d $(MSGSDIR)msg.fdb -l fr_FR -f $@
+	$(CHMOD_6) $@
+
+$(de_DE_MSG) : $(BUILD_FILE) msg.timestamp
+	$(BUILD_FILE) -d $(MSGSDIR)msg.fdb -l de_DE -f $@
+	$(CHMOD_6) $@
+
+
+$(ja_JP_MSG) : $(BUILD_FILE) msg.timestamp
+	$(BUILD_FILE) -d $(MSGSDIR)msg.fdb -l ja_JP.EUC -f $@
+	$(CHMOD_6) $@
+
+include $(ROOT)/gen/make.shared.targets
+
+-include $(Dependencies)

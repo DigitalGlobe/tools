@@ -1,0 +1,193 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{520DF501-5775-44FD-BDC6-37753A17696A}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+    <Import Project="firebird2.props" />
+    <Import Project="firebird2debug.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+    <Import Project="firebird2.props" />
+    <Import Project="firebird2release.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+    <Import Project="firebird2.props" />
+    <Import Project="firebird2debug.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.CPP.UpgradeFromVC71.props" />
+    <Import Project="firebird2.props" />
+    <Import Project="firebird2release.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <PreprocessorDefinitions>NDEBUG;_LIB;_WINDOWS;SUPERSERVER;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x041d</Culture>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+    </Midl>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <PreprocessorDefinitions>NDEBUG;_LIB;_WINDOWS;SUPERSERVER;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x041d</Culture>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;_LIB;_WINDOWS;SUPERSERVER;WIN32;DEV_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x041d</Culture>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Midl>
+      <TargetEnvironment>X64</TargetEnvironment>
+    </Midl>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>DEBUG;_DEBUG;_LIB;_WINDOWS;SUPERSERVER;WIN32;DEV_BUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x041d</Culture>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\dsql\ddl.cpp" />
+    <ClCompile Include="..\..\..\src\dsql\dsql.cpp" />
+    <ClCompile Include="..\..\..\src\dsql\errd.cpp" />
+    <ClCompile Include="..\..\..\src\dsql\gen.cpp" />
+    <ClCompile Include="..\..\..\src\dsql\hsh.cpp" />
+    <ClCompile Include="..\..\..\src\dsql\keywords.cpp" />
+    <ClCompile Include="..\..\..\src\dsql\make.cpp" />
+    <ClCompile Include="..\..\..\src\dsql\misc_func.cpp" />
+    <ClCompile Include="..\..\..\src\dsql\movd.cpp" />
+    <ClCompile Include="..\..\..\src\dsql\parse.cpp" />
+    <ClCompile Include="..\..\..\src\dsql\Parser.cpp" />
+    <ClCompile Include="..\..\..\src\dsql\pass1.cpp" />
+    <ClCompile Include="..\..\..\src\dsql\preparse.cpp" />
+    <ClCompile Include="..\..\..\src\dsql\StmtNodes.cpp" />
+    <ClCompile Include="..\..\..\src\dsql\user_dsql.cpp" />
+    <ClCompile Include="..\..\..\src\dsql\utld.cpp" />
+    <ClCompile Include="..\..\..\gen\$(Platform)\dsql\array.cpp" />
+    <ClCompile Include="..\..\..\gen\$(Platform)\dsql\blob.cpp" />
+    <ClCompile Include="..\..\..\gen\$(Platform)\dsql\DdlNodes.cpp" />
+    <ClCompile Include="..\..\..\gen\$(Platform)\dsql\metd.cpp" />
+    <ClCompile Include="..\..\..\src\gpre\pretty.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\src\dsql\array.epp" />
+    <None Include="..\..\..\src\dsql\blob.epp" />
+    <None Include="..\..\..\src\dsql\DdlNodes.epp" />
+    <None Include="..\..\..\src\dsql\metd.epp" />
+    <None Include="..\..\..\src\dsql\parse.y" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\dsql\array_proto.h" />
+    <ClInclude Include="..\..\..\src\dsql\blob_proto.h" />
+    <ClInclude Include="..\..\..\src\dsql\chars.h" />
+    <ClInclude Include="..\..\..\src\dsql\ddl_proto.h" />
+    <ClInclude Include="..\..\..\src\dsql\DdlNodes.h" />
+    <ClInclude Include="..\..\..\src\dsql\dsql.h" />
+    <ClInclude Include="..\..\..\src\dsql\dsql_proto.h" />
+    <ClInclude Include="..\..\..\src\dsql\errd_proto.h" />
+    <ClInclude Include="..\..\..\src\dsql\gen_proto.h" />
+    <ClInclude Include="..\..\..\src\dsql\hsh_proto.h" />
+    <ClInclude Include="..\..\..\src\dsql\keywords.h" />
+    <ClInclude Include="..\..\..\src\dsql\make_proto.h" />
+    <ClInclude Include="..\..\..\src\dsql\metd_proto.h" />
+    <ClInclude Include="..\..\..\src\dsql\misc_func.h" />
+    <ClInclude Include="..\..\..\src\dsql\movd_proto.h" />
+    <ClInclude Include="..\..\..\src\dsql\node.h" />
+    <ClInclude Include="..\..\..\src\dsql\Nodes.h" />
+    <ClInclude Include="..\..\..\src\dsql\parse_proto.h" />
+    <ClInclude Include="..\..\..\src\dsql\Parser.h" />
+    <ClInclude Include="..\..\..\src\dsql\pass1_proto.h" />
+    <ClInclude Include="..\..\..\src\dsql\prepa_proto.h" />
+    <ClInclude Include="..\..\..\src\dsql\sqlda.h" />
+    <ClInclude Include="..\..\..\src\dsql\StmtNodes.h" />
+    <ClInclude Include="..\..\..\src\dsql\sym.h" />
+    <ClInclude Include="..\..\..\src\dsql\user__proto.h" />
+    <ClInclude Include="..\..\..\src\dsql\utld_proto.h" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -1,0 +1,171 @@
+Servidor de Base de Dados Firebird $MAJOR.$MINOR
+==================================================
+
+Este documento constitui um guia para instalar o kit do
+Firebird $MAJOR.$MINOR em Windows. Estas notas 
+referem-se ao próprio kit de instalação, e não ao 
+Firebird $MAJOR.$MINOR em geral. Adicionalmente, estas 
+notas são dirigidas principalmente aos utilizadores do 
+instalador dos binários.
+
+Presume-se que os leitores destas notas estão 
+familiarizados com o Firebird $MAJOR.$MINOR. Se está a avaliar 
+o Firebird $MAJOR.$MINOR como parte de uma migração do Fb 2.1 é 
+aconselhável que consulte a documentação do 
+Firebird 2.1 para entender todas as mudanças 
+elaboradas entre as versões 2.1 e $MAJOR.$MINOR.
+
+
+Conteúdo
+--------
+
+o Antes de Instalar
+o Problemas com a instalação das bibliotecas 
+  MS VC runtime
+o Problemas de instalação conhecidos
+o Remoção
+o Outras Notas
+o Instalação a partir de um ficheiro batch
+
+
+Antes de Instalar
+-------------------
+
+Recomenda-se que REMOVA quaisquer versões prévias do
+Firebird ou InterBase antes de instalar este kit.
+É também importante verificar se o fbclient.dll e o
+gds32.dll são removidos do <system32>.
+
+
+Problemas com a instalação do "runtime" das bibliotecas MS VC
+-----------------------------------------------------------
+
+Foi feito um enorme esforço de forma a verificar que o 
+"runtime" das bibliotecas MS Visual C são instaladas 
+corretamente pelo instalador de binários. Desde a versão 
+2.1.2 que o Firebird pode funcionar com versões locais 
+destas bibliotecas "runtime", o que veio a simplificar 
+a instalação do cliente Firebird ou do servidor embutido 
+com a sua aplicação.
+
+Porém, se ocorrer algum problema poderá ser necessário a 
+instalação oficial vcredist.exe. As versões corretas 
+para este "build" do Firebird podem ser obtidas aqui:
+
+    http://www.microsoft.com/downloads/details.aspx?familyid=32BC1BEE-A3F9-4C13-9C99-220B62A191EE&displaylang=en
+
+e para x64 aqui:
+
+    http://www.microsoft.com/downloads/details.aspx?familyid=90548130-4468-4BBC-9673-D6ACABD5D13B&displaylang=en
+
+
+Outros problemas de instalação conhecidos
+---------------------------------
+
+o Apenas é possível instalar a instância padrão do
+  Firebird $MAJOR.$MINOR usando este instalador.
+  Se pretender instalar instâncias adicionais deve
+  fazê-lo manualmente usando as imagens de instalação
+  comprimidas (zipped).
+
+o Infelizmente, o instalador não pode detetar com
+  toda a eficácia se alguma versão anterior do Firebird
+  Classic Server está a correr.
+
+o Existem áreas que se sobrepoem na instalação de
+  32-bits e de 64-bits:
+
+  - O instalador de serviço (instsvc) utiliza o mesmo 
+    nome de instância para as instalações de 32 e de 
+    64-bits. Isto é "by design". Os serviços existem no 
+    mesmo "name space".
+
+  - Se ambas as versões de 32-bit e de 64-bit da 
+    Aplicação do Painel de Controlo forem instaladas, 
+    ambas apontam para a instância padrão.
+
+o Ao instalar sobre o Vista certifique-se que está 
+  a usar a conta de administração. Isto é, ao usar o 
+  instalador clique com o botão do lado direito e 
+  escolha "Executar como Administrador". Caso 
+  contrário, o instalador não conseguirá iniciar o 
+  serviço no final da instalação.
+
+o As bibliotecas instaladas pelo instclient não vão 
+  conseguir ser executadas se as bibliotecas MS 
+  "runtime" não tiverem sido instaladas corretamente. 
+  Em caso de problemas, deverão ser instaladas as 
+  versões indicadas em cima.
+
+
+Remoção
+-------
+
+o É preferível que este kit seja removido corretamente
+  usando a aplicação de remoção fornecida. Tal poderá
+  ser efetuado recorrendo ao Painel de Controlo.
+  Alternativamente poderá ser removido executando o
+  unins000.exe diretamente a partir da pasta de
+  instalação.
+
+o Se o Firebird se encontrar em execução como aplicação
+  (em vez de um serviço) recomenda-se que o interrompa
+  manualmente antes de proceder à remoção. Isto deve-se
+  ao programa de remoção não poder parar uma aplicação
+  em execução. Se um servidor se encontrar em execução
+  durante a remoção o processo terminará com erros.
+  Terá que remover o restante manualmente.
+
+o A remoção não apaga os seguintes ficheiros da pasta
+  de instalação:
+
+  - aliases.conf
+  - firebird.conf
+  - fbtrace.conf
+  - firebird.log
+  - security2.fdb
+
+  Tal é intencional. Estes ficheiros são potencialmente
+  modificáveis pelos utilizadores e poderão ser
+  necessários caso o Firebird volte a ser reinstalado.
+  Poderão contudo ser apagados manualmente caso não
+  pretenda usá-los mais.
+
+o Uma nova funcionalidade do programa de remoção é o seu
+  uso com o parâmetro /CLEAN. Isto irá verificar o 
+  contador dos ficheiros partilhados referidos em cima. 
+  Se possível, irá removê-los.
+
+o O programa de remoção não irá remover o runtime das 
+  bibliotecas de MS Visual C das diretorias do sistema. 
+  Estas poderão ser removidas manualmente pelo Painel de
+  Controlo, mas normalmente esta operação não é necessária.
+
+
+Outras Notas
+------------
+
+  O Firebird requer o WinSock2. Todas as plataformas
+  Win32 deverão possui-lo, com excepção para o Win95.
+  Um teste sobre a sua presença é feito durante o 
+  processo de instalação.
+  Se não for encontrado a instalação irá falhar. Poderá
+  visitar este link:
+
+    http://support.microsoft.com/default.aspx?scid=kb;EN-US;q177719
+
+  para obter informação sobre a sua instalação.
+
+
+Instalação a partir de um ficheiro batch
+----------------------------------------
+
+O programa de configuração poderá ser executado a
+partir de um ficheiro batch.
+Por favor consulte este documento:
+
+    installation_scripted.txt
+
+para mais detalhes.
+
+

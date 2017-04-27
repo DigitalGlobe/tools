@@ -1,0 +1,26 @@
+# Target labels
+ Main
+ opencv_objdetect
+ PerfTest
+# Source files and their labels
+C:/tools/src/OpenCV/modules/objdetect/perf/opencl/perf_cascades.cpp
+ Main
+ opencv_objdetect
+ PerfTest
+C:/tools/src/OpenCV/modules/objdetect/perf/opencl/perf_hogdetect.cpp
+ Main
+ opencv_objdetect
+ PerfTest
+C:/tools/src/OpenCV/modules/objdetect/perf/perf_main.cpp
+ Main
+ opencv_objdetect
+ PerfTest
+C:/tools/src/OpenCV/modules/objdetect/perf/perf_precomp.hpp
+ Main
+ opencv_objdetect
+ PerfTest
+C:/tools/src/OpenCV/modules/objdetect/opencv_perf_objdetect_pch.cpp
+ Main
+ opencv_objdetect
+ PerfTest
+C:/tools/src/OpenCV/modules/objdetect/CMakeLists.txt

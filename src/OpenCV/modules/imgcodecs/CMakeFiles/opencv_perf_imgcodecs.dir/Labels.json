@@ -1,0 +1,30 @@
+
+{
+	"sources" : 
+	[
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/imgcodecs/perf/perf_main.cpp",
+			"labels" : [ "Main", "opencv_imgcodecs", "PerfTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/imgcodecs/perf/perf_precomp.hpp",
+			"labels" : [ "Main", "opencv_imgcodecs", "PerfTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/imgcodecs/opencv_perf_imgcodecs_pch.cpp",
+			"labels" : [ "Main", "opencv_imgcodecs", "PerfTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/imgcodecs/CMakeLists.txt"
+		}
+	],
+	"target" : 
+	{
+		"labels" : [ "Main", "opencv_imgcodecs", "PerfTest" ],
+		"name" : "opencv_perf_imgcodecs"
+	}
+}

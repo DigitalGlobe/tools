@@ -1,0 +1,543 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="INTL files">
+      <UniqueIdentifier>{5c0fd2a2-b764-4a60-a3cd-f71c4cb8c0f9}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{344667c6-0c24-4cd6-80a8-bfb24d7198ff}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="Resource files">
+      <UniqueIdentifier>{6745d7c8-7239-401d-9921-bea59c0c974f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="COMMON files">
+      <UniqueIdentifier>{5b984df6-770c-451c-97d3-088dbd831bc8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="JRD files">
+      <UniqueIdentifier>{90f8ac5a-5de0-4910-a037-615e50b67390}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\jrd\CharSet.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cs_big5.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cs_gb2312.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cs_icu.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cs_jis.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cs_ksc.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cs_narrow.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cs_unicode_fss.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cs_unicode_ucs2.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cv_big5.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cv_gb2312.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cv_icu.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cv_jis.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cv_ksc.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cv_narrow.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cv_unicode_fss.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\isc.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_ascii.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_big5.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_dos.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_gb2312.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_icu.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_iso8859_1.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_iso8859_13.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_iso8859_2.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_jis.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_ksc.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_narrow.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_unicode_ucs2.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\ld.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\dllinst.cpp">
+      <Filter>COMMON files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\gds.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\IntlUtil.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\os\win32\mod_loader.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\os\win32\os_utils.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\unicode_util.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\intl\collations\ascii.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\ascii2.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\bl88591ca0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\bl88591da0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\bl88591de0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\bl88591es0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\bl88591fi0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\bl88591fr0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\bl88591is0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\bl88591it0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\bl88591nl0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\bl88591no0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\bl88591pt0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\bl88591sv0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\bl88591uk0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\bl88591us0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\blNEXTde0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\blNEXTes0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\blNEXTfr0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\blNEXTit0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\blNEXTus0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\CharSet.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\countries.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\country_codes.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_437.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_850.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_852.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_857.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_860.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_861.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_863.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_865.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_big5.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_cyrl.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_gb2312.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\cs_icu.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_iso8859_1.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_iso8859_2.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_jis_0208_1990.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_koi8r.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_koi8u.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_ksc5601.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_next.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_sjis.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_w1250.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_w1251.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_w1252.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_w1253.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets\cs_w1254.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\cv_icu.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db437de0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db437es1.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db437fi0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db437fr0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db437it0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db437nl0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db437sv0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db437uk0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db437us0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db850cf0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db850de0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db850es0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db850fr0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db850it1.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db850nl0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db850pt0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db850sv1.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db850uk0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db850us0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db852cz0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db852hdc.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db852po0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db852sl0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db857tr0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db860pt0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db863cf1.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db865da0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db865no0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\db866ru0.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\gds_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\IntlUtil.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\isc_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\kanji.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\kanji_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\koi8r_ru.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\koi8u_ua.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\langdrv.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\lc_icu.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\ld.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\ld_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\ldcommon.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\os\mod_loader.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\os\os_utils.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pd437intl.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pd437swedfin.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pd852hundc.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pd852polish.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pd852slovene.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pd857turk.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pd861iceland.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pd865nordan40.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pd866cyrr.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\ps852czech.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pw1250czech.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pw1250hun.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pw1250hundc.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pw1250polish.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pw1250slov.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pw1251cyrr.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pw1252i850.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pw1252intl.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pw1252nor4.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pw1252ptbr.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pw1252span.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pw1252swfn.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pw1253greek1.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\pw1253turk.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\conversions\tx437_865.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\conversions\tx437_lat1.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\conversions\tx865_lat1.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\undef.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\unicode_util.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\win1251_ua.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\win1257_ee.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\win1257_lt.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\win1257_lv.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\win_cz.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\win_cz_ci_ai.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\xx885913lt.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\xx88592czech.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\xx88592hun.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\collations\xx88592plk.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\src\jrd\version.rc">
+      <Filter>Resource files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\defs\intl.def">
+      <Filter>INTL files</Filter>
+    </None>
+  </ItemGroup>
+</Project>

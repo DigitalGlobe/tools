@@ -1,0 +1,210 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="COMMON files">
+      <UniqueIdentifier>{d2d76365-8054-4c7b-9abd-f57823ffe768}</UniqueIdentifier>
+      <Extensions>cpp;c</Extensions>
+    </Filter>
+    <Filter Include="GPRE files">
+      <UniqueIdentifier>{f40900d0-6a4d-4aa4-8239-5758d0e1263a}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="GPRE files\epp files">
+      <UniqueIdentifier>{5f818e77-21f5-4041-a740-914472b47ff2}</UniqueIdentifier>
+      <Extensions>epp</Extensions>
+    </Filter>
+    <Filter Include="GPRE files\Generated files">
+      <UniqueIdentifier>{3b1fd35c-e6d9-47c2-b248-720f892ca633}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="JRD files">
+      <UniqueIdentifier>{42b551c3-8b03-45f7-b52c-7a398adfc438}</UniqueIdentifier>
+      <Extensions>h;c</Extensions>
+    </Filter>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{3db8261b-9499-4741-a240-c303d4e0d152}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="Resource files">
+      <UniqueIdentifier>{8da7794e-d646-4164-b9be-61b83bce1d42}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\common\classes\TempFile.cpp">
+      <Filter>COMMON files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\utils.cpp">
+      <Filter>COMMON files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\ada.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\c_cxx.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\cmd.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\cme.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\cmp.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\cob.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\exp.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\ftn.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\gpre.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\hsh.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\int_cxx.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\jrdmet.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\movg.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\msc.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\par.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\pas.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\pat.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\pretty.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\rmc.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\sqe.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\gpre\sql.cpp">
+      <Filter>GPRE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gen\$(Platform)\gpre\gpre_meta.cpp">
+      <Filter>GPRE files\Generated files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\dsc.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\isc.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\src\gpre\gpre_meta.epp">
+      <Filter>GPRE files\epp files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\jrd\dsc.h">
+      <Filter>JRD files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\dsc_pub.h">
+      <Filter>JRD files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\cdbtable.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\cmd_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\cme_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\cmp_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\dyntable.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\exp_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\gpre.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\gpre_meta.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\gpre_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\gpreswi.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\hsh.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\hsh_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\jrdme_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\lang_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\movg_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\msc_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\par_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\parse.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\pat.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\pat_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\prett_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\sdltable.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\sqe_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\sql_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\classes\TempFile.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\common\utils_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\gpre\words.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\src\jrd\version.rc">
+      <Filter>Resource files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,30 @@
+###
+# $Id$
+###
+
+MAKE = nmake
+
+default:
+	cd pqe
+	$(MAKE) /f makefile.vc
+	cd ..
+	cd test
+	$(MAKE) /f makefile.vc
+	cd ..
+
+clean:
+	cd pqe
+	$(MAKE) /f makefile.vc clean
+	cd ..
+	cd test
+	$(MAKE) /f makefile.vc clean
+	cd ..
+
+
+clobber:
+	cd pqe
+	$(MAKE) /f makefile.vc clobber
+	cd ..
+	cd test
+	$(MAKE) /f makefile.vc clobber
+	cd ..

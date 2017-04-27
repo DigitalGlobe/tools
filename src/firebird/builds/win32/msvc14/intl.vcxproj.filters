@@ -1,0 +1,195 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="INTL files">
+      <UniqueIdentifier>{5c0fd2a2-b764-4a60-a3cd-f71c4cb8c0f9}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{344667c6-0c24-4cd6-80a8-bfb24d7198ff}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="Resource files">
+      <UniqueIdentifier>{6745d7c8-7239-401d-9921-bea59c0c974f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="COMMON files">
+      <UniqueIdentifier>{5b984df6-770c-451c-97d3-088dbd831bc8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="JRD files">
+      <UniqueIdentifier>{90f8ac5a-5de0-4910-a037-615e50b67390}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\jrd\CharSet.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cs_big5.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cs_gb2312.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cs_icu.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cs_jis.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cs_ksc.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cs_narrow.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cs_unicode_fss.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cs_unicode_ucs2.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cv_big5.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cv_gb2312.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cv_icu.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cv_jis.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cv_ksc.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cv_narrow.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\cv_unicode_fss.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\isc.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_ascii.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_big5.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_dos.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_gb2312.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_icu.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_iso8859_1.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_iso8859_13.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_iso8859_2.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_jis.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_ksc.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_narrow.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\lc_unicode_ucs2.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\intl\ld.cpp">
+      <Filter>INTL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\dllinst.cpp">
+      <Filter>COMMON files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\gds.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\IntlUtil.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\os\win32\mod_loader.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\os\win32\os_utils.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\unicode_util.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\jrd\CharSet.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\charsets.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\country_codes.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\cs_icu.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\cv_icu.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\gds_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\IntlUtil.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\isc_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\kanji.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\kanji_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\lc_icu.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\ld.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\ld_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\intl\ldcommon.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\os\mod_loader.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\os\os_utils.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\jrd\unicode_util.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\src\jrd\version.rc">
+      <Filter>Resource files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\defs\intl.def">
+      <Filter>INTL files</Filter>
+    </None>
+  </ItemGroup>
+</Project>

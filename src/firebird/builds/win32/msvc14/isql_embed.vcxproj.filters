@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ISQL files">
+      <UniqueIdentifier>{cddfcf50-eca5-4fb6-8da0-325f4bbe7f97}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="ISQL files\epp Source Files">
+      <UniqueIdentifier>{5b0ec000-5109-48a4-8507-990463b3dfa1}</UniqueIdentifier>
+      <Extensions>epp</Extensions>
+    </Filter>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{347844f3-a8af-4b54-af65-116f32389090}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+    <Filter Include="Resource files">
+      <UniqueIdentifier>{1dc78885-3224-495e-85a6-93cb84073b7f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\isql\ColList.cpp">
+      <Filter>ISQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\isql\Extender.cpp">
+      <Filter>ISQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gen\$(Platform)\isql\extract.cpp">
+      <Filter>ISQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\fb_exception.cpp">
+      <Filter>ISQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\isql\InputDevices.cpp">
+      <Filter>ISQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gen\$(Platform)\isql\isql.cpp">
+      <Filter>ISQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\isql\OptionsBase.cpp">
+      <Filter>ISQL files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gen\$(Platform)\isql\show.cpp">
+      <Filter>ISQL files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\src\isql\extract.epp">
+      <Filter>ISQL files\epp Source Files</Filter>
+    </None>
+    <None Include="..\..\..\src\isql\isql.epp">
+      <Filter>ISQL files\epp Source Files</Filter>
+    </None>
+    <None Include="..\..\..\src\isql\show.epp">
+      <Filter>ISQL files\epp Source Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\isql\Extender.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\isql\extra_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\isql\isql.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\isql\isql_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\isql\isql_res.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\isql\show_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\src\jrd\version.rc">
+      <Filter>Resource files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>

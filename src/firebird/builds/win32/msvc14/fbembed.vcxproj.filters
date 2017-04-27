@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="COMMON">
+      <UniqueIdentifier>{908a2261-958e-45f0-8f85-e4dd87083864}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="JRD files">
+      <UniqueIdentifier>{a1f5a1b6-2cde-45d8-9525-8bf14c3b4279}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="REMOTE files">
+      <UniqueIdentifier>{e62f3f39-9bae-43af-bfe3-0e0c14bcc2d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="UTILITIES files">
+      <UniqueIdentifier>{38c21fab-c02f-433c-beed-b8cfb793641e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource files">
+      <UniqueIdentifier>{85899d57-c90c-425c-93e9-61f7340f3551}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\common\config\config_file.cpp">
+      <Filter>COMMON</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\os\win32\config_root.cpp">
+      <Filter>COMMON</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\os\win32\ibinitdll.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\perf.cpp">
+      <Filter>JRD files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\auth\trusted\AuthSspi.cpp">
+      <Filter>REMOTE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\remote\inet.cpp">
+      <Filter>REMOTE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\remote\interface.cpp">
+      <Filter>REMOTE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\remote\merge.cpp">
+      <Filter>REMOTE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\remote\parser.cpp">
+      <Filter>REMOTE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\remote\protocol.cpp">
+      <Filter>REMOTE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\remote\remote.cpp">
+      <Filter>REMOTE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\remote\os\win32\wnet.cpp">
+      <Filter>REMOTE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\remote\xdr.cpp">
+      <Filter>REMOTE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\remote\xnet.cpp">
+      <Filter>REMOTE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gen\$(Platform)\utilities\gstat\dba.cpp">
+      <Filter>UTILITIES files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\utilities\nbackup.cpp">
+      <Filter>UTILITIES files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\utilities\nbackup\nbkMain.cpp">
+      <Filter>UTILITIES files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\utilities\gstat\ppg.cpp">
+      <Filter>UTILITIES files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\trace\TraceCmdLine.cpp">
+      <Filter>UTILITIES files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\jrd\trace\TraceService.cpp">
+      <Filter>UTILITIES files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\src\jrd\version.rc">
+      <Filter>Resource files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\defs\fbclient.def" />
+  </ItemGroup>
+</Project>

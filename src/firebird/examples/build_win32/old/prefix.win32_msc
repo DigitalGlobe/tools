@@ -1,0 +1,193 @@
+# The contents of this file are subject to the Interbase Public
+# License Version 1.0 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy
+# of the License at http://www.Inprise.com/IPL.html
+#
+# Software distributed under the License is distributed on an
+# "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+# or implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code was created by Inprise Corporation
+# and its predecessors. Portions created by Inprise Corporation are
+# Copyright (C) Inprise Corporation.
+#
+# All Rights Reserved.
+# Contributor(s): ______________________________________.
+# -------------------------- makefile.msc ------------------------
+#
+# This makefile will build the examples supplied with InterBase 5.0.
+# See the Programmer's Guide for information about the example
+# databases and example programs.
+#
+# You MUST edit the IBASE definition in this file to point to the
+# directory where InterBase was installed.  As well as the MSCDIR
+# definition to point to the installations directory of your 
+# Microsoft C/C++ Compiler. 
+#
+# To build all the examples use the 'all' target, by issuing the 
+# following command:
+#
+#   	nmake -f makefile.msc all
+#
+# To build any one individual target, use the following command:
+#
+#  	nmake -f makefile.msc 'target'
+#
+# where target 'target' is one of the following:
+# 	employe2.gdb, api1.exe, api2.exe, api3.exe, api4.exe, 
+# 	api5.exe, api6.exe, api7.exe, api8.exe, api9.exe, 
+# 	api9f.dll, api10.exe, api11.exe, api12.exe, api13.exe, 
+# 	api14.exe, api15.exe, api16.exe, api16t.exe, apifull.exe, 
+# 	dyn1.exe, dyn2.exe, dyn3.exe, dyn4.exe, dyn5.exe, 
+# 	dynfull.exe, stat1.exe, stat2.exe, stat3.exe, stat4.exe, 
+# 	stat5.exe, stat6.exe, stat7.exe, stat8.exe, stat9.exe, 
+# 	stat10.exe, stat11.exe, stat12.exe, stat12t.exe, 
+# 	udflib.dll
+#
+# ---------------------------------------------------------------------
+
+# ---------------------------------------------------------------------
+# InterBase Installation Directory
+#
+# CHANGE this definition to point to your InterBase installation directory
+# ---------------------------------------------------------------------
+IBASE=		d:\interbase
+
+# ---------------------------------------------------------------------
+# Microsoft C/C++ Installation Directory
+#
+# CHANGE this definition to point to your compiler's installation directory
+# ---------------------------------------------------------------------
+MSCDIR=		d:\DevStudio\VC
+
+# ---------------------------------------------------------------------
+# General InterBase Defines for Microsoft Windows 95/NT
+# ---------------------------------------------------------------------
+GPRE=		$(IBASE)\bin\gpre -c -n
+GPRE_M=		$(IBASE)\bin\gpre -c -n -m
+ISQL=		$(IBASE)\bin\isql
+DB=		employee.gdb
+
+# ---------------------------------------------------------------------
+# General Compiler and linker Defines for Microsoft C/C++ 5.0
+# ---------------------------------------------------------------------
+CFLAGS=		-c -Zi -w -MD -DWIN32 $(INCLUDE)
+LIB_CFLAGS=	$(CFLAGS) -LD
+INCLUDE=	-I$(IBASE)\include -I$(MSCDIR)\include
+LIBS=		$(MSCDIR)\lib\msvcrt.lib $(IBASE)\lib\gds32_ms.lib
+CC=		$(MSCDIR)\bin\cl
+LINK=		$(MSCDIR)\bin\link
+LIBRARIAN=	$(MSCDIR)\bin\lib
+COPY=		copy
+
+# ---------------------------------------------------------------------
+# Generic Compilation Rules 
+#
+# Do NOT change anything below this point.
+# ---------------------------------------------------------------------
+.SUFFIXES: .e .c .obj .exe
+
+.e.c:
+	$(GPRE) $< -d $(DB)
+
+.c.obj:
+	$(CC) $(CFLAGS) $< 
+
+.obj.exe:
+	$(LINK) -out:$@ $< $(LIBS)
+
+
+# ---------------------------------------------------------------------
+# Specific targets to build 
+# ---------------------------------------------------------------------
+
+cmt:
+	@echo "--------------------------- makefile.msc ------------------------
+	@echo "									 
+	@echo " This makefile will build the InterBase 5.0 examples.
+	@echo " See the Programmer's Guide for information about the example
+	@echo " databases and example programs.	
+	@echo "									
+	@echo " You MUST edit the IBASE definition this file to point to the	
+	@echo " directory where InterBase was installed.  As well as the MSCDIR 
+	@echo " definition point to the installations directory of your 
+	@echo " Microsoft C/C++ Compiler.					 
+	@echo "									
+	@echo " To build all the examples use the 'all' target, by issuing the 	
+	@echo " following command:						
+	@echo "									
+	@echo " 	nmake -f makefile.msc all				
+	@echo "									
+	@echo " To build any one individual target, use the command:	
+	@echo "									
+	@echo " 	nmake -f makefile.msc 'target'				
+	@echo "									
+	@echo " where target 'target' is one of the following:			
+	@echo "									
+	@echo " 	employe2.gdb, api1.exe, api2.exe, api3.exe, api4.exe, 
+	@echo " 	api5.exe, api6.exe, api7.exe, api8.exe, api9.exe, 
+	@echo " 	api9f.dll, api10.exe, api11.exe, api12.exe, api13.exe, 
+	@echo " 	api14.exe, api15.exe, api16.exe, api16t.exe, apifull.exe, 
+	@echo " 	dyn1.exe, dyn2.exe, dyn3.exe, dyn4.exe, dyn5.exe, 
+	@echo " 	dynfull.exe, stat1.exe, stat2.exe, stat3.exe, stat4.exe, 
+	@echo " 	stat5.exe, stat6.exe, stat7.exe, stat8.exe, stat9.exe, 
+	@echo " 	stat10.exe, stat11.exe, stat12.exe, stat12t.exe, 
+	@echo " 	udflib.dll
+	@echo " 								
+	@echo "-----------------------------------------------------------------
+
+all: employe2.gdb api1.exe api2.exe api3.exe \
+     api4.exe api5.exe api6.exe api7.exe api8.exe \
+     api9.exe api9f.dll api10.exe api11.exe api12.exe api13.exe \
+     api14.exe api15.exe api16.exe api16t.exe \
+     apifull.exe dyn1.exe dyn2.exe dyn3.exe dyn4.exe \
+     dyn5.exe dynfull.exe stat1.exe stat2.exe stat3.exe \
+     stat4.exe stat5.exe stat6.exe stat7.exe stat8.exe stat9.exe \
+     stat10.exe stat11.exe stat12.exe stat12t.exe udflib.dll 
+
+employe2.gdb: employe2.sql
+	$(ISQL) -i $?
+
+api9.obj: api9.c example.h api9f.sql
+	$(CC) $(CFLAGS) api9.c $(LIBS)
+	$(ISQL) employee.gdb -i api9f.sql
+
+api9f.obj: api9f.c example.h
+	$(CC) $(LIB_CFLAGS) $?
+
+api9f.lib api9f.exp: api9f.obj api9f.def
+	$(LIBRARIAN) api9f.obj -out:api9f.lib -def:api9f.def -machine:i386 \
+	-subsystem:console
+
+api9f.dll: api9f.lib api9f.exp api9f.obj
+# build a small argument file and use it
+	@echo -entry:_DllMainCRTStartup@12 > link.arg
+	@echo -subsystem:console -DLL -DEBUG:FULL >> link.arg
+	@echo -out:api9f.dll >> link.arg
+	@echo api9f.exp api9f.obj $(LIBS) >> link.arg
+	$(LINK) @link.arg
+	@echo -----------------------------------------------------------
+	@echo You need to copy api9f.dll to the interbase lib directory
+	@echo in order for api9.exe to work correctly.
+	@echo -----------------------------------------------------------
+
+udflib.obj: udflib.c example.h
+	$(CC) $(LIB_CFLAGS) udflib.c 
+
+udflib.lib udflib.exp: udflib.obj udflib.def
+	$(LIBRARIAN) udflib.obj -out:udflib.lib -def:udflib.def -machine:i386 \
+	-subsystem:console
+
+udflib.dll: udflib.lib udflib.obj udflib.exp
+# build a small argument file and use it
+	@echo -entry:_DllMainCRTStartup@12 > link.arg
+	@echo -subsystem:console -DLL >> link.arg
+	@echo -out:udflib.dll >> link.arg
+	@echo udflib.obj udflib.exp $(LIBS) >> link.arg
+	$(LINK) @link.arg
+	@echo -----------------------------------------------------------
+	@echo You need to copy udflib.dll to the interbase lib directory
+	@echo in order for the server to load it. 
+	@echo -----------------------------------------------------------
+

@@ -1,0 +1,26 @@
+# Target labels
+ Main
+ opencv_imgcodecs
+ AccuracyTest
+# Source files and their labels
+C:/tools/src/OpenCV/modules/imgcodecs/test/test_drawing.cpp
+ Main
+ opencv_imgcodecs
+ AccuracyTest
+C:/tools/src/OpenCV/modules/imgcodecs/test/test_grfmt.cpp
+ Main
+ opencv_imgcodecs
+ AccuracyTest
+C:/tools/src/OpenCV/modules/imgcodecs/test/test_main.cpp
+ Main
+ opencv_imgcodecs
+ AccuracyTest
+C:/tools/src/OpenCV/modules/imgcodecs/test/test_precomp.hpp
+ Main
+ opencv_imgcodecs
+ AccuracyTest
+C:/tools/src/OpenCV/modules/imgcodecs/opencv_test_imgcodecs_pch.cpp
+ Main
+ opencv_imgcodecs
+ AccuracyTest
+C:/tools/src/OpenCV/modules/imgcodecs/CMakeLists.txt

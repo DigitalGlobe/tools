@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="ALICE files">
+      <UniqueIdentifier>{e0454d1f-b099-4b81-8977-975f904fb698}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="ALICE files\epp files">
+      <UniqueIdentifier>{3a024d8f-9d56-4c63-9b63-b5ace85b0a6f}</UniqueIdentifier>
+      <Extensions>epp</Extensions>
+    </Filter>
+    <Filter Include="ALICE files\Generated files">
+      <UniqueIdentifier>{82658bd5-f297-447a-bd26-3b12c79dc2c4}</UniqueIdentifier>
+      <Extensions>c</Extensions>
+    </Filter>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{f6eb6f00-dc4f-4c3b-aed6-cba451d6fe8a}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\alice\alice.cpp">
+      <Filter>ALICE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\alice\exe.cpp">
+      <Filter>ALICE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\alice\tdr.cpp">
+      <Filter>ALICE files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gen\$(Platform)\alice\alice_meta.cpp">
+      <Filter>ALICE files\Generated files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\src\alice\alice_meta.epp">
+      <Filter>ALICE files\epp files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\alice\alice.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\alice\alice_meta.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\alice\alice_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\alice\aliceswi.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\alice\exe_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\alice\tdr_proto.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

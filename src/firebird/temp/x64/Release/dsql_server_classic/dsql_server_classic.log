@@ -1,0 +1,154 @@
+﻿  ddl.cpp
+  dsql.cpp
+  errd.cpp
+  gen.cpp
+c:\tools\src\firebird\src\jrd\../jrd/CsConvert.h(73): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\src\dsql\ddl.cpp)
+..\..\..\src\dsql\gen.cpp(203): warning C4267: 'argument': conversion from 'size_t' to 'const UCHAR', possible loss of data
+..\..\..\src\dsql\gen.cpp(3206): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\dsql\gen.cpp(3249): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\dsql\ddl.cpp(283): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\ddl.cpp(292): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\ddl.cpp(383): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\ddl.cpp(908): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\dsql\ddl.cpp(2502): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\ddl.cpp(2578): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\ddl.cpp(3808): warning C4267: 'initializing': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\ddl.cpp(3808): warning C4267: 'initializing': conversion from 'size_t' to 'const USHORT', possible loss of data
+..\..\..\src\dsql\ddl.cpp(6903): warning C4267: '=': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\src\dsql\ddl.cpp(6921): warning C4267: 'initializing': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\src\dsql\ddl.cpp(6921): warning C4267: 'initializing': conversion from 'size_t' to 'const ULONG', possible loss of data
+..\..\..\src\dsql\ddl.cpp(6958): warning C4267: 'initializing': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\ddl.cpp(6958): warning C4267: 'initializing': conversion from 'size_t' to 'const USHORT', possible loss of data
+..\..\..\src\dsql\ddl.cpp(6972): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\src\dsql\ddl.cpp(6974): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\ddl.cpp(6992): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\ddl.cpp(7007): warning C4267: '=': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\src\dsql\ddl.cpp(7154): warning C4267: 'initializing': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\src\dsql\ddl.cpp(7173): warning C4267: 'initializing': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\ddl.cpp(7191): warning C4267: 'initializing': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\ddl.cpp(7207): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\ddl.cpp(7209): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+  hsh.cpp
+  keywords.cpp
+  make.cpp
+  misc_func.cpp
+..\..\..\src\dsql\dsql.cpp(1540): warning C4267: 'argument': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\src\dsql\dsql.cpp(1548): warning C4267: 'argument': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\src\dsql\dsql.cpp(1762): warning C4267: '-=': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\src\dsql\dsql.cpp(1890): warning C4267: '-=': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\src\dsql\dsql.cpp(1945): warning C4267: '-=': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\src\dsql\dsql.cpp(2016): warning C4267: '-=': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\src\dsql\dsql.cpp(2338): warning C4267: 'return': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\dsql.cpp(2746): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\dsql.cpp(3371): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\dsql.cpp(3380): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\dsql.cpp(3389): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\dsql.cpp(3398): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\dsql.cpp(3407): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+c:\tools\src\firebird\src\jrd\../common/classes/objects_array.h(275): warning C4150: deletion of pointer to incomplete type 'Jrd::Trigger'; no destructor called (compiling source file ..\..\..\src\dsql\hsh.cpp)
+  c:\tools\src\firebird\src\dsql\../jrd/Database.h(71): note: see declaration of 'Jrd::Trigger' (compiling source file ..\..\..\src\dsql\hsh.cpp)
+  c:\tools\src\firebird\src\jrd\../common/classes/objects_array.h(273): note: while compiling class template member function 'Firebird::ObjectsArray<Jrd::Trigger,Firebird::Array<T *,Firebird::InlineStorage<T *,8>>>::~ObjectsArray(void)'
+          with
+          [
+              T=Jrd::Trigger
+          ] (compiling source file ..\..\..\src\dsql\hsh.cpp)
+  c:\tools\src\firebird\src\dsql\../jrd/Database.h(85): note: see reference to function template instantiation 'Firebird::ObjectsArray<Jrd::Trigger,Firebird::Array<T *,Firebird::InlineStorage<T *,8>>>::~ObjectsArray(void)' being compiled
+          with
+          [
+              T=Jrd::Trigger
+          ] (compiling source file ..\..\..\src\dsql\hsh.cpp)
+  c:\tools\src\firebird\src\dsql\../jrd/Database.h(82): note: see reference to class template instantiation 'Firebird::ObjectsArray<Jrd::Trigger,Firebird::Array<T *,Firebird::InlineStorage<T *,8>>>' being compiled
+          with
+          [
+              T=Jrd::Trigger
+          ] (compiling source file ..\..\..\src\dsql\hsh.cpp)
+c:\tools\src\firebird\src\jrd\../common/classes/objects_array.h(275): warning C4150: deletion of pointer to incomplete type 'Jrd::Trigger'; no destructor called (compiling source file ..\..\..\src\dsql\misc_func.cpp)
+  c:\tools\src\firebird\src\dsql\../jrd/Database.h(71): note: see declaration of 'Jrd::Trigger' (compiling source file ..\..\..\src\dsql\misc_func.cpp)
+  c:\tools\src\firebird\src\jrd\../common/classes/objects_array.h(273): note: while compiling class template member function 'Firebird::ObjectsArray<Jrd::Trigger,Firebird::Array<T *,Firebird::InlineStorage<T *,8>>>::~ObjectsArray(void)'
+          with
+          [
+              T=Jrd::Trigger
+          ] (compiling source file ..\..\..\src\dsql\misc_func.cpp)
+  c:\tools\src\firebird\src\dsql\../jrd/Database.h(85): note: see reference to function template instantiation 'Firebird::ObjectsArray<Jrd::Trigger,Firebird::Array<T *,Firebird::InlineStorage<T *,8>>>::~ObjectsArray(void)' being compiled
+          with
+          [
+              T=Jrd::Trigger
+          ] (compiling source file ..\..\..\src\dsql\misc_func.cpp)
+  c:\tools\src\firebird\src\dsql\../jrd/Database.h(82): note: see reference to class template instantiation 'Firebird::ObjectsArray<Jrd::Trigger,Firebird::Array<T *,Firebird::InlineStorage<T *,8>>>' being compiled
+          with
+          [
+              T=Jrd::Trigger
+          ] (compiling source file ..\..\..\src\dsql\misc_func.cpp)
+..\..\..\src\dsql\make.cpp(386): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\dsql\make.cpp(568): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\make.cpp(595): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\make.cpp(603): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\make.cpp(1255): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\dsql\make.cpp(1522): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\dsql\make.cpp(1634): warning C4267: 'initializing': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\make.cpp(1824): warning C4267: '=': conversion from 'size_t' to 'ULONG', possible loss of data
+  movd.cpp
+  parse.cpp
+  Parser.cpp
+  pass1.cpp
+..\..\..\src\dsql\parse.cpp(17490): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\parse.cpp(17624): warning C4267: 'initializing': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\parse.cpp(18031): warning C4267: 'argument': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\src\dsql\parse.cpp(18203): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\dsql\parse.cpp(18289): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\dsql\parse.cpp(18338): warning C4312: 'type cast': conversion from 'long' to 'Jrd::dsql_nod *' of greater size
+..\..\..\src\dsql\parse.cpp(20464): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\tools\src\firebird\src\jrd\../jrd/CsConvert.h(73): warning C4267: 'argument': conversion from 'size_t' to 'ULONG', possible loss of data (compiling source file ..\..\..\src\dsql\pass1.cpp)
+  preparse.cpp
+..\..\..\src\dsql\pass1.cpp(3958): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\pass1.cpp(3988): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\pass1.cpp(5091): warning C4267: '=': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\src\dsql\pass1.cpp(7143): warning C4267: '=': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\src\dsql\pass1.cpp(7160): warning C4267: '=': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\src\dsql\pass1.cpp(8779): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+..\..\..\src\dsql\pass1.cpp(9200): warning C4267: '=': conversion from 'size_t' to 'ULONG', possible loss of data
+..\..\..\src\dsql\preparse.cpp(129): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\src\dsql\preparse.cpp(261): warning C4267: 'argument': conversion from 'size_t' to 'short', possible loss of data
+..\..\..\src\dsql\preparse.cpp(288): warning C4267: 'argument': conversion from 'size_t' to 'short', possible loss of data
+  StmtNodes.cpp
+  user_dsql.cpp
+  utld.cpp
+  array.cpp
+..\..\..\gen\x64\dsql\array.cpp(793): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+  blob.cpp
+  DdlNodes.cpp
+  metd.cpp
+..\..\..\src\dsql\utld.cpp(817): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+c:\tools\src\firebird\src\jrd\../common/classes/objects_array.h(275): warning C4150: deletion of pointer to incomplete type 'Jrd::Trigger'; no destructor called (compiling source file ..\..\..\src\dsql\utld.cpp)
+  c:\tools\src\firebird\src\dsql\../jrd/Database.h(71): note: see declaration of 'Jrd::Trigger' (compiling source file ..\..\..\src\dsql\utld.cpp)
+  c:\tools\src\firebird\src\jrd\../common/classes/objects_array.h(273): note: while compiling class template member function 'Firebird::ObjectsArray<Jrd::Trigger,Firebird::Array<T *,Firebird::InlineStorage<T *,8>>>::~ObjectsArray(void)'
+          with
+          [
+              T=Jrd::Trigger
+          ] (compiling source file ..\..\..\src\dsql\utld.cpp)
+  c:\tools\src\firebird\src\dsql\../jrd/Database.h(85): note: see reference to function template instantiation 'Firebird::ObjectsArray<Jrd::Trigger,Firebird::Array<T *,Firebird::InlineStorage<T *,8>>>::~ObjectsArray(void)' being compiled
+          with
+          [
+              T=Jrd::Trigger
+          ] (compiling source file ..\..\..\src\dsql\utld.cpp)
+  c:\tools\src\firebird\src\dsql\../jrd/Database.h(82): note: see reference to class template instantiation 'Firebird::ObjectsArray<Jrd::Trigger,Firebird::Array<T *,Firebird::InlineStorage<T *,8>>>' being compiled
+          with
+          [
+              T=Jrd::Trigger
+          ] (compiling source file ..\..\..\src\dsql\utld.cpp)
+  pretty.cpp
+..\..\..\gen\x64\dsql\metd.cpp(450): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\gen\x64\dsql\metd.cpp(459): warning C4267: 'argument': conversion from 'size_t' to 'SSHORT', possible loss of data
+..\..\..\gen\x64\dsql\metd.cpp(992): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\gen\x64\dsql\metd.cpp(1070): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\gen\x64\dsql\metd.cpp(1126): warning C4267: 'initializing': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\gen\x64\dsql\metd.cpp(1126): warning C4267: 'initializing': conversion from 'size_t' to 'const USHORT', possible loss of data
+..\..\..\gen\x64\dsql\metd.cpp(1679): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\gen\x64\dsql\metd.cpp(2119): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\gen\x64\dsql\metd.cpp(2178): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\gen\x64\dsql\metd.cpp(2180): warning C4267: 'argument': conversion from 'size_t' to 'SLONG', possible loss of data
+..\..\..\gen\x64\dsql\metd.cpp(2269): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\gen\x64\dsql\metd.cpp(2504): warning C4267: 'argument': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\gen\x64\dsql\metd.cpp(2521): warning C4267: '=': conversion from 'size_t' to 'USHORT', possible loss of data
+..\..\..\gen\x64\dsql\metd.cpp(2597): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+  dsql_server_classic.vcxproj -> C:\tools\src\firebird\builds\win32\msvc14\..\..\..\temp\x64\Release\dsql_server_classic\dsql_server_classic.lib

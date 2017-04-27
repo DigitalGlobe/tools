@@ -1,0 +1,5 @@
+﻿C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(392,5): warning MSB8028: The intermediate directory (x64\Release\) contains files shared from another project (elements.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  outline.c
+C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V140\Microsoft.CppBuild.targets(1189,5): warning MSB8012: TargetPath(C:\LibExpat\Source\x64\Release\outline.exe) does not match the Linker's OutputFile property value (C:\LibExpat\Source\win32\bin\Release\outline.exe). This may cause your project to build incorrectly. To correct this, please make sure that $(OutDir), $(TargetName) and $(TargetExt) property values match the value specified in %(Link.OutputFile).
+  outline.vcxproj -> C:\LibExpat\Source\x64\Release\outline.exe
+  outline.vcxproj -> C:\LibExpat\Source\x64\Release\outline.pdb (Full PDB)

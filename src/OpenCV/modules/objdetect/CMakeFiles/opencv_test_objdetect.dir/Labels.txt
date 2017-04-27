@@ -1,0 +1,26 @@
+# Target labels
+ Main
+ opencv_objdetect
+ AccuracyTest
+# Source files and their labels
+C:/tools/src/OpenCV/modules/objdetect/test/opencl/test_hogdetector.cpp
+ Main
+ opencv_objdetect
+ AccuracyTest
+C:/tools/src/OpenCV/modules/objdetect/test/test_cascadeandhog.cpp
+ Main
+ opencv_objdetect
+ AccuracyTest
+C:/tools/src/OpenCV/modules/objdetect/test/test_main.cpp
+ Main
+ opencv_objdetect
+ AccuracyTest
+C:/tools/src/OpenCV/modules/objdetect/test/test_precomp.hpp
+ Main
+ opencv_objdetect
+ AccuracyTest
+C:/tools/src/OpenCV/modules/objdetect/opencv_test_objdetect_pch.cpp
+ Main
+ opencv_objdetect
+ AccuracyTest
+C:/tools/src/OpenCV/modules/objdetect/CMakeLists.txt

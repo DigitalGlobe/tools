@@ -1,0 +1,166 @@
+<!--
+  Copyright (C) 2004  Naval Research Laboratory
+
+  Permission to use, copy, modify and distribute this software and its
+  documentation is hereby granted, provided that both the copyright
+  notice and this permission notice appear in all copies of the software,
+  derivative works or modified versions, and any portions thereof, and
+  that both notices appear in supporting documentation.
+
+  NRL ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS" CONDITION AND
+  DISCLAIMS ANY LIABILITY OF ANY KIND FOR ANY DAMAGES WHATSOEVER
+  RESULTING FROM THE USE OF THIS SOFTWARE.
+-->
+
+<project name="OssimPlanetMessage" default="jar" basedir=".">
+
+<!--  Name of project and version -->
+
+<property name="Name" value="OssimPlanetMessage" />
+<property name="name" value="OssimPlanetMessage" />
+<property name="version" value="0.0.1" />
+
+<!--  Directories -->
+
+<!-- Ant puts the class files and the unsigned jar files in build.dir. -->
+<property name="build.dir" value="classes" />
+<property name="docs.dir" value="docs" />
+<property name="javadoc.dir" value="docs/javadoc" />
+
+<!-- You must put jar files from other projects in ext.dir. -->
+<property name="ext.dir" value="ext" />
+
+<!-- Ant puts the signed jar files go in lib.dir -->
+<property name="lib.dir" value="lib" />
+
+<!-- Source files live below the src.dir directory. -->
+<property name="src.dir" value="java" />
+<!-- If you want to relocate the source code change base.path.
+ You could change it to "org/ossim/planet/message"
+
+The jar targets look for class files relative to
+classes/${base.path}
+-->
+<property name="base.path" value="org/ossim/planet/message" />
+
+<!--  Properties -->
+
+<property name="javac.debug" value="on" /> 
+<property name="javac.optimize" value="off" /> 
+<!--property name="build.compiler" value="jikes" /-->
+<property name="build.compiler.emacs" value="true" />
+<property name="build.compiler.pedantic" value="false" />
+<property file="${src.dir}/build.pass" />
+
+<!--  Classpath -->
+
+	<property name="root" value="./" />
+	<property file="${root}/ant-build-config.properties" />
+	<property name="classes" value="${root}/classes" />
+	<property name="srcroot" value="${root}/java" />
+
+<path id="lib.class.path">
+	<fileset dir="${ext.dir}">
+		<include name="**/*.jar"/>
+	</fileset>
+	<fileset dir="${build.dir}"/>
+		<pathelement location="${classes}" />
+		<pathelement location="${log4j_jar}" />
+</path>
+
+<!--  Support files -->
+
+<patternset id="support.files">
+	<exclude name="**/*.keystore" />
+	<exclude name="**/*.pass" />
+
+	<include name="**/*.dtd" /> 
+	<include name="**/*.xml" /> 
+	<include name="**/*.xslt" /> 
+</patternset>
+
+<!--  Tasks --> 
+
+<target name="prepare">
+	<tstamp>
+		<format property="subversion" pattern="yyyy.MM.dd.hh.mm.ss" />
+	</tstamp>
+
+	<echo message="Build ${Name}-${version} (${subversion})" />
+
+	<mkdir dir="${build.dir}" />
+	<mkdir dir="${lib.dir}" />
+	<mkdir dir="${ext.dir}" />
+
+	<copy todir="${build.dir}">
+		<fileset dir="${src.dir}">
+			<patternset refid="support.files" />
+		</fileset>
+	</copy>
+
+</target>
+
+<target name="compile" depends="prepare">
+	<javac srcdir="${src.dir}"
+		includes="*.java"
+		destdir="${build.dir}"
+		classpathref="lib.class.path"
+		debug="${javac.debug}"
+		optimize="${javac.optimize}"
+		depend="on"
+		target="1.5"
+      >
+
+	  <!-- Enable -Xlint:unchecked if you want to know all the places where we don't catch unchecked exceptions -->
+	  <!-- compilerarg value="-Xlint:unchecked" -->
+		<compilerarg value="+Pno-naming-convention" compiler="jikes"/>
+	</javac>
+
+</target>
+
+<target name="jar" depends="compile">
+	<jar destfile="${build.dir}/OssimPlanetMessage.jar" basedir="${build.dir}"
+		includes="log4j.properties ${base.path}/*.class"
+		manifest="${src.dir}/manifest" update="true" />
+</target>
+
+<target name="signjar" depends="jar">
+	<signjar jar="${build.dir}/OssimPlanetMessage.jar" signedjar="${lib.dir}/OssimPlanetMessage.jar"
+		keystore="${src.dir}/source.keystore" storepass="${store.pass}" alias="OssimPlanet" keypass="${key.pass}" />
+</target>
+
+<target name="javadoc_check">
+	<uptodate property="javadoc.notrequired" targetfile="${javadoc.dir}/packages.html" >
+		<srcfiles dir="${src.dir}" includes="**/*.java **/package.html"/>
+	</uptodate>
+</target>
+
+<target name="javadoc" depends="javadoc_check" unless="javadoc.notrequired">
+	<mkdir dir="${build.dir}" /> 
+	<mkdir dir="${docs.dir}" /> 
+	<mkdir dir="${javadoc.dir}" /> 
+	<javadoc packagenames="*" useexternalfile="yes" sourcepath="${src.dir}"
+		classpathref="lib.class.path" link="${javadoc}" destdir="${javadoc.dir}"
+		use="true" private="true" author="true" version="true"
+		windowtitle="${Name} API" doctitle="${Name}" overview="${src.dir}/overview.html" />
+</target>
+
+<target name="doccheck">
+	<mkdir dir="${javadoc.dir}/doccheck" /> 
+	<javadoc packagenames="*" useexternalfile="yes" sourcepath="${src.dir}"
+		docletpath="/afs/cmf/project/dc/doccheck1.2b2/doccheck.jar  "
+		doclet="com.sun.tools.doclets.doccheck.DocCheck"
+		additionalparam="-classlist -title &quot;the ${Name} API&quot;"
+		classpathref="lib.class.path" destdir="${javadoc.dir}/doccheck"
+		public="true" />
+</target>
+
+<target name="clean" depends="clean_javadoc">
+	<delete dir="${build.dir}" />
+	<delete dir="${lib.dir}" />
+</target>
+
+<target name="clean_javadoc">
+	<delete dir="${javadoc.dir}" />
+</target>
+</project>

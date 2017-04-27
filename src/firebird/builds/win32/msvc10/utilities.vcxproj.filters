@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="UTILITIES files">
+      <UniqueIdentifier>{9da061b8-4448-44d1-b51c-602a62de2e60}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="UTILITIES files\epp files">
+      <UniqueIdentifier>{0684d6ac-e031-4056-9ae0-3721cebf1e50}</UniqueIdentifier>
+      <Extensions>epp</Extensions>
+    </Filter>
+    <Filter Include="UTILITIES files\Generated files">
+      <UniqueIdentifier>{f44e9858-e149-4bb3-aa70-7d169bf4eefe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{022341ea-536f-4a61-b2c3-fb44cc15c8fc}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\utilities\gsec\call_service.cpp">
+      <Filter>UTILITIES files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\utilities\gsec\gsec.cpp">
+      <Filter>UTILITIES files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\gen\$(Platform)\utilities\gsec\security.cpp">
+      <Filter>UTILITIES files\Generated files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\..\src\utilities\gstat.epp">
+      <Filter>UTILITIES files\epp files</Filter>
+    </None>
+    <None Include="..\..\..\src\utilities\rmet.epp">
+      <Filter>UTILITIES files\epp files</Filter>
+    </None>
+    <None Include="..\..\..\src\utilities\rstore.epp">
+      <Filter>UTILITIES files\epp files</Filter>
+    </None>
+    <None Include="..\..\..\src\utilities\security.epp">
+      <Filter>UTILITIES files\epp files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\utilities\gsec\gsec.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\utilities\install\registry.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

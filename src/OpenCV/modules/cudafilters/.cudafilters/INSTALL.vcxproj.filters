@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\tools\src\OpenCV\CMakeFiles\4b97dbc954e09d379c8a075a63d3998a\INSTALL_force.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{43B09869-DF13-3107-AE82-47643196EE60}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

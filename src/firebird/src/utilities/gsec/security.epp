@@ -1,0 +1,500 @@
+/*
+ *
+ *	PROGRAM:	Security data base manager
+ *	MODULE:		security.epp
+ *	DESCRIPTION:	Security routines
+ *
+ * The contents of this file are subject to the Interbase Public
+ * License Version 1.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy
+ * of the License at http://www.Inprise.com/IPL.html
+ *
+ * Software distributed under the License is distributed on an
+ * "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+ * or implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code was created by Inprise Corporation
+ * and its predecessors. Portions created by Inprise Corporation are
+ * Copyright (C) Inprise Corporation.
+ *
+ * All Rights Reserved.
+ * Contributor(s): ______________________________________.
+ */
+
+#include "firebird.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include "../jrd/common.h"
+#include "../jrd/ibase.h"
+#include "../jrd/jrd_pwd.h"
+#include "../jrd/enc_proto.h"
+#include "../jrd/gds_proto.h"
+#include "../jrd/isc_proto.h"
+#include "../utilities/gsec/gsec.h"
+#include "../utilities/gsec/secur_proto.h"
+#include "../common/utils_proto.h"
+#include "../common/classes/init.h"
+
+DATABASE DB = STATIC FILENAME "security2.fdb";
+
+static Firebird::GlobalPtr<Firebird::Mutex> execLineMutex;	// protects various gpre generated structures
+
+static bool grantRevokeAdmin(ISC_STATUS* isc_status, FB_API_HANDLE DB, FB_API_HANDLE trans,
+	const internal_user_data* io_user_data)
+{
+	if (!io_user_data->admin_entered)
+	{
+		return true;
+	}
+
+	Firebird::string userName(io_user_data->user_name);
+	for (unsigned i = 0; i < userName.length(); ++i)
+	{
+		if (userName[i] == '"')
+		{
+			userName.insert(i++, 1, '"');
+		}
+	}
+
+	Firebird::string sql;
+	sql.printf(io_user_data->admin ? "GRANT %s TO \"%s\"" : "REVOKE %s FROM \"%s\"", 
+			"RDB$ADMIN", userName.c_str());
+	isc_dsql_execute_immediate(isc_status, &DB, &trans, sql.length(), sql.c_str(), SQL_DIALECT_V6, NULL);
+
+	if (isc_status[1] && io_user_data->admin == 0)
+	{
+		isc_req_handle request = 0;
+		FOR (TRANSACTION_HANDLE trans REQUEST_HANDLE request) R IN RDB$USER_PRIVILEGES
+				WITH R.RDB$USER EQ io_user_data->user_name
+				 AND R.RDB$RELATION_NAME EQ 'RDB$ADMIN'
+				 AND R.RDB$PRIVILEGE EQ 'M'
+			sql.printf("REVOKE RDB$ADMIN FROM \"%s\" GRANTED BY \"%s\"",
+				userName.c_str(), R.RDB$GRANTOR);
+		END_FOR
+		if (request)
+		{
+			ISC_STATUS_ARRAY s;
+			if (isc_release_request(s, &request) != FB_SUCCESS)
+			{
+				return false;
+			}
+		}
+		isc_dsql_execute_immediate(isc_status, &DB, &trans, sql.length(), sql.c_str(), SQL_DIALECT_V6, NULL);
+	}
+
+	return isc_status[1] == 0;
+}
+
+
+SSHORT SECURITY_exec_line(ISC_STATUS* isc_status,
+						  FB_API_HANDLE DB,
+						  FB_API_HANDLE trans,
+						  internal_user_data* io_user_data,
+						  FPTR_SECURITY_CALLBACK display_func,
+						  void* callback_arg)
+{
+/*************************************
+ *
+ *	S E C U R I T Y _ e x e c _ l i n e
+ *
+ **************************************
+ *
+ * Functional description
+ *	Process a command line for the security data base manager.
+ *	This is used to add and delete users from the user information
+ *	database (security2.fdb).   It also displays information
+ *	about current users and allows modification of current
+ *	users' parameters.
+ *	Returns 0 on success, otherwise returns a Gsec message number
+ *	and the status vector containing the error info.
+ *	The syntax is:
+ *
+ *	Adding a new user:
+ *
+ *	    gsec -add <name> [ <parameter> ... ]    -- command line
+ *	    add <name> [ <parameter> ... ]          -- interactive
+ *
+ *	Deleting a current user:
+ *
+ *	    gsec -delete <name>     -- command line
+ *	    delete <name>           -- interactive
+ *
+ *	Displaying all current users:
+ *
+ *	    gsec -display           -- command line
+ *	    display                 -- interactive
+ *
+ *	Displaying one user:
+ *
+ *	    gsec -display <name>    -- command line
+ *	    display <name>          -- interactive
+ *
+ *	Modifying a user's parameters:
+ *
+ *	    gsec -modify <name> <parameter> [ <parameter> ... ] -- command line
+ *	    modify <name> <parameter> [ <parameter> ... ]       -- interactive
+ *
+ *	Get help:
+ *
+ *	    gsec -help              -- command line
+ *	    ?                       -- interactive
+ *	    help                    -- interactive
+ *
+ *	Quit interactive session:
+ *
+ *	    quit                    -- interactive
+ *
+ *	where <parameter> can be one of:
+ *
+ *	    -uid <uid>
+ *	    -gid <gid>
+ *	    -fname <firstname>
+ *	    -mname <middlename>
+ *	    -lname <lastname>
+ *
+ **************************************/
+	Firebird::MutexLockGuard guard(execLineMutex);
+
+	SCHAR encrypted1[MAX_PASSWORD_LENGTH + 2];
+	Firebird::string encrypted2;
+	bool found;
+	SSHORT ret = 0;
+
+	// check for non-printable characters in user name
+	for (const TEXT* p = io_user_data->user_name; *p; p++)
+	{
+		if (! isprint(*p)) {
+			return GsecMsg75;  // Add special error message for this case ?
+		}
+	}
+
+	isc_req_handle request = 0;
+	isc_req_handle request2 = 0;
+
+	switch (io_user_data->operation)
+	{
+	case MAP_DROP_OPER:
+	case MAP_SET_OPER:
+		{
+			Firebird::string sql;
+			sql.printf("ALTER ROLE RDB$ADMIN %s AUTO ADMIN MAPPING",
+				io_user_data->operation == MAP_SET_OPER ? "SET" : "DROP");
+			isc_dsql_execute_immediate(isc_status, &DB, &trans, sql.length(), sql.c_str(), 1, NULL);
+			if (isc_status[1] != 0)
+			{
+				ret = GsecMsg97;
+			}
+		}
+		break;
+	case ADD_OPER:
+		// this checks the "entered" flags for each parameter (except the name)
+		// and makes all non-entered parameters null valued
+
+		STORE (TRANSACTION_HANDLE trans REQUEST_HANDLE request) U IN USERS USING
+			strcpy(U.USER_NAME, io_user_data->user_name);
+			if (io_user_data->uid_entered)
+			{
+				U.UID = io_user_data->uid;
+				U.UID.NULL = ISC_FALSE;
+			}
+			else
+				U.UID.NULL = ISC_TRUE;
+			if (io_user_data->gid_entered)
+			{
+				U.GID = io_user_data->gid;
+				U.GID.NULL = ISC_FALSE;
+			}
+			else
+				U.GID.NULL = ISC_TRUE;
+			if (io_user_data->group_name_entered)
+			{
+				strcpy(U.GROUP_NAME, io_user_data->group_name);
+				U.GROUP_NAME.NULL = ISC_FALSE;
+			}
+			else
+				U.GROUP_NAME.NULL = ISC_TRUE;
+			if (io_user_data->password_entered)
+			{
+				ENC_crypt(encrypted1, sizeof encrypted1, io_user_data->password, PASSWORD_SALT);
+				Jrd::SecurityDatabase::hash(encrypted2, io_user_data->user_name, &encrypted1[2]);
+				strcpy(U.PASSWD, encrypted2.c_str());
+				U.PASSWD.NULL = ISC_FALSE;
+			}
+			else
+				U.PASSWD.NULL = ISC_TRUE;
+			if (io_user_data->first_name_entered)
+			{
+				strcpy(U.FIRST_NAME, io_user_data->first_name);
+				U.FIRST_NAME.NULL = ISC_FALSE;
+			}
+			else
+				U.FIRST_NAME.NULL = ISC_TRUE;
+			if (io_user_data->middle_name_entered)
+			{
+				strcpy(U.MIDDLE_NAME, io_user_data->middle_name);
+				U.MIDDLE_NAME.NULL = ISC_FALSE;
+			}
+			else
+				U.MIDDLE_NAME.NULL = ISC_TRUE;
+			if (io_user_data->last_name_entered)
+			{
+				strcpy(U.LAST_NAME, io_user_data->last_name);
+				U.LAST_NAME.NULL = ISC_FALSE;
+			}
+			else
+				U.LAST_NAME.NULL = ISC_TRUE;
+		END_STORE
+		ON_ERROR
+			ret = GsecMsg19;	// gsec - add record error
+		END_ERROR;
+		if (ret == 0 && !grantRevokeAdmin(isc_status, DB, trans, io_user_data))
+		{
+			ret = GsecMsg19;	// gsec - add record error
+		}
+		break;
+
+	case MOD_OPER:
+		// this updates an existing record, replacing all fields that are
+		// entered, and for those that were specified but not entered, it
+		// changes the current value to the null value
+
+		found = false;
+		FOR (TRANSACTION_HANDLE trans REQUEST_HANDLE request) U IN USERS
+				WITH U.USER_NAME EQ io_user_data->user_name
+			found = true;
+			MODIFY U USING
+				if (io_user_data->uid_entered)
+				{
+					U.UID = io_user_data->uid;
+					U.UID.NULL = ISC_FALSE;
+				}
+				else if (io_user_data->uid_specified)
+					U.UID.NULL = ISC_TRUE;
+				if (io_user_data->gid_entered)
+				{
+					U.GID = io_user_data->gid;
+					U.GID.NULL = ISC_FALSE;
+				}
+				else if (io_user_data->gid_specified)
+					U.GID.NULL = ISC_TRUE;
+				if (io_user_data->group_name_entered)
+				{
+					strcpy(U.GROUP_NAME, io_user_data->group_name);
+					U.GROUP_NAME.NULL = ISC_FALSE;
+				}
+				else if (io_user_data->group_name_specified)
+					U.GROUP_NAME.NULL = ISC_TRUE;
+				if (io_user_data->password_entered)
+				{
+					ENC_crypt(encrypted1, sizeof encrypted1, io_user_data->password, PASSWORD_SALT);
+					Jrd::SecurityDatabase::hash(encrypted2, io_user_data->user_name, &encrypted1[2]);
+					strcpy(U.PASSWD, encrypted2.c_str());
+					U.PASSWD.NULL = ISC_FALSE;
+				}
+				else if (io_user_data->password_specified)
+					U.PASSWD.NULL = ISC_TRUE;
+				if (io_user_data->first_name_entered)
+				{
+					strcpy(U.FIRST_NAME, io_user_data->first_name);
+					U.FIRST_NAME.NULL = ISC_FALSE;
+				}
+				else if (io_user_data->first_name_specified)
+					U.FIRST_NAME.NULL = ISC_TRUE;
+				if (io_user_data->middle_name_entered)
+				{
+					strcpy(U.MIDDLE_NAME, io_user_data->middle_name);
+					U.MIDDLE_NAME.NULL = ISC_FALSE;
+				}
+				else if (io_user_data->middle_name_specified)
+					U.MIDDLE_NAME.NULL = ISC_TRUE;
+				if (io_user_data->last_name_entered)
+				{
+					strcpy(U.LAST_NAME, io_user_data->last_name);
+					U.LAST_NAME.NULL = ISC_FALSE;
+				}
+				else if (io_user_data->last_name_specified)
+					U.LAST_NAME.NULL = ISC_TRUE;
+			END_MODIFY
+			ON_ERROR
+				ret = GsecMsg20;
+			END_ERROR;
+		END_FOR
+		ON_ERROR
+			ret = GsecMsg21;
+		END_ERROR;
+		if (!ret && !found)
+			ret = GsecMsg22;
+		if (ret == 0 && !grantRevokeAdmin(isc_status, DB, trans, io_user_data))
+		{
+			ret = GsecMsg21;
+		}
+		break;
+
+	case DEL_OPER:
+		// looks up the specified user record and deletes it
+
+		found = false;
+		// Do not allow SYSDBA user to be deleted
+		if (!fb_utils::stricmp(io_user_data->user_name, SYSDBA_USER_NAME))
+			ret = GsecMsg23;
+		else
+		{
+			FOR (TRANSACTION_HANDLE trans REQUEST_HANDLE request) U IN USERS
+					WITH U.USER_NAME EQ io_user_data->user_name
+				found = true;
+				ERASE U
+				ON_ERROR
+					ret = GsecMsg23;	// gsec - delete record error
+				END_ERROR;
+			END_FOR
+			ON_ERROR
+				ret = GsecMsg24;	// gsec - find/delete record error
+			END_ERROR;
+		}
+
+		if (!ret && !found)
+			ret = GsecMsg22;	// gsec - record not found for user:
+
+		io_user_data->admin = 0;
+		io_user_data->admin_entered = true;
+		if (ret == 0 && ! grantRevokeAdmin(isc_status, DB, trans, io_user_data))
+		{
+			ret = GsecMsg24;
+		}
+		break;
+
+	case DIS_OPER:
+	case OLD_DIS_OPER:
+		// gets either the desired record, or all records, and displays them
+
+		found = false;
+		if (!io_user_data->user_name_entered)
+		{
+			FOR (TRANSACTION_HANDLE trans REQUEST_HANDLE request) U IN USERS
+				io_user_data->uid = U.UID;
+				io_user_data->gid = U.GID;
+				*(io_user_data->sys_user_name) = '\0';
+				strcpy(io_user_data->user_name, U.USER_NAME);
+				strcpy(io_user_data->group_name, U.GROUP_NAME);
+				io_user_data->password[0] = 0;
+				strcpy(io_user_data->first_name, U.FIRST_NAME);
+				strcpy(io_user_data->middle_name, U.MIDDLE_NAME);
+				strcpy(io_user_data->last_name, U.LAST_NAME);
+
+				io_user_data->admin = 0;
+				FOR (TRANSACTION_HANDLE trans REQUEST_HANDLE request2) P IN RDB$USER_PRIVILEGES
+						WITH P.RDB$USER EQ U.USER_NAME
+						 AND P.RDB$RELATION_NAME EQ 'RDB$ADMIN'
+						 AND P.RDB$PRIVILEGE EQ 'M'
+					io_user_data->admin = 1;
+				END_FOR
+
+				display_func(callback_arg, io_user_data, !found);
+
+				found = true;
+			END_FOR
+			ON_ERROR
+				ret = GsecMsg28;	// gsec - find/display record error
+			END_ERROR;
+		}
+		else
+		{
+			FOR (TRANSACTION_HANDLE trans REQUEST_HANDLE request) U IN USERS
+					WITH U.USER_NAME EQ io_user_data->user_name
+				io_user_data->uid = U.UID;
+				io_user_data->gid = U.GID;
+				*(io_user_data->sys_user_name) = '\0';
+				strcpy(io_user_data->user_name, U.USER_NAME);
+				strcpy(io_user_data->group_name, U.GROUP_NAME);
+				io_user_data->password[0] = 0;
+				strcpy(io_user_data->first_name, U.FIRST_NAME);
+				strcpy(io_user_data->middle_name, U.MIDDLE_NAME);
+				strcpy(io_user_data->last_name, U.LAST_NAME);
+
+				io_user_data->admin = 0;
+				FOR (TRANSACTION_HANDLE trans REQUEST_HANDLE request2) P IN RDB$USER_PRIVILEGES
+						WITH P.RDB$USER EQ U.USER_NAME
+						 AND P.RDB$RELATION_NAME EQ 'RDB$ADMIN'
+						 AND P.RDB$PRIVILEGE EQ 'M'
+					io_user_data->admin = 1;
+				END_FOR
+
+				display_func(callback_arg, io_user_data, !found);
+
+				found = true;
+			END_FOR
+			ON_ERROR
+				ret = GsecMsg28;	// gsec - find/display record error
+			END_ERROR;
+		}
+		break;
+
+	default:
+		ret = GsecMsg16;		// gsec - error in switch specifications
+		break;
+	}
+
+	if (request)
+	{
+		ISC_STATUS_ARRAY s;
+		if (isc_release_request(s, &request) != FB_SUCCESS)
+		{
+			if (! ret)
+			{
+				ret = GsecMsg94;	// error releasing request in security database
+			}
+		}
+	}
+
+	if (request2)
+	{
+		ISC_STATUS_ARRAY s;
+		if (isc_release_request(s, &request2) != FB_SUCCESS)
+		{
+			if (! ret)
+			{
+				ret = GsecMsg94;	// error releasing request in security database
+			}
+		}
+	}
+
+	return ret;
+}
+
+SSHORT SECURITY_exec_line(ISC_STATUS* isc_status,
+						  FB_API_HANDLE DB,
+						  internal_user_data* io_user_data,
+						  FPTR_SECURITY_CALLBACK display_func,
+						  void* callback_arg)
+{
+	FB_API_HANDLE gds_trans = 0;
+
+	START_TRANSACTION
+	ON_ERROR
+		return GsecMsg75;		// gsec error
+	END_ERROR;
+
+	SSHORT ret = SECURITY_exec_line(isc_status, DB, gds_trans, io_user_data, display_func, callback_arg);
+
+	// rollback if we have an error using tmp_status to avoid
+	// overwriting the error status which the caller wants to see
+
+	if (ret)
+	{
+		ISC_STATUS_ARRAY tmp_status;
+		isc_rollback_transaction(tmp_status, &gds_trans);
+	}
+	else
+	{
+		COMMIT
+		ON_ERROR
+			// CVC: Shouldn't we call isc_rollback_transaction() here?
+			return GsecMsg75;	// gsec error
+		END_ERROR;
+	}
+
+	return ret;
+}

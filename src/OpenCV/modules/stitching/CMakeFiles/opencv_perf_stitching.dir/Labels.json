@@ -1,0 +1,45 @@
+
+{
+	"sources" : 
+	[
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/perf/opencl/perf_stitch.cpp",
+			"labels" : [ "Main", "opencv_stitching", "PerfTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/perf/opencl/perf_warpers.cpp",
+			"labels" : [ "Main", "opencv_stitching", "PerfTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/perf/perf_main.cpp",
+			"labels" : [ "Main", "opencv_stitching", "PerfTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/perf/perf_stich.cpp",
+			"labels" : [ "Main", "opencv_stitching", "PerfTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/perf/perf_precomp.hpp",
+			"labels" : [ "Main", "opencv_stitching", "PerfTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/opencv_perf_stitching_pch.cpp",
+			"labels" : [ "Main", "opencv_stitching", "PerfTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/stitching/CMakeLists.txt"
+		}
+	],
+	"target" : 
+	{
+		"labels" : [ "Main", "opencv_stitching", "PerfTest" ],
+		"name" : "opencv_perf_stitching"
+	}
+}

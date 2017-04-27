@@ -1,0 +1,325 @@
+# The contents of this file are subject to the Interbase Public
+# License Version 1.0 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy
+# of the License at http://www.Inprise.com/IPL.html
+#
+# Software distributed under the License is distributed on an
+# "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+# or implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code was created by Inprise Corporation
+# and its predecessors. Portions created by Inprise Corporation are
+# Copyright (C) Inprise Corporation.
+#
+# All Rights Reserved.
+# Contributor(s): ______________________________________.
+# Start of file prefix.linux:	DEV	$(PLATFORM)
+#$Id: makefile.old,v 1.1 2003-07-10 23:01:08 brodsom Exp $
+#Revision 1.6  2000/12/01 11:20:31  fsg
+#Added SHRLIB_EXT to  prefix.linux
+#
+
+.SUFFIXES: .c .e
+.e.c:
+	$(GPRE) $(GPRE_FLAGS) $<
+.SUFFIXES: .bin .o .c
+.c.o:
+	$(CC) -c $(CFLAGS) $(VERSION_FLAG) $<
+.c.bin:
+	$(CC) -c $(PIC_FLAGS) $(VERSION_FLAG) -o $*.bin $<
+
+
+PROD_DEBUG_OBJECTS=	nodebug.o
+PROD_SHRLIB_DIR=	-Lsource/jrd -Lsource/interbase/lib
+PROD_VERSION_FLAG=	-DPROD_BUILD
+PROD_CFLAGS=            -O3 -m486 -fpic -DFLINTSTONE
+
+
+DEV_DEBUG_OBJECTS=	grammar.o dbg.o dbt.o dmp.o
+DEV_SHRLIB_DIR=		-Lsource/jrd -Lsource/interbase/lib
+DEV_VERSION_FLAG=	-DDEV_BUILD
+DEV_CFLAGS=		-ggdb
+
+DEBUG_OBJECTS=		$(DEV_DEBUG_OBJECTS)
+SHRLIB_DIR=		$(DEV_SHRLIB_DIR)
+VERSION_FLAG=		$(DEV_VERSION_FLAG)
+CFLAGS_COMMON=		$(DEV_CFLAGS) -DLINUX -Wall -fwritable-strings -I$(INTERBASE)/include
+CFLAGS=			$(CFLAGS_COMMON) 
+PIC_J_CFLAGS=		$(CFLAGS_COMMON) -DPIPE_IS_SHRLIB -fPIC
+SPECIAL_OBJECTS=	j
+UDF_LINK_CMD=		gcc
+UDF_CFLAGS=         	-fPIC -mieee-fp
+UDF_LFLAGS=         	-shared
+UDF_SHRLIBS=        	-L$(INTERBASE)/lib  -lgds -lm -lc -mieee-fp -ldl -lcrypt
+
+
+#NOTE: PIC_J_CFLAGS is special CFLAGS used to build PIPD_IS_SHRLIB modules
+#      to workaround the Solaris threading problems with signals
+
+
+#NOTE: -Xt is ANSI C transition mode (default)
+#      -DBDS_COMP is for BSD Compatibility package and is used in <sys/ioctl.h>
+
+ACCESS_METHOD=		gdslib.linux pipe
+BACKEND_BRIDGE_MISC=	head5.o allp.o
+BIN_PATH=		/usr/isc/bin
+BRIDGE_MISC=		head5.o allp.o
+CHMOD_VAL=		666
+
+#NOTE: I removed CURSES_LIB=  -lbsd because it breaks the build on SuSE systems
+#      and isn't necessary anymore. 
+#FSG  091500    
+
+CURSES_LIB=             
+DSQL_P_OBJS=		dsql_p_objects
+FORM_OBJECTS=		form.o
+FORM_TRN_OBJECTS=	form_trn.o
+FUNCTIONS=		functions.bin
+FUNCSHR=		source/interbase/lib/gdsf.so
+GDS_LINK=		$(GDSSHR_LINK)
+GDS_PYXIS=		gds_pyxis.a
+GDSLIB_BACKEND=		source/interbase/lib/gds_b.a
+GDSLIB_LINK=		-Lsource/jrd -lgds_b -lc -ldl -lcrypt
+
+GDSSHR=			source/interbase/lib/gds.so
+LINUX_GDSSHR=		$(GDSSHR)
+GDSSHR_LINK=		$(SHRLIB_DIR) -lgds -ldl -lgds_pyxis -lcrypt -lncurses
+#PIPE_GDSSHR=		source/interbase/lib/gds.so.0
+PIPE_GDSSHR_LINK=	$(SHRLIB_DIR) -lgds -lgds_pyxis
+HLPDIR=			source/qli/
+HOSTNAME=		`hostname | cut -d'.' -f1`
+INCLUDES=		include_so include_so_ada	
+INTL=			intl
+
+INTL_CFLAGS=		$(CFLAGS)
+INTL_LD_LINE=		ld -G -o gdsintl 
+INTL_PIC_FLAGS=		$(PIC_FLAGS)
+INTL_TARGET=		intl_shr_objs
+IO_OBJECTS=		unix.o
+IO_P_OBJECTS=		unix.bin
+JRD_MISC_OBJECTS=	source/jrd/sun_ftn.o
+JRD_J_MISC_OBJECTS=	source/jrd/sun_ftn.j 
+JRD_P_MISC_OBJECTS=	source/jrd/sun_ftn.bin source/jrd/nodebug.bin
+LANG_OBJECTS=		ada.o ftn.o cob.o
+LANGUAGES=		cc cxx ada microfocus_cob make16 gdl1 sun_ftn
+LD_LIBS=		-lc
+LD_LIBS_J=		-lc
+LD_OPTS=		-shared
+LOCK_JRD_MISC=		source/jrd/thd.o
+LOCK_MANAGER=		manager
+MARION_DB=		-d source/marion.gdb
+MUISQL=			muisql
+MUISQL_MU_LIB=		-L /usr/gds.$(HOSTNAME)/qa_tools/lib -lmu
+MUISQL_LINK_OPTS=	$(MUISQL_MU_LIB) $(PIPE_GDSSHR_LINK) -lm 
+PIC_FLAGS=		$(CFLAGS) -fPIC
+PIPE=			gds.a gds_pipe
+PYXIS=			pyxis
+PYXIS_MISC_OBJS=	$(PYXIS_MISC)
+PYXIS_P_MISC_OBJS=	$(PYXIS_P_MISC)
+PYXIS_OBJECTS=		pyxis_objects
+PYXIS_MISC_OBJECTS=	$(PYXDIR)cdm.o $(PYXDIR)vt100.o $(PYXDIR)sun_ftn_pyxis.o
+REG_HELP=		isc_ins_hlp.dat
+REMOTE_GDSSHR=		$(GDSSHR)
+REMOTE_GDSSHR_LINK=	$(SERVER_LINK)
+REMOTE_P_OBJS=		rem_p_objects
+SCREEN_LIBS=		-lncurses
+SERVER_LINK=		$(GDSSHR_LINK)
+SETUP_ISC=              ISC_USER=sysdba; ISC_PASSWORD=masterkey; export ISC_USER ISC_PASSWORD;
+SPECIAL_OPT=		source/special_opt
+NETWORK_LIB=		
+SOCKET_LIB=		-lc
+THREAD_LIB=		-lpthread
+SUN_FUNCSHR=		$(FUNCSHR)
+LX_SUPER_GDSSHR=		source/interbase/lib/gds.so.1
+SUPER_CLIENT_GDSSHR=    $(LX_SUPER_GDSSHR)
+SUPER_BACKEND=		source/jrd/gds_ss.a
+SUPER_LINK=		-Lsource/jrd -lgds_ss -lc -ldl -lcrypt -lpthread
+SUPER_SERVER=	
+UTILITIES=		
+WAL_P_OBJS=		wal_p_objects
+
+
+SUPER_SERVER_DEST=	source/interbase/bin/fbserver
+INET_SERVER_DEST=	source/interbase/bin/gds_inet_server
+DNET_SERVER_DEST=	source/interbase/bin/gds_dnet_server
+AMBX_SERVER_DEST=	source/interbase/bin/gds_server
+INET_LIB_DEST=		source/interbase/lib/gds_inet_server.a
+DNET_LIB_DEST=		source/interbase/lib/gds_dnet_server.a
+
+SH=			sh -c
+RM=			rm -f
+CHMOD=			chmod
+CHMOD_6=		chmod 666
+CHMOD_7=		chmod 777
+CHMOD_S7=		chmod 06777
+MV=			mv -f
+TOUCH=			touch
+CP=			cp
+ECHO=			echo
+QUIET_ECHO=		@echo
+CD=			cd
+CAT=			cat
+AR=			ar r
+EXPAND_DBNAME=		@echo No need to expand...
+COMPRESS_DBNAME=	@echo No need to compress...
+
+ARCH_EXT=		.a
+EXEC_EXT=
+#      FSG 1.Dez.2000
+SHRLIB_EXT=             .so
+
+
+V3PRINTER=		source/lock/printv3.o
+
+# Forces library build for linux  TMC 082100
+PYXIS_LIBRARY= libpyxis.a
+
+
+#   End of file prefix.linux:	DEV	$(PLATFORM)
+# The contents of this file are subject to the Interbase Public
+# License Version 1.0 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy
+# of the License at http://www.Inprise.com/IPL.html
+#
+# Software distributed under the License is distributed on an
+# "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+# or implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code was created by Inprise Corporation
+# and its predecessors. Portions created by Inprise Corporation are
+# Copyright (C) Inprise Corporation.
+#
+# All Rights Reserved.
+# Contributor(s): ______________________________________.
+GBAK=		source/interbase/bin/gbak
+GPRE=		source/interbase/bin/gpre
+ISQL=		source/interbase/bin/isql
+
+GPRE_FLAGS=	-r -m -z -n
+
+EXAMPLES_DEST=	source/interbase/examples/v5/
+EXAMPLES_SRC=	source/example5/
+
+EMPBLD_OBJ=	empbuild.o
+
+INTLBLD_OBJ=	intlbld.o
+
+INPUT_FILES=	empddl.sql empdml.sql indexoff.sql indexon.sql \
+		job.inp lang.inp proj.inp qtr.inp
+
+INTL_FILES=	intlddl.sql intldml.sql indexoff.sql indexon.sql \
+		job.inp lang.inp proj.inp qtr.inp
+
+
+v5_examples: employee.gdb intlemp.gdb $(NT_EXAMPLES) makefile.example
+	$(CP) $(EXAMPLES_SRC)readme $(EXAMPLES_DEST)README
+	$(CP) $(EXAMPLES_SRC)align.h $(EXAMPLES_DEST)align.h
+	$(CP) $(EXAMPLES_SRC)api1.c $(EXAMPLES_DEST)api1.c
+	$(CP) $(EXAMPLES_SRC)api10.c $(EXAMPLES_DEST)api10.c
+	$(CP) $(EXAMPLES_SRC)api11.c $(EXAMPLES_DEST)api11.c
+	$(CP) $(EXAMPLES_SRC)api12.c $(EXAMPLES_DEST)api12.c
+	$(CP) $(EXAMPLES_SRC)api13.c $(EXAMPLES_DEST)api13.c
+	$(CP) $(EXAMPLES_SRC)api14.e $(EXAMPLES_DEST)api14.e
+	$(CP) $(EXAMPLES_SRC)api15.c $(EXAMPLES_DEST)api15.c
+	$(CP) $(EXAMPLES_SRC)api16.c $(EXAMPLES_DEST)api16.c
+	$(CP) $(EXAMPLES_SRC)api16t.c $(EXAMPLES_DEST)api16t.c
+	$(CP) $(EXAMPLES_SRC)api2.c $(EXAMPLES_DEST)api2.c
+	$(CP) $(EXAMPLES_SRC)api3.c $(EXAMPLES_DEST)api3.c
+	$(CP) $(EXAMPLES_SRC)api4.c $(EXAMPLES_DEST)api4.c
+	$(CP) $(EXAMPLES_SRC)api5.c $(EXAMPLES_DEST)api5.c
+	$(CP) $(EXAMPLES_SRC)api6.c $(EXAMPLES_DEST)api6.c
+	$(CP) $(EXAMPLES_SRC)api7.c $(EXAMPLES_DEST)api7.c
+	$(CP) $(EXAMPLES_SRC)api8.c $(EXAMPLES_DEST)api8.c
+	$(CP) $(EXAMPLES_SRC)api9.c $(EXAMPLES_DEST)api9.c
+	$(CP) $(EXAMPLES_SRC)api9f.c $(EXAMPLES_DEST)api9f.c
+	$(CP) $(EXAMPLES_SRC)apifull.c $(EXAMPLES_DEST)apifull.c
+	$(CP) $(EXAMPLES_SRC)employe2.sql $(EXAMPLES_DEST)employe2.sql
+	$(CP) $(EXAMPLES_SRC)dyn1.e $(EXAMPLES_DEST)dyn1.e
+	$(CP) $(EXAMPLES_SRC)dyn2.e $(EXAMPLES_DEST)dyn2.e
+	$(CP) $(EXAMPLES_SRC)dyn3.e $(EXAMPLES_DEST)dyn3.e
+	$(CP) $(EXAMPLES_SRC)dyn4.e $(EXAMPLES_DEST)dyn4.e
+	$(CP) $(EXAMPLES_SRC)dyn5.e $(EXAMPLES_DEST)dyn5.e
+	$(CP) $(EXAMPLES_SRC)dynfull.e $(EXAMPLES_DEST)dynfull.e
+	$(SETUP_ISC_LOCAL) \
+	$(GBAK) $(EXAMPLES_SRC)employee.gdb $(EXAMPLES_DEST)employee.gbk
+	-$(RM) $(EXAMPLES_DEST)employee.gdb
+	$(SETUP_ISC_LOCAL) \
+	$(GBAK) -r $(EXAMPLES_DEST)employee.gbk $(EXAMPLES_DEST)employee.gdb
+	$(CP) $(EXAMPLES_SRC)example.h $(EXAMPLES_DEST)example.h
+	$(CP) $(EXAMPLES_SRC)api9f.sql $(EXAMPLES_DEST)api9f.sql
+	$(SETUP_ISC_LOCAL) \
+	$(GBAK) $(EXAMPLES_SRC)intlemp.gdb $(EXAMPLES_DEST)intlemp.gbk
+	-$(RM) $(EXAMPLES_DEST)intlemp.gdb
+	$(SETUP_ISC_LOCAL) \
+	$(GBAK) -r $(EXAMPLES_DEST)intlemp.gbk $(EXAMPLES_DEST)intlemp.gdb
+	$(CP) $(EXAMPLES_SRC)stat1.e $(EXAMPLES_DEST)stat1.e
+	$(CP) $(EXAMPLES_SRC)stat10.e $(EXAMPLES_DEST)stat10.e
+	$(CP) $(EXAMPLES_SRC)stat11.e $(EXAMPLES_DEST)stat11.e
+	$(CP) $(EXAMPLES_SRC)stat12.e $(EXAMPLES_DEST)stat12.e
+	$(CP) $(EXAMPLES_SRC)stat12t.e $(EXAMPLES_DEST)stat12t.e
+	$(CP) $(EXAMPLES_SRC)stat2.e $(EXAMPLES_DEST)stat2.e
+	$(CP) $(EXAMPLES_SRC)stat3.e $(EXAMPLES_DEST)stat3.e
+	$(CP) $(EXAMPLES_SRC)stat4.e $(EXAMPLES_DEST)stat4.e
+	$(CP) $(EXAMPLES_SRC)stat5.e $(EXAMPLES_DEST)stat5.e
+	$(CP) $(EXAMPLES_SRC)stat6.e $(EXAMPLES_DEST)stat6.e
+	$(CP) $(EXAMPLES_SRC)stat7.e $(EXAMPLES_DEST)stat7.e
+	$(CP) $(EXAMPLES_SRC)stat8.e $(EXAMPLES_DEST)stat8.e
+	$(CP) $(EXAMPLES_SRC)stat9.e $(EXAMPLES_DEST)stat9.e
+	$(CP) $(EXAMPLES_SRC)udf.sql $(EXAMPLES_DEST)udf.sql
+	$(CP) $(EXAMPLES_SRC)udflib.c $(EXAMPLES_DEST)udflib.c
+	$(CP) $(EXAMPLES_SRC)makefile.example $(EXAMPLES_DEST)makefile
+
+nt_examples:
+	$(CP) $(EXAMPLES_SRC)api9f.def $(EXAMPLES_DEST)api9f.def
+	$(CP) $(EXAMPLES_SRC)udflib.def $(EXAMPLES_DEST)udflib.def
+	$(CP) $(EXAMPLES_SRC)makefile.bc $(EXAMPLES_DEST)Makefile.bc
+	$(CP) $(EXAMPLES_SRC)makefile.msc $(EXAMPLES_DEST)Makefile.msc
+
+employee.gdb:	empbuild$(EXEC_EXT) $(INPUT_FILES)
+	-$(RM) employee.gdb
+	$(SETUP_ISC_LOCAL) \
+	empbuild employee.gdb
+	-$(CHMOD_6) employee.gdb
+
+intlemp.gdb:	intlbld$(EXEC_EXT) $(INTL_FILES)
+	-$(RM) intlemp.gdb
+	$(SETUP_ISC_LOCAL) \
+	intlbld intlemp.gdb
+	-$(CHMOD_6) intlemp.gdb
+
+empbuild: $(EMPBLD_OBJ)
+	-$(RM) empbuild
+	$(CC) $(LINK_OPTS) empbuild.o -o empbuild $(GDS_LINK)
+	$(CHMOD_7) empbuild
+
+empbuild.exe:	$(EMPBLD_OBJ)
+	-$(RM) empbuild.exe
+	$(CC) $(O_EXE_SWITCH)empbuild $(LINK_OPTS) empbuild.o $(GDS_LINK)
+
+dbs: empddl.sql empbld.sql intlddl.sql intlbld.sql 
+	-$(RM) employee.gdb
+	-$(RM) intlemp.gdb
+	$(ISQL) -i empbld.sql
+	$(ISQL) -i intlbld.sql
+	$(TOUCH) dbs
+
+intlbld: $(INTLBLD_OBJ)
+	-$(RM) intlbld
+	$(CC) $(LINK_OPTS) intlbld.o -o intlbld $(GDS_LINK)
+	$(CHMOD_7) intlbld
+
+intlbld.exe:	$(INTLBLD_OBJ)
+	-$(RM) intlbld.exe
+	$(CC) $(O_EXE_SWITCH)intlbld $(LINK_OPTS) intlbld.o $(GDS_LINK)
+
+empbuild.c:	dbs empbuild.e
+empbuild.o:	empbuild.c
+intlbld.c:	dbs intlbld.e
+intlbld.o:	intlbld.c
+
+makefile.example:
+	$(CHMOD_7) build_make
+	$(SH) "build_make"
+

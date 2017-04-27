@@ -1,0 +1,31 @@
+#
+#  RPCGEN to generate the OGDI header file.
+#
+# Copyright (C) 1997 Logiciels et Applications Scientifiques (L.A.S.) Inc
+# Permission to use, copy, modify and distribute this software and
+# its documentation for any purpose and without fee is hereby granted,
+# provided that the above copyright notice appear in all copies, that
+# both the copyright notice and this permission notice appear in
+# supporting documentation, and that the name of L.A.S. Inc not be used 
+# in advertising or publicity pertaining to distribution of the software 
+# without specific, written prior permission. L.A.S. Inc. makes no
+# representations about the suitability of this software for any purpose.
+# It is provided "as is" without express or implied warranty.
+#
+
+EXTRA_INSTALL_TARGETS	=	install-includes
+
+include $(TOPDIR)/config/common.mak
+
+all:
+
+rpcgen:
+	-$(RM) -f $@ $@.raw
+	rpcgen -h -C -o $@.raw ecs.x
+	perl ../scripts/h_clean.pl -o $@ $@.raw
+
+clean:
+	@echo Nothing to clean in ogdi/include
+
+install-includes:
+	cp *.h $(INST_INCLUDE)

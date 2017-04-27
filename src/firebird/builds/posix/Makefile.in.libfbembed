@@ -1,0 +1,75 @@
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+# You may obtain a copy of the Licence at
+# http://www.gnu.org/licences/lgpl.html
+# 
+# As a special exception this file can also be included in modules
+# with other source code as long as that source code has been 
+# released under an Open Source Initiative certificed licence.  
+# More information about OSI certification can be found at: 
+# http://www.opensource.org 
+# 
+# This module is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public Licence for more details.
+# 
+# This module was created by members of the firebird development 
+# team.  All individual contributions remain the Copyright (C) of 
+# those individuals and all rights are reserved.  Contributors to 
+# this file are either listed below or can be obtained from a CVS 
+# history command.
+#
+#  Created by:  Mark O'Donohue <mark.odonohue@ludwig.edu.au>
+#
+#  Contributor(s):
+# 
+#
+ROOT=..
+ObjModuleType=std
+ArchType=classic
+
+include     $(ROOT)/gen/make.defaults
+include     $(ROOT)/gen/make.platform
+include     $(ROOT)/gen/make.rules
+include     $(ROOT)/gen/make.shared.variables
+
+@SET_MAKE@
+
+
+# These are deliberatly unexported otherwise gbak and others will try and check
+# the userid against the security2.fdb database, which doesn't exist at this stage
+# in the build. MOD 11-July-2002
+
+unexport ISC_USER
+unexport ISC_PASSWORD
+
+
+SERVER_Files = $(OS_ServerFiles) server.cpp 
+SERVER_Sources = $(addprefix remote/, $(SERVER_Files))
+SERVER_Objects = $(addprefix $(OBJ)/, $(addsuffix .o, $(basename $(SERVER_Sources))))
+
+
+
+AllObjects = $(LIBFBEMBED_Objects) $(SERVER_Objects) $(COMMON_Objects) 
+Dependencies = $(AllObjects:.o=.d)
+
+
+.PHONY: libfbembed
+
+libfbembed : $(LIBIBUTIL_SO) $(LIBFBEMBED_SONAME)
+
+$(LIBFBEMBED_SO): $(LIBFBEMBED_Objects) $(SERVER_Objects) $(COMMON_Objects)
+	$(LINK_EMBED) -o $@ $^ $(LINK_EMBED_LIBS)
+
+$(LIBFBEMBED_SOBASENAME): $(LIBFBEMBED_SO)
+	(cd $(LIB) && $(LN) -f $(SharedLibraryName) $(SharedLibrarySoName) )
+
+$(LIBFBEMBED_SONAME): $(LIBFBEMBED_SOBASENAME)
+	(cd $(LIB) && $(LN) -f $(SharedLibrarySoName) $(SharedLibraryBaseName) )
+
+include $(ROOT)/gen/make.shared.targets
+
+-include $(Dependencies)

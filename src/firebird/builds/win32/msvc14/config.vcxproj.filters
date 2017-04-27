@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Config files">
+      <UniqueIdentifier>{e63cb39d-da2d-4d9d-a867-6bdf52571880}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Vulcan files">
+      <UniqueIdentifier>{8d149ae1-892e-4f95-bb24-ef1423e96cef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{c659c855-524a-4376-b43c-4c4238878537}</UniqueIdentifier>
+      <Extensions>h</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\config\AdminException.cpp">
+      <Filter>Config files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\config\Args.cpp">
+      <Filter>Config files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\config\ArgsException.cpp">
+      <Filter>Config files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\config\ConfigFile.cpp">
+      <Filter>Config files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\config\Configuration.cpp">
+      <Filter>Config files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\config\ConfObj.cpp">
+      <Filter>Config files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\config\ConfObject.cpp">
+      <Filter>Config files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\config\Element.cpp">
+      <Filter>Config files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\config\FileName.cpp">
+      <Filter>Config files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\config\InputFile.cpp">
+      <Filter>Config files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\config\InputStream.cpp">
+      <Filter>Config files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\config\Lex.cpp">
+      <Filter>Config files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\config\ScanDir.cpp">
+      <Filter>Config files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\config\Stream.cpp">
+      <Filter>Config files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\config\StreamSegment.cpp">
+      <Filter>Config files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\vulcan\PathName.cpp">
+      <Filter>Vulcan files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\vulcan\RefObject.cpp">
+      <Filter>Vulcan files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\src\vulcan\PathName.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\vulcan\RefObject.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\src\config\ScanDir.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

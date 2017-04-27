@@ -1,0 +1,17 @@
+LIBRARY   PROJ
+
+CODE      PRELOAD MOVEABLE DISCARDABLE
+DATA      PRELOAD SINGLE
+
+EXPORTS
+	pj_free
+	pj_init
+	pj_inv
+	pj_fwd
+        rtodms
+        set_rtodms
+	nad_cvt
+	nad_init
+	nad_free
+
+

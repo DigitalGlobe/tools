@@ -1,0 +1,11 @@
+###
+# $Id: makefile.vc 12829 2008-05-08 19:42:50Z dburken $
+# 
+# nmake makefile
+#
+# Typical usage:  nmake /f makefile.vc
+###
+
+PROGRAM=ossim-slope
+
+!include ..\makefile.inc

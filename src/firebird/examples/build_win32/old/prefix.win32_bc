@@ -1,0 +1,203 @@
+# The contents of this file are subject to the Interbase Public
+# License Version 1.0 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy
+# of the License at http://www.Inprise.com/IPL.html
+#
+# Software distributed under the License is distributed on an
+# "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+# or implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code was created by Inprise Corporation
+# and its predecessors. Portions created by Inprise Corporation are
+# Copyright (C) Inprise Corporation.
+#
+# All Rights Reserved.
+# Contributor(s): ______________________________________.
+# -------------------------- makefile.bc -------------------------
+#
+# This makefile will build the examples supplied with InterBase 5.0.
+# See the Programmer's Guide for information about the example
+# databases and example programs.
+#
+# You MUST edit the IBASE definition in this file to point to the
+# directory where InterBase was installed.  As well as the BCDIR
+# definition to point to the installations directory of your 
+# Borland C/C++ Compiler. 
+#
+# To build all the examples use the 'all' target, by issuing the 
+# following command:
+#
+#   	make -f makefile.bc all
+#
+# To build any one individual target, use the following command:
+#
+#  	make -f makefile.bc 'target'
+#
+# where target 'target' is one of the following:
+# 	employe2.gdb, api1.exe, api2.exe, api3.exe, api4.exe, 
+# 	api5.exe, api6.exe, api7.exe, api8.exe, api9.exe, 
+# 	api9f.dll, api10.exe, api11.exe, api12.exe, api13.exe, 
+# 	api14.exe, api15.exe, api16.exe, api16t.exe, apifull.exe, 
+# 	dyn1.exe, dyn2.exe, dyn3.exe, dyn4.exe, dyn5.exe, 
+# 	dynfull.exe, stat1.exe, stat2.exe, stat3.exe, stat4.exe, 
+# 	stat5.exe, stat6.exe, stat7.exe, stat8.exe, stat9.exe, 
+# 	stat10.exe, stat11.exe, stat12.exe, stat12t.exe, 
+# 	udflib.dll
+#
+# ---------------------------------------------------------------------
+
+# ---------------------------------------------------------------------
+# InterBase Installation Directory
+#
+# CHANGE this definition to point to your InterBase installation directory
+# ---------------------------------------------------------------------
+IBASE=		d:\interbase
+
+# ---------------------------------------------------------------------
+# Borland C/C++ Installation Directory
+#
+# CHANGE this definition to point to your compiler's installation directory
+# ---------------------------------------------------------------------
+BCDIR=		d:\bc5
+
+# ---------------------------------------------------------------------
+# General InterBase Defines for Microsoft Windows 95/NT
+# ---------------------------------------------------------------------
+GPRE=		$(IBASE)\bin\gpre -c -n
+GPRE_M=		$(IBASE)\bin\gpre -c -n -m
+ISQL=		$(IBASE)\bin\isql
+DB=		employee.gdb
+
+# ---------------------------------------------------------------------
+# General Compiler and linker Defines for Borland C/C++ 5.0
+# ---------------------------------------------------------------------
+COMMON_FLAGS=	-c -v -w- -a4 -tWM -DWIN32 $(INCLUDE)
+CFLAGS=		$(COMMON_FLAGS) -tWC
+LIB_CFLAGS=	$(COMMON_FLAGS) -tWCDE
+INCLUDE=	-I$(IBASE)\include -I$(BCDIR)\include
+LFLAGS=		/c /x /ap /Tpe 
+LIBS=		$(IBASE)\lib\gds32.lib
+CC=		$(BCDIR)\bin\bcc32
+LINK=		$(BCDIR)\bin\tlink32
+IMPLIB=		$(BCDIR)\bin\implib
+COPY=		copy
+RM=		del
+
+
+# ---------------------------------------------------------------------
+# Generic Compilation Rules 
+#
+# Do NOT change anything below this point.
+# ---------------------------------------------------------------------
+.SUFFIXES: .e .c .obj .exe
+
+.e.c:
+	$(GPRE) $< -d $(DB)
+
+.c.obj:
+	$(CC) $(CFLAGS) $<
+
+.obj.exe:
+	@echo $(BCDIR)\lib\c0x32.obj+ > link.arg
+	@echo $< >> link.arg
+	@echo $@ >> link.arg
+	@echo $(LFLAGS) >> link.arg 
+	@echo $(LIBS)+ >> link.arg
+	@echo $(BCDIR)\lib\import32.lib+ >> link.arg
+	@echo $(BCDIR)\lib\cw32mt.lib >> link.arg
+	$(LINK) @link.arg 
+	-$(RM) link.arg
+
+# ---------------------------------------------------------------------
+# Specific targets to build 
+# ---------------------------------------------------------------------
+
+cmt:
+	@echo "--------------------------- makefile.bc -------------------------
+	@echo "									 
+	@echo " This makefile will build the InterBase 5.0 examples.		
+	@echo " See the Programmer's Guide for information about the example
+	@echo " databases and example programs.	
+	@echo "									
+	@echo " You MUST edit the IBASE definition in this file to point to the	
+	@echo " directory where InterBase was installed.  As well as the BCDIR 
+	@echo " definition to point to the installations directory of your 		
+	@echo " Borland C/C++ Compiler.					 
+	@echo "									
+	@echo " To build all the examples use the 'all' target, by issuing the 	
+	@echo " following command:						
+	@echo "									
+	@echo " 	make -f makefile.bc all				
+	@echo "									
+	@echo " To build any one individual target, use the command:	
+	@echo "									
+	@echo " 	make -f makefile.bc 'target'				
+	@echo "									
+	@echo " where target 'target' is one of the following:			
+	@echo "									
+	@echo " 	employe2.gdb, api1.exe, api2.exe, api3.exe, api4.exe, 
+	@echo " 	api5.exe, api6.exe, api7.exe, api8.exe, api9.exe, 
+	@echo " 	api9f.dll, api10.exe, api11.exe, api12.exe, api13.exe, 
+	@echo " 	api14.exe, api15.exe, api16.exe, api16t.exe, apifull.exe, 
+	@echo " 	dyn1.exe, dyn2.exe, dyn3.exe, dyn4.exe, dyn5.exe, 
+	@echo " 	dynfull.exe, stat1.exe, stat2.exe, stat3.exe, stat4.exe, 
+	@echo " 	stat5.exe, stat6.exe, stat7.exe, stat8.exe, stat9.exe, 
+	@echo " 	stat10.exe, stat11.exe, stat12.exe, stat12t.exe, 
+	@echo " 	udflib.dll
+	@echo " 								
+	@echo "-----------------------------------------------------------------
+
+all: employe2.gdb api1.exe api2.exe api3.exe \
+     api4.exe api5.exe api6.exe api7.exe api8.exe \
+     api9.exe api9f.dll api10.exe api11.exe api12.exe api13.exe \
+     api14.exe api15.exe api16.exe api16t.exe \
+     apifull.exe dyn1.exe dyn2.exe dyn3.exe dyn4.exe \
+     dyn5.exe dynfull.exe stat1.exe stat2.exe stat3.exe \
+     stat4.exe stat5.exe stat6.exe stat7.exe stat8.exe stat9.exe \
+     stat10.exe stat11.exe stat12.exe stat12t.exe udflib.dll 
+     
+
+employe2.gdb: employe2.sql
+	$(ISQL) -i $?
+
+api9.obj: api9.c example.h api9f.sql  
+	$(CC) $(CFLAGS) api9.c $(LIBS)
+	$(ISQL) employee.gdb -i api9f.sql
+
+api9f.obj: api9f.c example.h
+	$(CC) $(LIB_CFLAGS) $?
+
+api9f.dll: api9f.obj
+# build a small argument file and use it
+	@echo $(BCDIR)\lib\c0d32.obj+ > link.arg
+	@echo $? >> link.arg
+	@echo $@ >> link.arg
+	@echo /x /Tpd >> link.arg 
+	@echo $(LIBS)+ >> link.arg
+	@echo $(BCDIR)\lib\import32.lib+ >> link.arg
+	@echo $(BCDIR)\lib\cw32mt.lib >> link.arg
+	$(LINK) @link.arg
+	@echo -----------------------------------------------------------
+	@echo You need to copy api9f.dll to the interbase lib directory
+	@echo in order for api9.exe to work correctly.
+	@echo -----------------------------------------------------------
+
+udflib.obj: udflib.c example.h
+	$(CC) $(LIB_CFLAGS) udflib.c
+
+udflib.dll: udflib.obj
+# build a small argument file and use it
+	@echo $(BCDIR)\lib\c0d32.obj+ > link.arg
+	@echo $? >> link.arg
+	@echo $@ >> link.arg
+	@echo /x /Tpd >> link.arg 
+	@echo $(LIBS)+ >> link.arg
+	@echo $(BCDIR)\lib\import32.lib+ >> link.arg
+	@echo $(BCDIR)\lib\cw32mt.lib >> link.arg
+	$(LINK) @link.arg
+ 	@echo -----------------------------------------------------------
+	@echo You need to copy udflib.dll to the interbase lib directory
+	@echo in order for the server to load it. 
+	@echo -----------------------------------------------------------
+

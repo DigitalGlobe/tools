@@ -1,0 +1,108 @@
+#!/bin/sh
+#
+#  The contents of this file are subject to the Initial
+#  Developer's Public License Version 1.0 (the "License");
+#  you may not use this file except in compliance with the
+#  License. You may obtain a copy of the License at
+#  http://www.ibphoenix.com/main.nfs?a=ibphoenix&page=ibp_idpl.
+#
+#  Software distributed under the License is distributed AS IS,
+#  WITHOUT WARRANTY OF ANY KIND, either express or implied.
+#  See the License for the specific language governing rights
+#  and limitations under the License.
+#
+#  The Original Code was created by Mark O'Donohue
+#  for the Firebird Open Source RDBMS project.
+#
+#  Copyright (c) Mark O'Donohue <mark.odonohue@ludwig.edu.au>
+#  and all contributors signed below.
+#
+#  All Rights Reserved.
+#  Contributor(s): ______________________________________.
+#		Alex Peshkoff
+#
+
+#------------------------------------------------------------------------
+# init defaults
+DefaultLibrary=libfbembed
+
+
+#------------------------------------------------------------------------
+#  For security reasons most files in firebird installation are
+#  root-owned and world-readable(executable) only (including firebird).
+
+#  For some files RunUser and RunGroup (firebird)
+#  must have write access - lock and log for example.
+
+MakeFileFirebirdWritable() {
+    FileName=$1
+    chown $RunUser:$RunGroup $FileName
+
+	if [ "$RunUser" = "root" ]
+	# In that case we must open databases, locks, etc. to the world...
+	# That's a pity, but required if root RunUser choosen.
+	then
+    	chmod a=rw $FileName
+	else
+		# This is good secure setting
+	    chmod ug=rw,o= $FileName
+	fi
+}
+
+
+#------------------------------------------------------------------------
+#  fixArcSpecificPermissions
+#  Change the permissions specific for CS
+
+fixArcSpecificPermissions() {
+    # Fix QLI help
+	cd @FB_HELPDIR@
+    chmod a=r help.fdb
+}
+
+
+#------------------------------------------------------------------------
+#  changeXinetdServiceUser
+#  Change the run user of the xinetd service
+
+changeXinetdServiceUser() {
+    InitFile=/etc/xinetd.d/firebird
+    if [ -f $InitFile ] 
+    then
+        editFile $InitFile user "\tuser\t\t\t= $RunUser"
+    fi
+}
+
+
+#------------------------------------------------------------------------
+#  Update inetd service entry
+#  This just adds/replaces the service entry line
+
+updateInetdEntry() {
+    newLine="@FB_SERVICE_NAME@  stream  tcp     nowait.30000      $RunUser @FB_SBINDIR@/fb_inet_server fb_inet_server # Firebird Database Remote Server"
+    replaceLineInFile /etc/inetd.conf "$newLine" "^@FB_SERVICE_NAME@"
+}
+
+
+#------------------------------------------------------------------------
+#  Update xinetd service entry
+
+updateXinetdEntry() {
+    cp @FB_MISCDIR@/firebird.xinetd /etc/xinetd.d/firebird
+    changeXinetdServiceUser
+}
+
+
+#------------------------------------------------------------------------
+#  Update inetd service entry 
+#  Check to see if we have xinetd installed or plain inetd.  
+#  Install differs for each of them.
+
+updateInetdServiceEntry() {
+    if [ -d /etc/xinetd.d ] 
+    then
+        updateXinetdEntry
+    else
+        updateInetdEntry
+    fi
+}

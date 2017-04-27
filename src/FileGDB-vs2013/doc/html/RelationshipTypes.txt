@@ -1,0 +1,16 @@
+DatasetsRelatedThrough
+ItemInFolder
+ReplicaDatasetInReplica
+FeatureClassInTerrain
+FeatureClassInTopology
+DatasetInFeatureDataset
+DatasetOfReplicaDataset
+FeatureClassInParcelFabric
+FeatureClassInGeometricNetwork
+DatasetInFolder
+FolderInFolder
+TableInParcelFabric
+FeatureClassInNetworkDataset
+DomainInDataset
+RepresentationOfFeatureClass
+TableInNetworkDataset

@@ -1,0 +1,474 @@
+SHELL = /bin/sh
+OS := $(shell uname)
+
+include $(TOPDIR)/Make/dependencies
+
+## We don't care about architectural distinguishers in the OS
+## such as IRIX64, IRIX32, etc. so we truncate IRIX?? to IRIX
+ifeq ($(findstring IRIX,$(OS)),IRIX)
+OS := IRIX
+endif
+
+## Make CYGWIN_XXXX CYGWIN so it's "Windows cross platform" :)
+ifeq ($(findstring CYGWIN,$(OS)),CYGWIN)
+OS := CYGWIN
+#OS := MINGW
+endif
+
+## Make MINGW_XXXX MINGW so it's "Windows cross platform" :)
+ifeq ($(findstring MINGW,$(OS)),MINGW)
+OS := MINGW
+endif
+
+# TOPDIR needs to be redefined for every GNUmakefile
+TOPDIR     ?= ../
+THISDIR    = .
+MAKEDEPEND = ignore
+
+####################################################################### 
+##
+##                   VERSIONING SEMANTICS
+##
+## Version consistes of <major> . <minor> . <release> - <revision>
+## Where:
+##    major   : Production (0 = pre-production)
+##    minor   : 0-7 = Production minor, 8 = Alpha, 9 = Beta
+##    release : Release tag
+##    revision: Release revision - 0 = development (cutting edge). 
+##
+## Usage:
+##     Default - VERSION_REVISION is set to the value defined here
+##     Env variable WMS_VERSION_REVISION overrides default    
+##           e.g.:
+##               % setenv WMS_VERSION_REVISION 5
+##               % make version
+##     Command line overrides env variable
+##               % make VERSION_REVISION=  
+####################################################################### 
+VERSION_MAJOR    = 1
+VERSION_MINOR    = 0
+VERSION_RELEASE  = 0
+VERSION_REVISION ?= 0
+VERSION       = $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_RELEASE)
+
+INC        = -I$(TOPDIR)/include
+
+############################################################################
+## NOTE - Semantics for the use of ARCH, ARCHARGS, and ARCHINST parameters
+## ARCH     - must be defined if the OS supports both 64 and 32 bit 
+##           architectures may remain undefined if it does not.
+## ARCHARGS - Compiler directives to indicate for which architecture 
+##           to build for
+## ARCHINST - Installation target directory.  Define if the OS supports 
+##           more than one architecture (32 and 64).
+##              for ARCH=32 - define ARCHINST only if the system uses an 
+##                            extension on 'lib' to indicate 32 bit.  e.g. 
+##                            IRIX defines /usr/lib32
+##              for ARCH=64 - Always define ARCHINST.  Even if the OS 
+##                            doesn't make a distinction, we will.
+############################################################################
+
+CXXFLAGS   = $(ARCHARGS) $(DOF) $(DEF) $(INC)
+LDFLAGS    = $(ARCHARGS) $(DOF) $(LINKARGS) -L$(TOPDIR)/lib/$(OS)$(ARCH) 
+OBJS       = $(C++FILES:.cpp=.o) \
+             $(CXXFILES:.cpp=.o) \
+             $(CFILES:.c=.o) \
+
+EXE_EXT    =
+
+DOF        = $(OPTF)
+DEBUGDIR   = $(OS)$(ARCH).Debug
+OPTDIR     = $(OS)$(ARCH).Opt
+BININST    = bin
+LIBINST    = lib
+
+ifeq ("$(INST_LOCATION)","")
+INST_LOCATION  = /usr/local
+endif
+INST_LIBS      = $(INST_LOCATION)/lib$(ARCHINST)
+INST_INCLUDE   = $(INST_LOCATION)/include
+INST_SHARE     = $(INST_LOCATION)/share
+INST_EXAMPLES  = $(INST_LOCATION)/bin
+INST_SRC       = $(INST_SHARE)/libwms/src
+INST_EXAMPLE_SRC = $(INST_SRC)/examples
+INST_DOC       = $(INST_SHARE)/libwms/doc
+INST_DATA      = $(INST_SHARE)/libwms/data
+LINK           = ln -sf
+INSTBINCMD     = install -m 755
+INSTDEVCMD     = install -m 644
+INSTLINKBINCMD = $(LINK)
+INSTLINKDEVCMD = $(LINK)
+LIB_PREFIX     = lib
+LIB_EXT        = so
+PLUGIN_EXT     = so
+MAKEDIST       = echo "   === Distribution build is not implemented yet for $(OS)"; printf "\n"
+INSTLOGFILE    = /tmp/.wms_inst_log
+
+
+RECURSIVE_TARGETS = \
+	  opt\
+	  debug\
+	  clean\
+	  cleandepend\
+	  cleandependopt\
+	  cleandependdbg\
+	  cleandbg\
+	  cleanopt\
+	  cleantarget\
+	  cleantargetopt\
+	  cleantargetdbg\
+	  clobber\
+	  clobberdbg\
+	  clobberopt\
+	  cleantmp\
+	  docs\
+	  depend
+
+#### SUN OS Specific definitions 
+ifeq ($(OS),SunOS)
+  ifeq ($(COMPILER),)
+	COMPILER=gnu
+  endif
+LDFLAGS += -L/usr/local/lib
+  #### if useing g++ on a sun
+  ifeq ($(COMPILER),gnu)
+    C++               = g++
+    DEPARG            = -M
+    INC               += -I/usr/local/include
+    DEF               += -W -Wall -fPIC -fpermissive
+    OPTF              = -O2
+    DBGF              = -g 
+    SHARED            = -shared -fPIC 
+    ARCH              = 32
+  ifeq ($(ARCH),64)
+      ARCHARGS        = -m64 -DARCH64
+      ARCHINST        = 64 
+  else
+      ARCHARGS        = 
+  endif
+    OTHER_LIBS        = -L/usr/local/lib -lexpat -lcurl
+
+  #### using forte compilers (default)
+  else
+    C++               = CC
+    DEPARG            = -xM1
+    INC               += 
+    DEF               += -features=extensions -w
+    OPTF              = -xO4
+    DBGF              = -g 
+    SHARED            = -G
+    ARCH              = 32
+  ifeq ($(ARCH),64)
+      ARCHARGS        = -xarch=v9 -DARCH64
+      ARCHINST        = 64
+  else
+      ARCHARGS        = 
+      ARCHINST        = 
+  endif
+    OTHER_LIBS        = -L/usr/local/lib -lCstd -lexpat -lcurl
+    LINKARGS          =  
+  endif 
+    DYNAMICLIBRARYLIB = -ldl
+    SOCKET_LIBS       = -lsocket -lnsl
+    INSTBINCMD        = cp
+    INSTDEVCMD        = cp
+    INST_LOCATION     = /usr/local
+    MAKEDIST          = $(TOPDIR)/Make/makepkg
+    OTHER_LIBS        = -lexpat -lcurl
+endif
+
+#### IRIX Specific definitions
+ifeq ($(OS),IRIX)
+	CXX = CC
+	ifeq ($(CXX),CC)
+		LINKARGS          = -L${TOPDIR}/lib -LANG:std -OPT:Olimit=0  
+		C++               = CC
+		DEPARG            = -M
+		INC               += -I${TOPDIR}/include -I/usr/freeware/include
+		DEF               += -LANG:std -OPT:Olimit=0 \
+		                   -DEBUG:woff=1681 -DEBUG:woff=1682 -DEBUG:woff=3303\
+		                   -MDupdate $(MAKEDEPEND)
+		OPTF              = -O2 
+		DBGF              = -g 
+		SHARED            = -shared
+		PFLIBS            = \
+		                  -lpf3ds -lpfdem -lpfdted -lpfdwb -lpfdxf -lpfevt \
+		                  -lpfflt -lpfgds -lpfgfo -lpfim -lpflsa -lpflsb \
+		                  -lpfnff -lpfobj -lpfpegg -lpfpfb -lpfphd -lpfpts \
+		                  -lpfrot -lpfscale -lpfsgf -lpfsgo -lpfsphere -lpfsv \
+		                  -lpftri -lpfunc -lpfvct -lpfdu -lpfutil -lpf -all -limage
+		ARCH              = 32
+		ifeq ($(ARCH),64)
+			ARCHARGS          = -64 -DARCH64
+			ARCHINST          = 64
+			LINKARGS          += -L/usr/freeware/lib64
+			PF_XTRA_LIBS      = -L/usr/lib64/libpfdb -rpath /usr/lib64/libpfdb \
+			                     $(PFLIBS)
+		else 
+			ARCHARGS          = -n32
+			ARCHINST          = 32
+			LINKARGS          += -L/usr/freeware/lib32
+			PF_XTRA_LIBS      = -L/usr/lib32/libpfdb -rpath /usr/lib32/libpfdb \
+			                     $(PFLIBS)
+		endif
+	else		
+	 	LIBS              = -lstdc++
+		LINKARGS          = -L${TOPDIR}/lib  
+		C++               = g++
+		INC               += -I${TOPDIR}/include -I/usr/freeware/include
+		DEF               += -fPIC -W -Wno-unused 
+		OPTF              = -O2 
+		DBGF              = -g -gstabs+
+		SHARED            = -shared
+		PFLIBS            = \
+		                  -lpf3ds -lpfdem -lpfdted -lpfdwb -lpfdxf -lpfevt \
+		                  -lpfflt -lpfgds -lpfgfo -lpfim -lpflsa -lpflsb \
+		                  -lpfnff -lpfobj -lpfpegg -lpfpfb -lpfphd -lpfpts \
+		                  -lpfrot -lpfscale -lpfsgf -lpfsgo -lpfsphere -lpfsv \
+		                  -lpftri -lpfunc -lpfvct -lpfdu -lpfutil -lpf -all -limage
+		ARCH              = 32
+		ifeq ($(ARCH),64)
+			ARCHARGS          = -mabi=64 -mips4 -DARCH64
+			ARCHINST          = 64
+			LINKARGS          += -L/usr/freeware/lib64
+			PF_XTRA_LIBS      = -L/usr/lib64/libpfdb -rpath /usr/lib64/libpfdb \
+			                     $(PFLIBS)
+		else 
+			ARCHARGS          = -mabi=n32 -mips4
+			ARCHINST          = 32
+			LINKARGS          += -L/usr/freeware/lib32
+			PF_XTRA_LIBS      = -L/usr/lib32/libpfdb -rpath /usr/lib32/libpfdb \
+			                     $(PFLIBS)
+		endif	
+	endif
+
+	DYNAMICLIBRARYLIB = 
+	OTHER_LIBS        = -lm -lexpat -lcurl
+	MAKEDIST          = $(TOPDIR)/Make/makeirixdist
+
+endif
+
+#### Linux specific definitions
+
+ifeq ($(OS),Linux)
+
+  ifeq (x$(CXX),x)
+    C++             = g++
+  else
+    C++             = $(CXX)
+  endif
+
+  DEPARG            = -M
+  INC               += 
+
+  ifeq ($(COMPILER),intel)
+    C++             = ecc
+    LIBS            = -lgcc_s
+    DEF             += -KPIC
+    OPTF            = -O2 
+    DBGF            = -g 
+    ifeq ($(SYSARCH),ia64)
+      ARCHARGS        = 
+      ARCH            = IA64
+      ARCHINST        = IA64
+    else
+      ARCHARGS        = 
+      ARCH            = 32
+      ARCHINST        = 
+    endif
+  else
+    LIBS            = -lstdc++
+    DEF             += -W -Wall -fPIC
+    OPTF            = -O2 
+    DBGF            = -g -gstabs+
+    SYSARCH           := $(shell arch)
+    ifeq ($(SYSARCH),x86_64)
+      ARCHARGS        =
+      ARCH            = 64
+      ARCHINST        = 64
+    else
+      ARCHARGS        = 
+      ARCH            = 32
+      ARCHINST        = 
+    endif
+  endif
+
+
+  SHARED            = -shared
+  DYNAMICLIBRARYLIB = -ldl
+  PF_XTRA_LIBS      = -L/usr/lib/libpfdb   -Xlinker -rpath /usr/lib/libpfdb \
+                      -lpfdu -lpfutil -lpf 
+  SOCKET_LIBS       = 
+  OTHER_LIBS        = -lexpat -lcurl
+  MAKEDIST          = $(TOPDIR)/Make/makerpms
+endif
+
+#### FreeBSD specific definitions
+ifeq ($(OS),FreeBSD)
+  C++               = g++
+  DEPARG            = -MM
+  INC               +=  -I/usr/local/include
+  DEF               += -W -Wall
+  OPTF              = -O2 
+  DBGF              = -g 
+  SHARED            = -shared
+  ARCH              = 
+  ARCHINST          = 
+  ARCHARGS          = 
+  LINKARGS          = -L/usr/local/lib -rpath /usr/local/lib
+ DYNAMICLIBRARYLIB = 
+  SOCKET_LIBS       = 
+  OTHER_LIBS        = -lexpat -lcurl
+endif
+
+#### MacOS X specific definitions
+ifeq ($(OS),Darwin)
+  ifeq (x$(CXX),x)
+    C++             = g++
+  else
+    C++             = $(CXX)
+  endif
+  INC               += -I/usr/x11R6/include -I/opt/local/include
+  LDFLAGS	    += -L/usr/X11R6/lib -L/sw/lib -L/opt/local/lib
+  DEF               += -Wall
+  OPTF              = -O2
+  DBGF              = -g
+  DEPARG            = -M $(DEF)
+  SHARED            = -dynamic
+  ARCH              = 32
+  ARCHINST          = 
+  ARCHARGS          = 
+  LINKARGS          =
+  DYNAMICLIBRARYLIB =
+  CARBON_LIB        = -framework Carbon
+  OTHER_LIBS        = -lm -lstdc++ -lexpat -lcurl
+  LIB_EXT           = dylib
+  LIBVERSION	    = -current_version $(VERSION) \
+                        -compatibility_version \
+                        $(VERSION_MAJOR).$(VERSION_MINOR).0
+
+  ifeq ($(DARWIN_QUICKTIME),yes)
+    DEF             += -DDARWIN_QUICKTIME
+  endif
+
+  QUICKTIME	    = -framework QuickTime $(CARBON_LIB)
+
+endif
+
+#### Cygwin specific definitions
+ifeq ($(OS),CYGWIN)
+  C++               = c++
+  DEPARG            = -M
+  INC               += 
+  DEF               += -DWIN32 -W -Wall -DNOMINMAX
+  OPTF              = -O2 
+  DBGF              = -g 
+  SHARED            = -shared\
+                        -Wl,--out-implib,$(TOPDIR)/lib/$(OS)/lib$(TARGET_BASENAME).dll.a -Wl,--export-all-symbols
+
+  EXE_EXT           =.exe
+  ARCH              = 
+  ARCHINST          =
+  ARCHARGS          = 
+  LINKARGS          = -W -Wall
+  DYNAMICLIBRARYLIB =
+  SOCKET_LIBS       = 
+  OTHER_LIBS        = -lexpat `curl-config --libs`
+
+  LIBINST    = bin
+  PLUGININST = bin/$(OS)$(ARCH)
+
+  LIB_PREFIX        = cyg
+  LIB_EXT           = dll
+  PLUGIN_EXT        = dll
+  LINK              = cp -f
+  INST_LOCATION   = /usr/local
+  INST_LIBS         = $(INST_LOCATION)/bin
+  INST_PLUGINS      = $(INST_LOCATION)/bin
+  INST_INCLUDE      = $(INST_LOCATION)/include
+  INST_SHARE_PREFIX = /usr/local
+  INST_SRC          = $(INST_SHARE_PREFIX)/src
+  INST_EXAMPLES        = $(INST_SHARE_PREFIX)/bin
+  INST_EXAMPLE_SRC     = $(INST_SHARE_PREFIX)/src/demos
+  INST_DOC          = $(INST_SHARE_PREFIX)/doc
+  INST_DATA         = $(INST_SHARE_PREFIX)/data
+  MAKEDIST          = $(TOPDIR)/Make/makeinnosetup
+endif
+
+#### Mingw specific definitions
+ifeq ($(OS),MINGW)
+  C++               = c++ -mthreads
+  DEPARG            = -M
+  INC               += -I/usr/local/include
+  DEF               += -DWIN32 -Wall
+# -W
+  OPTF              = -O2 
+  DBGF              = -g 
+  SHARED            = -shared -mthreads \
+                      -Wl,--out-implib,$(TOPDIR)/lib/$(OS)/lib$(TARGET_BASENAME).dll.a -Wl,--export-all-symbols
+
+  EXE_EXT           =.exe
+  ARCH              = 
+  ARCHINST          =
+  ARCHARGS          = 
+  LINKARGS          = -W -Wall
+  DYNAMICLIBRARYLIB =
+  OTHER_LIBS        = -L/usr/local/lib -lexpat `curl-config --libs`
+
+  LIBINST    = bin
+  PLUGININST = bin/$(OS)$(ARCH)
+
+  LIB_PREFIX        = lib
+  LIB_EXT           = dll
+  PLUGIN_EXT        = dll
+  LINK              = cp -f
+  INST_LOCATION     = /usr/local
+  INST_LIBS         = $(INST_LOCATION)/bin
+  INST_PLUGINS      = $(INST_LOCATION)/bin
+  INST_INCLUDE      = $(INST_LOCATION)/include
+  INST_SHARE_PREFIX = /usr/local
+  INST_SRC          = $(INST_SHARE_PREFIX)/src
+  INST_EXAMPLES     = $(INST_SHARE_PREFIX)/bin
+  INST_EXAMPLE_SRC  = $(INST_SHARE_PREFIX)/src/examples
+  INST_DOC          = $(INST_SHARE_PREFIX)/doc
+  INST_DATA         = $(INST_SHARE_PREFIX)/data
+endif
+
+#### HP-UX Specific definitions
+# contributed by tino.schwarze@informatik.tu-chemnitz.de
+
+ifeq ($(OS),HP-UX)
+
+  C++               = g++
+  DEPARG            = -M
+  INC               += 
+  DEF               += -W -Wall -fPIC
+  OPTF              = -O2 
+  # gcc 3.1 uses DWARF as default, my GDB might not yet support this...
+  # at least I've got problems everywhere
+  DBGF              = -g -gstabs+ 
+  SHARED            = -shared -fPIC
+  ARCH              = 32
+ifeq ($(ARCH),64)
+    # not yet tested
+    ARCHARGS          = -march=2.0 -DARCH64
+    ARCHINST          = 64
+else
+   # at least my gcc 3.1 defaults to HP-PA RISC 1.1
+  ARCHARGS          = 
+  ARCHINST          = 
+endif
+  LINKARGS          = 
+  LIB_EXT           = sl
+  PLUGIN_EXT        = sl
+  DYNAMICLIBRARYLIB = -ldld
+  SOCKET_LIBS       = 
+  # make sure that global constructors/destructors are called upon
+  # shl_load() / shl_unload() - this is a gcc specific workaround
+  OTHER_LIBS        = -lm -Wl,+init -Wl,_GLOBAL__DI -Wl,+fini -Wl,_GLOBAL__DD -lexpat -lcurl
+
+endif
+
+VPATH=..
+
+DBGF += -DWMS_DEBUG

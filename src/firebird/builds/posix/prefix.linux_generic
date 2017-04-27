@@ -1,0 +1,32 @@
+# The contents of this file are subject to the Interbase Public
+# License Version 1.0 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy
+# of the License at http://www.Inprise.com/IPL.html
+#
+# Software distributed under the License is distributed on an
+# "AS IS" basis, WITHOUT WARRANTY OF ANY KIND, either express
+# or implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code was created by Inprise Corporation
+# and its predecessors. Portions created by Inprise Corporation are
+# Copyright (C) Inprise Corporation.
+#
+# All Rights Reserved.
+# Contributor(s): ______________________________________.
+# Start of file prefix.linux:	$(VERSION)	$(PLATFORM)
+#
+# 2 Oct 2002, Nickolay Samofatov - Major cleanup
+
+COMMON_FLAGS=-DLINUX -pipe -MMD -fPIC -DFB_SEND_FLAGS=MSG_NOSIGNAL -fsigned-char
+
+PROD_FLAGS=-ggdb -O3 -DNDEBUG $(COMMON_FLAGS)
+DEV_FLAGS=-ggdb -p -Wall -Wno-switch $(COMMON_FLAGS)
+CXXFLAGS:= $(CXXFLAGS) -fno-rtti
+
+OS_ServerFiles=inet_server.cpp
+
+EMBED_UTIL_TARGETS=gstat gsec fbguard nbackup fb_lock_print fbsvcmgr fbtracemgr
+CLIENT_UTIL_TARGETS=gstat gsec fbguard fbmgr_bin nbackup fb_lock_print fbsvcmgr fbtracemgr
+
+Physical_IO_Module=os/posix/unix.cpp

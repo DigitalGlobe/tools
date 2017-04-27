@@ -1,0 +1,23 @@
+LIBRARY   VRF
+
+CODE      PRELOAD MOVEABLE DISCARDABLE
+DATA      PRELOAD SINGLE
+
+EXPORTS
+	dyn_CreateServer
+	dyn_DestroyServer
+	dyn_SelectLayer
+	dyn_ReleaseLayer
+	dyn_SelectRegion
+	dyn_GetDictionary
+	dyn_GetAttributesFormat
+	dyn_GetNextObject
+	dyn_UpdateDictionary
+	dyn_GetServerProjection
+	dyn_GetGlobalBound
+	dyn_GetObject
+	dyn_GetObjectIdFromCoord
+	dyn_GetServerProjection
+	dyn_GetGlobalBound
+	dyn_SetServerLanguage
+

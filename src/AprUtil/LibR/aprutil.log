@@ -1,0 +1,1 @@
+﻿C:\tools\src\AprUtil\aprutil.vcxproj(83,5): warning MSB4011: "C:\Users\Tim Tisler\AppData\Local\Microsoft\MSBuild\v4.0\Microsoft.Cpp.Win32.user.props" cannot be imported again. It was already imported at "C:\tools\src\AprUtil\aprutil.vcxproj (77,5)". This is most likely a build authoring error. This subsequent import will be ignored. 

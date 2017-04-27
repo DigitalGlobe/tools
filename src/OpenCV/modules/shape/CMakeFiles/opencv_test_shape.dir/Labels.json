@@ -1,0 +1,35 @@
+
+{
+	"sources" : 
+	[
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/shape/test/test_main.cpp",
+			"labels" : [ "Main", "opencv_shape", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/shape/test/test_shape.cpp",
+			"labels" : [ "Main", "opencv_shape", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/shape/test/test_precomp.hpp",
+			"labels" : [ "Main", "opencv_shape", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/shape/opencv_test_shape_pch.cpp",
+			"labels" : [ "Main", "opencv_shape", "AccuracyTest" ]
+		},
+		
+		{
+			"file" : "C:/tools/src/OpenCV/modules/shape/CMakeLists.txt"
+		}
+	],
+	"target" : 
+	{
+		"labels" : [ "Main", "opencv_shape", "AccuracyTest" ],
+		"name" : "opencv_test_shape"
+	}
+}

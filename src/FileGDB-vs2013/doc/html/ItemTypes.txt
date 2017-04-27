@@ -1,0 +1,13 @@
+Feature Class
+Relationship Class
+Raster Catalog
+Mosaic Dataset
+Feature Dataset
+Terrain
+Network Dataset
+Table
+Raster Dataset
+Geometric Network
+Topology
+Toolbox
+Representation Class
