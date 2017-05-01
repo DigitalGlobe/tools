@@ -29,6 +29,8 @@ _populate_qt5gui_gl_target_properties(Gui_GLESv2 RELEASE libGLESv2.dll libGLESv2
 set_property(TARGET Qt5::Gui_EGL APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${Qt5Gui_EGL_INCLUDE_DIRS})
 set_property(TARGET Qt5::Gui_GLESv2 APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${Qt5Gui_OPENGL_INCLUDE_DIRS})
 
+_populate_qt5gui_gl_target_properties(Gui_EGL DEBUG libEGLd.dll libEGLd.lib)
+_populate_qt5gui_gl_target_properties(Gui_GLESv2 DEBUG libGLESv2d.dll libGLESv2d.lib)
 
 set(Qt5Gui_EGL_LIBRARIES Qt5::Gui_EGL)
 set(Qt5Gui_OPENGL_LIBRARIES Qt5::Gui_GLESv2)

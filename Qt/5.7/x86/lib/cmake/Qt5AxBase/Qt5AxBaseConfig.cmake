@@ -124,12 +124,12 @@ if (NOT TARGET Qt5::AxBase)
     set_property(TARGET Qt5::AxBase PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_AXBASE_LIB)
 
-    _populate_AxBase_target_properties(RELEASE "Qt5AxBase.lib" "" )
 
-    if (EXISTS "${_qt5AxBase_install_prefix}/lib/Qt5AxBased.lib" )
-        _populate_AxBase_target_properties(DEBUG "Qt5AxBased.lib" "" )
+    _populate_AxBase_target_properties(DEBUG "Qt5AxBased.lib" "" )
+
+    if (EXISTS "${_qt5AxBase_install_prefix}/lib/Qt5AxBase.lib" )
+        _populate_AxBase_target_properties(RELEASE "Qt5AxBase.lib" "" )
     endif()
-
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5AxBase_*Plugin.cmake")

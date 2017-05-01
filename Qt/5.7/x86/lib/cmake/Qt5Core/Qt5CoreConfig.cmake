@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::Core)
     set_property(TARGET Qt5::Core PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_CORE_LIB)
 
-    _populate_Core_target_properties(RELEASE "Qt5Core.dll" "Qt5Core.lib" )
+
+    _populate_Core_target_properties(DEBUG "Qt5Cored.dll" "Qt5Cored.lib" )
 
     if (EXISTS
-        "${_qt5Core_install_prefix}/bin/Qt5Cored.dll"
+        "${_qt5Core_install_prefix}/bin/Qt5Core.dll"
       AND EXISTS
-        "${_qt5Core_install_prefix}/lib/Qt5Cored.lib" )
-        _populate_Core_target_properties(DEBUG "Qt5Cored.dll" "Qt5Cored.lib" )
+        "${_qt5Core_install_prefix}/lib/Qt5Core.lib" )
+        _populate_Core_target_properties(RELEASE "Qt5Core.dll" "Qt5Core.lib" )
     endif()
-
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5Core_*Plugin.cmake")

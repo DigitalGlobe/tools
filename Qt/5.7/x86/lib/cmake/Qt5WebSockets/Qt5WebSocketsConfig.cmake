@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::WebSockets)
     set_property(TARGET Qt5::WebSockets PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_WEBSOCKETS_LIB)
 
-    _populate_WebSockets_target_properties(RELEASE "Qt5WebSockets.dll" "Qt5WebSockets.lib" )
+
+    _populate_WebSockets_target_properties(DEBUG "Qt5WebSocketsd.dll" "Qt5WebSocketsd.lib" )
 
     if (EXISTS
-        "${_qt5WebSockets_install_prefix}/bin/Qt5WebSocketsd.dll"
+        "${_qt5WebSockets_install_prefix}/bin/Qt5WebSockets.dll"
       AND EXISTS
-        "${_qt5WebSockets_install_prefix}/lib/Qt5WebSocketsd.lib" )
-        _populate_WebSockets_target_properties(DEBUG "Qt5WebSocketsd.dll" "Qt5WebSocketsd.lib" )
+        "${_qt5WebSockets_install_prefix}/lib/Qt5WebSockets.lib" )
+        _populate_WebSockets_target_properties(RELEASE "Qt5WebSockets.dll" "Qt5WebSockets.lib" )
     endif()
-
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5WebSockets_*Plugin.cmake")

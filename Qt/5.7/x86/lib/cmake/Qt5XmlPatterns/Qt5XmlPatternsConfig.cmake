@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::XmlPatterns)
     set_property(TARGET Qt5::XmlPatterns PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_XMLPATTERNS_LIB)
 
-    _populate_XmlPatterns_target_properties(RELEASE "Qt5XmlPatterns.dll" "Qt5XmlPatterns.lib" )
+
+    _populate_XmlPatterns_target_properties(DEBUG "Qt5XmlPatternsd.dll" "Qt5XmlPatternsd.lib" )
 
     if (EXISTS
-        "${_qt5XmlPatterns_install_prefix}/bin/Qt5XmlPatternsd.dll"
+        "${_qt5XmlPatterns_install_prefix}/bin/Qt5XmlPatterns.dll"
       AND EXISTS
-        "${_qt5XmlPatterns_install_prefix}/lib/Qt5XmlPatternsd.lib" )
-        _populate_XmlPatterns_target_properties(DEBUG "Qt5XmlPatternsd.dll" "Qt5XmlPatternsd.lib" )
+        "${_qt5XmlPatterns_install_prefix}/lib/Qt5XmlPatterns.lib" )
+        _populate_XmlPatterns_target_properties(RELEASE "Qt5XmlPatterns.dll" "Qt5XmlPatterns.lib" )
     endif()
-
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5XmlPatterns_*Plugin.cmake")

@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::ScriptTools)
     set_property(TARGET Qt5::ScriptTools PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_SCRIPTTOOLS_LIB)
 
-    _populate_ScriptTools_target_properties(RELEASE "Qt5ScriptTools.dll" "Qt5ScriptTools.lib" )
+
+    _populate_ScriptTools_target_properties(DEBUG "Qt5ScriptToolsd.dll" "Qt5ScriptToolsd.lib" )
 
     if (EXISTS
-        "${_qt5ScriptTools_install_prefix}/bin/Qt5ScriptToolsd.dll"
+        "${_qt5ScriptTools_install_prefix}/bin/Qt5ScriptTools.dll"
       AND EXISTS
-        "${_qt5ScriptTools_install_prefix}/lib/Qt5ScriptToolsd.lib" )
-        _populate_ScriptTools_target_properties(DEBUG "Qt5ScriptToolsd.dll" "Qt5ScriptToolsd.lib" )
+        "${_qt5ScriptTools_install_prefix}/lib/Qt5ScriptTools.lib" )
+        _populate_ScriptTools_target_properties(RELEASE "Qt5ScriptTools.dll" "Qt5ScriptTools.lib" )
     endif()
-
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5ScriptTools_*Plugin.cmake")

@@ -124,12 +124,12 @@ if (NOT TARGET Qt5::UiTools)
     set_property(TARGET Qt5::UiTools PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_UITOOLS_LIB)
 
-    _populate_UiTools_target_properties(RELEASE "Qt5UiTools.lib" "" )
 
-    if (EXISTS "${_qt5UiTools_install_prefix}/lib/Qt5UiToolsd.lib" )
-        _populate_UiTools_target_properties(DEBUG "Qt5UiToolsd.lib" "" )
+    _populate_UiTools_target_properties(DEBUG "Qt5UiToolsd.lib" "" )
+
+    if (EXISTS "${_qt5UiTools_install_prefix}/lib/Qt5UiTools.lib" )
+        _populate_UiTools_target_properties(RELEASE "Qt5UiTools.lib" "" )
     endif()
-
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5UiTools_*Plugin.cmake")

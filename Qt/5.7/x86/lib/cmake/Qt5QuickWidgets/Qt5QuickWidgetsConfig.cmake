@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::QuickWidgets)
     set_property(TARGET Qt5::QuickWidgets PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_QUICKWIDGETS_LIB)
 
-    _populate_QuickWidgets_target_properties(RELEASE "Qt5QuickWidgets.dll" "Qt5QuickWidgets.lib" )
+
+    _populate_QuickWidgets_target_properties(DEBUG "Qt5QuickWidgetsd.dll" "Qt5QuickWidgetsd.lib" )
 
     if (EXISTS
-        "${_qt5QuickWidgets_install_prefix}/bin/Qt5QuickWidgetsd.dll"
+        "${_qt5QuickWidgets_install_prefix}/bin/Qt5QuickWidgets.dll"
       AND EXISTS
-        "${_qt5QuickWidgets_install_prefix}/lib/Qt5QuickWidgetsd.lib" )
-        _populate_QuickWidgets_target_properties(DEBUG "Qt5QuickWidgetsd.dll" "Qt5QuickWidgetsd.lib" )
+        "${_qt5QuickWidgets_install_prefix}/lib/Qt5QuickWidgets.lib" )
+        _populate_QuickWidgets_target_properties(RELEASE "Qt5QuickWidgets.dll" "Qt5QuickWidgets.lib" )
     endif()
-
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5QuickWidgets_*Plugin.cmake")

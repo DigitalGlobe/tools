@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::PrintSupport)
     set_property(TARGET Qt5::PrintSupport PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_PRINTSUPPORT_LIB)
 
-    _populate_PrintSupport_target_properties(RELEASE "Qt5PrintSupport.dll" "Qt5PrintSupport.lib" )
+
+    _populate_PrintSupport_target_properties(DEBUG "Qt5PrintSupportd.dll" "Qt5PrintSupportd.lib" )
 
     if (EXISTS
-        "${_qt5PrintSupport_install_prefix}/bin/Qt5PrintSupportd.dll"
+        "${_qt5PrintSupport_install_prefix}/bin/Qt5PrintSupport.dll"
       AND EXISTS
-        "${_qt5PrintSupport_install_prefix}/lib/Qt5PrintSupportd.lib" )
-        _populate_PrintSupport_target_properties(DEBUG "Qt5PrintSupportd.dll" "Qt5PrintSupportd.lib" )
+        "${_qt5PrintSupport_install_prefix}/lib/Qt5PrintSupport.lib" )
+        _populate_PrintSupport_target_properties(RELEASE "Qt5PrintSupport.dll" "Qt5PrintSupport.lib" )
     endif()
-
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5PrintSupport_*Plugin.cmake")

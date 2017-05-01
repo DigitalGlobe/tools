@@ -57,14 +57,14 @@ class Program :
         _BOOST_LIB_DEBUG = '-vc140-mt-gd-1_61.lib'
         _BOOST_LIB_RELEASE = '-vc140-mt-1_61.lib'
         
-        _BOOST_FILESYSTEM = 'libboost_filesystem'
-        _BOOST_IOSTREAMS = 'libboost_iostreams'
-        _BOOST_PGM_OPTIONS = 'libboost_program_options'
-        _BOOST_SYSTEM = 'libboost_system'
-        _BOOST_THREAD = 'libboost_thread'
+        _BOOST_FILESYSTEM = 'boost_filesystem'
+        _BOOST_IOSTREAMS = 'boost_iostreams'
+        _BOOST_PGM_OPTIONS = 'boost_program_options'
+        _BOOST_SYSTEM = 'boost_system'
+        _BOOST_THREAD = 'boost_thread'
         
         _GDAL_INCLUDE = '..\\..\\include\\gdal'
-        _GDAL_LIB = 'gdal_i'
+        _GDAL_LIB = 'gdal'
         
         _GEOTIFF_INCLUDE = '..\\..\\include\\libgeotiff'
         _GEOTIFF_LIB = 'libgeotiff'
@@ -193,6 +193,7 @@ class Program :
             cmakeCommandLine += ' -DGDAL_LIBRARY="' + gdalLib + '"'
             cmakeCommandLine += ' -DGEOTIFF_INCLUDE_DIR="' + geotiffInclude + '"'
             cmakeCommandLine += ' -DGEOTIFF_LIBRARY="' + geotiffLib + '"'
+            cmakeCommandLine += ' -DCMAKE_CXX_FLAGS="/DWIN32 /D_WINDOWS /W3 /GR /EHsc /DBOOST_ALL_NO_LIB"'
             
             print('cmake: ' + cmakeCommandLine)
 

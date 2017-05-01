@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::WebChannel)
     set_property(TARGET Qt5::WebChannel PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_WEBCHANNEL_LIB)
 
-    _populate_WebChannel_target_properties(RELEASE "Qt5WebChannel.dll" "Qt5WebChannel.lib" )
+
+    _populate_WebChannel_target_properties(DEBUG "Qt5WebChanneld.dll" "Qt5WebChanneld.lib" )
 
     if (EXISTS
-        "${_qt5WebChannel_install_prefix}/bin/Qt5WebChanneld.dll"
+        "${_qt5WebChannel_install_prefix}/bin/Qt5WebChannel.dll"
       AND EXISTS
-        "${_qt5WebChannel_install_prefix}/lib/Qt5WebChanneld.lib" )
-        _populate_WebChannel_target_properties(DEBUG "Qt5WebChanneld.dll" "Qt5WebChanneld.lib" )
+        "${_qt5WebChannel_install_prefix}/lib/Qt5WebChannel.lib" )
+        _populate_WebChannel_target_properties(RELEASE "Qt5WebChannel.dll" "Qt5WebChannel.lib" )
     endif()
-
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5WebChannel_*Plugin.cmake")

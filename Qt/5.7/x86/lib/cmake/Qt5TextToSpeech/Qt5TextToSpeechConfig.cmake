@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::TextToSpeech)
     set_property(TARGET Qt5::TextToSpeech PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_TEXTTOSPEECH_LIB)
 
-    _populate_TextToSpeech_target_properties(RELEASE "Qt5TextToSpeech.dll" "Qt5TextToSpeech.lib" )
+
+    _populate_TextToSpeech_target_properties(DEBUG "Qt5TextToSpeechd.dll" "Qt5TextToSpeechd.lib" )
 
     if (EXISTS
-        "${_qt5TextToSpeech_install_prefix}/bin/Qt5TextToSpeechd.dll"
+        "${_qt5TextToSpeech_install_prefix}/bin/Qt5TextToSpeech.dll"
       AND EXISTS
-        "${_qt5TextToSpeech_install_prefix}/lib/Qt5TextToSpeechd.lib" )
-        _populate_TextToSpeech_target_properties(DEBUG "Qt5TextToSpeechd.dll" "Qt5TextToSpeechd.lib" )
+        "${_qt5TextToSpeech_install_prefix}/lib/Qt5TextToSpeech.lib" )
+        _populate_TextToSpeech_target_properties(RELEASE "Qt5TextToSpeech.dll" "Qt5TextToSpeech.lib" )
     endif()
-
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5TextToSpeech_*Plugin.cmake")

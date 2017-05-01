@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::NetworkAuth)
     set_property(TARGET Qt5::NetworkAuth PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_NETWORKAUTH_LIB)
 
-    _populate_NetworkAuth_target_properties(RELEASE "Qt5NetworkAuth.dll" "Qt5NetworkAuth.lib" )
+
+    _populate_NetworkAuth_target_properties(DEBUG "Qt5NetworkAuthd.dll" "Qt5NetworkAuthd.lib" )
 
     if (EXISTS
-        "${_qt5NetworkAuth_install_prefix}/bin/Qt5NetworkAuthd.dll"
+        "${_qt5NetworkAuth_install_prefix}/bin/Qt5NetworkAuth.dll"
       AND EXISTS
-        "${_qt5NetworkAuth_install_prefix}/lib/Qt5NetworkAuthd.lib" )
-        _populate_NetworkAuth_target_properties(DEBUG "Qt5NetworkAuthd.dll" "Qt5NetworkAuthd.lib" )
+        "${_qt5NetworkAuth_install_prefix}/lib/Qt5NetworkAuth.lib" )
+        _populate_NetworkAuth_target_properties(RELEASE "Qt5NetworkAuth.dll" "Qt5NetworkAuth.lib" )
     endif()
-
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5NetworkAuth_*Plugin.cmake")

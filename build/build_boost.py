@@ -118,7 +118,7 @@ class Program :
             buildBoostResult = systemManager.execute("bootstrap.bat")
 
             print("generating final compile command")
-            buildBoostCommandLine =  "b2 toolset=msvc-14.0 --abbreviate-paths architecture=x86 --prefix=../../build/Boost install --link=static -j2"
+            buildBoostCommandLine =  "b2 toolset=msvc-14.0 -a --abbreviate-paths architecture=x86 --prefix=../../build/Boost install link=shared runtime-link=shared -j4"
                                          
             # extend command line based on options
             if ( buildSettings.X64Specified() ) :

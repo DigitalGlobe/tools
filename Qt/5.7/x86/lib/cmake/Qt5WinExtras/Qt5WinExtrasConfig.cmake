@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::WinExtras)
     set_property(TARGET Qt5::WinExtras PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_WINEXTRAS_LIB)
 
-    _populate_WinExtras_target_properties(RELEASE "Qt5WinExtras.dll" "Qt5WinExtras.lib" )
+
+    _populate_WinExtras_target_properties(DEBUG "Qt5WinExtrasd.dll" "Qt5WinExtrasd.lib" )
 
     if (EXISTS
-        "${_qt5WinExtras_install_prefix}/bin/Qt5WinExtrasd.dll"
+        "${_qt5WinExtras_install_prefix}/bin/Qt5WinExtras.dll"
       AND EXISTS
-        "${_qt5WinExtras_install_prefix}/lib/Qt5WinExtrasd.lib" )
-        _populate_WinExtras_target_properties(DEBUG "Qt5WinExtrasd.dll" "Qt5WinExtrasd.lib" )
+        "${_qt5WinExtras_install_prefix}/lib/Qt5WinExtras.lib" )
+        _populate_WinExtras_target_properties(RELEASE "Qt5WinExtras.dll" "Qt5WinExtras.lib" )
     endif()
-
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5WinExtras_*Plugin.cmake")

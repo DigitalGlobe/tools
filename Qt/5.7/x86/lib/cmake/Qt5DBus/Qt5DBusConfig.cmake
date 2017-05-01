@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::DBus)
     set_property(TARGET Qt5::DBus PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_DBUS_LIB)
 
-    _populate_DBus_target_properties(RELEASE "Qt5DBus.dll" "Qt5DBus.lib" )
+
+    _populate_DBus_target_properties(DEBUG "Qt5DBusd.dll" "Qt5DBusd.lib" )
 
     if (EXISTS
-        "${_qt5DBus_install_prefix}/bin/Qt5DBusd.dll"
+        "${_qt5DBus_install_prefix}/bin/Qt5DBus.dll"
       AND EXISTS
-        "${_qt5DBus_install_prefix}/lib/Qt5DBusd.lib" )
-        _populate_DBus_target_properties(DEBUG "Qt5DBusd.dll" "Qt5DBusd.lib" )
+        "${_qt5DBus_install_prefix}/lib/Qt5DBus.lib" )
+        _populate_DBus_target_properties(RELEASE "Qt5DBus.dll" "Qt5DBus.lib" )
     endif()
-
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5DBus_*Plugin.cmake")

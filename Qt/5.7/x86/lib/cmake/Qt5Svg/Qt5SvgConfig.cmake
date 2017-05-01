@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::Svg)
     set_property(TARGET Qt5::Svg PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_SVG_LIB)
 
-    _populate_Svg_target_properties(RELEASE "Qt5Svg.dll" "Qt5Svg.lib" )
+
+    _populate_Svg_target_properties(DEBUG "Qt5Svgd.dll" "Qt5Svgd.lib" )
 
     if (EXISTS
-        "${_qt5Svg_install_prefix}/bin/Qt5Svgd.dll"
+        "${_qt5Svg_install_prefix}/bin/Qt5Svg.dll"
       AND EXISTS
-        "${_qt5Svg_install_prefix}/lib/Qt5Svgd.lib" )
-        _populate_Svg_target_properties(DEBUG "Qt5Svgd.dll" "Qt5Svgd.lib" )
+        "${_qt5Svg_install_prefix}/lib/Qt5Svg.lib" )
+        _populate_Svg_target_properties(RELEASE "Qt5Svg.dll" "Qt5Svg.lib" )
     endif()
-
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5Svg_*Plugin.cmake")

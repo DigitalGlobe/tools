@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::Purchasing)
     set_property(TARGET Qt5::Purchasing PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_PURCHASING_LIB)
 
-    _populate_Purchasing_target_properties(RELEASE "Qt5Purchasing.dll" "Qt5Purchasing.lib" )
+
+    _populate_Purchasing_target_properties(DEBUG "Qt5Purchasingd.dll" "Qt5Purchasingd.lib" )
 
     if (EXISTS
-        "${_qt5Purchasing_install_prefix}/bin/Qt5Purchasingd.dll"
+        "${_qt5Purchasing_install_prefix}/bin/Qt5Purchasing.dll"
       AND EXISTS
-        "${_qt5Purchasing_install_prefix}/lib/Qt5Purchasingd.lib" )
-        _populate_Purchasing_target_properties(DEBUG "Qt5Purchasingd.dll" "Qt5Purchasingd.lib" )
+        "${_qt5Purchasing_install_prefix}/lib/Qt5Purchasing.lib" )
+        _populate_Purchasing_target_properties(RELEASE "Qt5Purchasing.dll" "Qt5Purchasing.lib" )
     endif()
-
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5Purchasing_*Plugin.cmake")

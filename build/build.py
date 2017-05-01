@@ -211,7 +211,7 @@ class Program :
             else :
                 # build libraries that do not depend on other libraries
                 #     (order does not matter)
-                if False:
+                if True:
                     self._build(Program._FILE_NAME_BUILD_APR        )
                     self._build(Program._FILE_NAME_BUILD_BISON      )
                     self._build(Program._FILE_NAME_BUILD_BOOST      )
@@ -294,7 +294,8 @@ class Program :
             if ret != 0:
                 print("Error building 32-bit debug")
                 sys.exit(-1)
-                
+             
+            
             # build 32-bit release
             os.system( ( "%s \"%s\" \"%s\" \"%s\"" % \
                        ( Program._FILE_NAME_PYTHON                            , \

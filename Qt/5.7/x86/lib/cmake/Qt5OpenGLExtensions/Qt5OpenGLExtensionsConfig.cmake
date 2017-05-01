@@ -124,12 +124,12 @@ if (NOT TARGET Qt5::OpenGLExtensions)
     set_property(TARGET Qt5::OpenGLExtensions PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_OPENGLEXTENSIONS_LIB)
 
-    _populate_OpenGLExtensions_target_properties(RELEASE "Qt5OpenGLExtensions.lib" "" )
 
-    if (EXISTS "${_qt5OpenGLExtensions_install_prefix}/lib/Qt5OpenGLExtensionsd.lib" )
-        _populate_OpenGLExtensions_target_properties(DEBUG "Qt5OpenGLExtensionsd.lib" "" )
+    _populate_OpenGLExtensions_target_properties(DEBUG "Qt5OpenGLExtensionsd.lib" "" )
+
+    if (EXISTS "${_qt5OpenGLExtensions_install_prefix}/lib/Qt5OpenGLExtensions.lib" )
+        _populate_OpenGLExtensions_target_properties(RELEASE "Qt5OpenGLExtensions.lib" "" )
     endif()
-
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5OpenGLExtensions_*Plugin.cmake")

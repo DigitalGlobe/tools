@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::Scxml)
     set_property(TARGET Qt5::Scxml PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_SCXML_LIB)
 
-    _populate_Scxml_target_properties(RELEASE "Qt5Scxml.dll" "Qt5Scxml.lib" )
+
+    _populate_Scxml_target_properties(DEBUG "Qt5Scxmld.dll" "Qt5Scxmld.lib" )
 
     if (EXISTS
-        "${_qt5Scxml_install_prefix}/bin/Qt5Scxmld.dll"
+        "${_qt5Scxml_install_prefix}/bin/Qt5Scxml.dll"
       AND EXISTS
-        "${_qt5Scxml_install_prefix}/lib/Qt5Scxmld.lib" )
-        _populate_Scxml_target_properties(DEBUG "Qt5Scxmld.dll" "Qt5Scxmld.lib" )
+        "${_qt5Scxml_install_prefix}/lib/Qt5Scxml.lib" )
+        _populate_Scxml_target_properties(RELEASE "Qt5Scxml.dll" "Qt5Scxml.lib" )
     endif()
-
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5Scxml_*Plugin.cmake")

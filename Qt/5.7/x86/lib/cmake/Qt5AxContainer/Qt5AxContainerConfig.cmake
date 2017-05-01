@@ -123,12 +123,12 @@ if (NOT TARGET Qt5::AxContainer)
     set_property(TARGET Qt5::AxContainer PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_AXCONTAINER_LIB)
 
-    _populate_AxContainer_target_properties(RELEASE "Qt5AxContainer.lib" "" )
 
-    if (EXISTS "${_qt5AxContainer_install_prefix}/lib/Qt5AxContainerd.lib" )
-        _populate_AxContainer_target_properties(DEBUG "Qt5AxContainerd.lib" "" )
+    _populate_AxContainer_target_properties(DEBUG "Qt5AxContainerd.lib" "" )
+
+    if (EXISTS "${_qt5AxContainer_install_prefix}/lib/Qt5AxContainer.lib" )
+        _populate_AxContainer_target_properties(RELEASE "Qt5AxContainer.lib" "" )
     endif()
-
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5AxContainer_*Plugin.cmake")

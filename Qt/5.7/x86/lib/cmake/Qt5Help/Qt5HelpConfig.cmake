@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::Help)
     set_property(TARGET Qt5::Help PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_HELP_LIB)
 
-    _populate_Help_target_properties(RELEASE "Qt5Help.dll" "Qt5Help.lib" )
+
+    _populate_Help_target_properties(DEBUG "Qt5Helpd.dll" "Qt5Helpd.lib" )
 
     if (EXISTS
-        "${_qt5Help_install_prefix}/bin/Qt5Helpd.dll"
+        "${_qt5Help_install_prefix}/bin/Qt5Help.dll"
       AND EXISTS
-        "${_qt5Help_install_prefix}/lib/Qt5Helpd.lib" )
-        _populate_Help_target_properties(DEBUG "Qt5Helpd.dll" "Qt5Helpd.lib" )
+        "${_qt5Help_install_prefix}/lib/Qt5Help.lib" )
+        _populate_Help_target_properties(RELEASE "Qt5Help.dll" "Qt5Help.lib" )
     endif()
-
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5Help_*Plugin.cmake")

@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::Sql)
     set_property(TARGET Qt5::Sql PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_SQL_LIB)
 
-    _populate_Sql_target_properties(RELEASE "Qt5Sql.dll" "Qt5Sql.lib" )
+
+    _populate_Sql_target_properties(DEBUG "Qt5Sqld.dll" "Qt5Sqld.lib" )
 
     if (EXISTS
-        "${_qt5Sql_install_prefix}/bin/Qt5Sqld.dll"
+        "${_qt5Sql_install_prefix}/bin/Qt5Sql.dll"
       AND EXISTS
-        "${_qt5Sql_install_prefix}/lib/Qt5Sqld.lib" )
-        _populate_Sql_target_properties(DEBUG "Qt5Sqld.dll" "Qt5Sqld.lib" )
+        "${_qt5Sql_install_prefix}/lib/Qt5Sql.lib" )
+        _populate_Sql_target_properties(RELEASE "Qt5Sql.dll" "Qt5Sql.lib" )
     endif()
-
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5Sql_*Plugin.cmake")

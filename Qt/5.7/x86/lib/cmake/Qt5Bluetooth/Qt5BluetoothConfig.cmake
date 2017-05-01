@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::Bluetooth)
     set_property(TARGET Qt5::Bluetooth PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_BLUETOOTH_LIB)
 
-    _populate_Bluetooth_target_properties(RELEASE "Qt5Bluetooth.dll" "Qt5Bluetooth.lib" )
+
+    _populate_Bluetooth_target_properties(DEBUG "Qt5Bluetoothd.dll" "Qt5Bluetoothd.lib" )
 
     if (EXISTS
-        "${_qt5Bluetooth_install_prefix}/bin/Qt5Bluetoothd.dll"
+        "${_qt5Bluetooth_install_prefix}/bin/Qt5Bluetooth.dll"
       AND EXISTS
-        "${_qt5Bluetooth_install_prefix}/lib/Qt5Bluetoothd.lib" )
-        _populate_Bluetooth_target_properties(DEBUG "Qt5Bluetoothd.dll" "Qt5Bluetoothd.lib" )
+        "${_qt5Bluetooth_install_prefix}/lib/Qt5Bluetooth.lib" )
+        _populate_Bluetooth_target_properties(RELEASE "Qt5Bluetooth.dll" "Qt5Bluetooth.lib" )
     endif()
-
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5Bluetooth_*Plugin.cmake")

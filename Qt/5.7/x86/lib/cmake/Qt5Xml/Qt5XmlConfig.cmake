@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::Xml)
     set_property(TARGET Qt5::Xml PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_XML_LIB)
 
-    _populate_Xml_target_properties(RELEASE "Qt5Xml.dll" "Qt5Xml.lib" )
+
+    _populate_Xml_target_properties(DEBUG "Qt5Xmld.dll" "Qt5Xmld.lib" )
 
     if (EXISTS
-        "${_qt5Xml_install_prefix}/bin/Qt5Xmld.dll"
+        "${_qt5Xml_install_prefix}/bin/Qt5Xml.dll"
       AND EXISTS
-        "${_qt5Xml_install_prefix}/lib/Qt5Xmld.lib" )
-        _populate_Xml_target_properties(DEBUG "Qt5Xmld.dll" "Qt5Xmld.lib" )
+        "${_qt5Xml_install_prefix}/lib/Qt5Xml.lib" )
+        _populate_Xml_target_properties(RELEASE "Qt5Xml.dll" "Qt5Xml.lib" )
     endif()
-
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5Xml_*Plugin.cmake")
