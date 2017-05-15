@@ -1,5 +1,0 @@
-include_rules = [
-  "+mojo/edk/embedder",
-  "+mojo/public",
-  "+third_party/mojo/src/mojo/edk/embedder",
-]

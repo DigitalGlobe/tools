@@ -1,4 +1,0 @@
-include_rules = [
-  "+chromecast/media/base/video_plane_controller.h",
-  "+chromecast/public"
-]

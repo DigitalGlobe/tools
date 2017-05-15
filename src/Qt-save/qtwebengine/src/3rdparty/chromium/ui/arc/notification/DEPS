@@ -1,6 +1,0 @@
-include_rules = [
-  "+components/signin/core/account_id",
-  "+third_party/skia",
-  "+ui/gfx",
-  "+ui/message_center",
-]

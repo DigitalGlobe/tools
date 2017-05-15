@@ -1,4 +1,0 @@
-include_rules = [
-    "+base/bind.h",
-    "+base/threading",
-]

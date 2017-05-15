@@ -1,5 +1,0 @@
-timvolodine@chromium.org
-
-per-file *.mojom=set noparent
-per-file *.mojom=palmer@chromium.org
-per-file *.mojom=tsepez@chromium.org
