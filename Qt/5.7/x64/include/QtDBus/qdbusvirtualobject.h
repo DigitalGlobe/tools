@@ -40,7 +40,7 @@
 #ifndef QDBUSVIRTUALOBJECT_H
 #define QDBUSVIRTUALOBJECT_H
 
-#include <QtDBus/qdbusmacros.h>
+#include <QtDBus/qtdbusglobal.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qobject.h>
 
@@ -52,7 +52,6 @@ QT_BEGIN_NAMESPACE
 class QDBusMessage;
 class QDBusConnection;
 
-class QDBusVirtualObjectPrivate;
 class Q_DBUS_EXPORT QDBusVirtualObject : public QObject
 {
     Q_OBJECT
@@ -64,7 +63,6 @@ public:
     virtual bool handleMessage(const QDBusMessage &message, const QDBusConnection &connection) = 0;
 
 private:
-    Q_DECLARE_PRIVATE(QDBusVirtualObject)
     Q_DISABLE_COPY(QDBusVirtualObject)
 };
 

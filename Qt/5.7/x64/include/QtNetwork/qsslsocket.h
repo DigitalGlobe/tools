@@ -41,6 +41,7 @@
 #ifndef QSSLSOCKET_H
 #define QSSLSOCKET_H
 
+#include <QtNetwork/qtnetworkglobal.h>
 #include <QtCore/qlist.h>
 #include <QtCore/qregexp.h>
 #ifndef QT_NO_SSL
@@ -116,7 +117,7 @@ public:
     bool canReadLine() const Q_DECL_OVERRIDE;
     void close() Q_DECL_OVERRIDE;
     bool atEnd() const Q_DECL_OVERRIDE;
-    bool flush();
+    bool flush(); // ### Qt6: remove me (implementation moved to private flush())
     void abort();
 
     // From QAbstractSocket:

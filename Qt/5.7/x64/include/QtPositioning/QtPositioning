@@ -1,6 +1,7 @@
 #ifndef QT_QTPOSITIONING_MODULE_H
 #define QT_QTPOSITIONING_MODULE_H
 #include <QtPositioning/QtPositioningDepends>
+#include "qpositioningglobal.h"
 #include "qgeoaddress.h"
 #include "qgeoareamonitorinfo.h"
 #include "qgeoareamonitorsource.h"
@@ -15,6 +16,5 @@
 #include "qgeosatelliteinfosource.h"
 #include "qgeoshape.h"
 #include "qnmeapositioninfosource.h"
-#include "qpositioningglobal.h"
 #include "qtpositioningversion.h"
 #endif

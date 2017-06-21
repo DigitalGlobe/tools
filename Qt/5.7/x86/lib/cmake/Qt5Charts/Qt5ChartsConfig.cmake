@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::Charts)
     set_property(TARGET Qt5::Charts PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_CHARTS_LIB)
 
-
-    _populate_Charts_target_properties(DEBUG "Qt5Chartsd.dll" "Qt5Chartsd.lib" )
+    _populate_Charts_target_properties(RELEASE "Qt5Charts.dll" "Qt5Charts.lib" )
 
     if (EXISTS
-        "${_qt5Charts_install_prefix}/bin/Qt5Charts.dll"
+        "${_qt5Charts_install_prefix}/bin/Qt5Chartsd.dll"
       AND EXISTS
-        "${_qt5Charts_install_prefix}/lib/Qt5Charts.lib" )
-        _populate_Charts_target_properties(RELEASE "Qt5Charts.dll" "Qt5Charts.lib" )
+        "${_qt5Charts_install_prefix}/lib/Qt5Chartsd.lib" )
+        _populate_Charts_target_properties(DEBUG "Qt5Chartsd.dll" "Qt5Chartsd.lib" )
     endif()
+
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5Charts_*Plugin.cmake")

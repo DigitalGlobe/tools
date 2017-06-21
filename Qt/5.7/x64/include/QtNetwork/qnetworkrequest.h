@@ -40,6 +40,7 @@
 #ifndef QNETWORKREQUEST_H
 #define QNETWORKREQUEST_H
 
+#include <QtNetwork/qtnetworkglobal.h>
 #include <QtCore/QSharedDataPointer>
 #include <QtCore/QString>
 #include <QtCore/QUrl>
@@ -88,6 +89,8 @@ public:
         SpdyWasUsedAttribute,
         EmitAllUploadProgressSignalsAttribute,
         FollowRedirectsAttribute,
+        HTTP2AllowedAttribute,
+        HTTP2WasUsedAttribute,
 
         User = 1000,
         UserMax = 32767

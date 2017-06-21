@@ -34,9 +34,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Material 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Material 2.1
 
 T.ScrollBar {
     id: control
@@ -46,32 +46,43 @@ T.ScrollBar {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
-    padding: 2
+    padding: 1
 
-    //! [contentItem]
     contentItem: Rectangle {
         id: handle
 
-        implicitWidth: 4
-        implicitHeight: 4
+        implicitWidth: 13
+        implicitHeight: 13
 
-        color: control.pressed ? control.Material.scrollBarPressedColor : control.Material.scrollBarColor
+        color: control.pressed ? control.Material.scrollBarPressedColor :
+               control.hovered ? control.Material.scrollBarHoveredColor : control.Material.scrollBarColor
         visible: control.size < 1.0
         opacity: 0.0
+    }
 
-        states: State {
-            name: "active"
-            when: control.active
-            PropertyChanges { target: handle; opacity: 0.75 }
-        }
+    background: Rectangle {
+        implicitWidth: 16
+        implicitHeight: 16
+        color: "#0e000000"
+        opacity: 0.0
+    }
 
-        transitions: Transition {
+    states: State {
+        name: "active"
+        when: control.active
+    }
+
+    transitions: [
+        Transition {
+            to: "active"
+            NumberAnimation { targets: [contentItem, background]; property: "opacity"; to: 1.0 }
+        },
+        Transition {
             from: "active"
             SequentialAnimation {
-                PauseAnimation { duration: 450 }
-                NumberAnimation { target: handle; duration: 200; property: "opacity"; to: 0.0 }
+                PauseAnimation { duration: 2450 }
+                NumberAnimation { targets: [contentItem, background]; property: "opacity"; to: 0.0 }
             }
         }
-    }
-    //! [contentItem]
+    ]
 }

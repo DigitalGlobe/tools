@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::OpenGL)
     set_property(TARGET Qt5::OpenGL PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_OPENGL_LIB)
 
-
-    _populate_OpenGL_target_properties(DEBUG "Qt5OpenGLd.dll" "Qt5OpenGLd.lib" )
+    _populate_OpenGL_target_properties(RELEASE "Qt5OpenGL.dll" "Qt5OpenGL.lib" )
 
     if (EXISTS
-        "${_qt5OpenGL_install_prefix}/bin/Qt5OpenGL.dll"
+        "${_qt5OpenGL_install_prefix}/bin/Qt5OpenGLd.dll"
       AND EXISTS
-        "${_qt5OpenGL_install_prefix}/lib/Qt5OpenGL.lib" )
-        _populate_OpenGL_target_properties(RELEASE "Qt5OpenGL.dll" "Qt5OpenGL.lib" )
+        "${_qt5OpenGL_install_prefix}/lib/Qt5OpenGLd.lib" )
+        _populate_OpenGL_target_properties(DEBUG "Qt5OpenGLd.dll" "Qt5OpenGLd.lib" )
     endif()
+
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5OpenGL_*Plugin.cmake")

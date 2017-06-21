@@ -34,9 +34,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Universal 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Universal 2.1
 
 T.PageIndicator {
     id: control
@@ -49,7 +49,6 @@ T.PageIndicator {
     padding: 6
     spacing: 7
 
-    //! [delegate]
     delegate: Rectangle {
         implicitWidth: 5
         implicitHeight: 5
@@ -58,9 +57,7 @@ T.PageIndicator {
         color: index === control.currentIndex ? control.Universal.baseMediumHighColor :
                                       pressed ? control.Universal.baseMediumLowColor : control.Universal.baseLowColor
     }
-    //! [delegate]
 
-    //! [contentItem]
     contentItem: Row {
         spacing: control.spacing
 
@@ -69,5 +66,4 @@ T.PageIndicator {
             delegate: control.delegate
         }
     }
-    //! [contentItem]
 }

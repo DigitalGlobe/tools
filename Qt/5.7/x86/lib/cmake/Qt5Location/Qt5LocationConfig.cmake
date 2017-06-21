@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::Location)
     set_property(TARGET Qt5::Location PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_LOCATION_LIB)
 
-
-    _populate_Location_target_properties(DEBUG "Qt5Locationd.dll" "Qt5Locationd.lib" )
+    _populate_Location_target_properties(RELEASE "Qt5Location.dll" "Qt5Location.lib" )
 
     if (EXISTS
-        "${_qt5Location_install_prefix}/bin/Qt5Location.dll"
+        "${_qt5Location_install_prefix}/bin/Qt5Locationd.dll"
       AND EXISTS
-        "${_qt5Location_install_prefix}/lib/Qt5Location.lib" )
-        _populate_Location_target_properties(RELEASE "Qt5Location.dll" "Qt5Location.lib" )
+        "${_qt5Location_install_prefix}/lib/Qt5Locationd.lib" )
+        _populate_Location_target_properties(DEBUG "Qt5Locationd.dll" "Qt5Locationd.lib" )
     endif()
+
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5Location_*Plugin.cmake")

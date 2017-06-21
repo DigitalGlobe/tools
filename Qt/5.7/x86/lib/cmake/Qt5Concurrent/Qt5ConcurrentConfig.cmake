@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::Concurrent)
     set_property(TARGET Qt5::Concurrent PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_CONCURRENT_LIB)
 
-
-    _populate_Concurrent_target_properties(DEBUG "Qt5Concurrentd.dll" "Qt5Concurrentd.lib" )
+    _populate_Concurrent_target_properties(RELEASE "Qt5Concurrent.dll" "Qt5Concurrent.lib" )
 
     if (EXISTS
-        "${_qt5Concurrent_install_prefix}/bin/Qt5Concurrent.dll"
+        "${_qt5Concurrent_install_prefix}/bin/Qt5Concurrentd.dll"
       AND EXISTS
-        "${_qt5Concurrent_install_prefix}/lib/Qt5Concurrent.lib" )
-        _populate_Concurrent_target_properties(RELEASE "Qt5Concurrent.dll" "Qt5Concurrent.lib" )
+        "${_qt5Concurrent_install_prefix}/lib/Qt5Concurrentd.lib" )
+        _populate_Concurrent_target_properties(DEBUG "Qt5Concurrentd.dll" "Qt5Concurrentd.lib" )
     endif()
+
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5Concurrent_*Plugin.cmake")

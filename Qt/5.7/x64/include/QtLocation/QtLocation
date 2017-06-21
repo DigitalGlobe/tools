@@ -1,8 +1,8 @@
 #ifndef QT_QTLOCATION_MODULE_H
 #define QT_QTLOCATION_MODULE_H
 #include <QtLocation/QtLocationDepends>
-#include "qlocation.h"
 #include "qlocationglobal.h"
+#include "placemacro.h"
 #include "qgeocodereply.h"
 #include "qgeocodingmanager.h"
 #include "qgeocodingmanagerengine.h"
@@ -15,7 +15,7 @@
 #include "qgeoroutingmanagerengine.h"
 #include "qgeoserviceprovider.h"
 #include "qgeoserviceproviderfactory.h"
-#include "placemacro.h"
+#include "qlocation.h"
 #include "qplace.h"
 #include "qplaceattribute.h"
 #include "qplacecategory.h"

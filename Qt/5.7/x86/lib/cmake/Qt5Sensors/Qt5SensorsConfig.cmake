@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::Sensors)
     set_property(TARGET Qt5::Sensors PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_SENSORS_LIB)
 
-
-    _populate_Sensors_target_properties(DEBUG "Qt5Sensorsd.dll" "Qt5Sensorsd.lib" )
+    _populate_Sensors_target_properties(RELEASE "Qt5Sensors.dll" "Qt5Sensors.lib" )
 
     if (EXISTS
-        "${_qt5Sensors_install_prefix}/bin/Qt5Sensors.dll"
+        "${_qt5Sensors_install_prefix}/bin/Qt5Sensorsd.dll"
       AND EXISTS
-        "${_qt5Sensors_install_prefix}/lib/Qt5Sensors.lib" )
-        _populate_Sensors_target_properties(RELEASE "Qt5Sensors.dll" "Qt5Sensors.lib" )
+        "${_qt5Sensors_install_prefix}/lib/Qt5Sensorsd.lib" )
+        _populate_Sensors_target_properties(DEBUG "Qt5Sensorsd.dll" "Qt5Sensorsd.lib" )
     endif()
+
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5Sensors_*Plugin.cmake")

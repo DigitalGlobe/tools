@@ -34,9 +34,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Universal 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Universal 2.1
 
 T.MenuItem {
     id: control
@@ -53,7 +53,6 @@ T.MenuItem {
     bottomPadding: padding + 1
     spacing: 12
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: !control.mirrored ? control.indicator.width + control.spacing : 0
         rightPadding: control.mirrored ? control.indicator.width + control.spacing : 0
@@ -66,9 +65,7 @@ T.MenuItem {
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
-    //! [contentItem]
 
-    //! [indicator]
     indicator: Image {
         x: control.text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
@@ -78,15 +75,14 @@ T.MenuItem {
         sourceSize.width: width
         sourceSize.height: height
     }
-    //! [indicator]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 200
         implicitHeight: 40
 
         color: !control.enabled ? control.Universal.baseLowColor :
-                control.down ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
+                control.down ? control.Universal.listMediumColor :
+                control.hovered ? control.Universal.listLowColor : control.Universal.altMediumLowColor
 
         Rectangle {
             x: 1; y: 1
@@ -98,5 +94,4 @@ T.MenuItem {
             opacity: control.Universal.theme === Universal.Light ? 0.4 : 0.6
         }
     }
-    //! [background]
 }

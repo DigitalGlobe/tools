@@ -301,12 +301,7 @@ public:
         MacWindowToolBarButtonHint = 0x10000000,
         BypassGraphicsProxyWidget = 0x20000000,
         NoDropShadowWindowHint = 0x40000000,
-        WindowFullscreenButtonHint = 0x80000000,
-
-        // The following enums have overlapping values with other enums.
-        // This was not intentional, but it's too late to change now.
-        WindowOkButtonHint = 0x00080000, // WindowTransparentForInput
-        WindowCancelButtonHint = 0x00100000 // WindowOverridesSystemGestures
+        WindowFullscreenButtonHint = 0x80000000
     };
 
     Q_DECLARE_FLAGS(WindowFlags, WindowType)
@@ -509,6 +504,7 @@ public:
         AA_DontUseNativeDialogs = 23,
         AA_SynthesizeMouseForUnhandledTabletEvents = 24,
         AA_CompressHighFrequencyEvents = 25,
+        AA_DontCheckOpenGLContextThreadAffinity = 26,
 
         // Add new attributes before this line
         AA_AttributeCount
@@ -562,7 +558,7 @@ public:
         Key_Insert = 0x01000006,
         Key_Delete = 0x01000007,
         Key_Pause = 0x01000008,
-        Key_Print = 0x01000009,
+        Key_Print = 0x01000009,               // print screen
         Key_SysReq = 0x0100000a,
         Key_Clear = 0x0100000b,
         Key_Home = 0x01000010,                // cursor movement
@@ -1201,7 +1197,8 @@ public:
         SystemLocaleLongDate,
         DefaultLocaleShortDate,
         DefaultLocaleLongDate,
-        RFC2822Date        // RFC 2822 (+ 850 and 1036 during parsing)
+        RFC2822Date,        // RFC 2822 (+ 850 and 1036 during parsing)
+        ISODateWithMs
     };
 
     enum TimeSpec {
@@ -1682,6 +1679,7 @@ public:
     QT_Q_ENUM(Orientation)
     QT_Q_ENUM(DropAction)
     QT_Q_FLAG(Alignment)
+    QT_Q_ENUM(TextFlag)
     QT_Q_FLAG(Orientations)
     QT_Q_FLAG(DropActions)
     QT_Q_FLAG(Edges)

@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::QuickControls2)
     set_property(TARGET Qt5::QuickControls2 PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_QUICKCONTROLS2_LIB)
 
-
-    _populate_QuickControls2_target_properties(DEBUG "Qt5QuickControls2d.dll" "Qt5QuickControls2d.lib" )
+    _populate_QuickControls2_target_properties(RELEASE "Qt5QuickControls2.dll" "Qt5QuickControls2.lib" )
 
     if (EXISTS
-        "${_qt5QuickControls2_install_prefix}/bin/Qt5QuickControls2.dll"
+        "${_qt5QuickControls2_install_prefix}/bin/Qt5QuickControls2d.dll"
       AND EXISTS
-        "${_qt5QuickControls2_install_prefix}/lib/Qt5QuickControls2.lib" )
-        _populate_QuickControls2_target_properties(RELEASE "Qt5QuickControls2.dll" "Qt5QuickControls2.lib" )
+        "${_qt5QuickControls2_install_prefix}/lib/Qt5QuickControls2d.lib" )
+        _populate_QuickControls2_target_properties(DEBUG "Qt5QuickControls2d.dll" "Qt5QuickControls2d.lib" )
     endif()
+
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5QuickControls2_*Plugin.cmake")

@@ -46,6 +46,7 @@ build/cryptowrapper/*
 build/curl/*
 build/expat/*
 build/FileGDB/*
+build/firebird/*
 build/freetype/*
 build/galib/*
 build/GDAL-1.11.5/*

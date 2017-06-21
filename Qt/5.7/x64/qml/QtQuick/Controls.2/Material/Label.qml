@@ -34,13 +34,13 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Material 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Material 2.1
 
 T.Label {
     id: control
 
-    color: enabled ? Material.primaryTextColor : Material.hintTextColor
+    color: enabled ? Material.foreground : Material.hintTextColor
     linkColor: Material.accentColor
 }

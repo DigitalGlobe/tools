@@ -34,13 +34,15 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Material 2.0
-import QtQuick.Controls.Material.impl 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Material 2.1
+import QtQuick.Controls.Material.impl 2.1
 
 T.Drawer {
     id: control
+
+    parent: T.ApplicationWindow.overlay
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
@@ -48,27 +50,33 @@ T.Drawer {
     contentWidth: contentItem.implicitWidth || (contentChildren.length === 1 ? contentChildren[0].implicitWidth : 0)
     contentHeight: contentItem.implicitHeight || (contentChildren.length === 1 ? contentChildren[0].implicitHeight : 0)
 
-    //! [enter]
+    topPadding: !dim && edge === Qt.BottomEdge && Material.elevation === 0
+    leftPadding: !dim && edge === Qt.RightEdge && Material.elevation === 0
+    rightPadding: !dim && edge === Qt.LeftEdge && Material.elevation === 0
+    bottomPadding: !dim && edge === Qt.TopEdge && Material.elevation === 0
+
     enter: Transition { SmoothedAnimation { velocity: 5 } }
-    //! [enter]
-
-    //! [exit]
     exit: Transition { SmoothedAnimation { velocity: 5 } }
-    //! [exit]
 
-    //! [contentItem]
-    contentItem: Item { }
-    //! [contentItem]
+    Material.elevation: 16
 
-    //! [background]
     background: Rectangle {
         color: control.Material.dialogColor
 
+        Rectangle {
+            readonly property bool horizontal: control.edge === Qt.LeftEdge || control.edge === Qt.RightEdge
+            width: horizontal ? 1 : parent.width
+            height: horizontal ? parent.height : 1
+            color: control.Material.dividerColor
+            x: control.edge === Qt.LeftEdge ? parent.width - 1 : 0
+            y: control.edge === Qt.TopEdge ? parent.height - 1 : 0
+            visible: !control.dim && control.Material.elevation === 0
+        }
+
         layer.enabled: control.position > 0
         layer.effect: ElevationEffect {
-            elevation: 16
+            elevation: control.Material.elevation
             fullHeight: true
         }
     }
-    //! [background]
 }

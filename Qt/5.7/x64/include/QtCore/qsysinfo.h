@@ -69,7 +69,7 @@ public:
         LittleEndian
 
 #  ifdef Q_QDOC
-        , ByteOrder = <platform-dependent>
+        , ByteOrder = BigEndian or LittleEndian
 #  elif Q_BYTE_ORDER == Q_BIG_ENDIAN
         , ByteOrder = BigEndian
 #  elif Q_BYTE_ORDER == Q_LITTLE_ENDIAN
@@ -127,6 +127,8 @@ public:
 
 #define Q_MV_OSX(major, minor) (major == 10 ? minor + 2 : (major == 9 ? 1 : 0))
 #define Q_MV_IOS(major, minor) (QSysInfo::MV_IOS | major << 4 | minor)
+#define Q_MV_TVOS(major, minor) (QSysInfo::MV_TVOS | major << 4 | minor)
+#define Q_MV_WATCHOS(major, minor) (QSysInfo::MV_WATCHOS | major << 4 | minor)
     enum MacVersion {
         MV_None    = 0xffff,
         MV_Unknown = 0x0000,
@@ -145,6 +147,7 @@ public:
         MV_10_9 = Q_MV_OSX(10, 9),
         MV_10_10 = Q_MV_OSX(10, 10),
         MV_10_11 = Q_MV_OSX(10, 11),
+        MV_10_12 = Q_MV_OSX(10, 12),
 
         /* codenames */
         MV_CHEETAH = MV_10_0,
@@ -159,6 +162,7 @@ public:
         MV_MAVERICKS = MV_10_9,
         MV_YOSEMITE = MV_10_10,
         MV_ELCAPITAN = MV_10_11,
+        MV_SIERRA = MV_10_12,
 
         /* iOS */
         MV_IOS     = 1 << 8,
@@ -174,7 +178,25 @@ public:
         MV_IOS_8_2 = Q_MV_IOS(8, 2),
         MV_IOS_8_3 = Q_MV_IOS(8, 3),
         MV_IOS_8_4 = Q_MV_IOS(8, 4),
-        MV_IOS_9_0 = Q_MV_IOS(9, 0)
+        MV_IOS_9_0 = Q_MV_IOS(9, 0),
+        MV_IOS_9_1 = Q_MV_IOS(9, 1),
+        MV_IOS_9_2 = Q_MV_IOS(9, 2),
+        MV_IOS_9_3 = Q_MV_IOS(9, 3),
+        MV_IOS_10_0 = Q_MV_IOS(10, 0),
+
+        /* tvOS */
+        MV_TVOS     = 1 << 9,
+        MV_TVOS_9_0 = Q_MV_TVOS(9, 0),
+        MV_TVOS_9_1 = Q_MV_TVOS(9, 1),
+        MV_TVOS_9_2 = Q_MV_TVOS(9, 2),
+        MV_TVOS_10_0 = Q_MV_TVOS(10, 0),
+
+        /* watchOS */
+        MV_WATCHOS     = 1 << 10,
+        MV_WATCHOS_2_0 = Q_MV_WATCHOS(2, 0),
+        MV_WATCHOS_2_1 = Q_MV_WATCHOS(2, 1),
+        MV_WATCHOS_2_2 = Q_MV_WATCHOS(2, 2),
+        MV_WATCHOS_3_0 = Q_MV_WATCHOS(3, 0)
     };
 #if defined(Q_OS_MAC)
     static const MacVersion MacintoshVersion;

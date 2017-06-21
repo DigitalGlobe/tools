@@ -34,25 +34,22 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Universal 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Universal 2.1
 
 T.RangeSlider {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-        Math.max(background ? background.implicitWidth : 0,
-            first.handle ? first.handle.implicitWidth : 0,
-                second.handle ? second.handle.implicitWidth : 0) + leftPadding + rightPadding)
+        Math.max(first.handle ? first.handle.implicitWidth : 0,
+                 second.handle ? second.handle.implicitWidth : 0) + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-        Math.max(background ? background.implicitHeight : 0,
-            first.handle ? first.handle.implicitHeight : 0,
-                second.handle ? second.handle.implicitHeight : 0) + topPadding + bottomPadding)
+        Math.max(first.handle ? first.handle.implicitHeight : 0,
+                 second.handle ? second.handle.implicitHeight : 0) + topPadding + bottomPadding)
 
     padding: 6
 
-    //! [firstHandle]
     first.handle: Rectangle {
         implicitWidth: horizontal ? 8 : 24
         implicitHeight: horizontal ? 24 : 8
@@ -63,11 +60,11 @@ T.RangeSlider {
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : control.first.visualPosition * (control.availableHeight - height))
 
         radius: 4
-        color: control.first.pressed ? control.Universal.chromeHighColor : control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
+        color: control.first.pressed ? control.Universal.chromeHighColor :
+               control.first.hovered ? control.Universal.chromeAltLowColor :
+               control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
     }
-    //! [firstHandle]
 
-    //! [secondHandle]
     second.handle: Rectangle {
         implicitWidth: horizontal ? 8 : 24
         implicitHeight: horizontal ? 24 : 8
@@ -78,11 +75,11 @@ T.RangeSlider {
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : control.second.visualPosition * (control.availableHeight - height))
 
         radius: 4
-        color: control.second.pressed ? control.Universal.chromeHighColor : control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
+        color: control.second.pressed ? control.Universal.chromeHighColor :
+               control.second.hovered ? control.Universal.chromeAltLowColor :
+               control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
     }
-    //! [secondHandle]
 
-    //! [background]
     background: Item {
         implicitWidth: horizontal ? 200 : 18
         implicitHeight: horizontal ? 18 : 200
@@ -102,7 +99,8 @@ T.RangeSlider {
             width: parent.horizontal ? parent.width : 2 // SliderBackgroundThemeHeight
             height: !parent.horizontal ? parent.height : 2 // SliderBackgroundThemeHeight
 
-            color: control.enabled ? control.Universal.baseMediumLowColor : control.Universal.chromeDisabledHighColor
+            color: control.hovered && !control.pressed ? control.Universal.baseMediumColor :
+                   control.enabled ? control.Universal.baseMediumLowColor : control.Universal.chromeDisabledHighColor
         }
 
         Rectangle {
@@ -114,5 +112,4 @@ T.RangeSlider {
             color: control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
         }
     }
-    //! [background]
 }

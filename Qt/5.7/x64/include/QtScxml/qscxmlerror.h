@@ -41,6 +41,7 @@
 #define QSCXMLERROR_H
 
 #include <QtScxml/qscxmlglobals.h>
+#include <QtCore/qobjectdefs.h>
 
 #include <QString>
 
@@ -48,6 +49,15 @@ QT_BEGIN_NAMESPACE
 
 class Q_SCXML_EXPORT QScxmlError
 {
+#ifndef BUILD_QSCXMLC
+    Q_GADGET
+    Q_PROPERTY(bool valid READ isValid CONSTANT)
+    Q_PROPERTY(QString fileName READ fileName CONSTANT)
+    Q_PROPERTY(int line READ line CONSTANT)
+    Q_PROPERTY(int column READ column CONSTANT)
+    Q_PROPERTY(QString description READ description CONSTANT)
+#endif // BUILD_QSCXMLC
+
 public:
     QScxmlError();
     QScxmlError(const QString &fileName, int line, int column, const QString &description);

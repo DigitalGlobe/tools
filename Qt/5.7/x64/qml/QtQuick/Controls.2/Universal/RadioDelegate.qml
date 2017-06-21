@@ -34,9 +34,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Universal 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Universal 2.1
 
 T.RadioDelegate {
     id: control
@@ -56,15 +56,12 @@ T.RadioDelegate {
 
     property Item control
 
-    //! [indicator]
     indicator: RadioIndicator {
         x: text ? (control.mirrored ? control.leftPadding : control.width - width - control.rightPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control
     }
-    //! [indicator]
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: !control.mirrored ? 0 : control.indicator.width + control.spacing
         rightPadding: control.mirrored ? 0 : control.indicator.width + control.spacing
@@ -79,12 +76,11 @@ T.RadioDelegate {
         opacity: enabled ? 1.0 : 0.2
         color: control.Universal.foreground
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
-        visible: control.down || control.highlighted || control.visualFocus
-        color: control.down ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
+        visible: control.down || control.highlighted || control.visualFocus || control.hovered
+        color: control.down ? control.Universal.listMediumColor :
+               control.hovered ? control.Universal.listLowColor : control.Universal.altMediumLowColor
         Rectangle {
             width: parent.width
             height: parent.height
@@ -94,5 +90,4 @@ T.RadioDelegate {
         }
 
     }
-    //! [background]
 }

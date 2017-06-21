@@ -34,10 +34,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Controls.Material 2.0
-import QtQuick.Controls.Material.impl 2.0
-import QtQuick.Templates 2.0 as T
+import QtQuick 2.8
+import QtQuick.Controls.Material 2.1
+import QtQuick.Controls.Material.impl 2.1
+import QtQuick.Templates 2.1 as T
 
 T.Switch {
     id: control
@@ -52,26 +52,31 @@ T.Switch {
     padding: 8
     spacing: 8
 
-    //! [indicator]
     indicator: SwitchIndicator {
         x: text ? (control.mirrored ? control.width - width - control.rightPadding : control.leftPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control
-    }
-    //! [indicator]
 
-    //! [contentItem]
+        Ripple {
+            x: parent.handle.x + parent.handle.width / 2 - width / 2
+            y: parent.handle.y + parent.handle.height / 2 - height / 2
+            width: 28; height: 28
+            pressed: control.pressed
+            active: control.down || control.visualFocus || control.hovered
+            color: control.checked ? control.Material.highlightedRippleColor : control.Material.rippleColor
+        }
+    }
+
     contentItem: Text {
         leftPadding: control.indicator && !control.mirrored ? control.indicator.width + control.spacing : 0
         rightPadding: control.indicator && control.mirrored ? control.indicator.width + control.spacing : 0
 
         text: control.text
         font: control.font
-        color: control.enabled ? control.Material.primaryTextColor : control.Material.hintTextColor
+        color: control.enabled ? control.Material.foreground : control.Material.hintTextColor
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
-    //! [contentItem]
 }

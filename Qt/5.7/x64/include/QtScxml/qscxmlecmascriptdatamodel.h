@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef ECMASCRIPTDATAMODEL_H
-#define ECMASCRIPTDATAMODEL_H
+#ifndef QSCXMLECMASCRIPTDATAMODEL_H
+#define QSCXMLECMASCRIPTDATAMODEL_H
 
 #include <QtScxml/qscxmldatamodel.h>
 
@@ -52,30 +52,24 @@ class Q_SCXML_EXPORT QScxmlEcmaScriptDataModel: public QScxmlDataModel
     Q_DECLARE_PRIVATE(QScxmlEcmaScriptDataModel)
 public:
     explicit QScxmlEcmaScriptDataModel(QObject *parent = nullptr);
-    ~QScxmlEcmaScriptDataModel();
 
-    bool setup(const QVariantMap &initialDataValues) Q_DECL_OVERRIDE;
+    Q_INVOKABLE bool setup(const QVariantMap &initialDataValues) Q_DECL_OVERRIDE;
 
-#ifndef Q_QDOC
     QString evaluateToString(QScxmlExecutableContent::EvaluatorId id, bool *ok) Q_DECL_OVERRIDE Q_DECL_FINAL;
     bool evaluateToBool(QScxmlExecutableContent::EvaluatorId id, bool *ok) Q_DECL_OVERRIDE Q_DECL_FINAL;
     QVariant evaluateToVariant(QScxmlExecutableContent::EvaluatorId id, bool *ok) Q_DECL_OVERRIDE Q_DECL_FINAL;
     void evaluateToVoid(QScxmlExecutableContent::EvaluatorId id, bool *ok) Q_DECL_OVERRIDE Q_DECL_FINAL;
     void evaluateAssignment(QScxmlExecutableContent::EvaluatorId id, bool *ok) Q_DECL_OVERRIDE Q_DECL_FINAL;
     void evaluateInitialization(QScxmlExecutableContent::EvaluatorId id, bool *ok) Q_DECL_OVERRIDE Q_DECL_FINAL;
-    bool evaluateForeach(QScxmlExecutableContent::EvaluatorId id, bool *ok, ForeachLoopBody *body) Q_DECL_OVERRIDE Q_DECL_FINAL;
-#endif // Q_QDOC
+    void evaluateForeach(QScxmlExecutableContent::EvaluatorId id, bool *ok, ForeachLoopBody *body) Q_DECL_OVERRIDE Q_DECL_FINAL;
 
     void setScxmlEvent(const QScxmlEvent &event) Q_DECL_OVERRIDE;
 
     QVariant scxmlProperty(const QString &name) const Q_DECL_OVERRIDE;
     bool hasScxmlProperty(const QString &name) const Q_DECL_OVERRIDE;
     bool setScxmlProperty(const QString &name, const QVariant &value, const QString &context) Q_DECL_OVERRIDE;
-
-    QJSEngine *engine() const;
-    void setEngine(QJSEngine *engine);
 };
 
 QT_END_NAMESPACE
 
-#endif // ECMASCRIPTDATAMODEL_H
+#endif // QSCXMLECMASCRIPTDATAMODEL_H

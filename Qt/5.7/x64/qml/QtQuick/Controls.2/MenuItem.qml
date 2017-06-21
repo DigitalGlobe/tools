@@ -34,8 +34,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
+import QtQuick 2.8
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
+import QtQuick.Templates 2.1 as T
 
 T.MenuItem {
     id: control
@@ -49,22 +51,19 @@ T.MenuItem {
 
     padding: 6
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: control.checkable && !control.mirrored ? control.indicator.width + control.spacing : 0
         rightPadding: control.checkable && control.mirrored ? control.indicator.width + control.spacing : 0
 
         text: control.text
         font: control.font
-        color: control.enabled ? "#26282a" : "#bdbebf"
+        color: control.enabled ? Default.textDarkColor : Default.textDisabledColor
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
-    //! [contentItem]
 
-    //! [indicator]
     indicator: Image {
         x: control.mirrored ? control.width - width - control.rightPadding : control.leftPadding
         y: control.topPadding + (control.availableHeight - height) / 2
@@ -72,9 +71,7 @@ T.MenuItem {
         visible: control.checked
         source: control.checkable ? "qrc:/qt-project.org/imports/QtQuick/Controls.2/images/check.png" : ""
     }
-    //! [indicator]
 
-    //! [background]
     background: Item {
         implicitWidth: 200
         implicitHeight: 40
@@ -84,8 +81,7 @@ T.MenuItem {
             y: 1
             width: parent.width - 2
             height: parent.height - 2
-            color: control.visualFocus || control.down ? "#eeeeee" : "transparent"
+            color: control.visualFocus || control.down ? Default.delegateColor : "transparent"
         }
     }
-    //! [background]
 }

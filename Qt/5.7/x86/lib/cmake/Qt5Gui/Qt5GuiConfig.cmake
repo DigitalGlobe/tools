@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::Gui)
     set_property(TARGET Qt5::Gui PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_GUI_LIB)
 
-
-    _populate_Gui_target_properties(DEBUG "Qt5Guid.dll" "Qt5Guid.lib" )
+    _populate_Gui_target_properties(RELEASE "Qt5Gui.dll" "Qt5Gui.lib" )
 
     if (EXISTS
-        "${_qt5Gui_install_prefix}/bin/Qt5Gui.dll"
+        "${_qt5Gui_install_prefix}/bin/Qt5Guid.dll"
       AND EXISTS
-        "${_qt5Gui_install_prefix}/lib/Qt5Gui.lib" )
-        _populate_Gui_target_properties(RELEASE "Qt5Gui.dll" "Qt5Gui.lib" )
+        "${_qt5Gui_install_prefix}/lib/Qt5Guid.lib" )
+        _populate_Gui_target_properties(DEBUG "Qt5Guid.dll" "Qt5Guid.lib" )
     endif()
+
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5Gui_*Plugin.cmake")

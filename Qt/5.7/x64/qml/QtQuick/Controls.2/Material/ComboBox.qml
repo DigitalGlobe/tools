@@ -34,17 +34,15 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
+import QtQuick 2.8
 import QtQuick.Window 2.2
-import QtQuick.Controls 2.0
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Material 2.0
-import QtQuick.Controls.Material.impl 2.0
+import QtQuick.Controls 2.1
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Material 2.1
+import QtQuick.Controls.Material.impl 2.1
 
 T.ComboBox {
     id: control
-
-    Material.elevation: control.pressed ? 8 : 2
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
                             contentItem.implicitWidth + leftPadding + rightPadding)
@@ -54,46 +52,52 @@ T.ComboBox {
     baselineOffset: contentItem.y + contentItem.baselineOffset
 
     spacing: 6
-    padding: 16
+    // external vertical padding is 6 (to increase touch area)
+    padding: 12
+    leftPadding: padding - 4
+    rightPadding: padding - 4
 
-    //! [delegate]
+    Material.elevation: flat ? control.pressed || control.hovered ? 2 : 0
+                             : control.pressed ? 8 : 2
+    Material.background: flat ? "transparent" : undefined
+    Material.foreground: flat ? undefined : Material.primaryTextColor
+
     delegate: MenuItem {
-        width: control.width
+        width: control.popup.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
-        Material.foreground: control.currentIndex === index ? control.Material.accent : control.Material.foreground
+        Material.foreground: control.currentIndex === index ? control.popup.Material.accent : control.popup.Material.foreground
         highlighted: control.highlightedIndex === index
+        hoverEnabled: control.hoverEnabled
     }
-    //! [delegate]
 
-    //! [indicator]
     indicator: Image {
         x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
         y: control.topPadding + (control.availableHeight - height) / 2
-        opacity: !control.enabled ? 0.5 : 1.0
-        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Material/images/drop-indicator.png"
+        source: "image://material/drop-indicator/" + (control.enabled ? control.Material.foreground : control.Material.hintTextColor)
+        sourceSize.width: width
+        sourceSize.height: height
     }
-    //! [indicator]
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: control.mirrored && control.indicator ? control.indicator.width + control.spacing : 0
         rightPadding: !control.mirrored && control.indicator ? control.indicator.width + control.spacing : 0
 
         text: control.displayText
         font: control.font
-        color: control.enabled ? control.Material.primaryTextColor : control.Material.hintTextColor
+        color: control.enabled ? control.Material.foreground : control.Material.hintTextColor
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 120
         implicitHeight: 48
 
-        radius: 2
+        // external vertical padding is 6 (to increase touch area)
+        y: 6
+        height: parent.height - 12
+        radius: control.flat ? 0 : 2
         color: control.Material.dialogColor
 
         Behavior on color {
@@ -102,25 +106,26 @@ T.ComboBox {
             }
         }
 
-        layer.enabled: control.enabled && control.Material.elevation > 0
+        layer.enabled: control.enabled && control.Material.background.a > 0
         layer.effect: ElevationEffect {
             elevation: control.Material.elevation
         }
 
-        Rectangle {
+        Ripple {
+            clip: control.flat
+            clipRadius: control.flat ? 0 : 2
             width: parent.width
             height: parent.height
-            radius: parent.radius
-            visible: control.visualFocus
-            color: control.Material.checkBoxUncheckedRippleColor
+            pressed: control.pressed
+            anchor: control
+            active: control.pressed || control.visualFocus || control.hovered
+            color: control.Material.rippleColor
         }
     }
-    //! [background]
 
-    //! [popup]
     popup: T.Popup {
         width: control.width
-        implicitHeight: listview.contentHeight
+        implicitHeight: contentItem.implicitHeight
         transformOrigin: Item.Top
         topMargin: 12
         bottomMargin: 12
@@ -142,17 +147,19 @@ T.ComboBox {
         }
 
         contentItem: ListView {
-            id: listview
             clip: true
+            implicitHeight: contentHeight
             model: control.popup.visible ? control.delegateModel : null
             currentIndex: control.highlightedIndex
+            highlightRangeMode: ListView.ApplyRange
+            highlightMoveDuration: 0
 
             T.ScrollIndicator.vertical: ScrollIndicator { }
         }
 
         background: Rectangle {
-            radius: 3
-            color: control.Material.dialogColor
+            radius: 2
+            color: control.popup.Material.dialogColor
 
             layer.enabled: control.enabled
             layer.effect: ElevationEffect {
@@ -160,5 +167,4 @@ T.ComboBox {
             }
         }
     }
-    //! [popup]
 }

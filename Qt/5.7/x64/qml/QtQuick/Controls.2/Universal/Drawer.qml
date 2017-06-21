@@ -34,12 +34,14 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Universal 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Universal 2.1
 
 T.Drawer {
     id: control
+
+    parent: T.ApplicationWindow.overlay
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0, contentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0, contentHeight + topPadding + bottomPadding)
@@ -52,19 +54,9 @@ T.Drawer {
     rightPadding: control.edge === Qt.LeftEdge
     bottomPadding: control.edge === Qt.TopEdge
 
-    //! [enter]
     enter: Transition { SmoothedAnimation { velocity: 5 } }
-    //! [enter]
-
-    //! [exit]
     exit: Transition { SmoothedAnimation { velocity: 5 } }
-    //! [exit]
 
-    //! [contentItem]
-    contentItem: Item { }
-    //! [contentItem]
-
-    //! [background]
     background: Rectangle {
         color: control.Universal.chromeMediumLowColor
         Rectangle {
@@ -76,5 +68,4 @@ T.Drawer {
             y: control.edge === Qt.TopEdge ? parent.height - 1 : 0
         }
     }
-    //! [background]
 }

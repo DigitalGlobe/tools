@@ -40,8 +40,8 @@
 #ifndef QSQLERROR_H
 #define QSQLERROR_H
 
+#include <QtSql/qtsqlglobal.h>
 #include <QtCore/qstring.h>
-#include <QtSql/qsql.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -37,9 +37,9 @@
 **
 ****************************************************************************/
 
-#ifndef SCXMLGLOBALS_H
-#define SCXMLGLOBALS_H
-#include <qglobal.h>
+#ifndef QSCXMLGLOBALS_H
+#define QSCXMLGLOBALS_H
+#include <QtCore/qglobal.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -55,5 +55,5 @@ QT_BEGIN_NAMESPACE
 
 QT_END_NAMESPACE
 
-#endif // SCXMLGLOBALS_H
+#endif // QSCXMLGLOBALS_H
 

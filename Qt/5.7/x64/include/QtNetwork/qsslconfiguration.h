@@ -56,6 +56,7 @@
 #ifndef QSSLCONFIGURATION_H
 #define QSSLCONFIGURATION_H
 
+#include <QtNetwork/qtnetworkglobal.h>
 #include <QtCore/qshareddata.h>
 #include <QtNetwork/qsslsocket.h>
 #include <QtNetwork/qssl.h>
@@ -69,6 +70,7 @@ class QSslCertificate;
 class QSslCipher;
 class QSslKey;
 class QSslEllipticCurve;
+class QSslDiffieHellmanParameters;
 
 class QSslConfigurationPrivate;
 class Q_NETWORK_EXPORT QSslConfiguration
@@ -141,6 +143,12 @@ public:
     void setEllipticCurves(const QVector<QSslEllipticCurve> &curves);
     static QVector<QSslEllipticCurve> supportedEllipticCurves();
 
+    QByteArray preSharedKeyIdentityHint() const;
+    void setPreSharedKeyIdentityHint(const QByteArray &hint);
+
+    QSslDiffieHellmanParameters diffieHellmanParameters() const;
+    void setDiffieHellmanParameters(const QSslDiffieHellmanParameters &dhparams);
+
     static QSslConfiguration defaultConfiguration();
     static void setDefaultConfiguration(const QSslConfiguration &configuration);
 
@@ -160,6 +168,7 @@ public:
     QByteArray nextNegotiatedProtocol() const;
     NextProtocolNegotiationStatus nextProtocolNegotiationStatus() const;
 
+    static const char ALPNProtocolHTTP2[];
     static const char NextProtocolSpdy3_0[];
     static const char NextProtocolHttp1_1[];
 

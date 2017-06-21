@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::Nfc)
     set_property(TARGET Qt5::Nfc PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_NFC_LIB)
 
-
-    _populate_Nfc_target_properties(DEBUG "Qt5Nfcd.dll" "Qt5Nfcd.lib" )
+    _populate_Nfc_target_properties(RELEASE "Qt5Nfc.dll" "Qt5Nfc.lib" )
 
     if (EXISTS
-        "${_qt5Nfc_install_prefix}/bin/Qt5Nfc.dll"
+        "${_qt5Nfc_install_prefix}/bin/Qt5Nfcd.dll"
       AND EXISTS
-        "${_qt5Nfc_install_prefix}/lib/Qt5Nfc.lib" )
-        _populate_Nfc_target_properties(RELEASE "Qt5Nfc.dll" "Qt5Nfc.lib" )
+        "${_qt5Nfc_install_prefix}/lib/Qt5Nfcd.lib" )
+        _populate_Nfc_target_properties(DEBUG "Qt5Nfcd.dll" "Qt5Nfcd.lib" )
     endif()
+
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5Nfc_*Plugin.cmake")

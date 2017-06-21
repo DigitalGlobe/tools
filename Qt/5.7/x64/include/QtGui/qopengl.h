@@ -40,7 +40,7 @@
 #ifndef QOPENGL_H
 #define QOPENGL_H
 
-#include <QtCore/qglobal.h>
+#include <QtGui/qtguiglobal.h>
 
 #ifndef QT_NO_OPENGL
 
@@ -95,16 +95,25 @@ typedef void* GLeglImageOES;
 // applications cannot target ES 3. Therefore QOpenGLFunctions and
 // friends do everything dynamically and never rely on these macros.
 
+// Some Khronos headers use the ext proto guard in the standard headers as well,
+// which is bad. Work it around, but avoid spilling over to the ext header.
+#  ifndef GL_GLEXT_PROTOTYPES
+#   define GL_GLEXT_PROTOTYPES
+#   define QGL_TEMP_GLEXT_PROTO
+#  endif
+
 #  if defined(QT_OPENGL_ES_3_1)
 #   include <GLES3/gl31.h>
 #  elif defined(QT_OPENGL_ES_3)
 #   include <GLES3/gl3.h>
 #  else
-#   ifndef GL_GLEXT_PROTOTYPES
-#     define GL_GLEXT_PROTOTYPES
-#   endif
 #   include <GLES2/gl2.h>
 #endif
+
+#  ifdef QGL_TEMP_GLEXT_PROTO
+#   undef GL_GLEXT_PROTOTYPES
+#   undef QGL_TEMP_GLEXT_PROTO
+# endif
 
 /*
    Some GLES2 implementations (like the one on Harmattan) are missing the
@@ -119,28 +128,29 @@ typedef char GLchar;
 #else // non-ES2 platforms
 # if defined(Q_OS_MAC)
 #  include <OpenGL/gl.h>
-#  if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
-#   define GL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED
-#   include <OpenGL/gl3.h>
-#  endif
+#  define GL_DO_NOT_WARN_IF_MULTI_GL_VERSION_HEADERS_INCLUDED
+#  include <OpenGL/gl3.h>
 #  include <OpenGL/glext.h>
 # else
 #  define GL_GLEXT_LEGACY // Prevents GL/gl.h from #including system glext.h
-#  include <GL/gl.h>
+// Some Khronos headers use the ext proto guard in the standard headers as well,
+// which is bad. Work it around, but avoid spilling over to the ext header.
+#  ifndef GL_GLEXT_PROTOTYPES
+#   define GL_GLEXT_PROTOTYPES
+#   include <GL/gl.h>
+#   undef GL_GLEXT_PROTOTYPES
+#  else
+#   include <GL/gl.h>
+#  endif
 #  include <QtGui/qopenglext.h>
 # endif // Q_OS_MAC
 #endif // QT_OPENGL_ES_2
 
-// Desktops, apart from Mac OS X prior to 10.7 can support OpenGL 3.
-// Desktops, apart from Mac OS X prior to 10.9 can support OpenGL 4.
+// Desktops can support OpenGL 4.
 #if !defined(QT_OPENGL_ES_2)
-# if !defined(Q_OS_MAC) || (defined(Q_OS_MAC) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7)
-#  define QT_OPENGL_3
-#  define QT_OPENGL_3_2
-# endif
-# if !defined(Q_OS_MAC) || (defined(Q_OS_MAC) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_9)
-#  define QT_OPENGL_4
-# endif
+#define QT_OPENGL_3
+#define QT_OPENGL_3_2
+#define QT_OPENGL_4
 # if !defined(Q_OS_MAC)
 #  define QT_OPENGL_4_3
 # endif

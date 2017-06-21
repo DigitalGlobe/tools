@@ -34,9 +34,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Universal 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Universal 2.1
 
 T.ToolTip {
     id: control
@@ -56,7 +56,6 @@ T.ToolTip {
 
     closePolicy: T.Popup.CloseOnEscape | T.Popup.CloseOnPressOutsideParent | T.Popup.CloseOnReleaseOutsideParent
 
-    //! [contentItem]
     contentItem: Text {
         text: control.text
         font: control.font
@@ -64,13 +63,10 @@ T.ToolTip {
         opacity: enabled ? 1.0 : 0.2
         color: control.Universal.foreground
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         color: control.Universal.chromeMediumLowColor
         border.color: control.Universal.chromeHighColor
         border.width: 1 // ToolTipBorderThemeThickness
     }
-    //! [background]
 }

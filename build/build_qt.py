@@ -45,7 +45,7 @@ class Program :
             # initialize environment variables
             systemManager.initializeIncludeEnvironmentVariable( buildSettings.X64Specified() )
             systemManager.initializeLibraryEnvironmentVariable( buildSettings.X64Specified() )
-            systemManager.appendToPathEnvironmentVariable( pathFinder.getVisualStudioBinPathName( buildSettings.X64Specified() ) )
+            systemManager.appendToPathEnvironmentVariable( pathFinder.getVisualStudioBinPathName( buildSettings.X64Specified() ), True )
 
             # MSBuild is under "Program Files (x86)"
             systemManager.appendToPathEnvironmentVariable( os.path.join( systemManager.getProgramFilesPathName(False) , \
@@ -135,6 +135,7 @@ class Program :
                 buildType = "-debug"	
 
             firebirdBase = os.path.join(os.path.join(buildPathName, Program._FIREBIRD_BASE), ('x64' if buildSettings.X64Specified() else 'x86'))
+            # firebirdBase = os.path.join(os.path.join(buildPathName, Program._FIREBIRD_BASE), 'x86')
             firebirdInclude = os.path.join(firebirdBase, Program._FIREBIRD_INCLUDE)
             firebirdLib = os.path.join(firebirdBase, Program._FIREBIRD_LIB_PATH)
             

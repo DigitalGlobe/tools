@@ -34,10 +34,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Material 2.0
-import QtQuick.Controls.Material.impl 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Material 2.1
+import QtQuick.Controls.Material.impl 2.1
 
 T.SpinBox {
     id: control
@@ -58,22 +58,19 @@ T.SpinBox {
     leftPadding: (control.mirrored ? (up.indicator ? up.indicator.width : 0) : (down.indicator ? down.indicator.width : 0))
     rightPadding: (control.mirrored ? (down.indicator ? down.indicator.width : 0) : (up.indicator ? up.indicator.width : 0))
 
-    //! [validator]
     validator: IntValidator {
         locale: control.locale.name
         bottom: Math.min(control.from, control.to)
         top: Math.max(control.from, control.to)
     }
-    //! [validator]
 
-    //! [contentItem]
     contentItem: TextInput {
         text: control.textFromValue(control.value, control.locale)
 
         font: control.font
-        color: control.Material.primaryTextColor
+        color: enabled ? control.Material.foreground : control.Material.hintTextColor
         selectionColor: control.Material.textSelectionColor
-        selectedTextColor: control.Material.primaryTextColor
+        selectedTextColor: control.Material.foreground
         horizontalAlignment: Qt.AlignHCenter
         verticalAlignment: Qt.AlignVCenter
         cursorDelegate: Rectangle {
@@ -95,7 +92,7 @@ T.SpinBox {
                 id: timer
                 running: control.activeFocus
                 repeat: true
-                interval: Qt.styleHints.cursorFlashTime
+                interval: Qt.styleHints.cursorFlashTime / 2
                 onTriggered: cursor.opacity = !cursor.opacity ? 1 : 0
                 // force the cursor visible when gaining focus
                 onRunningChanged: cursor.opacity = 1
@@ -106,62 +103,68 @@ T.SpinBox {
         validator: control.validator
         inputMethodHints: Qt.ImhFormattedNumbersOnly
     }
-    //! [contentItem]
 
-    //! [up.indicator]
-    up.indicator: PaddedRectangle {
+    up.indicator: Item {
         x: control.mirrored ? 0 : parent.width - width
         implicitWidth: 48
         implicitHeight: 48
         height: parent.height
         width: height
-        padding: control.spacing
-        radius: 3
-        color: Qt.tint(Qt.tint(control.Material.buttonColor,
-                               control.activeFocus ? control.Material.buttonHoverColor : "transparent"),
-                               control.up.pressed ? control.Material.buttonPressColor: "transparent")
+
+        Ripple {
+            clipRadius: 2
+            x: control.spacing
+            y: control.spacing
+            width: parent.width - 2 * control.spacing
+            height: parent.height - 2 * control.spacing
+            pressed: control.up.pressed
+            active: control.up.pressed || control.up.hovered || control.visualFocus
+            color: control.Material.rippleColor
+        }
 
         Rectangle {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             width: Math.min(parent.width / 3, parent.width / 3)
             height: 2
-            color: enabled ? control.Material.primaryTextColor : control.Material.spinBoxDisabledIconColor
+            color: enabled ? control.Material.foreground : control.Material.spinBoxDisabledIconColor
         }
         Rectangle {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             width: 2
             height: Math.min(parent.width / 3, parent.width / 3)
-            color: enabled ? control.Material.primaryTextColor : control.Material.spinBoxDisabledIconColor
+            color: enabled ? control.Material.foreground : control.Material.spinBoxDisabledIconColor
         }
     }
-    //! [up.indicator]
 
-    //! [down.indicator]
-    down.indicator: PaddedRectangle {
+    down.indicator: Item {
         x: control.mirrored ? parent.width - width : 0
         implicitWidth: 48
         implicitHeight: 48
         height: parent.height
         width: height
-        padding: control.spacing
-        radius: 3
-        color: Qt.tint(Qt.tint(control.Material.buttonColor,
-                               control.activeFocus ? control.Material.buttonHoverColor : "transparent"),
-                               control.down.pressed ? control.Material.buttonPressColor : "transparent")
+
+        Ripple {
+            clipRadius: 2
+            x: control.spacing
+            y: control.spacing
+            width: parent.width - 2 * control.spacing
+            height: parent.height - 2 * control.spacing
+            pressed: control.down.pressed
+            active: control.down.pressed || control.down.hovered || control.visualFocus
+            color: control.Material.rippleColor
+        }
 
         Rectangle {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             width: parent.width / 3
             height: 2
-            color: enabled ? control.Material.primaryTextColor : control.Material.spinBoxDisabledIconColor
+            color: enabled ? control.Material.foreground : control.Material.spinBoxDisabledIconColor
         }
     }
-    //! [down.indicator]
 
-    //! [background]
     background: Item {
         implicitWidth: 192
         implicitHeight: 48
@@ -174,5 +177,4 @@ T.SpinBox {
             color: control.activeFocus ? control.Material.accentColor : control.Material.hintTextColor
         }
     }
-    //! [background]
 }

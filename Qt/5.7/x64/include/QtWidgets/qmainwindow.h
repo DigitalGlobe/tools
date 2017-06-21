@@ -40,6 +40,7 @@
 #ifndef QDYNAMICMAINWINDOW_H
 #define QDYNAMICMAINWINDOW_H
 
+#include <QtWidgets/qtwidgetsglobal.h>
 #include <QtWidgets/qwidget.h>
 #include <QtWidgets/qtabwidget.h>
 
@@ -195,6 +196,9 @@ public Q_SLOTS:
 Q_SIGNALS:
     void iconSizeChanged(const QSize &iconSize);
     void toolButtonStyleChanged(Qt::ToolButtonStyle toolButtonStyle);
+#ifndef QT_NO_DOCKWIDGET
+    void tabifiedDockWidgetActivated(QDockWidget *dockWidget);
+#endif
 
 protected:
 #ifndef QT_NO_CONTEXTMENU

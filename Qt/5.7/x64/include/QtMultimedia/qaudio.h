@@ -41,7 +41,7 @@
 #ifndef QAUDIO_H
 #define QAUDIO_H
 
-#include <QtMultimedia/qtmultimediadefs.h>
+#include <QtMultimedia/qtmultimediaglobal.h>
 #include <QtMultimedia/qmultimedia.h>
 
 #include <QtCore/qmetatype.h>
@@ -70,6 +70,15 @@ namespace QAudio
         SonificationRole,
         GameRole
     };
+
+    enum VolumeScale {
+        LinearVolumeScale,
+        CubicVolumeScale,
+        LogarithmicVolumeScale,
+        DecibelVolumeScale
+    };
+
+    Q_MULTIMEDIA_EXPORT qreal convertVolume(qreal volume, VolumeScale from, VolumeScale to);
 }
 
 #ifndef QT_NO_DEBUG_STREAM
@@ -77,6 +86,7 @@ Q_MULTIMEDIA_EXPORT QDebug operator<<(QDebug dbg, QAudio::Error error);
 Q_MULTIMEDIA_EXPORT QDebug operator<<(QDebug dbg, QAudio::State state);
 Q_MULTIMEDIA_EXPORT QDebug operator<<(QDebug dbg, QAudio::Mode mode);
 Q_MULTIMEDIA_EXPORT QDebug operator<<(QDebug dbg, QAudio::Role role);
+Q_MULTIMEDIA_EXPORT QDebug operator<<(QDebug dbg, QAudio::VolumeScale role);
 #endif
 
 QT_END_NAMESPACE
@@ -85,5 +95,6 @@ Q_DECLARE_METATYPE(QAudio::Error)
 Q_DECLARE_METATYPE(QAudio::State)
 Q_DECLARE_METATYPE(QAudio::Mode)
 Q_DECLARE_METATYPE(QAudio::Role)
+Q_DECLARE_METATYPE(QAudio::VolumeScale)
 
 #endif // QAUDIO_H

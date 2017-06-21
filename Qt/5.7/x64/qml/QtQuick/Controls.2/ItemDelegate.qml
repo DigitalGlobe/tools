@@ -34,8 +34,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
+import QtQuick 2.8
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
+import QtQuick.Templates 2.1 as T
 
 T.ItemDelegate {
     id: control
@@ -50,27 +52,25 @@ T.ItemDelegate {
     padding: 12
     spacing: 12
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
         rightPadding: !control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
 
         text: control.text
         font: control.font
-        color: control.enabled ? "#26282a" : "#bdbebf"
+        color: control.enabled ? Default.textDarkColor : Default.textDisabledColor
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 100
         implicitHeight: 40
         visible: control.down || control.highlighted || control.visualFocus
-        color: control.visualFocus ? (control.pressed ? "#cce0ff" : "#e5efff") : (control.down ? "#bdbebf" : "#eeeeee")
+        color: control.visualFocus
+            ? (control.pressed ? Default.focusPressedColor : Default.delegateFocusColor)
+            : (control.down ? Default.delegatePressedColor : Default.delegateColor)
     }
-    //! [background]
 }

@@ -34,9 +34,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Controls 2.0
-import QtQuick.Templates 2.0 as T
+import QtQuick 2.8
+import QtQuick.Controls 2.1
+import QtQuick.Templates 2.1 as T
 
 T.SwipeView {
     id: control
@@ -46,11 +46,9 @@ T.SwipeView {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
-    Accessible.role: Accessible.PageTabList
-
-    //! [contentItem]
     contentItem: ListView {
         model: control.contentModel
+        interactive: control.interactive
         currentIndex: control.currentIndex
 
         spacing: control.spacing
@@ -63,5 +61,4 @@ T.SwipeView {
         preferredHighlightEnd: 0
         highlightMoveDuration: 250
     }
-    //! [contentItem]
 }

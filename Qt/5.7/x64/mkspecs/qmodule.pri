@@ -1,14 +1,9 @@
+EXTRA_INCLUDEPATH += c:\\tools\\build\\Qt\\..\\..\\firebird\\x64\\include
+EXTRA_LIBDIR += c:\\tools\\build\\Qt\\..\\..\\firebird\\x64\\lib
+QT_CPU_FEATURES.x86_64 = sse sse2
+QT.global_private.enabled_features = sse2 dbus gui widgets
+QT.global_private.disabled_features = private_tests dbus-linked libudev posix_fallocate reduce_exports reduce_relocations release_tools system-zlib
+QT_COORD_TYPE = double
+CONFIG += sse2 sse3 ssse3 sse4_1 sse4_2 avx avx2 largefile msvc_mp precompile_header
 QT_BUILD_PARTS += libs tools
-QT_SKIP_MODULES += qt3d qtdatavis3d
-QT_QCONFIG_PATH = 
-
-host_build {
-    QT_CPU_FEATURES.x86_64 =  sse sse2
-} else {
-    QT_CPU_FEATURES.x86_64 =  sse sse2
-}
-QT_COORD_TYPE += double
-CONFIG += precompile_header pcre release compile_examples sse2 sse3 ssse3 sse4_1 sse4_2 avx avx2 largefile
-QMAKE_QT_VERSION_OVERRIDE = 5
-sql-plugins    += sqlite
-styles         += windows fusion windowsxp windowsvista
+QT_HOST_CFLAGS_DBUS += 

@@ -34,8 +34,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
+import QtQuick 2.8
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
+import QtQuick.Templates 2.1 as T
 
 T.PageIndicator {
     id: control
@@ -48,20 +50,17 @@ T.PageIndicator {
     padding: 6
     spacing: 6
 
-    //! [delegate]
     delegate: Rectangle {
         implicitWidth: 8
         implicitHeight: 8
 
         radius: width / 2
-        color: "#28282a" // TODO
+        color: Default.pageIndicatorColor
 
         opacity: index === currentIndex ? 0.95 : pressed ? 0.7 : 0.45
         Behavior on opacity { OpacityAnimator { duration: 100 } }
     }
-    //! [delegate]
 
-    //! [contentItem]
     contentItem: Row {
         spacing: control.spacing
 
@@ -70,5 +69,4 @@ T.PageIndicator {
             delegate: control.delegate
         }
     }
-    //! [contentItem]
 }

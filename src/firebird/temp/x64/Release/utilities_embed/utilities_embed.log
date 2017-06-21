@@ -1,6 +1,0 @@
-﻿  call_service.cpp
-..\..\..\src\utilities\gsec\call_service.cpp(122): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-..\..\..\src\utilities\gsec\call_service.cpp(132): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-..\..\..\src\utilities\gsec\call_service.cpp(435): warning C4267: 'argument': conversion from 'size_t' to 'unsigned short', possible loss of data
-..\..\..\src\utilities\gsec\call_service.cpp(653): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
-  utilities_embed.vcxproj -> C:\tools\src\firebird\builds\win32\msvc14\..\..\..\temp\x64\Release\utilities_embed\utilities_embed.lib

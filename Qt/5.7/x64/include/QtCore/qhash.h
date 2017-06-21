@@ -744,7 +744,7 @@ Q_INLINE_TEMPLATE T &QHash<Key, T>::operator[](const Key &akey)
     Node **node = findNode(akey, &h);
     if (*node == e) {
         if (d->willGrow())
-            node = findNode(akey, &h);
+            node = findNode(akey, h);
         return createNode(h, akey, T(), node)->value;
     }
     return (*node)->value;
@@ -760,11 +760,11 @@ Q_INLINE_TEMPLATE typename QHash<Key, T>::iterator QHash<Key, T>::insert(const K
     Node **node = findNode(akey, &h);
     if (*node == e) {
         if (d->willGrow())
-            node = findNode(akey, &h);
+            node = findNode(akey, h);
         return iterator(createNode(h, akey, avalue, node));
     }
 
-    if (!QtPrivate::is_same<T, QHashDummyValue>::value)
+    if (!std::is_same<T, QHashDummyValue>::value)
         (*node)->value = avalue;
     return iterator(*node);
 }
@@ -961,8 +961,7 @@ QPair<typename QHash<Key, T>::iterator, typename QHash<Key, T>::iterator> QHash<
 template <class Key, class T>
 QPair<typename QHash<Key, T>::const_iterator, typename QHash<Key, T>::const_iterator> QHash<Key, T>::equal_range(const Key &akey) const Q_DECL_NOTHROW
 {
-    uint h;
-    Node *node = *findNode(akey, &h);
+    Node *node = *findNode(akey);
     const_iterator firstIt = const_iterator(node);
 
     if (node != e) {
@@ -1094,6 +1093,27 @@ Q_INLINE_TEMPLATE int QMultiHash<Key, T>::count(const Key &key, const T &value) 
 
 Q_DECLARE_ASSOCIATIVE_ITERATOR(Hash)
 Q_DECLARE_MUTABLE_ASSOCIATIVE_ITERATOR(Hash)
+
+template <class Key, class T>
+uint qHash(const QHash<Key, T> &key, uint seed = 0)
+    Q_DECL_NOEXCEPT_EXPR(noexcept(qHash(std::declval<Key&>())) && noexcept(qHash(std::declval<T&>())))
+{
+    QtPrivate::QHashCombineCommutative hash;
+    for (auto it = key.begin(), end = key.end(); it != end; ++it) {
+        const Key &k = it.key();
+        const T   &v = it.value();
+        seed = hash(seed, std::pair<const Key&, const T&>(k, v));
+    }
+    return seed;
+}
+
+template <class Key, class T>
+inline uint qHash(const QMultiHash<Key, T> &key, uint seed = 0)
+    Q_DECL_NOEXCEPT_EXPR(noexcept(qHash(std::declval<Key&>())) && noexcept(qHash(std::declval<T&>())))
+{
+    const QHash<Key, T> &key2 = key;
+    return qHash(key2, seed);
+}
 
 QT_END_NAMESPACE
 

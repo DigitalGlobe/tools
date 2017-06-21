@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::Widgets)
     set_property(TARGET Qt5::Widgets PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_WIDGETS_LIB)
 
-
-    _populate_Widgets_target_properties(DEBUG "Qt5Widgetsd.dll" "Qt5Widgetsd.lib" )
+    _populate_Widgets_target_properties(RELEASE "Qt5Widgets.dll" "Qt5Widgets.lib" )
 
     if (EXISTS
-        "${_qt5Widgets_install_prefix}/bin/Qt5Widgets.dll"
+        "${_qt5Widgets_install_prefix}/bin/Qt5Widgetsd.dll"
       AND EXISTS
-        "${_qt5Widgets_install_prefix}/lib/Qt5Widgets.lib" )
-        _populate_Widgets_target_properties(RELEASE "Qt5Widgets.dll" "Qt5Widgets.lib" )
+        "${_qt5Widgets_install_prefix}/lib/Qt5Widgetsd.lib" )
+        _populate_Widgets_target_properties(DEBUG "Qt5Widgetsd.dll" "Qt5Widgetsd.lib" )
     endif()
+
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5Widgets_*Plugin.cmake")

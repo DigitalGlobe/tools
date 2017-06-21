@@ -34,9 +34,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Universal 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Universal 2.1
 
 T.ScrollIndicator {
     id: control
@@ -46,7 +46,6 @@ T.ScrollIndicator {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
-    //! [contentItem]
     contentItem: Rectangle {
         id: indicator
 
@@ -78,5 +77,4 @@ T.ScrollIndicator {
             }
         ]
     }
-    //! [contentItem]
 }

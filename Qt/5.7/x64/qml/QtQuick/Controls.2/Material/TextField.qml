@@ -34,22 +34,24 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Material 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Material 2.1
 
 T.TextField {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            placeholder.implicitWidth + leftPadding + rightPadding)
-    implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             placeholder.implicitHeight + 1 + topPadding + bottomPadding)
+                            placeholderText ? placeholder.implicitWidth + leftPadding + rightPadding : 0)
+                            || contentWidth + leftPadding + rightPadding
+    implicitHeight: Math.max(contentHeight + topPadding + bottomPadding,
+                             background ? background.implicitHeight : 0,
+                             placeholder.implicitHeight + topPadding + bottomPadding)
 
     topPadding: 8
     bottomPadding: 16
 
-    color: enabled ? Material.primaryTextColor : Material.hintTextColor
+    color: enabled ? Material.foreground : Material.hintTextColor
     selectionColor: Material.accentColor
     selectedTextColor: Material.primaryHighlightedTextColor
     verticalAlignment: TextInput.AlignVCenter
@@ -72,14 +74,13 @@ T.TextField {
             id: timer
             running: control.activeFocus
             repeat: true
-            interval: Qt.styleHints.cursorFlashTime
+            interval: Qt.styleHints.cursorFlashTime / 2
             onTriggered: cursor.opacity = !cursor.opacity ? 1 : 0
             // force the cursor visible when gaining focus
             onRunningChanged: cursor.opacity = 1
         }
     }
 
-    //! [placeholder]
     Text {
         id: placeholder
         x: control.leftPadding
@@ -95,14 +96,11 @@ T.TextField {
         visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
 
     }
-    //! [placeholder]
 
-    //! [background]
     background: Rectangle {
         y: control.height - height - control.bottomPadding / 2
         implicitWidth: 120
         height: control.activeFocus ? 2 : 1
         color: control.activeFocus ? control.Material.accentColor : control.Material.hintTextColor
     }
-    //! [background]
 }

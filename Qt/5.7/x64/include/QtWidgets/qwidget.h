@@ -40,6 +40,7 @@
 #ifndef QWIDGET_H
 #define QWIDGET_H
 
+#include <QtWidgets/qtwidgetsglobal.h>
 #include <QtGui/qwindowdefs.h>
 #include <QtCore/qobject.h>
 #include <QtCore/qmargins.h>
@@ -569,16 +570,6 @@ public:
     inline QWidget *childAt(int x, int y) const;
     QWidget *childAt(const QPoint &p) const;
 
-#if defined(Q_DEAD_CODE_FROM_QT4_X11)
-    const QX11Info &x11Info() const;
-    Qt::HANDLE x11PictureHandle() const;
-#endif
-
-#if defined(Q_DEAD_CODE_FROM_QT4_MAC)
-    Qt::HANDLE macQDHandle() const;
-    Qt::HANDLE macCGHandle() const;
-#endif
-
     void setAttribute(Qt::WidgetAttribute, bool on = true);
     inline bool testAttribute(Qt::WidgetAttribute) const;
 
@@ -675,6 +666,7 @@ protected:
     void destroy(bool destroyWindow = true,
                  bool destroySubWindows = true);
 
+    friend class QDataWidgetMapperPrivate; // for access to focusNextPrevChild
     virtual bool focusNextPrevChild(bool next);
     inline bool focusNextChild() { return focusNextPrevChild(true); }
     inline bool focusPreviousChild() { return focusNextPrevChild(false); }

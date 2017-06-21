@@ -1,8 +1,8 @@
 #ifndef QT_QTWINEXTRAS_MODULE_H
 #define QT_QTWINEXTRAS_MODULE_H
 #include <QtWinExtras/QtWinExtrasDepends>
-#include "qwinevent.h"
 #include "qwinextrasglobal.h"
+#include "qwinevent.h"
 #include "qwinfunctions.h"
 #include "qwinjumplist.h"
 #include "qwinjumplistcategory.h"

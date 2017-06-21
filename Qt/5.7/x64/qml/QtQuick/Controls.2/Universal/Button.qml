@@ -34,9 +34,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Universal 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Universal 2.1
 
 T.Button {
     id: control
@@ -53,7 +53,6 @@ T.Button {
 
     property bool useSystemFocusVisuals: true
 
-    //! [contentItem]
     contentItem: Text {
         text: control.text
         font: control.font
@@ -64,9 +63,7 @@ T.Button {
         opacity: enabled ? 1.0 : 0.2
         color: control.Universal.foreground
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 32
         implicitHeight: 32
@@ -75,6 +72,14 @@ T.Button {
         color: control.down ? control.Universal.baseMediumLowColor :
                control.enabled && (control.highlighted || control.checked) ? control.Universal.accent :
                                                                              control.Universal.baseLowColor
+
+        Rectangle {
+            width: parent.width
+            height: parent.height
+            color: "transparent"
+            visible: control.hovered
+            border.width: 2 // ButtonBorderThemeThickness
+            border.color: control.Universal.baseMediumLowColor
+        }
     }
-    //! [background]
 }

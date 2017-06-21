@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::QuickTest)
     set_property(TARGET Qt5::QuickTest PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_QMLTEST_LIB)
 
-
-    _populate_QuickTest_target_properties(DEBUG "Qt5QuickTestd.dll" "Qt5QuickTestd.lib" )
+    _populate_QuickTest_target_properties(RELEASE "Qt5QuickTest.dll" "Qt5QuickTest.lib" )
 
     if (EXISTS
-        "${_qt5QuickTest_install_prefix}/bin/Qt5QuickTest.dll"
+        "${_qt5QuickTest_install_prefix}/bin/Qt5QuickTestd.dll"
       AND EXISTS
-        "${_qt5QuickTest_install_prefix}/lib/Qt5QuickTest.lib" )
-        _populate_QuickTest_target_properties(RELEASE "Qt5QuickTest.dll" "Qt5QuickTest.lib" )
+        "${_qt5QuickTest_install_prefix}/lib/Qt5QuickTestd.lib" )
+        _populate_QuickTest_target_properties(DEBUG "Qt5QuickTestd.dll" "Qt5QuickTestd.lib" )
     endif()
+
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5QuickTest_*Plugin.cmake")

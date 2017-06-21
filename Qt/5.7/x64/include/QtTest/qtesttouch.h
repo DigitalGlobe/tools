@@ -65,6 +65,7 @@ Q_GUI_EXPORT  void qt_handleTouchEvent(QWindow *w, QTouchDevice *device,
 
 namespace QTest
 {
+    Q_GUI_EXPORT QTouchDevice * createTouchDevice(QTouchDevice::DeviceType devType = QTouchDevice::TouchScreen);
 
     class QTouchEventSequence
     {
@@ -129,6 +130,7 @@ namespace QTest
         void commit(bool processEvents = true)
         {
             if (!points.isEmpty()) {
+                qSleep(1);
                 if (targetWindow)
                 {
                     qt_handleTouchEvent(targetWindow, device, points.values());

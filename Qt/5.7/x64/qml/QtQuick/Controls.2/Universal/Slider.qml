@@ -34,25 +34,22 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Universal 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Universal 2.1
 
 T.Slider {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-                            Math.max(background ? background.implicitWidth : 0,
-                                     handle ? handle.implicitWidth : 0) + leftPadding + rightPadding)
+                           (handle ? handle.implicitWidth : 0) + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-                             Math.max(background ? background.implicitHeight : 0,
-                                      handle ? handle.implicitHeight : 0) + topPadding + bottomPadding)
+                            (handle ? handle.implicitHeight : 0) + topPadding + bottomPadding)
 
     padding: 6
 
     property bool useSystemFocusVisuals: true
 
-    //! [handle]
     handle: Rectangle {
         implicitWidth: horizontal ? 8 : 24
         implicitHeight: horizontal ? 24 : 8
@@ -63,11 +60,11 @@ T.Slider {
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : control.visualPosition * (control.availableHeight - height))
 
         radius: 4
-        color: control.pressed ? control.Universal.chromeHighColor : control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
+        color: control.pressed ? control.Universal.chromeHighColor :
+               control.hovered ? control.Universal.chromeAltLowColor :
+               control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
     }
-    //! [handle]
 
-    //! [background]
     background: Item {
         implicitWidth: horizontal ? 200 : 18
         implicitHeight: horizontal ? 18 : 200
@@ -87,7 +84,8 @@ T.Slider {
             width: parent.horizontal ? parent.width : 2 // SliderTrackThemeHeight
             height: !parent.horizontal ? parent.height : 2 // SliderTrackThemeHeight
 
-            color: control.enabled ? control.Universal.baseMediumLowColor : control.Universal.chromeDisabledHighColor
+            color: control.hovered && !control.pressed ? control.Universal.baseMediumColor :
+                   control.enabled ? control.Universal.baseMediumLowColor : control.Universal.chromeDisabledHighColor
         }
 
         Rectangle {
@@ -99,5 +97,4 @@ T.Slider {
             color: control.enabled ? control.Universal.accent : control.Universal.chromeDisabledHighColor
         }
     }
-    //! [background]
 }

@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::Designer)
     set_property(TARGET Qt5::Designer PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_DESIGNER_LIB)
 
-
-    _populate_Designer_target_properties(DEBUG "Qt5Designerd.dll" "Qt5Designerd.lib" )
+    _populate_Designer_target_properties(RELEASE "Qt5Designer.dll" "Qt5Designer.lib" )
 
     if (EXISTS
-        "${_qt5Designer_install_prefix}/bin/Qt5Designer.dll"
+        "${_qt5Designer_install_prefix}/bin/Qt5Designerd.dll"
       AND EXISTS
-        "${_qt5Designer_install_prefix}/lib/Qt5Designer.lib" )
-        _populate_Designer_target_properties(RELEASE "Qt5Designer.dll" "Qt5Designer.lib" )
+        "${_qt5Designer_install_prefix}/lib/Qt5Designerd.lib" )
+        _populate_Designer_target_properties(DEBUG "Qt5Designerd.dll" "Qt5Designerd.lib" )
     endif()
+
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5Designer_*Plugin.cmake")

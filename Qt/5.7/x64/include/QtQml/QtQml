@@ -2,7 +2,6 @@
 #define QT_QTQML_MODULE_H
 #include <QtQml/QtQmlDepends>
 #include "qtqmlglobal.h"
-#include "qqmldebug.h"
 #include "qjsengine.h"
 #include "qjsvalue.h"
 #include "qjsvalueiterator.h"
@@ -11,6 +10,7 @@
 #include "qqmlapplicationengine.h"
 #include "qqmlcomponent.h"
 #include "qqmlcontext.h"
+#include "qqmldebug.h"
 #include "qqmlengine.h"
 #include "qqmlerror.h"
 #include "qqmlexpression.h"
@@ -25,8 +25,8 @@
 #include "qqmlparserstatus.h"
 #include "qqmlprivate.h"
 #include "qqmlproperty.h"
+#include "qqmlpropertymap.h"
 #include "qqmlpropertyvaluesource.h"
 #include "qqmlscriptstring.h"
-#include "qqmlpropertymap.h"
 #include "qtqmlversion.h"
 #endif

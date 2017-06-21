@@ -123,12 +123,12 @@ if (NOT TARGET Qt5::AxServer)
     set_property(TARGET Qt5::AxServer PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_AXSERVER_LIB)
 
+    _populate_AxServer_target_properties(RELEASE "Qt5AxServer.lib" "" )
 
-    _populate_AxServer_target_properties(DEBUG "Qt5AxServerd.lib" "" )
-
-    if (EXISTS "${_qt5AxServer_install_prefix}/lib/Qt5AxServer.lib" )
-        _populate_AxServer_target_properties(RELEASE "Qt5AxServer.lib" "" )
+    if (EXISTS "${_qt5AxServer_install_prefix}/lib/Qt5AxServerd.lib" )
+        _populate_AxServer_target_properties(DEBUG "Qt5AxServerd.lib" "" )
     endif()
+
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5AxServer_*Plugin.cmake")

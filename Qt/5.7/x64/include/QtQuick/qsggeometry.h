@@ -51,6 +51,45 @@ class QSGGeometryData;
 class Q_QUICK_EXPORT QSGGeometry
 {
 public:
+    enum AttributeType {
+        UnknownAttribute,
+        PositionAttribute,
+        ColorAttribute,
+        TexCoordAttribute,
+        TexCoord1Attribute,
+        TexCoord2Attribute
+    };
+
+    enum DataPattern {
+        AlwaysUploadPattern = 0,
+        StreamPattern       = 1,
+        DynamicPattern      = 2,
+        StaticPattern       = 3
+    };
+
+    // Equivalents to GL_* drawing modes.
+    // Keep in sync with GL headers.
+    enum DrawingMode {
+        DrawPoints = 0x0000,
+        DrawLines = 0x0001,
+        DrawLineLoop = 0x0002,
+        DrawLineStrip = 0x0003,
+        DrawTriangles = 0x0004,
+        DrawTriangleStrip = 0x0005,
+        DrawTriangleFan = 0x0006
+    };
+
+    // Equivalents to GL_BYTE and similar type constants.
+    // Keep in sync with GL headers.
+    enum Type {
+        ByteType = 0x1400,
+        UnsignedByteType = 0x1401,
+        ShortType = 0x1402,
+        UnsignedShortType = 0x1403,
+        IntType = 0x1404,
+        UnsignedIntType = 0x1405,
+        FloatType = 0x1406
+    };
 
     struct Q_QUICK_EXPORT Attribute
     {
@@ -60,9 +99,12 @@ public:
 
         uint isVertexCoordinate : 1;
 
-        uint reserved : 31;
+        AttributeType attributeType : 4;
+
+        uint reserved : 27;
 
         static Attribute create(int pos, int tupleSize, int primitiveType, bool isPosition = false);
+        static Attribute createWithAttributeType(int pos, int tupleSize, int primitiveType, AttributeType attributeType);
     };
 
     struct AttributeSet {
@@ -97,21 +139,15 @@ public:
     static const AttributeSet &defaultAttributes_TexturedPoint2D();
     static const AttributeSet &defaultAttributes_ColoredPoint2D();
 
-    enum DataPattern {
-        AlwaysUploadPattern = 0,
-        StreamPattern       = 1,
-        DynamicPattern      = 2,
-        StaticPattern       = 3
-    };
-
     QSGGeometry(const QSGGeometry::AttributeSet &attribs,
                 int vertexCount,
                 int indexCount = 0,
-                int indexType = GL_UNSIGNED_SHORT);
+                int indexType = UnsignedShortType);
     virtual ~QSGGeometry();
 
-    void setDrawingMode(GLenum mode);
-    inline GLenum drawingMode() const { return m_drawing_mode; }
+    // must use unsigned int to be compatible with the old GLenum to keep BC
+    void setDrawingMode(unsigned int mode);
+    inline unsigned int drawingMode() const { return m_drawing_mode; }
 
     void allocate(int vertexCount, int indexCount = 0);
 
@@ -147,6 +183,7 @@ public:
 
     static void updateRectGeometry(QSGGeometry *g, const QRectF &rect);
     static void updateTexturedRectGeometry(QSGGeometry *g, const QRectF &rect, const QRectF &sourceRect);
+    static void updateColoredRectGeometry(QSGGeometry *g, const QRectF &rect);
 
     void setIndexDataPattern(DataPattern p);
     DataPattern indexDataPattern() const { return DataPattern(m_index_usage_pattern); }
@@ -187,25 +224,25 @@ private:
 
 inline uint *QSGGeometry::indexDataAsUInt()
 {
-    Q_ASSERT(m_index_type == GL_UNSIGNED_INT);
+    Q_ASSERT(m_index_type == UnsignedIntType);
     return static_cast<uint *>(indexData());
 }
 
 inline quint16 *QSGGeometry::indexDataAsUShort()
 {
-    Q_ASSERT(m_index_type == GL_UNSIGNED_SHORT);
+    Q_ASSERT(m_index_type == UnsignedShortType);
     return static_cast<quint16 *>(indexData());
 }
 
 inline const uint *QSGGeometry::indexDataAsUInt() const
 {
-    Q_ASSERT(m_index_type == GL_UNSIGNED_INT);
+    Q_ASSERT(m_index_type == UnsignedIntType);
     return static_cast<const uint *>(indexData());
 }
 
 inline const quint16 *QSGGeometry::indexDataAsUShort() const
 {
-    Q_ASSERT(m_index_type == GL_UNSIGNED_SHORT);
+    Q_ASSERT(m_index_type == UnsignedShortType);
     return static_cast<const quint16 *>(indexData());
 }
 
@@ -214,7 +251,7 @@ inline QSGGeometry::Point2D *QSGGeometry::vertexDataAsPoint2D()
     Q_ASSERT(m_attributes.count == 1);
     Q_ASSERT(m_attributes.stride == 2 * sizeof(float));
     Q_ASSERT(m_attributes.attributes[0].tupleSize == 2);
-    Q_ASSERT(m_attributes.attributes[0].type == GL_FLOAT);
+    Q_ASSERT(m_attributes.attributes[0].type == FloatType);
     Q_ASSERT(m_attributes.attributes[0].position == 0);
     return static_cast<Point2D *>(m_data);
 }
@@ -225,10 +262,10 @@ inline QSGGeometry::TexturedPoint2D *QSGGeometry::vertexDataAsTexturedPoint2D()
     Q_ASSERT(m_attributes.stride == 4 * sizeof(float));
     Q_ASSERT(m_attributes.attributes[0].position == 0);
     Q_ASSERT(m_attributes.attributes[0].tupleSize == 2);
-    Q_ASSERT(m_attributes.attributes[0].type == GL_FLOAT);
+    Q_ASSERT(m_attributes.attributes[0].type == FloatType);
     Q_ASSERT(m_attributes.attributes[1].position == 1);
     Q_ASSERT(m_attributes.attributes[1].tupleSize == 2);
-    Q_ASSERT(m_attributes.attributes[1].type == GL_FLOAT);
+    Q_ASSERT(m_attributes.attributes[1].type == FloatType);
     return static_cast<TexturedPoint2D *>(m_data);
 }
 
@@ -238,10 +275,10 @@ inline QSGGeometry::ColoredPoint2D *QSGGeometry::vertexDataAsColoredPoint2D()
     Q_ASSERT(m_attributes.stride == 2 * sizeof(float) + 4 * sizeof(char));
     Q_ASSERT(m_attributes.attributes[0].position == 0);
     Q_ASSERT(m_attributes.attributes[0].tupleSize == 2);
-    Q_ASSERT(m_attributes.attributes[0].type == GL_FLOAT);
+    Q_ASSERT(m_attributes.attributes[0].type == FloatType);
     Q_ASSERT(m_attributes.attributes[1].position == 1);
     Q_ASSERT(m_attributes.attributes[1].tupleSize == 4);
-    Q_ASSERT(m_attributes.attributes[1].type == GL_UNSIGNED_BYTE);
+    Q_ASSERT(m_attributes.attributes[1].type == UnsignedByteType);
     return static_cast<ColoredPoint2D *>(m_data);
 }
 
@@ -250,7 +287,7 @@ inline const QSGGeometry::Point2D *QSGGeometry::vertexDataAsPoint2D() const
     Q_ASSERT(m_attributes.count == 1);
     Q_ASSERT(m_attributes.stride == 2 * sizeof(float));
     Q_ASSERT(m_attributes.attributes[0].tupleSize == 2);
-    Q_ASSERT(m_attributes.attributes[0].type == GL_FLOAT);
+    Q_ASSERT(m_attributes.attributes[0].type == FloatType);
     Q_ASSERT(m_attributes.attributes[0].position == 0);
     return static_cast<const Point2D *>(m_data);
 }
@@ -261,10 +298,10 @@ inline const QSGGeometry::TexturedPoint2D *QSGGeometry::vertexDataAsTexturedPoin
     Q_ASSERT(m_attributes.stride == 4 * sizeof(float));
     Q_ASSERT(m_attributes.attributes[0].position == 0);
     Q_ASSERT(m_attributes.attributes[0].tupleSize == 2);
-    Q_ASSERT(m_attributes.attributes[0].type == GL_FLOAT);
+    Q_ASSERT(m_attributes.attributes[0].type == FloatType);
     Q_ASSERT(m_attributes.attributes[1].position == 1);
     Q_ASSERT(m_attributes.attributes[1].tupleSize == 2);
-    Q_ASSERT(m_attributes.attributes[1].type == GL_FLOAT);
+    Q_ASSERT(m_attributes.attributes[1].type == FloatType);
     return static_cast<const TexturedPoint2D *>(m_data);
 }
 
@@ -274,18 +311,18 @@ inline const QSGGeometry::ColoredPoint2D *QSGGeometry::vertexDataAsColoredPoint2
     Q_ASSERT(m_attributes.stride == 2 * sizeof(float) + 4 * sizeof(char));
     Q_ASSERT(m_attributes.attributes[0].position == 0);
     Q_ASSERT(m_attributes.attributes[0].tupleSize == 2);
-    Q_ASSERT(m_attributes.attributes[0].type == GL_FLOAT);
+    Q_ASSERT(m_attributes.attributes[0].type == FloatType);
     Q_ASSERT(m_attributes.attributes[1].position == 1);
     Q_ASSERT(m_attributes.attributes[1].tupleSize == 4);
-    Q_ASSERT(m_attributes.attributes[1].type == GL_UNSIGNED_BYTE);
+    Q_ASSERT(m_attributes.attributes[1].type == UnsignedByteType);
     return static_cast<const ColoredPoint2D *>(m_data);
 }
 
 int QSGGeometry::sizeOfIndex() const
 {
-    if (m_index_type == GL_UNSIGNED_SHORT) return 2;
-    else if (m_index_type == GL_UNSIGNED_BYTE) return 1;
-    else if (m_index_type == GL_UNSIGNED_INT) return 4;
+    if (m_index_type == UnsignedShortType) return 2;
+    else if (m_index_type == UnsignedByteType) return 1;
+    else if (m_index_type == UnsignedIntType) return 4;
     return 0;
 }
 

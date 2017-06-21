@@ -34,9 +34,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Material 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Material 2.1
+import QtQuick.Controls.Material.impl 2.1
 
 T.RadioDelegate {
     id: control
@@ -53,35 +54,39 @@ T.RadioDelegate {
     bottomPadding: 8
     spacing: 16
 
-    //! [indicator]
     indicator: RadioIndicator {
         x: text ? (control.mirrored ? control.leftPadding : control.width - width - control.rightPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control
     }
-    //! [indicator]
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: !control.mirrored ? 0 : control.indicator.width + control.spacing
         rightPadding: control.mirrored ? 0 : control.indicator.width + control.spacing
 
         text: control.text
         font: control.font
-        color: control.enabled ? control.Material.primaryTextColor : control.Material.hintTextColor
+        color: control.enabled ? control.Material.foreground : control.Material.hintTextColor
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitHeight: 48
 
-        visible: control.down || control.highlighted
-        color: control.down ? control.Material.buttonPressColor : control.Material.listHighlightColor
+        color: control.highlighted ? control.Material.listHighlightColor : "transparent"
+
+        Ripple {
+            width: parent.width
+            height: parent.height
+
+            clip: visible
+            pressed: control.pressed
+            anchor: control
+            active: control.down || control.visualFocus || control.hovered
+            color: control.Material.rippleColor
+        }
     }
-    //! [background]
 }

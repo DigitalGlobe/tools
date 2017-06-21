@@ -40,6 +40,7 @@
 #ifndef QABSTRACTSOCKET_H
 #define QABSTRACTSOCKET_H
 
+#include <QtNetwork/qtnetworkglobal.h>
 #include <QtCore/qiodevice.h>
 #include <QtCore/qobject.h>
 #ifndef QT_NO_DEBUG_STREAM
@@ -63,6 +64,7 @@ public:
     enum SocketType {
         TcpSocket,
         UdpSocket,
+        SctpSocket,
         UnknownSocketType = -1
     };
     Q_ENUM(SocketType)

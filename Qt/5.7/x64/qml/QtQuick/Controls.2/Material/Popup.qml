@@ -34,10 +34,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Material 2.0
-import QtQuick.Controls.Material.impl 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Material 2.1
+import QtQuick.Controls.Material.impl 2.1
 
 T.Popup {
     id: control
@@ -66,10 +66,8 @@ T.Popup {
         NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; easing.type: Easing.OutCubic; duration: 150 }
     }
 
-    contentItem: Item { }
-
     background: Rectangle {
-        radius: 3
+        radius: 2
         color: control.Material.dialogColor
 
         layer.enabled: control.Material.elevation > 0

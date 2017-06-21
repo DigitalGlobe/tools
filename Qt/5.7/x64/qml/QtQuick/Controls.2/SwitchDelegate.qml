@@ -34,10 +34,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls 2.0
-import QtQuick.Controls.impl 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
 
 T.SwitchDelegate {
     id: control
@@ -52,35 +52,29 @@ T.SwitchDelegate {
     padding: 12
     spacing: 12
 
-    //! [indicator]
     indicator: SwitchIndicator {
         x: text ? (control.mirrored ? control.leftPadding : control.width - width - control.rightPadding) : control.leftPadding + (control.availableWidth - width) / 2
         y: control.topPadding + (control.availableHeight - height) / 2
         control: control
     }
-    //! [indicator]
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: control.indicator && !control.mirrored ? 0 : control.indicator.width + control.spacing
         rightPadding: control.indicator && control.mirrored ? 0 : control.indicator.width + control.spacing
 
         text: control.text
         font: control.font
-        color: control.enabled ? "#26282a" : "#bdbebf"
+        color: control.enabled ? Default.textDarkColor : Default.textDisabledColor
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 100
         implicitHeight: 40
         visible: control.down || control.highlighted
-        color: control.down ? "#bdbebf" : "#eeeeee"
+        color: control.down ? Default.delegatePressedColor : Default.delegateColor
     }
-    //! [background]
 }

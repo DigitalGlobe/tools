@@ -34,9 +34,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.7
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Universal 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Universal 2.1
 
 T.TabBar {
     id: control
@@ -46,7 +46,6 @@ T.TabBar {
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
                              contentItem.implicitHeight + topPadding + bottomPadding)
 
-    //! [contentItem]
     contentItem: PathView {
         implicitWidth: 200
         implicitHeight: 48
@@ -68,13 +67,10 @@ T.TabBar {
             }
         }
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 200
         implicitHeight: 48
         color: control.Universal.background
     }
-    //! [background]
 }

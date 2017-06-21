@@ -40,6 +40,7 @@
 #ifndef QUNDOSTACK_H
 #define QUNDOSTACK_H
 
+#include <QtWidgets/qtwidgetsglobal.h>
 #include <QtCore/qobject.h>
 #include <QtCore/qstring.h>
 
@@ -127,6 +128,7 @@ public:
 
 public Q_SLOTS:
     void setClean();
+    void resetClean();
     void setIndex(int idx);
     void undo();
     void redo();

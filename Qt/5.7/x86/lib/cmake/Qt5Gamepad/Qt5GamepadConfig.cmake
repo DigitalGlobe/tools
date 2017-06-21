@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::Gamepad)
     set_property(TARGET Qt5::Gamepad PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_GAMEPAD_LIB)
 
-
-    _populate_Gamepad_target_properties(DEBUG "Qt5Gamepadd.dll" "Qt5Gamepadd.lib" )
+    _populate_Gamepad_target_properties(RELEASE "Qt5Gamepad.dll" "Qt5Gamepad.lib" )
 
     if (EXISTS
-        "${_qt5Gamepad_install_prefix}/bin/Qt5Gamepad.dll"
+        "${_qt5Gamepad_install_prefix}/bin/Qt5Gamepadd.dll"
       AND EXISTS
-        "${_qt5Gamepad_install_prefix}/lib/Qt5Gamepad.lib" )
-        _populate_Gamepad_target_properties(RELEASE "Qt5Gamepad.dll" "Qt5Gamepad.lib" )
+        "${_qt5Gamepad_install_prefix}/lib/Qt5Gamepadd.lib" )
+        _populate_Gamepad_target_properties(DEBUG "Qt5Gamepadd.dll" "Qt5Gamepadd.lib" )
     endif()
+
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5Gamepad_*Plugin.cmake")

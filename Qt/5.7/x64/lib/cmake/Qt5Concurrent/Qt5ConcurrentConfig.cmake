@@ -6,7 +6,7 @@ endif()
 get_filename_component(_qt5Concurrent_install_prefix "${CMAKE_CURRENT_LIST_DIR}/../../../" ABSOLUTE)
 
 # For backwards compatibility only. Use Qt5Concurrent_VERSION instead.
-set(Qt5Concurrent_VERSION_STRING 5.7.0)
+set(Qt5Concurrent_VERSION_STRING 5.8.0)
 
 set(Qt5Concurrent_LIBRARIES Qt5::Concurrent)
 
@@ -49,6 +49,7 @@ if (NOT TARGET Qt5::Concurrent)
 
     set(_Qt5Concurrent_OWN_INCLUDE_DIRS "${_qt5Concurrent_install_prefix}/include/" "${_qt5Concurrent_install_prefix}/include/QtConcurrent")
     set(Qt5Concurrent_PRIVATE_INCLUDE_DIRS "")
+    include("${CMAKE_CURRENT_LIST_DIR}/ExtraSourceIncludes.cmake" OPTIONAL)
 
     foreach(_dir ${_Qt5Concurrent_OWN_INCLUDE_DIRS})
         _qt5_Concurrent_check_file_exists(${_dir})
@@ -88,7 +89,7 @@ if (NOT TARGET Qt5::Concurrent)
     foreach(_module_dep ${_Qt5Concurrent_MODULE_DEPENDENCIES})
         if (NOT Qt5${_module_dep}_FOUND)
             find_package(Qt5${_module_dep}
-                5.7.0 ${_Qt5Concurrent_FIND_VERSION_EXACT}
+                5.8.0 ${_Qt5Concurrent_FIND_VERSION_EXACT}
                 ${_Qt5Concurrent_DEPENDENCIES_FIND_QUIET}
                 ${_Qt5Concurrent_FIND_DEPENDENCIES_REQUIRED}
                 PATHS "${CMAKE_CURRENT_LIST_DIR}/.." NO_DEFAULT_PATH

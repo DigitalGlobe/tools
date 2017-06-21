@@ -34,11 +34,11 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Controls 2.0
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Material 2.0
-import QtQuick.Controls.Material.impl 2.0
+import QtQuick 2.8
+import QtQuick.Controls 2.1
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Material 2.1
+import QtQuick.Controls.Material.impl 2.1
 
 T.Menu {
     id: control
@@ -68,7 +68,6 @@ T.Menu {
         NumberAnimation { property: "opacity"; from: 1.0; to: 0.0; easing.type: Easing.OutCubic; duration: 150 }
     }
 
-    //! [contentItem]
     contentItem: ListView {
         implicitHeight: contentHeight
 
@@ -81,9 +80,7 @@ T.Menu {
 
         ScrollIndicator.vertical: ScrollIndicator {}
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 200
         implicitHeight: 48
@@ -96,5 +93,4 @@ T.Menu {
             elevation: control.Material.elevation
         }
     }
-    //! [background]
 }

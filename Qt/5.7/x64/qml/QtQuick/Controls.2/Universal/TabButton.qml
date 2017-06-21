@@ -34,9 +34,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Universal 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Universal 2.1
 
 T.TabButton {
     id: control
@@ -49,7 +49,6 @@ T.TabButton {
 
     padding: 12 // PivotItemMargin
 
-    //! [contentItem]
     contentItem: Text {
         text: control.text
         font: control.font
@@ -57,8 +56,7 @@ T.TabButton {
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
 
-        opacity: control.checked || control.down ? 1.0 : 0.2
-        color: control.Universal.foreground
+        opacity: control.checked || control.down || control.hovered ? 1.0 : 0.2
+        color: control.hovered ? control.Universal.baseMediumHighColor : control.Universal.foreground
     }
-    //! [contentItem]
 }

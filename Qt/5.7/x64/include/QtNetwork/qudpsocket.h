@@ -40,6 +40,7 @@
 #ifndef QUDPSOCKET_H
 #define QUDPSOCKET_H
 
+#include <QtNetwork/qtnetworkglobal.h>
 #include <QtNetwork/qabstractsocket.h>
 #include <QtNetwork/qhostaddress.h>
 
@@ -48,6 +49,7 @@ QT_BEGIN_NAMESPACE
 
 #ifndef QT_NO_UDPSOCKET
 
+class QNetworkDatagram;
 class QNetworkInterface;
 class QUdpSocketPrivate;
 
@@ -72,7 +74,10 @@ public:
 
     bool hasPendingDatagrams() const;
     qint64 pendingDatagramSize() const;
+    QNetworkDatagram receiveDatagram(qint64 maxSize = -1);
     qint64 readDatagram(char *data, qint64 maxlen, QHostAddress *host = Q_NULLPTR, quint16 *port = Q_NULLPTR);
+
+    qint64 writeDatagram(const QNetworkDatagram &datagram);
     qint64 writeDatagram(const char *data, qint64 len, const QHostAddress &host, quint16 port);
     inline qint64 writeDatagram(const QByteArray &datagram, const QHostAddress &host, quint16 port)
         { return writeDatagram(datagram.constData(), datagram.size(), host, port); }

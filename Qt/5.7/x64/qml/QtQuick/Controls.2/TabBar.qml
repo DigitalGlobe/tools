@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
 
 T.TabBar {
     id: control
@@ -47,7 +47,6 @@ T.TabBar {
 
     spacing: 1
 
-    //! [contentItem]
     contentItem: ListView {
         implicitWidth: contentWidth
         implicitHeight: 40
@@ -58,11 +57,14 @@ T.TabBar {
         spacing: control.spacing
         orientation: ListView.Horizontal
         boundsBehavior: Flickable.StopAtBounds
+        flickableDirection: Flickable.AutoFlickIfNeeded
         snapMode: ListView.SnapToItem
-    }
-    //! [contentItem]
 
-    //! [background]
+        highlightMoveDuration: 0
+        highlightRangeMode: ListView.ApplyRange
+        preferredHighlightBegin: 40
+        preferredHighlightEnd: width - 40
+    }
+
     background: Rectangle { }
-    //! [background]
 }

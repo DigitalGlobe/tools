@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::Network)
     set_property(TARGET Qt5::Network PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_NETWORK_LIB)
 
-
-    _populate_Network_target_properties(DEBUG "Qt5Networkd.dll" "Qt5Networkd.lib" )
+    _populate_Network_target_properties(RELEASE "Qt5Network.dll" "Qt5Network.lib" )
 
     if (EXISTS
-        "${_qt5Network_install_prefix}/bin/Qt5Network.dll"
+        "${_qt5Network_install_prefix}/bin/Qt5Networkd.dll"
       AND EXISTS
-        "${_qt5Network_install_prefix}/lib/Qt5Network.lib" )
-        _populate_Network_target_properties(RELEASE "Qt5Network.dll" "Qt5Network.lib" )
+        "${_qt5Network_install_prefix}/lib/Qt5Networkd.lib" )
+        _populate_Network_target_properties(DEBUG "Qt5Networkd.dll" "Qt5Networkd.lib" )
     endif()
+
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5Network_*Plugin.cmake")

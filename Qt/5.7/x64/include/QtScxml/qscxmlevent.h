@@ -37,33 +37,32 @@
 **
 ****************************************************************************/
 
-#ifndef SCXMLEVENT_H
-#define SCXMLEVENT_H
+#ifndef QSCXMLEVENT_H
+#define QSCXMLEVENT_H
 
 #include <QtScxml/qscxmlglobals.h>
 
-#include <QEvent>
 #include <QStringList>
 #include <QVariantList>
 
 QT_BEGIN_NAMESPACE
 
-namespace QScxmlInternal {
-class WrappedQStateMachine;
-}
-
 class QScxmlEventPrivate;
 
-class Q_SCXML_EXPORT QScxmlEvent: public QEvent
+class Q_SCXML_EXPORT QScxmlEvent
 {
     Q_GADGET
-    Q_PROPERTY(QString name READ name CONSTANT)
-    Q_PROPERTY(QString eventType READ scxmlType CONSTANT)
-    Q_PROPERTY(QString sendId READ sendId CONSTANT)
-    Q_PROPERTY(QString origin READ origin CONSTANT)
-    Q_PROPERTY(QString originType READ originType CONSTANT)
-    Q_PROPERTY(QString invokeId READ invokeId CONSTANT)
-    Q_PROPERTY(QVariant data READ data CONSTANT)
+    Q_PROPERTY(QString name READ name WRITE setName)
+    Q_PROPERTY(EventType eventType READ eventType WRITE setEventType)
+    Q_PROPERTY(QString scxmlType READ scxmlType)
+    Q_PROPERTY(QString sendId READ sendId WRITE setSendId)
+    Q_PROPERTY(QString origin READ origin WRITE setOrigin)
+    Q_PROPERTY(QString originType READ originType WRITE setOriginType)
+    Q_PROPERTY(QString invokeId READ invokeId WRITE setInvokeId)
+    Q_PROPERTY(int delay READ delay WRITE setDelay)
+    Q_PROPERTY(QVariant data READ data WRITE setData)
+    Q_PROPERTY(bool errorEvent READ isErrorEvent)
+    Q_PROPERTY(QString errorMessage READ errorMessage WRITE setErrorMessage)
 
 public:
     QScxmlEvent();
@@ -77,6 +76,7 @@ public:
         InternalEvent,
         ExternalEvent
     };
+    Q_ENUM(EventType)
 
     QString name() const;
     void setName(const QString &name);
@@ -101,7 +101,7 @@ public:
     int delay() const;
     void setDelay(int delayInMiliSecs);
 
-    void clear();
+    Q_INVOKABLE void clear();
 
     QVariant data() const;
     void setData(const QVariant &data);
@@ -109,14 +109,6 @@ public:
     bool isErrorEvent() const;
     QString errorMessage() const;
     void setErrorMessage(const QString &message);
-
-protected:
-    friend class QScxmlInternal::WrappedQStateMachine;
-#ifndef Q_QDOC
-    static QEvent::Type scxmlEventType;
-    static QEvent::Type ignoreEventType;
-    void makeIgnorable();
-#endif // Q_QDOC
 
 private:
     QScxmlEventPrivate *d;
@@ -127,4 +119,4 @@ QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QScxmlEvent)
 
-#endif // SCXMLEVENT_H
+#endif // QSCXMLEVENT_H

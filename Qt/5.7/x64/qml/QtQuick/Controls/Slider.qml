@@ -46,7 +46,6 @@ import QtQuick.Controls.Private 1.0
     \inqmlmodule QtQuick.Controls
     \since 5.1
     \ingroup controls
-    \inherits QtQuickControls1::Control
     \brief Provides a vertical or horizontal slider control.
 
     \image slider.png
@@ -177,9 +176,11 @@ Control {
 
     /*! \internal
         The extra arguments positionAtMinimum and positionAtMaximum are there to force
-        re-evaluation of the handle position when the constraints change (QTBUG-41255).
+        re-evaluation of the handle position when the constraints change (QTBUG-41255),
+        and the same for range.minimumValue (QTBUG-51765).
     */
-    property real __handlePos: range.valueForPosition(__horizontal ? fakeHandle.x : fakeHandle.y, range.positionAtMinimum, range.positionAtMaximum)
+    property real __handlePos: range.valueForPosition(__horizontal ? fakeHandle.x : fakeHandle.y,
+        range.positionAtMinimum, range.positionAtMaximum, range.minimumValue)
 
     activeFocusOnTab: true
 

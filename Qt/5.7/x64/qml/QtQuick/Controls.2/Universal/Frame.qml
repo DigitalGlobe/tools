@@ -34,9 +34,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Universal 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Universal 2.1
 
 T.Frame {
     id: control
@@ -49,14 +49,8 @@ T.Frame {
 
     padding: 12
 
-    //! [contentItem]
-    contentItem: Item { }
-    //! [contentItem]
-
-    //! [background]
     background: Rectangle {
         color: "transparent"
         border.color: control.Universal.chromeDisabledLowColor
     }
-    //! [background]
 }

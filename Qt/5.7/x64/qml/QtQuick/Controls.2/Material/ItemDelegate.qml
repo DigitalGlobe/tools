@@ -34,9 +34,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Material 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Material 2.1
+import QtQuick.Controls.Material.impl 2.1
 
 T.ItemDelegate {
     id: control
@@ -51,27 +52,33 @@ T.ItemDelegate {
     padding: 16
     spacing: 16
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: control.checkable && !control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
         rightPadding: control.checkable && control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
 
         text: control.text
         font: control.font
-        color: control.enabled ? control.Material.primaryTextColor : control.Material.hintTextColor
+        color: control.enabled ? control.Material.foreground : control.Material.hintTextColor
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitHeight: 48
 
-        visible: control.down || control.highlighted
-        color: control.down ? control.Material.buttonPressColor : control.Material.listHighlightColor
+        color: control.highlighted ? control.Material.listHighlightColor : "transparent"
+
+        Ripple {
+            width: parent.width
+            height: parent.height
+
+            clip: visible
+            pressed: control.pressed
+            anchor: control
+            active: control.down || control.visualFocus || control.hovered
+            color: control.Material.rippleColor
+        }
     }
-    //! [background]
 }

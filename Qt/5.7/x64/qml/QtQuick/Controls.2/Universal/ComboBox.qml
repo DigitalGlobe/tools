@@ -34,11 +34,11 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
+import QtQuick 2.8
 import QtQuick.Window 2.2
-import QtQuick.Controls 2.0
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Universal 2.0
+import QtQuick.Controls 2.1
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Universal 2.1
 
 T.ComboBox {
     id: control
@@ -56,15 +56,13 @@ T.ComboBox {
     rightPadding: padding - 2
     bottomPadding: padding - 5
 
-    //! [delegate]
     delegate: ItemDelegate {
-        width: control.width
+        width: control.popup.width
         text: control.textRole ? (Array.isArray(control.model) ? modelData[control.textRole] : model[control.textRole]) : modelData
         highlighted: control.highlightedIndex === index
+        hoverEnabled: control.hoverEnabled
     }
-    //! [delegate]
 
-    //! [indicator]
     indicator: Image {
         x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
         y: control.topPadding + (control.availableHeight - height) / 2
@@ -72,9 +70,7 @@ T.ComboBox {
         sourceSize.width: width
         sourceSize.height: height
     }
-    //! [indicator]
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: control.mirrored && control.indicator ? control.indicator.width + control.spacing : 0
         rightPadding: !control.mirrored && control.indicator ? control.indicator.width + control.spacing : 0
@@ -88,18 +84,19 @@ T.ComboBox {
         opacity: enabled ? 1.0 : 0.2
         color: control.Universal.foreground
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 120
         implicitHeight: 32
 
-        border.width: 2 // ComboBoxBorderThemeThickness
+        border.width: control.flat ? 0 : 2 // ComboBoxBorderThemeThickness
         border.color: !control.enabled ? control.Universal.baseLowColor :
-                       control.pressed || popup.visible ? control.Universal.baseMediumLowColor : control.Universal.baseMediumLowColor
+                       control.pressed || popup.visible ? control.Universal.baseMediumLowColor :
+                       control.hovered ? control.Universal.baseMediumColor : control.Universal.baseMediumLowColor
         color: !control.enabled ? control.Universal.baseLowColor :
-                control.pressed || popup.visible ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
+                control.pressed || popup.visible ? control.Universal.listMediumColor :
+                control.flat && control.hovered ? control.Universal.listLowColor : control.Universal.altMediumLowColor
+        visible: !control.flat || control.pressed || control.hovered || control.visualFocus
 
         Rectangle {
             x: 2
@@ -112,12 +109,10 @@ T.ComboBox {
             opacity: control.Universal.theme === Universal.Light ? 0.4 : 0.6
         }
     }
-    //! [background]
 
-    //! [popup]
     popup: T.Popup {
         width: control.width
-        implicitHeight: Math.min(396, listview.contentHeight)
+        implicitHeight: Math.min(396, contentItem.implicitHeight)
         topMargin: 8
         bottomMargin: 8
 
@@ -125,10 +120,12 @@ T.ComboBox {
         Universal.accent: control.Universal.accent
 
         contentItem: ListView {
-            id: listview
             clip: true
+            implicitHeight: contentHeight
             model: control.popup.visible ? control.delegateModel : null
             currentIndex: control.highlightedIndex
+            highlightRangeMode: ListView.ApplyRange
+            highlightMoveDuration: 0
 
             T.ScrollIndicator.vertical: ScrollIndicator { }
         }
@@ -139,5 +136,4 @@ T.ComboBox {
             border.width: 1 // FlyoutBorderThemeThickness
         }
     }
-    //! [popup]
 }

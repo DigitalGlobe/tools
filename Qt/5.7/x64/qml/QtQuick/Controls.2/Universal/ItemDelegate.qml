@@ -34,9 +34,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Universal 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Universal 2.1
 
 T.ItemDelegate {
     id: control
@@ -54,7 +54,6 @@ T.ItemDelegate {
     topPadding: padding - 1
     bottomPadding: padding + 1
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: !control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
         rightPadding: control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
@@ -69,12 +68,11 @@ T.ItemDelegate {
         opacity: enabled ? 1.0 : 0.2
         color: control.Universal.foreground
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
-        visible: control.down || control.highlighted || control.visualFocus
-        color: control.down ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
+        visible: control.down || control.highlighted || control.visualFocus || control.hovered
+        color: control.down ? control.Universal.listMediumColor :
+               control.hovered ? control.Universal.listLowColor : control.Universal.altMediumLowColor
         Rectangle {
             width: parent.width
             height: parent.height
@@ -84,5 +82,4 @@ T.ItemDelegate {
         }
 
     }
-    //! [background]
 }

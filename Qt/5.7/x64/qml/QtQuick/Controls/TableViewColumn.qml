@@ -45,7 +45,6 @@ import QtQuick 2.2
     \since 5.1
     \ingroup viewitems
     \ingroup controls
-    \inherits QtQml::QtObject
     \brief Used to define columns in a \l TableView or in a \l TreeView.
 
     \image tableview.png
@@ -78,7 +77,7 @@ QtObject {
     /*! The model \c role of the column. */
     property string role
 
-    /*! The current width of the column
+    /*! The current width of the column.
     The default value depends on platform. If only one
     column is defined, the width expands to the viewport.
     */

@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::Quick)
     set_property(TARGET Qt5::Quick PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_QUICK_LIB)
 
-
-    _populate_Quick_target_properties(DEBUG "Qt5Quickd.dll" "Qt5Quickd.lib" )
+    _populate_Quick_target_properties(RELEASE "Qt5Quick.dll" "Qt5Quick.lib" )
 
     if (EXISTS
-        "${_qt5Quick_install_prefix}/bin/Qt5Quick.dll"
+        "${_qt5Quick_install_prefix}/bin/Qt5Quickd.dll"
       AND EXISTS
-        "${_qt5Quick_install_prefix}/lib/Qt5Quick.lib" )
-        _populate_Quick_target_properties(RELEASE "Qt5Quick.dll" "Qt5Quick.lib" )
+        "${_qt5Quick_install_prefix}/lib/Qt5Quickd.lib" )
+        _populate_Quick_target_properties(DEBUG "Qt5Quickd.dll" "Qt5Quickd.lib" )
     endif()
+
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5Quick_*Plugin.cmake")

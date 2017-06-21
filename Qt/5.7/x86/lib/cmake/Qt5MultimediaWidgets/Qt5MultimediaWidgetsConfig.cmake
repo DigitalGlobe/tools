@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::MultimediaWidgets)
     set_property(TARGET Qt5::MultimediaWidgets PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_MULTIMEDIAWIDGETS_LIB)
 
-
-    _populate_MultimediaWidgets_target_properties(DEBUG "Qt5MultimediaWidgetsd.dll" "Qt5MultimediaWidgetsd.lib" )
+    _populate_MultimediaWidgets_target_properties(RELEASE "Qt5MultimediaWidgets.dll" "Qt5MultimediaWidgets.lib" )
 
     if (EXISTS
-        "${_qt5MultimediaWidgets_install_prefix}/bin/Qt5MultimediaWidgets.dll"
+        "${_qt5MultimediaWidgets_install_prefix}/bin/Qt5MultimediaWidgetsd.dll"
       AND EXISTS
-        "${_qt5MultimediaWidgets_install_prefix}/lib/Qt5MultimediaWidgets.lib" )
-        _populate_MultimediaWidgets_target_properties(RELEASE "Qt5MultimediaWidgets.dll" "Qt5MultimediaWidgets.lib" )
+        "${_qt5MultimediaWidgets_install_prefix}/lib/Qt5MultimediaWidgetsd.lib" )
+        _populate_MultimediaWidgets_target_properties(DEBUG "Qt5MultimediaWidgetsd.dll" "Qt5MultimediaWidgetsd.lib" )
     endif()
+
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5MultimediaWidgets_*Plugin.cmake")

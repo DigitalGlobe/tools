@@ -34,10 +34,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Material 2.0
-import QtQuick.Controls.Material.impl 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Material 2.1
+import QtQuick.Controls.Material.impl 2.1
 
 T.BusyIndicator {
     id: control
@@ -47,7 +47,6 @@ T.BusyIndicator {
 
     padding: 6
 
-    //! [contentItem]
     contentItem: ProgressRing {
         id: ring
         x: control.leftPadding + (control.availableWidth - width) / 2
@@ -68,5 +67,4 @@ T.BusyIndicator {
             running: control.visible && control.running
         }
     }
-    //! [contentItem]
 }

@@ -41,6 +41,7 @@
 #define QQUICKWINDOW_H
 
 #include <QtQuick/qtquickglobal.h>
+#include <QtQuick/qsgrendererinterface.h>
 #include <QtCore/qmetatype.h>
 #include <QtGui/qopengl.h>
 #include <QtGui/qwindow.h>
@@ -60,6 +61,9 @@ class QQmlIncubationController;
 class QInputMethodEvent;
 class QQuickCloseEvent;
 class QQuickRenderControl;
+class QSGRectangleNode;
+class QSGImageNode;
+class QSGNinePatchNode;
 
 class Q_QUICK_EXPORT QQuickWindow : public QWindow
 {
@@ -110,16 +114,16 @@ public:
     bool sendEvent(QQuickItem *, QEvent *);
 
     QImage grabWindow();
-
+#ifndef QT_NO_OPENGL
     void setRenderTarget(QOpenGLFramebufferObject *fbo);
     QOpenGLFramebufferObject *renderTarget() const;
-
+#endif
     void setRenderTarget(uint fboId, const QSize &size);
     uint renderTargetId() const;
     QSize renderTargetSize() const;
-
+#ifndef QT_NO_OPENGL
     void resetOpenGLState();
-
+#endif
     QQmlIncubationController *incubationController() const;
 
 #ifndef QT_NO_ACCESSIBILITY
@@ -152,6 +156,15 @@ public:
     void scheduleRenderJob(QRunnable *job, RenderStage schedule);
 
     qreal effectiveDevicePixelRatio() const;
+
+    QSGRendererInterface *rendererInterface() const;
+
+    static void setSceneGraphBackend(QSGRendererInterface::GraphicsApi api);
+    static void setSceneGraphBackend(const QString &backend);
+
+    QSGRectangleNode *createRectangleNode() const;
+    QSGImageNode *createImageNode() const;
+    QSGNinePatchNode *createNinePatchNode() const;
 
 Q_SIGNALS:
     void frameSwapped();

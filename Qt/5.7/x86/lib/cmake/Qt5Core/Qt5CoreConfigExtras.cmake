@@ -101,14 +101,13 @@ set(Qt5Core_QTMAIN_LIBRARIES Qt5::WinMain)
 if (NOT TARGET Qt5::WinMain)
     add_library(Qt5::WinMain STATIC IMPORTED)
 
-
-    set_property(TARGET Qt5::WinMain APPEND PROPERTY IMPORTED_CONFIGURATIONS DEBUG)
-
-    set(imported_location "${_qt5Core_install_prefix}/lib/qtmaind.lib")
+    set_property(TARGET Qt5::WinMain APPEND PROPERTY IMPORTED_CONFIGURATIONS RELEASE)
+    set(imported_location "${_qt5Core_install_prefix}/lib/qtmain.lib")
 
     set_target_properties(Qt5::WinMain PROPERTIES
-        IMPORTED_LOCATION_DEBUG ${imported_location}
+        IMPORTED_LOCATION_RELEASE ${imported_location}
     )
+
 
     if (NOT CMAKE_VERSION VERSION_LESS 2.8.11 AND NOT Qt5_NO_LINK_QTMAIN)
         set(_isExe $<STREQUAL:$<TARGET_PROPERTY:TYPE>,EXECUTABLE>)

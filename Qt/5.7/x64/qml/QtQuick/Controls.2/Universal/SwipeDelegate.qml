@@ -34,9 +34,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Universal 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Universal 2.1
 
 T.SwipeDelegate {
     id: control
@@ -54,7 +54,6 @@ T.SwipeDelegate {
     topPadding: padding - 1
     bottomPadding: padding + 1
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: !control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
         rightPadding: control.mirrored ? (control.indicator ? control.indicator.width : 0) + control.spacing : 0
@@ -78,16 +77,15 @@ T.SwipeDelegate {
             }
         }
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         color: control.Universal.background
 
         Rectangle {
             width: parent.width
             height: parent.height
-            color: control.down ? control.Universal.listMediumColor : control.Universal.altMediumLowColor
+            color: control.down ? control.Universal.listMediumColor :
+                   control.hovered ? control.Universal.listLowColor : control.Universal.altMediumLowColor
             Rectangle {
                 width: parent.width
                 height: parent.height
@@ -105,5 +103,4 @@ T.SwipeDelegate {
             }
         }
     }
-    //! [background]
 }

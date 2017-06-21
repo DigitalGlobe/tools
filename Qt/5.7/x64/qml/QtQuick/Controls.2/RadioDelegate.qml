@@ -34,10 +34,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Controls 2.0
-import QtQuick.Controls.impl 2.0
-import QtQuick.Templates 2.0 as T
+import QtQuick 2.8
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
+import QtQuick.Templates 2.1 as T
 
 T.RadioDelegate {
     id: control
@@ -52,36 +52,30 @@ T.RadioDelegate {
     padding: 12
     spacing: 12
 
-    //! [contentItem]
     contentItem: Text {
         leftPadding: control.mirrored ? control.indicator.width + control.spacing : 0
         rightPadding: !control.mirrored ? control.indicator.width + control.spacing : 0
 
         text: control.text
         font: control.font
-        color: control.enabled ? "#26282a" : "#bdbebf"
+        color: control.enabled ? Default.textDarkColor : Default.textDisabledColor
         elide: Text.ElideRight
         visible: control.text
         horizontalAlignment: Text.AlignLeft
         verticalAlignment: Text.AlignVCenter
     }
-    //! [contentItem]
 
-    //! [indicator]
     indicator: RadioIndicator {
         x: control.mirrored ? control.leftPadding : control.width - width - control.rightPadding
         y: control.topPadding + (control.availableHeight - height) / 2
 
         control: control
     }
-    //! [indicator]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 100
         implicitHeight: 40
         visible: control.down || control.highlighted
-        color: control.down ? "#bdbebf" : "#eeeeee"
+        color: control.down ? Default.delegatePressedColor : Default.delegateColor
     }
-    //! [background]
 }

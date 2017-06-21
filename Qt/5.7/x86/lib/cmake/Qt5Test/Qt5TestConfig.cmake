@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::Test)
     set_property(TARGET Qt5::Test PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_TESTLIB_LIB)
 
-
-    _populate_Test_target_properties(DEBUG "Qt5Testd.dll" "Qt5Testd.lib" )
+    _populate_Test_target_properties(RELEASE "Qt5Test.dll" "Qt5Test.lib" )
 
     if (EXISTS
-        "${_qt5Test_install_prefix}/bin/Qt5Test.dll"
+        "${_qt5Test_install_prefix}/bin/Qt5Testd.dll"
       AND EXISTS
-        "${_qt5Test_install_prefix}/lib/Qt5Test.lib" )
-        _populate_Test_target_properties(RELEASE "Qt5Test.dll" "Qt5Test.lib" )
+        "${_qt5Test_install_prefix}/lib/Qt5Testd.lib" )
+        _populate_Test_target_properties(DEBUG "Qt5Testd.dll" "Qt5Testd.lib" )
     endif()
+
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5Test_*Plugin.cmake")

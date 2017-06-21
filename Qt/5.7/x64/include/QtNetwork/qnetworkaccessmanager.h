@@ -40,6 +40,7 @@
 #ifndef QNETWORKACCESSMANAGER_H
 #define QNETWORKACCESSMANAGER_H
 
+#include <QtNetwork/qtnetworkglobal.h>
 #include <QtCore/QObject>
 #ifndef QT_NO_SSL
 #include <QtNetwork/QSslConfiguration>
@@ -94,6 +95,7 @@ public:
         NotAccessible = 0,
         Accessible = 1
     };
+    Q_ENUM(NetworkAccessibility)
 #endif
 
     explicit QNetworkAccessManager(QObject *parent = Q_NULLPTR);
@@ -127,6 +129,8 @@ public:
     QNetworkReply *put(const QNetworkRequest &request, QHttpMultiPart *multiPart);
     QNetworkReply *deleteResource(const QNetworkRequest &request);
     QNetworkReply *sendCustomRequest(const QNetworkRequest &request, const QByteArray &verb, QIODevice *data = Q_NULLPTR);
+    QNetworkReply *sendCustomRequest(const QNetworkRequest &request, const QByteArray &verb, const QByteArray &data);
+    QNetworkReply *sendCustomRequest(const QNetworkRequest &request, const QByteArray &verb, QHttpMultiPart *multiPart);
 
 #ifndef QT_NO_BEARERMANAGEMENT
     void setConfiguration(const QNetworkConfiguration &config);
@@ -172,6 +176,7 @@ private:
     friend class QNetworkReplyImplPrivate;
     friend class QNetworkReplyHttpImpl;
     friend class QNetworkReplyHttpImplPrivate;
+    friend class QNetworkReplyFileImpl;
 
     Q_DECLARE_PRIVATE(QNetworkAccessManager)
     Q_PRIVATE_SLOT(d_func(), void _q_replyFinished())

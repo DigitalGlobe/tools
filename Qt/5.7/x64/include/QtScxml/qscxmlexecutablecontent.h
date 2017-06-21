@@ -37,25 +37,23 @@
 **
 ****************************************************************************/
 
-#ifndef EXECUTABLECONTENT_H
-#define EXECUTABLECONTENT_H
+#ifndef QSCXMLEXECUTABLECONTENT_H
+#define QSCXMLEXECUTABLECONTENT_H
 
 #include <QtScxml/qscxmlglobals.h>
-
-#include <QVector>
 
 QT_BEGIN_NAMESPACE
 
 namespace QScxmlExecutableContent {
 
-typedef int ContainerId;
-enum { NoInstruction = -1 };
+typedef qint32 ContainerId;
+enum { NoContainer = -1 };
 typedef qint32 StringId;
-typedef QVector<StringId> StringIds;
 enum { NoString = -1 };
-typedef qint32 *Instructions;
-
-class QScxmlExecutionEngine;
+typedef qint32 InstructionId;
+enum { NoInstruction = -1 };
+typedef qint32 EvaluatorId;
+enum { NoEvaluator = -1 };
 
 #if defined(Q_CC_MSVC) || defined(Q_CC_GNU)
 #pragma pack(push, 4) // 4 == sizeof(qint32)
@@ -77,14 +75,28 @@ struct ForeachInfo {
     StringId index;
     StringId context;
 };
+
+struct ParameterInfo {
+    StringId name;
+    EvaluatorId expr;
+    StringId location;
+};
+
+struct InvokeInfo {
+    StringId id;
+    StringId prefix;
+    StringId location;
+    StringId context;
+    EvaluatorId expr;
+    ContainerId finalize;
+    bool autoforward;
+};
 #if defined(Q_CC_MSVC) || defined(Q_CC_GNU)
 #pragma pack(pop)
 #endif
 
-typedef qint32 EvaluatorId;
-enum { NoEvaluator = -1 };
 } // QScxmlExecutableContent namespace
 
 QT_END_NAMESPACE
 
-#endif // EXECUTABLECONTENT_H
+#endif // QSCXMLEXECUTABLECONTENT_H

@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::SerialPort)
     set_property(TARGET Qt5::SerialPort PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_SERIALPORT_LIB)
 
-
-    _populate_SerialPort_target_properties(DEBUG "Qt5SerialPortd.dll" "Qt5SerialPortd.lib" )
+    _populate_SerialPort_target_properties(RELEASE "Qt5SerialPort.dll" "Qt5SerialPort.lib" )
 
     if (EXISTS
-        "${_qt5SerialPort_install_prefix}/bin/Qt5SerialPort.dll"
+        "${_qt5SerialPort_install_prefix}/bin/Qt5SerialPortd.dll"
       AND EXISTS
-        "${_qt5SerialPort_install_prefix}/lib/Qt5SerialPort.lib" )
-        _populate_SerialPort_target_properties(RELEASE "Qt5SerialPort.dll" "Qt5SerialPort.lib" )
+        "${_qt5SerialPort_install_prefix}/lib/Qt5SerialPortd.lib" )
+        _populate_SerialPort_target_properties(DEBUG "Qt5SerialPortd.dll" "Qt5SerialPortd.lib" )
     endif()
+
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5SerialPort_*Plugin.cmake")

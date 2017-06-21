@@ -98,51 +98,75 @@ class Program :
             sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
             
             
-            srcInstallDir = os.path.join(buildPathName, 'output_' + ('amd64' if buildSettings.X64Specified() else 'Win32'))
+            srcInstallDir = os.path.join(buildPathName, 'output_' + ('x64' if buildSettings.X64Specified() else 'Win32'))
             installDir = os.path.join(buildPathName, ( Program._PATH_NAME_INSTALLATION_DIR_X64 if buildSettings.X64Specified() else Program._PATH_NAME_INSTALLATION_DIR_X86))
+
+            # need to remove the install dir first, it interferes with the build
+            systemManager.removeDirectory(installDir)
             
             # remove build dir
             systemManager.changeDirectory(sourcePathName)
-            systemManager.removeDirectory(buildPathName)
+            #systemManager.removeDirectory(buildPathName)
 
             #copy UriParser to the Build area
-            systemManager.copyDirectory( sourcePathName, buildPathName)
+            #systemManager.copyDirectory( sourcePathName, buildPathName)
         
             buildPathName   = os.path.join( buildPathName, 'builds\\win32' )
 
             # start building
             systemManager.changeDirectory(buildPathName)
 
-            os.environ['FB_PROCESSOR_ARCHITECTURE'] = 'amd64' if buildSettings.X64Specified() else 'Win32'
+            os.environ['FB_PROCESSOR_ARCHITECTURE'] = 'AMD64' if buildSettings.X64Specified() else 'Win32'
             
-            cmd = 'make_icu.bat clean ' + ( '' if ( buildSettings.ReleaseSpecified() )  else 'debug')
+            # cmd = 'run_all.bat clean ' + ( '' if ( buildSettings.ReleaseSpecified() )  else 'debug')
+            # print('cmd: ' + cmd)
+            #
+            # result = systemManager.execute(cmd)
+            # if (result != 0) :
+            #    sys.exit(-1)
+             
+            result = 0
+            cmd = 'clean_all.bat clean ' + ( 'release' if ( buildSettings.ReleaseSpecified() )  else 'debug')
             print('cmd: ' + cmd)
             
-            result = systemManager.execute(cmd)
+            # result = systemManager.execute(cmd)
             if (result != 0) :
                 sys.exit(-1)
                 
-            cmd = 'make_boot.bat clean ' + ( '' if ( buildSettings.ReleaseSpecified() )  else 'debug')
+            cmd = 'make_icu.bat clean ' + ( 'release' if ( buildSettings.ReleaseSpecified() )  else 'debug')
             print('cmd: ' + cmd)
-            
-            result = systemManager.execute(cmd)
+             
+            # result = systemManager.execute(cmd)
             if (result != 0) :
                 sys.exit(-1)
                 
-            cmd = 'make_all.bat clean ' + ( '' if ( buildSettings.ReleaseSpecified() )  else 'debug')
+            cmd = 'make_boot.bat clean ' + ( 'release' if ( buildSettings.ReleaseSpecified() )  else 'debug')
             print('cmd: ' + cmd)
             
-            result = systemManager.execute(cmd)
+            # result = systemManager.execute(cmd)
             if (result != 0) :
                 sys.exit(-1)
+             
+            
+            cmd = 'make_all.bat clean ' + ( 'release' if ( buildSettings.ReleaseSpecified() )  else 'debug')
+            print('cmd: ' + cmd)
+             
+            # result = systemManager.execute(cmd)
+            if (result != 0) :
+                sys.exit(-1)
+
                 
-            systemManager.removeDirectory(installDir)
             systemManager.distributeFiles(srcInstallDir, installDir, \
                   '*',                                                \
                   True, False, True) 
 
             # firebird install docs recommend changing the fbclient_ms.lib to gds32_ms.lib (the borland name?), so we'll make a copy
             systemManager.copyFile(os.path.join(installDir, 'lib//fbclient_ms.lib'), os.path.join(installDir, 'lib//gds32_ms.lib')) 
+            
+            # To use the embedded server, we need to remove fbclient.dll and rename the fbembed.dll to fbclient.dll
+            systemManager.removeFile(os.path.join(installDir, 'bin//fbclient.dll')) 
+            systemManager.copyFile(os.path.join(installDir, 'bin//fbembed.dll'), os.path.join(installDir, 'bin//fbclient.dll')) 
+            systemManager.removeFile(os.path.join(installDir, 'bin//fbembed.dll')) 
 
     #--------------------------------------------------------------------------
 

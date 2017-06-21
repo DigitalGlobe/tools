@@ -40,8 +40,8 @@
 #ifndef QPAGESETUPDIALOG_H
 #define QPAGESETUPDIALOG_H
 
-#include <QtWidgets/qdialog.h>
 #include <QtPrintSupport/qtprintsupportglobal.h>
+#include <QtWidgets/qdialog.h>
 
 QT_BEGIN_NAMESPACE
 

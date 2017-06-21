@@ -34,10 +34,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Material 2.0
-import QtQuick.Controls.Material.impl 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Material 2.1
+import QtQuick.Controls.Material.impl 2.1
 
 T.ToolBar {
     id: control
@@ -52,14 +52,9 @@ T.ToolBar {
 
     Material.foreground: Material.toolTextColor
 
-    //! [contentItem]
-    contentItem: Item { }
-    //! [contentItem]
-
-    //! [background]
     background: Rectangle {
         implicitHeight: 48
-        color: control.Material.primaryColor
+        color: control.Material.toolBarColor
 
         layer.enabled: control.Material.elevation > 0
         layer.effect: ElevationEffect {
@@ -67,5 +62,4 @@ T.ToolBar {
             fullWidth: true
         }
     }
-    //! [background]
 }

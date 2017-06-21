@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef NULLDATAMODEL_H
-#define NULLDATAMODEL_H
+#ifndef QSCXMLNULLDATAMODEL_H
+#define QSCXMLNULLDATAMODEL_H
 
 #include <QtScxml/qscxmldatamodel.h>
 
@@ -53,17 +53,15 @@ public:
     explicit QScxmlNullDataModel(QObject *parent = nullptr);
     ~QScxmlNullDataModel();
 
-    bool setup(const QVariantMap &initialDataValues) Q_DECL_OVERRIDE;
+    Q_INVOKABLE bool setup(const QVariantMap &initialDataValues) Q_DECL_OVERRIDE;
 
-#ifndef Q_QDOC
     QString evaluateToString(QScxmlExecutableContent::EvaluatorId id, bool *ok) Q_DECL_OVERRIDE Q_DECL_FINAL;
     bool evaluateToBool(QScxmlExecutableContent::EvaluatorId id, bool *ok) Q_DECL_OVERRIDE Q_DECL_FINAL;
     QVariant evaluateToVariant(QScxmlExecutableContent::EvaluatorId id, bool *ok) Q_DECL_OVERRIDE Q_DECL_FINAL;
     void evaluateToVoid(QScxmlExecutableContent::EvaluatorId id, bool *ok) Q_DECL_OVERRIDE Q_DECL_FINAL;
     void evaluateAssignment(QScxmlExecutableContent::EvaluatorId id, bool *ok) Q_DECL_OVERRIDE Q_DECL_FINAL;
     void evaluateInitialization(QScxmlExecutableContent::EvaluatorId id, bool *ok) Q_DECL_OVERRIDE Q_DECL_FINAL;
-    bool evaluateForeach(QScxmlExecutableContent::EvaluatorId id, bool *ok, ForeachLoopBody *body) Q_DECL_OVERRIDE Q_DECL_FINAL;
-#endif // Q_QDOC
+    void evaluateForeach(QScxmlExecutableContent::EvaluatorId id, bool *ok, ForeachLoopBody *body) Q_DECL_OVERRIDE Q_DECL_FINAL;
 
     void setScxmlEvent(const QScxmlEvent &event) Q_DECL_OVERRIDE;
 
@@ -74,4 +72,4 @@ public:
 
 QT_END_NAMESPACE
 
-#endif // NULLDATAMODEL_H
+#endif // QSCXMLNULLDATAMODEL_H

@@ -58,10 +58,6 @@
 #include <QtCore/qsize.h>
 #include <QtCore/qrect.h>
 
-#ifdef QT_NETWORK_LIB
-#  include <QtNetwork/qhostaddress.h>
-#endif
-
 QT_BEGIN_NAMESPACE
 
 
@@ -108,43 +104,63 @@ template<> inline char *toString(const QDateTime &dateTime)
 
 template<> inline char *toString(const QChar &c)
 {
+    const ushort uc = c.unicode();
+    if (uc < 128) {
+        char msg[32] = {'\0'};
+        qsnprintf(msg, sizeof(msg), "QChar: '%c' (0x%x)", char(uc), unsigned(uc));
+        return qstrdup(msg);
+    }
     return qstrdup(qPrintable(QString::fromLatin1("QChar: '%1' (0x%2)").arg(c).arg(QString::number(static_cast<int>(c.unicode()), 16))));
 }
 
 template<> inline char *toString(const QPoint &p)
 {
-    return qstrdup(QString::fromLatin1("QPoint(%1,%2)").arg(p.x()).arg(p.y()).toLatin1().constData());
+    char msg[128] = {'\0'};
+    qsnprintf(msg, sizeof(msg), "QPoint(%d,%d)", p.x(), p.y());
+    return qstrdup(msg);
 }
 
 template<> inline char *toString(const QSize &s)
 {
-    return qstrdup(QString::fromLatin1("QSize(%1x%2)").arg(s.width()).arg(s.height()).toLatin1().constData());
+    char msg[128] = {'\0'};
+    qsnprintf(msg, sizeof(msg), "QSize(%dx%d)", s.width(), s.height());
+    return qstrdup(msg);
 }
 
 template<> inline char *toString(const QRect &s)
 {
-    return qstrdup(QString::fromLatin1("QRect(%1,%2 %5x%6) (bottomright %3,%4)").arg(s.left()).arg(s.top()).arg(s.right()).arg(s.bottom()).arg(s.width()).arg(s.height()).toLatin1().constData());
+    char msg[256] = {'\0'};
+    qsnprintf(msg, sizeof(msg), "QRect(%d,%d %dx%d) (bottomright %d,%d)",
+              s.left(), s.top(), s.width(), s.height(), s.right(), s.bottom());
+    return qstrdup(msg);
 }
 
 template<> inline char *toString(const QPointF &p)
 {
-    return qstrdup(QString::fromLatin1("QPointF(%1,%2)").arg(p.x()).arg(p.y()).toLatin1().constData());
+    char msg[64] = {'\0'};
+    qsnprintf(msg, sizeof(msg), "QPointF(%g,%g)", p.x(), p.y());
+    return qstrdup(msg);
 }
 
 template<> inline char *toString(const QSizeF &s)
 {
-    return qstrdup(QString::fromLatin1("QSizeF(%1x%2)").arg(s.width()).arg(s.height()).toLatin1().constData());
+    char msg[64] = {'\0'};
+    qsnprintf(msg, sizeof(msg), "QSizeF(%gx%g)", s.width(), s.height());
+    return qstrdup(msg);
 }
 
 template<> inline char *toString(const QRectF &s)
 {
-    return qstrdup(QString::fromLatin1("QRectF(%1,%2 %5x%6) (bottomright %3,%4)").arg(s.left()).arg(s.top()).arg(s.right()).arg(s.bottom()).arg(s.width()).arg(s.height()).toLatin1().constData());
+    char msg[256] = {'\0'};
+    qsnprintf(msg, sizeof(msg), "QRectF(%g,%g %gx%g) (bottomright %g,%g)",
+              s.left(), s.top(), s.width(), s.height(), s.right(), s.bottom());
+    return qstrdup(msg);
 }
 
 template<> inline char *toString(const QUrl &uri)
 {
     if (!uri.isValid())
-        return qstrdup(qPrintable(QStringLiteral("Invalid URL: ") + uri.errorString()));
+        return qstrdup(qPrintable(QLatin1String("Invalid URL: ") + uri.errorString()));
     return qstrdup(uri.toEncoded().constData());
 }
 
@@ -160,7 +176,7 @@ template<> inline char *toString(const QVariant &v)
         if (!v.isNull()) {
             vstring.append(',');
             if (v.canConvert(QVariant::String)) {
-                vstring.append(qvariant_cast<QString>(v).toLocal8Bit());
+                vstring.append(v.toString().toLocal8Bit());
             }
             else {
                 vstring.append("<value not representable as string>");
@@ -172,25 +188,10 @@ template<> inline char *toString(const QVariant &v)
     return qstrdup(vstring.constData());
 }
 
-#ifdef QT_NETWORK_LIB
-/*!
-    \internal
- */
-template<> inline char *toString(const QHostAddress &addr)
+inline char *toString(std::nullptr_t)
 {
-    switch (addr.protocol()) {
-    case QAbstractSocket::UnknownNetworkLayerProtocol:
-        return qstrdup("<unknown address (parse error)>");
-    case QAbstractSocket::AnyIPProtocol:
-        return qstrdup("QHostAddress::Any");
-    case QAbstractSocket::IPv4Protocol:
-    case QAbstractSocket::IPv6Protocol:
-        break;
-    }
-
-    return qstrdup(addr.toString().toLatin1().constData());
+    return toString(QLatin1String("nullptr"));
 }
-#endif
 
 template<>
 inline bool qCompare(QString const &t1, QLatin1String const &t2, const char *actual,
@@ -330,6 +331,10 @@ int main(int argc, char *argv[]) \
 #else
 #  define QTEST_ADD_GPU_BLACKLIST_SUPPORT_DEFS
 #  define QTEST_ADD_GPU_BLACKLIST_SUPPORT
+#endif
+
+#if defined(QT_NETWORK_LIB)
+#  include <QtTest/qtest_network.h>
 #endif
 
 #if defined(QT_WIDGETS_LIB)

@@ -34,9 +34,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Universal 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Universal 2.1
 
 T.SpinBox {
     id: control
@@ -60,15 +60,12 @@ T.SpinBox {
 
     Universal.theme: activeFocus ? Universal.Light : undefined
 
-    //! [validator]
     validator: IntValidator {
         locale: control.locale.name
         bottom: Math.min(control.from, control.to)
         top: Math.max(control.from, control.to)
     }
-    //! [validator]
 
-    //! [contentItem]
     contentItem: TextInput {
         text: control.textFromValue(control.value, control.locale)
 
@@ -84,9 +81,7 @@ T.SpinBox {
         validator: control.validator
         inputMethodHints: Qt.ImhFormattedNumbersOnly
     }
-    //! [contentItem]
 
-    //! [up.indicator]
     up.indicator: Item {
         implicitWidth: 28
         height: parent.height + 4
@@ -97,9 +92,11 @@ T.SpinBox {
             x: 2; y: 4
             width: parent.width - 4
             height: parent.height - 8
-            color: !control.up.pressed ? "transparent" :
-                   control.activeFocus ? control.Universal.accent
-                                       : control.Universal.chromeDisabledLowColor
+            color: control.activeFocus ? control.Universal.accent :
+                   control.up.pressed ? control.Universal.baseMediumLowColor :
+                   control.up.hovered ? control.Universal.baseLowColor : "transparent"
+            visible: control.up.pressed || control.up.hovered
+            opacity: control.activeFocus && !control.up.pressed ? 0.4 : 1.0
         }
 
         Image {
@@ -112,9 +109,7 @@ T.SpinBox {
             sourceSize.height: height
         }
     }
-    //! [up.indicator]
 
-    //! [down.indicator]
     down.indicator: Item {
         implicitWidth: 28
         height: parent.height + 4
@@ -125,9 +120,11 @@ T.SpinBox {
             x: 2; y: 4
             width: parent.width - 4
             height: parent.height - 8
-            color: !control.down.pressed ? "transparent" :
-                     control.activeFocus ? control.Universal.accent
-                                         : control.Universal.chromeDisabledLowColor
+            color: control.activeFocus ? control.Universal.accent :
+                   control.down.pressed ? control.Universal.baseMediumLowColor :
+                   control.down.hovered ? control.Universal.baseLowColor : "transparent"
+            visible: control.down.pressed || control.down.hovered
+            opacity: control.activeFocus && !control.down.pressed ? 0.4 : 1.0
         }
 
         Image {
@@ -140,17 +137,15 @@ T.SpinBox {
             sourceSize.height: height
         }
     }
-    //! [down.indicator]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 60 + 28 // TextControlThemeMinWidth - 4 (border)
         implicitHeight: 28 // TextControlThemeMinHeight - 4 (border)
 
         border.width: 2 // TextControlBorderThemeThickness
         border.color: !control.enabled ? control.Universal.baseLowColor :
-                       control.activeFocus ? control.Universal.accent : control.Universal.chromeDisabledLowColor
+                       control.activeFocus ? control.Universal.accent :
+                       control.hovered ? control.Universal.baseMediumColor : control.Universal.chromeDisabledLowColor
         color: control.enabled ? control.Universal.background : control.Universal.baseLowColor
     }
-    //! [background]
 }

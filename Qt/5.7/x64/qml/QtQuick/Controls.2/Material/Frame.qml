@@ -34,9 +34,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Material 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Material 2.1
+import QtQuick.Controls.Material.impl 2.1
 
 T.Frame {
     id: control
@@ -49,15 +50,14 @@ T.Frame {
 
     padding: 12
 
-    //! [contentItem]
-    contentItem: Item { }
-    //! [contentItem]
-
-    //! [background]
     background: Rectangle {
-        radius: 3
-        color: "transparent"
+        radius: 2
+        color: control.Material.elevation > 0 ? control.Material.backgroundColor : "transparent"
         border.color: control.Material.frameColor
+
+        layer.enabled: control.enabled && control.Material.elevation > 0
+        layer.effect: ElevationEffect {
+            elevation: control.Material.elevation
+        }
     }
-    //! [background]
 }

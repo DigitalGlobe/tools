@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::Script)
     set_property(TARGET Qt5::Script PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_SCRIPT_LIB)
 
-
-    _populate_Script_target_properties(DEBUG "Qt5Scriptd.dll" "Qt5Scriptd.lib" )
+    _populate_Script_target_properties(RELEASE "Qt5Script.dll" "Qt5Script.lib" )
 
     if (EXISTS
-        "${_qt5Script_install_prefix}/bin/Qt5Script.dll"
+        "${_qt5Script_install_prefix}/bin/Qt5Scriptd.dll"
       AND EXISTS
-        "${_qt5Script_install_prefix}/lib/Qt5Script.lib" )
-        _populate_Script_target_properties(RELEASE "Qt5Script.dll" "Qt5Script.lib" )
+        "${_qt5Script_install_prefix}/lib/Qt5Scriptd.lib" )
+        _populate_Script_target_properties(DEBUG "Qt5Scriptd.dll" "Qt5Scriptd.lib" )
     endif()
+
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5Script_*Plugin.cmake")

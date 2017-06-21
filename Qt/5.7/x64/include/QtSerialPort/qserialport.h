@@ -200,9 +200,9 @@ public:
 #endif
 #endif
 
-    explicit QSerialPort(QObject *parent = Q_NULLPTR);
-    explicit QSerialPort(const QString &name, QObject *parent = Q_NULLPTR);
-    explicit QSerialPort(const QSerialPortInfo &info, QObject *parent = Q_NULLPTR);
+    explicit QSerialPort(QObject *parent = nullptr);
+    explicit QSerialPort(const QString &name, QObject *parent = nullptr);
+    explicit QSerialPort(const QSerialPortInfo &info, QObject *parent = nullptr);
     virtual ~QSerialPort();
 
     void setPortName(const QString &name);
@@ -262,8 +262,8 @@ public:
     qint64 bytesToWrite() const Q_DECL_OVERRIDE;
     bool canReadLine() const Q_DECL_OVERRIDE;
 
-    bool waitForReadyRead(int msecs) Q_DECL_OVERRIDE;
-    bool waitForBytesWritten(int msecs) Q_DECL_OVERRIDE;
+    bool waitForReadyRead(int msecs = 30000) Q_DECL_OVERRIDE;
+    bool waitForBytesWritten(int msecs = 30000) Q_DECL_OVERRIDE;
 
 #if QT_DEPRECATED_SINCE(5, 5)
     QT_DEPRECATED bool sendBreak(int duration = 0);
@@ -284,7 +284,10 @@ Q_SIGNALS:
 #endif
     void dataTerminalReadyChanged(bool set);
     void requestToSendChanged(bool set);
+#if QT_DEPRECATED_SINCE(5, 8)
     void error(QSerialPort::SerialPortError serialPortError);
+#endif
+    void errorOccurred(QSerialPort::SerialPortError error);
 #if QT_DEPRECATED_SINCE(5, 5)
     QT_DEPRECATED void settingsRestoredOnCloseChanged(bool restore);
 #endif

@@ -80,10 +80,12 @@ public:
     void clear();
     void clear(QObject *);
 
+#if QT_CONFIG(qml_network)
     bool connectFinished(QObject *, const char *);
     bool connectFinished(QObject *, int);
     bool connectDownloadProgress(QObject *, const char *);
     bool connectDownloadProgress(QObject *, int);
+#endif
 
     static bool isSynchronous(const QString &url);
     static bool isSynchronous(const QUrl &url);

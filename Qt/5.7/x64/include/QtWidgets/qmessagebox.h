@@ -40,6 +40,7 @@
 #ifndef QMESSAGEBOX_H
 #define QMESSAGEBOX_H
 
+#include <QtWidgets/qtwidgetsglobal.h>
 #include <QtWidgets/qdialog.h>
 
 QT_BEGIN_NAMESPACE
@@ -141,10 +142,6 @@ public:
     QPushButton *addButton(const QString &text, ButtonRole role);
     QPushButton *addButton(StandardButton button);
     void removeButton(QAbstractButton *button);
-
-#ifdef Q_OS_WINCE
-    void setVisible(bool visible);
-#endif
 
     using QDialog::open;
     void open(QObject *receiver, const char *member);

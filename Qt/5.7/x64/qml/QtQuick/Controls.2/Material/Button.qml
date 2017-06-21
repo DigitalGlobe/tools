@@ -34,10 +34,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Material 2.0
-import QtQuick.Controls.Material.impl 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Material 2.1
+import QtQuick.Controls.Material.impl 2.1
 
 T.Button {
     id: control
@@ -57,20 +57,17 @@ T.Button {
                              : control.down ? 8 : 2
     Material.background: flat ? "transparent" : undefined
 
-    //! [contentItem]
     contentItem: Text {
         text: control.text
         font: control.font
         color: !control.enabled ? control.Material.hintTextColor :
             control.flat && control.highlighted ? control.Material.accentColor :
-            control.highlighted ? control.Material.primaryHighlightedTextColor : control.Material.primaryTextColor
+            control.highlighted ? control.Material.primaryHighlightedTextColor : control.Material.foreground
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
         elide: Text.ElideRight
     }
-    //! [contentItem]
 
-    //! [background]
     // TODO: Add a proper ripple/ink effect for mouse/touch input and focus state
     background: Rectangle {
         implicitWidth: 64
@@ -81,16 +78,19 @@ T.Button {
         width: parent.width
         height: parent.height - 12
         radius: 2
-        color: !control.enabled
-                    ? control.Material.buttonDisabledColor
-                : control.down
-                    ? control.highlighted ? control.Material.highlightedButtonPressColor
-                                          : control.Material.buttonPressColor
-                : control.visualFocus || control.checked
-                    ? control.highlighted ? control.Material.highlightedButtonHoverColor
-                                          : control.Material.buttonHoverColor
-                    : control.highlighted ? control.Material.highlightedButtonColor
-                                          : control.Material.buttonColor
+        color: !control.enabled ? control.Material.buttonDisabledColor :
+                control.highlighted ? control.Material.highlightedButtonColor : control.Material.buttonColor
+
+        PaddedRectangle {
+            y: parent.height - 4
+            width: parent.width
+            height: 4
+            radius: 2
+            topPadding: -2
+            clip: true
+            visible: control.checkable && (!control.highlighted || control.flat)
+            color: control.checked && control.enabled ? control.Material.accentColor : control.Material.secondaryTextColor
+        }
 
         Behavior on color {
             ColorAnimation {
@@ -105,6 +105,15 @@ T.Button {
         layer.effect: ElevationEffect {
             elevation: control.Material.elevation
         }
+
+        Ripple {
+            clipRadius: 2
+            width: parent.width
+            height: parent.height
+            pressed: control.pressed
+            anchor: control
+            active: control.down || control.visualFocus || control.hovered
+            color: control.Material.rippleColor
+        }
     }
-    //! [background]
 }

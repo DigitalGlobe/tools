@@ -34,10 +34,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Material 2.0
-import QtQuick.Controls.Material.impl 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Material 2.1
+import QtQuick.Controls.Material.impl 2.1
 
 T.Pane {
     id: control
@@ -50,18 +50,13 @@ T.Pane {
 
     padding: 12
 
-    //! [contentItem]
-    contentItem: Item { }
-    //! [contentItem]
-
-    //! [background]
     background: Rectangle {
         color: control.Material.backgroundColor
+        radius: control.Material.elevation > 0 ? 2 : 0
 
         layer.enabled: control.enabled && control.Material.elevation > 0
         layer.effect: ElevationEffect {
             elevation: control.Material.elevation
         }
     }
-    //! [background]
 }

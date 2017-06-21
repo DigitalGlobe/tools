@@ -51,10 +51,11 @@ class Q_SERIALBUS_EXPORT QCanBus : public QObject
 
 public:
     static QCanBus *instance();
-    QList<QByteArray> plugins() const;
+    QStringList plugins() const;
 
-    QCanBusDevice *createDevice(const QByteArray &plugin,
-                                const QString &interfaceName) const;
+    QCanBusDevice *createDevice(const QString &plugin,
+                                const QString &interfaceName,
+                                QString *errorMessage = nullptr) const;
 
 private:
     QCanBus(QObject *parent = nullptr);

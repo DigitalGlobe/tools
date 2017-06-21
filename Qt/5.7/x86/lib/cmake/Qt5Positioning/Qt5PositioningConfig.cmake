@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::Positioning)
     set_property(TARGET Qt5::Positioning PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_POSITIONING_LIB)
 
-
-    _populate_Positioning_target_properties(DEBUG "Qt5Positioningd.dll" "Qt5Positioningd.lib" )
+    _populate_Positioning_target_properties(RELEASE "Qt5Positioning.dll" "Qt5Positioning.lib" )
 
     if (EXISTS
-        "${_qt5Positioning_install_prefix}/bin/Qt5Positioning.dll"
+        "${_qt5Positioning_install_prefix}/bin/Qt5Positioningd.dll"
       AND EXISTS
-        "${_qt5Positioning_install_prefix}/lib/Qt5Positioning.lib" )
-        _populate_Positioning_target_properties(RELEASE "Qt5Positioning.dll" "Qt5Positioning.lib" )
+        "${_qt5Positioning_install_prefix}/lib/Qt5Positioningd.lib" )
+        _populate_Positioning_target_properties(DEBUG "Qt5Positioningd.dll" "Qt5Positioningd.lib" )
     endif()
+
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5Positioning_*Plugin.cmake")

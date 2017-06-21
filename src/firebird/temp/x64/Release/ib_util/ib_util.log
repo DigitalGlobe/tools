@@ -1,6 +1,0 @@
-﻿  ib_util.cpp
-ib_util.obj : warning LNK4197: export 'ib_util_init' specified multiple times; using first specification
-ib_util.obj : warning LNK4197: export 'ib_util_malloc' specified multiple times; using first specification
-     Creating library ..\..\..\temp\x64\Release\ib_util\ib_util.lib and object ..\..\..\temp\x64\Release\ib_util\ib_util.exp
-  ib_util.vcxproj -> C:\tools\src\firebird\builds\win32\msvc14\..\..\..\temp\x64\Release\firebird\bin\ib_util.dll
-  ib_util.vcxproj -> ..\..\..\temp\x64\Release\ib_util\ib_util.pdb (Full PDB)

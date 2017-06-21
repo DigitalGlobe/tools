@@ -123,15 +123,15 @@ if (NOT TARGET Qt5::SerialBus)
     set_property(TARGET Qt5::SerialBus PROPERTY
       INTERFACE_COMPILE_DEFINITIONS QT_SERIALBUS_LIB)
 
-
-    _populate_SerialBus_target_properties(DEBUG "Qt5SerialBusd.dll" "Qt5SerialBusd.lib" )
+    _populate_SerialBus_target_properties(RELEASE "Qt5SerialBus.dll" "Qt5SerialBus.lib" )
 
     if (EXISTS
-        "${_qt5SerialBus_install_prefix}/bin/Qt5SerialBus.dll"
+        "${_qt5SerialBus_install_prefix}/bin/Qt5SerialBusd.dll"
       AND EXISTS
-        "${_qt5SerialBus_install_prefix}/lib/Qt5SerialBus.lib" )
-        _populate_SerialBus_target_properties(RELEASE "Qt5SerialBus.dll" "Qt5SerialBus.lib" )
+        "${_qt5SerialBus_install_prefix}/lib/Qt5SerialBusd.lib" )
+        _populate_SerialBus_target_properties(DEBUG "Qt5SerialBusd.dll" "Qt5SerialBusd.lib" )
     endif()
+
 
 
     file(GLOB pluginTargets "${CMAKE_CURRENT_LIST_DIR}/Qt5SerialBus_*Plugin.cmake")

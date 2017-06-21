@@ -34,9 +34,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Controls 2.0
-import QtQuick.Templates 2.0 as T
+import QtQuick 2.8
+import QtQuick.Controls 2.1
+import QtQuick.Controls.impl 2.1
+import QtQuick.Templates 2.1 as T
 
 T.Menu {
     id: control
@@ -48,7 +49,6 @@ T.Menu {
 
     margins: 0
 
-    //! [contentItem]
     contentItem: ListView {
         implicitHeight: contentHeight
         model: control.contentModel
@@ -60,14 +60,11 @@ T.Menu {
 
         ScrollIndicator.vertical: ScrollIndicator {}
     }
-    //! [contentItem]
 
-    //! [background]
     background: Rectangle {
         implicitWidth: 200
         implicitHeight: 40
-        color: "#ffffff"
-        border.color: "#353637"
+        color: Default.backgroundColor
+        border.color: Default.frameDarkColor
     }
-    //! [background]
 }

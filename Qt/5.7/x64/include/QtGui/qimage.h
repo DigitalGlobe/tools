@@ -40,6 +40,7 @@
 #ifndef QIMAGE_H
 #define QIMAGE_H
 
+#include <QtGui/qtguiglobal.h>
 #include <QtGui/qcolor.h>
 #include <QtGui/qrgb.h>
 #include <QtGui/qpaintdevice.h>
@@ -51,6 +52,10 @@
 
 #if QT_DEPRECATED_SINCE(5, 0)
 #include <QtCore/qstringlist.h>
+#endif
+
+#if defined(Q_OS_DARWIN) || defined(Q_QDOC)
+Q_FORWARD_DECLARE_MUTABLE_CG_TYPE(CGImage);
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -320,8 +325,13 @@ public:
     static QPixelFormat toPixelFormat(QImage::Format format) Q_DECL_NOTHROW;
     static QImage::Format toImageFormat(QPixelFormat format) Q_DECL_NOTHROW;
 
+    // Platform spesific conversion functions
+#if defined(Q_OS_DARWIN) || defined(Q_QDOC)
+    CGImageRef toCGImage() const Q_DECL_CF_RETURNS_RETAINED;
+#endif
+
 #if QT_DEPRECATED_SINCE(5, 0)
-    QT_DEPRECATED inline QString text(const char* key, const char* lang=0) const;
+    QT_DEPRECATED inline QString text(const char *key, const char *lang = Q_NULLPTR) const;
     QT_DEPRECATED inline QList<QImageTextKeyLang> textList() const;
     QT_DEPRECATED inline QStringList textLanguages() const;
     QT_DEPRECATED inline QString text(const QImageTextKeyLang&) const;
@@ -371,8 +381,7 @@ inline void QImage::setPixelColor(const QPoint &pt, const QColor &c) { setPixelC
 #if QT_DEPRECATED_SINCE(5, 0)
 
 QT_WARNING_PUSH
-QT_WARNING_DISABLE_GCC("-Wdeprecated-declarations")
-QT_WARNING_DISABLE_MSVC(4996)
+QT_WARNING_DISABLE_DEPRECATED
 
 inline QString QImage::text(const char* key, const char* lang) const
 {

@@ -6,7 +6,7 @@ endif()
 get_filename_component(_qt5Purchasing_install_prefix "${CMAKE_CURRENT_LIST_DIR}/../../../" ABSOLUTE)
 
 # For backwards compatibility only. Use Qt5Purchasing_VERSION instead.
-set(Qt5Purchasing_VERSION_STRING 5.7.0)
+set(Qt5Purchasing_VERSION_STRING 5.8.0)
 
 set(Qt5Purchasing_LIBRARIES Qt5::Purchasing)
 
@@ -48,10 +48,8 @@ endmacro()
 if (NOT TARGET Qt5::Purchasing)
 
     set(_Qt5Purchasing_OWN_INCLUDE_DIRS "${_qt5Purchasing_install_prefix}/include/" "${_qt5Purchasing_install_prefix}/include/QtPurchasing")
-    set(Qt5Purchasing_PRIVATE_INCLUDE_DIRS
-        "${_qt5Purchasing_install_prefix}/include/QtPurchasing/5.7.0"
-        "${_qt5Purchasing_install_prefix}/include/QtPurchasing/5.7.0/QtPurchasing"
-    )
+    set(Qt5Purchasing_PRIVATE_INCLUDE_DIRS "")
+    include("${CMAKE_CURRENT_LIST_DIR}/ExtraSourceIncludes.cmake" OPTIONAL)
 
     foreach(_dir ${_Qt5Purchasing_OWN_INCLUDE_DIRS})
         _qt5_Purchasing_check_file_exists(${_dir})
@@ -91,7 +89,7 @@ if (NOT TARGET Qt5::Purchasing)
     foreach(_module_dep ${_Qt5Purchasing_MODULE_DEPENDENCIES})
         if (NOT Qt5${_module_dep}_FOUND)
             find_package(Qt5${_module_dep}
-                5.7.0 ${_Qt5Purchasing_FIND_VERSION_EXACT}
+                5.8.0 ${_Qt5Purchasing_FIND_VERSION_EXACT}
                 ${_Qt5Purchasing_DEPENDENCIES_FIND_QUIET}
                 ${_Qt5Purchasing_FIND_DEPENDENCIES_REQUIRED}
                 PATHS "${CMAKE_CURRENT_LIST_DIR}/.." NO_DEFAULT_PATH

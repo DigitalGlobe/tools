@@ -6,7 +6,7 @@ endif()
 get_filename_component(_qt5QuickControls2_install_prefix "${CMAKE_CURRENT_LIST_DIR}/../../../" ABSOLUTE)
 
 # For backwards compatibility only. Use Qt5QuickControls2_VERSION instead.
-set(Qt5QuickControls2_VERSION_STRING 5.7.0)
+set(Qt5QuickControls2_VERSION_STRING 5.8.0)
 
 set(Qt5QuickControls2_LIBRARIES Qt5::QuickControls2)
 
@@ -48,10 +48,8 @@ endmacro()
 if (NOT TARGET Qt5::QuickControls2)
 
     set(_Qt5QuickControls2_OWN_INCLUDE_DIRS "${_qt5QuickControls2_install_prefix}/include/" "${_qt5QuickControls2_install_prefix}/include/QtQuickControls2")
-    set(Qt5QuickControls2_PRIVATE_INCLUDE_DIRS
-        "${_qt5QuickControls2_install_prefix}/include/QtQuickControls2/5.7.0"
-        "${_qt5QuickControls2_install_prefix}/include/QtQuickControls2/5.7.0/QtQuickControls2"
-    )
+    set(Qt5QuickControls2_PRIVATE_INCLUDE_DIRS "")
+    include("${CMAKE_CURRENT_LIST_DIR}/ExtraSourceIncludes.cmake" OPTIONAL)
 
     foreach(_dir ${_Qt5QuickControls2_OWN_INCLUDE_DIRS})
         _qt5_QuickControls2_check_file_exists(${_dir})
@@ -91,7 +89,7 @@ if (NOT TARGET Qt5::QuickControls2)
     foreach(_module_dep ${_Qt5QuickControls2_MODULE_DEPENDENCIES})
         if (NOT Qt5${_module_dep}_FOUND)
             find_package(Qt5${_module_dep}
-                5.7.0 ${_Qt5QuickControls2_FIND_VERSION_EXACT}
+                5.8.0 ${_Qt5QuickControls2_FIND_VERSION_EXACT}
                 ${_Qt5QuickControls2_DEPENDENCIES_FIND_QUIET}
                 ${_Qt5QuickControls2_FIND_DEPENDENCIES_REQUIRED}
                 PATHS "${CMAKE_CURRENT_LIST_DIR}/.." NO_DEFAULT_PATH

@@ -34,54 +34,49 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.6
-import QtQuick.Templates 2.0 as T
-import QtQuick.Controls.Material 2.0
-import QtQuick.Controls.Material.impl 2.0
+import QtQuick 2.8
+import QtQuick.Templates 2.1 as T
+import QtQuick.Controls.Material 2.1
+import QtQuick.Controls.Material.impl 2.1
 
 T.RangeSlider {
     id: control
 
     implicitWidth: Math.max(background ? background.implicitWidth : 0,
-        Math.max(background ? background.implicitWidth : 0,
-            first.handle ? first.handle.implicitWidth : 0,
-                second.handle ? second.handle.implicitWidth : 0) + leftPadding + rightPadding)
+        Math.max(first.handle ? first.handle.implicitWidth : 0,
+                 second.handle ? second.handle.implicitWidth : 0) + leftPadding + rightPadding)
     implicitHeight: Math.max(background ? background.implicitHeight : 0,
-        Math.max(background ? background.implicitHeight : 0,
-            first.handle ? first.handle.implicitHeight : 0,
-                second.handle ? second.handle.implicitHeight : 0) + topPadding + bottomPadding)
+        Math.max(first.handle ? first.handle.implicitHeight : 0,
+                 second.handle ? second.handle.implicitHeight : 0) + topPadding + bottomPadding)
 
     padding: 6
 
-    //! [firstHandle]
     first.handle: SliderHandle {
         x: control.leftPadding + (horizontal ? control.first.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2)
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : control.first.visualPosition * (control.availableHeight - height))
         value: first.value
         handleHasFocus: activeFocus
         handlePressed: first.pressed
+        handleHovered: first.hovered
     }
-    //! [firstHandle]
 
-    //! [secondHandle]
     second.handle: SliderHandle {
         x: control.leftPadding + (horizontal ? control.second.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2)
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : control.second.visualPosition * (control.availableHeight - height))
         value: second.value
         handleHasFocus: activeFocus
         handlePressed: second.pressed
+        handleHovered: second.hovered
     }
-    //! [secondHandle]
 
-    //! [background]
     background: Rectangle {
         x: control.leftPadding + (horizontal ? 0 : (control.availableWidth - width) / 2)
         y: control.topPadding + (horizontal ? (control.availableHeight - height) / 2 : 0)
-        implicitWidth: horizontal ? 200 : 1
-        implicitHeight: horizontal ? 1 : 200
-        width: horizontal ? control.availableWidth : implicitWidth
-        height: horizontal ? implicitHeight : control.availableHeight
-        color: control.Material.primaryTextColor
+        implicitWidth: horizontal ? 200 : 48
+        implicitHeight: horizontal ? 48 : 200
+        width: horizontal ? control.availableWidth : 1
+        height: horizontal ? 1 : control.availableHeight
+        color: control.Material.foreground
         scale: horizontal && control.mirrored ? -1 : 1
 
         readonly property bool horizontal: control.orientation === Qt.Horizontal
@@ -95,5 +90,4 @@ T.RangeSlider {
             color: control.Material.accentColor
         }
     }
-    //! [background]
 }

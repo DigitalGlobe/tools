@@ -176,6 +176,9 @@ class Program :
          #the name of the build file to build qxrunner
         _FILE_NAME_BUILD_QXRUNNER = "build_qxrunner.py"
         #----------------------------------------------------------------------
+         #the name of the build file to build firebird
+        _FILE_NAME_BUILD_FIREBIRD = "build_firebird.py"
+        #----------------------------------------------------------------------
         # the name of the Python executable file
         _FILE_NAME_PYTHON = "python.exe"
         #----------------------------------------------------------------------
@@ -219,6 +222,7 @@ class Program :
                     self._build(Program._FILE_NAME_BUILD_CRYPTO     )
                     self._build(Program._FILE_NAME_BUILD_CURL       )
                     self._build(Program._FILE_NAME_BUILD_EXPAT      )
+                    self._build(Program._FILE_NAME_BUILD_FIREBIRD   )
                     self._build(Program._FILE_NAME_BUILD_GALIB      )
                     self._build(Program._FILE_NAME_BUILD_GEOS       )
                     self._build(Program._FILE_NAME_BUILD_GLEW       )
@@ -239,16 +243,15 @@ class Program :
                     self._build(Program._FILE_NAME_BUILD_OPENTHREADS)
                     self._build(Program._FILE_NAME_BUILD_PROJ4      )
                     self._build(Program._FILE_NAME_BUILD_PTHREADS   )
-                    self._build(Program._FILE_NAME_BUILD_QT         )
                     self._build(Program._FILE_NAME_BUILD_SZIP       )
                     self._build(Program._FILE_NAME_BUILD_TBB        )
                     self._build(Program._FILE_NAME_BUILD_URIPARSER  )
                     self._build(Program._FILE_NAME_BUILD_VLD        )
                     self._build(Program._FILE_NAME_BUILD_ZLIB       )
-                
 
                 # build libraries that depend on other libraries
                 #     (order does matter)
+                self._build(Program._FILE_NAME_BUILD_QT         )
                 self._build(Program._FILE_NAME_BUILD_QXRUNNER   )
                 self._build(Program._FILE_NAME_BUILD_FREETYPE   )
                 self._build(Program._FILE_NAME_BUILD_HAWKNL     )
@@ -284,16 +287,19 @@ class Program :
                     
             systemManager = SystemManager()
         
-            # build 32-bit debug
-            ret = os.system( ( "%s \"%s\" \"%s\" \"%s\"" % \
-                       ( Program._FILE_NAME_PYTHON                            , \
-                         os.path.join( systemManager.getCurrentPathName() , \
-                                       buildFileName                      )   , \
-                         BuildSettingSet.ARGUMENT_VALUE_BITNESS_X86           ,
-                         BuildSettingSet.ARGUMENT_VALUE_CONFIGURATION_DEBUG   ) ) )
-            if ret != 0:
-                print("Error building 32-bit debug")
-                sys.exit(-1)
+            if "firebird" in buildFileName:
+                print("Skipping Firebird 32-bit debug build")
+            else:
+                # build 32-bit debug
+                ret = os.system( ( "%s \"%s\" \"%s\" \"%s\"" % \
+                           ( Program._FILE_NAME_PYTHON                            , \
+                             os.path.join( systemManager.getCurrentPathName() , \
+                                           buildFileName                      )   , \
+                             BuildSettingSet.ARGUMENT_VALUE_BITNESS_X86           ,
+                             BuildSettingSet.ARGUMENT_VALUE_CONFIGURATION_DEBUG   ) ) )
+                if ret != 0:
+                    print("Error building 32-bit debug")
+                    sys.exit(-1)
              
             
             # build 32-bit release
@@ -308,15 +314,18 @@ class Program :
                 sys.exit(-1)
 
             # build 64-bit debug
-            os.system( ( "%s \"%s\" \"%s\" \"%s\"" % \
-                       ( Program._FILE_NAME_PYTHON                            , \
-                         os.path.join( systemManager.getCurrentPathName() , \
-                                       buildFileName                      )   , \
-                         BuildSettingSet.ARGUMENT_VALUE_BITNESS_X64           ,
-                         BuildSettingSet.ARGUMENT_VALUE_CONFIGURATION_DEBUG   ) ) )
-            if ret != 0:
-                print("Error building 64-bit debug")
-                sys.exit(-1)
+            if "firebird" in buildFileName:
+                print("Skipping Firebird 64-bit debug build")
+            else:            
+                os.system( ( "%s \"%s\" \"%s\" \"%s\"" % \
+                           ( Program._FILE_NAME_PYTHON                            , \
+                             os.path.join( systemManager.getCurrentPathName() , \
+                                           buildFileName                      )   , \
+                             BuildSettingSet.ARGUMENT_VALUE_BITNESS_X64           ,
+                             BuildSettingSet.ARGUMENT_VALUE_CONFIGURATION_DEBUG   ) ) )
+                if ret != 0:
+                    print("Error building 64-bit debug")
+                    sys.exit(-1)
 
             # build 64-bit release
             os.system( ( "%s \"%s\" \"%s\" \"%s\"" % \

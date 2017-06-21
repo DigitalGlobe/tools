@@ -102,9 +102,9 @@ class SystemManager :
         # the default value for the 64-bit library environment variable
         # _VALUE_LIBRARY_X64 = "%ProgramFiles(x86)%\\Microsoft Visual Studio 14.0\\VC\\LIB\\amd64;%ProgramFiles(x86)%\\Microsoft Visual Studio 14.0\\VC\\ATLMFC\\LIB\\amd64;%ProgramFiles(x86)%\\Windows Kits\\10\\lib\\10.0.10586.0\\ucrt\\x64;%ProgramFiles(x86)%\\Windows Kits\\NETFXSDK\\4.6.1\\lib\\um\\x64;%ProgramFiles(x86)%\\Windows Kits\\10\\lib\\10.0.10586.0\\um\\x64"
         _VALUE_LIBRARY_X64 = _ENVIRONMENT_VARIABLE_VISUAL_STUDIO + "\\LIB\\amd64;" + \
-        _ENVIRONMENT_VARIABLE_VISUAL_STUDIO + "\\ATLMFC\\LIB\\x64;" + \
+        _ENVIRONMENT_VARIABLE_VISUAL_STUDIO + "\\ATLMFC\\LIB\\amd64;" + \
         _ENVIRONMENT_VARIABLE_SDK_LIB_X64 + "\\ucrt\\x64;" + \
-        "%ProgramFiles(x86)%\\Windows Kits\\NETFXSDK\\4.6.1\\lib\\um\\x64;" + \
+        "%ProgramFiles(x86)%\\Windows Kits\\NETFXSDK\\4.6.1\\lib\\um\\amd64;" + \
         _ENVIRONMENT_VARIABLE_SDK_LIB_X64 + "\\um\\x64"
         
         #----------------------------------------------------------------------
@@ -486,7 +486,7 @@ class SystemManager :
             
                     shutil.rmtree(pathName)
                     
-                except (IOError) as ex:
+                except (IOError, WindowsError) as ex:
                 
                     print(ex)
                     print("Retrying...")

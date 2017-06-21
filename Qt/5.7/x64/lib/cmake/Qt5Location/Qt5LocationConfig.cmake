@@ -6,7 +6,7 @@ endif()
 get_filename_component(_qt5Location_install_prefix "${CMAKE_CURRENT_LIST_DIR}/../../../" ABSOLUTE)
 
 # For backwards compatibility only. Use Qt5Location_VERSION instead.
-set(Qt5Location_VERSION_STRING 5.7.0)
+set(Qt5Location_VERSION_STRING 5.8.0)
 
 set(Qt5Location_LIBRARIES Qt5::Location)
 
@@ -48,10 +48,8 @@ endmacro()
 if (NOT TARGET Qt5::Location)
 
     set(_Qt5Location_OWN_INCLUDE_DIRS "${_qt5Location_install_prefix}/include/" "${_qt5Location_install_prefix}/include/QtLocation")
-    set(Qt5Location_PRIVATE_INCLUDE_DIRS
-        "${_qt5Location_install_prefix}/include/QtLocation/5.7.0"
-        "${_qt5Location_install_prefix}/include/QtLocation/5.7.0/QtLocation"
-    )
+    set(Qt5Location_PRIVATE_INCLUDE_DIRS "")
+    include("${CMAKE_CURRENT_LIST_DIR}/ExtraSourceIncludes.cmake" OPTIONAL)
 
     foreach(_dir ${_Qt5Location_OWN_INCLUDE_DIRS})
         _qt5_Location_check_file_exists(${_dir})
@@ -91,7 +89,7 @@ if (NOT TARGET Qt5::Location)
     foreach(_module_dep ${_Qt5Location_MODULE_DEPENDENCIES})
         if (NOT Qt5${_module_dep}_FOUND)
             find_package(Qt5${_module_dep}
-                5.7.0 ${_Qt5Location_FIND_VERSION_EXACT}
+                5.8.0 ${_Qt5Location_FIND_VERSION_EXACT}
                 ${_Qt5Location_DEPENDENCIES_FIND_QUIET}
                 ${_Qt5Location_FIND_DEPENDENCIES_REQUIRED}
                 PATHS "${CMAKE_CURRENT_LIST_DIR}/.." NO_DEFAULT_PATH
