@@ -116,7 +116,8 @@ class Program :
             msBuildCommandLine += ' /p:TargetName=' + libName
             msBuildCommandLine += ' /p:Configuration="' + conf + '"'
             msBuildCommandLine += ' /p:BuildProjectReferences=false'
-            
+            # msBuildCommandLine += ' /p:CharacterSet="unicode"'
+
             linkerprops = {}
             linkerprops['OutputFile'] = os.path.join( buildOutDir, libName )
             if buildSettings.ReleaseSpecified():
