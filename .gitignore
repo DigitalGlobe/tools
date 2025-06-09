@@ -14,6 +14,9 @@
 *.sdf
 *.vc.opendb
 
+# VS code files
+.vscode/*
+
 # Compiled Dynamic libraries
 #*.so
 #*.dylib
@@ -89,3 +92,6 @@ build/UriParser/*
 build/vld/*
 build/Xerces/*
 build/ZLib/*
+
+include/*
+sdk/*
