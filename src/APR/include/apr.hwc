@@ -25,7 +25,7 @@
  * And please, make an effort to stub apr.hnw and apr.h.in in the process.
  *
  * This is the Win32 specific version of apr.h.  It is copied from
- * apr.hw by the apr.dsp and libapr.dsp projects. 
+ * apr.hw by the apr.dsp and libapr.dsp projects.
  */
 
 /**
@@ -60,16 +60,8 @@
  *   C4244: int to char/short - precision loss
  *   C4514: unreferenced inline function removed
  */
+#if defined(_MSC_VER)
 #pragma warning(disable: 4100 4127 4163 4201 4514; once: 4057 4075 4244)
-
-/* Ignore Microsoft's interpretation of secure development
- * and the POSIX string handling API
- */
-#if defined(_MSC_VER) && _MSC_VER >= 1400
-#ifndef _CRT_SECURE_NO_DEPRECATE
-#define _CRT_SECURE_NO_DEPRECATE
-#endif
-#pragma warning(disable: 4996)
 #endif
 
 /* Has windows.h already been included?  If so, our preferences don't matter,
@@ -120,11 +112,38 @@
  * are platform specific and should NOT be relied upon!</em></strong>
  */
 
-#define APR_INLINE __inline
+/* So that we can use inline on some critical functions, and use
+ * GNUC attributes (such as to get -Wall warnings for printf-like
+ * functions).  Both __inline__ and __attribute__ exist for gcc >= 2.7,
+ * other !__GNUC__ compilers may provide __attribute__ still.
+ *
+ * We've since discovered that the gcc shipped with NeXT systems
+ * as "cc" is completely broken.  It claims to be __GNUC__ and so
+ * on, but it doesn't implement half of the things that __GNUC__
+ * means.  In particular it's missing inline and the __attribute__
+ * stuff.  So we hack around it.  PR#1613. -djg
+ */
+#if defined(__GNUC__) \
+    && (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 7)) \
+    && !defined(NEXT)
+#define APR_INLINE  __inline__
 #define APR_HAS_INLINE          1
-#if !defined(__GNUC__) && !defined(__attribute__)
+#else  /* !__GNUC__ */
+#if defined(_MSC_VER)
+#define APR_INLINE  __inline
+#define APR_HAS_INLINE          1
+#else  /* !_MSC_VER */
+#define APR_INLINE
+#define APR_HAS_INLINE          0
+#endif /* !_MSC_VER */
+/* __has_attribute should always be a pre-defined macro, but not
+ * necessarily __attribute__ (e.g. builtin), so check for both to
+ * avoid overriding __attribute__.
+ */
+#if !(defined(__attribute__) || defined(__has_attribute))
 #define __attribute__(__x)
 #endif
+#endif /* !__GNUC__ */
 
 #ifndef _WIN32_WCE
 #define APR_HAVE_ARPA_INET_H    0
@@ -209,25 +228,42 @@
 /** @} */
 /** @} */
 
-/* We don't include our conditional headers within the doxyblocks 
- * or the extern "C" namespace 
+/* We don't include our conditional headers within the doxyblocks
+ * or the extern "C" namespace
  */
 
 #if APR_HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+
 #if APR_HAVE_STDIO_H
 #include <stdio.h>
 #endif
+
 #if APR_HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
+
 #if APR_HAVE_STDDEF_H
 #include <stddef.h>
 #endif
+
+#if APR_HAVE_SYS_SOCKET_H
+#include <sys/socket.h>
+#endif
+
+#if APR_HAVE_STDINT_H
+#include <stdint.h>
+#endif
+
+#if APR_HAVE_SYS_WAIT_H
+#include <sys/wait.h>
+#endif
+
 #if APR_HAVE_TIME_H
 #include <time.h>
 #endif
+
 #if APR_HAVE_PROCESS_H
 #include <process.h>
 #endif
@@ -258,12 +294,12 @@ extern "C" {
 #define APR_USE_SHMEM_MMAP_ANON    0
 #define APR_USE_SHMEM_BEOS         0
 
-#define APR_USE_FLOCK_SERIALIZE           0 
+#define APR_USE_FLOCK_SERIALIZE           0
 #define APR_USE_POSIXSEM_SERIALIZE        0
 #define APR_USE_SYSVSEM_SERIALIZE         0
 #define APR_USE_FCNTL_SERIALIZE           0
-#define APR_USE_PROC_PTHREAD_SERIALIZE    0 
-#define APR_USE_PTHREAD_SERIALIZE         0 
+#define APR_USE_PROC_PTHREAD_SERIALIZE    0
+#define APR_USE_PTHREAD_SERIALIZE         0
 
 #define APR_HAS_FLOCK_SERIALIZE           0
 #define APR_HAS_SYSVSEM_SERIALIZE         0
@@ -280,6 +316,7 @@ extern "C" {
 #define APR_HAVE_INET_ADDR      1
 #define APR_HAVE_INET_NETWORK   0
 #define APR_HAVE_IPV6           @apr_have_ipv6_10@
+#define APR_HAVE_SOCKADDR_UN    0
 #define APR_HAVE_MEMMOVE        1
 #define APR_HAVE_SETRLIMIT      0
 #define APR_HAVE_SIGACTION      0
@@ -316,6 +353,7 @@ extern "C" {
 #define APR_HAS_UNICODE_FS        1
 #define APR_HAS_PROC_INVOKED      1
 #define APR_HAS_OS_UUID           1
+#define APR_HAS_TIMEDLOCKS        1
 
 #ifndef _WIN32_WCE
 #define APR_HAS_SENDFILE          1
@@ -343,7 +381,7 @@ extern "C" {
 /* If we have a TCP implementation that can be "corked", what flag
  * do we use?
  */
-#define APR_TCP_NOPUSH_FLAG       @apr_tcp_nopush_flag@
+#define APR_TCP_NOPUSH_FLAG       0
 
 /* Is the TCP_NODELAY socket option inherited from listening sockets?
  */
@@ -351,7 +389,7 @@ extern "C" {
 
 /* Is the O_NONBLOCK flag inherited from listening sockets?
  */
-#define APR_O_NONBLOCK_INHERITED  1
+#define APR_O_NONBLOCK_INHERITED 1
 
 /* Typedefs that APR needs. */
 
@@ -623,17 +661,16 @@ typedef  int         gid_t;
      && (*(const apr_uint32_t *)(const void *)(&(a)->s6_addr[8]) == ntohl(0x0000ffff)))
 #endif
 
-#endif /* APR_HAS_IPV6 */
+#endif /* APR_HAVE_IPV6 */
 
 #ifdef __cplusplus
 }
 #endif
 
-/* Done with badly written headers
+/* Done with badly written headers, leave 'deprecated CRT' undeprecated
  */
 #if defined(_MSC_VER) && _MSC_VER >= 1200
 #pragma warning(pop)
-#pragma warning(disable: 4996)
 #endif
 
 #endif /* WIN32 */

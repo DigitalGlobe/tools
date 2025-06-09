@@ -102,7 +102,8 @@ APR_DECLARE(apr_hash_t *) apr_hash_copy(apr_pool_t *pool,
  * @param key Pointer to the key
  * @param klen Length of the key. Can be APR_HASH_KEY_STRING to use the string length.
  * @param val Value to associate with the key
- * @remark If the value is NULL the hash entry is deleted.
+ * @remark If the value is NULL the hash entry is deleted. The key is stored as is,
+ *         and so must have a lifetime at least as long as the hash table's pool.
  */
 APR_DECLARE(void) apr_hash_set(apr_hash_t *ht, const void *key,
                                apr_ssize_t klen, const void *val);
@@ -255,7 +256,7 @@ typedef int (apr_hash_do_callback_fn_t)(void *rec, const void *key,
 
 /** 
  * Iterate over a hash table running the provided function once for every
- * element in the hash table. The @param comp function will be invoked for
+ * element in the hash table. The @p comp function will be invoked for
  * every element in the hash table.
  *
  * @param comp The function to run

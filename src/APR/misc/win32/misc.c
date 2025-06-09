@@ -27,25 +27,15 @@ apr_status_t apr_get_oslevel(apr_oslevel_e *level)
 {
     if (apr_os_level == APR_WIN_UNK) 
     {
-        static OSVERSIONINFO oslev;
-        oslev.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-        GetVersionEx(&oslev);
+        OSVERSIONINFOEXW oslev;
+        oslev.dwOSVersionInfoSize = sizeof(oslev);
+        if (!GetVersionExW((OSVERSIONINFOW*) &oslev)) {
+            return apr_get_os_error();
+        }
 
         if (oslev.dwPlatformId == VER_PLATFORM_WIN32_NT) 
         {
-            static unsigned int servpack = 0;
-            TCHAR *pservpack;
-            if ((pservpack = oslev.szCSDVersion)) {
-                while (*pservpack && !apr_isdigit(*pservpack)) {
-                    pservpack++;
-                }
-                if (*pservpack)
-#ifdef _UNICODE
-                    servpack = _wtoi(pservpack);
-#else
-                    servpack = atoi(pservpack);
-#endif
-            }
+            unsigned int servpack = oslev.wServicePackMajor;
 
             if (oslev.dwMajorVersion < 3) {
                 apr_os_level = APR_WIN_UNSUP;
@@ -99,11 +89,19 @@ apr_status_t apr_get_oslevel(apr_oslevel_e *level)
             else if (oslev.dwMajorVersion == 6) {
                 if (oslev.dwMinorVersion == 0)
                     apr_os_level = APR_WIN_VISTA;
+                else if (oslev.dwMinorVersion == 1) {
+                    if (servpack < 1)
+                        apr_os_level = APR_WIN_7;
+                    else
+                        apr_os_level = APR_WIN_7_SP1;
+                }
+                else if (oslev.dwMinorVersion == 2)
+                    apr_os_level = APR_WIN_8;
                 else
-                    apr_os_level = APR_WIN_7;
+                    apr_os_level = APR_WIN_8_1;
             }
             else {
-                apr_os_level = APR_WIN_XP;
+                apr_os_level = APR_WIN_10;
             }
         }
 #ifndef WINNT
@@ -151,7 +149,7 @@ apr_status_t apr_get_oslevel(apr_oslevel_e *level)
 
     *level = apr_os_level;
 
-    if (apr_os_level < APR_WIN_UNSUP) {
+    if (apr_os_level <= APR_WIN_UNSUP) {
         return APR_EGENERAL;
     }
 
@@ -163,30 +161,61 @@ apr_status_t apr_get_oslevel(apr_oslevel_e *level)
  * missing from one or more releases of the Win32 API
  */
 
-static const char* const lateDllName[DLL_defined] = {
-    "kernel32", "advapi32", "mswsock",  "ws2_32", "shell32", "ntdll.dll"  };
-static HMODULE lateDllHandle[DLL_defined] = {
-     NULL,       NULL,       NULL,       NULL,     NULL,       NULL       };
+typedef struct win32_late_dll_t {
+    const char *dll_name;
+    volatile HMODULE dll_handle;
+} win32_late_dll_t;
+
+static win32_late_dll_t late_dll[DLL_defined] = {
+    {"kernel32", INVALID_HANDLE_VALUE},
+    {"advapi32", INVALID_HANDLE_VALUE},
+    {"mswsock", INVALID_HANDLE_VALUE},
+    {"ws2_32", INVALID_HANDLE_VALUE},
+    {"shell32", INVALID_HANDLE_VALUE},
+    {"ntdll.dll", INVALID_HANDLE_VALUE},
+    {"Iphplapi", INVALID_HANDLE_VALUE}
+};
 
 FARPROC apr_load_dll_func(apr_dlltoken_e fnLib, char* fnName, int ordinal)
 {
-    if (!lateDllHandle[fnLib]) { 
-        lateDllHandle[fnLib] = LoadLibraryA(lateDllName[fnLib]);
-        if (!lateDllHandle[fnLib])
-            return NULL;
+    win32_late_dll_t *dll = &late_dll[fnLib];
+    HMODULE cached_dll_handle;
+
+    /* Pointer sized reads are atomic on Windows. */
+    cached_dll_handle = dll->dll_handle;
+    if (cached_dll_handle == INVALID_HANDLE_VALUE) {
+        HMODULE dll_handle = NULL;
+
+        dll_handle = LoadLibrary(dll->dll_name);
+
+        cached_dll_handle = InterlockedCompareExchangePointer(&dll->dll_handle,
+                                                              dll_handle,
+                                                              INVALID_HANDLE_VALUE);
+        if (cached_dll_handle == INVALID_HANDLE_VALUE) {
+            cached_dll_handle = dll_handle;
+        }
+        else if (dll_handle) {
+            /* Other thread won the race: release our library handle. */
+            FreeLibrary(dll_handle);
+        }
     }
+
+    if (!cached_dll_handle) {
+        return NULL;
+    }
+
 #if defined(_WIN32_WCE)
     if (ordinal)
-        return GetProcAddressA(lateDllHandle[fnLib], (const char *)
-                                                     (apr_ssize_t)ordinal);
+        return GetProcAddressA(cached_dll_handle,
+                               (const char *) (apr_ssize_t)ordinal);
     else
-        return GetProcAddressA(lateDllHandle[fnLib], fnName);
+        return GetProcAddressA(cached_dll_handle, fnName);
 #else
     if (ordinal)
-        return GetProcAddress(lateDllHandle[fnLib], (const char *)
-                                                    (apr_ssize_t)ordinal);
+        return GetProcAddress(cached_dll_handle,
+                              (const char *) (apr_ssize_t)ordinal);
     else
-        return GetProcAddress(lateDllHandle[fnLib], fnName);
+        return GetProcAddress(cached_dll_handle, fnName);
 #endif
 }
 

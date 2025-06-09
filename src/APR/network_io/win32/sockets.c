@@ -24,6 +24,13 @@
 #include "apr_arch_inherit.h"
 #include "apr_arch_misc.h"
 
+/* Borrow the definition of SOMAXCONN_HINT() from Windows SDK 8,
+ * in case the SDK we are building against doesn't have it.
+ */
+#ifndef SOMAXCONN_HINT
+#define SOMAXCONN_HINT(b) (-(b))
+#endif
+
 static char generic_inaddr_any[16] = {0}; /* big enough for IPv4 or IPv6 */
 
 static apr_status_t socket_cleanup(void *sock)
@@ -223,7 +230,21 @@ APR_DECLARE(apr_status_t) apr_socket_bind(apr_socket_t *sock,
 APR_DECLARE(apr_status_t) apr_socket_listen(apr_socket_t *sock,
                                             apr_int32_t backlog)
 {
-    if (listen(sock->socketdes, backlog) == SOCKET_ERROR)
+    int backlog_val;
+
+    if (apr_os_level >= APR_WIN_8) {
+        /* Starting from Windows 8, listen() accepts a special SOMAXCONN_HINT()
+         * arg that allows setting the listen backlog value to a larger
+         * value than the predefined Winsock 2 limit (several hundred).
+         * https://blogs.msdn.microsoft.com/winsdk/2015/06/01/winsocks-listen-backlog-offers-more-flexibility-in-windows-8/
+         */
+        backlog_val = SOMAXCONN_HINT(backlog);
+    }
+    else {
+        backlog_val = backlog;
+    }
+
+    if (listen(sock->socketdes, backlog_val) == SOCKET_ERROR)
         return apr_get_netos_error();
     else
         return APR_SUCCESS;
@@ -393,7 +414,10 @@ APR_DECLARE(apr_status_t) apr_socket_connect(apr_socket_t *sock,
         sock->remote_addr_unknown = 0;
 
         /* Copy the address structure details in. */
-        sock->remote_addr = sa;
+        sock->remote_addr->sa = sa->sa;
+        sock->remote_addr->salen = sa->salen;
+        /* Adjust ipaddr_ptr et al. */
+        apr_sockaddr_vars_set(sock->remote_addr, sa->family, sa->port);
     }
 
     if (sock->local_addr->sa.sin.sin_port == 0) {

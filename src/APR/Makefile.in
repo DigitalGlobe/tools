@@ -46,7 +46,7 @@ LT_VERSION = @LT_VERSION@
 
 CLEAN_TARGETS = apr-config.out apr.exp exports.c export_vars.c .make.dirs \
 	build/apr_rules.out tools/gen_test_char@EXEEXT@ \
-	tools/gen_test_char.o tools/gen_test_char.lo \
+	tools/gen_test_char.o \
 	include/private/apr_escape_test_char.h
 DISTCLEAN_TARGETS = config.cache config.log config.status \
 	include/apr.h include/arch/unix/apr_private.h \
@@ -63,6 +63,8 @@ exec_prefix=@exec_prefix@
 bindir=@bindir@
 libdir=@libdir@
 includedir=@includedir@
+datarootdir=@datarootdir@
+datadir=@datadir@
 installbuilddir=@installbuilddir@
 
 # Create apr-config script suitable for the install tree
@@ -129,19 +131,15 @@ check: $(TARGET_LIB)
 etags:
 	etags `find . -name '*.[ch]'`
 
-OBJECTS_gen_test_char = tools/gen_test_char.lo $(LOCAL_LIBS)
-tools/gen_test_char.lo: tools/gen_test_char.c
+tools/gen_test_char@EXEEXT@: $(top_srcdir)/tools/gen_test_char.c
 	$(APR_MKDIR) tools
-	$(LT_COMPILE)
-
-tools/gen_test_char@EXEEXT@: $(OBJECTS_gen_test_char)
-	$(LINK_PROG) $(OBJECTS_gen_test_char) $(ALL_LIBS)
+	$(CC_FOR_BUILD) $(CFLAGS_FOR_BUILD) $(top_srcdir)/tools/gen_test_char.c -o $@
 
 include/private/apr_escape_test_char.h: tools/gen_test_char@EXEEXT@
 	$(APR_MKDIR) include/private
 	tools/gen_test_char@EXEEXT@ > $@
 
-LINK_PROG = $(LIBTOOL) $(LTFLAGS) --mode=link $(COMPILE) $(LT_LDFLAGS) \
+LINK_PROG = $(LIBTOOL) $(LTFLAGS) --mode=link --tag=CC $(COMPILE) $(LT_LDFLAGS) \
 	    @LT_NO_INSTALL@ $(ALL_LDFLAGS) -o $@
 
 # DO NOT REMOVE

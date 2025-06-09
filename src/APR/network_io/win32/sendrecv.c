@@ -100,53 +100,38 @@ APR_DECLARE(apr_status_t) apr_socket_sendv(apr_socket_t *sock,
 {
     apr_status_t rc = APR_SUCCESS;
     apr_ssize_t rv;
-    apr_size_t cur_len;
-    apr_int32_t nvec = 0;
-    int i, j = 0;
+    apr_size_t total_len;
+    apr_int32_t i;
     DWORD dwBytes = 0;
     WSABUF *pWsaBuf;
 
+    total_len = 0;
     for (i = 0; i < in_vec; i++) {
-        cur_len = vec[i].iov_len;
-        nvec++;
-        while (cur_len > APR_DWORD_MAX) {
-            nvec++;
-            cur_len -= APR_DWORD_MAX;
-        } 
+        apr_size_t iov_len = vec[i].iov_len;
+        if (iov_len > (apr_size_t)MAXDWORD - total_len) {
+            /* WSASend() returns NumberOfBytesSent as DWORD, so the total size
+               should be less than that. */
+            return APR_EINVAL;
+        }
+        total_len += iov_len;
     }
 
-    pWsaBuf = (nvec <= WSABUF_ON_STACK) ? _alloca(sizeof(WSABUF) * (nvec))
-                                         : malloc(sizeof(WSABUF) * (nvec));
+    pWsaBuf = (in_vec <= WSABUF_ON_STACK) ? _alloca(sizeof(WSABUF) * (in_vec))
+                                          : malloc(sizeof(WSABUF) * (in_vec));
     if (!pWsaBuf)
         return APR_ENOMEM;
 
     for (i = 0; i < in_vec; i++) {
-        char * base = vec[i].iov_base;
-        cur_len = vec[i].iov_len;
-        
-        do {
-            if (cur_len > APR_DWORD_MAX) {
-                pWsaBuf[j].buf = base;
-                pWsaBuf[j].len = APR_DWORD_MAX;
-                cur_len -= APR_DWORD_MAX;
-                base += APR_DWORD_MAX;
-            }
-            else {
-                pWsaBuf[j].buf = base;
-                pWsaBuf[j].len = (DWORD)cur_len;
-                cur_len = 0;
-            }
-            j++;
-
-        } while (cur_len > 0);
+        pWsaBuf[i].buf = vec[i].iov_base;
+        pWsaBuf[i].len = (ULONG) vec[i].iov_len;
     }
 #ifndef _WIN32_WCE
-    rv = WSASend(sock->socketdes, pWsaBuf, nvec, &dwBytes, 0, NULL, NULL);
+    rv = WSASend(sock->socketdes, pWsaBuf, in_vec, &dwBytes, 0, NULL, NULL);
     if (rv == SOCKET_ERROR) {
         rc = apr_get_netos_error();
     }
 #else
-    for (i = 0; i < nvec; i++) {
+    for (i = 0; i < in_vec; i++) {
         rv = send(sock->socketdes, pWsaBuf[i].buf, pWsaBuf[i].len, 0);
         if (rv == SOCKET_ERROR) {
             rc = apr_get_netos_error();
@@ -155,7 +140,7 @@ APR_DECLARE(apr_status_t) apr_socket_sendv(apr_socket_t *sock,
         dwBytes += rv;
     }
 #endif
-    if (nvec > WSABUF_ON_STACK) 
+    if (in_vec > WSABUF_ON_STACK)
         free(pWsaBuf);
 
     *nbytes = dwBytes;
@@ -270,9 +255,27 @@ APR_DECLARE(apr_status_t) apr_socket_sendfile(apr_socket_t *sock,
     int disconnected = 0;
     int sendv_trailers = 0;
     char hdtrbuf[4096];
+    LPFN_TRANSMITFILE pfn_transmit_file = NULL;
+    static GUID wsaid_transmitfile = WSAID_TRANSMITFILE;
+    DWORD dw;
 
     if (apr_os_level < APR_WIN_NT) {
         return APR_ENOTIMPL;
+    }
+
+    /* According to documentation TransmitFile() should not be used directly.
+     * Pointer to function should retrieved using WSAIoctl:
+     * https://docs.microsoft.com/en-gb/windows/win32/api/mswsock/nf-mswsock-transmitfile#remarks
+     */
+    if (WSAIoctl(sock->socketdes, SIO_GET_EXTENSION_FUNCTION_POINTER,
+                 &wsaid_transmitfile, sizeof(wsaid_transmitfile),
+                 &pfn_transmit_file, sizeof(pfn_transmit_file),
+                 &dw, NULL, NULL) == SOCKET_ERROR) {
+        return apr_get_os_error();
+    }
+
+    if (dw != sizeof(pfn_transmit_file)) {
+        return APR_EINVAL;
     }
 
     /* Use len to keep track of number of total bytes sent (including headers) */
@@ -366,13 +369,13 @@ APR_DECLARE(apr_status_t) apr_socket_sendfile(apr_socket_t *sock,
         sock->overlapped->OffsetHigh = (DWORD)(curoff >> 32);
 #endif  
         /* XXX BoundsChecker claims dwFlags must not be zero. */
-        rv = TransmitFile(sock->socketdes,  /* socket */
-                          file->filehand, /* open file descriptor of the file to be sent */
-                          xmitbytes,      /* number of bytes to send. 0=send all */
-                          0,              /* Number of bytes per send. 0=use default */
-                          sock->overlapped,    /* OVERLAPPED structure */
-                          ptfb,           /* header and trailer buffers */
-                          dwFlags);       /* flags to control various aspects of TransmitFile */
+        rv = pfn_transmit_file(sock->socketdes,  /* socket */
+                               file->filehand, /* open file descriptor of the file to be sent */
+                               xmitbytes,      /* number of bytes to send. 0=send all */
+                               0,              /* Number of bytes per send. 0=use default */
+                               sock->overlapped,    /* OVERLAPPED structure */
+                               ptfb,           /* header and trailer buffers */
+                               dwFlags);       /* flags to control various aspects of TransmitFile */
         if (!rv) {
             status = apr_get_netos_error();
             if ((status == APR_FROM_OS_ERROR(ERROR_IO_PENDING)) ||

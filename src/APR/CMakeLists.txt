@@ -15,17 +15,50 @@
 #
 # Read README.cmake before using this.
 
+# CMAKE_MINIMUM_REQUIRED should be the first directive in the file:
+# https://cmake.org/cmake/help/latest/command/cmake_minimum_required.html
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+
 PROJECT(APR C)
 
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+# Enable support for MSVC runtime library selection by abstraction
+# if supported by CMake.
+IF(POLICY CMP0091)
+  CMAKE_POLICY(SET CMP0091 NEW)
+ENDIF()
+
+# Add simple support CMAKE_WARNING_AS_ERROR if CMake doesn't
+# support it.
+IF (CMAKE_VERSION VERSION_LESS 3.24)
+  IF(CMAKE_WARNING_AS_ERROR AND MSVC)
+    SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /WX")
+  ENDIF()
+ENDIF()
+
+SET(apr_name    apr-1)
+SET(apr_libname libapr-1)
 
 OPTION(APR_INSTALL_PRIVATE_H  "Install selected private .h files (for httpd)"  OFF)
 OPTION(APR_HAVE_IPV6        "IPv6 support"                 ON)
 OPTION(INSTALL_PDB          "Install .pdb files (if generated)"  ON)
 OPTION(APR_BUILD_TESTAPR    "Build the test suite"         OFF)
+OPTION(APR_BUILD_SHARED     "Build shared libraries"       ON)
+OPTION(APR_BUILD_STATIC     "Build static libraries"       ON)
 OPTION(TEST_STATIC_LIBS     "Test programs use APR static libraries instead of shared libraries?" OFF)
-SET(MIN_WINDOWS_VER             "Vista" 
+SET(MIN_WINDOWS_VER             "Vista"
     CACHE STRING "Minimum Windows version")
+
+SET(APR_INSTALL_BIN_DIR      "bin"                       CACHE STRING "Install subdirectory for binary files")
+SET(APR_INSTALL_LIB_DIR      "lib"                       CACHE STRING "Install subdirectory for library files")
+SET(APR_INSTALL_INCLUDE_DIR  "include"                   CACHE STRING "Install subdirectory for include files")
+
+IF(NOT APR_BUILD_SHARED AND NOT APR_BUILD_STATIC)
+  MESSAGE(FATAL_ERROR "Both APR_BUILD_SHARED and APR_BUILD_STATIC have been disabled")
+ENDIF()
+
+IF(NOT APR_BUILD_STATIC AND TEST_STATIC_LIBS)
+  MESSAGE(FATAL_ERROR "APR_BUILD_STATIC has been disabled, but TEST_STATIC_LIBS is enabled")
+ENDIF()
 
 # create 1-or-0 representation of feature tests for apr.h
 
@@ -45,15 +78,22 @@ ELSE()
   SET(win32_winnt_str ${MIN_WINDOWS_VER})
 ENDIF()
 
+# Read current version.
+FILE(STRINGS include/apr_version.h VERSION_STRINGS REGEX "#define (APR_MAJOR_VERSION|APR_MINOR_VERSION|APR_PATCH_VERSION)")
+
+STRING(REGEX REPLACE ".*#define APR_MAJOR_VERSION[ \t]+([0-9]+).*" "\\1" APR_MAJOR_VERSION ${VERSION_STRINGS})
+STRING(REGEX REPLACE ".*#define APR_MINOR_VERSION[ \t]+([0-9]+).*" "\\1" APR_MINOR_VERSION ${VERSION_STRINGS})
+STRING(REGEX REPLACE ".*#define APR_PATCH_VERSION[ \t]+([0-9]+).*" "\\1" APR_PATCH_VERSION ${VERSION_STRINGS})
+
 CONFIGURE_FILE(include/apr.hwc
                ${PROJECT_BINARY_DIR}/apr.h)
 
 ADD_EXECUTABLE(gen_test_char tools/gen_test_char.c)
-GET_TARGET_PROPERTY(GEN_TEST_CHAR_EXE gen_test_char LOCATION)
+
 ADD_CUSTOM_COMMAND(
   COMMENT "Generating character tables, apr_escape_test_char.h, for current locale"
   DEPENDS gen_test_char
-  COMMAND ${GEN_TEST_CHAR_EXE} > ${PROJECT_BINARY_DIR}/apr_escape_test_char.h
+  COMMAND $<TARGET_FILE:gen_test_char> > ${PROJECT_BINARY_DIR}/apr_escape_test_char.h
   OUTPUT ${PROJECT_BINARY_DIR}/apr_escape_test_char.h
 )
 ADD_CUSTOM_TARGET(
@@ -69,16 +109,15 @@ ADD_CUSTOM_TARGET(
 #         you've generated apr.h before using a different build
 
 SET(APR_INCLUDE_DIRECTORIES
-  ${PROJECT_BINARY_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/arch/win32
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/arch/unix
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/private
+  $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/arch/win32>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/arch/unix>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/private>
 )
 
 SET(APR_SYSTEM_LIBS
   ws2_32
-  mswsock
   rpcrt4
 )
 
@@ -87,7 +126,9 @@ INCLUDE_DIRECTORIES(${APR_INCLUDE_DIRECTORIES})
 SET(APR_PUBLIC_HEADERS_STATIC
   include/apr_allocator.h
   include/apr_atomic.h
+  include/apr_cstr.h
   include/apr_dso.h
+  include/apr_encode.h
   include/apr_env.h
   include/apr_errno.h
   include/apr_escape.h
@@ -102,6 +143,7 @@ SET(APR_PUBLIC_HEADERS_STATIC
   include/apr_lib.h
   include/apr_mmap.h
   include/apr_network_io.h
+  include/apr_perms_set.h
   include/apr_poll.h
   include/apr_pools.h
   include/apr_portable.h
@@ -129,7 +171,9 @@ SET(APR_PUBLIC_HEADERS_GENERATED
 
 SET(APR_SOURCES
   atomic/win32/apr_atomic.c
+  atomic/win32/apr_atomic64.c
   dso/win32/dso.c
+  encoding/apr_encode.c
   encoding/apr_escape.c
   file_io/unix/copy.c
   file_io/unix/fileacc.c
@@ -179,11 +223,13 @@ SET(APR_SOURCES
   poll/unix/pollcb.c
   poll/unix/pollset.c
   poll/unix/select.c
+  poll/unix/wakeup.c
   random/unix/apr_random.c
   random/unix/sha2.c
   random/unix/sha2_glue.c
   shmem/win32/shm.c
   strings/apr_cpystrn.c
+  strings/apr_cstr.c
   strings/apr_fnmatch.c
   strings/apr_snprintf.c
   strings/apr_strings.c
@@ -202,80 +248,113 @@ SET(APR_SOURCES
   user/win32/userinfo.c
 )
 
-SET(APR_TEST_SOURCES
-  test/abts.c
-  test/testargs.c
-  test/testatomic.c
-  test/testcond.c
-  test/testdir.c
-  test/testdso.c
-  test/testdup.c
-  test/testenv.c
-  test/testescape.c
-  test/testfile.c
-  test/testfilecopy.c
-  test/testfileinfo.c
-  test/testflock.c
-  test/testfmt.c
-  test/testfnmatch.c
-  test/testglobalmutex.c
-  test/testhash.c
-  test/testipsub.c
-  test/testlfs.c
-  test/testlock.c
-  test/testmmap.c
-  test/testnames.c
-  test/testoc.c
-  test/testpath.c
-  test/testpipe.c
-  test/testpoll.c
-  test/testpools.c
-  test/testproc.c
-  test/testprocmutex.c
-  test/testrand.c
-  test/testshm.c
-  test/testskiplist.c
-  test/testsleep.c
-  test/testsock.c
-  test/testsockets.c
-  test/testsockopt.c
-  test/teststr.c
-  test/teststrnatcmp.c
-  test/testtable.c
-  test/testtemp.c
-  test/testthread.c
-  test/testtime.c
-  test/testud.c
-  test/testuser.c
-  test/testutil.c
-  test/testvsn.c
+SET(APR_TEST_SUITES
+  testargs
+  testatomic
+  testcond
+  testdir
+  testdso
+  testdup
+  testenv
+  testencode
+  testescape
+  testfile
+  testfilecopy
+  testfileinfo
+  testflock
+  testfmt
+  testfnmatch
+  testglobalmutex
+  testhash
+  testipsub
+  testlfs
+  testlock
+  testmmap
+  testnames
+  testoc
+  testpath
+  testpipe
+  testpoll
+  testpools
+  testproc
+  testprocmutex
+  testrand
+  testshm
+  testskiplist
+  testsleep
+  testsock
+  testsockets
+  testsockopt
+  teststr
+  teststrnatcmp
+  testtable
+  testtemp
+  testthread
+  testtime
+  testud
+  testuser
+  testvsn
 )
 
 SET(install_targets)
 SET(install_bin_pdb)
 
-# libapr-1 is shared, apr-1 is static
-ADD_LIBRARY(libapr-1 SHARED ${APR_SOURCES} ${APR_PUBLIC_HEADERS_GENERATED} libapr.rc)
-SET(install_targets ${install_targets} libapr-1)
-SET(install_bin_pdb ${install_bin_pdb} ${PROJECT_BINARY_DIR}/libapr-1.pdb)
-TARGET_LINK_LIBRARIES(libapr-1 ${APR_SYSTEM_LIBS})
-SET_TARGET_PROPERTIES(libapr-1 PROPERTIES COMPILE_DEFINITIONS "APR_DECLARE_EXPORT;WINNT")
-ADD_DEPENDENCIES(libapr-1 test_char_header)
+IF (MSVC)
+  # Ignore Microsoft's interpretation of secure development
+  # and the POSIX string handling API
+  ADD_COMPILE_DEFINITIONS(_CRT_SECURE_NO_DEPRECATE _CRT_NONSTDC_NO_WARNINGS)
+ENDIF()
 
-ADD_LIBRARY(apr-1 STATIC ${APR_SOURCES} ${APR_PUBLIC_HEADERS_GENERATED})
-SET(install_targets ${install_targets} apr-1)
-TARGET_LINK_LIBRARIES(apr-1 ${APR_SYSTEM_LIBS})
-SET_TARGET_PROPERTIES(apr-1 PROPERTIES COMPILE_DEFINITIONS "APR_DECLARE_STATIC;WINNT")
-ADD_DEPENDENCIES(apr-1 test_char_header)
+# libapr-1 is shared, apr-1 is static
+IF (APR_BUILD_SHARED)
+  ADD_LIBRARY(${apr_libname} SHARED ${APR_SOURCES} ${APR_PUBLIC_HEADERS_GENERATED} libapr.rc)
+  LIST(APPEND install_targets ${apr_libname})
+  LIST(APPEND install_bin_pdb $<TARGET_PDB_FILE:${apr_libname}>)
+  TARGET_LINK_LIBRARIES(${apr_libname}
+                        PRIVATE ${APR_SYSTEM_LIBS})
+  TARGET_COMPILE_DEFINITIONS(${apr_libname}
+                             PRIVATE "APR_DECLARE_EXPORT;WINNT"
+                             INTERFACE "APR_DECLARE_IMPORT;WINNT")
+  TARGET_INCLUDE_DIRECTORIES(${apr_libname}
+    PRIVATE ${APR_INCLUDE_DIRECTORIES}
+    INTERFACE $<INSTALL_INTERFACE:${APR_INSTALL_INCLUDE_DIR}> ${APR_INCLUDE_DIRECTORIES}
+  )
+  ADD_DEPENDENCIES(${apr_libname} test_char_header)
+ENDIF()
+
+IF (APR_BUILD_STATIC)
+  ADD_LIBRARY(${apr_name} STATIC ${APR_SOURCES} ${APR_PUBLIC_HEADERS_GENERATED})
+  LIST(APPEND install_targets ${apr_name})
+  TARGET_LINK_LIBRARIES(${apr_name}
+                        PRIVATE ${APR_SYSTEM_LIBS})
+  TARGET_COMPILE_DEFINITIONS(${apr_name}
+                             PRIVATE "APR_DECLARE_STATIC;WINNT"
+                             INTERFACE "APR_DECLARE_STATIC;WINNT")
+  TARGET_INCLUDE_DIRECTORIES(${apr_name}
+    PRIVATE ${APR_INCLUDE_DIRECTORIES}
+    INTERFACE $<INSTALL_INTERFACE:${APR_INSTALL_INCLUDE_DIR}> ${APR_INCLUDE_DIRECTORIES}
+  )
+  ADD_DEPENDENCIES(${apr_name} test_char_header)
+ENDIF()
 
 # libaprapp-1 and aprapp-1 are static
-ADD_LIBRARY(libaprapp-1 STATIC misc/win32/apr_app.c misc/win32/internal.c ${APR_PUBLIC_HEADERS_GENERATED})
-SET(install_targets ${install_targets} libaprapp-1)
-SET_TARGET_PROPERTIES(libaprapp-1 PROPERTIES COMPILE_DEFINITIONS "APR_APP;WINNT")
+IF (APR_BUILD_SHARED)
+  ADD_LIBRARY(libaprapp-1 STATIC misc/win32/apr_app.c misc/win32/internal.c ${APR_PUBLIC_HEADERS_GENERATED})
+  LIST(APPEND install_targets libaprapp-1)
+  SET_TARGET_PROPERTIES(libaprapp-1 PROPERTIES COMPILE_DEFINITIONS "APR_APP;WINNT")
+  TARGET_INCLUDE_DIRECTORIES(libaprapp-1
+    PRIVATE ${APR_INCLUDE_DIRECTORIES}
+  )
+ENDIF()
 
-ADD_LIBRARY(aprapp-1 STATIC misc/win32/apr_app.c misc/win32/internal.c ${APR_PUBLIC_HEADERS_GENERATED})
-SET(install_targets ${install_targets} aprapp-1)
-SET_TARGET_PROPERTIES(aprapp-1 PROPERTIES COMPILE_DEFINITIONS "APR_DECLARE_STATIC;APR_APP;WINNT")
+IF (APR_BUILD_STATIC)
+  ADD_LIBRARY(aprapp-1 STATIC misc/win32/apr_app.c misc/win32/internal.c ${APR_PUBLIC_HEADERS_GENERATED})
+  LIST(APPEND install_targets aprapp-1)
+  SET_TARGET_PROPERTIES(aprapp-1 PROPERTIES COMPILE_DEFINITIONS "APR_DECLARE_STATIC;APR_APP;WINNT")
+  TARGET_INCLUDE_DIRECTORIES(aprapp-1
+    PRIVATE ${APR_INCLUDE_DIRECTORIES}
+  )
+ENDIF()
 
 IF(APR_BUILD_TESTAPR)
   ENABLE_TESTING()
@@ -283,9 +362,9 @@ IF(APR_BUILD_TESTAPR)
   ADD_CUSTOM_TARGET(check COMMAND ${CMAKE_CTEST_COMMAND} --verbose)
 
   # copy data files to build directory so that we can run programs from there
-  EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E make_directory 
+  EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E make_directory
                   ${PROJECT_BINARY_DIR}/data)
-  EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy_if_different 
+  EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy_if_different
                   ${PROJECT_SOURCE_DIR}/test/data/file_datafile.txt
                   ${PROJECT_BINARY_DIR}/data/file_datafile.txt)
   EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy_if_different
@@ -293,41 +372,43 @@ IF(APR_BUILD_TESTAPR)
                   ${PROJECT_BINARY_DIR}/data/mmap_datafile.txt)
 
   IF(TEST_STATIC_LIBS)
-    SET(whichapr    apr-1)
+    SET(whichapr    ${apr_name})
     SET(whichaprapp aprapp-1)
-    SET(apiflag     -DAPR_DECLARE_STATIC)
   ELSE()
-    SET(whichapr    libapr-1)
+    SET(whichapr    ${apr_libname})
     SET(whichaprapp libaprapp-1)
-    SET(apiflag)
   ENDIF()
 
   ADD_EXECUTABLE(testapp test/testapp.c)
-  TARGET_LINK_LIBRARIES(testapp ${whichapr} ${whichaprapp} ${APR_SYSTEM_LIBS})
+  TARGET_LINK_LIBRARIES(testapp ${whichapr} ${whichaprapp})
   SET_TARGET_PROPERTIES(testapp PROPERTIES LINK_FLAGS /entry:wmainCRTStartup)
-  IF(apiflag)
-    SET_TARGET_PROPERTIES(testapp PROPERTIES COMPILE_FLAGS ${apiflag})
-  ENDIF()
   ADD_TEST(NAME testapp COMMAND testapp)
 
+  SET (APR_TEST_SOURCES
+    test/abts.c
+    test/testutil.c
+    )
+
+  FOREACH(testsuite ${APR_TEST_SUITES})
+    LIST(APPEND APR_TEST_SOURCES test/${testsuite}.c)
+  ENDFOREACH()
+
   ADD_EXECUTABLE(testall ${APR_TEST_SOURCES})
-  TARGET_LINK_LIBRARIES(testall ${whichapr} ${APR_SYSTEM_LIBS})
-  IF(apiflag)
-    SET_TARGET_PROPERTIES(testall PROPERTIES COMPILE_FLAGS ${apiflag})
-  ENDIF()
-  ADD_TEST(NAME testall COMMAND testall)
+  TARGET_LINK_LIBRARIES(testall ${whichapr} ws2_32.lib)
+  SET_TARGET_PROPERTIES(testall PROPERTIES COMPILE_DEFINITIONS "BINPATH=$<TARGET_FILE_DIR:testall>")
+
+  FOREACH(test ${APR_TEST_SUITES})
+    ADD_TEST(NAME ${test} COMMAND testall -v ${test})
+  ENDFOREACH()
 
   ADD_LIBRARY(mod_test MODULE test/mod_test.c)
-  TARGET_LINK_LIBRARIES(mod_test ${whichapr} ${APR_SYSTEM_LIBS})
+  TARGET_LINK_LIBRARIES(mod_test ${whichapr})
   SET_PROPERTY(TARGET mod_test APPEND PROPERTY LINK_FLAGS /export:print_hello)
   # nasty work-around for difficulties adding more than one additional flag
   # (they get joined in a bad way behind the scenes)
   GET_PROPERTY(link_flags TARGET mod_test PROPERTY LINK_FLAGS)
   SET(link_flags "${link_flags} /export:count_reps")
   SET_TARGET_PROPERTIES(mod_test PROPERTIES LINK_FLAGS ${link_flags})
-  IF(apiflag)
-    SET_TARGET_PROPERTIES(mod_test PROPERTIES COMPILE_FLAGS ${apiflag})
-  ENDIF()
 
   # Build all the single-source executable files with no special build
   # requirements.
@@ -351,10 +432,10 @@ IF(APR_BUILD_TESTAPR)
   FOREACH(sourcefile ${single_source_programs})
     STRING(REGEX REPLACE ".*/([^\\]+)\\.c" "\\1" proggie ${sourcefile})
     ADD_EXECUTABLE(${proggie} ${sourcefile})
-    TARGET_LINK_LIBRARIES(${proggie} ${whichapr} ${APR_SYSTEM_LIBS})
-    IF(apiflag)
-      SET_TARGET_PROPERTIES(${proggie} PROPERTIES COMPILE_FLAGS ${apiflag})
-    ENDIF()
+    TARGET_LINK_LIBRARIES(${proggie} ${whichapr})
+    SET_TARGET_PROPERTIES(${proggie} PROPERTIES COMPILE_DEFINITIONS "BINPATH=$<TARGET_FILE_DIR:${proggie}>")
+
+    ADD_DEPENDENCIES(testall ${proggie})
   ENDFOREACH()
 
   # Add tests for programs that run by themselves with no arguments.
@@ -380,20 +461,38 @@ IF(APR_BUILD_TESTAPR)
 ENDIF (APR_BUILD_TESTAPR)
 
 # Installation
+INCLUDE(CMakePackageConfigHelpers)
 
-INSTALL(TARGETS ${install_targets}
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-       )
+string(TOLOWER "${PROJECT_NAME}" project_name_lower)
+
+write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/${project_name_lower}-config-version.cmake"
+  VERSION ${APR_MAJOR_VERSION}.${APR_MINOR_VERSION}.${APR_PATCH_VERSION}
+  COMPATIBILITY SameMajorVersion
+)
+
+INSTALL(TARGETS ${install_targets} EXPORT apr-config
+        RUNTIME DESTINATION ${APR_INSTALL_BIN_DIR}
+        LIBRARY DESTINATION ${APR_INSTALL_LIB_DIR}
+        ARCHIVE DESTINATION ${APR_INSTALL_LIB_DIR}
+)
+
+INSTALL(EXPORT apr-config
+        NAMESPACE apr::
+        DESTINATION "lib/cmake/${project_name_lower}"
+        FILE "${project_name_lower}-config.cmake"
+)
+
+INSTALL(FILES "${CMAKE_CURRENT_BINARY_DIR}/${project_name_lower}-config-version.cmake"
+        DESTINATION "lib/cmake/${project_name_lower}"
+)
 
 IF(INSTALL_PDB)
   INSTALL(FILES ${install_bin_pdb}
-          DESTINATION bin
+          DESTINATION ${APR_INSTALL_BIN_DIR}
           CONFIGURATIONS RelWithDebInfo Debug)
 ENDIF()
 
-INSTALL(FILES ${APR_PUBLIC_HEADERS_STATIC} ${APR_PUBLIC_HEADERS_GENERATED} DESTINATION include)
+INSTALL(FILES ${APR_PUBLIC_HEADERS_STATIC} ${APR_PUBLIC_HEADERS_GENERATED} DESTINATION ${APR_INSTALL_INCLUDE_DIR})
 IF(APR_INSTALL_PRIVATE_H)
   # Kludges for unexpected dependencies of httpd 2.x, not installed by default
   SET(APR_PRIVATE_H_FOR_HTTPD
@@ -402,8 +501,8 @@ IF(APR_INSTALL_PRIVATE_H)
     include/arch/win32/apr_arch_utf8.h
     include/arch/win32/apr_private.h
     )
-  INSTALL(FILES ${APR_PRIVATE_H_FOR_HTTPD} DESTINATION include/arch/win32)
-  INSTALL(FILES include/arch/apr_private_common.h DESTINATION include/arch)
+  INSTALL(FILES ${APR_PRIVATE_H_FOR_HTTPD} DESTINATION ${APR_INSTALL_INCLUDE_DIR}/arch/win32)
+  INSTALL(FILES include/arch/apr_private_common.h DESTINATION ${APR_INSTALL_INCLUDE_DIR}/arch)
 ENDIF()
 
 STRING(TOUPPER "${CMAKE_BUILD_TYPE}" buildtype)
@@ -415,9 +514,14 @@ MESSAGE(STATUS "")
 MESSAGE(STATUS "  Build type ...................... : ${CMAKE_BUILD_TYPE}")
 MESSAGE(STATUS "  Install .pdb (if available)...... : ${INSTALL_PDB}")
 MESSAGE(STATUS "  Install prefix .................. : ${CMAKE_INSTALL_PREFIX}")
+MESSAGE(STATUS "    Directory for binary files .... : PREFIX/${APR_INSTALL_BIN_DIR}")
+MESSAGE(STATUS "    Directory for library files ... : PREFIX/${APR_INSTALL_LIB_DIR}")
+MESSAGE(STATUS "    Directory for include files ... : PREFIX/${APR_INSTALL_INCLUDE_DIR}")
 MESSAGE(STATUS "  C compiler ...................... : ${CMAKE_C_COMPILER}")
 MESSAGE(STATUS "  IPv6 ............................ : ${APR_HAVE_IPV6}")
 MESSAGE(STATUS "  Minimum Windows version ......... : ${MIN_WINDOWS_VER}")
+MESSAGE(STATUS "  Build shared libs ............... : ${APR_BUILD_SHARED}")
+MESSAGE(STATUS "  Build static libs ............... : ${APR_BUILD_STATIC}")
 MESSAGE(STATUS "  Build test suite ................ : ${APR_BUILD_TESTAPR}")
 IF(TEST_STATIC_LIBS)
 MESSAGE(STATUS "    (testing static libraries)")

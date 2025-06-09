@@ -30,10 +30,9 @@
 
 #ifdef WAITIO_USES_POLL
 
-#ifdef HAVE_POLL_H
+#if HAVE_POLL_H
 #include <poll.h>
-#endif
-#ifdef HAVE_SYS_POLL_H
+#elif HAVE_SYS_POLL_H
 #include <sys/poll.h>
 #endif
 
@@ -43,10 +42,13 @@ apr_status_t apr_wait_for_io_or_timeout(apr_file_t *f, apr_socket_t *s,
     struct pollfd pfd;
     int rc, timeout;
 
-    timeout    = f        ? f->timeout / 1000 : s->timeout / 1000;
+    timeout    = f        ? f->timeout        : s->timeout;
     pfd.fd     = f        ? f->filedes        : s->socketdes;
     pfd.events = for_read ? POLLIN            : POLLOUT;
 
+    if (timeout > 0) {
+        timeout = (timeout + 999) / 1000;
+    }
     do {
         rc = poll(&pfd, 1, timeout);
     } while (rc == -1 && errno == EINTR);

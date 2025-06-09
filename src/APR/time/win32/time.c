@@ -54,6 +54,9 @@ static void SystemTimeToAprExpTime(apr_time_exp_t *xt, SYSTEMTIME *tm)
     static const int dayoffset[12] =
     {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
 
+    if (tm->wMonth < 1 || tm->wMonth > 12)
+        return;
+
     /* Note; the caller is responsible for filling in detailed tm_usec,
      * tm_gmtoff and tm_isdst data when applicable.
      */
@@ -108,6 +111,7 @@ APR_DECLARE(apr_status_t) apr_time_exp_gmt(apr_time_exp_t *result,
     FileTimeToSystemTime(&ft, &st);
     /* The Platform SDK documents that SYSTEMTIME/FILETIME are
      * generally UTC, so no timezone info needed
+     * The time value makes a roundtrip, st cannot be invalid below.
      */
     SystemTimeToAprExpTime(result, &st);
     result->tm_usec = (apr_int32_t) (input % APR_USEC_PER_SEC);
@@ -124,6 +128,7 @@ APR_DECLARE(apr_status_t) apr_time_exp_tz(apr_time_exp_t *result,
     FileTimeToSystemTime(&ft, &st);
     /* The Platform SDK documents that SYSTEMTIME/FILETIME are
      * generally UTC, so we will simply note the offs used.
+     * The time value makes a roundtrip, st cannot be invalid below.
      */
     SystemTimeToAprExpTime(result, &st);
     result->tm_usec = (apr_int32_t) (input % APR_USEC_PER_SEC);
@@ -155,6 +160,7 @@ APR_DECLARE(apr_status_t) apr_time_exp_lt(apr_time_exp_t *result,
          * because FileTimeToLocalFileFime is documented that the
          * resulting time local file time would have DST relative
          * to the *present* date, not the date converted.
+         * The time value makes a roundtrip, localst cannot be invalid below.
          */
         SystemTimeToTzSpecificLocalTime(tz, &st, &localst);
         SystemTimeToAprExpTime(result, &localst);
@@ -184,6 +190,7 @@ APR_DECLARE(apr_status_t) apr_time_exp_lt(apr_time_exp_t *result,
         TIME_ZONE_INFORMATION tz;
 	/* XXX: This code is simply *wrong*.  The time converted will always
          * map to the *now current* status of daylight savings time.
+         * The time value makes a roundtrip, st cannot be invalid below.
          */
 
         FileTimeToLocalFileTime(&ft, &localft);
@@ -223,6 +230,9 @@ APR_DECLARE(apr_status_t) apr_time_exp_get(apr_time_t *t,
     apr_time_t days;
     static const int dayoffset[12] =
     {306, 337, 0, 31, 61, 92, 122, 153, 184, 214, 245, 275};
+
+    if (xt->tm_mon < 0 || xt->tm_mon >= 12)
+        return APR_EBADDATE;
 
     /* shift new year to 1st March in order to make leap year calc easy */
 
@@ -292,6 +302,9 @@ APR_DECLARE(apr_status_t) apr_os_exp_time_put(apr_time_exp_t *aprtime,
     /* The Platform SDK documents that SYSTEMTIME/FILETIME are
      * generally UTC, so no timezone info needed
      */
+    if ((*ostime)->wMonth < 1 || (*ostime)->wMonth > 12)
+        return APR_EBADDATE;
+
     SystemTimeToAprExpTime(aprtime, *ostime);
     return APR_SUCCESS;
 }
@@ -301,7 +314,7 @@ APR_DECLARE(void) apr_sleep(apr_interval_time_t t)
     /* One of the few sane situations for a cast, Sleep
      * is in ms, not us, and passed as a DWORD value
      */
-    Sleep((DWORD)(t / 1000));
+    Sleep((DWORD)((t + 999) / 1000));
 }
 
 #if defined(_WIN32_WCE)

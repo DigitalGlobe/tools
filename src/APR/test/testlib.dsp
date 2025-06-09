@@ -215,6 +215,10 @@ SOURCE=.\testenv.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\testenv.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\testfile.c
 # End Source File
 # Begin Source File
@@ -308,10 +312,6 @@ SOURCE=.\testshm.c
 # Begin Source File
 
 SOURCE=.\testshm.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\testskiplist.c
 # End Source File
 # Begin Source File
 

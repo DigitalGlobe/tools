@@ -75,7 +75,7 @@ APR_DECLARE(apr_time_t) apr_time_now(void)
 {
     struct timeval tv;
     gettimeofday(&tv, NULL);
-    return tv.tv_sec * APR_USEC_PER_SEC + tv.tv_usec;
+    return tv.tv_sec * (apr_time_t)APR_USEC_PER_SEC + (apr_time_t)tv.tv_usec;
 }
 
 static void explode_time(apr_time_exp_t *xt, apr_time_t t,
@@ -141,6 +141,9 @@ APR_DECLARE(apr_status_t) apr_time_exp_get(apr_time_t *t, apr_time_exp_t *xt)
     apr_time_t days;
     static const int dayoffset[12] =
     {306, 337, 0, 31, 61, 92, 122, 153, 184, 214, 245, 275};
+
+    if (xt->tm_mon < 0 || xt->tm_mon >= 12)
+        return APR_EBADDATE;
 
     /* shift new year to 1st March in order to make leap year calc easy */
 

@@ -199,7 +199,7 @@ void* getStatCache();
 /*
  * Include common private declarations.
  */
-#include "../apr_private_common.h"
+#include "arch/apr_private_common.h"
 
 #endif  /*APR_PRIVATE_H*/
 #endif  /*NETWARE*/

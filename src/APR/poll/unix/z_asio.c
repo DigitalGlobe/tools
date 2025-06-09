@@ -247,9 +247,11 @@ static apr_status_t asio_pollset_cleanup(apr_pollset_t *pollset)
     int rv;
 
     DBG(4, "entered\n");
-    rv = msgctl(pollset->p->msg_q, IPC_RMID, NULL);
+    if (pollset->flags & APR_POLLSET_THREADSAFE) { 
+        rv = msgctl(pollset->p->msg_q, IPC_RMID, NULL);
+        DBG1(4, "asio_pollset_cleanup: msgctl(IPC_RMID) returned %d\n", rv);
+    }
 
-    DBG1(4, "exiting, msgctl(IPC_RMID) returned %d\n", rv);
     return rv;
 }
 
@@ -264,13 +266,13 @@ static apr_status_t asio_pollset_create(apr_pollset_t *pollset,
 
     DBG1(2, "entered, flags: %x\n", flags);
 
-    priv = pollset->p = apr_palloc(p, sizeof(*priv));
+    priv = pollset->p = apr_pcalloc(p, sizeof(*priv));
 
     if (flags & APR_POLLSET_THREADSAFE) {
 #if APR_HAS_THREADS
-        if (rv = apr_thread_mutex_create(&(priv->ring_lock),
+        if ((rv = apr_thread_mutex_create(&(priv->ring_lock),
                                            APR_THREAD_MUTEX_DEFAULT,
-                                           p) != APR_SUCCESS) {
+                                           p)) != APR_SUCCESS) {
             DBG1(1, "apr_thread_mutex_create returned %d\n", rv);
             pollset->p = NULL;
             return rv;
@@ -481,7 +483,8 @@ static apr_status_t asio_pollset_remove(apr_pollset_t *pollset,
     asio_elem_t *elem;
     apr_status_t rv = APR_SUCCESS;
     apr_pollset_private_t *priv = pollset->p;
-    struct aiocb cancel_a;   /* AIO_CANCEL is synchronous, so autodata works fine */
+    /* AIO_CANCEL is synchronous, so autodata works fine.  */
+    struct aiocb cancel_a = {0};   
 
     int fd;
 
@@ -551,7 +554,7 @@ static posix_poll(apr_pollset_t *pollset,
     DBG(4, "entered\n");
 
     if (timeout > 0) {
-        timeout /= 1000;
+        timeout = (timeout + 999) / 1000;
     }
     rv = poll(priv->pollset, pollset->nelts, timeout);
     (*num) = rv;
@@ -695,6 +698,7 @@ static apr_status_t asio_pollset_poll(apr_pollset_t *pollset,
             tv.tv_nsec = apr_time_usec(timeout) * 1000;
         } else {
             tv.tv_sec = INT_MAX;  /* block until something is ready */
+            tv.tv_nsec = 0;
         }
 
         DBG2(6, "nothing on the ready ring "
@@ -765,7 +769,7 @@ static apr_status_t asio_pollset_poll(apr_pollset_t *pollset,
     return rv;
 }  /* end of asio_pollset_poll */
 
-static apr_pollset_provider_t impl = {
+static const apr_pollset_provider_t impl = {
     asio_pollset_create,
     asio_pollset_add,
     asio_pollset_remove,
@@ -774,6 +778,6 @@ static apr_pollset_provider_t impl = {
     "asio"
 };
 
-apr_pollset_provider_t *apr_pollset_provider_aio_msgq = &impl;
+const apr_pollset_provider_t *apr_pollset_provider_aio_msgq = &impl;
 
 #endif /* HAVE_AIO_MSGQ */

@@ -33,28 +33,6 @@
 static apr_pool_t *ptmp = NULL;
 static apr_skiplist *skiplist = NULL;
 
-/* apr_skiplist_add[_compare]() are missing in 1.5.x,
- * so emulate them (not thread-safe!)...
- */
-static apr_skiplist_compare current_comp;
-static int add_comp(void *a, void *b)
-{
-    return current_comp(a, b) < 0 ? -1 : +1;
-}
-static apr_skiplistnode *apr_skiplist_add_compare(apr_skiplist *sl, void *data,
-                                                  apr_skiplist_compare comp)
-{
-    current_comp = comp;
-    return apr_skiplist_insert_compare(sl, data, add_comp);
-}
-static apr_skiplistnode *apr_skiplist_add(apr_skiplist *sl, void *data)
-{
-    /* Ugly, really, but should work *as long as* the compare function is the
-     * first field of the (opaque) skiplist struct, this is the case for now :p
-     */
-    return apr_skiplist_add_compare(sl, data, *(apr_skiplist_compare*)sl);
-}
-
 static int skiplist_get_size(abts_case *tc, apr_skiplist *sl)
 {
     size_t size = 0;
@@ -62,6 +40,7 @@ static int skiplist_get_size(abts_case *tc, apr_skiplist *sl)
     for (n = apr_skiplist_getlist(sl); n; apr_skiplist_next(sl, &n)) {
         ++size;
     }
+    ABTS_TRUE(tc, size == apr_skiplist_size(sl));
     return size;
 }
 
@@ -97,7 +76,7 @@ static void skiplist_dontfind(abts_case *tc, void *data)
 static void skiplist_insert(abts_case *tc, void *data)
 {
     const char *val;
-    int i;
+    int i, height = 0;
 
     for (i = 0; i < 10; ++i) {
         ABTS_PTR_EQUAL(tc, NULL, apr_skiplist_insert(skiplist, "baton"));
@@ -105,6 +84,13 @@ static void skiplist_insert(abts_case *tc, void *data)
         val = apr_skiplist_find(skiplist, "baton", NULL);
         ABTS_PTR_NOTNULL(tc, val);
         ABTS_STR_EQUAL(tc, "baton", val);
+
+        if (height == 0) {
+            height = apr_skiplist_height(skiplist);
+        }
+        else {
+            ABTS_INT_EQUAL(tc, height, apr_skiplist_height(skiplist));
+        }
     }
 
     ABTS_PTR_NOTNULL(tc, apr_skiplist_insert(skiplist, "foo"));
@@ -120,12 +106,16 @@ static void skiplist_insert(abts_case *tc, void *data)
     ABTS_STR_EQUAL(tc, "atfirst", val);
 }
 
+#define NUM_ADDS 100
 static void skiplist_add(abts_case *tc, void *data)
 {
     const char *val;
-    size_t i, n = skiplist_get_size(tc, skiplist);
+    size_t i, n = 0;
 
-    for (i = 0; i < 100; ++i) {
+    apr_skiplist_remove_all(skiplist, NULL);
+    ABTS_TRUE(tc, 0 == skiplist_get_size(tc, skiplist));
+
+    for (i = 0; i < NUM_ADDS; ++i) {
         n++;
         ABTS_PTR_NOTNULL(tc, apr_skiplist_add(skiplist, "daton"));
         ABTS_TRUE(tc, n == skiplist_get_size(tc, skiplist));
@@ -156,10 +146,48 @@ static void skiplist_add(abts_case *tc, void *data)
     }
 }
 
+static void skiplist_replace(abts_case *tc, void *data)
+{
+    const char *val;
+    size_t n = skiplist_get_size(tc, skiplist);
+
+    n -= NUM_ADDS - 1;
+    apr_skiplist_replace(skiplist, "daton", NULL);
+    ABTS_TRUE(tc, n == skiplist_get_size(tc, skiplist));
+    val = apr_skiplist_find(skiplist, "daton", NULL);
+    ABTS_PTR_NOTNULL(tc, val);
+    ABTS_STR_EQUAL(tc, "daton", val);
+
+    n -= NUM_ADDS - 1;
+    apr_skiplist_replace(skiplist, "baton", NULL);
+    ABTS_TRUE(tc, n == skiplist_get_size(tc, skiplist));
+    val = apr_skiplist_find(skiplist, "baton", NULL);
+    ABTS_PTR_NOTNULL(tc, val);
+    ABTS_STR_EQUAL(tc, "baton", val);
+
+    n -= NUM_ADDS - 1;
+    apr_skiplist_replace(skiplist, "caton", NULL);
+    ABTS_TRUE(tc, n == skiplist_get_size(tc, skiplist));
+    val = apr_skiplist_find(skiplist, "caton", NULL);
+    ABTS_PTR_NOTNULL(tc, val);
+    ABTS_STR_EQUAL(tc, "caton", val);
+
+    n -= NUM_ADDS - 1;
+    apr_skiplist_replace(skiplist, "aaton", NULL);
+    ABTS_TRUE(tc, n == skiplist_get_size(tc, skiplist));
+    val = apr_skiplist_find(skiplist, "aaton", NULL);
+    ABTS_PTR_NOTNULL(tc, val);
+    ABTS_STR_EQUAL(tc, "aaton", val);
+
+    ABTS_TRUE(tc, n == 4);
+}
+
 static void skiplist_destroy(abts_case *tc, void *data)
 {
     apr_skiplist_destroy(skiplist, NULL);
-    ABTS_TRUE(tc, 0 == skiplist_get_size(tc, skiplist));
+    ABTS_TRUE(tc, 0 == apr_skiplist_size(skiplist));
+    ABTS_TRUE(tc, 1 == apr_skiplist_height(skiplist));
+    ABTS_TRUE(tc, NULL == apr_skiplist_getlist(skiplist));
 }
 
 static void skiplist_size(abts_case *tc, void *data)
@@ -235,6 +263,8 @@ static void skiplist_random_loop(abts_case *tc, void *data)
     ABTS_INT_EQUAL(tc, APR_SUCCESS, apr_skiplist_init(&sl, ptmp));
     apr_skiplist_set_compare(sl, (apr_skiplist_compare)strcmp,
                                  (apr_skiplist_compare)strcmp);
+    apr_skiplist_set_preheight(sl, 7);
+    ABTS_INT_EQUAL(tc, 7, apr_skiplist_preheight(sl));
 
     batons = apr_palloc(ptmp, NUM_FIND * sizeof(char*));
 
@@ -263,21 +293,21 @@ typedef struct elem {
 static void add_int_to_skiplist(abts_case *tc, apr_skiplist *list, int n){
     int* a = apr_skiplist_alloc(list, sizeof(int));
     *a = n;
-    ABTS_PTR_NOTNULL(tc, apr_skiplist_insert(list, a));
+    ABTS_PTR_NOTNULL(tc, apr_skiplist_add(list, a));
 }
 
 static void add_elem_to_skiplist(abts_case *tc, apr_skiplist *list, elem n){
     elem* a = apr_skiplist_alloc(list, sizeof(elem));
     *a = n;
-    ABTS_PTR_NOTNULL(tc, apr_skiplist_insert(list, a));
+    ABTS_PTR_NOTNULL(tc, apr_skiplist_add(list, a));
 }
 
 static int comp(void *a, void *b){
-    return (*((int*) a) < *((int*) b)) ? -1 : 1;
+    return *((int*) a) - *((int*) b);
 }
 
 static int scomp(void *a, void *b){
-    return (((elem*) a)->a < ((elem*) b)->a) ? -1 : 1;
+    return ((elem*) a)->a - ((elem*) b)->a;
 }
 
 static int ecomp(void *a, void *b)
@@ -301,6 +331,39 @@ static int ecomp(void *a, void *b)
     }
 }
 
+/* Some tests below add multiple duplicates and then try to remove each one
+ * individually, in arbitrary order.
+ *
+ * Using apr_skiplist_remove_compare(..., scomp, NULL) would not work because
+ * it will likely remove any duplicate (the first one) encountered on the path,
+ * hence possibly not the expected one.
+ * 
+ * Using apr_skiplist_remove_compare(..., ecomp, NULL) works provided all the
+ * duplicates (same a) don't also have the same b (which is the case in the
+ * test below), hence uniqueness is cooked in the elem itself.
+ *
+ * Another possibility is to rely on unique pointers, and then cook a remove
+ * function, like the following skiplist_remove_scomp(), which will go straight
+ * to the last duplicate (using scomp) and then iterate on the previous elems
+ * until pointers match.
+ *
+ * Providing uniqueness in the elem itself is the more clean/efficient option,
+ * but if all you have is a unique pointer the pattern in the function may be
+ * worth it ( or it's just a way to test several skiplist functionalities :)
+ */
+static void skiplist_remove_scomp(abts_case *tc, apr_skiplist *list, elem *n)
+{
+    elem *e;
+    apr_skiplistnode *iter = NULL;
+    e = apr_skiplist_last(list, n, &iter);
+    while (e && e != n) {
+        ABTS_INT_EQUAL(tc, 0, scomp(n, e));
+        e = apr_skiplist_previous(list, &iter);
+    }
+    ABTS_PTR_EQUAL(tc, n, apr_skiplist_element(iter));
+    apr_skiplist_remove_node(list, iter, NULL);
+}
+
 static void skiplist_test(abts_case *tc, void *data) {
     int test_elems = 10;
     int i = 0, j = 0;
@@ -309,6 +372,7 @@ static void skiplist_test(abts_case *tc, void *data) {
     apr_skiplist * list = NULL;
     apr_skiplist * list2 = NULL;
     apr_skiplist * list3 = NULL;
+    apr_skiplist * list4 = NULL;
     int first_forty_two = 42,
         second_forty_two = 42;
     apr_array_header_t *array;
@@ -419,6 +483,39 @@ static void skiplist_test(abts_case *tc, void *data) {
         ABTS_TRUE(tc, apr_skiplist_remove(list3, e, NULL) != 0);
     }
 
+    ABTS_INT_EQUAL(tc, APR_SUCCESS, apr_skiplist_init(&list4, ptmp));
+    apr_skiplist_set_compare(list4, scomp, scomp);
+    for (i = 0; i < 5; ++i){
+        add_elem_to_skiplist(tc, list4, t1);
+    }
+    for (i = 0; i < 5; ++i){
+        add_elem_to_skiplist(tc, list4, t2);
+    }
+    apr_skiplist_add(list4, &t2);
+    for (i = 0; i < 5; ++i){
+        add_elem_to_skiplist(tc, list4, t2);
+    }
+    for (i = 0; i < 5; ++i){
+        add_elem_to_skiplist(tc, list4, t3);
+    }
+    apr_skiplist_add(list4, &t3);
+    for (i = 0; i < 5; ++i){
+        add_elem_to_skiplist(tc, list4, t3);
+    }
+    for (i = 0; i < 5; ++i){
+        add_elem_to_skiplist(tc, list4, t4);
+    }
+    apr_skiplist_add(list4, &t4);
+    for (i = 0; i < 5; ++i){
+        add_elem_to_skiplist(tc, list4, t4);
+    }
+    for (i = 0; i < 5; ++i){
+        add_elem_to_skiplist(tc, list4, t5);
+    }
+    skiplist_remove_scomp(tc, list4, &t2);
+    skiplist_remove_scomp(tc, list4, &t3);
+    skiplist_remove_scomp(tc, list4, &t4);
+
     apr_pool_clear(ptmp);
 }
 
@@ -434,6 +531,7 @@ abts_suite *testskiplist(abts_suite *suite)
     abts_run_test(suite, skiplist_dontfind, NULL);
     abts_run_test(suite, skiplist_insert, NULL);
     abts_run_test(suite, skiplist_add, NULL);
+    abts_run_test(suite, skiplist_replace, NULL);
     abts_run_test(suite, skiplist_destroy, NULL);
     abts_run_test(suite, skiplist_size, NULL);
     abts_run_test(suite, skiplist_remove, NULL);

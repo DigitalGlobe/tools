@@ -26,6 +26,7 @@
 
 #include "apr_general.h"
 #include "apr_strings.h"
+#include "apr_cstr.h"
 #include "apr_errno.h"
 
 /* I haven't bothered to check for APR_ENOTIMPL here, AFAIK, all string
@@ -306,9 +307,10 @@ static void overflow_strfsize(abts_case *tc, void *data)
     for (; off < 999999999; off += 999) {
         apr_strfsize(off, buf);
     }
-    for (off = 1; off < LONG_MAX && off > 0; off *= 2) {
+    for (off = LONG_MAX; off > 1; off /= 2) {
         apr_strfsize(off, buf);
-        apr_strfsize(off + 1, buf);
+        if (sizeof(apr_off_t) > sizeof(long) || off < LONG_MAX)
+            apr_strfsize(off + 1, buf);
         apr_strfsize(off - 1, buf);
     }
 
@@ -382,6 +384,30 @@ static void snprintf_overflow(abts_case *tc, void *data)
     ABTS_TRUE(tc, buf[2] == '4' && buf[3] == '2');
 }
 
+static void skip_prefix(abts_case *tc, void *data)
+{
+    ABTS_STR_EQUAL(tc, apr_cstr_skip_prefix("12345", "12345"), "");
+    ABTS_STR_EQUAL(tc, apr_cstr_skip_prefix("12345", "123"),   "45");
+    ABTS_STR_EQUAL(tc, apr_cstr_skip_prefix("12345", ""),      "12345");
+    ABTS_STR_EQUAL(tc, apr_cstr_skip_prefix("12345", "23"),    NULL);
+    ABTS_STR_EQUAL(tc, apr_cstr_skip_prefix("1",     "12"),    NULL);
+    ABTS_STR_EQUAL(tc, apr_cstr_skip_prefix("",      ""),      "");
+    ABTS_STR_EQUAL(tc, apr_cstr_skip_prefix("",      "12"),    NULL);
+}
+
+static void pstrcat(abts_case *tc, void *data)
+{
+    ABTS_STR_EQUAL(tc, apr_pstrcat(p, "a", "bc", "def", NULL),
+                   "abcdef");
+    ABTS_STR_EQUAL(tc, apr_pstrcat(p, NULL), "");
+    ABTS_STR_EQUAL(tc, apr_pstrcat(p,
+                                   "a", "b", "c", "d", "e",
+                                   "f", "g", "h", "i", "j",
+                                   "1", "2", "3", "4", "5",
+                                   NULL),
+                   "abcdefghij12345");
+}
+
 abts_suite *teststr(abts_suite *suite)
 {
     suite = ADD_SUITE(suite)
@@ -399,6 +425,8 @@ abts_suite *teststr(abts_suite *suite)
     abts_run_test(suite, string_strfsize, NULL);
     abts_run_test(suite, string_cpystrn, NULL);
     abts_run_test(suite, snprintf_overflow, NULL);
+    abts_run_test(suite, skip_prefix, NULL);
+    abts_run_test(suite, pstrcat, NULL);
 
     return suite;
 }
