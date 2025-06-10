@@ -18,7 +18,7 @@ class Program :
 
     #--------------------------------------------------------------------------
     # constants
-    
+
         #----------------------------------------------------------------------
         # the name of the build file to build APR
         _FILE_NAME_BUILD_APR = "build_apr.py"
@@ -182,41 +182,41 @@ class Program :
         # the name of the Python executable file
         _FILE_NAME_PYTHON = "python.exe"
         #----------------------------------------------------------------------
-        
+
     #--------------------------------------------------------------------------
     # constructors
-    
+
         #----------------------------------------------------------------------
         # Constructs this program.
         #
         # Parameters :
         #     self : this program
         def __init__(self) :
-        
+
             pass
         #----------------------------------------------------------------------
-        
+
     #--------------------------------------------------------------------------
     # public methods
-    
+
         #----------------------------------------------------------------------
         # The main method of the program.
         #
         # Parameters :
         #     self : this program
         def main(self) :
-        
+
             if ( len(sys.argv) > 1 ) :
-            
+
                 # build all configurations of the specified build file
                 self._build(sys.argv[1])
-            
+
             else :
                 # build libraries that do not depend on other libraries
                 #     (order does not matter)
                 if True:
-                    self._build(Program._FILE_NAME_BUILD_APR        )
-                    self._build(Program._FILE_NAME_BUILD_BISON      )
+                    # self._build(Program._FILE_NAME_BUILD_APR        )
+                    # self._build(Program._FILE_NAME_BUILD_BISON      )
                     self._build(Program._FILE_NAME_BUILD_BOOST      )
                     self._build(Program._FILE_NAME_BUILD_CPPUNIT    )
                     self._build(Program._FILE_NAME_BUILD_CRYPTO     )
@@ -272,10 +272,10 @@ class Program :
                 self._build(Program._FILE_NAME_BUILD_LIBLAS    )
                 self._build(Program._FILE_NAME_BUILD_OSG       )
         #----------------------------------------------------------------------
-        
+
     #--------------------------------------------------------------------------
     # private methods
-    
+
         #----------------------------------------------------------------------
         # Builds a library using a specified build file.
         #
@@ -284,9 +284,9 @@ class Program :
         #     buildFileName : the name of the build file to use
         def _build( self          , \
                     buildFileName ) :
-                    
+
             systemManager = SystemManager()
-        
+
             if "firebird" in buildFileName:
                 print("Skipping Firebird 32-bit debug build")
             else:
@@ -300,8 +300,8 @@ class Program :
                 if ret != 0:
                     print("Error building 32-bit debug")
                     sys.exit(-1)
-             
-            
+
+
             # build 32-bit release
             os.system( ( "%s \"%s\" \"%s\" \"%s\"" % \
                        ( Program._FILE_NAME_PYTHON                            , \
@@ -316,7 +316,7 @@ class Program :
             # build 64-bit debug
             if "firebird" in buildFileName:
                 print("Skipping Firebird 64-bit debug build")
-            else:            
+            else:
                 os.system( ( "%s \"%s\" \"%s\" \"%s\"" % \
                            ( Program._FILE_NAME_PYTHON                            , \
                              os.path.join( systemManager.getCurrentPathName() , \
@@ -339,9 +339,9 @@ class Program :
                 sys.exit(-1)
 
         #----------------------------------------------------------------------
-        
+
     #--------------------------------------------------------------------------
-    
+
 #------------------------------------------------------------------------------
 Program().main()
 #------------------------------------------------------------------------------
