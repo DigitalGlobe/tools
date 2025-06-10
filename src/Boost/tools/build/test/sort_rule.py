@@ -1,11 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright (C) 2008. Jurko Gospodnetic
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Tests for the Boost Jam builtin SORT rule.
+
+from __future__ import print_function
 
 import BoostBuild
 
@@ -63,19 +65,20 @@ def testSORTDuration():
         use_test_config=False)
 
     f = open(t.workpath("test.jam"), "w")
-    print >> f, "data = "
-    for i in range(0, 20000):
+    print("data = ", file=f)
+    # high value will cause stack exhaustion in compile_append_chain
+    for i in range(0, 10000):
         if i % 2:
-            print >> f, '"aaa"'
+            print('"aaa"', file=f)
         else:
-            print >> f, '"bbb"'
-    print >> f, """;
+            print('"bbb"', file=f)
+    print(""";
 
 ECHO "starting up" ;
 sorted = [ SORT $(data) ] ;
 ECHO "done" ;
 NOCARE all ;
-"""
+""", file=f)
     f.close()
 
     t.run_build_system(expected_duration=1)

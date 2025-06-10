@@ -1,4 +1,4 @@
-//  error_code_test.cpp  -----------------------------------------------------//
+//  header_only_test.cpp  -----------------------------------------------------//
 
 //  Copyright Beman Dawes 2007
 
@@ -16,8 +16,10 @@
 #include <boost/detail/lightweight_test.hpp>
 #include <boost/system/error_code.hpp>
 
-int main( int, char*[] )
+int main()
 {
-  boost::system::error_code ec( 0, boost::system::system_category() );
-  return ::boost::report_errors();
+    boost::system::error_code ec( 0, boost::system::system_category() );
+    (void)ec;
+
+    return ::boost::report_errors();
 }

@@ -1,10 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright (C) 2006. Vladimir Prus
 # Copyright (C) 2008. Jurko Gospodnetic
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Tests that we explicitly request a file (not target) to be built by
 # specifying its name on the command line.
@@ -37,7 +37,7 @@ exe sub : hello.cpp ;
 
     t.run_build_system(["sub", t.adjust_suffix("hello.obj")])
     t.expect_output_lines("*depends on itself*", False)
-    t.expect_addition("sub/bin/$toolset/debug/hello.obj")
+    t.expect_addition("sub/bin/$toolset/debug*/hello.obj")
     t.expect_nothing_more()
 
     t.cleanup()
@@ -63,7 +63,7 @@ exe hello3 : hello3.cpp ;
     t.write("hello3.cpp", "int main() {}\n")
 
     t.run_build_system(["hello1", t.adjust_suffix("hello1.obj")])
-    t.expect_addition("bin/$toolset/debug/hello1.obj")
+    t.expect_addition("bin/$toolset/debug*/hello1.obj")
     t.expect_nothing_more()
 
     t.cleanup()
@@ -117,8 +117,8 @@ exe hello3 : hello3.cpp ;
 
     t.run_build_system([t.adjust_suffix("hello1.obj"), t.adjust_suffix(
         "hello2.obj")])
-    t.expect_addition("bin/$toolset/debug/hello1.obj")
-    t.expect_addition("bin/$toolset/debug/hello2.obj")
+    t.expect_addition("bin/$toolset/debug*/hello1.obj")
+    t.expect_addition("bin/$toolset/debug*/hello2.obj")
     t.expect_nothing_more()
 
     t.cleanup()
@@ -149,8 +149,8 @@ exe sub : hello.cpp ;
 
     t.run_build_system([t.adjust_suffix("hello.obj")])
     t.expect_output_lines("*depends on itself*", False)
-    t.expect_addition("bin/$toolset/debug/hello.obj")
-    t.expect_addition("sub/bin/$toolset/debug/hello.obj")
+    t.expect_addition("bin/$toolset/debug*/hello.obj")
+    t.expect_addition("sub/bin/$toolset/debug*/hello.obj")
     t.expect_nothing_more()
 
     t.cleanup()

@@ -25,7 +25,7 @@ X(22)
 
 >>> try: result = apply_object_list(identity, 5)
 ... except TypeError: pass
-... else: print 'expected an exception, got', result, 'instead'
+... else: print('expected an exception, got', result, 'instead')
 
 >>> assert apply_list_list(identity, letters) is letters
 
@@ -33,24 +33,24 @@ X(22)
 
 >>> try: result = apply_list_list(len, letters)
 ... except TypeError: pass
-... else: print 'expected an exception, got', result, 'instead'
+... else: print('expected an exception, got', result, 'instead')
 
 >>> append_object(letters, '.')
 >>> letters
 ['h', 'e', 'l', 'l', 'o', '.']
 
   tuples do not automatically convert to lists when passed as arguments
-  
+
 >>> try: append_list(letters, (1,2))
 ... except TypeError: pass
-... else: print 'expected an exception'
+... else: print('expected an exception')
 
 >>> append_list(letters, [1,2])
 >>> letters
 ['h', 'e', 'l', 'l', 'o', '.', [1, 2]]
 
     Check that subclass functions are properly called
-    
+
 >>> class mylist(list):
 ...     def append(self, o):
 ...         list.append(self, o)
@@ -68,8 +68,8 @@ X(22)
 2
 
 >>> def printer(*args):
-...     for x in args: print x,
-...     print
+...     for x in args: print( x,)
+...     print('')
 ...
 
 >>> y = X(42)
@@ -102,6 +102,8 @@ reverse sorted:
 ['y', 'x', 'o', 'l', 'l', 'h', 'e', '.']
 '''
 
+from __future__ import print_function
+
 def run(args = None):
     import sys
     import doctest
@@ -109,10 +111,10 @@ def run(args = None):
     if args is not None:
         sys.argv = args
     return doctest.testmod(sys.modules.get(__name__))
-    
+
 if __name__ == '__main__':
-    print "running..."
+    print("running...")
     import sys
     status = run()[0]
-    if (status == 0): print "Done."
+    if (status == 0): print("Done.")
     sys.exit(status)

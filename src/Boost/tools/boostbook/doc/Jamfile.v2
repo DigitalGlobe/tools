@@ -7,7 +7,16 @@
 project boostbook/doc ;
 import boostbook : boostbook ;
 
+xml reference : reference.dtdxml : <location>. ;
+explicit reference ;
+
 boostbook boostbook : boostbook.xml :
     <xsl:param>boost.root=../../../..
+    <dependency>reference
     ;
 
+###############################################################################
+alias boostdoc ;
+explicit boostdoc ;
+alias boostrelease : boostbook ;
+explicit boostrelease ;

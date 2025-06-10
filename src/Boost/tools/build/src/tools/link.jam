@@ -1,6 +1,6 @@
 # Copyright 2012 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import os ;
 import targets ;
@@ -34,7 +34,7 @@ actions touch {
    $(TOUCH) "$(<)"
 }
 
-rule can-symlink ( project : ps )
+rule can-symlink ( project )
 {
     if ! $(.can-symlink)
     {
@@ -45,10 +45,10 @@ rule can-symlink ( project : ps )
         local target = [ new file-target test-symlink : :
             $(project) : [ new action $(source-target) : link.mklink ] ] ;
 
-        if [ configure.try-build $(target) : $(ps) : "symlinks supported" ]
+        if [ configure.try-build $(target) : [ property-set.empty ] : "symlinks supported" ]
         {
             .can-symlink = true ;
-        }       
+        }
         else
         {
             .can-symlink = false ;
@@ -64,7 +64,7 @@ if [ os.name ] = NT
 {
 
 # Test for Windows junctions (mklink /J)
-rule can-junction ( project : ps )
+rule can-junction ( project )
 {
     if ! $(.can-junction)
     {
@@ -75,10 +75,10 @@ rule can-junction ( project : ps )
         local target = [ new file-target test-junction : :
             $(project) : [ new action $(source-target) : link.junction ] ] ;
 
-        if [ configure.try-build $(target) : $(ps) : "junctions supported" ]
+        if [ configure.try-build $(target) : [ property-set.empty ] : "junctions supported" ]
         {
             .can-junction = true ;
-        }       
+        }
         else
         {
             .can-junction = false ;
@@ -96,13 +96,13 @@ else
 
 .can-junction = false ;
 
-rule can-junction ( project : ps )
+rule can-junction ( project )
 {
 }
 
 }
 
-rule can-hardlink ( project : ps )
+rule can-hardlink ( project )
 {
     if ! $(.can-hardlink)
     {
@@ -119,10 +119,10 @@ rule can-hardlink ( project : ps )
             : [ new property-set <location-prefix>symlink ]
             ] ] ;
 
-        if [ configure.try-build $(target) : $(ps) : "hardlinks supported" ]
+        if [ configure.try-build $(target) : [ property-set.empty ] : "hardlinks supported" ]
         {
             .can-hardlink = true ;
-        }       
+        }
         else
         {
             .can-hardlink = false ;
@@ -192,10 +192,10 @@ class symlink-target-class : basic-target
 
         # If we have symlinks, don't bother checking
         # for hardlinks and junctions.
-        if ! [ link.can-symlink $(self.project) : $(property-set) ]
+        if ! [ link.can-symlink $(self.project) ]
         {
-            link.can-junction $(self.project) : $(property-set) ;
-            link.can-hardlink $(self.project) : $(property-set) ;
+            link.can-junction $(self.project) ;
+            link.can-hardlink $(self.project) ;
         }
 
         if [ $(property-set).get <location> ]
@@ -216,10 +216,10 @@ class symlink-target-class : basic-target
 
             property-set = [ property-set.create <location>$(path) ] ;
         }
-        
+
         local a = [ new non-scanning-action $(source-target) :
             link.do-link-recursively : $(property-set) ] ;
-        
+
         local t = [ new notfile-target $(name)
             : $(self.project) : $(a) ] ;
 
@@ -229,8 +229,8 @@ class symlink-target-class : basic-target
 
 rule do-file-link
 {
-    local target = [ path.native [ path.relative-to [ path.pwd ] $(<) ] ] ;
-    local source = [ path.native [ path.relative-to [ path.pwd ] $(>) ] ] ;
+    local target = [ path.relative-to [ path.pwd ] $(<) ] ;
+    local source = [ path.relative-to [ path.pwd ] $(>) ] ;
     local old-source = [ on $(target) return $(LINK-SOURCE) ] ;
     if $(old-source)
     {
@@ -240,6 +240,8 @@ rule do-file-link
             Link previously defined to another file, $(old-source[1]). ;
     }
     LINK-SOURCE on $(target) = $(source) $(.current-target) ;
+    target = [ path.native $(target) ] ;
+    source = [ path.native $(source) ] ;
     LOCATE on $(target) = . ;
     DEPENDS $(.current-target) : $(target) ;
     if $(.can-symlink) = true

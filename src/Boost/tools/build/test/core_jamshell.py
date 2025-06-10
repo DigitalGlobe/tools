@@ -1,13 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2014 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import BoostBuild
 import sys
 
-t = BoostBuild.Tester(pass_toolset=False, pass_d0=False)
+t = BoostBuild.Tester(pass_toolset=False)
 
 t.write("file.jam", """
 actions run {
@@ -37,7 +37,8 @@ else
     JAMSHELL on test-py = $(PYTHON) -c ;
 }
 ACTION on test-py = "
-print \\\",\\\".join([str(x) for x in range(3)])
+from __future__ import print_function
+print(\\\",\\\".join([str(x) for x in range(3)]))
 " ;
 run test-py ;
 
@@ -48,7 +49,10 @@ t.run_build_system(["-ffile.jam", "-d1", "-sPYTHON=" + sys.executable], status=1
 t.expect_output_lines([
     "...failed run test-raw-fail...",
     "0,1,2",
+    "",
+    "...updated 2 targets...",
+    "",
     "...failed updating 1 target...",
-    "...updated 2 targets..."])
+    "   run test-raw-fail"])
 
 t.cleanup()

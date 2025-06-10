@@ -1,10 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2003 Dave Abrahams
 # Copyright 2002, 2003, 2004 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Test conditional properties.
 
@@ -23,7 +23,7 @@ int main() {}
 # Test conditionals in target requirements.
 t.write("jamroot.jam", "exe a : a.cpp : <link>static:<define>STATIC ;")
 t.run_build_system(["link=static"])
-t.expect_addition("bin/$toolset/debug/link-static/a.exe")
+t.expect_addition("bin/$toolset/debug*/a.exe")
 t.rm("bin")
 
 # Test conditionals in project requirements.
@@ -32,7 +32,7 @@ project : requirements <link>static:<define>STATIC ;
 exe a : a.cpp ;
 """)
 t.run_build_system(["link=static"])
-t.expect_addition("bin/$toolset/debug/link-static/a.exe")
+t.expect_addition("bin/$toolset/debug*/a.exe")
 t.rm("bin")
 
 # Regression test for a bug found by Ali Azarbayejani. Conditionals inside
@@ -43,6 +43,6 @@ exe a : a.cpp l ;
 """)
 t.write("l.cpp", "int i;")
 t.run_build_system(["link=static"])
-t.expect_addition("bin/$toolset/debug/link-static/a.exe")
+t.expect_addition("bin/$toolset/debug*/a.exe")
 
 t.cleanup()

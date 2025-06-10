@@ -1,15 +1,25 @@
 /*
+ *  Copyright 2022 René Ferdinand Rivera Morell
  *  Copyright 2001-2004 David Abrahams.
+ *  Copyright 2019 Rene Rivera.
  *  Distributed under the Boost Software License, Version 1.0.
- *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+ *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 #ifndef MODULES_DWA10182001_H
 #define MODULES_DWA10182001_H
 
+#include "config.h"
+#include "bind.h"
 #include "lists.h"
 #include "object.h"
 
+#include <string>
+#include <vector>
+
 typedef struct module_t module_t ;
+
+typedef module_t * module_ptr;
+
 struct module_t
 {
     OBJECT * name;
@@ -46,6 +56,8 @@ void module_set_fixed_variables( module_t *, int n );
  * Returns the index of the variable or -1 if none exists.
  */
 int module_get_fixed_var( module_t *, OBJECT * name );
+
+LIST * module_rules( module_t * m = nullptr);
 
 void modules_done();
 

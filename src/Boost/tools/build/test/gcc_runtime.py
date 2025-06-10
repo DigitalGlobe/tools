@@ -1,9 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2004 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Tests that on gcc, we correctly report a problem when static runtime is
 # requested for building a shared library.
@@ -20,9 +20,8 @@ t.expect_output_lines("warning: On gcc, DLLs can not be built with "
 t.expect_nothing_more()
 
 t.run_build_system(["link=static", "runtime-link=static"])
-binFolder = "bin/$toolset/debug/link-static/runtime-link-static"
-t.expect_addition("%s/hello.obj" % binFolder)
-t.expect_addition("%s/hello.lib" % binFolder)
+t.expect_addition("bin/$toolset/debug*/link-static*/hello.obj")
+t.expect_addition("bin/$toolset/debug*/link-static*/hello.lib")
 t.expect_nothing_more()
 
 t.cleanup()

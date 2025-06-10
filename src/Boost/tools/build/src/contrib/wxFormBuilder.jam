@@ -3,8 +3,8 @@
 # Copyright (c) 2007-2008 Dario Senic, Jurko Gospodnetic.
 #
 # Use, modification and distribution is subject to the Boost Software
-# License Version 1.0. (See accompanying file LICENSE_1_0.txt or
-# http://www.boost.org/LICENSE_1_0.txt)
+# License Version 1.0. (See accompanying file LICENSE.txt or
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 #
 ################################################################################
 
@@ -74,7 +74,7 @@ import type       ;
 #   wxFormBuilder generated CPP and H files need to be moved to the location
 # where the Boost Build target system expects them so that the generated CPP
 # file can be included into the compile process and that the clean rule
-# succesfully deletes both CPP and H files. We expect wxFormBuilder to generate
+# successfully deletes both CPP and H files. We expect wxFormBuilder to generate
 # files in the same location where the provided WX_FORM_BUILDER_PROJECT file is
 # located.
 #                                                    (15.05.2007.) (Dario)

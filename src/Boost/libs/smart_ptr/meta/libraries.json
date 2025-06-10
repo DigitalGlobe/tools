@@ -9,7 +9,6 @@
         "Glen Fernandes"
     ],
     "description": "Smart pointer class templates.",
-    "documentation": "smart_ptr.htm",
     "std": [
         "tr1"
     ],
@@ -17,6 +16,7 @@
         "Memory"
     ],
     "maintainers": [
-        "Peter Dimov <pdimov -at- pdimov.com>"
-    ]
+        "Peter Dimov <pdimov -at- gmail.com>"
+    ],
+    "cxxstd": "11"
 }

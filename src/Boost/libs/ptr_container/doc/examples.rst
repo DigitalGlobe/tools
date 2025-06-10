@@ -110,9 +110,9 @@ Some examples are given here and in the accompanying test files:
         
         // ... fill the container somehow
         
-        auto_type ptr  = deq.release_back();             // remove back element from container and give up ownership
+        auto_type ptr  = deq.pop_back();                 // remove back element from container and give up ownership
         auto_type ptr2 = deq.release( deq.begin() + 2 ); // use an iterator to determine the element to release
-        ptr            = deq.release_front();            // supported for 'ptr_list' and 'ptr_deque'
+        ptr            = deq.pop_front();                // supported for 'ptr_list' and 'ptr_deque'
                                         
         deq.push_back( ptr.release() );                  // give ownership back to the container
         
@@ -180,7 +180,7 @@ The source code can also be found `here <../test/tut1.cpp>`_.
 
 .. raw:: html 
 
-        <hr>
+        <hr/>
 
 **Navigate:**
 
@@ -189,7 +189,7 @@ The source code can also be found `here <../test/tut1.cpp>`_.
 
 .. raw:: html 
 
-        <hr>
+        <hr/>
 
 :Copyright:     Thorsten Ottosen 2004-2006. Use, modification and distribution is subject to the Boost Software License, Version 1.0 (see LICENSE_1_0.txt__).
 

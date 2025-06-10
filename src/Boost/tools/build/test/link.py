@@ -1,13 +1,15 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2014-2015 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Tests the link-directory rule used to create the
 # common boost/ directory in the new git layout.
 
 import BoostBuild
+import os
+from unittest.mock import patch
 
 def ignore_config(t):
     """These files are created by the configuration logic in link.jam
@@ -85,13 +87,21 @@ def test_merge_existing(group1, group2):
     if "dir1-link" in group2:
         if "dir1-link" not in group1:
             t.expect_addition("include/file1.h")
+        else:
+            # When a directory is split the link needs to be recreated.
+            # On Windows, the test system checks the mod time of the
+            # link rather than the link target, so this may be seen as
+            # an update.
+            t.ignore_touch("include/file1.h")
         t.expect_content("include/file1.h", "file1")
     else:
         t.ignore_removal("include/file1.h")
-        
+
     if "dir2-link" in group2:
         if "dir2-link" not in group1:
             t.expect_addition("include/file2.h")
+        else:
+            t.ignore_touch("include/file2.h")
         t.expect_content("include/file2.h", "file2")
     else:
         t.ignore_removal("include/file2.h")
@@ -157,11 +167,18 @@ def test_merge_recursive_existing(group1, group2):
     t.run_build_system(group1)
     t.run_build_system(group2 + ["-d+12"])
 
-    t.ignore_addition("include/file1.h")
-    t.ignore_addition("include/nested/file2.h")
-    t.ignore_addition("include/nested/file3.h")
-    t.ignore_addition("include/nested/xxx/yyy/file4.h")
-    t.ignore_addition("include/nested/xxx/yyy/file5.h")
+    def check_file(target, file):
+        if target in group2:
+            if target in group1:
+                t.ignore_touch(file)
+            else:
+                t.expect_addition(file)
+
+    check_file("dir1-link", "include/file1.h")
+    check_file("dir2-link", "include/nested/file2.h")
+    check_file("dir3-link", "include/nested/file3.h")
+    check_file("dir4-link", "include/nested/xxx/yyy/file4.h")
+    check_file("dir5-link", "include/nested/xxx/yyy/file5.h")
     ignore_config(t)
     t.expect_nothing_more()
 
@@ -200,7 +217,7 @@ def test_include_scan():
 
     t.run_build_system(["test"])
 
-    t.expect_addition("bin/$toolset/debug/test.obj")
+    t.expect_addition("bin/$toolset/debug*/test.obj")
 
     t.run_build_system()
     t.expect_nothing_more()
@@ -233,7 +250,8 @@ def test_include_scan_merge_existing():
 
     t.run_build_system(["test"])
     t.expect_addition("include/file1.h")
-    t.expect_addition("bin/$toolset/debug/test.obj")
+    t.expect_addition("bin/$toolset/debug*/test.obj")
+    t.ignore_touch("include/file2.h")
     t.expect_nothing_more()
 
     t.cleanup()
@@ -261,10 +279,10 @@ def test_update_file_link(params1, params2):
 
     .project = [ project.current ] ;
     .has-files = [ glob include/file1.h ] ;
-    
+
     rule can-link ( properties * ) {
-        if ( ! [ link.can-symlink $(.project) : [ property-set.empty ] ] ) &&
-           ( ! [ link.can-hardlink $(.project) : [ property-set.empty ] ] )
+        if ( ! [ link.can-symlink $(.project) ] ) &&
+           ( ! [ link.can-hardlink $(.project) ] )
         {
             ECHO links unsupported ;
         }
@@ -323,12 +341,14 @@ def test_error_duplicate():
 
     t.cleanup()
 
-test_basic()
-test_merge_two()
-test_merge_existing_all()
-test_merge_recursive()
-test_merge_recursive_existing_all()
-test_include_scan()
-test_include_scan_merge_existing()
-test_update_file_link_all()
-test_error_duplicate()
+
+with patch.dict(os.environ, {var: "winsymlinks:nativestrict" for var in ["MSYS", "CYGWIN"]}):
+    test_basic()
+    test_merge_two()
+    test_merge_existing_all()
+    test_merge_recursive()
+    test_merge_recursive_existing_all()
+    test_include_scan()
+    test_include_scan_merge_existing()
+    test_update_file_link_all()
+    test_error_duplicate()

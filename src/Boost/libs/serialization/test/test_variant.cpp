@@ -2,9 +2,13 @@
 // test_variant.cpp
 // test of non-intrusive serialization of variant types
 //
-// copyright (c) 2005   
+// copyright (c) 2005
 // troy d. straszheim <troy@resophonic.com>
 // http://www.resophonic.com
+//
+// copyright (c) 2023
+// Robert Ramey <ramey@rrsd.com>
+// http://www.rrsd.com
 //
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
@@ -18,10 +22,14 @@
 #include <cstddef> // NULL
 #include <cstdio> // remove
 #include <fstream>
+
 #include <boost/config.hpp>
+#if BOOST_CXX_VERSION > 199711L // only include floating point if C++ version >= C++11
 #include <boost/math/special_functions/next.hpp>
+#endif
+
 #if defined(BOOST_NO_STDC_NAMESPACE)
-namespace std{ 
+namespace std {
     using ::remove;
 }
 #endif
@@ -29,7 +37,6 @@ namespace std{
 #include <boost/type_traits/is_same.hpp>
 #include <boost/mpl/eval_if.hpp>
 #include <boost/mpl/identity.hpp>
-#include <boost/serialization/throw_exception.hpp>
 
 #if defined(_MSC_VER) && (_MSC_VER <= 1020)
 #  pragma warning (disable : 4786) // too long name, harmless warning
@@ -38,9 +45,14 @@ namespace std{
 #include "test_tools.hpp"
 
 #include <boost/archive/archive_exception.hpp>
-
 #include <boost/serialization/nvp.hpp>
-#include <boost/serialization/variant.hpp>
+#include <boost/serialization/throw_exception.hpp>
+
+#include <boost/variant/static_visitor.hpp>
+
+namespace boost {
+    template<typename ResultType> class static_visitor;
+}
 
 #include "A.hpp"
 #include "A.ipp"
@@ -49,8 +61,9 @@ class are_equal
     : public boost::static_visitor<bool>
 {
 public:
-    // note extra rigamorole for compilers which don't support
-    // partial function template ordering - specfically msvc 6.x
+    typedef bool result_type;
+    // note extra rigamarole for compilers which don't support
+    // partial function template ordering - specifically msvc 6.x
     struct same {
         template<class T, class U>
         static bool invoke(const T & t, const U & u){
@@ -66,7 +79,7 @@ public:
     };
 
     template <class T, class U>
-    bool operator()( const T & t, const U & u) const 
+    bool operator()( const T & t, const U & u) const
     {
         typedef typename boost::mpl::eval_if<boost::is_same<T, U>,
             boost::mpl::identity<same>,
@@ -75,95 +88,112 @@ public:
         return type::invoke(t, u);
     }
 
+    template <class T, class U>
+    bool operator()(T * const & t,  U * const & u) const
+    {
+        return this->operator()(*t, *u);
+    }
+
     bool operator()( const float & lhs, const float & rhs ) const
     {
-        return std::abs( boost::math::float_distance(lhs, rhs)) < 2;
+        #if BOOST_CXX_VERSION > 199711L // only include floating point if C++ version >= C++11
+        return std::abs( boost::math::float_distance(lhs, rhs) ) < 2;
+        #else
+        return true;
+        #endif
     }
     bool operator()( const double & lhs, const double & rhs ) const
     {
-        return std::abs( boost::math::float_distance(lhs, rhs)) < 2;
+        #if BOOST_CXX_VERSION > 199711L // only include floating point if C++ version >= C++11
+        return std::abs( boost::math::float_distance(lhs, rhs) ) < 2;
+        #else
+        return true;
+        #endif
     }
 };
 
-template <class T>
-void test_type(const T& gets_written){
-   const char * testfile = boost::archive::tmpnam(NULL);
-   BOOST_REQUIRE(testfile != NULL);
-   {
-      test_ostream os(testfile, TEST_STREAM_FLAGS);
-      test_oarchive oa(os, TEST_ARCHIVE_FLAGS);
-      oa << boost::serialization::make_nvp("written", gets_written);
-   }
+template<class Variant>
+bool test_type(const Variant & v){
+    const char * testfile = boost::archive::tmpnam(NULL);
+    BOOST_REQUIRE(testfile != NULL);
+    {
+        test_ostream os(testfile, TEST_STREAM_FLAGS);
+        test_oarchive oa(os, TEST_ARCHIVE_FLAGS);
+        oa << boost::serialization::make_nvp("written", v);
+    }
 
-   T got_read;
-   {
-      test_istream is(testfile, TEST_STREAM_FLAGS);
-      test_iarchive ia(is, TEST_ARCHIVE_FLAGS);
-      ia >> boost::serialization::make_nvp("written", got_read);
-   }
-   BOOST_CHECK(boost::apply_visitor(are_equal(), gets_written, got_read));
-
-   std::remove(testfile);
+    Variant vx;
+    {
+        test_istream is(testfile, TEST_STREAM_FLAGS);
+        test_iarchive ia(is, TEST_ARCHIVE_FLAGS);
+        BOOST_TRY {
+            ia >> boost::serialization::make_nvp("written", vx);
+            BOOST_CHECK(visit(are_equal(), v, vx));
+        }
+        BOOST_CATCH(boost::archive::archive_exception const& e) {
+            return false;
+        }
+        BOOST_CATCH_END
+    }
+    std::remove(testfile);
+    return true;
 }
 
-// this verifies that if you try to read in a variant from a file
-// whose "which" is illegal for the one in memory (that is, you're
-// reading in to a different variant than you wrote out to) the load()
-// operation will throw.  One could concievably add checking for
-// sequence length as well, but this would add size to the archive for
-// dubious benefit.
-//
-void do_bad_read()
+template<class Variant>
+void test(Variant & v)
 {
-    // Compiling this test invokes and ICE on msvc 6
-    // So, we'll just to skip it for this compiler
-    #if defined(_MSC_VER) && (_MSC_VER <= 1020)
-        boost::variant<bool, float, int, std::string> big_variant;
-        big_variant = std::string("adrenochrome");
+    // uninitialized
+    test_type(v);
+    v = false;
+    test_type(v);
+    v = 1;
+    test_type(v);
+    v = (float) 2.3;
+    test_type(v);
+    v = (double) 6.4;
+    test_type(v);
+    v = A();
+    test_type(v);
+    v = std::string("we can't stop here, this is Bat Country");
+    test_type(v);
+}
 
-        const char * testfile = boost::archive::tmpnam(NULL);
-        BOOST_REQUIRE(testfile != NULL);
-        {
-            test_ostream os(testfile, TEST_STREAM_FLAGS);
-            test_oarchive oa(os, TEST_ARCHIVE_FLAGS);
-            oa << BOOST_SERIALIZATION_NVP(big_variant);
-        }
-        boost::variant<bool, float, int> little_variant;
-        {
-            test_istream is(testfile, TEST_STREAM_FLAGS);
-            test_iarchive ia(is, TEST_ARCHIVE_FLAGS);
-            bool exception_invoked = false;
-            BOOST_TRY {
-                ia >> BOOST_SERIALIZATION_NVP(little_variant);
-            } BOOST_CATCH (boost::archive::archive_exception e) {
-                BOOST_CHECK(boost::archive::archive_exception::unsupported_version == e.code);
-                exception_invoked = true;
-            }
-            BOOST_CATCH_END
-            BOOST_CHECK(exception_invoked);
-        }
+#include <boost/serialization/variant.hpp>
+
+int test_main( int /* argc */, char* /* argv */[] ){
+
+    // boost::variant - compatible with C++03
+    {
+        boost::variant<bool, int, float, double, A, std::string> v;
+        test(v);
+        const A a;
+        boost::variant<bool, int, float, double, const A *, std::string> v1 = & a;
+        test_type(v1);
+    }
+
+    // boost::variant2/variant requires C++ 11
+    #if BOOST_CXX_VERSION >= 201103L
+    {
+        boost::variant2::variant<bool, int, float, double, A, std::string> v;
+        test(v);
+        const A a;
+        boost::variant2::variant<bool, int, float, double, const A *, std::string> v1 = & a;
+        test_type(v1);
+    }
     #endif
-}
 
-int test_main( int /* argc */, char* /* argv */[] )
-{
-   {
-      boost::variant<bool, int, float, double, A, std::string> v;
-      v = false;
-      test_type(v);
-      v = 1;
-      test_type(v);
-      v = (float) 2.3;
-      test_type(v);
-      v = (double) 6.4;
-      test_type(v);
-      v = std::string("we can't stop here, this is Bat Country");
-      test_type(v);
-      v = A();
-      test_type(v);
-   }
-   do_bad_read();
-   return EXIT_SUCCESS;
+    // std::variant reqires C++ 17 or more
+    #ifndef BOOST_NO_CXX17_HDR_VARIANT
+    {
+        std::variant<bool, int, float, double, A, std::string> v;
+        test(v);
+        const A a;
+        std::variant<bool, int, float, double, const A *, std::string> v1 = & a;
+        test_type(v1);
+    }
+    #endif
+
+    return EXIT_SUCCESS;
 }
 
 // EOF

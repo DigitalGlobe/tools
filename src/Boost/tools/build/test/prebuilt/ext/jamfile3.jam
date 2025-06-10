@@ -3,44 +3,23 @@
 # it tries to access prebuilt targets using absolute
 # paths. It used to be broken on Windows.
 
-import os ;
-
-local dll-suffix = so ;
-local prefix = "" ;
-if [ os.name ] in CYGWIN NT
-{
-   if [ MATCH ^(gcc) : $toolset ]
-   {
-      dll-suffix = dll ;
-   }
-   else
-   {
-      dll-suffix = lib ;
-   }
-}
-else
-{
-   prefix = "lib" ;      
-}
-if [ MATCH ^(clang-)?(darwin) : $toolset ]
-{
-   dll-suffix = dylib ;
-}
+import modules ;
+LIBNAME = [ modules.peek : LIBNAME ] ;
 
 project ext ;
 
 # Assumed bjam was invoked from the project root
 local pwd = [ PWD ] ;
 
-lib a : 
-    : <file>$(pwd)/ext/debug/$(prefix)a.$(dll-suffix) <variant>debug
+lib a :
+    : <file>$(pwd)/ext/debug/$(LIBNAME:E=LIBNAME-not-defined) <variant>debug
     :
     : <include>debug
     ;
-    
+
 lib a :
-    : <file>$(pwd)/ext/release/$(prefix)a.$(dll-suffix) <variant>release
+    : <file>$(pwd)/ext/release/$(LIBNAME:E=LIBNAME-not-defined) <variant>release
     :
     : <include>release
     ;
-    
+

@@ -1,7 +1,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // test_array.cpp
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -16,7 +16,7 @@
 #include <algorithm> // equal
 #include <cstdio> // remove
 #if defined(BOOST_NO_STDC_NAMESPACE)
-namespace std{ 
+namespace std{
     using ::remove;
 }
 #endif
@@ -58,7 +58,7 @@ int test_std_array(){
             BOOST_TRY {
                 ia >> boost::serialization::make_nvp("a_array", a_array1);
             }
-            BOOST_CATCH (boost::archive::archive_exception ae){
+            BOOST_CATCH (boost::archive::archive_exception const& ae){
                 BOOST_CHECK(
                     boost::archive::archive_exception::array_size_too_short
                     == ae.code
@@ -85,7 +85,7 @@ int test_main( int /* argc */, char* /* argv */[] ){
     res = test_std_array<int>();
     if (res != EXIT_SUCCESS)
         return EXIT_FAILURE;
-    
+
     return EXIT_SUCCESS;
 }
 

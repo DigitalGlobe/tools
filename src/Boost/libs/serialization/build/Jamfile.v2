@@ -12,6 +12,8 @@ project boost/serialization
       <conditional>@include-spirit
 ;
 
+import ../../config/checks/config : requires ;
+
 SPIRIT_ROOT = [ modules.peek : SPIRIT_ROOT ] ;
 rule include-spirit ( properties * )
 {
@@ -53,6 +55,7 @@ rule include-spirit ( properties * )
 }
 
 SOURCES = 
+    archive_exception
     basic_archive
     basic_iarchive
     basic_iserializer
@@ -74,32 +77,46 @@ SOURCES =
     stl_port
     text_iarchive
     text_oarchive
+    polymorphic_text_iarchive
+    polymorphic_text_oarchive
+    polymorphic_binary_iarchive
+    polymorphic_binary_oarchive
+    polymorphic_xml_iarchive
+    polymorphic_xml_oarchive
     void_cast
-    archive_exception
     xml_grammar
     xml_iarchive
-    xml_oarchive
     xml_archive_exception
     codecvt_null
+ ;
+
+SOURCES_HAS_STD_WSTREAMBUF = 
+    xml_oarchive
     utf8_codecvt_facet
-    singleton
 ;
-    
+
 WSOURCES = 
     basic_text_wiprimitive
     basic_text_woprimitive
     text_wiarchive
     text_woarchive
+    polymorphic_text_wiarchive
+    polymorphic_text_woarchive
     xml_wgrammar
     xml_wiarchive
     xml_woarchive
+    polymorphic_xml_wiarchive
+    polymorphic_xml_woarchive
 ;
 
 lib boost_serialization 
-    : $(SOURCES).cpp
-    : 
+    : ## sources ##
+     $(SOURCES).cpp
+    : ## requirements ##
+    [ check-target-builds ../../config/checks//std_wstreambuf : <source>../src/$(SOURCES_HAS_STD_WSTREAMBUF).cpp ]
     <toolset>msvc:<cxxflags>/Gy
     <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
+    <toolset>msvc:<define>_CRT_SECURE_NO_WARNINGS
     <toolset>clang:<cxxflags>"-fvisibility=hidden -fvisibility-inlines-hidden"
     <toolset>gcc:<cxxflags>"-fvisibility=hidden -fvisibility-inlines-hidden"
     <toolset>darwin:<cxxflags>"-fvisibility=hidden -fvisibility-inlines-hidden"
@@ -111,15 +128,19 @@ lib boost_serialization
 
 lib boost_wserialization 
     : $(WSOURCES).cpp boost_serialization 
-    :     
+    : 
+    [ requires std_wstreambuf ]
     <toolset>msvc:<cxxflags>/Gy 
     <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
+    <toolset>msvc:<define>_CRT_SECURE_NO_WARNINGS
     <toolset>clang:<cxxflags>"-fvisibility=hidden -fvisibility-inlines-hidden"
     <toolset>gcc:<cxxflags>"-fvisibility=hidden -fvisibility-inlines-hidden"
     <toolset>darwin:<cxxflags>"-fvisibility=hidden -fvisibility-inlines-hidden"
     <toolset>gcc:<cxxflags>"-ftemplate-depth-255"
     <toolset>clang:<cxxflags>"-ftemplate-depth-255"
     <toolset>darwin:<cxxflags>"-ftemplate-depth-255"
+    # note: both serialization and wserialization are conditioned on the this
+    # switch - don't change it to BOOST_WSERIALIZATION_DYN_LINK
     <link>shared:<define>BOOST_SERIALIZATION_DYN_LINK=1
     ;
 

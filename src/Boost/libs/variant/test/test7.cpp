@@ -16,7 +16,7 @@
 #pragma warning(disable:4244) // conversion from 'const int' to 'const short'
 #endif
 
-#include "boost/test/minimal.hpp"
+#include "boost/core/lightweight_test.hpp"
 #include "boost/variant.hpp"
 
 #include "jobs.h"
@@ -69,8 +69,8 @@ struct Tracker
    static void remove(const jas& j)
    {
       iterator_type iter = s_this_to_sn_.find(&j);
-      BOOST_CHECK(iter != s_this_to_sn_.end());
-      BOOST_CHECK( ((*iter).second) == j.sn_);
+      BOOST_TEST(iter != s_this_to_sn_.end());
+      BOOST_TEST( ((*iter).second) == j.sn_);
 
       int sn = (*iter).second;
       if(sn != j.sn_)
@@ -79,7 +79,7 @@ struct Tracker
             << ", other: this = " << &j << ", j.sn_ = " << j.sn_ << endl;
       }
 
-      BOOST_CHECK(sn == j.sn_);
+      BOOST_TEST(sn == j.sn_);
 
    
 
@@ -91,7 +91,7 @@ struct Tracker
 
    static void check()
    {
-      BOOST_CHECK(s_this_to_sn_.empty());      
+      BOOST_TEST(s_this_to_sn_.empty());      
    }
 };
 
@@ -214,13 +214,13 @@ void var_compare(const VariantType& v, ExpectedType expected)
    compare_helper<ExpectedType> ch(expected);
 
    bool checks = boost::apply_visitor(ch, v);
-   BOOST_CHECK(checks);
+   BOOST_TEST(checks);
 }
 
 
 void run()
 {   
-   variant<string, short> v0;
+   boost::variant<string, short> v0;
 
    var_compare(v0, string(""));
 
@@ -230,7 +230,7 @@ void run()
    v0 = "penny lane";
    var_compare(v0, string("penny lane"));
 
-   variant<jas, string, int> v1, v2 = jas(195);
+   boost::variant<jas, string, int> v1, v2 = jas(195);
    var_compare(v1, jas(364));
 
    v1 = jas(500);
@@ -240,16 +240,16 @@ void run()
    var_compare(v2, jas(500));
 
 
-   variant<string, int> v3;
+   boost::variant<string, int> v3;
    var_compare(v3, string(""));
 }
 
 
-int test_main(int , char* [])
+int main()
 {
    run();
    Tracker::check();
 
-   return 0;
+   return boost::report_errors();
 }
 

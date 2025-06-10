@@ -12,6 +12,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
 #include <boost/thread/thread.hpp>
+#include <boost/config.hpp>
 
 #ifndef DEFAULT_EXECUTION_MONITOR_TYPE
 #   define DEFAULT_EXECUTION_MONITOR_TYPE execution_monitor::use_condition
@@ -93,17 +94,28 @@ public:
     bool wait()
     {
         boost::xtime xt = delay(secs);
-        if (type != use_condition)
+        if (type == use_sleep_only) {
             boost::thread::sleep(xt);
-        if (type != use_sleep_only) {
+            return done;
+        }
+        if (type == use_condition) {
             boost::unique_lock<boost::mutex> lock(mutex);
-            while (type == use_condition && !done) {
+            while (!done) {
                 if (!cond.timed_wait(lock, xt))
                     break;
             }
             return done;
         }
-        return done;
+        for (int i = 0; ; ++i) {
+            {
+                boost::unique_lock<boost::mutex> lock(mutex);
+                if (done)
+                    return true;
+                else if (i > secs * 2)
+                    return done;
+            }
+            boost::thread::sleep(delay(0, 500));
+        }
     }
 
 private:
@@ -122,6 +134,10 @@ class indirect_adapter
 public:
     indirect_adapter(F func, execution_monitor& monitor)
         : func(func), monitor(monitor) { }
+#if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
+    indirect_adapter(indirect_adapter const&) = default;
+#endif
+
     void operator()() const
     {
         try
@@ -199,11 +215,15 @@ class thread_member_binder
 public:
     thread_member_binder(R (T::*func)(), T& param)
         : func(func), param(param) { }
+#if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
+    thread_member_binder(thread_member_binder const&) = default;
+#endif
+
     void operator()() const { (param.*func)(); }
 
 private:
     void operator=(thread_member_binder&);
-    
+
     R (T::*func)();
     T& param;
 };

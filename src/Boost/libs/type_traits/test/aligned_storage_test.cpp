@@ -4,8 +4,6 @@
 //  Boost Software License, Version 1.0. (See accompanying file 
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include "test.hpp"
-#include "check_integral_constant.hpp"
 #ifdef TEST_STD
 #  include <type_traits>
 #  include <boost/type_traits/type_with_alignment.hpp> // max_align and long_long_type
@@ -14,6 +12,8 @@
 #  include <boost/type_traits/aligned_storage.hpp>
 #  include <boost/type_traits/is_pod.hpp>
 #endif
+#include "test.hpp"
+#include "check_integral_constant.hpp"
 
 template <class T>
 union must_be_pod
@@ -32,11 +32,12 @@ inline void no_unused_warning(const volatile T&)
 #endif
 
 template <class T>
-void do_check(const T&)
+BOOST_TT_PROC void do_check(const T&)
 {
    typedef typename tt::aligned_storage<T::value,T::value>::type t1;
    t1 as1 = { 0, };
    must_be_pod<t1> pod1;
+#ifndef TEST_CUDA_DEVICE
    no_unused_warning(as1);
    no_unused_warning(pod1);
    BOOST_TEST_MESSAGE(typeid(t1).name());
@@ -73,6 +74,7 @@ void do_check(const T&)
    BOOST_CHECK(as3.address() == &as3);
    const t3 as4 = { 0, };
    BOOST_CHECK(as4.address() == static_cast<const void*>(&as4));
+#endif
 #endif
 }
 

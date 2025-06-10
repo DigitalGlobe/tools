@@ -3,11 +3,11 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/detail/lightweight_test.hpp>
-#include <boost/config/warning_disable.hpp>
-
-#include <boost/phoenix.hpp>
 #include <boost/spirit/include/lex_lexertl.hpp>
+
+#include <boost/core/lightweight_test.hpp>
+#include <boost/phoenix/core.hpp>
+#include <boost/phoenix/operator.hpp>
 
 #include <fstream>
 
@@ -27,7 +27,7 @@ struct test_lexer : boost::spirit::lex::lexer<BaseLexer>
     }
 };
 
-int main(int argc, char* argv[])
+int main()
 {
     typedef lex::lexertl::token<char const*> token_type;
     typedef lex::lexertl::actor_lexer<token_type> lexer_type;

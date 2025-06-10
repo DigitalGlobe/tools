@@ -14,28 +14,13 @@
 //  20 Jul 99  header name changed to .hpp
 //  20 Apr 99  additional error tests added.
 
-#include <boost/config.hpp>
+#define _CRT_SECURE_NO_WARNINGS
 
-#if defined(BOOST_MSVC)
-
-# pragma warning(disable: 4786)  // identifier truncated in debug info
-# pragma warning(disable: 4710)  // function not inlined
-# pragma warning(disable: 4711)  // function selected for automatic inline expansion
-# pragma warning(disable: 4514)  // unreferenced inline removed
-
-#if (BOOST_MSVC >= 1310)
-# pragma warning(disable: 4675)  // resolved overload found with Koenig lookup
-#endif
-
-#endif
-
-#ifdef __BORLANDC__
-# pragma warn -8092 // template argument passed to 'find' is not an iterator
-#endif
 
 #include <boost/smart_ptr.hpp>
+#include <boost/config.hpp>
 
-#include <boost/detail/lightweight_test.hpp>
+#include <boost/core/lightweight_test.hpp>
 
 #include <iostream>
 #include <set>
@@ -193,10 +178,6 @@ void test()
     BOOST_TEST( cp.use_count() == 3 );
     BOOST_TEST( *cp == 87654 );
 
-#if defined( BOOST_NO_ARGUMENT_DEPENDENT_LOOKUP )
-    using boost::swap;
-#endif
-
     boost::shared_ptr<int> cp4;
     swap( cp2, cp4 );
     BOOST_TEST( cp4.use_count() == 3 );
@@ -294,8 +275,6 @@ void test()
     BOOST_TEST( sup2.use_count() == 2 );
 
     std::cout << "OK\n";
-
-    new char[12345]; // deliberate memory leak to verify leaks detected
 }
 
 int main()

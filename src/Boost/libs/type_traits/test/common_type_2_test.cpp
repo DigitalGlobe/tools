@@ -7,13 +7,13 @@
 
 #define BOOST_COMMON_TYPE_DONT_USE_TYPEOF 1
 
-#include "test.hpp"
-#include "check_type.hpp"
 #ifdef TEST_STD
 #  include <type_traits>
 #else
 #  include <boost/type_traits/common_type.hpp>
 #endif
+#include "test.hpp"
+#include "check_type.hpp"
 #include <iostream>
 
 #ifdef BOOST_INTEL
@@ -27,22 +27,22 @@ struct C2 {};
     
 struct C3 : C2 {};
 struct C1C2 {
-    C1C2() {}
-    C1C2(C1 const&) {}
-    C1C2(C2 const&) {}
-    C1C2& operator=(C1C2 const&) {
+    BOOST_TT_PROC C1C2() {}
+    BOOST_TT_PROC C1C2(C1 const&) {}
+    BOOST_TT_PROC C1C2(C2 const&) {}
+    BOOST_TT_PROC C1C2& operator=(C1C2 const&) {
         return *this;
     }
 };
 
 template <typename C, typename A>
-void proc2(typename boost::common_type<A, C>::type const& ) {}
+BOOST_TT_PROC void proc2(typename boost::common_type<A, C>::type const& ) {}
 
 template <typename C, typename A, typename B>
-void proc3(typename boost::common_type<C, A, B>::type const& ) {}
+BOOST_TT_PROC void proc3(typename boost::common_type<C, A, B>::type const& ) {}
 
 template <typename C, typename A>
-void assignation_2() {
+BOOST_TT_PROC void assignation_2() {
 typedef typename boost::common_type<A, C>::type AC;
     A a;
     C c;
@@ -56,7 +56,7 @@ typedef typename boost::common_type<A, C>::type AC;
 }
 
 template <typename C, typename A, typename B>
-void assignation_3() {
+BOOST_TT_PROC void assignation_3() {
 typedef typename boost::common_type<C, A, B>::type ABC;
     A a;
     B b;
@@ -72,11 +72,11 @@ typedef typename boost::common_type<C, A, B>::type ABC;
     proc3<C, A, B>(c);
 }
 
-C1C2 c1c2;
-C1 c1;
+BOOST_TT_PROC C1C2 c1c2;
+BOOST_TT_PROC C1 c1;
 
-int f(C1C2 ) { return 1;}
-int f(C1 ) { return 2;}
+BOOST_TT_PROC int f(C1C2 ) { return 1;}
+BOOST_TT_PROC int f(C1 ) { return 2;}
 template <typename OSTREAM>
 OSTREAM& operator<<(OSTREAM& os, C1 const&) {return os;}
 
@@ -90,18 +90,18 @@ TT_TEST_BEGIN(common_type)
 #ifndef __SUNPRO_CC
     assignation_2<C1C2, C1>();
     typedef tt::common_type<C1C2&, C1&>::type T1;
-	BOOST_CHECK_TYPE(T1, C1C2);
+    BOOST_CHECK_TYPE(T1, C1C2);
     typedef tt::common_type<C3*, C2*>::type T2;
-	BOOST_CHECK_TYPE(T2, C2*);
+    BOOST_CHECK_TYPE(T2, C2*);
     typedef tt::common_type<int*, int const*>::type T3;
-	BOOST_CHECK_TYPE(T3, int const*);
+    BOOST_CHECK_TYPE(T3, int const*);
 #if defined(BOOST_NO_CXX11_DECLTYPE) && !defined(BOOST_COMMON_TYPE_DONT_USE_TYPEOF)
     // fails if BOOST_COMMON_TYPE_DONT_USE_TYPEOF:
     typedef tt::common_type<int volatile*, int const*>::type T4;
-	BOOST_CHECK_TYPE(T4, int const volatile*);
+    BOOST_CHECK_TYPE(T4, int const volatile*);
 #endif
     typedef tt::common_type<int*, int volatile*>::type T5;
-	BOOST_CHECK_TYPE(T5, int volatile*);
+    BOOST_CHECK_TYPE(T5, int volatile*);
 
     assignation_2<C1, C1C2>();
     assignation_2<C1C2, C2>();

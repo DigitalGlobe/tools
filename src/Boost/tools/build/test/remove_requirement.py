@@ -1,9 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright (C) Vladimir Prus 2006.
 # Distributed under the Boost Software License, Version 1.0. (See
-# accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import BoostBuild
 
@@ -12,6 +12,8 @@ t = BoostBuild.Tester(use_test_config=False)
 
 t.write("jamroot.jam", """
 project : requirements <threading>multi <variant>debug:<link>static ;
+# Force link to be relevant
+project : requirements <link>shared:<define>TEST_DLL ;
 
 build-project sub ;
 build-project sub2 ;
@@ -41,7 +43,7 @@ int main() {}
 """)
 
 t.write("sub3/jamfile.jam", """
-exe hello : hello.cpp : -<variant>debug:<link>static ;
+exe hello : hello.cpp : "-<variant>debug:<link>static" ;
 """)
 
 t.write("sub4/hello.cpp", """
@@ -49,16 +51,16 @@ int main() {}
 """)
 
 t.write("sub4/jamfile.jam", """
-project : requirements -<variant>debug:<link>static ;
+project : requirements "-<variant>debug:<link>static" ;
 exe hello : hello.cpp ;
 """)
 
 t.run_build_system()
 
-t.expect_addition("sub/bin/$toolset/debug/link-static/hello.exe")
-t.expect_addition("sub2/bin/$toolset/debug/link-static/hello.exe")
-t.expect_addition("sub3/bin/$toolset/debug/threading-multi/hello.exe")
-t.expect_addition("sub4/bin/$toolset/debug/threading-multi/hello.exe")
+t.expect_addition("sub/bin/$toolset/debug*/link-static*/hello.exe")
+t.expect_addition("sub2/bin/$toolset/debug*/link-static*/hello.exe")
+t.expect_addition("sub3/bin/$toolset/debug*/threading-multi*/hello.exe")
+t.expect_addition("sub4/bin/$toolset/debug*/threading-multi*/hello.exe")
 
 t.rm(".")
 
@@ -84,6 +86,6 @@ Broken
 
 t.run_build_system()
 
-t.expect_addition("sub/bin/$toolset/debug/hello.exe")
+t.expect_addition("sub/bin/$toolset/debug*/hello.exe")
 
 t.cleanup()

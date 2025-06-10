@@ -7,7 +7,7 @@
 /* This file is ALSO:
  * Copyright 2001-2004 David Abrahams.
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 /*
@@ -17,6 +17,7 @@
 #ifndef PARSE_DWA20011020_H
 #define PARSE_DWA20011020_H
 
+#include "config.h"
 #include "frames.h"
 #include "lists.h"
 #include "modules.h"
@@ -60,20 +61,30 @@ struct _PARSE {
     OBJECT * string;
     OBJECT * string1;
     int      num;
-    int      refs;
     OBJECT * rulename;
     OBJECT * file;
     int      line;
 };
 
 void parse_file( OBJECT *, FRAME * );
+void parse_string( OBJECT * name, const char * * lines, FRAME * frame );
+void parse_buffer( OBJECT * name, const char * buffer, FRAME * frame );
+void parse_include( OBJECT * target, FRAME * frame );
 void parse_save( PARSE * );
 
-PARSE * parse_make( int type, PARSE * left, PARSE * right, PARSE * third,
+PARSE * parse_make(
+    int type, PARSE * & left, PARSE * & right, PARSE * & third,
     OBJECT * string, OBJECT * string1, int num );
+inline PARSE * parse_make(
+    int type, PARSE * & left, PARSE * && right, PARSE * & third,
+    OBJECT * string, OBJECT * string1, int num )
+{
+    PARSE * r = right;
+    return parse_make( type, left, r, third, string, string1, num );
+}
 
-void parse_refer( PARSE * );
-void parse_free( PARSE * );
+void parse_free( PARSE * & );
 LIST * parse_evaluate( PARSE *, FRAME * );
+void parse_done();
 
 #endif

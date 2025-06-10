@@ -1,127 +1,73 @@
 /*
- * Copyright 2006. Rene Rivera
+ * Copyright 2006-2022 René Ferdinand Rivera Morell
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at
- * http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or copy at
+ * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 #ifndef BJAM_MEM_H
 #define BJAM_MEM_H
 
-#ifdef OPT_BOEHM_GC
+#include "config.h"
 
-    /* Use Boehm GC memory allocator. */
-    #include <gc.h>
+#include <cstdlib>
+#include <memory>
 
-    #define bjam_malloc_x(s) memset(GC_malloc(s),0,s)
-    #define bjam_malloc_atomic_x(s) memset(GC_malloc_atomic(s),0,s)
-    #define bjam_calloc_x(n,s) memset(GC_malloc((n)*(s)),0,(n)*(s))
-    #define bjam_calloc_atomic_x(n,s) memset(GC_malloc_atomic((n)*(s)),0,(n)*(s))
-    #define bjam_realloc_x(p,s) GC_realloc(p,s)
-    #define bjam_free_x(p) GC_free(p)
-    #define bjam_mem_init_x() GC_init(); GC_enable_incremental()
-
-    #define bjam_malloc_raw_x(s) malloc(s)
-    #define bjam_calloc_raw_x(n,s) calloc(n,s)
-    #define bjam_realloc_raw_x(p,s) realloc(p,s)
-    #define bjam_free_raw_x(p) free(p)
-
-    #ifndef BJAM_NEWSTR_NO_ALLOCATE
-    # define BJAM_NEWSTR_NO_ALLOCATE
-    #endif
-
-#elif defined( OPT_DUMA )
-
-    /* Use Duma memory debugging library. */
-    #include <stdlib.h>
-
-    #define _DUMA_CONFIG_H_
-    #define DUMA_NO_GLOBAL_MALLOC_FREE
-    #define DUMA_EXPLICIT_INIT
-    #define DUMA_NO_THREAD_SAFETY
-    #define DUMA_NO_CPP_SUPPORT
-    /* #define DUMA_NO_LEAKDETECTION */
-    /* #define DUMA_USE_FRAMENO */
-    /* #define DUMA_PREFER_ATEXIT */
-    /* #define DUMA_OLD_DEL_MACRO */
-    /* #define DUMA_NO_HANG_MSG */
-    #define DUMA_PAGE_SIZE 4096
-    #define DUMA_MIN_ALIGNMENT 1
-    /* #define DUMA_GNU_INIT_ATTR 0 */
-    typedef unsigned int DUMA_ADDR;
-    typedef unsigned int DUMA_SIZE;
-    #include <duma.h>
-
-    #define bjam_malloc_x(s) malloc(s)
-    #define bjam_calloc_x(n,s) calloc(n,s)
-    #define bjam_realloc_x(p,s) realloc(p,s)
-    #define bjam_free_x(p) free(p)
-
-    #ifndef BJAM_NEWSTR_NO_ALLOCATE
-    # define BJAM_NEWSTR_NO_ALLOCATE
-    #endif
-
-#else
-
-    /* Standard C memory allocation. */
-    #include <stdlib.h>
-
-    #define bjam_malloc_x(s) malloc(s)
-    #define bjam_calloc_x(n,s) calloc(n,s)
-    #define bjam_realloc_x(p,s) realloc(p,s)
-    #define bjam_free_x(p) free(p)
-
-#endif
+#define bjam_malloc_x(s) std::malloc(s)
+#define bjam_calloc_x(n, s) std::calloc(n, s)
+#define bjam_realloc_x(p, s) std::realloc(p, s)
+#define bjam_free_x(p) std::free(p)
 
 #ifndef bjam_malloc_atomic_x
-    #define bjam_malloc_atomic_x(s) bjam_malloc_x(s)
+#define bjam_malloc_atomic_x(s) bjam_malloc_x(s)
 #endif
 #ifndef bjam_calloc_atomic_x
-    #define bjam_calloc_atomic_x(n,s) bjam_calloc_x(n,s)
+#define bjam_calloc_atomic_x(n, s) bjam_calloc_x(n, s)
 #endif
 #ifndef bjam_mem_init_x
-    #define bjam_mem_init_x()
+#define bjam_mem_init_x()
 #endif
 #ifndef bjam_mem_close_x
-    #define bjam_mem_close_x()
+#define bjam_mem_close_x()
 #endif
 #ifndef bjam_malloc_raw_x
-    #define bjam_malloc_raw_x(s) bjam_malloc_x(s)
+#define bjam_malloc_raw_x(s) bjam_malloc_x(s)
 #endif
 #ifndef bjam_calloc_raw_x
-    #define bjam_calloc_raw_x(n,s) bjam_calloc_x(n,s)
+#define bjam_calloc_raw_x(n, s) bjam_calloc_x(n, s)
 #endif
 #ifndef bjam_realloc_raw_x
-    #define bjam_realloc_raw_x(p,s) bjam_realloc_x(p,s)
+#define bjam_realloc_raw_x(p, s) bjam_realloc_x(p, s)
 #endif
 #ifndef bjam_free_raw_x
-    #define bjam_free_raw_x(p) bjam_free_x(p)
+#define bjam_free_raw_x(p) bjam_free_x(p)
 #endif
 
 #ifdef OPT_DEBUG_PROFILE
-    /* Profile tracing of memory allocations. */
-    #include "debug.h"
+/* Profile tracing of memory allocations. */
+#include "debug.h"
 
-    #define BJAM_MALLOC(s) (profile_memory(s), bjam_malloc_x(s))
-    #define BJAM_MALLOC_ATOMIC(s) (profile_memory(s), bjam_malloc_atomic_x(s))
-    #define BJAM_CALLOC(n,s) (profile_memory(n*s), bjam_calloc_x(n,s))
-    #define BJAM_CALLOC_ATOMIC(n,s) (profile_memory(n*s), bjam_calloc_atomic_x(n,s))
-    #define BJAM_REALLOC(p,s) (profile_memory(s), bjam_realloc_x(p,s))
+#define BJAM_MALLOC(s) (profile_memory(s), bjam_malloc_x(s))
+#define BJAM_MALLOC_ATOMIC(s) (profile_memory(s), bjam_malloc_atomic_x(s))
+#define BJAM_CALLOC(n, s) (profile_memory(n * s), bjam_calloc_x(n, s))
+#define BJAM_CALLOC_ATOMIC(n, s) \
+(profile_memory(n * s), bjam_calloc_atomic_x(n, s))
+#define BJAM_REALLOC(p, s) (profile_memory(s), bjam_realloc_x(p, s))
 
-    #define BJAM_MALLOC_RAW(s) (profile_memory(s), bjam_malloc_raw_x(s))
-    #define BJAM_CALLOC_RAW(n,s) (profile_memory(n*s), bjam_calloc_raw_x(n,s))
-    #define BJAM_REALLOC_RAW(p,s) (profile_memory(s), bjam_realloc_raw_x(p,s))
+#define BJAM_MALLOC_RAW(s) (profile_memory(s), bjam_malloc_raw_x(s))
+#define BJAM_CALLOC_RAW(n, s) (profile_memory(n * s), bjam_calloc_raw_x(n, s))
+#define BJAM_REALLOC_RAW(p, s) (profile_memory(s), bjam_realloc_raw_x(p, s))
 #else
-    /* No mem tracing. */
-    #define BJAM_MALLOC(s) bjam_malloc_x(s)
-    #define BJAM_MALLOC_ATOMIC(s) bjam_malloc_atomic_x(s)
-    #define BJAM_CALLOC(n,s) bjam_calloc_x(n,s)
-    #define BJAM_CALLOC_ATOMIC(n,s) bjam_calloc_atomic_x(n,s)
-    #define BJAM_REALLOC(p,s) bjam_realloc_x(p,s)
+/* No mem tracing. */
+#define BJAM_MALLOC(s) bjam_malloc_x(s)
+#define BJAM_MALLOC_ATOMIC(s) bjam_malloc_atomic_x(s)
+#define BJAM_CALLOC(n, s) bjam_calloc_x(n, s)
+#define BJAM_CALLOC_ATOMIC(n, s) bjam_calloc_atomic_x(n, s)
+#define BJAM_REALLOC(p, s) bjam_realloc_x(p, s)
 
-    #define BJAM_MALLOC_RAW(s) bjam_malloc_raw_x(s)
-    #define BJAM_CALLOC_RAW(n,s) bjam_calloc_raw_x(n,s)
-    #define BJAM_REALLOC_RAW(p,s) bjam_realloc_raw_x(p,s)
+#define BJAM_MALLOC_RAW(s) bjam_malloc_raw_x(s)
+#define BJAM_CALLOC_RAW(n, s) bjam_calloc_raw_x(n, s)
+#define BJAM_REALLOC_RAW(p, s) bjam_realloc_raw_x(p, s)
 #endif
 
 #define BJAM_MEM_INIT() bjam_mem_init_x()
@@ -129,5 +75,119 @@
 
 #define BJAM_FREE(p) bjam_free_x(p)
 #define BJAM_FREE_RAW(p) bjam_free_raw_x(p)
+
+namespace b2 { namespace jam {
+
+// Zero-init and call constructor at the given pre-allocated memory.
+template <typename T, typename... Args>
+T * ctor_ptr(void * p, Args &&... args)
+{
+	std::memset(p, 0, sizeof(T));
+	return new (p) T(std::forward<Args>(args)...);
+}
+
+// Call destructor at the given memory.
+template <typename T>
+void dtor_ptr(T * p)
+{
+	p->~T();
+}
+
+// Allocate memory and construct a type with args.
+template <typename T, typename... Args>
+T * make_ptr(Args &&... args)
+{
+	return ctor_ptr<T>(BJAM_MALLOC(sizeof(T)), std::forward<Args>(args)...);
+}
+
+// Allocate memory, with tail padding, and construct a type with args.
+template <typename T, typename... Args>
+T * make_ptr_extra(std::size_t padding, Args &&... args)
+{
+	return ctor_ptr<T>(
+		BJAM_MALLOC(sizeof(T) + padding), std::forward<Args>(args)...);
+}
+
+// Destructs and deallocates an object.
+template <typename T>
+void free_ptr(T * p)
+{
+	dtor_ptr(p);
+	BJAM_FREE(p);
+}
+
+// Unique ptr deleter that destructs and frees the memory.
+template <typename T>
+struct unique_jptr_deleter
+{
+	void operator()(T * p) const
+	{
+		p->~T();
+		BJAM_FREE(p);
+	}
+};
+
+// Unique ptr that will delete and free using the jam memory functions.
+template <typename T>
+using unique_jptr = std::unique_ptr<T, unique_jptr_deleter<T>>;
+
+// Allocate and construct an object with args using the jam memory functions.
+template <typename T, typename... Args>
+unique_jptr<T> make_unique_jptr(Args &&... args)
+{
+	return unique_jptr<T>(make_ptr<T>(std::forward<Args>(args)...));
+}
+
+// Allocate, with tail padding, and construct an object with args using the jam
+// memory functions.
+template <typename T, typename... Args>
+unique_jptr<T> make_unique_jptr_extra(std::size_t padding, Args &&... args)
+{
+	return unique_jptr<T>(
+		make_ptr_extra<T>(padding, std::forward<Args>(args)...));
+}
+
+template <typename T>
+struct unique_jptr_free
+{
+	using free_f = void (*)(T *);
+
+	explicit unique_jptr_free(free_f f)
+		: free_function(f)
+	{}
+
+	unique_jptr_free(unique_jptr_free && p)
+		: free_function(std::move(p.free_function))
+	{
+		p.free_function = nullptr;
+	}
+
+	void operator()(T * p) const
+	{
+		// if (free_function)
+		if (p) (*free_function)(p);
+	}
+
+	private:
+	free_f free_function = nullptr;
+};
+
+template <typename T>
+using unique_bare_jptr = std::unique_ptr<T, unique_jptr_free<T>>;
+
+template <typename T, typename F>
+unique_bare_jptr<T> make_unique_bare_jptr(T * p, F exit_f)
+{
+	return unique_bare_jptr<T>(p, unique_jptr_free<T>(exit_f));
+}
+
+template <typename T, typename F, typename G>
+unique_bare_jptr<T> make_unique_bare_jptr(T * p, F enter_f, G exit_f)
+{
+	enter_f(p);
+	return unique_bare_jptr<T>(p, unique_jptr_free<T>(exit_f));
+}
+
+}} // namespace b2::jam
 
 #endif

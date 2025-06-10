@@ -11,30 +11,30 @@
 >>> x.push_back(3)
 >>> x.push_back(5)
 >>> for y in x:
-...     print y
+...     print(y)
 1
 3
 5
 >>> z = range(x)
 >>> for y in z:
-...     print y
+...     print(y)
 1
 3
 5
 
    Range2 wraps a transform_iterator which doubles the elements it
    traverses. This proves we can wrap input iterators
-   
+
 >>> z2 = range2(x)
 >>> for y in z2:
-...     print y
+...     print(y)
 2
 6
 10
 
 >>> l2 = two_lists()
 >>> for y in l2.primes:
-...     print y
+...     print(y)
 2
 3
 5
@@ -42,7 +42,7 @@
 11
 13
 >>> for y in l2.evens:
-...     print y
+...     print(y)
 2
 4
 6
@@ -55,12 +55,15 @@
 >>> ll.push_back(x)
 >>> for a in ll: #doctest: +NORMALIZE_WHITESPACE
 ...     for b in a:
-...         print b,
-...     print
+...         print(b, end=' ')
+...     print('')
 ...
 1 3 5
 1 3 5 7
 '''
+
+from __future__ import print_function
+
 def run(args = None):
     import sys
     import doctest
@@ -68,10 +71,10 @@ def run(args = None):
     if args is not None:
         sys.argv = args
     return doctest.testmod(sys.modules.get(__name__))
-    
+
 if __name__ == '__main__':
-    print "running..."
+    print("running...")
     import sys
     status = run()[0]
-    if (status == 0): print "Done."
+    if (status == 0): print("Done.")
     sys.exit(status)

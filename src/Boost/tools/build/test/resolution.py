@@ -1,9 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright (C) Vladimir Prus 2006.
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Tests for the target id resolution process.
 
@@ -24,12 +24,12 @@ t.write("hello.cpp", "int main() {}\n")
 
 t.run_build_system()
 
-t.expect_addition("bin/$toolset/debug/hello.obj")
+t.expect_addition("bin/$toolset/debug*/hello.obj")
 
 t.touch("hello.cpp")
 t.run_build_system(["s"])
 # If 'hello' in the 's' target resolved to file in the current dir, nothing
 # will be rebuilt.
-t.expect_touch("bin/$toolset/debug/hello.obj")
+t.expect_touch("bin/$toolset/debug*/hello.obj")
 
 t.cleanup()

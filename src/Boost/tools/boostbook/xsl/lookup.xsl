@@ -18,12 +18,32 @@
   <!-- Generate an ID for the entity referenced -->
   <xsl:template name="generate.id">
     <xsl:param name="node" select="."/>
-    <xsl:apply-templates select="$node" mode="generate.id"/>
+    <xsl:choose>
+      <xsl:when test="not(string($node/@id)='')">
+        <xsl:value-of select="$node/@id"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:apply-templates select="$node" mode="generate.id"/>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <xsl:template match="*" mode="generate.id">
-    <xsl:value-of select="generate-id(.)"/>
+    <xsl:variable name="raw.id"><xsl:call-template name="object.id"/></xsl:variable>
+    <xsl:value-of select="translate($raw.id, '.', '_')"/>
     <xsl:text>-bb</xsl:text>
+  </xsl:template>
+
+  <xsl:template name="postfix.id">
+    <xsl:variable name="raw.id"><xsl:call-template name="object.id"/></xsl:variable>
+    <xsl:choose>
+      <xsl:when test="starts-with($raw.id, 'id-')">
+        <xsl:value-of select="translate(substring-after($raw.id, 'id-'), '.', '_')"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <xsl:value-of select="$raw.id"/>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <xsl:template name="strip-qualifiers-non-template">
@@ -138,22 +158,28 @@
   <!-- Build the fully-qualified name of the given node -->
   <xsl:template name="fully-qualified-name">
     <xsl:param name="node"/>
-    <xsl:apply-templates select="$node" mode="fully-qualified-name"/>
+    <xsl:param name="replace-unnamed" select="false()"/>
+    <xsl:apply-templates select="$node" mode="fully-qualified-name">
+      <xsl:with-param name="replace-unnamed" select="$replace-unnamed"/>
+    </xsl:apply-templates>
   </xsl:template>
 
   <!-- Hack to make the node we are building the current node so that the
        ancestor:: syntax will work -->
   <xsl:template match="*" mode="fully-qualified-name">
-    <xsl:param name="is.id" select="false()" />
+    <xsl:param name="is.id" select="false()"/>
+    <xsl:param name="replace-unnamed" select="false()"/>
     <xsl:call-template name="build-fully-qualified-name">
       <xsl:with-param name="is.id" select="$is.id"/>
+      <xsl:with-param name="replace-unnamed" select="$replace-unnamed"/>
     </xsl:call-template>
   </xsl:template>
 
   <!-- The real routine that builds a fully-qualified name for the current
        node. -->
   <xsl:template name="build-fully-qualified-name">
-    <xsl:param name="is.id" select="false()" />
+    <xsl:param name="is.id" select="false()"/>
+    <xsl:param name="replace-unnamed" select="false()"/>
 
     <!-- Determine the set of ancestor namespaces -->
     <xsl:variable name="ancestors"
@@ -164,6 +190,7 @@
     <xsl:for-each select="$ancestors">
       <xsl:apply-templates select="." mode="fast-print-id-part">
         <xsl:with-param name="is.id" select="$is.id"/>
+        <xsl:with-param name="replace-unnamed" select="$replace-unnamed"/>
       </xsl:apply-templates>
       <xsl:choose>
         <xsl:when test="$is.id"><xsl:text>.</xsl:text></xsl:when>
@@ -172,6 +199,7 @@
     </xsl:for-each>
     <xsl:apply-templates select="." mode="fast-print-id-part">
       <xsl:with-param name="is.id" select="$is.id"/>
+      <xsl:with-param name="replace-unnamed" select="$replace-unnamed"/>
     </xsl:apply-templates>
   </xsl:template>
 
@@ -199,9 +227,12 @@
   
   <xsl:template match="*" mode="fast-print-id-part">
     <xsl:param name="is.id"/>
+    <xsl:param name="replace-unnamed" select="false()"/>
     <xsl:choose>
       <xsl:when test="not($is.id)">
-        <xsl:apply-templates select="." mode="print-name"/>
+        <xsl:apply-templates select="." mode="print-name">
+          <xsl:with-param name="replace-unnamed" select="$replace-unnamed"/>
+        </xsl:apply-templates>
       </xsl:when>
       <xsl:when test="$fast-elements[@id=generate-id()]">
         <xsl:value-of select="$fast-elements[@id=generate-id()]/@part-id"/>
@@ -234,10 +265,11 @@
           translate($part, '.&lt;&gt;;\:*?&quot;| ', '') != $part
         )">
         <xsl:variable name="normalized" select="translate(normalize-space(translate($part, '.&lt;&gt;;\:*?&quot;|_', '            ')), ' ', '_')"/>
+        <xsl:variable name="id"><xsl:call-template name="postfix.id"/></xsl:variable>
         <xsl:value-of select =
           "concat(
-            substring($normalized, 1, $boost.max.id.part.length - string-length(generate-id(.)) - 1),
-            concat('_', generate-id(.)))"/>
+            substring($normalized, 1, $boost.max.id.part.length - string-length($id) - 1),
+            concat('_', $id))"/>
       </xsl:when>
       <xsl:otherwise>
         <xsl:value-of select="$part"/>
@@ -251,13 +283,40 @@
   </xsl:template>
 
   <xsl:template match="function|overloaded-function" mode="unique.name">
-    <xsl:value-of select="number(count(key('named-entities',
-        translate(@name, $uppercase-letters, $lowercase-letters))) = 1)"/>
+    <xsl:variable name="func-name">
+      <xsl:call-template name="fully-qualified-name">
+        <xsl:with-param name="node" select="."/>
+      </xsl:call-template>
+    </xsl:variable>
+
+    <!-- Count the number of elements with the same qualified name -->
+    <xsl:variable name="count-elements">
+      <xsl:for-each select="key('named-entities', translate(@name, $uppercase-letters, $lowercase-letters))">
+        <xsl:variable name="other-name">
+          <xsl:call-template name="fully-qualified-name">
+            <xsl:with-param name="node" select="."/>
+          </xsl:call-template>
+        </xsl:variable>
+        <xsl:if test="$func-name = $other-name">
+          <xsl:text> </xsl:text>
+        </xsl:if>
+      </xsl:for-each>
+    </xsl:variable>
+    
+    <xsl:value-of select="number(string-length($count-elements) = 1)"/>
   </xsl:template>
 
   <!-- Print the name of the current node -->
   <xsl:template match="*" mode="print-name">
-    <xsl:value-of select="@name"/>
+    <xsl:param name="replace-unnamed" select="false()"/>
+    <xsl:choose>
+      <xsl:when test="not($replace-unnamed) or not(string(@name)='' or starts-with(string(@name), '@'))">
+        <xsl:value-of select="@name"/>
+      </xsl:when>
+      <xsl:otherwise>
+        <emphasis>[unnamed]</emphasis>
+      </xsl:otherwise>
+    </xsl:choose>
   </xsl:template>
 
   <xsl:template match="template-arg" mode="print-name">

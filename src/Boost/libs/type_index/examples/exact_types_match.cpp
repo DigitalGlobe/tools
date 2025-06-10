@@ -1,4 +1,4 @@
-// Copyright 2013-2015 Antony Polukhin
+// Copyright 2013-2025 Antony Polukhin
 
 // Distributed under the Boost Software License, Version 1.0.
 // (See the accompanying file LICENSE_1_0.txt
@@ -17,10 +17,14 @@
 #include <boost/type_index.hpp>
 #include <iostream>
 #include <stdexcept>
+#include <cstdlib>
+    
 //<-
 // Making `#include <cassert>` visible in docs, while actually using hand-made check
 // instead of `assert`. This is required to verify correct behavior even if NDEBUG
 // is defined and to avoid `unused local variable` warnings with defined NDEBUG.
+//
+// boost-no-inspect
 #ifdef assert
 #   undef assert
 #endif

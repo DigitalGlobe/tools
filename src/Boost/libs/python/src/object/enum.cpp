@@ -34,16 +34,24 @@ static PyMemberDef enum_members[] = {
 
 extern "C"
 {
+    static void
+    enum_dealloc(enum_object* self)
+    {
+        Py_XDECREF(self->name);
+        Py_TYPE(self)->tp_free((PyObject*)self);
+    }
+
     static PyObject* enum_repr(PyObject* self_)
     {
-        // XXX(bhy) Potentional memory leak here since PyObject_GetAttrString returns a new reference
-        // const char *mod = PyString_AsString(PyObject_GetAttrString( self_, const_cast<char*>("__module__")));
         PyObject *mod = PyObject_GetAttrString( self_, "__module__");
+        object auto_free = object(handle<>(mod));
         enum_object* self = downcast<enum_object>(self_);
         if (!self->name)
         {
             return
-#if PY_VERSION_HEX >= 0x03000000
+#if PY_VERSION_HEX >= 0x03030000
+                PyUnicode_FromFormat("%S.%S(%ld)", mod, ((PyHeapTypeObject*)(self_->ob_type))->ht_qualname, PyLong_AsLong(self_));
+#elif PY_VERSION_HEX >= 0x03000000
                 PyUnicode_FromFormat("%S.%s(%ld)", mod, self_->ob_type->tp_name, PyLong_AsLong(self_));
 #else
                 PyString_FromFormat("%s.%s(%ld)", PyString_AsString(mod), self_->ob_type->tp_name, PyInt_AS_LONG(self_));
@@ -56,7 +64,9 @@ extern "C"
                 return 0;
 
             return
-#if PY_VERSION_HEX >= 0x03000000
+#if PY_VERSION_HEX >= 0x03030000
+                PyUnicode_FromFormat("%S.%S.%S", mod, ((PyHeapTypeObject*)(self_->ob_type))->ht_qualname, name);
+#elif PY_VERSION_HEX >= 0x03000000
                 PyUnicode_FromFormat("%S.%s.%S", mod, self_->ob_type->tp_name, name);
 #else
                 PyString_FromFormat("%s.%s.%s", 
@@ -88,7 +98,7 @@ static PyTypeObject enum_type_object = {
     const_cast<char*>("Boost.Python.enum"),
     sizeof(enum_object),                    /* tp_basicsize */
     0,                                      /* tp_itemsize */
-    0,                                      /* tp_dealloc */
+    (destructor) enum_dealloc,              /* tp_dealloc */
     0,                                      /* tp_print */
     0,                                      /* tp_getattr */
     0,                                      /* tp_setattr */
@@ -107,7 +117,6 @@ static PyTypeObject enum_type_object = {
 #if PY_VERSION_HEX < 0x03000000
     | Py_TPFLAGS_CHECKTYPES
 #endif
-    | Py_TPFLAGS_HAVE_GC
     | Py_TPFLAGS_BASETYPE,                  /* tp_flags */
     0,                                      /* tp_doc */
     0,                                      /* tp_traverse */
@@ -140,6 +149,7 @@ static PyTypeObject enum_type_object = {
 };
 
 object module_prefix();
+object qualname(const char *name);
 
 namespace
 {
@@ -147,7 +157,7 @@ namespace
   {
       if (enum_type_object.tp_dict == 0)
       {
-          Py_TYPE(&enum_type_object) = incref(&PyType_Type);
+          Py_SET_TYPE(&enum_type_object, incref(&PyType_Type));
 #if PY_VERSION_HEX >= 0x03000000
           enum_type_object.tp_base = &PyLong_Type;
 #else
@@ -170,6 +180,11 @@ namespace
       object module_name = module_prefix();
       if (module_name)
          d["__module__"] = module_name;
+#if PY_VERSION_HEX >= 0x03030000
+      object q = qualname(name);
+      if (q)
+         d["__qualname__"] = q;
+#endif
       if (doc)
          d["__doc__"] = doc;
 

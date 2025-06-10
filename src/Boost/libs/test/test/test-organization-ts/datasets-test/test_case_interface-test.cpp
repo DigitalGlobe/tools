@@ -98,7 +98,7 @@ BOOST_DATA_TEST_CASE( test_case_interface_06, samples1 * samples2 * samples3, in
 // test dataset dim > 3
 int index7 = 0;
 
-float samples4[] = {1E3, 1E-3, 3.14};
+float samples4[] = {1E3f, 1E-3f, 3.14f};
 
 #define sizeoftable(x) (sizeof(x)/sizeof(x[0]))
 
@@ -130,5 +130,86 @@ BOOST_DATA_TEST_CASE_F( SharedFixture, test_case_interface_08, data::make({1,2,3
 {
     BOOST_TEST( sample == m_expected );
 }
+
+//____________________________________________________________________________//
+
+BOOST_DATA_TEST_CASE(test_case_interface_correct_file_line_declaration, samples2)
+{
+  boost::unit_test::test_case const& current_test_case = boost::unit_test::framework::current_test_case();
+  BOOST_TEST(current_test_case.p_line_num == 136);
+  BOOST_TEST(current_test_case.p_file_name == __FILE__);
+}
+
+//____________________________________________________________________________//
+// ticket 13443
+
+BOOST_DATA_TEST_CASE( 
+  test_arity_above_9,
+  data::make( { 1, 2, 3, 5 } ) ^
+  data::make( { 1, 2, 3, 5 } ) ^
+  data::make( { 1, 2, 3, 5 } ) ^
+  data::make( { 1, 2, 3, 5 } ) ^
+  data::make( { 1, 2, 3, 5 } ) ^
+  data::make( { 1, 2, 3, 5 } ) ^
+  data::make( { 1, 2, 3, 5 } ) ^
+  data::make( { 1, 2, 3, 5 } ) ^
+  data::make( { 1, 2, 3, 5 } ) ^
+  data::make( { 1, 2, 3, 5 } ),
+  sample1, sample2, sample3, sample4, sample5, sample6, sample7, sample8, sample9, sample10)
+{
+}
+
+//____________________________________________________________________________//
+
+BOOST_AUTO_TEST_CASE( test_has_dataset )
+{
+    using t1 = decltype(data::make( 1 ));
+    BOOST_TEST((data::monomorphic::has_dataset<t1>::value));
+  
+    BOOST_TEST((data::monomorphic::has_dataset<int, t1>::value));
+    BOOST_TEST((!data::monomorphic::has_dataset<int, float>::value));
+}
+
+//____________________________________________________________________________//
+
+
+static int index_fixture_setup_teardown = 0;
+
+struct SharedFixtureSetupTeardown {
+    SharedFixtureSetupTeardown()
+    : m_expected(1 + index_fixture_setup_teardown)
+    {}
+
+    void setup() {
+      m_expected *= m_expected;
+    }
+
+    void teardown() {
+      index_fixture_setup_teardown++;
+    }
+
+    int m_expected;
+};
+
+BOOST_DATA_TEST_CASE_F( SharedFixtureSetupTeardown, test_case_interface_setup_teardown, data::make({0,1,2,3}) )
+{
+    BOOST_TEST( sample == index_fixture_setup_teardown );
+    BOOST_TEST( m_expected == (1+sample)*(1+sample));
+}
+
+//____________________________________________________________________________//
+// GH-217
+
+#ifndef BOOST_TEST_ERRONEOUS_INIT_LIST
+
+const bool ExpectedValues[] = { false, true, true, true, false, false};
+BOOST_DATA_TEST_CASE(BoostDataTest
+  , boost::unit_test::data::make({ false, true, true, true, false, false }) ^
+    boost::unit_test::data::make(ExpectedValues)
+  , value, expectedValue)
+{
+  BOOST_TEST(value == expectedValue);
+}
+#endif
 
 // EOF

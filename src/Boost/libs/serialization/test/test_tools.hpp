@@ -12,23 +12,22 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // test_tools.hpp
 //
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
 //  See http://www.boost.org for updates, documentation, and revision history.
 
-#include <cstddef> // size_t
 #include <boost/config.hpp>
 #ifndef BOOST_NO_EXCEPTION_STD_NAMESPACE
     #include <exception>
 #endif
-#include <boost/detail/no_exceptions_support.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 
 #if defined(UNDER_CE)
 
-// Windows CE does not supply the tmpnam function in its CRT. 
+// Windows CE does not supply the tmpnam function in its CRT.
 // Substitute a primitive implementation here.
 namespace boost {
 namespace archive {
@@ -46,13 +45,13 @@ namespace archive {
 
 #elif defined(_WIN32) || defined(__WIN32__) || defined(WIN32)
 // win32 has a brain-dead tmpnam implementation.
-// which leaves temp files in root directory 
+// which leaves temp files in root directory
 // regardless of environmental settings
 
 #include <cstdlib>
 #include <cstring>
 #if defined(BOOST_NO_STDC_NAMESPACE)
-namespace std{ 
+namespace std{
     using ::remove;
     using ::strcpy;
     using ::strcat;
@@ -64,10 +63,12 @@ namespace std{
 #include <boost/archive/tmpdir.hpp>
 
 //#if defined(__COMO__)
+#if !defined(BOOST_EMBTC)
     #define chdir _chdir
+#endif
 //#endif  // defined win32
 
-#if defined(NDEBUG) && defined(__BORLANDC__)
+#if defined(NDEBUG) && defined(BOOST_BORLANDC)
     #define STRCPY strcpy
 #else
     #define STRCPY std::strcpy
@@ -77,14 +78,12 @@ namespace boost {
 namespace archive {
     const char * test_filename(const char * dir = NULL, char *fname = NULL){
         static char ibuffer [512];
-        std::size_t i;
         ibuffer[0] = '\0';
         if(NULL == dir){
             dir = boost::archive::tmpdir();
         }
         STRCPY(ibuffer, dir);
         std::strcat(ibuffer, "/");
-        i = std::strlen(ibuffer);
         if(NULL == fname){
             char old_dir[256];
             _getcwd(old_dir, sizeof(old_dir) - 1);
@@ -119,9 +118,9 @@ namespace archive {
 // citing the tmpnam(3S) manpage, "the operation is not performed and a
 // NULL pointer is returned". tempnam does not have this restriction, so,
 // let's use tempnam instead.
- 
+
 #define tmpnam(X) tempnam(NULL,X)
- 
+
 namespace boost {
 namespace archive {
     using ::tmpnam;
@@ -131,7 +130,7 @@ namespace archive {
 #else // defined(__hpux)
 
 // (C) Copyright 2010 Dean Michael Berris.
-// Instead of using the potentially dangrous tempnam function that's part
+// Instead of using the potentially dangerous tempnam function that's part
 // of the C standard library, on Unix/Linux we use the more portable and
 // "safe" unique_path function provided in the Boost.Filesystem library.
 
@@ -185,7 +184,7 @@ inline void msg_impl(char const * msg, char const * file, int line, char const *
 #define BOOST_CHECKPOINT( M ) \
     BOOST_WARN_MESSAGE( true , (M) )
 
-//#define BOOST_TEST_DONT_PRINT_LOG_VALUE( T ) 
+//#define BOOST_TEST_DONT_PRINT_LOG_VALUE( T )
 
 #define BOOST_FAIL( M ) BOOST_REQUIRE_MESSAGE( false, (M) )
 #define EXIT_SUCCESS 0
@@ -196,7 +195,7 @@ int test_main(int argc, char * argv[]);
 
 int
 main(int argc, char * argv[]){
-    boost::serialization::singleton_module::lock();
+    boost::serialization::get_singleton_module().lock();
 
     int retval = 1;
     BOOST_TRY{
@@ -212,7 +211,7 @@ main(int argc, char * argv[]){
     }
     BOOST_CATCH_END
 
-    boost::serialization::singleton_module::unlock();
+    boost::serialization::get_singleton_module().unlock();
 
     int error_count = boost::report_errors();
     if(error_count > 0)
@@ -228,6 +227,12 @@ main(int argc, char * argv[]){
 #include "binary_archive.hpp"
 #include "xml_archive.hpp"
 #include "xml_warchive.hpp"
+
+#include "polymorphic_text_archive.hpp"
+#include "polymorphic_text_warchive.hpp"
+#include "polymorphic_binary_archive.hpp"
+#include "polymorphic_xml_archive.hpp"
+#include "polymorphic_xml_warchive.hpp"
 */
 
 /////////////////////////////////////////////

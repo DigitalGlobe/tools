@@ -1,8 +1,8 @@
 # Copyright 2003 Dave Abrahams
 # Copyright 2002, 2003, 2004, 2005 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Implements scanners: objects computing implicit dependencies for files, such
 # as includes in C++.
@@ -42,16 +42,16 @@ class scanner
     rule pattern ( )
     {
         import errors : error : errors.error ;
-        errors.error "method must be overriden" ;
+        errors.error "method must be overridden" ;
     }
 
     # Establish necessary relationship between targets, given an actual target
-    # beeing scanned and a list of pattern matches in that file.
+    # being scanned and a list of pattern matches in that file.
     #
     rule process ( target : matches * )
     {
         import errors : error : errors.error ;
-        errors.error "method must be overriden" ;
+        errors.error "method must be overridden" ;
     }
 }
 
@@ -102,7 +102,7 @@ rule get ( scanner-class : property-set )
     if ! $(scanner-class) in $(.registered)
     {
         import errors ;
-        errors.error "attempt to get an unregisted scanner" ;
+        errors.error "attempt to get an unregistered scanner" ;
     }
 
     local r = $(.rv-cache.$(property-set)) ;

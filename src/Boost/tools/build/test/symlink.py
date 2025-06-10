@@ -1,18 +1,20 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2003 Dave Abrahams
 # Copyright 2003 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Test the 'symlink' rule.
+
+from __future__ import print_function
 
 import os
 import BoostBuild
 
 
 if os.name != 'posix':
-    print "The symlink tests can be run on posix only."
+    print("The symlink tests can be run on posix only.")
     import sys
     sys.exit(1)
 

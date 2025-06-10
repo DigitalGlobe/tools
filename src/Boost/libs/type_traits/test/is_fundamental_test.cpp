@@ -4,12 +4,16 @@
 //  Boost Software License, Version 1.0. (See accompanying file 
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include "test.hpp"
-#include "check_integral_constant.hpp"
 #ifdef TEST_STD
 #  include <type_traits>
 #else
 #  include <boost/type_traits/is_fundamental.hpp>
+#endif
+#include "test.hpp"
+#include "check_integral_constant.hpp"
+
+#ifndef BOOST_NO_CXX23_HDR_STDFLOAT
+#include <stdfloat>
 #endif
 
 TT_TEST_BEGIN(is_fundamental)
@@ -155,7 +159,7 @@ BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<char16_t>::value, true);
 BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<char32_t>::value, true);
 #endif
 
-#ifdef BOOST_HAS_INT128
+#if defined(BOOST_HAS_INT128) && !defined(TEST_CUDA_DEVICE)
 BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<boost::int128_type>::value, true);
 BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<boost::uint128_type>::value, true);
 #endif
@@ -164,6 +168,38 @@ BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<boost::uint128_type>::value, 
 BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<boost::float128_type>::value, true);
 #endif
 
+#ifndef BOOST_NO_CXX23_HDR_STDFLOAT
+#if defined(__STDCPP_FLOAT16_T__)
+BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<std::float16_t>::value, true);
+BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<const std::float16_t>::value, true);
+BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<volatile std::float16_t>::value, true);
+BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<const volatile std::float16_t>::value, true);
+#endif
+#if defined(__STDCPP_FLOAT32_T__)
+BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<std::float32_t>::value, true);
+BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<const std::float32_t>::value, true);
+BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<volatile std::float32_t>::value, true);
+BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<const volatile std::float32_t>::value, true);
+#endif
+#if defined(__STDCPP_FLOAT64_T__)
+BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<std::float32_t>::value, true);
+BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<const std::float32_t>::value, true);
+BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<volatile std::float32_t>::value, true);
+BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<const volatile std::float32_t>::value, true);
+#endif
+#if defined(__STDCPP_FLOAT128_T__)
+BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<std::float128_t>::value, true);
+BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<const std::float128_t>::value, true);
+BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<volatile std::float128_t>::value, true);
+BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<const volatile std::float128_t>::value, true);
+#endif
+#if defined(__STDCPP_BFLOAT16_T__)
+BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<std::bfloat16_t>::value, true);
+BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<const std::bfloat16_t>::value, true);
+BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<volatile std::bfloat16_t>::value, true);
+BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_fundamental<const volatile std::bfloat16_t>::value, true);
+#endif
+#endif
 TT_TEST_END
 
 

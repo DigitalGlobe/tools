@@ -1,10 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 # Copyright (c) 2008 Steven Watanabe
 #
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Test that the common.copy rule set the modification date of the new file to
 # the current time.
@@ -50,13 +50,13 @@ install test2i : test2 : <dependency>test1 ;
 """)
 
 tester.run_build_system()
-tester.expect_addition("bin/$toolset/debug/test2.obj")
-tester.expect_addition("bin/$toolset/debug/test1.obj")
+tester.expect_addition("bin/$toolset/debug*/test2.obj")
+tester.expect_addition("bin/$toolset/debug*/test1.obj")
 tester.expect_addition("test2i/test2.obj")
 tester.expect_nothing_more()
 
-test2src = tester.read("test2i/test2.obj")
-test2dest = tester.read("bin/$toolset/debug/test2.obj")
+test2src = tester.read("test2i/test2.obj", binary=True)
+test2dest = tester.read("bin/$toolset/debug*/test2.obj", binary=True)
 if test2src != test2dest:
     BoostBuild.annotation("failure", "The object file was not copied "
         "correctly")

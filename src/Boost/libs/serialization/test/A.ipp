@@ -8,13 +8,11 @@
 
 //  See http://www.boost.org for updates, documentation, and revision history.
 
-#include <boost/detail/workaround.hpp>
-#if ! BOOST_WORKAROUND(BOOST_MSVC, <= 1300)
-
 #if BOOST_WORKAROUND(BOOST_DINKUMWARE_STDLIB, == 1)
 #include <boost/archive/dinkumware.hpp>
 #endif
 
+#include <boost/serialization/nvp.hpp>
 #include "A.hpp"
 
 template<class Archive>
@@ -27,7 +25,7 @@ void A::serialize(
     ar & BOOST_SERIALIZATION_NVP(f);
     ar & BOOST_SERIALIZATION_NVP(g);
     #endif
-    #if BOOST_WORKAROUND(__BORLANDC__,  <= 0x551 )
+    #if BOOST_WORKAROUND(BOOST_BORLANDC,  <= 0x551 )
         int i;
         if(BOOST_DEDUCED_TYPENAME Archive::is_saving::value){
             i = l;
@@ -60,5 +58,3 @@ void A::serialize(
     ar & BOOST_SERIALIZATION_NVP(z);
     #endif
 }
-
-#endif // workaround BOOST_WORKAROUND(BOOST_MSVC, <= 1300)

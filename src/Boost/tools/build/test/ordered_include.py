@@ -1,10 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 # Copyright (c) 2008 Steven Watanabe
 #
 # Distributed under the Boost Software License, Version 1.0. (See
-# accompanying file LICENSE_1_0.txt) or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# accompanying file LICENSE.txt) or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import BoostBuild
 
@@ -22,24 +22,24 @@ def test_default_order():
     #include <test.hpp>
     int main() { f(); }
     """)
-    
+
     tester.write("a/test.hpp", """
     void f();
     """)
-    
+
     tester.write("b/test.hpp", """
     """)
-    
+
     tester.run_build_system()
-    
-    tester.expect_addition("bin/$toolset/debug/test.obj")
-    
+
+    tester.expect_addition("bin/$toolset/debug*/test.obj")
+
     # Check that the dependencies are correct
     tester.touch("a/test.hpp")
     tester.run_build_system()
-    tester.expect_touch("bin/$toolset/debug/test.obj")
+    tester.expect_touch("bin/$toolset/debug*/test.obj")
     tester.expect_nothing_more()
-    
+
     tester.touch("b/test.hpp")
     tester.run_build_system()
     tester.expect_nothing_more()
@@ -60,24 +60,24 @@ def test_default_order_mixed():
     #include <test.hpp>
     int main() { f(); }
     """)
-    
+
     tester.write("a/test.hpp", """
     void f();
     """)
-    
+
     tester.write("b/test.hpp", """
     """)
-    
+
     tester.run_build_system()
-    
-    tester.expect_addition("bin/$toolset/debug/test.obj")
-    
+
+    tester.expect_addition("bin/$toolset/debug*/test.obj")
+
     # Check that the dependencies are correct
     tester.touch("a/test.hpp")
     tester.run_build_system()
-    tester.expect_touch("bin/$toolset/debug/test.obj")
+    tester.expect_touch("bin/$toolset/debug*/test.obj")
     tester.expect_nothing_more()
-    
+
     tester.touch("b/test.hpp")
     tester.run_build_system()
     tester.expect_nothing_more()
@@ -104,16 +104,16 @@ def test_basic():
 
     tester.run_build_system()
 
-    tester.expect_addition("bin/$toolset/debug/test.obj")
+    tester.expect_addition("bin/$toolset/debug*/test.obj")
 
     # Check that the dependencies are correct
     tester.touch("a/test1.hpp")
     tester.run_build_system()
-    tester.expect_touch("bin/$toolset/debug/test.obj")
+    tester.expect_touch("bin/$toolset/debug*/test.obj")
 
     tester.touch("b/test2.hpp")
     tester.run_build_system()
-    tester.expect_touch("bin/$toolset/debug/test.obj")
+    tester.expect_touch("bin/$toolset/debug*/test.obj")
 
     tester.cleanup()
 
@@ -135,7 +135,7 @@ def test_order1():
 
     t.touch("a/test.h")
     t.run_build_system()
-    t.expect_touch("bin/$toolset/debug/test.obj")
+    t.expect_touch("bin/$toolset/debug*/test.obj")
     t.expect_nothing_more()
 
     t.touch("b/test.h")
@@ -166,7 +166,7 @@ def test_order2():
 
     t.touch("b/test.h")
     t.run_build_system()
-    t.expect_touch("bin/$toolset/debug/test.obj")
+    t.expect_touch("bin/$toolset/debug*/test.obj")
     t.expect_nothing_more()
 
     t.cleanup()
@@ -203,11 +203,11 @@ def test_order_graph():
     t.write("d/test4.h", "#error should find b/test4.h\n")
 
     t.run_build_system()
-    t.expect_addition("bin/$toolset/debug/test.obj")
+    t.expect_addition("bin/$toolset/debug*/test.obj")
 
     t.touch("b/test1.h")
     t.run_build_system()
-    t.expect_touch("bin/$toolset/debug/test.obj")
+    t.expect_touch("bin/$toolset/debug*/test.obj")
     t.expect_nothing_more()
 
     t.touch("a/test1.h")
@@ -216,7 +216,7 @@ def test_order_graph():
 
     t.touch("c/test2.h")
     t.run_build_system()
-    t.expect_touch("bin/$toolset/debug/test.obj")
+    t.expect_touch("bin/$toolset/debug*/test.obj")
     t.expect_nothing_more()
 
     t.touch("b/test2.h")
@@ -225,7 +225,7 @@ def test_order_graph():
 
     t.touch("e/test3.h")
     t.run_build_system()
-    t.expect_touch("bin/$toolset/debug/test.obj")
+    t.expect_touch("bin/$toolset/debug*/test.obj")
     t.expect_nothing_more()
 
     t.touch("b/test3.h")
@@ -234,7 +234,7 @@ def test_order_graph():
 
     t.touch("b/test4.h")
     t.run_build_system()
-    t.expect_touch("bin/$toolset/debug/test.obj")
+    t.expect_touch("bin/$toolset/debug*/test.obj")
     t.expect_nothing_more()
 
     t.touch("d/test4.h")

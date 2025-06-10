@@ -4,13 +4,13 @@
 //  Boost Software License, Version 1.0. (See accompanying file 
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include "test.hpp"
-#include "check_integral_constant.hpp"
 #ifdef TEST_STD
 #  include <type_traits>
 #else
 #  include <boost/type_traits/is_integral.hpp>
 #endif
+#include "test.hpp"
+#include "check_integral_constant.hpp"
 
 TT_TEST_BEGIN(is_integral)
 
@@ -112,7 +112,7 @@ BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_integral<__int64 const volatile>::value, 
 
 #endif
 
-#ifdef BOOST_HAS_INT128
+#if defined(BOOST_HAS_INT128) && !defined(TEST_CUDA_DEVICE)
 
 BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_integral<boost::uint128_type>::value, true);
 BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_integral<boost::int128_type>::value, true);
@@ -152,6 +152,10 @@ BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_integral<char16_t>::value, true);
 #endif
 #ifndef BOOST_NO_CXX11_CHAR32_T
 BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_integral<char32_t>::value, true);
+#endif
+
+#if defined(__cpp_char8_t) && __cpp_char8_t >= 201811L
+BOOST_CHECK_INTEGRAL_CONSTANT(::tt::is_integral<char8_t>::value, true);
 #endif
 
 TT_TEST_END

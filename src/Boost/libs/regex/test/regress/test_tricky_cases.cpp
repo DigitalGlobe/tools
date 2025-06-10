@@ -276,7 +276,7 @@ void test_tricky_cases3()
    // posix only:
    TEST_REGEX_SEARCH("^[[:blank:]]*#([^\\n]*\\\\[[:space:]]+)*[^\\n]*", awk, "#define some_symbol(x) \\  \r\n  foo();\\\r\n   printf(#x);", match_default, make_array(0, 53, 28, 42, -2, -2));
    // now try and test some unicode specific characters:
-#if !BOOST_WORKAROUND(__BORLANDC__, < 0x560)
+#if !BOOST_WORKAROUND(BOOST_BORLANDC, < 0x560)
    TEST_REGEX_SEARCH_W(L"[[:unicode:]]+", perl, L"a\x0300\x0400z", match_default, make_array(1, 3, -2, -2));
    TEST_REGEX_SEARCH_W(L"[\x10-\xff]", perl, L"\x0300\x0400", match_default, make_array(-2, -2));
    TEST_REGEX_SEARCH_W(L"[\01-\05]{5}", perl, L"\x0300\x0400\x0300\x0400\x0300\x0400", match_default, make_array(-2, -2));
@@ -434,5 +434,17 @@ void test_tricky_cases3()
       test(char(0), test_regex_search_tag());
    }while(0);
 #endif
+
+   do {
+      const unsigned char bytes[] = { 0x15,0x0,0x28,0x28,0x85,0x7c,0xb5,0x7c,0x7c,0x7c,0x7c,0x0,0x7c,0x7c,0x16,0x7c,0x7c,0x7c,0x67,0x85,0x0,0xb5,0x7c,0x7c,0x7c,0x7c,0x7c,0x7c,0x7c,0x7c,0x7c,0x7c,0x7c,0x3d,0x0,0x7c,0x7c,0x29,0x3f,0x28,0x3f,0x31,0x29,0xb5,0x2a,0xb5,0xff,0xb5,0xb5,0x85,0xb5,0x67,0xa,0x2a,0xf7,0x2a,0x7c,0x7c,0x32,0x29,0x5c,0x5a,0x3a,0x6b };
+      std::string str((char*)bytes, sizeof(bytes));
+      test_info<char>::set_info(__FILE__, __LINE__,
+         str.c_str(),
+         perl, str.c_str(), match_default | match_not_dot_newline,
+         make_array(0, 1, -2, -2));
+      test(char(0), test_regex_search_tag());
+   } while(0);
+
+
 }
 

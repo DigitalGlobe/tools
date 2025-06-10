@@ -1,122 +1,74 @@
-#include <boost/config.hpp>
-
-#if defined(BOOST_MSVC)
-#pragma warning(disable: 4786)  // identifier truncated in debug info
-#pragma warning(disable: 4710)  // function not inlined
-#pragma warning(disable: 4711)  // function selected for automatic inline expansion
-#pragma warning(disable: 4514)  // unreferenced inline removed
-#endif
-
-//  weak_ptr_mt_test.cpp
-//
-//  Copyright (c) 2002 Peter Dimov and Multi Media Ltd.
-//  Copyright 2005, 2008 Peter Dimov
-//
-//  Distributed under the Boost Software License, Version 1.0.
-//  See accompanying file LICENSE_1_0.txt or copy at
-//  http://www.boost.org/LICENSE_1_0.txt
+// Copyright 2018, 2020 Peter Dimov
+// Distributed under the Boost Software License, Version 1.0.
+// https://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
-#include <boost/bind.hpp>
+#include <boost/smart_ptr/detail/lightweight_thread.hpp>
+#include <boost/bind/bind.hpp>
+#include <boost/core/lightweight_test.hpp>
 
-#include <vector>
+static boost::shared_ptr<int> sp( new int );
+static boost::weak_ptr<int> wp( sp );
 
-#include <cstdio>
-#include <ctime>
-#include <cstdlib>
-
-#include <boost/detail/lightweight_thread.hpp>
-
-//
-
-int const n = 16384;
-int const k = 512; // vector size
-int const m = 16; // threads
-
-void test( std::vector< boost::shared_ptr<int> > & v )
+void f1( int n )
 {
-    using namespace std; // printf, rand
-
-    std::vector< boost::weak_ptr<int> > w( v.begin(), v.end() );
-
-    int s = 0, f = 0, r = 0;
-
     for( int i = 0; i < n; ++i )
     {
-        // randomly kill a pointer
+        boost::weak_ptr<int> p1( wp );
 
-        v[ rand() % k ].reset();
-        ++s;
-
-        for( int j = 0; j < k; ++j )
-        {
-            if( boost::shared_ptr<int> px = w[ j ].lock() )
-            {
-                ++s;
-
-                if( rand() & 4 )
-                {
-                    continue;
-                }
-
-                // rebind anyway with prob. 50% for add_ref_lock() against weak_release() contention
-                ++f;
-            }
-            else
-            {
-                ++r;
-            }
-
-            w[ j ] = v[ rand() % k ];
-        }
+        BOOST_TEST( !wp.expired() );
+        BOOST_TEST( wp.lock() != 0 );
     }
-
-    printf( "\n%d locks, %d forced rebinds, %d normal rebinds.", s, f, r );
 }
 
-#if defined( BOOST_HAS_PTHREADS )
+void f2( int n )
+{
+    for( int i = 0; i < n; ++i )
+    {
+        boost::weak_ptr<int> p1( wp );
 
-char const * thmodel = "POSIX";
-
-#else
-
-char const * thmodel = "Windows";
-
-#endif
+        BOOST_TEST( wp.expired() );
+        BOOST_TEST( wp.lock() == 0 );
+    }
+}
 
 int main()
 {
-    using namespace std; // printf, clock_t, clock
+    int const N = 100000; // iterations
+    int const M = 8;      // threads
 
-    printf("Using %s threads: %d threads, %d * %d iterations: ", thmodel, m, n, k );
+    boost::detail::lw_thread_t th[ M ] = {};
 
-    std::vector< boost::shared_ptr<int> > v( k );
-
-    for( int i = 0; i < k; ++i )
+    for( int i = 0; i < M; ++i )
     {
-        v[ i ].reset( new int( 0 ) );
+        boost::detail::lw_thread_create( th[ i ], boost::bind( f1, N ) );
     }
 
-    clock_t t = clock();
-
-    pthread_t a[ m ];
-
-    for( int i = 0; i < m; ++i )
+    for( int i = 0; i < M; ++i )
     {
-        boost::detail::lw_thread_create( a[ i ], boost::bind( test, v ) );
+        boost::detail::lw_thread_join( th[ i ] );
     }
 
-    v.resize( 0 ); // kill original copies
+    BOOST_TEST_EQ( sp.use_count(), 1 );
+    BOOST_TEST_EQ( wp.use_count(), 1 );
 
-    for( int j = 0; j < m; ++j )
+    sp.reset();
+
+    BOOST_TEST_EQ( sp.use_count(), 0 );
+    BOOST_TEST_EQ( wp.use_count(), 0 );
+
+    for( int i = 0; i < M; ++i )
     {
-        pthread_join( a[j], 0 );
+        boost::detail::lw_thread_create( th[ i ], boost::bind( f2, N ) );
     }
 
-    t = clock() - t;
+    for( int i = 0; i < M; ++i )
+    {
+        boost::detail::lw_thread_join( th[ i ] );
+    }
 
-    printf("\n\n%.3f seconds.\n", static_cast<double>(t) / CLOCKS_PER_SEC);
+    wp.reset();
 
-    return 0;
+    return boost::report_errors();
 }

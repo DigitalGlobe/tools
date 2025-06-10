@@ -7,15 +7,16 @@
     http://www.boost.org/LICENSE_1_0.txt)
 =============================================================================*/
 
-#include <boost/detail/lightweight_test.hpp>
 #include <boost/spirit/include/classic_core.hpp>
 #include <boost/spirit/include/classic_actor.hpp>
+
+#include <boost/core/lightweight_test.hpp>
 #include <boost/math/concepts/real_concept.hpp>
 
 using namespace BOOST_SPIRIT_CLASSIC_NS;
 using boost::math::concepts::real_concept;
 
-int main(int argc, char* argv[])
+int main()
 {
     real_parser<real_concept> const rr_p;
     bool started = false;

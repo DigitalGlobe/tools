@@ -1,9 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2008, 2012 Jurko Gospodnetic
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Tests that generators get selected correctly.
 #
@@ -60,6 +60,7 @@ actions generate-a-cpp-file { $(CREATE-FILE) "$(<)" }
 """)
 
     t.write("Other/mygen.py", """\
+from __future__ import print_function
 import b2.build.generators as generators
 import b2.build.type as type
 
@@ -74,7 +75,7 @@ if os.name == 'nt':
 else:
     action = 'echo "void g() {}" > "$(<)"'
 def f(*args):
-    print "Generating a CPP file..."
+    print("Generating a CPP file...")
 
 get_manager().engine().register_action("mygen.generate-a-cpp-file", action,
     function=f)
@@ -87,9 +88,9 @@ my-obj other-obj : source.extension ;
 
     t.run_build_system()
     t.expect_output_lines("Generating a CPP file...")
-    t.expect_addition("bin/$toolset/debug/dummy.my_obj")
-    t.expect_addition("Other/bin/$toolset/debug/other-obj.cpp")
-    t.expect_addition("Other/bin/$toolset/debug/other-obj.my_obj")
+    t.expect_addition("bin/dummy.my_obj")
+    t.expect_addition("Other/bin/other-obj.cpp")
+    t.expect_addition("Other/bin/other-obj.my_obj")
     t.expect_nothing_more()
 
     t.cleanup()
@@ -139,8 +140,8 @@ yyy other : source.xxx2 ;
 """)
 
     t.run_build_system()
-    t.expect_addition("bin/$toolset/debug/dummy.yyy")
-    t.expect_addition("Other/bin/$toolset/debug/other.yyy")
+    t.expect_addition("bin/dummy.yyy")
+    t.expect_addition("Other/bin/other.yyy")
     t.expect_nothing_more()
 
     t.cleanup()

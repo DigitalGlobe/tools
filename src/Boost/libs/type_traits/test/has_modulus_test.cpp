@@ -3,14 +3,13 @@
 //  Boost Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include "test.hpp"
-#include "check_integral_constant.hpp"
-
 #ifdef TEST_STD
 #  include <type_traits>
 #else
 #  include <boost/type_traits/has_modulus.hpp>
 #endif
+#include "test.hpp"
+#include "check_integral_constant.hpp"
 
 #define BOOST_TT_TRAIT_NAME has_modulus
 #define BOOST_TT_TRAIT_OP %
@@ -18,7 +17,7 @@
 
 #include "has_binary_operators.hpp"
 
-void specific() {
+BOOST_TT_PROC void specific() {
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< bool const &, void, int >::value), 0);
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< int, void, int >::value), 0);
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< void, int &, int >::value), 0);

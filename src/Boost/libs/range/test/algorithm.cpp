@@ -35,9 +35,8 @@
 #endif
 
 #include <boost/assign.hpp>
-#include <boost/config.hpp>    
+#include <boost/config.hpp>
 #include <boost/array.hpp>
-#include <boost/bind.hpp>
 #include <boost/range/numeric.hpp>
 #include <boost/range/algorithm.hpp>
 #include <boost/range/value_type.hpp>
@@ -457,7 +456,7 @@ void simple_compile_test()
 
     BOOST_RANGE_RETURNS_TEST2( find_end, v, std::less<int>() );
     BOOST_RANGE_RETURNS_TEST2( find_first_of, v, std::less<int>() );
-    BOOST_RANGE_RETURNS_TEST2( search, v, std::less<int>() );
+    BOOST_RANGE_RETURNS_TEST2( boost::search, v, std::less<int>() );
     BOOST_RANGE_RETURNS_TEST2( lower_bound, 0, std::less<int>() );
     BOOST_RANGE_RETURNS_TEST2( upper_bound, 0, std::less<int>() );
 

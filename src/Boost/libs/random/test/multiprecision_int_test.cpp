@@ -20,6 +20,7 @@
 #define BOOST_TEST_MAIN
 #include <boost/test/unit_test.hpp>
 
+#include <boost/core/ignore_unused.hpp>
 #include <boost/multiprecision/debug_adaptor.hpp>
 #include <boost/multiprecision/cpp_bin_float.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
@@ -31,6 +32,7 @@
 #include <boost/random/uniform_int.hpp>
 #include <boost/random/uniform_smallint.hpp>
 #include <boost/random/discrete_distribution.hpp>
+#include <boost/mpl/list.hpp>
 #include <sstream>
 
 typedef boost::mpl::list <
@@ -63,6 +65,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(generator_test, engine_type, engines)
    gen.discard(20);
 
    typename engine_type::base_type base(gen.base());
+   boost::ignore_unused(base);
 
    std::stringstream ss;
    ss << gen;
@@ -212,8 +215,11 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(discrete_distributions, distribution_type, other_d
    distribution_type d2;
    ss >> d2;
    BOOST_CHECK(d == d2);
-
-   boost::random::independent_bits_engine<boost::random::mt19937, std::numeric_limits<boost::multiprecision::uint1024_t>::digits, boost::multiprecision::uint1024_t > big_random;
+   //
+   // The number of digits in the independent_bits_engine must be low enough that we don't overflow
+   // when converting to a double (see other_distributions declared above).
+   //
+   boost::random::independent_bits_engine<boost::random::mt19937, std::numeric_limits<boost::multiprecision::uint1024_t>::digits - 2, boost::multiprecision::uint1024_t > big_random;
    for(unsigned i = 0; i < 200; ++i)
    {
       result_type r = d(big_random);

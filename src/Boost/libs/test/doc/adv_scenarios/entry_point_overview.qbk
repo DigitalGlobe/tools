@@ -1,5 +1,5 @@
 [/
- / Copyright (c) 2003 Boost.Test contributors 
+ / Copyright (c) 2003 Boost.Test contributors
  /
  / Distributed under the Boost Software License, Version 1.0. (See accompanying
  / file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -13,7 +13,7 @@ The only thing you are required to do in case your program consists of more than
 is to indicate to the framework in which of the files it is supposed to generate function `main`.
 You do it by defining macro __BOOST_TEST_MODULE__ before the inclusion of any of the framework files.
 The value of this macro is used as a name of the [link ref_test_module test module] as well as the
-[link boost_test.tests_organization.test_suite.master_test_suite master test suite]. 
+[link boost_test.tests_organization.test_tree.master_test_suite master test suite].
 
 The reason for defining function `main` for you is twofold:
 
@@ -32,7 +32,7 @@ It calls [link boost_test.adv_scenarios.test_module_init_overview ['test module 
 The default entry point is sufficient in most of the cases. Occasionally, a need may arise to declare an entry point with a
 different name or signature. For overriding the definition of the default test module's entry point:
 
-* [link boost_test.adv_scenarios.single_header_customizations.entry_point see here], for single header usage variant,
+* [link boost_test.adv_scenarios.single_header_customizations.entry_point see here], for header-only usage variant,
 * [link boost_test.adv_scenarios.static_lib_customizations.entry_point see here], for static library usage variant,
 * [link boost_test.adv_scenarios.shared_lib_customizations.entry_point see here], for shared library usage variant.
 

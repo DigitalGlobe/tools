@@ -47,7 +47,7 @@ struct switch_grammar : public spirit::grammar<switch_grammar> {
 
 
 template <typename ScannerT>
-switch_grammar::definition<ScannerT>::definition(switch_grammar const & self)
+switch_grammar::definition<ScannerT>::definition(switch_grammar const & /*self*/)
 {
     using boost::cref;
 
@@ -71,11 +71,11 @@ switch_grammar::definition<ScannerT>::definition(switch_grammar const & self)
         [
             limit_d(cref(index), cref(index))[uint_p] >>
 
-            switch_p[
+            switch_p[(
                 case_p<'s'>(uint_p),
                 case_p<'d'>(uint_p),
                 case_p<'n'>(uint_p)
-            ]
+            )]
         ];
 }
 

@@ -1,11 +1,11 @@
 # Copyright 2008 - 2013 Roland Schwarz
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Boost library support module.
 #
-# This module allows to use the boost library from boost-build projects. The
+# This module allows to use the boost library from B2 projects. The
 # location of a boost source tree or the path to a pre-built version of the
 # library can be configured from either site-config.jam or user-config.jam. If
 # no location is configured the module looks for a BOOST_ROOT environment
@@ -69,7 +69,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 # parameter must be a valid boost version number, e.g. 1.35, if specifying a
 # pre-built version with versioned layout. It may be a symbolic name, e.g.
 # 'trunk' if specifying a source tree. The options are specified as named
-# parameters (like properties). The following paramters are available:
+# parameters (like properties). The following parameters are available:
 #
 # <root>/path-to-boost-root            : Specify a source tree.
 # <include>/path-to-include            : The include directory to search.
@@ -94,9 +94,9 @@ rule init
         {
             if ! $(.boost_default)
             {
-                echo notice: configuring default boost library $(version) ;
+                echo notice\: configuring default boost library $(version) ;
             }
-            echo notice: configuring boost library $(version) ;
+            echo notice\: configuring boost library $(version) ;
         }
         .boost_default ?= $(version) ; # the first configured is default
         .boost.$(version) = [ property-set.create $(options) ] ;
@@ -139,7 +139,7 @@ rule use-project
 
             if $(.debug-configuration)
             {
-                echo notice: using boost library $(version) [ $(opt).raw ] ;
+                echo notice\: using boost library $(version) [ $(opt).raw ] ;
             }
 
             .layout = [ $(opt).get <layout> ] ;
@@ -172,7 +172,7 @@ rule use-project
             else
             {
                 project.initialize $(__name__) ;
-                # It is possible to overide the setup of the searched libraries
+                # It is possible to override the setup of the searched libraries
                 # per version. The (unlikely) 0.0.1 tag is meant as an example
                 # template only.
                 switch $(version)
@@ -213,6 +213,7 @@ rule boost_std ( inc ? lib ? )
     boost_lib_std graph               : BOOST_GRAPH_DYN_LINK ;
     boost_lib_std graph_parallel      : BOOST_GRAPH_DYN_LINK ;
     boost_lib_std iostreams           : BOOST_IOSTREAMS_DYN_LINK ;
+    boost_lib_std json                : BOOST_JSON_DYN_LINK ;
     boost_lib_std locale              : BOOST_LOCALE_DYN_LINK ;
     boost_lib_std log                 : BOOST_LOG_DYN_LINK  ;
     boost_lib_std log_setup           : BOOST_LOG_SETUP_DYN_LINK  ;
@@ -236,6 +237,7 @@ rule boost_std ( inc ? lib ? )
     boost_lib_std thread              : BOOST_THREAD_DYN_DLL  ;
     boost_lib_std timer               : BOOST_TIMER_DYN_DLL  ;
     boost_lib_std unit_test_framework : BOOST_TEST_DYN_LINK  ;
+    boost_lib_std url                 : BOOST_URL_DYN_LINK  ;
     boost_lib_std wave                : BOOST_WAVE_DYN_LINK  ;
     boost_lib_std wserialization      : BOOST_SERIALIZATION_DYN_LINK ;
 }
@@ -262,7 +264,7 @@ rule tag_std ( name : type ? : property-set )
     local result ;
     if $(.layout) = system
     {
-        local version = [ MATCH ^([0-9]+)_([0-9]+) : $(.version_tag) ] ;
+        local version = [ MATCH "^([0-9]+)_([0-9]+)" : $(.version_tag) ] ;
         if $(version[1]) = "1" && [ numbers.less $(version[2]) 39 ]
         {
             result = [ tag_tagged $(name) : $(type) : $(property-set) ] ;

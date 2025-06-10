@@ -8,13 +8,18 @@
     License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
     http://www.boost.org/LICENSE_1_0.txt)
 =============================================================================*/
-#include <boost/detail/lightweight_test.hpp>
 #include <boost/spirit/include/classic_core.hpp>
 #include <boost/spirit/include/classic_assign_actor.hpp>
 
+#include <boost/core/lightweight_test.hpp>
+
+#ifdef _MSC_VER
+// bogus https://developercommunity.visualstudio.com/t/buggy-warning-c4709/471956
+# pragma warning(disable: 4709) // comma operator within array index expression
+#endif
+
 using namespace boost;
 using namespace BOOST_SPIRIT_CLASSIC_NS;
-using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -99,8 +104,8 @@ void bug_003()
 
 void bug_004()
 {
-    const char min = (numeric_limits<char>::min)();
-    const char max = (numeric_limits<char>::max)();
+    const char min = (std::numeric_limits<char>::min)();
+    const char max = (std::numeric_limits<char>::max)();
 
     {
         chset<> set(~range<>(min, max));
@@ -140,7 +145,6 @@ void bug_004()
 ///////////////////////////////////////////////////////////////////////////////
 #include <boost/spirit/include/classic_core.hpp>
 
-using namespace std;
 using namespace boost;
 using namespace spirit;
 
@@ -261,7 +265,7 @@ void sf_bug_719322()
 #include <string>
 #include <fstream>
 #include <iostream>
-#include <boost/detail/lightweight_test.hpp>
+#include <boost/core/lightweight_test.hpp>
 #include <stdio.h>
 
 template <typename IterT>
@@ -318,15 +322,17 @@ void sf_bug_742038()
     position_iterator<std::string::iterator> e;
     test_assign(b, e);
 
-    std::fstream f(tmpfilename, std::ios::out);
-    f << src;
-    f.close();
+    {
+        std::fstream f(tmpfilename, std::ios::out);
+        f << src;
+        f.close();
 
-    file_iterator<> b1(tmpfilename);
-    file_iterator<> e1(b1.make_end());
-    test_assign(b1, e1);
+        file_iterator<> b1(tmpfilename);
+        file_iterator<> e1(b1.make_end());
+        test_assign(b1, e1);
+    }
 
-    ::remove(tmpfilename);
+    std::remove(tmpfilename);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

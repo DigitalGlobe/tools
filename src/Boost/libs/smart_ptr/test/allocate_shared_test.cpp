@@ -6,7 +6,7 @@
 // See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt
 
-#include <boost/detail/lightweight_test.hpp>
+#include <boost/core/lightweight_test.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
@@ -62,6 +62,12 @@ int main()
     }
 
     {
+        boost::shared_ptr< int > pi = boost::allocate_shared_noinit< int >( std::allocator<int>() );
+
+        BOOST_TEST( pi.get() != 0 );
+    }
+
+    {
         boost::shared_ptr< int > pi = boost::allocate_shared< int >( std::allocator<int>(), 5 );
 
         BOOST_TEST( pi.get() != 0 );
@@ -72,6 +78,19 @@ int main()
 
     {
         boost::shared_ptr< X > pi = boost::allocate_shared< X >( std::allocator<void>() );
+        boost::weak_ptr<X> wp( pi );
+
+        BOOST_TEST( X::instances == 1 );
+        BOOST_TEST( pi.get() != 0 );
+        BOOST_TEST( pi->v == 0 );
+
+        pi.reset();
+
+        BOOST_TEST( X::instances == 0 );
+    }
+
+    {
+        boost::shared_ptr< X > pi = boost::allocate_shared_noinit< X >( std::allocator<void>() );
         boost::weak_ptr<X> wp( pi );
 
         BOOST_TEST( X::instances == 1 );

@@ -1,9 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2003 Dave Abrahams
 # Copyright 2003, 2006 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Test the 'make' rule.
 
@@ -28,8 +28,8 @@ make foo.bar : : creator : <test_feature>12345678 ;
 """)
 
 t.run_build_system()
-t.expect_addition("bin/$toolset/debug/foo.bar")
-t.fail_test(string.find(t.read("bin/$toolset/debug/foo.bar"), "12345678") == -1)
+t.expect_addition("bin/foo.bar")
+t.fail_test(t.read("bin/foo.bar").find("12345678") == -1)
 
 
 # Regression test. Make sure that if a main target is requested two times, and

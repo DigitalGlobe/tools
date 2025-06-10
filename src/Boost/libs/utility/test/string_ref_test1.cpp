@@ -7,23 +7,23 @@
     For more information, see http://www.boost.org
 */
 
+#include <cstddef>
 #include <iostream>
 #include <algorithm>
 #include <string>
 
 #include <boost/utility/string_ref.hpp>
 
-#define BOOST_TEST_MAIN
-#include <boost/test/unit_test.hpp>
+#include <boost/core/lightweight_test.hpp>
 
 typedef boost::string_ref string_ref;
 
 //  Should be equal
 void interop ( const std::string &str, string_ref ref ) {
-//  BOOST_CHECK ( str == ref );
-    BOOST_CHECK ( str.size () == ref.size ());
-    BOOST_CHECK ( std::equal ( str.begin (),  str.end (),  ref.begin ()));
-    BOOST_CHECK ( std::equal ( str.rbegin (), str.rend (), ref.rbegin ()));
+//  BOOST_TEST ( str == ref );
+    BOOST_TEST ( str.size () == ref.size ());
+    BOOST_TEST ( std::equal ( str.begin (),  str.end (),  ref.begin ()));
+    BOOST_TEST ( std::equal ( str.rbegin (), str.rend (), ref.rbegin ()));
     }
 
 void null_tests ( const char *p ) {
@@ -34,38 +34,38 @@ void null_tests ( const char *p ) {
     string_ref sr4 ( p );
     sr4.clear ();
 
-    BOOST_CHECK ( sr1 == sr2 );
-    BOOST_CHECK ( sr1 == sr3 );
-    BOOST_CHECK ( sr2 == sr3 );
-    BOOST_CHECK ( sr1 == sr4 );
+    BOOST_TEST ( sr1 == sr2 );
+    BOOST_TEST ( sr1 == sr3 );
+    BOOST_TEST ( sr2 == sr3 );
+    BOOST_TEST ( sr1 == sr4 );
     }
 
 //  make sure that substrings work just like strings
 void test_substr ( const std::string &str ) {
-    const size_t sz = str.size ();
+    const std::size_t sz = str.size ();
     string_ref ref ( str );
 
 //  Substrings at the end
-    for ( size_t i = 0; i <= sz; ++ i )
+    for ( std::size_t i = 0; i <= sz; ++ i )
         interop ( str.substr ( i ), ref.substr ( i ));
 
 //  Substrings at the beginning
-    for ( size_t i = 0; i <= sz; ++ i )
+    for ( std::size_t i = 0; i <= sz; ++ i )
         interop ( str.substr ( 0, i ), ref.substr ( 0, i ));
 
 //  All possible substrings
-    for ( size_t i = 0; i < sz; ++i )
-        for ( size_t j = i; j < sz; ++j )
+    for ( std::size_t i = 0; i < sz; ++i )
+        for ( std::size_t j = i; j < sz; ++j )
             interop ( str.substr ( i, j ), ref.substr ( i, j ));
     }
 
 //  make sure that removing prefixes and suffixes work just like strings
 void test_remove ( const std::string &str ) {
-    const size_t sz = str.size ();
+    const std::size_t sz = str.size ();
     std::string work;
     string_ref ref;
 
-    for ( size_t i = 1; i <= sz; ++i ) {
+    for ( std::size_t i = 1; i <= sz; ++i ) {
       work = str;
       ref  = str;
       while ( ref.size () >= i ) {
@@ -75,7 +75,7 @@ void test_remove ( const std::string &str ) {
           }
       }
 
-    for ( size_t i = 1; i < sz; ++ i ) {
+    for ( std::size_t i = 1; i < sz; ++ i ) {
       work = str;
       ref  = str;
       while ( ref.size () >= i ) {
@@ -94,7 +94,7 @@ const char *test_strings [] = {
     NULL
     };
 
-BOOST_AUTO_TEST_CASE( test_main )
+int main()
 {
     const char **p = &test_strings[0];
 
@@ -106,4 +106,6 @@ BOOST_AUTO_TEST_CASE( test_main )
 
         p++;
         }
+
+    return boost::report_errors();
 }

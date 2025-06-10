@@ -10,11 +10,10 @@
 
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
-#include <boost/detail/lightweight_test.hpp>
+#include <boost/core/lightweight_test.hpp>
 #include <memory>
 #include <utility>
-
-#if !defined( BOOST_NO_CXX11_SMART_PTR ) && !defined( BOOST_NO_CXX11_RVALUE_REFERENCES )
+#include <type_traits>
 
 struct X: public boost::enable_shared_from_this< X >
 {
@@ -67,10 +66,41 @@ struct YD
 {
     void operator()( Y* p ) const
     {
-        p->deleted_ = true;
-        delete p;
+        if( p )
+        {
+            p->deleted_ = true;
+            delete p;
+        }
+        else
+        {
+            BOOST_ERROR( "YD::operator()(0) called" );
+        }
     }
 };
+
+template<class U, class T, class D> static void test_null_unique_ptr( std::unique_ptr<T, D> p1, std::unique_ptr<T, D> p2 )
+{
+    BOOST_TEST( T::instances == 0 );
+
+    boost::shared_ptr<U> sp( std::move( p1 ) );
+
+    BOOST_TEST( sp.get() == 0 );
+    BOOST_TEST( sp.use_count() == 0 );
+
+    sp.reset( new T, typename std::remove_reference<D>::type() );
+
+    BOOST_TEST( sp.get() != 0 );
+    BOOST_TEST( sp.use_count() == 1 );
+
+    BOOST_TEST( T::instances == 1 );
+
+    sp = std::move( p2 );
+
+    BOOST_TEST( sp.get() == 0 );
+    BOOST_TEST( sp.use_count() == 0 );
+
+    BOOST_TEST( T::instances == 0 );
+}
 
 int main()
 {
@@ -226,14 +256,28 @@ int main()
         BOOST_TEST( Y::instances == 0 );
     }
 
+    {
+        test_null_unique_ptr<X>( std::unique_ptr<X>(), std::unique_ptr<X>() );
+        test_null_unique_ptr<X const>( std::unique_ptr<X>(), std::unique_ptr<X>() );
+        test_null_unique_ptr<void>( std::unique_ptr<X>(), std::unique_ptr<X>() );
+        test_null_unique_ptr<void const>( std::unique_ptr<X>(), std::unique_ptr<X>() );
+    }
+
+    {
+        test_null_unique_ptr<Y>( std::unique_ptr<Y, YD>( 0, YD() ), std::unique_ptr<Y, YD>( 0, YD() ) );
+        test_null_unique_ptr<Y const>( std::unique_ptr<Y, YD>( 0, YD() ), std::unique_ptr<Y, YD>( 0, YD() ) );
+        test_null_unique_ptr<void>( std::unique_ptr<Y, YD>( 0, YD() ), std::unique_ptr<Y, YD>( 0, YD() ) );
+        test_null_unique_ptr<void const>( std::unique_ptr<Y, YD>( 0, YD() ), std::unique_ptr<Y, YD>( 0, YD() ) );
+    }
+
+    {
+        YD yd;
+
+        test_null_unique_ptr<Y>( std::unique_ptr<Y, YD&>( 0, yd ), std::unique_ptr<Y, YD&>( 0, yd ) );
+        test_null_unique_ptr<Y const>( std::unique_ptr<Y, YD&>( 0, yd ), std::unique_ptr<Y, YD&>( 0, yd ) );
+        test_null_unique_ptr<void>( std::unique_ptr<Y, YD&>( 0, yd ), std::unique_ptr<Y, YD&>( 0, yd ) );
+        test_null_unique_ptr<void const>( std::unique_ptr<Y, YD&>( 0, yd ), std::unique_ptr<Y, YD&>( 0, yd ) );
+    }
+
     return boost::report_errors();
 }
-
-#else // !defined( BOOST_NO_CXX11_SMART_PTR ) && !defined( BOOST_NO_CXX11_RVALUE_REFERENCES )
-
-int main()
-{
-    return 0;
-}
-
-#endif

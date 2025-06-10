@@ -3,14 +3,13 @@
 //  Boost Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include "test.hpp"
-#include "check_integral_constant.hpp"
-
 #ifdef TEST_STD
 #  include <type_traits>
 #else
 #  include <boost/type_traits/has_right_shift.hpp>
 #endif
+#include "test.hpp"
+#include "check_integral_constant.hpp"
 
 #define BOOST_TT_TRAIT_NAME has_right_shift
 #define BOOST_TT_TRAIT_OP >>
@@ -20,7 +19,7 @@
 
 #include "has_binary_operators.hpp"
 
-void specific() {
+BOOST_TT_PROC void specific() {
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< bool const, void, void >::value), 0);
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< bool &, void >::value), 0);
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< bool const &, void, void >::value), 0);
@@ -235,9 +234,11 @@ void specific() {
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< std::istream, char&, std::istream& >::value), 1);
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< std::istream, signed char&, std::istream& >::value), 1);
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< std::istream, unsigned char&, std::istream& >::value), 1);
+#if !(defined(_LIBCPP_VERSION) && (_LIBCPP_VERSION >= 9000)) && !defined(_HAS_CXX20) && (BOOST_CXX_VERSION < 202000)
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< std::istream, char*, std::istream& >::value), 1);
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< std::istream, signed char*, std::istream& >::value), 1);
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< std::istream, unsigned char*, std::istream& >::value), 1);
+#endif
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< std::istream, std::string&, std::istream& >::value), 1);
 }
 

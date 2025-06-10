@@ -5,8 +5,6 @@
 
 // This test checks whether #8970 was fixed
 
-#include <boost/config/warning_disable.hpp>
-#include <boost/detail/lightweight_test.hpp>
 #include <iostream>
 #include <boost/spirit/include/karma.hpp>
 
@@ -18,7 +16,7 @@ using namespace boost::spirit;
 template <typename Num>
 struct signed_policy : karma::real_policies<Num>
 {
-    static bool force_sign(Num n) { return true; }
+    static bool force_sign(Num /*n*/) { return true; }
 };
 
 int main()

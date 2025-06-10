@@ -58,6 +58,8 @@ void test_independent_subs()
    TEST_REGEX_SEARCH("word (?>[a-zA-Z0-9]+ ){0,30}otherword", perl, "word cat dog elephant mussel cow horse canary baboon snake shark the quick brown fox and the lazy dog and several other words getting close to thirty by now I really really hope otherword", match_default, make_array(-2, -2));
    TEST_REGEX_SEARCH("((?>Z)+|A)+", perl, "ZABCDEFG", match_default, make_array(0, 2, 1, 2, -2, -2));
    TEST_INVALID_REGEX("((?>)+|A)+", perl);
+   // Bug https://github.com/boostorg/regex/issues/140:
+   TEST_REGEX_SEARCH("1?+(?#)1", perl, "22113", match_default, make_array(2, 4, -2, -2));
 }
 
 void test_conditionals()
@@ -205,6 +207,18 @@ void test_options()
    TEST_REGEX_SEARCH("(a (?x)b c)d e", perl, "a bcde", match_default, make_array(-2, -2));
    TEST_REGEX_SEARCH("(a b(?x)c d (?-x)e f)", perl, "a bcde f", match_default, make_array(0, 8, 0, 8, -2, -2));
    TEST_REGEX_SEARCH("(a b(?x)c d (?-x)e f)", perl, "abcdef", match_default, make_array(-2, -2));
+
+   TEST_INVALID_REGEX("a++(?#abc)+", perl);
+   TEST_INVALID_REGEX("a++(?#abc)?", perl);
+   TEST_INVALID_REGEX("a++(?#abc)*", perl);
+   TEST_INVALID_REGEX("a++(?#abc){2}", perl);
+   TEST_INVALID_REGEX("a++(?#abc)(?#more)+", perl);
+   TEST_REGEX_SEARCH("(?x) ab (?#first comment) (?#more)   +", perl, "abbbb", match_default, make_array(0, 5, -2, -2));
+   TEST_REGEX_SEARCH("ab(?#first comment)(?#more)+", perl, "abbbb", match_default, make_array(0, 5, -2, -2));
+   TEST_REGEX_SEARCH("(?x) ab (?#first comment) (?#more)   (c)", perl, "abc", match_default, make_array(0, 3, 2, 3, -2, -2));
+   TEST_REGEX_SEARCH("ab(?#first comment)(?#more)(c)", perl, "abc", match_default, make_array(0, 3, 2, 3, -2, -2));
+   TEST_REGEX_SEARCH("(?x) ab (?#first comment) (?#more)   (?:c)", perl, "abc", match_default, make_array(0, 3, -2, -2));
+   TEST_REGEX_SEARCH("ab(?#first comment)(?#more)(?:c)", perl, "abc", match_default, make_array(0, 3, -2, -2));
 }
 
 void test_options2()
@@ -245,6 +259,10 @@ void test_options2()
    TEST_REGEX_SEARCH("a(?i:b)*c", perl, "aBBc", match_default, make_array(0, 4, -2, -2));
    TEST_REGEX_SEARCH("a(?i:b)*c", perl, "aBC", match_default, make_array(-2, -2));
    TEST_REGEX_SEARCH("a(?i:b)*c", perl, "aBBC", match_default, make_array(-2, -2));
+   TEST_REGEX_SEARCH("(?i:j)|h", perl, "J", match_default, make_array(0, 1, -2, -2));
+   TEST_REGEX_SEARCH("(?i:j)|h", perl, "j", match_default, make_array(0, 1, -2, -2));
+   TEST_REGEX_SEARCH("(?i:j)|h", perl, "h", match_default, make_array(0, 1, -2, -2));
+   TEST_REGEX_SEARCH("(?i:j)|h", perl, "H", match_default, make_array(-2, -2));
 
    TEST_REGEX_SEARCH("a(?=b(?i)c)\\w\\wd", perl, "abcd", match_default, make_array(0, 4, -2, -2));
    TEST_REGEX_SEARCH("a(?=b(?i)c)\\w\\wd", perl, "abCd", match_default, make_array(0, 4, -2, -2));
@@ -919,6 +937,7 @@ void test_recursion()
    TEST_REGEX_SEARCH("namespace\\s+(\\w+)\\s+(\\{(?:[^{}]*(?:(?2)[^{}]*)*)?\\})", perl, "namespace one { namespace two { int foo(){} } { {{{ }  } } } {}}", match_default, make_array(0, 64, 10, 13, 14, 64, -2, -2));
    TEST_INVALID_REGEX("((?1)|a)", perl);
    TEST_REGEX_SEARCH("a(?0)?", perl, "aaaaa", match_default, make_array(0, 5, -2, -2));
+   TEST_REGEX_SEARCH("((?(DEFINE)(?'a'A)(?'b'(?&a)?(?&a)))(?&b)?)", perl, "AA", match_default, make_array(0, 2, 0, 2, -1, -1, -2, 2, 2, 2, 2, -1, -1, -2, -2));
 
    // Recursion to a named sub with a name that is used multiple times:
    TEST_REGEX_SEARCH("(?:(?<A>a+)|(?<A>b+))\\.(?&A)", perl, "aaaa.aa", match_default, make_array(0, 7, 0, 4, -1, -1, -2, -2));
@@ -980,6 +999,9 @@ void test_verbs()
    TEST_REGEX_SEARCH("AA+(*SKIP)(B|Z)|C", perl, "AAAC", match_default, make_array(3, 4, -1, -1, -2, -2));
    TEST_REGEX_SEARCH("AA+(*SKIP)(B|Z)|AC", perl, "AAAC", match_default, make_array(-2, -2));
    TEST_REGEX_SEARCH("AA+(*SKIP)B|C", perl, "AAAC", match_default, make_array(3, 4, -2, -2));
+   
+   // https://github.com/boostorg/regex/issues/152
+   TEST_REGEX_SEARCH("\\A((\x1f((?1)    )?+)?+(*SKIP) *?(?2)*?)\\z", perl, "\x20\x1f\x1f\x20", match_default, make_array(-2, -2));
 
    TEST_REGEX_SEARCH("^(?:aaa(*THEN)\\w{6}|bbb(*THEN)\\w{5}|ccc(*THEN)\\w{4}|\\w{3})", perl, "aaaxxxxxx", match_default, make_array(0, 9, -2, -2));
    TEST_REGEX_SEARCH("^(?:aaa(*THEN)\\w{6}|bbb(*THEN)\\w{5}|ccc(*THEN)\\w{4}|\\w{3})", perl, "aaa++++++", match_default, make_array(-2, -2));

@@ -5,10 +5,6 @@
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/config/warning_disable.hpp>
-#include <boost/detail/lightweight_test.hpp>
-
-#include <boost/mpl/print.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/support_utree.hpp>
 
@@ -163,6 +159,11 @@ int main()
         BOOST_TEST(check(ut, "( ( \"a\" ) ( 25.5 ) \"b\" )"));
         ut.clear();
 
+#if defined(BOOST_CLANG)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Woverloaded-shift-op-parentheses"
+#endif
+
         BOOST_TEST(test_attr("a25.5b", r1 > r2 >> r3, ut));
         BOOST_TEST(ut.which() == utree_type::list_type);
         BOOST_TEST(check(ut, "( \"a\" ( 25.5 ) ( \"b\" ) )"));
@@ -181,6 +182,10 @@ int main()
         BOOST_TEST(test_attr("a25.5b", r3 >> r2 > char_, ut));
         BOOST_TEST(ut.which() == utree_type::list_type);
         BOOST_TEST(check(ut, "( ( \"a\" ) ( 25.5 ) \"b\" )"));
+
+#if defined(BOOST_CLANG)
+#pragma clang diagnostic pop
+#endif
     }
 
     return boost::report_errors();

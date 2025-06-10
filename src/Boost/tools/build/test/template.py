@@ -1,11 +1,11 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright (C) FILL SOMETHING HERE 2006.
 # Distributed under the Boost Software License, Version 1.0. (See
-# accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
-# This file is template for Boost.Build tests. It creates a simple project that
+# This file is template for B2 tests. It creates a simple project that
 # builds one exe from one source, and checks that the exe is really created.
 
 import BoostBuild
@@ -21,13 +21,13 @@ exe hello : hello.cpp ;
 
 t.write("hello.cpp", """
 int main() {}
-"""
+""")
 
 # Run the build.
 t.run_build_system()
 
 # First, create a list of three pathnames.
-file_list = BoostBuild.List("bin/$toolset/debug/") * \
+file_list = BoostBuild.List("bin/$toolset/debug*/") * \
     BoostBuild.List("hello.exe hello.obj")
 # Second, assert that those files were added as result of the last build system
 # invocation.

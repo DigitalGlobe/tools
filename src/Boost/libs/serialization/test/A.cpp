@@ -1,7 +1,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // A.cpp    simple class test
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -11,12 +11,15 @@
 #include <cassert>
 #include <cstdlib> // rand()
 #include <cstddef> // size_t
-#include <boost/math/special_functions/next.hpp>
+
 
 #include <boost/config.hpp>
+#if BOOST_CXX_VERSION > 199711L // only include floating point if C++ version >= C++11
+#include <boost/math/special_functions/next.hpp>
+#endif
 #if defined(BOOST_NO_STDC_NAMESPACE)
 namespace std{
-    using ::rand; 
+    using ::rand;
     using ::size_t;
 }
 #endif
@@ -48,7 +51,7 @@ void accumulate(std::size_t & s, const T & t){
         s += *tptr++;
     }
 }
-
+A_DLL_DECL
 A::operator std::size_t () const {
     std::size_t retval = 0;
     accumulate(retval, b);
@@ -76,13 +79,14 @@ A::operator std::size_t () const {
 #if defined(_MSC_VER)
 #pragma warning(push) // Save warning settings.
 #pragma warning(disable : 4244) // Disable possible loss of data warning
+#endif
 
-#endif 
+A_DLL_DECL
 A::A() :
     b(true),
     #ifndef BOOST_NO_INT64_T
-    f(std::rand() * std::rand()),
-    g(std::rand() * std::rand()),
+    f(static_cast<boost::int64_t>(std::rand()) * static_cast<boost::int64_t>(std::rand())),
+    g(static_cast<boost::uint64_t>(std::rand()) * static_cast<boost::uint64_t>(std::rand())),
     #endif
     l(static_cast<enum h>(std::rand() % 3)),
     m(std::rand()),
@@ -109,10 +113,10 @@ A::A() :
 
 #if defined(_MSC_VER)
 #pragma warning(pop) // Restore warnings to previous state.
-#endif 
+#endif
 
-bool A::operator==(const A &rhs) const
-{
+A_DLL_DECL bool
+A::operator==(const A &rhs) const {
     if(b != rhs.b)
         return false;
     if(l != rhs.l)
@@ -130,12 +134,12 @@ bool A::operator==(const A &rhs) const
     if(o != rhs.o)
         return false;
     if(p != rhs.p)
-        return false; 
+        return false;
     if(q != rhs.q)
         return false;
     #ifndef BOOST_NO_CWCHAR
     if(r != rhs.r)
-        return false; 
+        return false;
     #endif
     if(c != rhs.c)
         return false;
@@ -144,29 +148,32 @@ bool A::operator==(const A &rhs) const
     if(t != rhs.t)
         return false;
     if(u != rhs.u)
-        return false; 
+        return false;
     if(v != rhs.v)
-        return false; 
-    if(std::abs( boost::math::float_distance(w, rhs.w)) > 1)
         return false;
-    if(std::abs( boost::math::float_distance(x, rhs.x)) > 1)
-        return false;
+    #if BOOST_CXX_VERSION > 199711L // only include floating point if C++ version >= C++11
+        if(std::abs( boost::math::float_distance(w, rhs.w)) > 1)
+            return false;
+        if(std::abs( boost::math::float_distance(x, rhs.x)) > 1)
+            return false;
+    #endif
     if(0 != y.compare(rhs.y))
+
         return false;
     #ifndef BOOST_NO_STD_WSTRING
     if(0 != z.compare(rhs.z))
         return false;
-    #endif      
+    #endif
     return true;
 }
 
-bool A::operator!=(const A &rhs) const
-{
+A_DLL_DECL bool
+A::operator!=(const A &rhs) const {
     return ! (*this == rhs);
 }
 
-bool A::operator<(const A &rhs) const
-{
+A_DLL_DECL bool
+A::operator<(const A &rhs) const {
     if(b != rhs.b)
         return b < rhs.b;
     #ifndef BOOST_NO_INT64_T
@@ -198,11 +205,11 @@ bool A::operator<(const A &rhs) const
     if(t != rhs.t )
         return t < rhs.t;
     if(u != rhs.u )
-        return u < rhs.u; 
+        return u < rhs.u;
     if(v != rhs.v )
         return v < rhs.v;
     if(w != rhs.w )
-        return w < rhs.w; 
+        return w < rhs.w;
     if(x != rhs.x )
         return x < rhs.x;
     int i = y.compare(rhs.y);

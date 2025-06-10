@@ -4,20 +4,20 @@
 //  Boost Software License, Version 1.0. (See accompanying file 
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include "test.hpp"
-#include "check_integral_constant.hpp"
 #ifdef TEST_STD
 #  include <type_traits>
 #else
 #  include <boost/type_traits/has_nothrow_assign.hpp>
 #endif
+#include "test.hpp"
+#include "check_integral_constant.hpp"
 
 #ifndef BOOST_NO_CXX11_DELETED_FUNCTIONS
 
 struct non_assignable
 {
-   non_assignable();
-   non_assignable& operator=(const non_assignable&) = delete;
+   BOOST_TT_PROC non_assignable();
+   BOOST_TT_PROC non_assignable& operator=(const non_assignable&) = delete;
 };
 
 #endif
@@ -26,8 +26,8 @@ struct non_assignable
 
 struct noexcept_assignable
 {
-   noexcept_assignable();
-   noexcept_assignable& operator=(const noexcept_assignable&)noexcept;
+   BOOST_TT_PROC noexcept_assignable();
+   BOOST_TT_PROC noexcept_assignable& operator=(const noexcept_assignable&)noexcept;
 };
 
 #endif

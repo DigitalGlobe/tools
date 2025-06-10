@@ -1,11 +1,11 @@
 #  Copyright (c) 2015 Artur Shepilko
 #
 #  Use, modification and distribution is subject to the Boost Software
-#  License Version 1.0. (See accompanying file LICENSE_1_0.txt or
-#  http://www.boost.org/LICENSE_1_0.txt)
+#  License Version 1.0. (See accompanying file LICENSE.txt or
+#  https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Implements OpenVMS-based HP DECC/C++ toolset.
-# Relies on POSIX-style path handling bjam/Boost.Build implementation for VMS.
+# Relies on POSIX-style path handling bjam/B2 implementation for VMS.
 
 import "class" : new ;
 import property ;
@@ -17,6 +17,7 @@ import type ;
 import common ;
 import unix ;
 import path ;
+import regex ;
 
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
@@ -29,10 +30,6 @@ feature.extend toolset : vmsdecc ;
 toolset.inherit-generators  vmsdecc : unix : unix.link unix.link.dll ;
 toolset.inherit-flags vmsdecc : unix ;
 toolset.inherit-rules vmsdecc : unix ;
-
-generators.override vmsdecc.archive-generator : builtin.archive-generator ;
-generators.override vmsdecc.prebuilt : builtin.prebuilt ;
-generators.override vmsdecc.searched-lib-generator : searched-lib-generator ;
 
 type.set-generated-target-suffix EXE : <toolset>vmsdecc <target-os>vms : exe ;
 type.set-generated-target-suffix OBJ : <toolset>vmsdecc <target-os>vms : obj ;
@@ -68,7 +65,7 @@ rule init ( version ? : command * : options * )
     toolset.flags vmsdecc.link .LD $(condition) :  $(linker) ;
     if $(.debug-configuration)
     {
-        ECHO notice: using linker :: $(condition) :: $(linker[1]) ;
+        ECHO notice\: using linker "::" $(condition) "::" $(linker[1]) ;
     }
 
     local archiver = LIB ;
@@ -90,11 +87,16 @@ flags vmsdecc.compile OPTIONS <profiling>on : /DEBUG ;   ## needs PCA link optio
 flags vmsdecc.compile OPTIONS <optimization>off : /NOOPT ;
 flags vmsdecc.compile OPTIONS <optimization>speed : /OPT=INLINE=SPEED/OPT=NOINLINE ;
 flags vmsdecc.compile OPTIONS <optimization>space : /OPT=INLINE=SIZE/OPT=NOINLINE ;
-flags vmsdecc.compile OPTIONS <warnings>off : /NOWARN;
+flags vmsdecc.compile OPTIONS <warnings>off : /NOWARN ;
 flags vmsdecc.compile OPTIONS <warnings>on : /WARN ;
 flags vmsdecc.compile OPTIONS <warnings>all  : /WARN=ENABLE=ALL ;
+flags vmsdecc.compile OPTIONS <warnings>extra : /WARN=ENABLE=ALL ;
+flags vmsdecc.compile OPTIONS <warnings>pedantic : /WARN=ENABLE=ALL ;
 
 flags vmsdecc.compile.c++ OPTIONS <inlining>off : /OPT=NOINLINE ;
+
+flags vmsdecc.compile.c.preprocess OPTIONS <linemarkers>off : /NOLINE_DIRECTIVES ;
+flags vmsdecc.compile.c++.preprocess OPTIONS <linemarkers>off : /NOLINE_DIRECTIVES ;
 
 flags vmsdecc OPTIONS <address-model>32 : /POINTER=32 ;
 flags vmsdecc OPTIONS <address-model>64 : /POINTER=64 ; ## /POINTER=64=ARGV argv-64
@@ -169,6 +171,10 @@ rule compile.c++ ( targets * : sources * : properties * )
 
   TARGET-CXX-REPO on $(targets) =  [ on $(targets[1]) get-target-cxx-repo $(LOCATE) ] ;
   CXX-REPOS on $(targets) = [ on $(targets) return $(TARGET-CXX-REPO) $(CXX-REPOS) ] ;
+
+    local config_command = [ regex.escape [ on $(targets[1]) return $(.CXX:E="") ]
+        : "()[]\\+.*^$\"" : "\\" ] ;
+    COMMAND_DATABASE on $(targets) = "($(config_command)[^\n]*)" ;
 }
 
 
@@ -177,6 +183,10 @@ rule compile.c ( targets * : sources * : properties * )
   DEPENDS $(targets) : [ on $(targets) return $(SOURCE-INCLUDES) ] ;
 
   INCLUDES on $(targets) = [ on $(targets) get-includes $(sources) : $(INCLUDES) ] ;
+
+    local config_command = [ regex.escape [ on $(targets[1]) return $(.CC:E="") ]
+        : "()[]\\+.*^$\"" : "\\" ] ;
+    COMMAND_DATABASE on $(targets) = "($(config_command)[^\n]*)" ;
 }
 
 actions compile.c

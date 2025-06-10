@@ -11,6 +11,7 @@
 #ifndef TIMESTAMP_H_SW_2011_11_18
 #define TIMESTAMP_H_SW_2011_11_18
 
+#include "config.h"
 #include "object.h"
 
 #ifdef OS_NT
@@ -42,5 +43,6 @@ void timestamp_from_filetime( timestamp * const, FILETIME const * const );
 #endif
 
 void timestamp_done();
+double timestamp_delta_seconds( timestamp const * const, timestamp const * const );
 
 #endif

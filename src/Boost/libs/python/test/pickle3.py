@@ -21,13 +21,15 @@ r'''>>> import pickle3_ext
     ...   wd.z = 3. * number
     ...   pstr = pickle.dumps(wd)
     ...   wl = pickle.loads(pstr)
-    ...   print wd.greet(), wd.get_secret_number(), wd.x, wd.y, wd.z
-    ...   print wl.greet(), wl.get_secret_number(), wl.x, wl.y, wl.z
+    ...   print(wd.greet(), wd.get_secret_number(), wd.x, wd.y, wd.z)
+    ...   print(wl.greet(), wl.get_secret_number(), wl.x, wl.y, wl.z)
     Hello from California! 24 48 yyyyyyyyyyyyyyyyyyyyyyyy 72.0
     Hello from California! 24 48 yyyyyyyyyyyyyyyyyyyyyyyy 72.0
     Hello from California! 42 84 yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy 126.0
     Hello from California! 0 84 yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy 126.0
 '''
+
+from __future__ import print_function
 
 def run(args = None):
     import sys
@@ -36,10 +38,10 @@ def run(args = None):
     if args is not None:
         sys.argv = args
     return doctest.testmod(sys.modules.get(__name__))
-    
+
 if __name__ == '__main__':
-    print "running..."
+    print("running...")
     import sys
     status = run()[0]
-    if (status == 0): print "Done."
+    if (status == 0): print("Done.")
     sys.exit(status)

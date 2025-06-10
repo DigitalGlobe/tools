@@ -1,5 +1,5 @@
 [/
-  Copyright 2015 Peter Dimov
+  Copyright 2015-2020 Peter Dimov
 
   Distributed under the Boost Software License, Version 1.0.
 
@@ -10,7 +10,7 @@
 [article Boostdep
   [quickbook 1.6]
   [id boostdep]
-  [copyright 2014, 2015, 2016 Peter Dimov]
+  [copyright 2014-2020 Peter Dimov]
   [license Distributed under the
     [@http://boost.org/LICENSE_1_0.txt Boost Software License, Version 1.0].
   ]
@@ -189,7 +189,7 @@ Once you have the Boost contents which you want to analyze for dependencies, pro
 To build /Boostdep/, issue the following command from the Boost root:
 
 [pre
-b2 tools/boostdep/build//install
+b2 tools/boostdep/build
 ]
 
 This will build /Boostdep/ from source using the default "toolset" (a Boost.Build term meaning "compiler") and if successful,
@@ -233,7 +233,10 @@ Usage:
 
     boostdep --list-modules
     boostdep --list-buildable
-    boostdep \[--track-sources\] --list-dependencies
+    boostdep \[--track-sources\] \[--track-tests\] --list-dependencies
+    boostdep --list-exceptions
+    boostdep --list-missing-headers
+    boostdep --list-buildable-dependencies
 
     boostdep \[options\] --module-overview
     boostdep \[options\] --module-levels
@@ -244,12 +247,22 @@ Usage:
     boostdep \[options\] --reverse <module>
     boostdep \[options\] --subset <module>
     boostdep \[options\] \[--header\] <header>
+    boostdep --test <module>
+    boostdep --cmake <module>
+    boostdep --pkgconfig <module> <version> \[<var>=<value>\] \[<var>=<value>\]...
+    boostdep \[options\] --subset-for <directory>
+    boostdep --brief <module>
 
-    \[options\]: \[--track-sources\] \[--title <title>\] \[--footer <footer>\] \[--html\]
+    \[options\]: \[--boost-root <path-to-boost>\]
+               \[--\[no-\]track-sources\] \[--\[no-\]track-tests\]
+               \[--html-title <title>\] \[--html-footer <footer>\]
+               \[--html-stylesheet <stylesheet>\] \[--html-prefix <prefix>\]
+               \[--html\]
+               \[--csv\]
+               \[--csv-separator <separator>\]
+               \[--csv-[no-]table-marker\]
+               \[--csv-[no-]table-header\]
 ]
-
-(The 1.58.0 version of /Boostdep/ has an unfortunate bug that causes the above output to be truncated after =boostdep --list-modules=.
-The rest of the functionality is intact though, so you can still use it as described.)
 
 [endsect]
 
@@ -431,7 +444,7 @@ To make these links work as expected, you can generate HTML reports for each mod
 as follows:
 
 [pre
-dist/bin/boostdep --title "Dependency Report for /module/" --html --primary /module/ --secondary /module/ --reverse /module/ > /module/.html
+dist/bin/boostdep --html-title "Dependency Report for /module/" --html --primary /module/ --secondary /module/ --reverse /module/ > /module/.html
 ]
 
 This step can be automated if you generate a module list first with
@@ -468,11 +481,11 @@ mkdir %OUTDIR%
 
 %BOOSTDEP% --list-modules > %OUTDIR%\list-modules.txt
 
-%BOOSTDEP% --footer "%FOOTER%" --html --module-overview > %OUTDIR%\module-overview.html
-%BOOSTDEP% --footer "%FOOTER%" --html --module-levels > %OUTDIR%\module-levels.html
-%BOOSTDEP% --footer "%FOOTER%" --html --module-weights > %OUTDIR%\module-weights.html
+%BOOSTDEP% --html-footer "%FOOTER%" --html --module-overview > %OUTDIR%\module-overview.html
+%BOOSTDEP% --html-footer "%FOOTER%" --html --module-levels > %OUTDIR%\module-levels.html
+%BOOSTDEP% --html-footer "%FOOTER%" --html --module-weights > %OUTDIR%\module-weights.html
 
-FOR /f %%i IN (%OUTDIR%\list-modules.txt) DO %BOOSTDEP% --title "Dependency Report for %%i" --footer "%FOOTER%" --html --primary %%i --secondary %%i --reverse %%i > %OUTDIR%\%%i.html
+FOR /f %%i IN (%OUTDIR%\list-modules.txt) DO %BOOSTDEP% --html-title "Dependency Report for %%i" --html-footer "%FOOTER%" --html --primary %%i --secondary %%i --reverse %%i > %OUTDIR%\%%i.html
 ]
 
 [endsect]
@@ -507,10 +520,36 @@ module -> dependency1 dependency2 /.../
 ]
 
 By default, only the =include= directory is scanned for `#include` directives. If
-the option =--track-sources= is given, the =src= directory is also scanned.
+the option =--track-sources= is given, the =src= directory is also scanned. If
+the option =--track-tests= is given, the =test= directory is also scanned.
 
 This command is typically used from scripts. The output is virtually identical to
 =--module-overview= in plain text, but slightly more machine-friendly.
+[endsect]
+
+[section --list-exceptions]
+=boostdep --list-exceptions= prints a list of the headers that are not contained into
+the include directory ot their corresponding module.
+
+[endsect]
+
+[section --list-missing-headers]
+=boostdep --list-missing-headers= prints a list of the headers that are included by
+another header, but are missing.
+
+[endsect]
+
+[section --list-buildable-dependencies]
+=boostdep --list-buildable-dependencies= prints a list of the dependencies of the buildable
+libraries, in the form
+
+[pre
+module = dependency1 dependency2 /.../ ;
+]
+
+This is valid Boost.Build syntax, so the output can be used as a Boost.Build module. All
+header-only libraries are considered one library named =headers=.
+
 [endsect]
 
 [section --module-overview]
@@ -539,11 +578,11 @@ where /accumulators/ is a link to =accumulators.html=.
 
 As before, if =--track-sources= is given, the =src= subdirectory is scanned for `#include` directives.
 
-HTML output is enabled by the =--html= option. The =--title= and =--footer= options set the HTML =<title>=
+HTML output is enabled by the =--html= option. The =--html-title= and =--html-footer= options set the HTML =<title>=
 and the page footer and need to precede =--html=, like in the following example:
 
 [pre
-dist/bin/boostdep --title "Module Overview" --footer "Generated on 21.05.2015 20:53:11" --html --module-overview > module-overview.html
+dist/bin/boostdep --html-title "Module Overview" --html-footer "Generated on 21.05.2015 20:53:11" --html --module-overview > module-overview.html
 ]
 
 [endsect]
@@ -556,7 +595,7 @@ of cyclic dependencies, doesn't depend on other modules of level =N=. It takes t
 =--module-overview=.
 
 [pre
-dist/bin/boostdep --title "Module Levels" --footer "Generated on 21.05.2015 20:53:11" --html --module-levels > module-levels.html
+dist/bin/boostdep --html-title "Module Levels" --html-footer "Generated on 21.05.2015 20:53:11" --html --module-levels > module-levels.html
 ]
 
 [endsect]
@@ -569,7 +608,7 @@ its dependencies. This includes the indirect dependencies.
 =--module-weights= takes the same options as =--module-overview=.
 
 [pre
-dist/bin/boostdep --title "Module Weights" --footer "Generated on 21.05.2015 20:53:11" --html --module-weights > module-weights.html
+dist/bin/boostdep --html-title "Module Weights" --html-footer "Generated on 21.05.2015 20:53:11" --html --module-weights > module-weights.html
 ]
 
 [endsect]
@@ -579,7 +618,7 @@ dist/bin/boostdep --title "Module Weights" --footer "Generated on 21.05.2015 20:
 [^boostdep --primary /module/] lists the primary (direct) dependencies of /module/. It takes the same options as =--module-overview=.
 
 [pre
-dist/bin/boostdep --title "Primary Dependencies of filesystem" --footer "Generated on 21.05.2015 20:53:11" --html --primary filesystem > filesystem-primary.html
+dist/bin/boostdep --html-title "Primary Dependencies of filesystem" --html-footer "Generated on 21.05.2015 20:53:11" --html --primary filesystem > filesystem-primary.html
 ]
 
 [endsect]
@@ -589,13 +628,13 @@ dist/bin/boostdep --title "Primary Dependencies of filesystem" --footer "Generat
 [^boostdep --secondary /module/] lists the secondary (indirect) dependencies of /module/. It takes the same options as =--module-overview=.
 
 [pre
-dist/bin/boostdep --title "Secondary Dependencies of filesystem" --footer "Generated on 21.05.2015 20:53:11" --html --secondary filesystem > filesystem-secondary.html
+dist/bin/boostdep --html-title "Secondary Dependencies of filesystem" --html-footer "Generated on 21.05.2015 20:53:11" --html --secondary filesystem > filesystem-secondary.html
 ]
 
 You can combine =--primary= and =--secondary= in one invocation.
 
 [pre
-dist/bin/boostdep --title "Dependencies of filesystem" --footer "Generated on 21.05.2015 20:53:11" --html --primary filesystem --secondary filesystem > filesystem.html
+dist/bin/boostdep --html-title "Dependencies of filesystem" --html-footer "Generated on 21.05.2015 20:53:11" --html --primary filesystem --secondary filesystem > filesystem.html
 ]
 
 [endsect]
@@ -605,13 +644,13 @@ dist/bin/boostdep --title "Dependencies of filesystem" --footer "Generated on 21
 [^boostdep --reverse /module/] lists the reverse dependencies of /module/, that is, it lists which modules depend on /module/. It takes the same options as =--module-overview=.
 
 [pre
-dist/bin/boostdep --title "Reverse Dependencies of filesystem" --footer "Generated on 21.05.2015 20:53:11" --html --reverse filesystem > filesystem-reverse.html
+dist/bin/boostdep --html-title "Reverse Dependencies of filesystem" --html-footer "Generated on 21.05.2015 20:53:11" --html --reverse filesystem > filesystem-reverse.html
 ]
 
 You can combine =--reverse= with =--primary= and =--secondary= for a complete module report.
 
 [pre
-dist/bin/boostdep --title "Dependency Report for filesystem" --footer "Generated on 21.05.2015 20:53:11" --html --primary filesystem --secondary filesystem --reverse filesystem > filesystem.html
+dist/bin/boostdep --html-title "Dependency Report for filesystem" --html-footer "Generated on 21.05.2015 20:53:11" --html --primary filesystem --secondary filesystem --reverse filesystem > filesystem.html
 ]
 
 [endsect]
@@ -627,7 +666,7 @@ that /module/ will be usable, whereas the latter guarantees it for every module 
 =--subset= takes the same options as =--module-overview=.
 
 [pre
-dist/bin/boostdep --title "Subset Dependencies of filesystem" --footer "Generated on 21.05.2015 20:53:11" --html --subset filesystem > filesystem-subset.html
+dist/bin/boostdep --html-title "Subset Dependencies of filesystem" --html-footer "Generated on 21.05.2015 20:53:11" --html --subset filesystem > filesystem-subset.html
 ]
 
 You can combine =--subset= with the other module report options.
@@ -639,33 +678,214 @@ You can combine =--subset= with the other module report options.
 [^boostdep --header /header/] creates an inclusion report for /header/. It takes the same options as =--module-overview=.
 
 [pre
-dist/bin/boostdep --title "Inclusion Report for <boost/shared_ptr.hpp>" --footer "Generated on 21.05.2015 20:53:11" --html --header boost/shared_ptr.hpp > header-boost-shared_ptr.html
+dist/bin/boostdep --html-title "Inclusion Report for <boost/shared_ptr.hpp>" --html-footer "Generated on 21.05.2015 20:53:11" --html --header boost/shared_ptr.hpp > header-boost-shared_ptr.html
 ]
+
+[endsect]
+
+[section --test]
+
+[^boostdep --test /module/] lists the test dependencies of /module/, that is, it lists which modules need to be present so that the tests of /module/ can be run.
+
+[pre
+dist/bin/boostdep --test filesystem
+]
+
+[endsect]
+
+[section --cmake]
+
+[^boostdep --cmake /module/] generates a =CMakeLists.txt= file for /module/.
+
+[endsect]
+
+[section --pkgconfig]
+
+[^boostdep --pkgconfig /module/ /version/ /var/=/value/...] outputs a =pkg-config= =.pc= file for /module/.
+
+[pre
+dist/bin/boostdep --pkgconfig system 1.65.0 prefix=/usr/local includedir=${prefix}/include libdir=${prefix}/lib
+]
+
+[endsect]
+
+[section --subset-for]
+
+[^boostdep --subset-for /directory/] scans /directory/ for `#include` directives and lists which Boost modules are reachable through these `#include`s.
+
+Its use is in determining what subset of Boost is needed by a user application or library.
+
+[pre
+dist/bin/boostdep --subset-for d:\my_app
+]
+
+[endsect]
+
+[section --brief]
+
+[^boostdep --brief /module/] generates a brief dependency report for /module/. All the primary and secondary dependencies are listed, one per line.
+
+[pre
+dist/bin/boostdep --brief filesystem
+]
+
+[endsect]
+
+[section --boost-root]
+
+[^--boost-root /path-to-boost/] instructs /Boostdep/ to look for the Boost root directory at /path-to-boost/. If this option
+is not given, the current directory and its parents are searched for the presence of a file named =Jamroot=. If one is found,
+that directory is assumed to be the root. If not, the environment variable =BOOST_ROOT= is assumed to contain the path to the
+Boost root.
 
 [endsect]
 
 [section --track-sources]
 
-The =--track-sources= option instructs /Boostdep/ to scan the =src= library subdirectory for `#include` directives. By default,
-only the =include= subdirectory is scanned.
+The =--track-sources= option instructs /Boostdep/ to scan the =src= library subdirectory for `#include` directives. If not enabled,
+only the =include= subdirectory is scanned. This option on by default in 1.77 and later, and can be turned off with =--no-track-sources=.
 
 [endsect]
 
-[section --title]
+[section --track-tests]
 
-[^--title /title/] sets the contents of the HTML =<title>= tag. It must precede =--html= to have an effect.
+The =--track-tests= option instructs /Boostdep/ to scan the =test= library subdirectory for `#include` directives. By default,
+the =test= subdirectory is not scanned.
 
 [endsect]
 
-[section --footer]
+[section --html-title]
 
-[^--footer /footer/] sets the page footer text. It has no effect if =--html= is not given.
+[^--html-title /title/] sets the contents of the HTML =<title>= tag. It must precede =--html= to have an effect.
+
+[endsect]
+
+[section --html-footer]
+
+[^--html-footer /footer/] sets the HTML page footer text. It has no effect if =--html= is not given.
+
+[endsect]
+
+[section --html-stylesheet]
+
+[^--html-stylesheet /stylesheet/] sets the HTML stylesheet URL. It has no effect if =--html= is not given.
+
+[endsect]
+
+[section --html-prefix]
+
+[^--html-prefix /prefix/] sets the HTML prefix; the prefix is output immediately after the `<body>` tag. It has no effect if =--html= is not given.
 
 [endsect]
 
 [section --html]
 
 =--html= switches to HTML output mode (the default is plain text). It must precede the commands that generate output.
+
+[endsect]
+
+[section --csv]
+
+=--csv= switches to CSV output mode (the default is plain text). It must precede the commands that generate output.
+It supports the same operations supported by =--html= (=--module-overview=, =--module-levels=...).
+By default, each operation will create a table prefixed by a table marker that describes the operation and a header
+describing column names. For instance, the following command:
+
+[pre
+dist/bin/boostdep --csv --primary assert --secondary container_hash --header boost/container/deque.hpp --reverse interprocess --subset assert
+]
+
+can output:
+
+[pre
+
+[Primary],assert
+Module,Header,From
+config,boost/config.hpp,boost/assert.hpp boost/assert/source_location.hpp
+config,boost/config/workaround.hpp,boost/assert/source_location.hpp
+config,boost/cstdint.hpp,boost/assert/source_location.hpp
+
+[Secondary],container_hash
+Module,Adds
+type_traits,static_assert
+
+[Header],boost/container/deque.hpp,container
+Module,From
+interprocess,boost/interprocess/containers/deque.hpp
+thread,boost/thread/csbl/deque.hpp
+
+[Reverse],interprocess
+Module,Header,From
+flyweight,boost/interprocess/detail/intermodule_singleton.hpp,boost/flyweight/intermodule_holder.hpp
+log,boost/interprocess/creation_tags.hpp,libs/log/src/posix/ipc_reliable_message_queue.cpp
+log,boost/interprocess/detail/workaround.hpp,libs/log/src/posix/ipc_sync_wrappers.hpp
+log,boost/interprocess/exceptions.hpp,libs/log/src/posix/ipc_reliable_message_queue.cpp
+log,boost/interprocess/mapped_region.hpp,libs/log/src/posix/ipc_reliable_message_queue.cpp
+log,boost/interprocess/permissions.hpp,libs/log/src/permissions.cpp libs/log/src/posix/ipc_reliable_message_queue.cpp
+log,boost/interprocess/shared_memory_object.hpp,libs/log/src/posix/ipc_reliable_message_queue.cpp
+log,boost/interprocess/sync/interprocess_condition.hpp,libs/log/src/posix/ipc_sync_wrappers.hpp
+log,boost/interprocess/sync/interprocess_mutex.hpp,libs/log/src/posix/ipc_sync_wrappers.hpp
+
+[Subset],assert
+Module,Path
+config,boost/assert.hpp -> boost/config.hpp
+config,boost/assert/source_location.hpp -> boost/config.hpp
+
+]
+
+[endsect]
+
+[section --csv-separator]
+
+[^--csv-separator /separator/] sets the CSV column separator string. The default separator is the comma character (','). It has no effect if =--csv= is not given.
+The following command will create a CSV file using semicolon (';') as the separator:
+
+[pre
+dist/bin/boostdep --csv --csv-separator ';' --primary assert
+]
+
+[endsect]
+
+[section --csv-table-marker]
+
+=--csv-table-marker= activates a marker line for each table that is created in the CSV file in the form `[Operation] <csv-separator> <arg>`.
+It's activated by default. This allows the detection of each operation, which creates its own table in the CSV file.
+If =--csv-no-table-marker= is given the marker line is not emitted. It has no effect if =--csv= is not given. The following command
+
+[pre
+dist/bin/boostdep --csv --csv-no-table-marker --csv-no-table-header --primary assert
+]
+
+will output a standard CSV file with no `[Primary],assert` marker line:
+
+[pre
+Module,Header,From
+config,boost/config.hpp,boost/assert.hpp boost/assert/source_location.hpp
+config,boost/config/workaround.hpp,boost/assert/source_location.hpp
+config,boost/cstdint.hpp,boost/assert/source_location.hpp
+]
+
+[endsect]
+
+[section --csv-table-header]
+
+=--csv-table-header= activates a header line describing each column of each table that is created in the CSV file. 
+It's activated by default. This allows easier identification of the column meaning and easier import to a database. 
+If =--csv-no-table-marker= is given the marker line is not emitted. It has no effect if =--csv= is not given.
+The following command
+
+[pre
+dist/bin/boostdep --csv --csv-no-table-header --primary assert
+]
+
+will output a standard CSV file with no `Module,Header,From` header line
+
+[pre
+[Primary],assert
+config,boost/config.hpp,boost/assert.hpp boost/assert/source_location.hpp
+config,boost/config/workaround.hpp,boost/assert/source_location.hpp
+config,boost/cstdint.hpp,boost/assert/source_location.hpp
+]
 
 [endsect]
 

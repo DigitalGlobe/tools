@@ -2,8 +2,8 @@
 # Copyright 2005, 2006 Rene Rivera
 # Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Implements virtual targets, which correspond to actual files created during a
 # build, but are not yet targets in Jam sense. They are needed, for example,
@@ -58,9 +58,12 @@
 # builtin.jam modules. They are shown in the diagram to give the big picture.
 
 import "class" : new ;
+import feature ;
 import path ;
+import property-set ;
 import sequence ;
 import set ;
+import toolset ;
 import type ;
 import utility ;
 
@@ -118,6 +121,11 @@ class virtual-target
         .always = 1 ;
     }
 
+    rule fail-expected ( )
+    {
+        .fail-expected = 1 ;
+    }
+
     # Generates all the actual targets and sets up build actions for this
     # target.
     #
@@ -136,6 +144,11 @@ class virtual-target
         if $(.always)
         {
             ALWAYS $(actual-name) ;
+        }
+
+        if $(.fail-expected)
+        {
+            FAIL_EXPECTED $(actual-name) ;
         }
 
         if ! $(scanner)
@@ -160,6 +173,19 @@ class virtual-target
     }
 
 # private: (overridables)
+
+    # Sets/gets the 'root' flag. Target is root if it directly corresponds to
+    # some variant of a main target.
+    #
+    rule root ( set ? )
+    {
+        if $(set)
+        {
+            self.root = true ;
+        }
+        return $(self.root) ;
+    }
+
 
     # Sets up build actions for 'target'. Should call appropriate rules and set
     # target variables.
@@ -194,6 +220,14 @@ class virtual-target
     {
         import errors : error : errors.error ;
         errors.error "method should be defined in derived classes" ;
+    }
+
+    # Returns additional properties that are relevant for this target
+    # beyond those required by the action.
+    #
+    rule relevant ( )
+    {
+        return [ property-set.empty ] ;
     }
 
 # implementation
@@ -275,20 +309,8 @@ class abstract-file-target : virtual-target
         return $(self.action) ;
     }
 
-    # Sets/gets the 'root' flag. Target is root if it directly corresponds to
-    # some variant of a main target.
-    #
-    rule root ( set ? )
-    {
-        if $(set)
-        {
-            self.root = true ;
-        }
-        return $(self.root) ;
-    }
-
     # Gets or sets the subvariant which created this target. Subvariant is set
-    # when target is brought into existance and is never changed after that. In
+    # when target is brought into existence and is never changed after that. In
     # particular, if a target is shared by multiple subvariants, only the first
     # one is stored.
     #
@@ -432,7 +454,7 @@ class abstract-file-target : virtual-target
         {
             ps = [ property-set.empty ] ;
         }
-        
+
         # Add this target object for use in getting additional information
         # when tagging.
         ps = [ property-set.create [ $(ps).raw ] <target>$(__name__) ] ;
@@ -448,7 +470,8 @@ class abstract-file-target : virtual-target
                 {
                     import errors : error : errors.error ;
                     errors.error <tag>@rulename is present but is not the only
-                        <tag> feature. ;
+                        <tag> feature. Tags present..
+                        : $(tag) ;
                 }
 
                 self.name = [ indirect.call $(rule-name) $(specified-name)
@@ -734,12 +757,6 @@ class action
         self.targets += $(targets) ;
     }
 
-    rule replace-targets ( old-targets * : new-targets * )
-    {
-        self.targets = [ set.difference $(self.targets) : $(old-targets) ] ;
-        self.targets += $(new-targets) ;
-    }
-
     rule targets ( )
     {
         return $(self.targets) ;
@@ -794,7 +811,9 @@ class action
             # rules.
             .action on $(actual-targets) = $(__name__) ;
 
-            indirect.call $(self.action-name) $(actual-targets)
+            #indirect.call $(self.action-name) $(actual-targets)
+            #    : $(self.actual-sources) : [ $(properties).raw ] ;
+            execute $(self.action-name) $(actual-targets)
                 : $(self.actual-sources) : [ $(properties).raw ] ;
 
             # Since we set up the creating action here, we set up the action for
@@ -864,6 +883,19 @@ class action
     rule adjust-properties ( property-set )
     {
         return $(property-set) ;
+    }
+
+    # Execute the action rule on the given targets, sources, and properties.
+    # Since this does the final call to the engine action rule this takes
+    # engine level targets and raw properties. One could override this, for
+    # example, to set additional variables on the target that might be
+    # difficult to determine just using toolset flags.
+    # Note, you must call this base rule when overriding as otherwise the
+    # actions will not execute and the engine will not run commands.
+    #
+    rule execute ( action-name targets + : sources * : properties * )
+    {
+        indirect.call $(action-name) $(targets) : $(sources) : $(properties) ;
     }
 }
 
@@ -963,47 +995,17 @@ rule from-file ( file : file-loc : project )
 #
 rule register ( target )
 {
-    local signature = [ sequence.join [ $(target).path ] [ $(target).name ] : -
-        ] ;
-
-    local result ;
-    for local t in $(.cache.$(signature))
-    {
-        local a1 = [ $(t).action ] ;
-        local a2 = [ $(target).action ] ;
-
-        if ! $(result)
-        {
-            if ! $(a1) && ! $(a2)
-            {
-                result = $(t) ;
-            }
-            else if $(a1) && $(a2) &&
-                ( [ $(a1).action-name ] = [ $(a2).action-name ] ) &&
-                ( [ $(a1).sources     ] = [ $(a2).sources     ] )
-            {
-                local ps1 = [ $(a1).properties ] ;
-                local ps2 = [ $(a2).properties ] ;
-                local p1 = [ $(ps1).base ] [ $(ps1).free ] [ set.difference
-                    [ $(ps1).dependency ] : [ $(ps1).incidental ] ] ;
-                local p2 = [ $(ps2).base ] [ $(ps2).free ] [ set.difference
-                    [ $(ps2).dependency ] : [ $(ps2).incidental ] ] ;
-                if $(p1) = $(p2)
-                {
-                    result = $(t) ;
-                }
-            }
-        }
-    }
+    local signature = [ $(target).actual-name ] ;
+    local result = $(.cache.$(signature)) ;
 
     if ! $(result)
     {
         .cache.$(signature) += $(target) ;
+        .all-targets += $(target) ;
         result = $(target) ;
     }
 
     .recent-targets += $(result) ;
-    .all-targets += $(result) ;
 
     return $(result) ;
 }
@@ -1084,8 +1086,17 @@ rule register-actual-name ( actual-name : virtual-target )
         if $(action1) && $(action2)
         {
             local p1 = [ $(action1).properties ] ;
-            p1 = [ $(p1).raw ] ;
             local p2 = [ $(action2).properties ] ;
+            # Only show features that are relevant for either target.
+            local relevant = [ $(p1).get <relevant> ] [ $(p2).get <relevant> ] ;
+            relevant = [ feature.expand-relevant $(relevant) ] ;
+            # The presence of relevant can potentially mess things up,
+            # so we always need to show it.
+            relevant += relevant ;
+            relevant = [ property-set.create <relevant>$(relevant) ] ;
+            p1 = [ $(p1).relevant $(relevant) ] ;
+            p2 = [ $(p2).relevant $(relevant) ] ;
+            p1 = [ $(p1).raw ] ;
             p2 = [ $(p2).raw ] ;
             properties-removed = [ set.difference $(p1) : $(p2) ] ;
             properties-removed ?= "none" ;
@@ -1319,11 +1330,11 @@ class subvariant
 
     rule all-target-directories ( target-type ? )
     {
-        if ! $(self.target-directories)
+        if ! $(self.target-directories.$(target-type:E=))
         {
             compute-target-directories $(target-type) ;
         }
-        return $(self.target-directories) ;
+        return $(self.target-directories.$(target-type:E=)) ;
     }
 
     rule compute-target-directories ( target-type ? )
@@ -1343,6 +1354,6 @@ class subvariant
         {
             result += [ $(d).all-target-directories $(target-type) ] ;
         }
-        self.target-directories = $(result) ;
+        self.target-directories.$(target-type:E=) = $(result) ;
     }
 }

@@ -1,11 +1,12 @@
 # Copyright 2003 Dave Abrahams
 # Copyright 2003, 2004, 2005, 2006 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import "class" : new ;
 import feature ;
+import indirect ;
 import path ;
 import project ;
 import property ;
@@ -20,7 +21,7 @@ import option ;
 # rule should be used to create new instances. Instances are immutable.
 #
 #   Each property is classified with regard to its effect on build results.
-# Incidental properties have no effect on build results, from Boost.Build's
+# Incidental properties have no effect on build results, from B2's
 # point of view. Others are either free, or non-free and we refer to non-free
 # ones as 'base'. Each property belongs to exactly one of those categories.
 #
@@ -34,10 +35,12 @@ class property-set
 {
     import errors ;
     import feature ;
+    import modules ;
     import path ;
     import property ;
     import property-set ;
     import set ;
+    import sequence ;
 
     rule __init__ ( raw-properties * )
     {
@@ -61,7 +64,7 @@ class property-set
 
     rule str ( )
     {
-        return "[" $(self.raw) "]" ;
+        return "[" [ sequence.transform property.str : $(self.raw) ] "]" ;
     }
 
     # Returns properties that are neither incidental nor free.
@@ -84,6 +87,48 @@ class property-set
             init-base ;
         }
         return $(self.free) ;
+    }
+
+    # Returns relevant base properties.  This is used for computing
+    # target paths, so it must return the expanded set of relevant
+    # properties.
+    #
+    rule base-relevant ( )
+    {
+        if ! $(self.relevant-initialized)
+        {
+            init-relevant ;
+        }
+        return $(self.base-relevant) ;
+    }
+
+    # Returns all properties marked as relevant by features-ps
+    # Does not attempt to expand features-ps in any way, as
+    # this matches what virtual-target.register needs.
+    #
+    rule relevant ( features-ps )
+    {
+        if ! $(self.relevant.$(features-ps))
+        {
+            local result ;
+            local features = [ $(features-ps).get <relevant> ] ;
+            features = <$(features)> ;
+            local ignore-relevance = [ modules.peek
+                property-set : .ignore-relevance ] ;
+            for local p in $(self.raw)
+            {
+                if $(ignore-relevance) || $(p:G) in $(features)
+                {
+                    local att = [ feature.attributes $(p:G) ] ;
+                    if ! ( incidental in $(att) )
+                    {
+                        result += $(p) ;
+                    }
+                }
+            }
+            self.relevant.$(features-ps) = [ property-set.create $(result) ] ;
+        }
+        return $(self.relevant.$(features-ps)) ;
     }
 
     # Returns dependency properties.
@@ -215,7 +260,7 @@ class property-set
     {
         if ! $(self.as-path)
         {
-            self.as-path = [ property.as-path [ base ] ] ;
+            self.as-path = [ property.as-path [ base-relevant ] ] ;
         }
         return $(self.as-path) ;
     }
@@ -345,6 +390,30 @@ class property-set
         self.base-initialized = true ;
     }
 
+    rule init-relevant ( )
+    {
+        local relevant-features = [ get <relevant> ] ;
+        relevant-features = [ feature.expand-relevant $(relevant-features) ] ;
+        relevant-features = <$(relevant-features)> ;
+        ignore-relevance = [ modules.peek property-set : .ignore-relevance ] ;
+        for local p in $(self.raw)
+        {
+            if $(ignore-relevance) || $(p:G) in $(relevant-features)
+            {
+                local att = [ feature.attributes $(p:G) ] ;
+                if ! ( incidental in $(att) )
+                {
+                    self.relevant += $(p) ;
+                    if ! ( free in $(att) )
+                    {
+                        self.base-relevant += $(p) ;
+                    }
+                }
+            }
+        }
+        self.relevant-initialized = true ;
+    }
+
     rule init-dependency ( )
     {
         for local p in $(self.raw)
@@ -369,7 +438,7 @@ class property-set
             # characters as well, e.g. free or indirect properties. Indirect
             # properties for example contain a full Jamfile path in their value
             # which on Windows file systems contains ':' as the drive separator.
-            if [ MATCH (:) : $(p:G=) ]
+            if ( [ MATCH "(:)" : $(p:G=) ] && ! ( free in [ feature.attributes $(p:G) ] ) ) || $(p:G) = <conditional>
             {
                 self.conditional += $(p) ;
             }
@@ -382,6 +451,13 @@ class property-set
     }
 }
 
+# This is a temporary measure to help users work around
+# any problems.  Remove it once we've verified that
+# everything works.
+if --ignore-relevance in [ modules.peek : ARGV ]
+{
+    .ignore-relevance = true ;
+}
 
 # Creates a new 'property-set' instance for the given raw properties or returns
 # an already existing ones.
@@ -475,8 +551,11 @@ rule refine-from-user-input ( parent-requirements : specification * :
                 $(remove-requirements) : $(project-module) $(location) ] ;
 
             parent-requirements = [ property-set.create
-                [ set.difference [ $(parent-requirements).raw ]
-                : [ $(ps).raw ] ] ] ;
+                [ set.difference
+                    [ indirect.difference
+                        [ $(parent-requirements).raw ] : [ $(ps).raw ] ]
+                    : [ $(ps).raw ]
+                ] ] ;
             specification = $(add-requirements) ;
         }
 
@@ -514,4 +593,13 @@ else
     {
         return $(path) ;
     }
+}
+
+rule __test__ ( )
+{
+    import errors : try catch ;
+
+    try ;
+        create invalid-property ;
+    catch "Invalid property: 'invalid-property'" ;
 }

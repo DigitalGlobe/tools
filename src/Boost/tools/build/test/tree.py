@@ -2,8 +2,8 @@
 # Copyright 2001, 2002 Vladimir Prus
 # Copyright 2012 Jurko Gospodnetic
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 ###############################################################################
 #
@@ -19,6 +19,8 @@
 # option.
 #
 ###############################################################################
+
+from __future__ import print_function
 
 import os
 import os.path
@@ -100,16 +102,24 @@ class TreeDifference:
     def ignore_directories(self):
         """Removes directories from our lists of found differences."""
         not_dir = lambda x : x[-1] != "/"
-        self.added_files = filter(not_dir, self.added_files)
-        self.removed_files = filter(not_dir, self.removed_files)
-        self.modified_files = filter(not_dir, self.modified_files)
-        self.touched_files = filter(not_dir, self.touched_files)
+        self.added_files = list(filter(not_dir, self.added_files))
+        self.removed_files = list(filter(not_dir, self.removed_files))
+        self.modified_files = list(filter(not_dir, self.modified_files))
+        self.touched_files = list(filter(not_dir, self.touched_files))
+
+    @staticmethod
+    def _pprint_filelist(names):
+        names = sorted(names)
+        s = repr(names)
+        if len(s) < 70:
+            return s
+        return "".join("\n  - {}".format(name) for name in names)
 
     def pprint(self, file=sys.stdout):
-        file.write("Added files   : %s\n" % self.added_files)
-        file.write("Removed files : %s\n" % self.removed_files)
-        file.write("Modified files: %s\n" % self.modified_files)
-        file.write("Touched files : %s\n" % self.touched_files)
+        file.write("Added files   : %s\n" % self._pprint_filelist(self.added_files))
+        file.write("Removed files : %s\n" % self._pprint_filelist(self.removed_files))
+        file.write("Modified files: %s\n" % self._pprint_filelist(self.modified_files))
+        file.write("Touched files : %s\n" % self._pprint_filelist(self.touched_files))
 
     def empty(self):
         return not (self.added_files or self.removed_files or
@@ -199,7 +209,7 @@ def _traverse_tree(t, parent_path):
 
 def _get_text(path):
     """Return a string with the textual contents of a file at PATH."""
-    fp = open(path, 'r')
+    fp = open(path, 'rb')
     try:
         return fp.read()
     finally:

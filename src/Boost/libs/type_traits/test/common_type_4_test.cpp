@@ -4,13 +4,13 @@
 //  Boost Software License, Version 1.0. (See accompanying file 
 //  LICENSE_1_0.txt or copy at http://www.tt.org/LICENSE_1_0.txt)
 
-#include "test.hpp"
-#include "check_type.hpp"
 #ifdef TEST_STD
 #  include <type_traits>
 #else
 #  include <boost/type_traits/common_type.hpp>
 #endif
+#include "test.hpp"
+#include "check_type.hpp"
 #include <iostream>
 
 TT_TEST_BEGIN(common_type_4)
@@ -51,7 +51,10 @@ TT_TEST_BEGIN(common_type_4)
 
     BOOST_CHECK_TYPE(tt::common_type<UDT()>::type, UDT(*)());
     BOOST_CHECK_TYPE(tt::common_type<UDT const()>::type, UDT const(*)());
+#if __cplusplus <= 201703
+    // Deprecated in C++20:
     BOOST_CHECK_TYPE(tt::common_type<UDT volatile()>::type, UDT volatile(*)());
     BOOST_CHECK_TYPE(tt::common_type<UDT const volatile()>::type, UDT const volatile(*)());
+#endif
 }
 TT_TEST_END

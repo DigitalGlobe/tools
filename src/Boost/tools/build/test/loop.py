@@ -1,8 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2003 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import BoostBuild
 import string
@@ -18,7 +18,7 @@ t.write("main.cpp", "")
 t.write("l.cpp", "")
 
 t.run_build_system(["--no-error-backtrace"], status=1)
-t.fail_test(string.find(t.stdout(),
+t.fail_test(t.stdout().find(
     "error: Recursion in main target references") == -1)
 
 t.cleanup()

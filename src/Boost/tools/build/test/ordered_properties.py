@@ -1,10 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2004 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
-# This checks that Boost.Build does not reorder <include> properties
+# This checks that B2 does not reorder <include> properties
 # lexicographically.
 
 import BoostBuild
@@ -28,6 +28,6 @@ inline void foo() {}
 """)
 
 t.run_build_system()
-t.expect_addition("bin/$toolset/debug/a.exe")
+t.expect_addition("bin/$toolset/debug*/a.exe")
 
 t.cleanup()

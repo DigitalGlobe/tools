@@ -12,8 +12,8 @@ import quickbook ;
 
 #doxygen autodoc
 #   :
-#      [ glob ../../../boost/chrono/*.hpp ]
-#      [ glob ../../../boost/chrono/allocators/*.hpp ]
+#      [ glob ../include/boost/chrono/*.hpp ]
+#      [ glob ../include/boost/chrono/allocators/*.hpp ]
 #   :
 #        <doxygen:param>EXTRACT_ALL=NO
 #        <doxygen:param>HIDE_UNDOC_MEMBERS=YES
@@ -74,3 +74,13 @@ boostbook standalone
 
 install pdfinstall : standalone/<format>pdf : <location>. <install-type>PDF ;
 explicit pdfinstall ;
+
+###############################################################################
+alias boostdoc
+    : ratio
+    :
+    : #<dependency>autodoc
+    : ;
+explicit boostdoc ;
+alias boostrelease ;
+explicit boostrelease ;

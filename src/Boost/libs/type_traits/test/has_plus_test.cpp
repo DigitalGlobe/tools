@@ -3,14 +3,13 @@
 //  Boost Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include "test.hpp"
-#include "check_integral_constant.hpp"
-
 #ifdef TEST_STD
 #  include <type_traits>
 #else
 #  include <boost/type_traits/has_plus.hpp>
 #endif
+#include "test.hpp"
+#include "check_integral_constant.hpp"
 
 #define BOOST_TT_TRAIT_NAME has_plus
 #define BOOST_TT_TRAIT_OP +
@@ -18,7 +17,7 @@
 
 #include "has_binary_operators.hpp"
 
-void specific() {
+BOOST_TT_PROC void specific() {
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< bool const &, void, int >::value), 0);
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< int, void, int >::value), 0);
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< void, int &, int >::value), 0);
@@ -148,6 +147,7 @@ void specific() {
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< double const &, int* & >::value), 0);
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< double const &, int* &, bool & >::value), 0);
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< double const &, int* &, bool const & >::value), 0);
+#ifndef __NVCC__
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< void*, bool const, bool const >::value), 0);
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< void*, bool const, int const & >::value), 0);
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< void*, bool &, bool >::value), 0);
@@ -179,6 +179,7 @@ void specific() {
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< void* const &, void* &, int const & >::value), 0);
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< void* const &, int*, bool >::value), 0);
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< void* const &, int* const, int & >::value), 0);
+#endif   
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< int*, bool &, int >::value), 0);
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< int*, int, int & >::value), 0);
    BOOST_CHECK_INTEGRAL_CONSTANT((::boost::BOOST_TT_TRAIT_NAME< int*, int const, int >::value), 0);

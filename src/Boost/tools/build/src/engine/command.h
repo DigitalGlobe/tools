@@ -4,6 +4,12 @@
  * This file is part of Jam - see jam.c for Copyright information.
  */
 
+/*  This file is ALSO:
+ *  Copyright 2022 René Ferdinand Rivera Morell
+ *  Distributed under the Boost Software License, Version 1.0.
+ *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
+ */
+
 /*
  * command.h - the CMD structure and routines to manipulate them
  *
@@ -40,9 +46,11 @@
 #ifndef COMMAND_SW20111118_H
 #define COMMAND_SW20111118_H
 
+#include "config.h"
 #include "lists.h"
+#include "mem.h"
 #include "rules.h"
-#include "strings.h"
+#include "jam_strings.h"
 
 
 typedef struct _cmd CMD;
@@ -78,8 +86,8 @@ struct _cmd
     string buf[ 1 ];  /* actual commands */
     int    noop;      /* no-op commands should be faked instead of executed */
     int    asynccnt;  /* number of outstanding dependencies */
-    TARGETS * lock;   /* semaphores that are required by this cmd. */
-    TARGETS * unlock; /* semaphores that are released when this cmd finishes. */
+    targets_ptr lock;   /* semaphores that are required by this cmd. */
+    targets_uptr unlock; /* semaphores that are released when this cmd finishes. */
     char   status;    /* the command status */
 };
 

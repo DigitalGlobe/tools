@@ -10,12 +10,15 @@
 // For more information, see http://www.boost.org
 
 #include <memory>
+#include <boost/core/ref.hpp>
 #include <boost/optional.hpp>
-#include <boost/ref.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/test/minimal.hpp>
 #include <boost/signals2.hpp>
-#include <boost/bind.hpp>
+#define BOOST_TEST_MODULE track_test
+#include <boost/test/included/unit_test.hpp>
+#include <boost/bind/bind.hpp>
+
+using namespace boost::placeholders;
 
 struct swallow {
   typedef int result_type;
@@ -51,7 +54,7 @@ static int myfunc(int i, double z)
   return i;
 }
 
-int test_main(int, char*[])
+BOOST_AUTO_TEST_CASE(test_main)
 {
   typedef boost::signals2::signal<int (int), max_or_default<int> > sig_type;
   sig_type s1;
@@ -136,7 +139,29 @@ int test_main(int, char*[])
     BOOST_CHECK(s1(5) == 5);
   }
   BOOST_CHECK(s1(5) == 0);
+  // make sure tracking foreign shared_ptr<const void> works
+  {
+    std::shared_ptr<const void> shorty(new int());
+    s1.connect(sig_type::slot_type(swallow(), shorty.get(), _1).track_foreign(shorty));
+    BOOST_CHECK(s1(5) == 5);
+  }
+  {
+    std::shared_ptr<int> shorty(new int());
+    s1.connect
+    (
+      sig_type::slot_type
+      (
+        swallow(),
+        shorty.get(),
+        _1
+      ).track_foreign
+      (
+        std::weak_ptr<const void>(shorty)
+      )
+    );
+    BOOST_CHECK(s1(5) == 5);
+  }
+  BOOST_CHECK(s1(5) == 0);
+  BOOST_CHECK(s1(5) == 0);
 #endif
-
-  return 0;
 }

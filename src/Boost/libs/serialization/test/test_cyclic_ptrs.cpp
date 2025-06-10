@@ -1,7 +1,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // test_cyclic_ptrs.cpp
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -14,7 +14,7 @@
 #include <cstdio> // remove
 #include <boost/config.hpp>
 #if defined(BOOST_NO_STDC_NAMESPACE)
-namespace std{ 
+namespace std{
     using ::remove;
 }
 #endif
@@ -23,7 +23,6 @@ namespace std{
 #include <boost/core/no_exceptions_support.hpp>
 
 #include <boost/serialization/nvp.hpp>
-#include <boost/serialization/version.hpp>
 #include <boost/serialization/base_object.hpp>
 
 #include "A.hpp"
@@ -62,10 +61,10 @@ bool J::operator==(const J &rhs) const
 // of those objects which it points to either directly or indirectly.
 // When those objects are subsequently serialized, it is discovered
 // that have already been serialized through pointers.  This is
-// detected by the system and an exception - pointer_conflict - 
-// is thrown.  Permiting this to go undetected would result in the
+// detected by the system and an exception - pointer_conflict -
+// is thrown.  Permitting this to go undetected would result in the
 // creation of multiple equal objects rather than the original
-// structure.  
+// structure.
 class K
 {
     J j1;
@@ -143,6 +142,7 @@ int test2(){
         ia >> BOOST_SERIALIZATION_NVP(j2);
     }
     BOOST_CHECK(*j1 == *j2);
+    delete j1;
     BOOST_CHECK(j2 == j2->j);
     std::remove(testfile);
     return EXIT_SUCCESS;
@@ -156,13 +156,13 @@ int test3(){
     boost::archive::archive_exception exception(
         boost::archive::archive_exception::no_exception
     );
-    {   
+    {
         test_ostream os(testfile, TEST_STREAM_FLAGS);
         test_oarchive oa(os, TEST_ARCHIVE_FLAGS);
         BOOST_TRY {
             oa << BOOST_SERIALIZATION_NVP(k);
         }
-        BOOST_CATCH (boost::archive::archive_exception ae){
+        BOOST_CATCH (boost::archive::archive_exception const& ae){
             exception = ae;
         }
         BOOST_CATCH_END
@@ -181,7 +181,7 @@ int test3(){
         BOOST_TRY {
             ia >> BOOST_SERIALIZATION_NVP(k);
         }
-        BOOST_CATCH (boost::archive::archive_exception ae){
+        BOOST_CATCH (boost::archive::archive_exception const& ae){
             exception = ae;
         }
         BOOST_CATCH_END

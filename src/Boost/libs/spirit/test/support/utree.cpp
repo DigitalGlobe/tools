@@ -6,13 +6,10 @@
     Distributed under the Boost Software License, Version 1.0. (See accompanying
     file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 =============================================================================*/
-
-#include <boost/config/warning_disable.hpp>
-#include <boost/detail/lightweight_test.hpp>
-
-#include <boost/functional/hash.hpp>
-#include <boost/spirit/include/phoenix.hpp>
 #include <boost/spirit/include/support_utree.hpp>
+
+#include <boost/core/lightweight_test.hpp>
+#include <boost/functional/hash.hpp>
 
 #include <iostream>
 #include <sstream>
@@ -348,10 +345,10 @@ int main()
         BOOST_TEST((utree(1) || utree(0)) == utree(true));
         BOOST_TEST((utree(1) || utree(1)) == utree(true));
 
-        BOOST_TEST(!utree(true)   == utree(false));
-        BOOST_TEST(!utree(false)  == utree(true));
-        BOOST_TEST(!utree(1)      == utree(false));
-        BOOST_TEST(!utree(0)      == utree(true));
+        BOOST_TEST((!utree(true))   == utree(false));
+        BOOST_TEST((!utree(false))  == utree(true));
+        BOOST_TEST((!utree(1))      == utree(false));
+        BOOST_TEST((!utree(0))      == utree(true));
 
         BOOST_TEST((utree(456) + utree(123)) == utree(456 + 123));
         BOOST_TEST((utree(456) + utree(123.456)) == utree(456 + 123.456));

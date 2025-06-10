@@ -1,9 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2004 Vladimir Prus.
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Test that we load parent projects before loading children.
 
@@ -32,7 +32,7 @@ int main() {}
 
 t.run_build_system()
 
-t.expect_addition("child/bin/$toolset/debug/main.exe")
+t.expect_addition("child/bin/$toolset/debug*/main.exe")
 t.fail_test(t.stdout().find("Setting child requirements") < t.stdout().find(
     "Setting parent requirements"))
 
@@ -49,7 +49,7 @@ int main() {}
 """)
 
 t.run_build_system(subdir="src/app")
-t.expect_addition("src/app/bin/$toolset/debug/test.exe")
+t.expect_addition("src/app/bin/$toolset/debug*/test.exe")
 
 
 # child/child2 used to be loaded before child

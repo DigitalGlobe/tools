@@ -7,7 +7,7 @@
 
 #include <boost/thread/thread_only.hpp>
 #include <boost/test/unit_test.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 void do_nothing()
 {}
@@ -20,7 +20,7 @@ BOOST_AUTO_TEST_CASE(test_thread_id_for_default_constructed_thread_is_default_co
 
 BOOST_AUTO_TEST_CASE(test_thread_id_for_running_thread_is_not_default_constructed_id)
 {
-    boost::thread t(do_nothing);
+    boost::thread t(&do_nothing);
     BOOST_CHECK(t.get_id()!=boost::thread::id());
     t.join();
 }

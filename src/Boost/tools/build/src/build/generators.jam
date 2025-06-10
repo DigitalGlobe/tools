@@ -2,8 +2,8 @@
 # Copyright 2006. Rene Rivera
 #
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Manages 'generators' --- objects which can do transformation between different
 # target types and contain algorithm for finding transformation from sources to
@@ -32,7 +32,7 @@
 #
 # Likewise, when generator tries to convert sources to consumable types, it can
 # get more targets that it was asked for. The question is what to do with extra
-# targets. Boost.Build attempts to convert them to requested types, and attempts
+# targets. B2 attempts to convert them to requested types, and attempts
 # that as early as possible. Specifically, this is done after invoking each
 # generator. TODO: An example is needed to document the rationale for trying
 # extra target conversion at that point.
@@ -40,13 +40,14 @@
 # In order for the system to be able to use a specific generator instance 'when
 # needed', the instance needs to be registered with the system using
 # generators.register() or one of its related rules. Unregistered generators may
-# only be run explicitly and will not be considered by Boost.Build when when
+# only be run explicitly and will not be considered by B2 when when
 # converting between given target types.
 
 import "class" : new ;
 import property-set ;
 import sequence ;
 import set ;
+import regex ;
 import type ;
 import utility ;
 import virtual-target ;
@@ -167,8 +168,10 @@ class generator
     import utility ;
     import path ;
     import property ;
+    import property-set ;
     import sequence ;
     import set ;
+    import toolset ;
     import type ;
     import virtual-target ;
 
@@ -215,12 +218,12 @@ class generator
             # name. We use parallel lists for prefix and postfix (as opposed to
             # mapping), because given target type might occur several times, for
             # example "H H(%_symbols)".
-            local m = [ MATCH ([^\\(]*)(\\((.*)%(.*)\\))? : $(e) ] ;
+            local m = [ MATCH "([^\\(]*)(\\((.*)%(.*)\\))?" : $(e) ] ;
             self.target-types += $(m[1]) ;
             self.name-prefix += $(m[3]:E="") ;
             self.name-postfix += $(m[4]:E="") ;
         }
-        
+
         for local r in [ requirements ]
         {
             if $(r:G=)
@@ -236,6 +239,10 @@ class generator
         # Note that 'transform' here, is the same as 'for_each'.
         sequence.transform type.validate : $(self.source-types) ;
         sequence.transform type.validate : $(self.target-types) ;
+
+        local relevant-for-generator =
+            [ sequence.transform utility.ungrist : $(requirements:G) ] ;
+        self.relevant-features = [ property-set.create <relevant>$(relevant-for-generator) ] ;
     }
 
     ################# End of constructor #################
@@ -292,29 +299,27 @@ class generator
         # feature name in requirements (i.e. grist-only element), as matching
         # any value of the feature.
 
-        if [ $(property-set-to-match).contains-raw $(self.property-requirements) ] &&
-            [ $(property-set-to-match).contains-features $(self.feature-requirements) ]
-        {
-            return true ;
-        }
-        else
-        {
+        if ! [ $(property-set-to-match).contains-raw $(self.property-requirements) ] {
+            generators.dout [ indent ] "    property-requirements are not met:" $(self.property-requirements) ;
             return ;
         }
+        if ! [ $(property-set-to-match).contains-features $(self.feature-requirements) ] {
+            generators.dout [ indent ] "    feature-requirements are not met:" $(self.feature-requirements) ;
+            return ;
+        }
+        return true ;
     }
 
     # Returns another generator which differs from $(self) in
     #   - id
-    #   - value to <toolset> feature in properties
+    #   - requirements, which are refined with the new ones
     #
     rule clone ( new-id : new-toolset-properties + )
     {
         local g = [ new $(__class__) $(new-id) $(self.composing) :
             $(self.source-types) : $(self.target-types-and-names) :
-            # Note: this does not remove any subfeatures of <toolset> which
-            # might cause problems.
-            [ property.change $(self.requirements) : <toolset> ]
-            $(new-toolset-properties) ] ;
+            [ property.refine $(self.requirements) : $(new-toolset-properties) ]
+            ] ;
         return $(g) ;
     }
 
@@ -327,7 +332,7 @@ class generator
         local target-types ;
         for local t in $(self.target-types-and-names)
         {
-            local m = [ MATCH ([^\\(]*)(\\(.*\\))? : $(t) ] ;
+            local m = [ MATCH "([^\\(]*)(\\(.*\\))?" : $(t) ] ;
             if $(m) = $(base)
             {
                 target-types += $(type)$(m[2]:E="") ;
@@ -406,22 +411,26 @@ class generator
         }
 
         local result ;
-        if $(consumed)
+        if $(consumed[2])
         {
-            result = [ construct-result $(consumed) : $(project) $(name) :
-                $(property-set) ] ;
+            result = [ construct-result $(consumed[2-]) : $(project) $(name) :
+                [ $(property-set).add $(consumed[1]) ] ] ;
         }
 
         if $(result)
         {
-            generators.dout [ indent ] "  SUCCESS: " $(result) ;
+            generators.dout [ indent ] "  SUCCESS:" $(result) ;
         }
         else
         {
             generators.dout [ indent ] "  FAILURE" ;
         }
         generators.dout ;
-        return $(result) ;
+        if $(result)
+        {
+            # Make sure that we propagate usage-requirements up the stack.
+            return [ $(result[1]).add $(consumed[1]) ] $(result[2-]) ;
+        }
     }
 
     # Constructs the dependency graph to be returned by this generator.
@@ -443,6 +452,11 @@ class generator
     )
     {
         local result ;
+
+        local relevant = [ toolset.relevant $(self.rule-name) ] ;
+        relevant = [ $(relevant).add $(self.relevant-features) ] ;
+        property-set = [ $(property-set).add $(relevant) ] ;
+
         # If this is a 1->1 transformation, apply it to all consumed targets in
         # order.
         if ! $(self.source-types[2]) && ! $(self.composing)
@@ -458,7 +472,16 @@ class generator
             result += [ generated-targets $(consumed) : $(property-set) :
                 $(project) $(name) ] ;
         }
-        return $(result) ;
+        if $(result)
+        {
+            if [ class.is-a $(result[1]) : property-set ]
+            {
+                return [ $(result[1]).add $(relevant) ] $(result[2-]) ;
+            }
+            else {
+               return $(relevant) $(result) ;
+            }
+        }
     }
 
     # Determine target name from fullname (maybe including path components)
@@ -539,9 +562,12 @@ class generator
         }
 
         # Assign an action for each target.
-        local action = [ action-class ] ;
-        local a = [ class.new $(action) $(sources) : $(self.rule-name) :
-                    $(property-set) ] ;
+        local a = [ action $(sources) : $(property-set)
+                    : $(project) $(name) ] ;
+        if ! $(a)
+        {
+            return ;
+        }
 
         # Create generated target for each target type.
         local targets ;
@@ -558,7 +584,18 @@ class generator
                 $(project) : $(a) ] ;
         }
 
+        targets += [ additional-targets-produced $(sources) : $(property-set)
+                   : $(project) $(name) $(a) : $(targets) ] ;
+
         return [ sequence.transform virtual-target.register : $(targets) ] ;
+    }
+
+    # Hook to produce additional targets for cases which could not be (easily)
+    # solved by registering multiple constrained generators.
+    #
+    rule additional-targets-produced ( sources + : property-set
+                                     : project name action : targets + )
+    {
     }
 
     # Attempts to convert 'sources' to targets of types that this generator can
@@ -576,6 +613,7 @@ class generator
     {
         local _consumed ;
         local missing-types ;
+        local usage-requirements ;
 
         if $(sources[2])
         {
@@ -588,6 +626,7 @@ class generator
             local temp = [ consume-directly $(sources) ] ;
             if $(temp[1])
             {
+                usage-requirements = [ property-set.empty ] ;
                 _consumed = $(temp[1]) ;
             }
             missing-types = $(temp[2-]) ;
@@ -613,7 +652,7 @@ class generator
             # everything to the required type. There is no need to rerun it on
             # targets of different types.
 
-            # NOTE: ignoring usage requirements.
+            usage-requirements = $(transformed[1]) ;
             for local t in $(transformed[2-])
             {
                 if [ $(t).type ] in $(missing-types)
@@ -623,7 +662,7 @@ class generator
             }
         }
 
-        return [ sequence.unique $(_consumed) ] ;
+        return $(usage-requirements) [ sequence.unique $(_consumed) ] ;
     }
 
     # Converts several files to consumable types. Called for composing
@@ -637,11 +676,12 @@ class generator
         # type.
         if ! $(self.source-types)
         {
-            # Anything is acceptible
-            return $(sources) ;
+            # Anything is acceptable
+            return [ property-set.empty ] $(sources) ;
         }
         else
         {
+            local usage-requirements = [ property-set.empty ] ;
             local acceptible-types = [ sequence.unique
                 [ sequence.transform type.all-derived : $(self.source-types) ] ] ;
             for local source in $(sources)
@@ -661,13 +701,17 @@ class generator
                     {
                         generators.dout [ indent ] " failed to convert " $(source) ;
                     }
+                    else
+                    {
+                        usage-requirements = [ $(usage-requirements).add $(transformed[1]) ] ;
+                    }
                 }
                 else
                 {
                     result += $(source) ;
                 }
             }
-            return [ sequence.unique $(result) : stable ] ;
+            return $(usage-requirements) [ sequence.unique $(result) : stable ] ;
         }
     }
 
@@ -704,6 +748,16 @@ class generator
     rule action-class ( )
     {
         return "action" ;
+    }
+
+    # Returns action to be used to generate targets. Default implementation
+    # returns instantiated class returned by "action-class" member rule.
+    #
+    rule action ( sources + : property-set : project name )
+    {
+        local action = [ action-class ] ;
+        return [ class.new $(action) $(sources) : $(self.rule-name) :
+                    $(property-set) ] ;
     }
 }
 
@@ -800,6 +854,25 @@ rule register-composing ( id : source-types * : target-types + : requirements *
 rule generators-for-toolset ( toolset )
 {
     return $(.generators-for-toolset.$(toolset)) ;
+}
+
+
+# Adds generator overrides from 'base' to 'toolset'.
+# Intended for use in toolset.inherit-generators.
+#
+rule inherit-overrides ( toolset : base : generators-to-ignore * )
+{
+    for local overrider-id in [ MATCH "^\\.override\\.$(base)\\.(.*)" : [ VARNAMES $(__name__) ] ]
+    {
+        if ! $(base).$(overrider-id) in $(generators-to-ignore)
+        {
+            for local overridee-id in [ regex.replace-list $(.override.$(base).$(overrider-id))
+                                      : ^$(base)\\. : $(toolset). ]
+            {
+                override $(toolset).$(overrider-id) : $(overridee-id) ;
+            }
+        }
+    }
 }
 
 
@@ -1017,7 +1090,7 @@ local rule try-one-generator-really ( project name ? : generator : target-type
     generators.dout [ indent ] " " $(targets) ;
     if $(usage-requirements)
     {
-        generators.dout [ indent ] "  with usage requirements:" $(x) ;
+        generators.dout [ indent ] "  with usage requirements:" $(usage-requirements) ;
     }
 
     if $(success)
@@ -1239,7 +1312,7 @@ rule find-viable-generators ( target-type : property-set )
 
     # Generators which override 'all'.
     local all-overrides ;
-    # Generators which are overriden.
+    # Generators which are overridden.
     local overriden-ids ;
     for local g in $(viable-generators)
     {
@@ -1347,14 +1420,16 @@ local rule construct-really ( project name ? : target-type : property-set :
 #
 rule construct ( project name ? : target-type : property-set * : sources * : top-level ? )
 {
-    local saved-stack ;
+    local saved-active ;
     if $(top-level)
     {
         saved-active = $(.active-generators) ;
         .active-generators = ;
     }
 
-    if (.construct-stack)
+    # FIXME This is probably not intended be be run unconditionally,
+    # but changing it causes no_type to fail.
+    if "(.construct-stack)"
     {
         ensure-type $(sources) ;
     }
@@ -1371,7 +1446,7 @@ rule construct ( project name ? : target-type : property-set * : sources * : top
         {
             generators.dout [ indent ] "    from" $(s) ;
         }
-        generators.dout [ indent ] "    properties:" [ $(property-set).raw ] ;
+        generators.dout [ indent ] "    properties:" [ $(property-set).str ] ;
     }
 
     local result = [ construct-really $(project) $(name) : $(target-type) :

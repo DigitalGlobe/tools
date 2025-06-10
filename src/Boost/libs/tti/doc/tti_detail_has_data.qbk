@@ -5,7 +5,7 @@
   http://www.boost.org/LICENSE_1_0.txt).
 ]
 
-[section:tti_detail_has_data Introspecting inner data]
+[section:tti_detail_has_data Introspecting data]
 
 The TTI macro [macroref BOOST_TTI_HAS_DATA] introspects the data of a class.
 The data can be member data or static member data.
@@ -13,7 +13,7 @@ The data can be member data or static member data.
 BOOST_TTI_HAS_DATA macro takes a single parameter, which is the name 
 of an inner member data or static member data, whose existence
 the programmer wants to check. The macro generates a metafunction
-called 'has_data_'name_of_inner_data'.
+called "has_data_'name_of_inner_data'".
 
 The metafunction can be invoked by passing it the enclosing type 
 to introspect and the type of the data.

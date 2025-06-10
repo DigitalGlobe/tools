@@ -1,7 +1,7 @@
 /////////1/////////2/////////3/////////4/////////5/////////6/////////7/////////8
 // test_codecvt_null.cpp
 
-// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com . 
+// (C) Copyright 2002 Robert Ramey - http://www.rrsd.com .
 // Use, modification and distribution is subject to the Boost Software
 // License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -21,7 +21,7 @@
 
 #include <boost/config.hpp>
 #if defined(BOOST_NO_STDC_NAMESPACE)
-namespace std{ 
+namespace std{
     using ::remove;
 }
 #endif
@@ -40,29 +40,29 @@ struct test_data
 
 template<>
 wchar_t test_data<2>::wchar_encoding[] = {
-    0x0001,
-    0x007f,
-    0x0080,
-    0x07ff,
-    0x0800,
-    0x7fff
+    (wchar_t) 0x0001,
+    (wchar_t) 0x007f,
+    (wchar_t) 0x0080,
+    (wchar_t) 0x07ff,
+    (wchar_t) 0x0800,
+    (wchar_t) 0x7fff
 };
 
 template<>
 wchar_t test_data<4>::wchar_encoding[] = {
-    0x00000001,
-    0x0000007f,
-    0x00000080,
-    0x000007ff,
-    0x00000800,
-    0x0000ffff,
-    0x00010000,
-    0x0010ffff,
-    0x001fffff,
-    0x00200000,
-    0x03ffffff,
-    0x04000000,
-    0x7fffffff
+    (wchar_t) 0x00000001,
+    (wchar_t) 0x0000007f,
+    (wchar_t) 0x00000080,
+    (wchar_t) 0x000007ff,
+    (wchar_t) 0x00000800,
+    (wchar_t) 0x0000ffff,
+    (wchar_t) 0x00010000,
+    (wchar_t) 0x0010ffff,
+    (wchar_t) 0x001fffff,
+    (wchar_t) 0x00200000,
+    (wchar_t) 0x03ffffff,
+    (wchar_t) 0x04000000,
+    (wchar_t) 0x7fffffff
 };
 
 #include <iostream>
@@ -105,9 +105,9 @@ int test_main( int /* argc */, char* /* argv */[] ) {
         std::wofstream ofs("testfile2");
         ofs.imbue(null_locale);
         int i = 10;
-        ofs << i;
+        ofs << i << '\n';
         ofs.close();
-        
+
         std::wifstream ifs("testfile2");
         ifs.imbue(null_locale);
         int i2;
@@ -117,7 +117,7 @@ int test_main( int /* argc */, char* /* argv */[] ) {
         BOOST_CHECK(i == i2);
         ifs.close();
     }
- 
+
     std::remove(testfile);
     return EXIT_SUCCESS;
 }

@@ -1,10 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2005 David Abrahams
 # Copyright 2008, 2012 Jurko Gospodnetic
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Tests the build step timing facilities.
 
@@ -49,14 +49,15 @@ rule time
 
 actions time
 {
-    echo $(>) user: $(__USER_TIME__) system: $(__SYSTEM_TIME__)
+    echo $(>) user: $(__USER_TIME__) system: $(__SYSTEM_TIME__) clock: $(__CLOCK_TIME__)
     echo timed from $(>) >> $(<)
 }
 
-rule record_time ( target : source : start end user system )
+rule record_time ( target : source : start end user system clock )
 {
     __USER_TIME__ on $(target) = $(user) ;
     __SYSTEM_TIME__ on $(target) = $(system) ;
+    __CLOCK_TIME__ on $(target) = $(clock) ;
 }
 
 rule make
@@ -76,12 +77,13 @@ make bar : baz ;
     t.write("baz", "nothing")
 
     expected_output = """\
-\.\.\.found 4 targets\.\.\.
-\.\.\.updating 2 targets\.\.\.
+\\.\\.\\.found 4 targets\\.\\.\\.
+\\.\\.\\.updating 2 targets\\.\\.\\.
 make bar
 time foo
-bar +user: [0-9\.]+ +system: +[0-9\.]+ *
-\.\.\.updated 2 targets\.\.\.$
+bar +user: [0-9.]+ +system: +[0-9.]+ +clock: +[0-9.]+ *
+
+\\.\\.\\.updated 2 targets\\.\\.\\.$
 """
 
     t.run_build_system(["-ffile.jam", "-d+1"], stdout=expected_output,
@@ -117,14 +119,16 @@ time my-time : my-exe ;
 """)
 
     t.run_build_system()
-    t.expect_addition("bin/$toolset/debug/aaa.obj")
-    t.expect_addition("bin/$toolset/debug/my-exe.exe")
-    t.expect_addition("bin/$toolset/debug/my-time.time")
+    t.expect_addition("bin/$toolset/debug*/aaa.obj")
+    t.expect_addition("bin/$toolset/debug*/my-exe.exe")
+    t.expect_addition("bin/$toolset/debug*/my-time.time")
 
-    t.expect_content_lines("bin/$toolset/debug/my-time.time",
+    t.expect_content_lines("bin/$toolset/debug*/my-time.time",
         "user: *[0-9] seconds")
-    t.expect_content_lines("bin/$toolset/debug/my-time.time",
+    t.expect_content_lines("bin/$toolset/debug*/my-time.time",
         "system: *[0-9] seconds")
+    t.expect_content_lines("bin/$toolset/debug*/my-time.time",
+        "clock: *[0-9] seconds")
 
     t.cleanup()
 
@@ -153,12 +157,12 @@ time "my time" : "my exe" ;
 """)
 
     t.run_build_system()
-    t.expect_addition("bin/$toolset/debug/aaa bbb.obj")
-    t.expect_addition("bin/$toolset/debug/my exe.exe")
-    t.expect_addition("bin/$toolset/debug/my time.time")
+    t.expect_addition("bin/$toolset/debug*/aaa bbb.obj")
+    t.expect_addition("bin/$toolset/debug*/my exe.exe")
+    t.expect_addition("bin/$toolset/debug*/my time.time")
 
-    t.expect_content_lines("bin/$toolset/debug/my time.time", "user: *")
-    t.expect_content_lines("bin/$toolset/debug/my time.time", "system: *")
+    t.expect_content_lines("bin/$toolset/debug*/my time.time", "user: *")
+    t.expect_content_lines("bin/$toolset/debug*/my time.time", "system: *")
 
     t.cleanup()
 

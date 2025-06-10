@@ -13,8 +13,11 @@ int main()
   BOOST_TEST((HaveTheSIntFunction<AType,int,boost::mpl::vector<long,double> >::value));
   BOOST_TEST((!TheTIntFunction<AType,AType,boost::mpl::vector<long,double> >::value));
   BOOST_TEST((TheTIntFunction<AnotherType,AType,boost::mpl::vector<long,double> >::value));
+  BOOST_TEST((TheTIntFunction<AnotherType,AType (long,double)>::value));
   BOOST_TEST((BOOST_TTI_HAS_STATIC_MEMBER_FUNCTION_GEN(TSFunction)<AnotherType,AType::AStructType,boost::mpl::vector<AType::AnIntType,double> >::value));
   BOOST_TEST((!Pickedname<AnotherType,void>::value));
+  
+  BOOST_TEST((BOOST_TTI_HAS_STATIC_MEMBER_FUNCTION_GEN(UnionStaticMemberFunction)<AnotherType::AnotherUnion,void>::value));
   
   // Passing non-class enclosing type will return false
   

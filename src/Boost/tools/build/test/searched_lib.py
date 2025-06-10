@@ -1,9 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2003 Dave Abrahams
 # Copyright 2003, 2004, 2005, 2006 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Test usage of searched-libs: one which are found via -l
 # switch to the linker/compiler.
@@ -26,17 +26,17 @@ void foo() {}
 """);
 
 t.run_build_system(subdir="lib")
-t.expect_addition("lib/bin/$toolset/debug/test_lib.dll")
+t.expect_addition("lib/bin/$toolset/debug*/test_lib.dll")
 
 
 # Auto adjusting of suffixes does not work, since we need to
 # change dll to lib.
-if ( ( os.name == "nt" ) or os.uname()[0].lower().startswith("cygwin") ) and \
-    ( BoostBuild.get_toolset() != "gcc" ):
-    t.copy("lib/bin/$toolset/debug/test_lib.implib", "lib/test_lib.implib")
-    t.copy("lib/bin/$toolset/debug/test_lib.dll", "lib/test_lib.dll")
+if t.is_implib_expected():
+    t.expect_addition("lib/bin/$toolset/debug*/test_lib.implib")
+    t.copy("lib/bin/$toolset/debug*/test_lib.implib", "lib/test_lib.implib")
+    t.copy("lib/bin/$toolset/debug*/test_lib.dll", "lib/test_lib.dll")
 else:
-    t.copy("lib/bin/$toolset/debug/test_lib.dll", "lib/test_lib.dll")
+    t.copy("lib/bin/$toolset/debug*/test_lib.dll", "lib/test_lib.dll")
 
 
 # Test that the simplest usage of searched library works.
@@ -65,8 +65,9 @@ helper() { foo(); }
 """)
 
 t.run_build_system(["-d2"])
-t.expect_addition("bin/$toolset/debug/main.exe")
+t.expect_addition("bin/$toolset/debug*/main.exe")
 t.rm("bin/$toolset/debug/main.exe")
+t.rm("bin/$toolset/debug/*/main.exe")
 
 
 # Test that 'unit-test' will correctly add runtime paths to searched libraries.
@@ -83,8 +84,9 @@ lib test_lib : : <name>test_lib <search>lib ;
 """)
 
 t.run_build_system()
-t.expect_addition("bin/$toolset/debug/main.passed")
+t.expect_addition("bin/$toolset/debug*/main.passed")
 t.rm("bin/$toolset/debug/main.exe")
+t.rm("bin/$toolset/debug/*/main.exe")
 
 
 # Now try using searched lib from static lib. Request shared version of searched
@@ -96,9 +98,10 @@ lib test_lib : : <name>test_lib <search>lib ;
 """)
 
 t.run_build_system(stderr=None)
-t.expect_addition("bin/$toolset/debug/main.exe")
-t.expect_addition("bin/$toolset/debug/link-static/helper.lib")
+t.expect_addition("bin/$toolset/debug*/main.exe")
+t.expect_addition("bin/$toolset/debug/link-static*/helper.lib")
 t.rm("bin/$toolset/debug/main.exe")
+t.rm("bin/$toolset/debug/*/main.exe")
 
 # A regression test: <library>property referring to searched-lib was being
 # mishandled. As the result, we were putting target name to the command line!
@@ -160,6 +163,22 @@ lib l : : <name>l_f ;
 t.run_build_system(["-n"])
 
 
+# A regression test. Virtual targets distinguished by their search paths were
+# not differentiated when registered, which caused search paths to be selected
+# incorrectly for build requests with multiple feature values.
+t.write("jamroot.jam", "")
+t.write("a.cpp", "")
+t.write("jamfile.jam", """\
+exe a : a.cpp l ;
+lib l : : <name>l <search>lib32 <address-model>32 ;
+lib l : : <name>l <search>lib64 <address-model>64 ;
+""")
+
+t.run_build_system(["-n","address-model=32,64"])
+t.fail_test(t.stdout().find("lib32") == -1)
+t.fail_test(t.stdout().find("lib64") == -1)
+
+
 # Make sure plain "lib foobar ; " works.
 t.write("jamfile.jam", """\
 exe a : a.cpp foobar ;
@@ -167,7 +186,7 @@ lib foobar ;
 """)
 
 t.run_build_system(["-n", "-d2"])
-t.fail_test(string.find(t.stdout(), "foobar") == -1)
+t.fail_test(t.stdout().find("foobar") == -1)
 
 
 # Make sure plain "lib foo bar ; " works.
@@ -177,7 +196,7 @@ lib foo bar ;
 """)
 
 t.run_build_system(["-n", "-d2"])
-t.fail_test(string.find(t.stdout(), "foo") == -1)
-t.fail_test(string.find(t.stdout(), "bar") == -1)
+t.fail_test(t.stdout().find("foo") == -1)
+t.fail_test(t.stdout().find("bar") == -1)
 
 t.cleanup()

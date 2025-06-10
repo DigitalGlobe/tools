@@ -24,8 +24,6 @@
 #include <boost/detail/lightweight_test.hpp>
 #include <boost/static_assert.hpp>
 
-namespace boost
-{
   template <typename T>
   struct wrap
   {
@@ -38,11 +36,10 @@ namespace boost
   };
 
   template <typename T>
-  exception_ptr make_exception_ptr(T v)
+  boost::exception_ptr make_exception_ptr(T v)
   {
-    return copy_exception(wrap<T> (v));
+    return boost::copy_exception(wrap<T> (v));
   }
-}
 
 int main()
 {
@@ -51,19 +48,19 @@ int main()
     typedef int T;
     boost::promise<T> p;
     boost::future<T> f = p.get_future();
-    p.set_exception(boost::make_exception_ptr(3));
+    p.set_exception(::make_exception_ptr(3));
     try
     {
       f.get();
       BOOST_TEST(false);
     }
-    catch (boost::wrap<int> i)
+    catch (::wrap<int> i)
     {
       BOOST_TEST(i.value == 3);
     }
     try
     {
-      p.set_exception(boost::make_exception_ptr(3));
+      p.set_exception(::make_exception_ptr(3));
       BOOST_TEST(false);
     }
     catch (const boost::future_error& e)
@@ -75,7 +72,36 @@ int main()
       BOOST_TEST(false);
     }
   }
-
+  {
+    typedef int T;
+    boost::promise<T> p;
+    boost::future<T> f = p.get_future();
+    p.set_exception_deferred(::make_exception_ptr(3));
+    BOOST_TEST(!f.is_ready());
+    p.notify_deferred();
+    try
+    {
+      f.get();
+      BOOST_TEST(false);
+    }
+    catch (::wrap<int> i)
+    {
+      BOOST_TEST(i.value == 3);
+    }
+    try
+    {
+      p.set_exception(::make_exception_ptr(3));
+      BOOST_TEST(false);
+    }
+    catch (const boost::future_error& e)
+    {
+      BOOST_TEST(e.code() == boost::system::make_error_code(boost::future_errc::promise_already_satisfied));
+    }
+    catch (...)
+    {
+      BOOST_TEST(false);
+    }
+  }
   return boost::report_errors();
 }
 

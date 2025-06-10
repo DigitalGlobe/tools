@@ -4,15 +4,15 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying 
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/config/warning_disable.hpp>
 #include <boost/spirit/include/karma.hpp>
-#include <boost/detail/lightweight_test.hpp>
+
+#include <boost/core/lightweight_test.hpp>
 
 #include <iterator>
 #include <sstream>
 #include <string>
 
-int main( int argc, char** argv )
+int main()
 {
     namespace karma = boost::spirit::karma;
     std::string output;

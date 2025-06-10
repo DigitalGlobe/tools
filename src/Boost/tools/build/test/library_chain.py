@@ -1,8 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2003, 2004, 2005, 2006 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Test that a chain of libraries works ok, no matter if we use static or shared
 # linking.
@@ -10,6 +10,7 @@
 import BoostBuild
 import os
 import string
+import sys
 
 t = BoostBuild.Tester(use_test_config=False)
 
@@ -54,11 +55,11 @@ foo() { geek(); }
 t.write("b/jamfile.jam", "lib b : b.cpp ../a//a ;")
 
 t.run_build_system(["-d2"], stderr=None)
-t.expect_addition("bin/$toolset/debug/main.exe")
+t.expect_addition("bin/$toolset/debug*/main.exe")
 t.rm(["bin", "a/bin", "b/bin"])
 
 t.run_build_system(["link=static"])
-t.expect_addition("bin/$toolset/debug/link-static/main.exe")
+t.expect_addition("bin/$toolset/debug/link-static*/main.exe")
 t.rm(["bin", "a/bin", "b/bin"])
 
 
@@ -66,14 +67,14 @@ t.rm(["bin", "a/bin", "b/bin"])
 t.write("b/jamfile.jam", "lib b : b.cpp : <library>../a//a ;")
 
 t.run_build_system(["link=static"])
-t.expect_addition("bin/$toolset/debug/link-static/main.exe")
+t.expect_addition("bin/$toolset/debug/link-static*/main.exe")
 
 t.rm(["bin", "a/bin", "b/bin"])
 
 t.write("b/jamfile.jam", "lib b : b.cpp ../a//a/<link>shared : <link>static ;")
 
 t.run_build_system()
-t.expect_addition("bin/$toolset/debug/main.exe")
+t.expect_addition("bin/$toolset/debug*/main.exe")
 
 t.rm(["bin", "a/bin", "b/bin"])
 
@@ -88,16 +89,16 @@ lib z : : <name>zzz ;
 t.run_build_system(["-a", "-d+2"], status=None, stderr=None)
 # Try to find the "zzz" string either in response file (for Windows compilers),
 # or in the standard output.
-rsp = t.adjust_names("bin/$toolset/debug/main.exe.rsp")[0]
-if os.path.exists(rsp) and ( string.find(open(rsp).read(), "zzz") != -1 ):
+rsp = t.adjust_names("bin/$toolset/debug*/main.exe.rsp")[0]
+if os.path.exists(rsp) and ( open(rsp).read().find("zzz") != -1 ):
     pass
-elif string.find(t.stdout(), "zzz") != -1:
+elif t.stdout().find("zzz") != -1:
     pass
 else:
     t.fail_test(1)
 
 # Test main -> libb -> liba chain in the case where liba is a file and not a
-# Boost.Build target.
+# B2 target.
 t.rm(".")
 
 t.write("jamroot.jam", "")
@@ -116,14 +117,13 @@ void a() {}
 t.run_build_system(subdir="a")
 t.expect_addition("a/dist/a.dll")
 
-if ( os.name == 'nt' or os.uname()[0].lower().startswith('cygwin') ) and \
-    BoostBuild.get_toolset() != 'gcc':
-    # This is a Windows import library -- we know the exact name.
-    file = "a/dist/a.lib"
+if t.is_implib_expected():
+    # This is a Windows import library.
+    file = t.adjust_name("a.implib")
 else:
-    file = t.adjust_names("a/dist/a.dll")[0]
+    file = t.adjust_name("a.dll")
 
-t.write("b/jamfile.jam", "lib b : b.cpp ../%s ;" % file)
+t.write("b/jamfile.jam", "lib b : b.cpp ../a/dist/%s ;" % file)
 
 t.write("b/b.cpp", """\
 #if defined(_WIN32)
@@ -147,6 +147,6 @@ int main() { b(); }
 """)
 
 t.run_build_system()
-t.expect_addition("bin/$toolset/debug/main.exe")
+t.expect_addition("bin/$toolset/debug*/main.exe")
 
 t.cleanup()

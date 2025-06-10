@@ -1,9 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright (C) Vladimir Prus 2005.
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Basic tests for the 'notfile' rule.
 
@@ -29,8 +29,8 @@ t.run_build_system(["-n", "-d+2"])
 
 t.fail_test(t.stdout().find("echo hi") == -1)
 
-name = t.adjust_names("bin/$toolset/debug/hello.exe")[0]
-name = apply(os.path.join, name.split("/"));
+name = t.adjust_names("bin/$toolset/debug*/hello.exe")[0]
+name = os.path.join(*name.split("/"))
 t.expect_output_lines(" valgrind *%s " % name)
 
 t.cleanup()

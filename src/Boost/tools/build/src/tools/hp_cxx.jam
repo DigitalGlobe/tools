@@ -1,7 +1,48 @@
 # Copyright 2001 David Abrahams.
 # Copyright 2004, 2005 Markus Schoepflin.
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
+
+#| tag::doc[]
+
+[[bbv2.reference.tools.compiler.hp_cxx]]
+= HP C++ Compiler for Tru64 Unix
+
+The `hp_cxx` modules supports the
+http://h30097.www3.hp.com/cplus/?jumpid=reg_R1002_USEN[HP C++ Compiler]
+for Tru64 Unix.
+
+The module is initialized using the following syntax:
+
+----
+using hp_cxx : [version] : [c++-compile-command] : [compiler options] ;
+----
+
+This statement may be repeated several times, if you want to configure
+several versions of the compiler.
+
+If the command is not specified, B2 will search for a binary
+named `hp_cxx` in PATH.
+
+The following options can be provided, using
+_`<option-name>option-value syntax`_:
+
+`cflags`::
+Specifies additional compiler flags that will be used when compiling C
+sources.
+
+`cxxflags`::
+Specifies additional compiler flags that will be used when compiling C++
+sources.
+
+`compileflags`::
+Specifies additional compiler flags that will be used when compiling both C
+and C++ sources.
+
+`linkflags`::
+Specifies additional command line options that will be passed to the linker.
+
+|# # end::doc[]
 
 #
 # HP CXX compiler
@@ -28,6 +69,8 @@
 #   optimization is needed.
 #
 
+import regex ;
+
 import feature generators common ;
 import toolset : flags ;
 
@@ -37,17 +80,13 @@ feature.extend c++abi : cxxarm ;
 # Inherit from Unix toolset to get library ordering magic.
 toolset.inherit  hp_cxx : unix ;
 
-generators.override hp_cxx.prebuilt : builtin.lib-generator ;
-generators.override hp_cxx.prebuilt : builtin.prebuilt ;
-generators.override hp_cxx.searched-lib-generator : searched-lib-generator ;
-
 
 rule init ( version ? : command * : options * )
 {
     local condition = [ common.check-init-parameters hp_cxx : version $(version) ] ;
-    
+
     local command = [ common.get-invocation-command hp_cxx : cxx : $(command) ] ;
-    
+
     if $(command)
     {
         local root = [ common.get-absolute-tool-path $(command[-1]) ] ;
@@ -55,12 +94,12 @@ rule init ( version ? : command * : options * )
         if $(root)
         {
             flags hp_cxx .root $(condition) : "\"$(root)\"/" ;
-        }        
-    }      
+        }
+    }
     # If we can't find 'cxx' anyway, at least show 'cxx' in the commands
     command ?= cxx ;
-        
-    common.handle-options hp_cxx : $(condition) : $(command) : $(options) ;               
+
+    common.handle-options hp_cxx : $(condition) : $(command) : $(options) ;
 }
 
 generators.register-c-compiler hp_cxx.compile.c++ : CPP : OBJ : <toolset>hp_cxx ;
@@ -110,7 +149,7 @@ flags hp_cxx.link OPTIONS <c++abi> : -model ansi : : hack-hack ;
 flags hp_cxx.link OPTIONS <c++abi>cxxarm : -model arm ;
 
 # Display a descriptive tag together with each compiler message. This tag can
-# be used by the user to explicitely suppress the compiler message.
+# be used by the user to explicitly suppress the compiler message.
 flags hp_cxx.compile OPTIONS : -msg_display_tag ;
 
 flags hp_cxx.compile OPTIONS <cflags> ;
@@ -145,6 +184,12 @@ actions link.dll bind LIBRARIES
 # Note: Relaxed ANSI mode (-std) is used for compilation because in strict ANSI
 # C89 mode (-std1) the compiler doesn't accept C++ comments in C files. As -std
 # is the default, no special flag is needed.
+
+rule compile.c ( targets * : sources * : properties * )
+{
+    COMMAND_DATABASE on $(targets) = "(cc [^\n]*)" ;
+}
+
 actions compile.c
 {
     $(.root:E=)cc -c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
@@ -156,7 +201,7 @@ actions compile.c
 # Note: We deliberately don't suppress any warnings on the compiler command
 # line, the user can always do this in a customized toolset later on.
 
-rule compile.c++
+rule compile.c++ ( targets * : sources * : properties * )
 {
     # We preprocess the TEMPLATE_DEPTH command line option here because we found
     # no way to do it correctly in the actual action code. There we either get
@@ -165,6 +210,10 @@ rule compile.c++
     # "-pending_instantiations ".
     local template-depth = [ on $(1) return $(TEMPLATE_DEPTH) ] ;
     TEMPLATE_DEPTH on $(1) = "-pending_instantiations "$(template-depth) ;
+    local config_command = [ regex.escape
+        [ on $(targets[1]) return $(CONFIG_COMMAND:E="") ]
+        : "()[]\\+.*^$\"" : "\\" ] ;
+    COMMAND_DATABASE on $(targets) = "($(config_command)[^\n]*)" ;
 }
 
 actions compile.c++

@@ -11,7 +11,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/signals2/deconstruct.hpp>
 #include <boost/signals2/deconstruct_ptr.hpp>
-#include <boost/test/minimal.hpp>
+#define BOOST_TEST_MODULE deconstruct_test
+#include <boost/test/included/unit_test.hpp>
 
 class X: public boost::signals2::postconstructible {
 public:
@@ -125,8 +126,11 @@ void deconstruct_ptr_test()
 
 class deconstructed_esft : public boost::enable_shared_from_this<deconstructed_esft>
 {
-  friend void adl_postconstruct(boost::shared_ptr<void>, deconstructed_esft *)
-  {}
+public:
+  deconstructed_esft() : x(0) {}
+
+private:
+  friend void adl_postconstruct(boost::shared_ptr<void>, deconstructed_esft *) {}
   int x;
 };
 
@@ -163,9 +167,8 @@ void deconstruct_test()
   }
 }
 
-int test_main(int, char*[])
+BOOST_AUTO_TEST_CASE(test_main)
 {
   deconstruct_ptr_test();
   deconstruct_test();
-  return 0;
 }

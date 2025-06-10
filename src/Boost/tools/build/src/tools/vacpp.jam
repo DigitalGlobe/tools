@@ -1,11 +1,34 @@
 # Copyright Vladimir Prus 2004.
 # Copyright Toon Knapen 2004.
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt
-# or copy at http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt
+# or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
+
+#| tag::doc[]
+
+[[bbv2.reference.tools.compiler.vacpp]]
+= IBM Visual Age
+
+The `vacpp` module supports the http://www.ibm.com/software/ad/vacpp[IBM
+Visual Age] C++ Compiler, for the AIX operating system. Versions 7.1 and
+8.0 are known to work.
+
+The module is initialized using the following syntax:
+
+----
+using vacpp ;
+----
+
+The module does not accept any initialization options. The compiler
+should be installed in the `/usr/vacpp/bin` directory.
+
+Later versions of Visual Age are known as XL C/C++. They were not tested
+with the the `vacpp` module.
+
+|# # end::doc[]
 
 #
-# Boost.Build V2 toolset for the IBM XL C++ compiler
+# B2 V2 toolset for the IBM XL C++ compiler
 #
 
 import toolset : flags ;
@@ -16,18 +39,16 @@ import os ;
 
 feature.extend toolset : vacpp ;
 toolset.inherit vacpp : unix ;
-generators.override vacpp.prebuilt : builtin.prebuilt ;
-generators.override vacpp.searched-lib-generator : searched-lib-generator ;
 
 # Configure the vacpp toolset
 rule init ( version ? : command * : options * )
 {
-    local condition = [ 
+    local condition = [
         common.check-init-parameters vacpp : version $(version) ] ;
-              
+
     command = [ common.get-invocation-command vacpp : xlC
         : $(command) : "/usr/vacpp/bin/xlC" ] ;
-        
+
     common.handle-options vacpp : $(condition) : $(command) : $(options) ;
 }
 
@@ -80,7 +101,7 @@ if [ os.name ] = AIX
     # searched during load-time. Note that the AIX linker does not have an
     # -soname equivalent, this is as close as it gets.
     #
-    # The above options are definately for AIX 5.x, and most likely also for
+    # The above options are definitely for AIX 5.x, and most likely also for
     # AIX 4.x and AIX 6.x. For details about the AIX linker see:
     # http://download.boulder.ibm.com/ibmdl/pub/software/dw/aix/es-aix_ll.pdf
     #
@@ -131,7 +152,7 @@ actions vacpp.link bind NEEDLIBS
 
 actions vacpp.link.dll bind NEEDLIBS
 {
-    xlC_r -G $(LINKFLAGS) -o "$(<[1])" $(HAVE_SONAME)-Wl,-soname$(SPACE)-Wl,$(<[-1]:D=) -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS) $(USER_OPTIONS) 
+    xlC_r -G $(LINKFLAGS) -o "$(<[1])" $(HAVE_SONAME)-Wl,-soname$(SPACE)-Wl,$(<[-1]:D=) -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS) $(USER_OPTIONS)
 }
 
 actions vacpp.compile.c

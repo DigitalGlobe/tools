@@ -1,16 +1,16 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright (C) Vladimir Prus 2003.
 # Distributed under the Boost Software License, Version 1.0.
-#    (See accompanying file LICENSE_1_0.txt or copy at
-#         http://www.boost.org/LICENSE_1_0.txt)
+#    (See accompanying file LICENSE.txt or copy at
+#         https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Test for the regression testing framework.
 
 import BoostBuild
 
 # Create a temporary working directory.
-t = BoostBuild.Tester(use_test_config=False)
+t = BoostBuild.Tester(["-d0"], use_test_config=False)
 
 t.write("Jamroot.jam", """
 project
@@ -32,7 +32,7 @@ t.write("test.cpp", """
 t.run_build_system(["test"], stdout="""Hello World!
 """)
 
-t.expect_addition("bin/$toolset/link-static/test.obj")
+t.expect_addition("bin/$toolset/link-static*/test.obj")
 t.expect_nothing_more()
 
 t.cleanup()

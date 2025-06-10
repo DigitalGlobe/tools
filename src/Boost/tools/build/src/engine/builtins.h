@@ -7,6 +7,7 @@
 #ifndef JAM_BUILTINS_H
 # define JAM_BUILTINS_H
 
+# include "config.h"
 # include "frames.h"
 
 /*
@@ -14,8 +15,6 @@
  */
 
 void load_builtins();
-void init_set();
-void init_path();
 void init_regex();
 void init_property_set();
 void init_sequence();
@@ -47,7 +46,6 @@ LIST *builtin_update( FRAME * frame, int flags );
 LIST *builtin_update_now( FRAME * frame, int flags );
 LIST *builtin_import_module( FRAME * frame, int flags );
 LIST *builtin_imported_modules( FRAME * frame, int flags );
-LIST *builtin_instance( FRAME * frame, int flags );
 LIST *builtin_sort( FRAME * frame, int flags );
 LIST *builtin_normalize_path( FRAME * frame, int flags );
 LIST *builtin_native_rule( FRAME * frame, int flags );
@@ -65,6 +63,7 @@ LIST *builtin_self_path( FRAME * frame, int flags );
 LIST *builtin_makedir( FRAME * frame, int flags );
 LIST *builtin_readlink( FRAME * frame, int flags );
 LIST *builtin_glob_archive( FRAME * frame, int flags );
+LIST *builtin_debug_print_helper( FRAME * frame, int flags );
 
 void backtrace( FRAME *frame );
 extern int last_update_now_status;

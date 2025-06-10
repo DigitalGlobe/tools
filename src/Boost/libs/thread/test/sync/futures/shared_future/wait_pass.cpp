@@ -32,6 +32,10 @@
 
 #if defined BOOST_THREAD_USES_CHRONO
 
+#ifdef BOOST_MSVC
+#pragma warning(disable: 4127) // conditional expression is constant
+#endif
+
 typedef boost::chrono::milliseconds ms;
 
 namespace boost
@@ -41,22 +45,6 @@ namespace boost
   {
     os << underlying_cast<int>(st) << " ";
     return os;
-  }
-  template <typename T>
-  struct wrap
-  {
-    wrap(T const& v) :
-      value(v)
-    {
-    }
-    T value;
-
-  };
-
-  template <typename T>
-  exception_ptr make_exception_ptr(T v)
-  {
-    return copy_exception(wrap<T> (v));
   }
 }
 

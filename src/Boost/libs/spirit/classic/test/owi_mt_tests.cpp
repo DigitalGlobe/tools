@@ -12,7 +12,7 @@
 
 #include <iostream>
 #include <boost/config.hpp>
-#include <boost/detail/lightweight_test.hpp>
+#include <boost/core/lightweight_test.hpp>
 
 #if !defined(BOOST_HAS_THREADS) || defined(DONT_HAVE_BOOST) || defined(BOOST_DISABLE_THREADS)
 static void skipped()
@@ -50,7 +50,7 @@ static const unsigned long maximum_test_size = 1000000UL;
 #include <boost/thread/lock_types.hpp>
 #include <vector>
 #include <algorithm>
-#include <boost/detail/lightweight_test.hpp>
+#include <boost/core/lightweight_test.hpp>
 
 using BOOST_SPIRIT_CLASSIC_NS::impl::object_with_id;
 
@@ -89,7 +89,7 @@ struct test_task
 
         boost::xtime now;
         boost::xtime_get(&now, boost::TIME_UTC_);
-        unsigned long seconds = now.sec - start_time.sec;
+        boost::xtime::xtime_sec_t seconds = now.sec - start_time.sec;
         if (seconds < 4)
         {
             test_size *= 2;

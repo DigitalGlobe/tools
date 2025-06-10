@@ -4,14 +4,14 @@
 //  Boost Software License, Version 1.0. (See accompanying file 
 //  LICENSE_1_0.txt or copy at http://www.tt.org/LICENSE_1_0.txt)
 
-#include "test.hpp"
-#include "check_type.hpp"
-#include "check_integral_constant.hpp"
 #ifdef TEST_STD
 #  include <type_traits>
 #else
 #  include <boost/type_traits/make_signed.hpp>
 #endif
+#include "test.hpp"
+#include "check_type.hpp"
+#include "check_integral_constant.hpp"
 
 TT_TEST_BEGIN(make_signed)
 // signed types:
@@ -95,7 +95,7 @@ BOOST_CHECK_TYPE(::tt::make_signed<const volatile boost::ulong_long_type>::type,
 #elif defined(BOOST_HAS_MS_INT64)
 BOOST_CHECK_TYPE(::tt::make_signed<const volatile unsigned __int64>::type, const volatile __int64);
 #endif
-#ifdef BOOST_HAS_INT128
+#if defined(BOOST_HAS_INT128) && !defined(TEST_CUDA_DEVICE)
 BOOST_CHECK_TYPE(::tt::make_signed<boost::int128_type>::type, boost::int128_type);
 BOOST_CHECK_TYPE(::tt::make_signed<boost::uint128_type>::type, boost::int128_type);
 #endif

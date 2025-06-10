@@ -1,9 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2007 Rene Rivera.
 # Copyright 2011 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import BoostBuild
 
@@ -49,12 +49,14 @@ echo [subtest_b] 2
 [subtest_b] 0
 [subtest_b] 1
 [subtest_b] 2
+
 ...updated 2 targets...
 """)
 
 t.run_build_system(["-ffile.jam", "-d1"], stdout="""\
 ...found 4 targets...
 ...updating 2 targets...
+
 ...updated 2 targets...
 """)
 

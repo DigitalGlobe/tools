@@ -6,7 +6,7 @@
 //  See accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt
 
-#include <boost/detail/lightweight_test.hpp>
+#include <boost/core/lightweight_test.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -42,6 +42,28 @@ int main()
 
     {
         boost::shared_ptr< X > px = boost::allocate_shared< X >( std::allocator<void>() );
+        BOOST_TEST( X::instances == 1 );
+
+        try
+        {
+            boost::shared_ptr< X > qx = px->shared_from_this();
+
+            BOOST_TEST( px == qx );
+            BOOST_TEST( !( px < qx ) && !( qx < px ) );
+
+            px.reset();
+            BOOST_TEST( X::instances == 1 );
+        }
+        catch( boost::bad_weak_ptr const& )
+        {
+            BOOST_ERROR( "px->shared_from_this() failed" );
+        }
+    }
+
+    BOOST_TEST( X::instances == 0 );
+
+    {
+        boost::shared_ptr< X > px = boost::allocate_shared_noinit< X >( std::allocator<void>() );
         BOOST_TEST( X::instances == 1 );
 
         try

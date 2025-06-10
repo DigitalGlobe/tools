@@ -1,9 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2003 Dave Abrahams
 # Copyright 2002, 2003, 2004, 2006 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import BoostBuild
 
@@ -250,7 +250,7 @@ foo() {}
 """)
 
 t.run_build_system(["link=static"])
-t.expect_addition("libs/bin/$toolset/debug/link-static/a_d.obj")
+t.expect_addition("libs/bin/$toolset/debug/link-static*/a_d.obj")
 
 
 # Test that indirect conditionals are respected in usage requirements.
@@ -278,6 +278,6 @@ foo() {}
 """)
 
 t.run_build_system()
-t.expect_addition("bin/$toolset/debug/a.exe")
+t.expect_addition("bin/$toolset/debug*/a.exe")
 
 t.cleanup()

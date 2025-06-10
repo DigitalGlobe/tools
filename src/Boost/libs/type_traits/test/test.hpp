@@ -8,6 +8,7 @@
 #define TT_TEST_HPP
 
 #include <boost/config.hpp>
+#include <boost/detail/workaround.hpp>
 
 #if defined(_WIN32_WCE) && defined(BOOST_MSVC)
 #pragma warning(disable:4201)
@@ -17,7 +18,11 @@
 #include <iostream>
 #include <typeinfo>
 
-#ifdef __BORLANDC__
+#ifdef TEST_CUDA_DEVICE
+#define TEST_VIA_STATIC_ASSERT
+#endif
+
+#ifdef BOOST_BORLANDC
 // we have to turn off these warnings otherwise we get swamped by the things:
 #pragma option -w-8008 -w-8066
 #endif
@@ -84,6 +89,9 @@ int error_count = 0;
 #define BOOST_TEST_MESSAGE(message)\
    do{ std::cout << __FILE__ << ":" << __LINE__ << ": " << message << std::endl; }while(0)
 
+#ifdef TEST_CUDA_DEVICE
+#define BOOST_CHECK(pred) pred
+#else
 #define BOOST_CHECK(pred)\
    do{ \
       if(!(pred)){\
@@ -91,13 +99,48 @@ int error_count = 0;
          ++error_count;\
       } \
    }while(0)
+#endif
 
+#ifdef TEST_CUDA_DEVICE
+#define TT_TEST_BEGIN(trait_name)\
+   __global__ void test_proc(){
+#define TT_TEST_END }
+#define BOOST_TT_PROC __device__
+#else
 #define TT_TEST_BEGIN(trait_name)\
    int main(){
 #define TT_TEST_END return error_count; }
+#define BOOST_TT_PROC
+#endif
 
+#if !defined(BOOST_NO_CXX11_TEMPLATE_ALIASES) && !BOOST_WORKAROUND(BOOST_GCC, < 40704)
+
+#define TRANSFORM_CHECK_ALIASES(name, from_suffix, to_suffix)\
+   BOOST_CHECK_TYPE(bool to_suffix, name##_t<bool from_suffix>);\
+   BOOST_CHECK_TYPE(char to_suffix, name##_t<char from_suffix>);\
+   BOOST_CHECK_TYPE(wchar_t to_suffix, name##_t<wchar_t from_suffix>);\
+   BOOST_CHECK_TYPE(signed char to_suffix, name##_t<signed char from_suffix>);\
+   BOOST_CHECK_TYPE(unsigned char to_suffix, name##_t<unsigned char from_suffix>);\
+   BOOST_CHECK_TYPE(short to_suffix, name##_t<short from_suffix>);\
+   BOOST_CHECK_TYPE(unsigned short to_suffix, name##_t<unsigned short from_suffix>);\
+   BOOST_CHECK_TYPE(int to_suffix, name##_t<int from_suffix>);\
+   BOOST_CHECK_TYPE(unsigned int to_suffix, name##_t<unsigned int from_suffix>);\
+   BOOST_CHECK_TYPE(long to_suffix, name##_t<long from_suffix>);\
+   BOOST_CHECK_TYPE(unsigned long to_suffix, name##_t<unsigned long from_suffix>);\
+   BOOST_CHECK_TYPE(float to_suffix, name##_t<float from_suffix>);\
+   BOOST_CHECK_TYPE(long double to_suffix, name##_t<long double from_suffix>);\
+   BOOST_CHECK_TYPE(double to_suffix, name##_t<double from_suffix>);\
+   BOOST_CHECK_TYPE(UDT to_suffix, name##_t<UDT from_suffix>);\
+   BOOST_CHECK_TYPE(enum1 to_suffix, name##_t<enum1 from_suffix>);
+
+#else
+
+#define TRANSFORM_CHECK_ALIASES(name, from_suffix, to_suffix) /**/
+
+#endif
 
 #define TRANSFORM_CHECK(name, from_suffix, to_suffix)\
+   TRANSFORM_CHECK_ALIASES(name, from_suffix, to_suffix)\
    BOOST_CHECK_TYPE(bool to_suffix, name<bool from_suffix>::type);\
    BOOST_CHECK_TYPE(char to_suffix, name<char from_suffix>::type);\
    BOOST_CHECK_TYPE(wchar_t to_suffix, name<wchar_t from_suffix>::type);\
@@ -118,13 +161,13 @@ int error_count = 0;
 #define BOOST_DUMMY_MACRO_PARAM /**/
 
 #define BOOST_DECL_TRANSFORM_TEST(name, type, from, to)\
-void name(){ TRANSFORM_CHECK(type, from, to) }
+BOOST_TT_PROC void name(){ TRANSFORM_CHECK(type, from, to) }
 #define BOOST_DECL_TRANSFORM_TEST3(name, type, from)\
-void name(){ TRANSFORM_CHECK(type, from, BOOST_DUMMY_MACRO_PARAM) }
+BOOST_TT_PROC void name(){ TRANSFORM_CHECK(type, from, BOOST_DUMMY_MACRO_PARAM) }
 #define BOOST_DECL_TRANSFORM_TEST2(name, type, to)\
-void name(){ TRANSFORM_CHECK(type, BOOST_DUMMY_MACRO_PARAM, to) }
+BOOST_TT_PROC void name(){ TRANSFORM_CHECK(type, BOOST_DUMMY_MACRO_PARAM, to) }
 #define BOOST_DECL_TRANSFORM_TEST0(name, type)\
-void name(){ TRANSFORM_CHECK(type, BOOST_DUMMY_MACRO_PARAM, BOOST_DUMMY_MACRO_PARAM) }
+BOOST_TT_PROC void name(){ TRANSFORM_CHECK(type, BOOST_DUMMY_MACRO_PARAM, BOOST_DUMMY_MACRO_PARAM) }
 
 
 
@@ -150,6 +193,11 @@ struct UDT
    int f2();
    int f3(int);
    int f4(int, float);
+#ifdef __cpp_noexcept_function_type
+   void f5()noexcept;
+   int f6(int)noexcept(true);
+   double f7()noexcept(false);
+#endif
 };
 
 typedef void(*f1)();
@@ -161,6 +209,12 @@ typedef int (UDT::*mf3)(int);
 typedef int (UDT::*mf4)(int, float);
 typedef int (UDT::*mp);
 typedef int (UDT::*cmf)(int) const;
+#ifdef __cpp_noexcept_function_type
+typedef void (UDT::*mf5)()noexcept;
+typedef int (UDT::*mf6)(int)noexcept;
+typedef double (UDT::*mf7)()noexcept;
+#endif
+typedef int (UDT::*mf8)(...);
 
 // cv-qualifiers applied to reference types should have no effect
 // declare these here for later use with is_reference and remove_reference:
@@ -170,6 +224,9 @@ typedef int (UDT::*cmf)(int) const;
 # elif defined(BOOST_INTEL)
 #  pragma warning(push)
 #  pragma warning(disable: 21)
+# elif defined(BOOST_CLANG)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wignored-qualifiers"
 # endif
 //
 // This is intentional:
@@ -190,6 +247,8 @@ typedef r_type cr_type;
 # elif defined(BOOST_INTEL)
 #  pragma warning(pop)
 #  pragma warning(disable: 985) // identifier truncated in debug information
+# elif defined(BOOST_CLANG)
+#  pragma clang diagnostic pop
 # endif
 
 struct POD_UDT { int x; };
@@ -283,6 +342,12 @@ enum enum2
 {
    three_,four_
 };
+
+#ifndef BOOST_NO_CXX11_SCOPED_ENUMS
+
+enum class scoped_enum { one, two, three };
+
+#endif
 
 struct VB
 {

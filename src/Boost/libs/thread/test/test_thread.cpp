@@ -12,7 +12,7 @@
 
 #include <boost/thread/thread_only.hpp>
 #include <boost/thread/xtime.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/ref.hpp>
 #include <boost/utility.hpp>
 
@@ -206,8 +206,8 @@ BOOST_AUTO_TEST_CASE(test_timed_join)
 
 BOOST_AUTO_TEST_CASE(test_swap)
 {
-    boost::thread t(simple_thread);
-    boost::thread t2(simple_thread);
+    boost::thread t(&simple_thread);
+    boost::thread t2(&simple_thread);
     boost::thread::id id1=t.get_id();
     boost::thread::id id2=t2.get_id();
 

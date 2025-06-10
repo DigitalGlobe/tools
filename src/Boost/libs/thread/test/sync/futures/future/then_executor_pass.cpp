@@ -10,8 +10,7 @@
 // template<typename F>
 // auto then(F&& func) -> future<decltype(func(*this))>;
 
-#define BOOST_THREAD_VERSION 4
-#define BOOST_THREAD_PROVIDES_EXECUTORS
+#define BOOST_THREAD_VERSION 5
 //#define BOOST_THREAD_USES_LOG
 #define BOOST_THREAD_USES_LOG_THREAD_ID
 #include <boost/thread/detail/log.hpp>
@@ -24,6 +23,9 @@
 
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
 
+#ifdef BOOST_MSVC
+#pragma warning(disable: 4127) // conditional expression is constant
+#endif
 
 int p1()
 {

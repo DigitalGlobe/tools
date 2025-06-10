@@ -28,6 +28,8 @@ following special characters:
 
 [pre .\[{}()\\\*+?|^$]
 
+Other characters are special only in certain situations - for example `]` is special only after an opening `[`.
+
 [h4 Wildcard]
 
 The single character '.' when used outside of a character set will match 
@@ -171,7 +173,7 @@ An escape character followed by a digit /n/, where /n/ is in the range 1-9,
 matches the same string that was matched by sub-expression /n/.  For example 
 the expression:
 
-[pre ^(a\*).\*\\1$]
+[pre ^(a\*)\[\^a\]\*\\1$]
 
 Will match the string:
 
@@ -193,7 +195,11 @@ You can also use the \g escape for the same function, for example:
 [[[^\g{one}]][Match whatever matched the sub-expression named "one"]]
 ]
 
-Finally the \k escape can be used to refer to named subexpressions, for example [^\k<two>] will match
+Note that a back reference can also be a forward-reference to a sub-expression that has not yet
+been seen - this only really makes sense within a repeat, so for example `(\2two|(one))+` will
+match "oneonetwo".
+
+Finally the \k escape can be used to refer to named subexpressions, for example [^\k<two>] will 
 whatever matched the subexpression named "two".
 
 [h4 Alternation]
@@ -215,7 +221,7 @@ if you really want an empty alternative use [^(?:)] as a placeholder, for exampl
 
 [h4 Character sets]
 
-A character set is a bracket-expression starting with [^[] and ending with [^]], 
+A character set is a bracket-expression starting with [^\[] and ending with [^\]], 
 it defines a set of characters, and matches any single character that is a 
 member of that set.
 
@@ -297,24 +303,24 @@ The following escape sequences are all synonyms for single characters:
 
 [table
 [[Escape][Character]]
-[[[^\a]][[^\a]]]
-[[[^\e]][[^0x1B]]]
-[[[^\f]][[^\f]]]
-[[[^\n]][[^\n]]]
-[[[^\r]][[^\r]]]
-[[[^\t]][[^\t]]]
-[[[^\v]][[^\v]]]
-[[[^\b]][[^\b] (but only inside a character class declaration).]]
-[[[^\cX]][An ASCII escape sequence - the character whose code point is X % 32]]
-[[[^\xdd]][A hexadecimal escape sequence - matches the single character whose 
+[[[^\\a]][[^\\a]]]
+[[[^\\e]][[^0x1B]]]
+[[[^\\f]][[^\\f]]]
+[[[^\\n]][[^\\n]]]
+[[[^\\r]][[^\\r]]]
+[[[^\\t]][[^\\t]]]
+[[[^\\v]][[^\\v]]]
+[[[^\\b]][[^\\b] (but only inside a character class declaration).]]
+[[[^\\cX]][An ASCII escape sequence - the character whose code point is X % 32]]
+[[[^\\xdd]][A hexadecimal escape sequence - matches the single character whose 
       code point is 0xdd.]]
-[[[^\x{dddd}]][A hexadecimal escape sequence - matches the single character whose 
+[[[^\\x{dddd}]][A hexadecimal escape sequence - matches the single character whose 
       code point is 0xdddd.]]
-[[[^\0ddd]][An octal escape sequence - matches the single character whose 
+[[[^\\0ddd]][An octal escape sequence - matches the single character whose 
    code point is 0ddd.]]
-[[[^\N{name}]][Matches the single character which has the 
+[[[^\\N{name}]][Matches the single character which has the 
       [link boost_regex.syntax.collating_names symbolic name] /name/.  
-      For example [^\N{newline}] matches the single character \\n.]]
+      For example [^\\N{newline}] matches the single character \\n.]]
 ]      
  
 [h5 "Single character" character classes:]

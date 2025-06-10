@@ -1,9 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright (C) Vladimir Prus 2006.
 # Distributed under the Boost Software License, Version 1.0. (See
-# accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Test that it is possible to add a suffix to a main target name to disambiguate
 # that main target from another, and that this does not affect the names of the
@@ -25,8 +25,8 @@ int main() {}
 
 t.run_build_system()
 
-t.expect_addition("bin/$toolset/debug/hello.exe")
-t.expect_addition("bin/$toolset/debug/hello.obj")
-t.expect_addition("bin/$toolset/release/hello.obj")
+t.expect_addition("bin/$toolset/debug*/hello.exe")
+t.expect_addition("bin/$toolset/debug*/hello.obj")
+t.expect_addition("bin/$toolset/release*/hello.obj")
 
 t.cleanup()

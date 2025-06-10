@@ -3,8 +3,9 @@
 // (See accompanying file LICENSE_1_0.txt
 // or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-
-#define BOOST_PROGRAM_OPTIONS_SOURCE
+#ifndef BOOST_PROGRAM_OPTIONS_SOURCE
+# define BOOST_PROGRAM_OPTIONS_SOURCE
+#endif
 #include <boost/program_options/config.hpp>
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/options_description.hpp>
@@ -42,16 +43,15 @@ namespace boost { namespace program_options {
         string option_name;
         string original_token;
 
+#ifndef BOOST_NO_EXCEPTIONS
         try
+#endif
         {
 
             // First, convert/store all given options
             for (i = 0; i < options.options.size(); ++i) {
 
                 option_name = options.options[i].string_key;
-                original_token = options.options[i].original_tokens.size() ?
-                                options.options[i].original_tokens[0] :
-                                option_name;
                 // Skip positional options without name
                 if (option_name.empty())
                     continue;
@@ -68,7 +68,7 @@ namespace boost { namespace program_options {
                 if (xm.m_final.count(option_name))
                     continue;
 
-                string original_token = options.options[i].original_tokens.size() ?
+                original_token = options.options[i].original_tokens.size() ?
                                         options.options[i].original_tokens[0]     : "";
                 const option_description& d = desc.find(option_name, false,
                                                         false, false);

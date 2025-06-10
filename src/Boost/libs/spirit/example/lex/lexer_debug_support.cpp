@@ -5,11 +5,9 @@
 
 // #define BOOST_SPIRIT_LEXERTL_DEBUG 1
 
-#include <boost/config/warning_disable.hpp>
-
 #include <boost/spirit/include/lex_lexertl.hpp>
 #include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 
 namespace lex = boost::spirit::lex;
 namespace qi = boost::spirit::qi;
@@ -65,7 +63,7 @@ struct language_grammar : qi::grammar<Iterator>
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-int main(int argc, char* argv[])
+int main()
 {
     // iterator type used to expose the underlying input stream
     typedef std::string::iterator base_iterator_type;

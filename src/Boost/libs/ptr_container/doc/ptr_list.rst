@@ -51,7 +51,7 @@ to store the pointers.
             public: // modifiers_
                 void                push_front( T* x );
 		template< class U >
-		void                push_front( std::auto_ptr<U> x );
+		void                push_front( compatible-smart-ptr<U> x );
                 auto_type           pop_front();
              
             public: // `list operations`_
@@ -80,7 +80,7 @@ Semantics: modifiers
 
     - Exception safety: Strong guarantee
 
-- ``template< class U > void push_front( std::auto_ptr<U> x );``
+- ``template< class U > void push_front( compatible-smart-ptr<U> x );``
 
     - Effects: ``push_front( x.release() );``
     
@@ -146,7 +146,7 @@ Semantics: list operations
 
 .. raw:: html 
 
-        <hr>
+        <hr/>
 
 :Copyright:     Thorsten Ottosen 2004-2006. Use, modification and distribution is subject to the Boost Software License, Version 1.0 (see LICENSE_1_0.txt__).
 

@@ -12,7 +12,7 @@
 
 #include <boost/detail/workaround.hpp>
 
-#if BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x564))
+#if BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x564))
 #  pragma warn -8091 // suppress warning in Boost.Test
 #  pragma warn -8057 // unused argument argc/argv in Boost.Test
 #endif
@@ -47,7 +47,7 @@ void check_iterator_range()
     BOOST_CHECK( !r.empty() );
     BOOST_CHECK( !r2.empty() );
 
-//#if BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x564))
+//#if BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x564))
 //    if( !(bool)r )
 //        BOOST_CHECK( false );
 //    if( !(bool)r2 )
@@ -59,8 +59,8 @@ void check_iterator_range()
         BOOST_CHECK( false );
 //#endif
 
-    BOOST_CHECK_EQUAL( r.size(), size( r ) );
-    BOOST_CHECK_EQUAL( r2.size(), size( r2 ) );
+    BOOST_CHECK_EQUAL( r.size(), boost::size( r ) );
+    BOOST_CHECK_EQUAL( r2.size(), boost::size( r2 ) );
 
     BOOST_CHECK_EQUAL( std::distance( r.begin(), r.end() ),
                        std::distance( boost::begin( r2 ), boost::end( r2 ) ) );

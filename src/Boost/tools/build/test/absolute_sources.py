@@ -1,8 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2003, 2004 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Test that sources with absolute names are handled OK.
 
@@ -20,7 +20,7 @@ t.write("hello.cpp", "int main() {}\n")
 t.write("empty.cpp", "\n")
 
 t.run_build_system()
-t.expect_addition("bin/$toolset/debug/hello.exe")
+t.expect_addition("bin/$toolset/debug*/hello.exe")
 t.rm(".")
 
 # Test a contrived case in which an absolute name is used in a standalone
@@ -53,7 +53,7 @@ alias('a', [os.path.join(pwd, 'a.cpp')])
 """)
 
 t.run_build_system()
-t.expect_addition("bin/$toolset/debug/a.exe")
+t.expect_addition("bin/$toolset/debug*/a.exe")
 
 # Test absolute path in target ids.
 t.rm(".")
@@ -68,6 +68,6 @@ alias x : $(pwd)/../d1//a ;
 """)
 
 t.run_build_system(subdir="d2")
-t.expect_addition("d1/bin/$toolset/debug/a.exe")
+t.expect_addition("d1/bin/$toolset/debug*/a.exe")
 
 t.cleanup()

@@ -4,8 +4,8 @@
 """
 >>> from str_ext import *
 >>> def printer(*args):
-...     for x in args: print x,
-...     print
+...     for x in args: print(x, end=' ')
+...     print('')
 ...
 >>> work_with_string(printer) #doctest: +NORMALIZE_WHITESPACE
 ['this', 'is', 'a', 'demo', 'string']
@@ -37,6 +37,8 @@ this is a blabla string
 aaaaaaaaaaaaaaaaaaaaa
 """
 
+from __future__ import print_function
+
 def run(args = None):
     import sys
     import doctest
@@ -44,10 +46,10 @@ def run(args = None):
     if args is not None:
         sys.argv = args
     return doctest.testmod(sys.modules.get(__name__))
-    
+
 if __name__ == '__main__':
-    print "running..."
+    print("running...")
     import sys
     status = run()[0]
-    if (status == 0): print "Done."
+    if (status == 0): print("Done.")
     sys.exit(status)

@@ -1,9 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2007 Rene Rivera.
 # Copyright 2011 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 #   Added to guard against a bug causing targets to be used before they
 # themselves have finished building. This used to happen for targets built by a
@@ -17,7 +17,7 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
+t = BoostBuild.Tester(["-d1"], pass_toolset=0)
 
 t.write("sleep.bat", """\
 ::@timeout /T %1 /NOBREAK >nul
@@ -72,6 +72,7 @@ t.run_build_system(["-ffile.jam", "-j2"], stdout="""\
 003
 .use.2 u2.user
 004
+
 ...updated 4 targets...
 """)
 

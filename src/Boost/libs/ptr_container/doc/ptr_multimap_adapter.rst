@@ -61,7 +61,7 @@ of the interface from ``associative_ptr_container``.
             public: // `modifiers`_         
                 iterator  insert( key_type& k, T* x ); 
 		template< class U >
-		iterator  insert( const key_type&, std::auto_ptr<U> x );                        
+		iterator  insert( const key_type&, compatible-smart-ptr<U> x );                        
 
             public: // `pointer container requirements`_
                 void      transfer( iterator object, ptr_multimap_adapter& from );
@@ -123,7 +123,7 @@ Semantics: modifiers
 
     - Exception safety: Strong guarantee
 
-- ``template< class U > iterator insert( const key_type& k, std::auto_ptr<U> x );``                         
+- ``template< class U > iterator insert( const key_type& k, compatible-smart-ptr<U> x );``                         
 
    - Equivalent to (but without the ``const_cast``): ``return insert( const_cast<key_type&>(k), x.release() );``
 
@@ -189,7 +189,7 @@ Semantics: pointer container requirements
  
 .. raw:: html 
 
-        <hr>
+        <hr/>
 
 :Copyright:     Thorsten Ottosen 2004-2006. Use, modification and distribution is subject to the Boost Software License, Version 1.0 (see LICENSE_1_0.txt__).
 

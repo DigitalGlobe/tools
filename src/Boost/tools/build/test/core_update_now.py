@@ -1,15 +1,15 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2011 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import BoostBuild
 import os
 
 
 def basic():
-    t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
+    t = BoostBuild.Tester(pass_toolset=0)
 
     t.write("file.jam", """\
 actions do-print
@@ -31,6 +31,7 @@ DEPENDS all : target1 ;
 ...updating 1 target...
 do-print target1
 updating target1
+
 ...updated 1 target...
 ...found 1 target...
 """)
@@ -39,7 +40,7 @@ updating target1
 
 
 def ignore_minus_n():
-    t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
+    t = BoostBuild.Tester(pass_toolset=0)
 
     t.write("file.jam", """\
 actions do-print
@@ -64,6 +65,7 @@ do-print target1
     echo updating target1
 
 updating target1
+
 ...updated 1 target...
 ...found 1 target...
 """)
@@ -72,7 +74,7 @@ updating target1
 
 
 def failed_target():
-    t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
+    t = BoostBuild.Tester(pass_toolset=0)
 
     t.write("file.jam", """\
 actions fail
@@ -106,12 +108,15 @@ fail target1
     exit 1
 
 ...failed fail target1...
+
 ...failed updating 1 target...
+   fail target1
 ...found 2 targets...
 ...updating 1 target...
 do-print target2
 
     echo updating target2
+
 
 ...updated 1 target...
 """)
@@ -120,7 +125,7 @@ do-print target2
 
 
 def missing_target():
-    t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
+    t = BoostBuild.Tester(pass_toolset=0)
 
     t.write("file.jam", """\
 actions do-print
@@ -155,7 +160,7 @@ def build_once():
     effect.
 
     """
-    t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
+    t = BoostBuild.Tester(pass_toolset=0)
 
     t.write("file.jam", """\
 actions do-print
@@ -181,12 +186,14 @@ do-print target1
 
     echo updating target1
 
+
 ...updated 1 target...
 do-print target1
 
     echo updating target1
 
 updating target1
+
 ...updated 1 target...
 ...found 1 target...
 """)
@@ -199,7 +206,7 @@ def return_status():
     Make sure that UPDATE_NOW returns a failure status if
     the target failed in a previous call to UPDATE_NOW
     """
-    t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
+    t = BoostBuild.Tester(pass_toolset=0)
 
     t.write("file.jam", """\
 actions fail
@@ -211,8 +218,8 @@ NOTFILE target1 ;
 ALWAYS target1 ;
 fail target1 ;
 
-ECHO update1: [ UPDATE_NOW target1 ] ;
-ECHO update2: [ UPDATE_NOW target1 ] ;
+ECHO "update1:" [ UPDATE_NOW target1 ] ;
+ECHO "update2:" [ UPDATE_NOW target1 ] ;
 
 DEPENDS all : target1 ;
 """)
@@ -225,7 +232,9 @@ fail target1
     exit 1
 
 ...failed fail target1...
+
 ...failed updating 1 target...
+   fail target1
 update1:
 update2:
 ...found 1 target...
@@ -237,7 +246,7 @@ update2:
 def save_restore():
     """Tests that ignore-minus-n and ignore-minus-q are
     local to the call to UPDATE_NOW"""
-    t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
+    t = BoostBuild.Tester(pass_toolset=0)
 
     t.write("actions.jam", """\
 rule fail
@@ -283,7 +292,10 @@ fail target2
     exit 1
 
 ...failed fail target2...
+
 ...failed updating 2 targets...
+   fail target1
+   fail target2
 ...found 2 targets...
 ...updating 2 targets...
 fail target3
@@ -293,6 +305,7 @@ fail target3
 fail target4
 
     exit 1
+
 
 ...updated 2 targets...
 ''')
@@ -305,7 +318,9 @@ fail target1
     exit 1
 
 ...failed fail target1...
+
 ...failed updating 1 target...
+   fail target1
 ...found 2 targets...
 ...updating 2 targets...
 fail target3
@@ -313,7 +328,9 @@ fail target3
     exit 1
 
 ...failed fail target3...
+
 ...failed updating 1 target...
+   fail target3
 ''')
 
     t.run_build_system(['-n', '-sIGNORE_MINUS_Q=1', '-ffile.jam'],
@@ -327,6 +344,7 @@ fail target2
 
     exit 1
 
+
 ...updated 2 targets...
 ...found 2 targets...
 ...updating 2 targets...
@@ -337,6 +355,7 @@ fail target3
 fail target4
 
     exit 1
+
 
 ...updated 2 targets...
 ''')
@@ -354,7 +373,10 @@ fail target2
     exit 1
 
 ...failed fail target2...
+
 ...failed updating 2 targets...
+   fail target1
+   fail target2
 ...found 2 targets...
 ...updating 2 targets...
 fail target3
@@ -362,7 +384,9 @@ fail target3
     exit 1
 
 ...failed fail target3...
+
 ...failed updating 1 target...
+   fail target3
 ''')
 
     t.cleanup()

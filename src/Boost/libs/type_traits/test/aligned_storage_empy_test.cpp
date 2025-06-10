@@ -4,8 +4,6 @@
 //  Boost Software License, Version 1.0. (See accompanying file 
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include "test.hpp"
-#include "check_integral_constant.hpp"
 #ifdef TEST_STD
 #  include <type_traits>
 #  include <boost/type_traits/type_with_alignment.hpp> // max_align and long_long_type
@@ -14,6 +12,8 @@
 #  include <boost/type_traits/aligned_storage.hpp>
 #  include <boost/type_traits/is_pod.hpp>
 #endif
+#include "test.hpp"
+#include "check_integral_constant.hpp"
 
 
 namespace
@@ -27,7 +27,7 @@ namespace
     
     template< unsigned N, unsigned Alignment >
     struct alignment_implementation2 : 
-#ifndef __BORLANDC__
+#ifndef BOOST_BORLANDC
        private 
 #else
        public
@@ -90,6 +90,8 @@ namespace
 
 TT_TEST_BEGIN(type_with_empty_alignment_buffer)
 
+#ifndef TEST_CUDA_DEVICE
+
 do_check<char>();
 do_check<short>();
 do_check<int>();
@@ -115,6 +117,8 @@ do_check<POD_UDT>();
 do_check<empty_UDT>();
 do_check<union_UDT>();
 do_check<boost::detail::max_align>();
+
+#endif
 
 TT_TEST_END
 

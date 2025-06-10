@@ -1,3 +1,13 @@
+//  (C) Copyright Raffi Enficiaud 2014.
+//  Distributed under the Boost Software License, Version 1.0.
+//  (See accompanying file LICENSE_1_0.txt or copy at
+//  http://www.boost.org/LICENSE_1_0.txt)
+//
+//  See http://www.boost.org/libs/test for the library home page.
+//
+//  snippets included in the dataset documentation
+// ***************************************************************************
+
 #define BOOST_TEST_MAIN
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
@@ -26,6 +36,8 @@ BOOST_DATA_TEST_CASE( test_case_arity1, data::xrange(5), my_var )
 //]
 
 //[snippet_dataset1_3
+// The following definition of the dataset test case throws an exception before the
+// test module starts (zip of non infinite or singleton datasets of different length)
 BOOST_DATA_TEST_CASE( test_case_arity2, data::xrange(2) ^ data::xrange(5), apples, potatoes)
 {
   BOOST_TEST((apples <= 1 && apples >= 0));
