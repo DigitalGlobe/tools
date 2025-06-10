@@ -3,12 +3,16 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#define BOOST_NO_EXCEPTIONS
 #include <boost/config.hpp>
+
+#if !defined( BOOST_NO_EXCEPTIONS )
+#   error This program requires exception handling disabled.
+#endif
+
 #include <boost/throw_exception.hpp>
 #include <boost/exception/info.hpp>
 #include <boost/exception/diagnostic_information.hpp>
-#include <boost/detail/lightweight_test.hpp>
+#include <boost/core/lightweight_test.hpp>
 #include <stdlib.h>
 
 struct
@@ -17,7 +21,7 @@ my_exception:
     std::exception
     {
     char const *
-    what() const throw()
+    what() const BOOST_NOEXCEPT_OR_NOTHROW
         {
         return "my_exception";
         }
@@ -39,7 +43,12 @@ boost
 #ifndef BOOST_NO_RTTI
         BOOST_TEST(s.find("my_tag")!=std::string::npos);
 #endif
-        exit(0);
+        exit(boost::report_errors());
+        }
+    void
+    throw_exception(std::exception const & x, boost::source_location const &)
+        {
+        throw_exception(x);
         }
     }
 

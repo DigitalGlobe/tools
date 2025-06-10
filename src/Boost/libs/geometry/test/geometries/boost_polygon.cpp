@@ -2,6 +2,7 @@
 // Unit Test
 
 // Copyright (c) 2010-2012 Barend Gehrels, Amsterdam, the Netherlands.
+// Copyright (c) 2023 Adam Wulkiewicz, Lodz, Poland.
 
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
@@ -34,14 +35,15 @@
 template <typename T>
 void fill_polygon_with_two_holes(boost::polygon::polygon_with_holes_data<T>& boost_polygon_polygon)
 {
-    std::vector<boost::polygon::point_data<T> > point_vector;
-    point_vector.push_back(boost::polygon::point_data<T>(0, 0));
-    point_vector.push_back(boost::polygon::point_data<T>(0, 10));
-    point_vector.push_back(boost::polygon::point_data<T>(10, 10));
-    point_vector.push_back(boost::polygon::point_data<T>(10, 0));
-    point_vector.push_back(boost::polygon::point_data<T>(0, 0));
-    boost_polygon_polygon.set(point_vector.begin(), point_vector.end());
-
+    {
+        std::vector<boost::polygon::point_data<T> > point_vector;
+        point_vector.push_back(boost::polygon::point_data<T>(0, 0));
+        point_vector.push_back(boost::polygon::point_data<T>(0, 10));
+        point_vector.push_back(boost::polygon::point_data<T>(10, 10));
+        point_vector.push_back(boost::polygon::point_data<T>(10, 0));
+        point_vector.push_back(boost::polygon::point_data<T>(0, 0));
+        boost_polygon_polygon.set(point_vector.begin(), point_vector.end());
+    }
 
     std::vector<boost::polygon::polygon_data<T> > holes;
     holes.resize(2);
@@ -73,7 +75,7 @@ template <typename T>
 void test_coordinate_type()
 {
     // 1a: Check if Boost.Polygon's point fulfills Boost.Geometry's point concept
-    bg::concept::check<boost::polygon::point_data<T> >();
+    bg::concepts::check<boost::polygon::point_data<T> >();
 
     // 1b: use a Boost.Polygon point in Boost.Geometry, calc. distance with two point types
     boost::polygon::point_data<T> boost_polygon_point(1, 2);
@@ -84,7 +86,7 @@ void test_coordinate_type()
                     2 * std::sqrt(2.0));
 
     // 2a: Check if Boost.Polygon's box fulfills Boost.Geometry's box concept
-    bg::concept::check<boost::polygon::rectangle_data<T> >();
+    bg::concepts::check<boost::polygon::rectangle_data<T> >();
 
     // 2b: use a Boost.Polygon rectangle in Boost.Geometry, compare with boxes
     boost::polygon::rectangle_data<T> boost_polygon_box;
@@ -99,7 +101,7 @@ void test_coordinate_type()
     BOOST_CHECK_EQUAL(boost_polygon_area, boost_polygon_area_by_boost_polygon);
 
     // 3a: Check if Boost.Polygon's polygon fulfills Boost.Geometry's ring concept
-    bg::concept::check<boost::polygon::polygon_data<T> >();
+    bg::concepts::check<boost::polygon::polygon_data<T> >();
 
     // 3b: use a Boost.Polygon polygon (ring)
     boost::polygon::polygon_data<T> boost_polygon_ring;

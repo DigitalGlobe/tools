@@ -8,9 +8,10 @@
 // http://www.boost.org/LICENSE_1_0.txt
 //
 
-#include <boost/ref.hpp>
+#include <boost/core/ref.hpp>
 
 int main()
 {
     boost::reference_wrapper<int> r = boost::ref( 2 ); // this should produce an ERROR
+    (void)r;
 }

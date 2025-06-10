@@ -5,6 +5,10 @@
 // Copyright (c) 2008-2012 Bruno Lalande, Paris, France.
 // Copyright (c) 2009-2012 Mateusz Loskot, London, UK.
 
+// This file was modified by Oracle on 2021-2022.
+// Modifications copyright (c) 2021-2022 Oracle and/or its affiliates.
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
+
 // Parts of Boost.Geometry are redesigned from Geodan's Geographic Library
 // (geolib/GGL), copyright (c) 1995-2010 Geodan, Amsterdam, the Netherlands.
 
@@ -13,57 +17,15 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 
 #include <iterator>
-
+#include <vector>
 
 #include <algorithms/test_simplify.hpp>
 #include <boost/geometry/geometries/geometries.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/geometry/geometries/register/ring.hpp>
 
 #include <test_geometries/wrapped_boost_array.hpp>
 #include <test_common/test_point.hpp>
-
-// #define TEST_PULL89
-#ifdef TEST_PULL89
-#include <boost/geometry/strategies/cartesian/distance_projected_point_ax.hpp>
-#endif
-
-
-#ifdef TEST_PULL89
-template <typename Geometry, typename T>
-void test_with_ax(std::string const& wkt,
-        std::string const& expected,
-        T const& adt,
-        T const& xdt)
-{
-    typedef typename bg::point_type<Geometry>::type point_type;
-    typedef bg::strategy::distance::detail::projected_point_ax<> ax_type;
-    typedef typename bg::strategy::distance::services::return_type
-    <
-        bg::strategy::distance::detail::projected_point_ax<>,
-        point_type,
-        point_type
-    >::type return_type;
-
-    typedef bg::strategy::distance::detail::projected_point_ax_less
-    <
-        return_type
-    > comparator_type;
-
-    typedef bg::strategy::simplify::detail::douglas_peucker
-    <
-        point_type,
-        bg::strategy::distance::detail::projected_point_ax<>,
-        comparator_type
-    > dp_ax;
-
-    return_type max_distance(adt, xdt);
-    comparator_type comparator(max_distance);
-    dp_ax strategy(comparator);
-
-    test_geometry<Geometry>(wkt, expected, max_distance, strategy);
-}
-#endif
-
 
 template <typename P>
 void test_all()
@@ -84,10 +46,16 @@ void test_all()
     test_geometry<bg::model::linestring<P> >(
         "LINESTRING(0 0,120 6,80 10,200 0)",
         "LINESTRING(0 0,120 6,80 10,200 0)", 7);
+
     // Same which reordered coordinates
     test_geometry<bg::model::linestring<P> >(
         "LINESTRING(0 0,80 10,120 6,200 0)",
         "LINESTRING(0 0,80 10,200 0)", 7);
+
+    // Duplicate point is removed
+    test_geometry<bg::model::linestring<P> >(
+        "LINESTRING(0 0,0 0)",
+        "LINESTRING(0 0)", 1.0);
 
     // Mail 2013-10-07, real-life test, piece of River Leine
     // PostGIS returns exactly the same result
@@ -110,9 +78,15 @@ void test_all()
         "LINESTRING(0 0,5 5,7 5,10 10)", 1.0);
     */
 
-    test_geometry<bg::model::ring<P> >(
-        "POLYGON((4 0,8 2,8 7,4 9,0 7,0 2,2 1,4 0))",
-        "POLYGON((4 0,8 2,8 7,4 9,0 7,0 2,4 0))", 1.0);
+    /*
+
+    Above can be checked in PostGIS by:
+
+    select astext(ST_Simplify(geomfromtext('LINESTRING(0 0, 5 5, 10 10)'),1.0)) as simplified
+    union all select astext(ST_Simplify(geomfromtext('LINESTRING(0 0, 5 5, 6 5, 10 10)'),1.0))
+    etc
+    */
+
 
     test_geometry<bg::model::polygon<P> >(
         "POLYGON((4 0,8 2,8 7,4 9,0 7,0 2,2 1,4 0))",
@@ -122,14 +96,82 @@ void test_all()
         "POLYGON((4 0,8 2,8 7,4 9,0 7,0 2,2 1,4 0),(7 3,7 6,1 6,1 3,4 3,7 3))",
         "POLYGON((4 0,8 2,8 7,4 9,0 7,0 2,4 0),(7 3,7 6,1 6,1 3,7 3))", 1.0);
 
-/*
+    // Closing point should be simplified away
+    test_geometry<bg::model::polygon<P> >(
+        "POLYGON((1 0,0 0,0 4,4 4,4 0,1 0))",
+        "POLYGON((0 0,0 4,4 4,4 0,0 0))", 0.1);
 
-Above can be checked in PostGIS by:
+    // Section around closing point should be simplified away
+    test_geometry<bg::model::polygon<P> >(
+        "POLYGON((5 0,4 0,3 0,2 0,1 0,0 0,0 5,5 5,5 0))",
+        "POLYGON((5 0,0 0,0 5,5 5,5 0))", 0.1);
 
-select astext(ST_Simplify(geomfromtext('LINESTRING(0 0, 5 5, 10 10)'),1.0)) as simplified
-union all select astext(ST_Simplify(geomfromtext('LINESTRING(0 0, 5 5, 6 5, 10 10)'),1.0))
-etc
-*/
+    // Manually rotate this WKT over all the 5 redundant points at closing area
+    test_geometry<bg::model::polygon<P> >(
+        "POLYGON((4 0,3 0,2 0,1 0,0 0,0 5,5 5,5 0,4 0))",
+        "POLYGON((0 0,0 5,5 5,5 0,0 0))", 0.1);
+    test_geometry<bg::model::polygon<P> >(
+        "POLYGON((3 0,2 0,1 0,0 0,0 5,5 5,5 0,4 0,3 0))",
+        "POLYGON((0 0,0 5,5 5,5 0,0 0))", 0.1);
+    test_geometry<bg::model::polygon<P> >(
+        "POLYGON((2 0,1 0,0 0,0 5,5 5,5 0,4 0,3 0,2 0))",
+        "POLYGON((0 0,0 5,5 5,5 0,0 0))", 0.1);
+    test_geometry<bg::model::polygon<P> >(
+        "POLYGON((1 0,0 0,0 5,5 5,5 0,4 0,3 0,2 0,1 0))",
+        "POLYGON((0 0,0 5,5 5,5 0,0 0))", 0.1);
+    test_geometry<bg::model::polygon<P> >(
+        "POLYGON((0 0,0 5,5 5,5 0,4 0,3 0,2 0,1 0,0 0))",
+        "POLYGON((0 0,0 5,5 5,5 0,0 0))", 0.1);
+
+    // Test wither all collinear points in between are simplified away
+    // First approach did select one of them because it was the end of the
+    // "closing area". Now the opposite is taken, which is farthest and never
+    // collinear
+    test_geometry<bg::model::polygon<P> >(
+            "POLYGON((2 0,1 0,0 0,0 1,0 2,0 3,0 4,1 4,2 4,3 4,4 4,4 3,4 2,4 1,4 0,3 0,2 0))",
+            "POLYGON((0 0,0 4,4 4,4 0,0 0))", 1.0);
+
+    // Test simplifying away one of the sides (collinear), then closing point
+    // and finally the whole polygon
+    std::string const near_triangle = "POLYGON((0.55 0.55,1 0,0.5 0,0 0,0 1,0.55 0.55))";
+    test_geometry<bg::model::polygon<P> >(near_triangle,
+        "POLYGON((0.55 0.55,1 0,0 0,0 1,0.55 0.55))", 0.01);
+    test_geometry<bg::model::polygon<P> >(near_triangle,
+        "POLYGON((1 0,0 0,0 1,1 0))", 0.1);
+    // 0.9 should still result in a simplified polygon
+    test_geometry<bg::model::polygon<P> >(near_triangle,
+        "POLYGON((1 0,0 0,0 1,1 0))", 0.9);
+    test_geometry<bg::model::polygon<P> >(near_triangle,
+        "POLYGON(())", 1.1);
+
+    // Test simplifying away the closing point, and closing it explicitly
+    std::string const salamina = "POLYGON((2616131.59828 4579307.29099,2616687.86177 4579151.05325,2618172.52982 4578718.79836,2618728.79332 4578522.73574,2620336.91468 4577424.54293,2620522.48427 4576992.50129,2621264.76264 4569815.3917,2621140.75272 4569502.07546,2620491.53745 4568208.96982,2620151.34509 4567855.90928,2612606.55528 4562800.36094,2611833.3301 4562291.50023,2611369.5731 4562174.16117,2610225.54269 4562408.69959,2605896.21638 4564367.29512,2605494.13038 4564641.6634,2605277.94792 4566288.44857,2606019.89233 4569423.46562,2609050.12019 4577424.54293,2614337.90732 4579347.12775,2615296.7021 4579543.34723,2616131.59828 4579307.29099))";
+    test_geometry<bg::model::polygon<P> >(salamina, 196318951.5097456, 100);
+    test_geometry<bg::model::polygon<P> >(salamina, 194471472.35804176, 200);
+    test_geometry<bg::model::polygon<P> >(salamina, 191735337.33374023, 500);
+    test_geometry<bg::model::polygon<P> >(salamina, 186593693.18401337, 1000);
+    test_geometry<bg::model::polygon<P> >(salamina, 181448561.04094696, 2000);
+    test_geometry<bg::model::polygon<P> >(salamina, 141965392.92240524, 5000);
+
+    // Interior ring (sized ~ 1) should be simplified away (distance 5)
+    test_geometry<bg::model::polygon<P> >(
+        "POLYGON((0 0,0 10,10 10,10 0,0 0),(5 5,6 6,5 6,5 5))",
+        "POLYGON((0 0,0 10,10 10,10 0,0 0))", 5.0);
+
+    // Non-closed version
+    test_geometry<bg::model::polygon<P, true, false> >(
+        "POLYGON((1 0,0 0,0 4,4 4,4 0))",
+        "POLYGON((0 0,0 4,4 4,4 0))", 0.1);
+    test_geometry<bg::model::polygon<P, true, false> >(
+        "POLYGON((0 0,0 1,1 1,1 0))",
+        "POLYGON((0 0,0 1,1 1,1 0))", 0.1);
+
+    // Non-closed, ccw version
+    // https://github.com/boostorg/geometry/issues/956
+    test_geometry<bg::model::polygon<P, false, false> >(
+        "POLYGON((0 0,0.4 0,0.4 0.4))",
+        "POLYGON((0 0,0.4 0,0.4 0.4))", 0);
+
 
     {
         // Test with explicit strategy
@@ -151,18 +193,23 @@ etc
         "POINT(0 0)",
         "POINT(0 0)", 1.0);
 
+    test_geometry<bg::model::segment<P> >(
+        "SEGMENT(0 0, 1 1)",
+        "SEGMENT(0 0, 1 1)", 1.0);
+
+    test_geometry<bg::model::box<P> >(
+        "BOX(0 0, 1 1)",
+        "BOX(0 0, 1 1)", 1.0);
+
+    test_geometry<bg::model::multi_point<P> >(
+        "MULTIPOINT(0 0, 1 1, 2 2)",
+        "MULTIPOINT(0 0, 1 1, 2 2)", 1.0);
+
 
     // RING: check compilation and behaviour
     test_geometry<bg::model::ring<P> >(
         "POLYGON((4 0,8 2,8 7,4 9,0 7,0 2,2 1,4 0))",
         "POLYGON((4 0,8 2,8 7,4 9,0 7,0 2,4 0))", 1.0);
-
-
-#ifdef TEST_PULL89
-    test_with_ax<bg::model::linestring<P> >(
-        "LINESTRING(0 0,120 6,80 10,200 0)",
-        "LINESTRING(0 0,80 10,200 0)", 10, 7);
-#endif
 }
 
 template <typename P>
@@ -178,16 +225,6 @@ void test_zigzag()
     test_geometry<bg::model::linestring<P> >(zigzag, expected150, 1.5001);
     test_geometry<bg::model::linestring<P> >(zigzag, expected200, 2.0001);
     test_geometry<bg::model::linestring<P> >(zigzag, expected225, 2.25); // should be larger than sqrt(5)=2.236
-
-#ifdef TEST_PULL89
-    // This should work (results might vary but should have LESS points then expected above
-    // Small xtd, larger adt,
-    test_with_ax<bg::model::linestring<P> >(zigzag, expected100, 1.0001, 1.0001);
-    test_with_ax<bg::model::linestring<P> >(zigzag, expected150, 1.5001, 1.0001);
-    test_with_ax<bg::model::linestring<P> >(zigzag, expected200, 2.0001, 1.0001);
-    test_with_ax<bg::model::linestring<P> >(zigzag, expected225, 2.25, 1.0001);
-#endif
-
 }
 
 
@@ -212,13 +249,65 @@ void test_spherical()
 }
 
 
+template <typename P>
+struct quad
+{
+    using iterator = P const*;
+    using const_iterator = P const*;
+
+    quad(P const& p0, P const& p1, P const& p2, P const& p3)
+        : m_arr{p0, p1, p2, p3, p0}
+    {}
+
+    const_iterator begin() const { return m_arr; }
+    const_iterator end() const { return m_arr + 5; }
+
+private:
+    P m_arr[5];
+};
+BOOST_GEOMETRY_REGISTER_RING_TEMPLATED(quad)
+
+void test_different_types()
+{
+    using point_t = bg::model::d2::point_xy<double>;
+    using quad_t = ::quad<point_t>;
+    using bg_ring_t = bg::model::ring<point_t>;
+    quad_t quad{{0, 0}, {10, 1}, {20, 2}, {30, 0}};
+    bg_ring_t result;
+    bg::simplify(quad, result, 0.1);
+    BOOST_CHECK(boost::size(result) == 4);
+    BOOST_CHECK_CLOSE(bg::area(result), 30.0, 0.00001);
+
+    using var_t = boost::variant<point_t, quad_t>;
+    using bg_var_t = boost::variant<point_t, bg_ring_t>;
+    var_t var = quad;
+    bg_var_t result_var;
+    bg::simplify(var, result_var, 0.1);
+    BOOST_CHECK(bg::num_points(result_var) == 4);
+    BOOST_CHECK_CLOSE(bg::area(result_var), 30.0, 0.00001);
+
+    using gc_t = bg::model::geometry_collection<var_t>;
+    using bg_gc_t = bg::model::geometry_collection<bg_var_t>;
+    gc_t gc = {var};
+    bg_gc_t result_gc;
+    bg::simplify(gc, result_gc, 0.1);
+    BOOST_CHECK(bg::num_points(result_gc) == 4);
+    BOOST_CHECK_CLOSE(bg::area(result_gc), 30.0, 0.00001);
+}
+
+
 int test_main(int, char* [])
 {
     // Integer compiles, but simplify-process fails (due to distances)
     //test_all<bg::model::d2::point_xy<int> >();
 
-    test_all<bg::model::d2::point_xy<float> >();
     test_all<bg::model::d2::point_xy<double> >();
+
+#if ! defined(BOOST_GEOMETRY_TEST_ONLY_ONE_TYPE)
+
+    test_all<bg::model::d2::point_xy<float> >();
+
+#endif
 
     test_3d<bg::model::point<double, 3, bg::cs::cartesian> >();
 
@@ -226,12 +315,7 @@ int test_main(int, char* [])
 
     test_zigzag<bg::model::d2::point_xy<double> >();
 
-#if defined(HAVE_TTMATH)
-    test_all<bg::model::d2::point_xy<ttmath_big> >();
-    test_spherical<bg::model::point<ttmath_big, 2, bg::cs::spherical_equatorial<bg::degree> > >();
-#endif
-
-
+    test_different_types();
 
     return 0;
 }

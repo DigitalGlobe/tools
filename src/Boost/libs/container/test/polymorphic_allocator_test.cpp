@@ -25,9 +25,6 @@ void test_default_constructor()
 
 void test_resource_constructor()
 {
-   polymorphic_allocator<int> a(0);
-   BOOST_TEST(a.resource() == get_default_resource());
-
    derived_from_memory_resource d;
    polymorphic_allocator<int> b(&d);
    BOOST_TEST(&d == b.resource());
@@ -63,7 +60,7 @@ void test_allocate()
    BOOST_TEST(d.do_allocate_return == &dummy);
    //It shall allocate 2*sizeof(int), alignment_of<int>
    BOOST_TEST(d.do_allocate_bytes == 2*sizeof(int));
-   BOOST_TEST(d.do_allocate_alignment == container_detail::alignment_of<int>::value);
+   BOOST_TEST(d.do_allocate_alignment == dtl::alignment_of<int>::value);
 }
 
 void test_deallocate()
@@ -77,7 +74,7 @@ void test_deallocate()
    //It shall deallocate 2*sizeof(int), alignment_of<int>
    BOOST_TEST(d.do_deallocate_p == &dummy);
    BOOST_TEST(d.do_deallocate_bytes == 3*sizeof(int));
-   BOOST_TEST(d.do_deallocate_alignment == container_detail::alignment_of<int>::value);
+   BOOST_TEST(d.do_deallocate_alignment == dtl::alignment_of<int>::value);
 }
 
 void test_construct()

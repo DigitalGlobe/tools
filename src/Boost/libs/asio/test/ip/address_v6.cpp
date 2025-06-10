@@ -2,7 +2,7 @@
 // address_v6.cpp
 // ~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -66,9 +66,6 @@ void test()
     b = addr1.is_v4_mapped();
     (void)b;
 
-    b = addr1.is_v4_compatible();
-    (void)b;
-
     b = addr1.is_multicast_node_local();
     (void)b;
 
@@ -88,24 +85,12 @@ void test()
     (void)bytes_value;
 
     std::string string_value = addr1.to_string();
-    string_value = addr1.to_string(ec);
-
-    ip::address_v4 addr3 = addr1.to_v4();
 
     // address_v6 static functions.
-
-    addr1 = ip::address_v6::from_string("0::0");
-    addr1 = ip::address_v6::from_string("0::0", ec);
-    addr1 = ip::address_v6::from_string(string_value);
-    addr1 = ip::address_v6::from_string(string_value, ec);
 
     addr1 = ip::address_v6::any();
 
     addr1 = ip::address_v6::loopback();
-
-    addr1 = ip::address_v6::v4_mapped(addr3);
-
-    addr1 = ip::address_v6::v4_compatible(addr3);
 
     // address_v6 comparisons.
 
@@ -127,6 +112,28 @@ void test()
     b = (addr1 >= addr2);
     (void)b;
 
+    // address_v6 creation functions.
+
+    addr1 = ip::make_address_v6(const_bytes_value, scope_id);
+    addr1 = ip::make_address_v6("0::0");
+    addr1 = ip::make_address_v6("0::0", ec);
+    addr1 = ip::make_address_v6(string_value);
+    addr1 = ip::make_address_v6(string_value, ec);
+#if defined(BOOST_ASIO_HAS_STRING_VIEW)
+# if defined(BOOST_ASIO_HAS_STD_STRING_VIEW)
+    std::string_view string_view_value("0::0");
+# else // defined(BOOST_ASIO_HAS_STD_EXPERIMENTAL_STRING_VIEW)
+    std::experimental::string_view string_view_value("0::0");
+# endif // defined(BOOST_ASIO_HAS_STD_EXPERIMENTAL_STRING_VIEW)
+    addr1 = ip::make_address_v6(string_view_value);
+    addr1 = ip::make_address_v6(string_view_value, ec);
+#endif // defined(BOOST_ASIO_HAS_STRING_VIEW)
+
+    // address_v6 IPv4-mapped conversion.
+    ip::address_v4 addr3;
+    addr1 = ip::make_address_v6(ip::v4_mapped, addr3);
+    addr3 = ip::make_address_v4(ip::v4_mapped, addr1);
+
     // address_v6 I/O.
 
     std::ostringstream os;
@@ -136,6 +143,11 @@ void test()
     std::wostringstream wos;
     wos << addr1;
 #endif // !defined(BOOST_NO_STD_WSTREAMBUF)
+
+#if defined(BOOST_ASIO_HAS_STD_HASH)
+    std::size_t hash1 = std::hash<ip::address_v6>()(addr1);
+    (void)hash1;
+#endif // defined(BOOST_ASIO_HAS_STD_HASH)
   }
   catch (std::exception&)
   {
@@ -274,18 +286,6 @@ void test()
   BOOST_ASIO_CHECK(!mcast_org_local_address.is_v4_mapped());
   BOOST_ASIO_CHECK(!mcast_site_local_address.is_v4_mapped());
 
-  BOOST_ASIO_CHECK(!unspecified_address.is_v4_compatible());
-  BOOST_ASIO_CHECK(!loopback_address.is_v4_compatible());
-  BOOST_ASIO_CHECK(!link_local_address.is_v4_compatible());
-  BOOST_ASIO_CHECK(!site_local_address.is_v4_compatible());
-  BOOST_ASIO_CHECK(!v4_mapped_address.is_v4_compatible());
-  BOOST_ASIO_CHECK(v4_compat_address.is_v4_compatible());
-  BOOST_ASIO_CHECK(!mcast_global_address.is_v4_compatible());
-  BOOST_ASIO_CHECK(!mcast_link_local_address.is_v4_compatible());
-  BOOST_ASIO_CHECK(!mcast_node_local_address.is_v4_compatible());
-  BOOST_ASIO_CHECK(!mcast_org_local_address.is_v4_compatible());
-  BOOST_ASIO_CHECK(!mcast_site_local_address.is_v4_compatible());
-
   BOOST_ASIO_CHECK(!unspecified_address.is_multicast());
   BOOST_ASIO_CHECK(!loopback_address.is_multicast());
   BOOST_ASIO_CHECK(!link_local_address.is_multicast());
@@ -368,6 +368,6 @@ void test()
 BOOST_ASIO_TEST_SUITE
 (
   "ip/address_v6",
-  BOOST_ASIO_TEST_CASE(ip_address_v6_compile::test)
+  BOOST_ASIO_COMPILE_TEST_CASE(ip_address_v6_compile::test)
   BOOST_ASIO_TEST_CASE(ip_address_v6_runtime::test)
 )

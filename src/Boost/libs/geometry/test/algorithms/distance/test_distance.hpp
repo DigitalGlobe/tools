@@ -15,7 +15,6 @@
 #include <boost/geometry/io/wkt/read.hpp>
 #include <boost/geometry/strategies/strategies.hpp>
 
-
 // Define a custom distance strategy
 // For this one, the "taxicab" distance,
 // see http://en.wikipedia.org/wiki/Taxicab_geometry
@@ -52,7 +51,7 @@ struct tag<taxicab_distance>
 template <typename P1, typename P2>
 struct return_type<taxicab_distance, P1, P2>
 {
-    typedef typename coordinate_type<P1>::type type;
+    using type = coordinate_type_t<P1>;
 };
 
 
@@ -75,7 +74,7 @@ template <typename P1, typename P2>
 struct result_from_distance<taxicab_distance, P1, P2>
 {
     template <typename T>
-    static inline typename coordinate_type<P1>::type apply(taxicab_distance const& , T const& value)
+    static inline coordinate_type_t<P1> apply(taxicab_distance const& , T const& value)
     {
         return value;
     }

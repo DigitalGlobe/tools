@@ -10,6 +10,7 @@
 #include <boost/graph/use_mpi.hpp>
 #include <boost/config.hpp>
 #include <boost/throw_exception.hpp>
+#include <boost/serialization/vector.hpp>
 #include <boost/graph/distributed/adjacency_list.hpp>
 #include <boost/graph/connected_components.hpp>
 #include <boost/graph/distributed/connected_components_parallel_search.hpp>
@@ -23,7 +24,7 @@
 #include <cstdlib>
 #include <iomanip>
 #include <boost/random.hpp>
-#include <boost/test/minimal.hpp>
+#include <boost/core/lightweight_test.hpp>
 
 #include <boost/graph/distributed/compressed_sparse_row_graph.hpp>
 #include <boost/graph/rmat_graph_generator.hpp>
@@ -184,7 +185,7 @@ test_distributed_connected_components(int n, double _p, bool verify, bool emit_d
     }
 }
 
-int test_main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
   mpi::environment env(argc, argv);
 
@@ -199,5 +200,5 @@ int test_main(int argc, char* argv[])
        argc == 6? 1 : atoi(argv[6]),
        argv[5]==std::string("true"));
 
-  return 0;
+  return boost::report_errors();
 }

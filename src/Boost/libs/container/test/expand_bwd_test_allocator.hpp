@@ -62,14 +62,14 @@ class expand_bwd_test_allocator
    typedef T                                    value_type;
    typedef T *                                  pointer;
    typedef const T *                            const_pointer;
-   typedef typename container_detail::add_reference
+   typedef typename dtl::add_reference
                      <value_type>::type         reference;
-   typedef typename container_detail::add_reference
+   typedef typename dtl::add_reference
                      <const value_type>::type   const_reference;
    typedef std::size_t                          size_type;
    typedef std::ptrdiff_t                       difference_type;
 
-   typedef boost::container::container_detail::version_type<expand_bwd_test_allocator, 2>   version;
+   typedef boost::container::dtl::version_type<expand_bwd_test_allocator, 2>   version;
 
    //Dummy multiallocation chain
    struct multiallocation_chain{};
@@ -79,7 +79,7 @@ class expand_bwd_test_allocator
    {  typedef expand_bwd_test_allocator<T2>   other;   };
 
    //!Constructor from the segment manager. Never throws
-   expand_bwd_test_allocator(T *buffer, size_type sz, difference_type offset)
+   expand_bwd_test_allocator(T *buffer, size_type sz, size_type offset)
       : mp_buffer(buffer), m_size(sz)
       , m_offset(offset),  m_allocations(0){ }
 
@@ -95,10 +95,10 @@ class expand_bwd_test_allocator
       , m_offset(other.m_offset),  m_allocations(0){ }
 
    pointer address(reference value)
-   {  return pointer(container_detail::addressof(value));  }
+   {  return pointer(dtl::addressof(value));  }
 
    const_pointer address(const_reference value) const
-   {  return const_pointer(container_detail::addressof(value));  }
+   {  return const_pointer(dtl::addressof(value));  }
 
    pointer allocate(size_type , cvoid_ptr hint = 0)
    {  (void)hint; return 0; }
@@ -137,20 +137,18 @@ class expand_bwd_test_allocator
       if(m_allocations == 0){
          if((m_offset + limit_size) > m_size){
             assert(0);
+            throw_bad_alloc();
          }
          ++m_allocations;
          reuse = 0;
          return (mp_buffer + m_offset);
       }
-      else if(m_allocations == 1){
-         if(limit_size > m_size){
-            assert(0);
-         }
-         ++m_allocations;
-         return mp_buffer;
-      }
       else{
-         throw_bad_alloc();
+         if(m_allocations != 1){
+            throw_bad_alloc();
+         }
+         assert(limit_size <= m_size);
+         ++m_allocations;
          return mp_buffer;
       }
    }
@@ -174,20 +172,20 @@ class expand_bwd_test_allocator
 
    pointer           mp_buffer;
    size_type         m_size;
-   difference_type   m_offset;
+   size_type         m_offset;
    char              m_allocations;
 };
 
 //!Equality test for same type of expand_bwd_test_allocator
 template<class T> inline
-bool operator==(const expand_bwd_test_allocator<T>  &alloc1,
-                const expand_bwd_test_allocator<T>  &alloc2)
+bool operator==(const expand_bwd_test_allocator<T>  &,
+                const expand_bwd_test_allocator<T>  &)
 {  return false; }
 
 //!Inequality test for same type of expand_bwd_test_allocator
 template<class T> inline
-bool operator!=(const expand_bwd_test_allocator<T>  &alloc1,
-                const expand_bwd_test_allocator<T>  &alloc2)
+bool operator!=(const expand_bwd_test_allocator<T>  &,
+                const expand_bwd_test_allocator<T>  &)
 {  return true; }
 
 }  //namespace test {

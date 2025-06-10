@@ -13,6 +13,7 @@
         "Programming"
     ],
     "maintainers": [
-        "Douglas Gregor <dgregor -at- cs.indiana.edu>"
-    ]
+        "Peter Dimov <pdimov -at- gmail.com>"
+    ],
+    "cxxstd": "11"
 }

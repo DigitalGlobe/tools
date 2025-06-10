@@ -1,5 +1,5 @@
 #index.idx for Convert Quickbook, Doxygen and Auto-index.
-#  Copyright (c) Vladimir Batov 2009-2014
+#  Copyright (c) Vladimir Batov 2009-2022
 #  Distributed under the Boost Software License, Version 1.0.
 #  See copy at http://www.boost.org/LICENSE_1_0.txt.
 
@@ -9,6 +9,7 @@
 !scan ../include/boost/convert/spirit.hpp
 !scan ../include/boost/convert/stream.hpp
 !scan ../include/boost/convert/strtol.hpp
+!scan ../include/boost/convert/charconv.hpp
 !scan ../include/boost/make_default.hpp
 !scan ../include/boost/convert.hpp
 
@@ -22,7 +23,7 @@
 !scan ../example/lexical_cast.cpp
 !scan ../example/stream.cpp
 
-# Might be useful to Doxygen document everything for maintainance?
+# Might be useful to Doxygen document everything for maintenance?
 #!scan "../include/boost/detail/" "*.hpp" true
 
 base \<\w*\base\w*\>
@@ -41,7 +42,4 @@ skipws  \<skip\w*\>
 transformation \<transform\w*\>
 user-defined types (UDT)  \<\w*user\w*\>
 whitespace \<white\w*\>
-
-
-
 

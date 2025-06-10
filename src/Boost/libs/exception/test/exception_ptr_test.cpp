@@ -3,6 +3,12 @@
 //Distributed under the Boost Software License, Version 1.0. (See accompanying
 //file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#include <boost/config.hpp>
+
+#if defined( BOOST_NO_EXCEPTIONS )
+#   error This program requires exception handling.
+#endif
+
 #include <boost/exception_ptr.hpp>
 #include <boost/exception/info.hpp>
 #include <boost/exception/get_error_info.hpp>
@@ -10,7 +16,7 @@
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
 #include <boost/thread.hpp>
-#include <boost/detail/atomic_count.hpp>
+#include <boost/smart_ptr/detail/atomic_count.hpp>
 #include <boost/detail/lightweight_test.hpp>
 #include <iostream>
 
@@ -87,7 +93,7 @@ exc:
         }
 
     virtual
-    ~exc() throw()
+    ~exc() BOOST_NOEXCEPT_OR_NOTHROW
         {
         --exc_count;
         }
@@ -121,9 +127,42 @@ check( boost::shared_ptr<thread_handle> const & t )
         }
     }
 
+void
+test_deep_copy()
+    {
+    int const * p1=0;
+    boost::exception_ptr p;
+    try
+        {
+        BOOST_THROW_EXCEPTION(exc() << answer(42));
+        BOOST_ERROR("BOOST_THROW_EXCEPTION didn't throw");
+        }
+    catch(
+    exc & e )
+        {
+        p1=boost::get_error_info<answer>(e);
+        p=boost::current_exception();
+        }
+    BOOST_TEST(p1!=0);
+    BOOST_TEST(p);
+    try
+        {
+        boost::rethrow_exception(p);
+        BOOST_ERROR("rethrow_exception didn't throw");
+        }
+    catch(
+    exc & e )
+        {
+        int const * p2=boost::get_error_info<answer>(e);
+        BOOST_TEST(p2!=0 && *p2==42);
+        BOOST_TEST(p2!=p1);
+        }
+    }
+
 int
 main()
     {
+    test_deep_copy();
     BOOST_TEST(++exc_count==1);
     try
         {

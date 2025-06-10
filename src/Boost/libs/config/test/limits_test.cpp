@@ -52,6 +52,7 @@ template<typename T> inline T make_char_numeric_for_streaming(T x) { return x; }
 inline int make_char_numeric_for_streaming(char c) { return c; }
 inline int make_char_numeric_for_streaming(signed char c) { return c; }
 inline int make_char_numeric_for_streaming(unsigned char c) { return c; }
+inline int make_char_numeric_for_streaming(wchar_t c) { return c; }
 #endif
 
 #if (defined(_GLIBCPP_VERSION) || defined(_GLIBCXX_VERSION)) \
@@ -207,7 +208,7 @@ int cpp_main(int, char*[])
   test_float_limits(long_double(), "long double");
   // Some compilers don't pay attention to std:3.6.1/5 and issue a
   // warning here if "return 0;" is omitted.
-  return 0;
+  return boost::report_errors();
 }
 
 

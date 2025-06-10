@@ -11,6 +11,7 @@
 #include <boost/graph/use_mpi.hpp>
 #include <boost/config.hpp>
 #include <boost/throw_exception.hpp>
+#include <boost/serialization/vector.hpp>
 #include <boost/graph/distributed/compressed_sparse_row_graph.hpp>
 #include <boost/graph/distributed/mpi_process_group.hpp>
 #include <boost/graph/distributed/concepts.hpp>
@@ -19,7 +20,7 @@
 #include <boost/graph/breadth_first_search.hpp>
 #include <boost/graph/graphviz.hpp>
 #include <boost/property_map/vector_property_map.hpp>
-#include <boost/test/minimal.hpp>
+#include <boost/core/lightweight_test.hpp>
 
 #ifdef BOOST_NO_EXCEPTIONS
 void
@@ -75,7 +76,7 @@ void concept_checks()
   Digraph g;
 }
 
-int test_main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
   mpi::environment env(argc, argv);
 
@@ -98,5 +99,5 @@ int test_main(int argc, char* argv[])
 
   std::ofstream out("dcsr.dot");
   write_graphviz(out, g);
-  return 0;
+  return boost::report_errors();
 }

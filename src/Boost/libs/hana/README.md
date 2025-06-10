@@ -1,4 +1,4 @@
-# Boost.Hana <a target="_blank" href="http://semver.org">![Version][badge.version]</a> <a target="_blank" href="https://travis-ci.org/boostorg/hana">![Travis status][badge.Travis]</a> <a target="_blank" href="https://ci.appveyor.com/project/ldionne/hana">![Appveyor status][badge.Appveyor]</a> <a target="_blank" href="http://melpon.org/wandbox/permlink/MZqKhMF7tiaNZdJg">![Try it online][badge.wandbox]</a> <a target="_blank" href="https://gitter.im/boostorg/hana">![Gitter Chat][badge.Gitter]</a>
+# Boost.Hana <a target="_blank" href="http://semver.org">![Version][badge.version]</a> <a target="_blank" href="https://travis-ci.org/boostorg/hana">![Travis status][badge.Travis]</a> <a target="_blank" href="https://ci.appveyor.com/project/ldionne/hana">![Appveyor status][badge.Appveyor]</a> <a target="_blank" href="https://godbolt.org/z/36MvzMb7n">![Try it online][badge.tryit]</a> <a target="_blank" href="https://gitter.im/boostorg/hana">![Gitter Chat][badge.Gitter]</a>
 
 > Your standard library for metaprogramming
 
@@ -57,15 +57,20 @@ int main() {
 
 ## Documentation
 You can browse the documentation online at http://boostorg.github.io/hana.
-You can also get an offline version of the documentation by checking out
-the `gh-pages` branch. To avoid overwriting the current directory, you
-can clone the `gh-pages` branch into a subdirectory like `doc/html`:
+The documentation covers everything you should need including installing the
+library, a tutorial explaining what Hana is and how to use it, and an extensive
+reference section with examples. The remainder of this README is mostly for
+people that wish to work on the library itself, not for its users.
+
+An offline copy of the documentation can be obtained by checking out the
+`gh-pages` branch. To avoid overwriting the current directory, you can clone
+the `gh-pages` branch into a subdirectory like `doc/html`:
 ```shell
 git clone http://github.com/boostorg/hana --branch=gh-pages --depth=1 doc/html
 ```
 
 After issuing this, `doc/html` will contain exactly the same static website
-that's [available online][Hana.docs]. Note that `doc/html` is automatically
+that is [available online][Hana.docs]. Note that `doc/html` is automatically
 ignored by Git so updating the documentation won't pollute your index.
 
 
@@ -75,17 +80,16 @@ installation of [CMake][]. Once this is done, you can `cd` to the root
 of the project and setup the build directory:
 ```shell
 mkdir build
-cd build
-cmake ..
+cmake -S . -B build
 ```
 
-Usually, you'll want to specify a custom compiler because the system's
+Sometimes, you'll want to specify a custom compiler because the system's
 compiler is too old:
 ```shell
-cmake .. -DCMAKE_CXX_COMPILER=/path/to/compiler
+cmake -S . -B build -DCMAKE_CXX_COMPILER=/path/to/compiler
 ```
 
-Usually, this will work just fine. However, on some systems, the standard
+Usually, this will work just fine. However, on some older systems, the standard
 library and/or compiler provided by default does not support C++14. If
 this is your case, the [wiki][Hana.wiki] has more information about
 setting you up on different systems.
@@ -95,12 +99,12 @@ It's also fine if you don't have them; a few tests requiring the Boost headers
 will be disabled in that case. However, if you'd like Hana to use a custom
 installation of Boost, you can specify the path to this custom installation:
 ```shell
-cmake .. -DCMAKE_CXX_COMPILER=/path/to/compiler -DBOOST_ROOT=/path/to/boost
+cmake -S . -B build -DCMAKE_CXX_COMPILER=/path/to/compiler -DBOOST_ROOT=/path/to/boost
 ```
 
 You can now build and run the unit tests and the examples:
 ```shell
-cmake --build . --target check
+cmake --build build --target check
 ```
 
 You should be aware that compiling the unit tests is pretty time and RAM
@@ -125,9 +129,8 @@ root of the project to the new source file is `path/to/file.cpp`. When you
 re-run the CMake generation step, a new target named `path.to.file` will be
 created, and a test of the same name will also be created. Hence,
 ```shell
-cd build # Go back to the build directory
-cmake --build . --target path.to.file # Builds the program associated to path/to/file.cpp
-ctest -R path.to.file # Runs the program as a test
+cmake --build build --target path.to.file # Builds the program associated to path/to/file.cpp
+ctest --test-dir build -R path.to.file # Runs the program as a test
 ```
 
 > #### Tip for Sublime Text users
@@ -152,23 +155,9 @@ The project is organized in a couple of subdirectories.
   cloning the `gh-pages` branch into that directory, as explained above.
 - The [example](example) directory contains the source code for all the
   examples of both the tutorial and the reference documentation.
-- The [experimental](experimental) directory contains various experiments that
-  might or might not make it into Hana at some point.
 - The [include](include) directory contains the library itself, which is
   header only.
 - The [test](test) directory contains the source code for all the unit tests.
-
-
-## Related material
-- Talk on metaprogramming and Hana at [CppCon][] 2015 ([slides](http://ldionne.com/hana-cppcon-2015)/[video](https://youtu.be/cg1wOINjV9U))
-- Talk on metaprogramming and Hana at [C++Now][] 2015 ([slides](http://ldionne.com/hana-cppnow-2015))
-- Talk on Hana at [CppCon][] 2014 ([slides](http://ldionne.com/hana-cppcon-2014)/[video](https://youtu.be/L2SktfaJPuU))
-- The [MPL11][] library, which is how Hana started out
-- Talk on the MPL11 at [C++Now][] 2014 ([slides](http://ldionne.com/mpl11-cppnow-2014)/[video](https://youtu.be/8c0aWLuEO0Y))
-- Louis Dionne's bachelor's thesis was a formalization of C++ metaprogramming through
-  category theory. The thesis is available [here](https://github.com/ldionne/hana-thesis/blob/gh-pages/main.pdf),
-  and the slides of a related presentation are available [here](http://ldionne.com/hana-thesis).
-  Unfortunately, both are in french only.
 
 
 ## Contributing
@@ -180,12 +169,8 @@ Please see [LICENSE.md](LICENSE.md).
 
 
 ## Releasing
-This section acts as a reminder of the few simple steps required to release a
-new version of the library. This is only relevant to Hana's developers. To
-release a new version of the library, create an annotated tag using `git tag -a`.
-Then, push the tag and create a new GitHub release pointing to that tag.
-Once that is done, bump the version number in `include/boost/hana/version.hpp`
-so that it matches the next planned release.
+Releasing is now done exclusively via the Boost release process. There are no
+separate releases of Hana since the library is now pretty stable.
 
 
 <!-- Links -->
@@ -193,12 +178,9 @@ so that it matches the next planned release.
 [badge.Gitter]: https://img.shields.io/badge/gitter-join%20chat-blue.svg
 [badge.Travis]: https://travis-ci.org/boostorg/hana.svg?branch=master
 [badge.version]: https://badge.fury.io/gh/boostorg%2Fhana.svg
-[badge.Wandbox]: https://img.shields.io/badge/try%20it-online-blue.svg
-[C++Now]: http://cppnow.org
+[badge.tryit]: https://img.shields.io/badge/try%20it-online-blue.svg
 [CMake]: http://www.cmake.org
-[CppCon]: http://cppcon.org
 [Doxygen]: http://www.doxygen.org
 [eRuby]: http://en.wikipedia.org/wiki/ERuby
 [Hana.docs]: http://boostorg.github.io/hana
 [Hana.wiki]: https://github.com/boostorg/hana/wiki
-[MPL11]: http://github.com/ldionne/mpl11

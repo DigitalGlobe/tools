@@ -32,8 +32,7 @@ main()
   time_duration td = us_eastern::local_to_utc_offset(t10);//dst flag is defaulted
   check("check local calculation",   td == hours(5));
   ptime t10_local = t10 + td;
-  std::cout << to_simple_string(t10_local)
-            << std::endl;
+  std::cout << t10_local << std::endl;
   check("check local calculation",   t10_local == t10_check);
   check("check utc is dst",          
         us_eastern::utc_to_local_offset(t10) == hours(-5));
@@ -43,12 +42,10 @@ main()
   date d4(2002,May,1);
   ptime t11(d4, hours(3));
   check("check local offset",us_eastern::local_to_utc_offset(t11) == hours(4));
-  std::cout << to_simple_string(us_eastern::local_to_utc_offset(t11)) << std::endl;
+  std::cout << us_eastern::local_to_utc_offset(t11) << std::endl;
   ptime t11_check(d4, hours(7));//now utc offset is only 4 hours
   ptime t11_local = t11 + us_eastern::local_to_utc_offset(t11);
-  std::cout << to_simple_string(t11_local) << " "
-            << to_simple_string(t11_check)
-            << std::endl;
+  std::cout << t11_local << " " << t11_check << std::endl;
   check("check local calculation", t11_local == t11_check);
   //should get same offset with DST flag set
   check("check local offset-dst flag on",   
@@ -121,12 +118,13 @@ main()
 
   typedef boost::date_time::local_adjustor<ptime, -5, us_dst> us_eastern2;
 
-  ptime t7a(date(2002,May,31), hours(17)); 
-  ptime t7b = us_eastern2::local_to_utc(t7a);
-  ptime t7c = us_eastern2::utc_to_local(t7b);
-  //converted to local then back ot utc
-  check("check us_local_adjustor", t7c == t7a);
-
+  {
+    ptime t7a(date(2002,May,31), hours(17)); 
+    ptime t7b = us_eastern2::local_to_utc(t7a);
+    ptime t7c = us_eastern2::utc_to_local(t7b);
+    //converted to local then back ot utc
+    check("check us_local_adjustor", t7c == t7a);
+  }
 
   typedef boost::date_time::us_dst_trait<date> us_dst_traits;
   typedef boost::date_time::dst_calc_engine<date, time_duration, us_dst_traits>

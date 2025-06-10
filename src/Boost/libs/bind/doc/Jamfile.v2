@@ -4,8 +4,6 @@
 #   (See accompanying file LICENSE_1_0.txt or copy at
 #   http://www.boost.org/LICENSE_1_0.txt)
 
-project doc/bind ;
-
 import boostbook ;
 import quickbook ;
 
@@ -52,3 +50,9 @@ boostbook standalone_mem_fn
 
         <xsl:param>generate.manifest=0
      ;
+
+###############################################################################
+alias boostdoc ;
+explicit boostdoc ;
+alias boostrelease : standalone_bind standalone_mem_fn ;
+explicit boostrelease ;

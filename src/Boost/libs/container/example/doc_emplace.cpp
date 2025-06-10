@@ -7,8 +7,7 @@
 // See http://www.boost.org/libs/container for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#include <boost/container/detail/config_begin.hpp>
-#include <boost/container/detail/workaround.hpp>
+
 //[doc_emplace
 #include <boost/container/list.hpp>
 #include <cassert>
@@ -31,7 +30,7 @@ int main ()
    list<non_copy_movable> l;
    non_copy_movable ncm;
 
-   //A new element will be built calling non_copy_movable(int) contructor
+   //A new element will be built calling non_copy_movable(int) constructor
    l.emplace(l.begin(), 0);
    assert(l.size() == 1);
 
@@ -41,4 +40,3 @@ int main ()
    return 0;
 }
 //]
-#include <boost/container/detail/config_end.hpp>

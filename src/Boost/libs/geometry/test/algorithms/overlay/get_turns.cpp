@@ -5,6 +5,11 @@
 // Copyright (c) 2008-2012 Bruno Lalande, Paris, France.
 // Copyright (c) 2009-2012 Mateusz Loskot, London, UK.
 
+// This file was modified by Oracle on 2017-2024.
+// Modifications copyright (c) 2017-2024, Oracle and/or its affiliates.
+// Contributed and/or modified by Vissarion Fysikopoulos, on behalf of Oracle
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
+
 // Parts of Boost.Geometry are redesigned from Geodan's Geographic Library
 // (geolib/GGL), copyright (c) 1995-2010 Geodan, Amsterdam, the Netherlands.
 
@@ -24,7 +29,6 @@
 
 #include <boost/geometry/algorithms/correct.hpp>
 #include <boost/geometry/algorithms/detail/overlay/get_turns.hpp>
-#include <boost/geometry/policies/robustness/get_rescale_policy.hpp>
 
 #include <boost/geometry/algorithms/detail/overlay/debug_turn_info.hpp>
 
@@ -59,22 +63,27 @@ struct test_get_turns
             G1 const& g1, G2 const& g2, double /*precision*/)
     {
         typedef typename bg::point_type<G2>::type point_type;
-        typedef typename bg::rescale_policy_type<point_type>::type
-            rescale_policy_type;
 
-        rescale_policy_type rescale_policy
-                = bg::get_rescale_policy<rescale_policy_type>(g1, g2);
+        typedef typename bg::strategies::relate::services::default_strategy
+            <
+                G1, G2
+            >::type strategy_type;
+
+        strategy_type strategy;
 
         typedef bg::detail::overlay::turn_info
             <
                 point_type,
-                typename bg::segment_ratio_type<point_type, rescale_policy_type>::type
+                typename bg::segment_ratio_type<point_type>::type
             > turn_info;
         std::vector<turn_info> turns;
 
 
         bg::detail::get_turns::no_interrupt_policy policy;
-        bg::get_turns<false, false, bg::detail::overlay::assign_null_policy>(g1, g2, rescale_policy, turns, policy);
+        bg::get_turns
+            <
+                false, false, bg::detail::overlay::assign_null_policy
+            >(g1, g2, strategy, turns, policy);
 
         BOOST_CHECK_MESSAGE(
             expected_count == boost::size(turns),
@@ -107,7 +116,7 @@ struct test_get_turns
                     "stroke:rgb(51,51,153);stroke-width:3");
 
             int index = 0;
-            BOOST_FOREACH(turn_info const& turn, turns)
+            for (turn_info const& turn : turns)
             {
                 mapper.map(turn.point, "fill:rgb(255,128,0);stroke:rgb(0,0,100);stroke-width:1");
 
@@ -380,9 +389,6 @@ int test_main(int, char* [])
     test_all<long double>();
 #endif
 
-#if defined(HAVE_TTMATH)
-    test_all<ttmath_big>();
-#endif
     return 0;
 }
 

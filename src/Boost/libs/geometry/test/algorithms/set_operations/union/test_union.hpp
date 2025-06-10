@@ -3,9 +3,9 @@
 
 // Copyright (c) 2007-2015 Barend Gehrels, Amsterdam, the Netherlands.
 
-// This file was modified by Oracle on 2015.
-// Modifications copyright (c) 2015 Oracle and/or its affiliates.
-
+// This file was modified by Oracle on 2015-2024.
+// Modifications copyright (c) 2015-2024 Oracle and/or its affiliates.
+// Contributed and/or modified by Vissarion Fysikopoulos, on behalf of Oracle
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
@@ -19,9 +19,17 @@
 #include <fstream>
 
 #include <geometry_test_common.hpp>
+#include <count_set.hpp>
+#include <expectation_limits.hpp>
+#include <algorithms/check_validity.hpp>
+#include "../setop_output_type.hpp"
 
 #include <boost/core/ignore_unused.hpp>
 #include <boost/range/algorithm/copy.hpp>
+#include <boost/range/begin.hpp>
+#include <boost/range/end.hpp>
+#include <boost/range/iterator.hpp>
+#include <boost/range/size.hpp>
 
 #include <boost/geometry/algorithms/union.hpp>
 
@@ -34,66 +42,80 @@
 
 #include <boost/geometry/geometries/geometries.hpp>
 
-#include <boost/geometry/strategies/strategies.hpp>
-
 #include <boost/geometry/io/wkt/wkt.hpp>
-
 
 #if defined(TEST_WITH_SVG)
 #  include <boost/geometry/io/svg/svg_mapper.hpp>
 #endif
 
-struct ut_settings
+#include <boost/geometry/strategies/strategies.hpp>
+
+
+struct ut_settings : public ut_base_settings
 {
-    double percentage;
-    bool test_validity;
-
-    ut_settings()
-        : percentage(0.001)
-        , test_validity(false)
-    {}
-
+    double percentage = 0.001;
+    bool ignore_validity_on_invalid_input = true;
 };
 
+template <typename Range>
+inline std::size_t num_points(Range const& rng, bool add_for_open = false)
+{
+    std::size_t result = 0;
+    for (auto it = boost::begin(rng); it != boost::end(rng); ++it)
+    {
+        result += bg::num_points(*it, add_for_open);
+    }
+    return result;
+}
 
 template <typename OutputType, typename G1, typename G2>
 void test_union(std::string const& caseid, G1 const& g1, G2 const& g2,
-        int expected_count, int expected_hole_count,
-        int expected_point_count, double expected_area,
+        count_set const& expected_count, count_set const& expected_hole_count,
+        int expected_point_count, expectation_limits const& expected_area,
         ut_settings const& settings)
 {
     typedef typename bg::coordinate_type<G1>::type coordinate_type;
     boost::ignore_unused<coordinate_type>();
     boost::ignore_unused(expected_point_count);
 
-    // Declare output (vector of rings, or vector of polygons)
-    std::vector<OutputType> clip;
+    // Declare output (vector of rings or multi_polygon)
+    typedef typename setop_output_type<OutputType>::type result_type;
+    result_type clip;
 
-#if defined(BOOST_GEOMETRY_DEBUG_ROBUSTNESS)
-    std::cout << "*** UNION " << caseid << std::endl;
+    // Check normal behaviour
+    bg::union_(g1, g2, clip);
+
+#if ! defined(BOOST_GEOMETRY_TEST_ONLY_ONE_TYPE)
+    {
+        // Check strategy passed explicitly
+        result_type clip_s;
+        typedef typename bg::strategy::intersection::services::default_strategy
+            <
+                typename bg::cs_tag<OutputType>::type
+            >::type strategy_type;
+        bg::union_(g1, g2, clip_s, strategy_type());
+        BOOST_CHECK_EQUAL(num_points(clip), num_points(clip_s));
+    }
 #endif
 
-    bg::union_(g1, g2, clip);
+    if (settings.test_validity())
+    {
+        std::string message;
+        bool const valid = check_validity<result_type>::apply(clip, caseid,
+            g1, g2, message, settings.ignore_validity_on_invalid_input);
+        BOOST_CHECK_MESSAGE(valid,
+            "union: " << caseid << " not valid: " << message
+            << " type: " << (type_for_assert_message<G1, G2>()));
+    }
 
     typename bg::default_area_result<OutputType>::type area = 0;
     std::size_t n = 0;
     std::size_t holes = 0;
-    for (typename std::vector<OutputType>::iterator it = clip.begin();
-            it != clip.end(); ++it)
+    for (auto it = clip.begin(); it != clip.end(); ++it)
     {
         area += bg::area(*it);
         holes += bg::num_interior_rings(*it);
         n += bg::num_points(*it, true);
-
-        if (settings.test_validity)
-        {
-            // Check validity (currently on separate clips only)
-            // std::cout << bg::dsv(*it) << std::endl;
-            std::string message;
-            bool const valid = bg::is_valid(*it, message);
-            BOOST_CHECK_MESSAGE(valid,
-                "union: " << caseid << " not valid " << message);
-        }
     }
 
 
@@ -101,15 +123,13 @@ void test_union(std::string const& caseid, G1 const& g1, G2 const& g2,
     {
         // Test inserter functionality
         // Test if inserter returns output-iterator (using Boost.Range copy)
-        std::vector<OutputType> inserted, array_with_one_empty_geometry;
+        result_type inserted, array_with_one_empty_geometry;
         array_with_one_empty_geometry.push_back(OutputType());
         boost::copy(array_with_one_empty_geometry, bg::detail::union_::union_insert<OutputType>(g1, g2, std::back_inserter(inserted)));
 
         typename bg::default_area_result<OutputType>::type area_inserted = 0;
         int index = 0;
-        for (typename std::vector<OutputType>::iterator it = inserted.begin();
-                it != inserted.end();
-                ++it, ++index)
+        for (auto it = inserted.begin(); it != inserted.end(); ++it, ++index)
         {
             // Skip the empty polygon created above to avoid the empty_input_exception
             if (! bg::is_empty(*it))
@@ -118,45 +138,39 @@ void test_union(std::string const& caseid, G1 const& g1, G2 const& g2,
             }
         }
         BOOST_CHECK_EQUAL(boost::size(clip), boost::size(inserted) - 1);
-        BOOST_CHECK_CLOSE(area_inserted, expected_area, settings.percentage);
+        BOOST_CHECK_MESSAGE(expected_area.contains(area_inserted, settings.percentage),
+                "union: " << caseid << std::setprecision(20)
+                << " #area expected: " << expected_area
+                << " detected: " << area_inserted
+                << " type: " << (type_for_assert_message<G1, G2>()));
     }
 #endif
 
-
-
-#if defined(BOOST_GEOMETRY_DEBUG_ROBUSTNESS)
-    std::cout << "*** case: " << caseid
-        << " area: " << area
-        << " points: " << n
-        << " polygons: " << boost::size(clip)
-        << " holes: " << holes
-        << std::endl;
-#endif
-
-    BOOST_CHECK_MESSAGE(expected_count < 0 || int(clip.size()) == expected_count,
+    if (! expected_count.empty())
+    {
+        BOOST_CHECK_MESSAGE(expected_count.has(clip.size()),
             "union: " << caseid
             << " #clips expected: " << expected_count
             << " detected: " << clip.size()
             << " type: " << (type_for_assert_message<G1, G2>())
             );
+    }
 
-    BOOST_CHECK_MESSAGE(expected_hole_count < 0 || int(holes) == expected_hole_count,
-            "union: " << caseid
-            << " #holes expected: " << expected_hole_count
-            << " detected: " << holes
-            << " type: " << (type_for_assert_message<G1, G2>())
-            );
+    if (! expected_hole_count.empty())
+    {
+        BOOST_CHECK_MESSAGE(expected_hole_count.has(holes),
+                            "union: " << caseid
+                            << " #holes expected: " << expected_hole_count
+                            << " detected: " << holes
+                            << " type: " << (type_for_assert_message<G1, G2>())
+                            );
+    }
 
-#if ! defined(BOOST_GEOMETRY_NO_ROBUSTNESS)
-    BOOST_CHECK_MESSAGE(expected_point_count < 0 || std::abs(int(n) - expected_point_count) < 3,
-            "union: " << caseid
-            << " #points expected: " << expected_point_count
-            << " detected: " << n
-            << " type: " << (type_for_assert_message<G1, G2>())
-            );
-#endif
-
-    BOOST_CHECK_CLOSE(area, expected_area, settings.percentage);
+    BOOST_CHECK_MESSAGE(expected_area.contains(area, settings.percentage),
+            "union: " << caseid << std::setprecision(20)
+            << " #area expected: " << expected_area
+            << " detected: " << area
+            << " type: " << (type_for_assert_message<G1, G2>()));
 
 #if defined(TEST_WITH_SVG)
     {
@@ -173,9 +187,6 @@ void test_union(std::string const& caseid, G1 const& g1, G2 const& g2,
             << string_from_type<coordinate_type>::name()
             << (ccw ? "_ccw" : "")
             << (open ? "_open" : "")
-#if defined(BOOST_GEOMETRY_NO_ROBUSTNESS)
-            << "_no_rob"
-#endif
             << ".svg";
 
         std::ofstream svg(filename.str().c_str());
@@ -194,10 +205,9 @@ void test_union(std::string const& caseid, G1 const& g1, G2 const& g2,
         //mapper.map(g1, "opacity:0.6;fill:rgb(0,0,255);stroke:rgb(0,0,0);stroke-width:1");
         //mapper.map(g2, "opacity:0.6;fill:rgb(0,255,0);stroke:rgb(0,0,0);stroke-width:1");
 
-        for (typename std::vector<OutputType>::const_iterator it = clip.begin();
-                it != clip.end(); ++it)
+        for (auto const& item : clip)
         {
-            mapper.map(*it, "fill-opacity:0.2;stroke-opacity:0.4;fill:rgb(255,0,0);"
+            mapper.map(item, "fill-opacity:0.2;stroke-opacity:0.4;fill:rgb(255,0,0);"
                     "stroke:rgb(255,0,255);stroke-width:8");
             //mapper.map(*it, "opacity:0.6;fill:none;stroke:rgb(255,0,0);stroke-width:5");
         }
@@ -208,8 +218,8 @@ void test_union(std::string const& caseid, G1 const& g1, G2 const& g2,
 template <typename OutputType, typename G1, typename G2>
 void test_one(std::string const& caseid,
         std::string const& wkt1, std::string const& wkt2,
-        int expected_count, int expected_hole_count,
-        int expected_point_count, double expected_area,
+        count_set const& expected_count, count_set const& expected_hole_count,
+        int expected_point_count, expectation_limits const& expected_area,
         ut_settings const& settings = ut_settings())
 {
     G1 g1;

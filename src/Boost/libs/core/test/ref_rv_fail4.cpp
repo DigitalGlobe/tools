@@ -9,13 +9,14 @@
 // http://www.boost.org/LICENSE_1_0.txt
 //
 
-#include <boost/ref.hpp>
+#include <boost/core/ref.hpp>
 
 #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
 int main()
 {
     boost::reference_wrapper<int const> r = boost::cref( 2 ); // should fail
+    (void)r;
 }
 
 #else

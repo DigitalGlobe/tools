@@ -1,7 +1,12 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
-// Unit Test
-//
-// Copyright (c) 2009-2015 Barend Gehrels, Amsterdam, the Netherlands.
+// Robustness Test
+
+// Copyright (c) 2009-2021 Barend Gehrels, Amsterdam, the Netherlands.
+
+// This file was modified by Oracle on 2021.
+// Modifications copyright (c) 2021, Oracle and/or its affiliates.
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
+
 // Use, modification and distribution is subject to the Boost Software License,
 // Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -9,12 +14,10 @@
 #ifndef BOOST_GEOMETRY_TEST_OVERLAY_P_Q_HPP
 #define BOOST_GEOMETRY_TEST_OVERLAY_P_Q_HPP
 
+#include <iostream>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
-
-//#define BOOST_GEOMETRY_ROBUSTNESS_USE_DIFFERENCE
-
 
 #include <geometry_test_common.hpp>
 
@@ -32,21 +35,25 @@
 
 #include <boost/geometry/algorithms/detail/overlay/debug_turn_info.hpp>
 #include <boost/geometry/algorithms/intersects.hpp>
+#include <boost/geometry/algorithms/is_valid.hpp>
 #include <boost/geometry/algorithms/touches.hpp>
 
 struct p_q_settings
 {
-    bool svg;
-    bool also_difference;
-    bool wkt;
-    double tolerance;
+    bool svg{false};
+    bool also_difference{false};
+    bool validity{false};
+    bool wkt{false};
+    bool verify_area{false};
 
-    p_q_settings()
-        : svg(false)
-        , also_difference(false)
-        , wkt(false)
-        , tolerance(1.0e-3) // since rescaling to integer the tolerance should be less. Was originally 1.0e-6
-    {}
+    // NOTE: since rescaling to integer the tolerance is less.
+    // Was originally 1.0e-6 TODO: restore
+    double tolerance{1.0e-3};
+
+    // Concise verbose output, to be able to verify what is going on
+    bool verbose{false};
+    // Detailed verbose output
+    bool report{false};
 };
 
 template <typename Geometry>
@@ -62,6 +69,49 @@ inline typename bg::default_area_result<Geometry>::type p_q_area(Geometry const&
     }
 }
 
+struct verify_area
+{
+    template <typename Iterator>
+    static inline bool check_ring(Iterator begin, Iterator end)
+    {
+        for (Iterator it = begin; it != end; ++it)
+        {
+            auto const area = bg::area(*it);
+            if (bg::math::abs(area) < 0.01)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    template <typename Interiors>
+    static inline bool check_rings(Interiors const& rings)
+    {
+        return check_ring(boost::begin(rings), boost::end(rings));
+    }
+
+    template <typename Iterator>
+    static inline bool check_polys(Iterator begin, Iterator end)
+    {
+        for (Iterator it = begin; it != end; ++it)
+        {
+            // If necessary, exterior_ring can be checked too
+            if (! check_rings(bg::interior_rings(*it)))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    template <typename Geometry>
+    static inline bool apply(Geometry const& g)
+    {
+        return check_polys(boost::begin(g), boost::end(g));
+    }
+};
+
 template <typename OutputType, typename CalculationType, typename G1, typename G2>
 static bool test_overlay_p_q(std::string const& caseid,
             G1 const& p, G2 const& q,
@@ -72,7 +122,7 @@ static bool test_overlay_p_q(std::string const& caseid,
     typedef typename bg::coordinate_type<G1>::type coordinate_type;
     typedef typename bg::point_type<G1>::type point_type;
 
-    bg::model::multi_polygon<OutputType> out_i, out_u, out_d, out_d2;
+    bg::model::multi_polygon<OutputType> out_i, out_u, out_d1, out_d2;
 
     CalculationType area_p = p_q_area(p);
     CalculationType area_q = p_q_area(q);
@@ -84,23 +134,62 @@ static bool test_overlay_p_q(std::string const& caseid,
     bg::union_(p, q, out_u);
     CalculationType area_u = p_q_area(out_u);
 
-    double sum = (area_p + area_q) - area_u - area_i;
+    auto const sum = (area_p + area_q) - area_u - area_i;
 
-    bool wrong = std::abs(sum) > settings.tolerance;
+    bool wrong = bg::math::abs(sum) > settings.tolerance;
 
     if (settings.also_difference)
     {
-        bg::difference(p, q, out_d);
+        bg::difference(p, q, out_d1);
         bg::difference(q, p, out_d2);
-        area_d1 = p_q_area(out_d);
+        area_d1 = p_q_area(out_d1);
         area_d2 = p_q_area(out_d2);
-        double sum_d1 = (area_u - area_q) - area_d1;
-        double sum_d2 = (area_u - area_p) - area_d2;
-        bool wrong_d1 = std::abs(sum_d1) > settings.tolerance;
-        bool wrong_d2 = std::abs(sum_d2) > settings.tolerance;
+        auto sum_d1 = (area_u - area_q) - area_d1;
+        auto sum_d2 = (area_u - area_p) - area_d2;
+        bool wrong_d1 = bg::math::abs(sum_d1) > settings.tolerance;
+        bool wrong_d2 = bg::math::abs(sum_d2) > settings.tolerance;
 
         if (wrong_d1 || wrong_d2)
         {
+            wrong = true;
+        }
+    }
+
+    if (settings.validity)
+    {
+        std::string message;
+        if (! bg::is_valid(out_u, message))
+        {
+            std::cout << "Union is not valid: " << message << std::endl;
+            wrong = true;
+        }
+        if (! bg::is_valid(out_i, message))
+        {
+            std::cout << "Intersection is not valid: " << message << std::endl;
+            wrong = true;
+        }
+        if (settings.also_difference)
+        {
+            if (! bg::is_valid(out_d1, message))
+            {
+                std::cout << "Difference (p-q) is not valid: " << message << std::endl;
+                wrong = true;
+            }
+            if (! bg::is_valid(out_d2, message))
+            {
+                std::cout << "Difference (q-p) is not valid: " << message << std::endl;
+                wrong = true;
+            }
+        }
+
+        if (settings.verify_area && ! verify_area::apply(out_u))
+        {
+            std::cout << "Union/interior area incorrect" << std::endl;
+            wrong = true;
+        }
+        if (settings.verify_area && ! verify_area::apply(out_i))
+        {
+            std::cout << "Intersection/interior area incorrect" << std::endl;
             wrong = true;
         }
     }
@@ -119,6 +208,12 @@ static bool test_overlay_p_q(std::string const& caseid,
     }
 
     bool svg = settings.svg;
+    bool wkt = settings.wkt;
+
+    if (settings.verbose)
+    {
+        std::cout << " [" << area_i << " " << area_u << "]";
+    }
 
     if (wrong || settings.wkt)
     {
@@ -126,45 +221,62 @@ static bool test_overlay_p_q(std::string const& caseid,
         {
             result = false;
             svg = true;
+            wkt = true;
         }
-        bg::unique(out_i);
-        bg::unique(out_u);
 
-        std::cout
-            << "type: " << string_from_type<CalculationType>::name()
-            << " id: " << caseid
-            << " area i: " << area_i
-            << " area u: " << area_u
-            << " area p: " << area_p
-            << " area q: " << area_q
-            << " sum: " << sum;
-
-        if (settings.also_difference)
+        if (settings.report)
         {
             std::cout
-                << " area d1: " << area_d1
-                << " area d2: " << area_d2;
-        }
-        std::cout
-            << std::endl
-            << std::setprecision(9)
-            << " p: " << bg::wkt(p) << std::endl
-            << " q: " << bg::wkt(q) << std::endl
-            << " i: " << bg::wkt(out_i) << std::endl
-            << " u: " << bg::wkt(out_u) << std::endl
-            ;
+                << "type: " << string_from_type<CalculationType>::name()
+                << " id: " << caseid
+                << " area i: " << area_i
+                << " area u: " << area_u
+                << " area p: " << area_p
+                << " area q: " << area_q
+                << " sum: " << sum;
 
+            if (settings.also_difference)
+            {
+                std::cout
+                        << " area d1: " << area_d1
+                        << " area d2: " << area_d2;
+            }
+            std::cout
+                    << std::endl
+                    << std::setprecision(9)
+                    << " p: " << bg::wkt(p) << std::endl
+                    << " q: " << bg::wkt(q) << std::endl
+                    << " i: " << bg::wkt(out_i) << std::endl
+                    << " u: " << bg::wkt(out_u) << std::endl;
+        }
     }
 
-    if(svg)
+    std::string filename;
     {
-        std::ostringstream filename;
-        filename << "overlay_" << caseid << "_"
-            << string_from_type<coordinate_type>::name()
-            << string_from_type<CalculationType>::name()
-            << ".svg";
+        std::ostringstream out;
+        out << "overlay_" << caseid << "_"
+            << string_from_type<coordinate_type>::name();
+        if (!std::is_same<coordinate_type, CalculationType>::value)
+        {
+            out << string_from_type<CalculationType>::name();
+        }
+        out << ".";
+        filename = out.str();
+    }
 
-        std::ofstream svg(filename.str().c_str());
+    if (wkt)
+    {
+        std::ofstream stream(filename + "wkt");
+        // Stream input WKT's
+        stream << bg::wkt(p) << std::endl;
+        stream << bg::wkt(q) << std::endl;
+        // If you need the output WKT, then stream out_i and out_u
+    }
+
+
+    if (svg)
+    {
+        std::ofstream svg(filename + "svg");
 
         bg::svg_mapper<point_type> mapper(svg, 500, 500);
 
@@ -179,12 +291,12 @@ static bool test_overlay_p_q(std::string const& caseid,
 
         if (settings.also_difference)
         {
-            for (BOOST_AUTO(it, out_d.begin()); it != out_d.end(); ++it)
+            for (auto it = out_d1.begin(); it != out_d1.end(); ++it)
             {
                 mapper.map(*it,
                     "opacity:0.8;fill:none;stroke:rgb(255,128,0);stroke-width:4;stroke-dasharray:1,7;stroke-linecap:round");
             }
-            for (BOOST_AUTO(it, out_d2.begin()); it != out_d2.end(); ++it)
+            for (auto it = out_d2.begin(); it != out_d2.end(); ++it)
             {
                 mapper.map(*it,
                     "opacity:0.8;fill:none;stroke:rgb(255,0,255);stroke-width:4;stroke-dasharray:1,7;stroke-linecap:round");
@@ -192,16 +304,10 @@ static bool test_overlay_p_q(std::string const& caseid,
         }
         else
         {
-            for (BOOST_AUTO(it, out_i.begin()); it != out_i.end(); ++it)
-            {
-                mapper.map(*it, "fill-opacity:0.1;stroke-opacity:0.4;fill:rgb(255,0,0);"
-                        "stroke:rgb(255,0,0);stroke-width:4");
-            }
-            for (BOOST_AUTO(it, out_u.begin()); it != out_u.end(); ++it)
-            {
-                mapper.map(*it, "fill-opacity:0.1;stroke-opacity:0.4;fill:rgb(255,0,0);"
-                        "stroke:rgb(255,0,255);stroke-width:4");
-            }
+            mapper.map(out_i, "fill-opacity:0.1;stroke-opacity:0.4;fill:rgb(255,0,128);"
+                    "stroke:rgb(255,0,0);stroke-width:4");
+            mapper.map(out_u, "fill-opacity:0.1;stroke-opacity:0.4;fill:rgb(255,0,0);"
+                    "stroke:rgb(255,0,255);stroke-width:4");
         }
     }
     return result;

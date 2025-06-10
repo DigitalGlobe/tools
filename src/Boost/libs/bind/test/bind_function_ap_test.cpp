@@ -1,4 +1,5 @@
 #include <boost/config.hpp>
+#include <boost/config/pragma_message.hpp>
 
 //
 //  bind_function_ap_test.cpp - regression test
@@ -10,6 +11,18 @@
 //  http://www.boost.org/LICENSE_1_0.txt
 //
 
+#if defined(BOOST_NO_AUTO_PTR)
+
+BOOST_PRAGMA_MESSAGE( "Skipping test because BOOST_NO_AUTO_PTR is defined" )
+int main() {}
+
+#elif !defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ( defined(BOOST_GCC) && BOOST_GCC < 40600 )
+
+BOOST_PRAGMA_MESSAGE( "Skipping test for GCC 4.4 -std=c++0x" )
+int main() {}
+
+#else
+
 #if defined( __GNUC__ ) && ( __GNUC__ * 100 + __GNUC_MINOR__ >= 406 )
 # pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #elif defined( __clang__ ) && defined( __has_warning )
@@ -18,10 +31,12 @@
 # endif
 #endif
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/function.hpp>
-#include <boost/detail/lightweight_test.hpp>
+#include <boost/core/lightweight_test.hpp>
 #include <memory>
+
+using namespace boost::placeholders;
 
 //
 
@@ -222,3 +237,5 @@ int main()
     test();
     return boost::report_errors();
 }
+
+#endif

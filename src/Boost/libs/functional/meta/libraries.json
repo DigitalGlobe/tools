@@ -9,23 +9,27 @@
         "description": "The Boost.Function library contains a family of class templates that are function object wrappers.",
         "category": [
             "Function-objects"
-        ]
+        ],
+        "cxxstd": "03"
     },
     {
         "key": "functional/factory",
         "boost-version": "1.43.0",
         "name": "Functional/Factory",
         "authors": [
+            "Glen Fernandes",
             "Tobias Schwinger"
         ],
         "maintainers": [
+            "Glen Fernandes <glenjofe -at- gmail.com>",
             "Tobias Schwinger <tschwinger -at- isonews2.com>"
         ],
         "description": "Function object templates for dynamic and static object creation",
         "documentation": "factory/",
         "category": [
             "Function-objects"
-        ]
+        ],
+        "cxxstd": "03"
     },
     {
         "key": "functional/forward",
@@ -41,26 +45,8 @@
         "documentation": "forward/",
         "category": [
             "Function-objects"
-        ]
-    },
-    {
-        "key": "functional/hash",
-        "boost-version": "1.33.0",
-        "name": "Functional/Hash",
-        "authors": [
-            "Daniel James"
         ],
-        "maintainers": [
-            "Daniel James <dnljms -at- gmail.com>"
-        ],
-        "description": "A TR1 hash function object that can be extended to hash user defined types.",
-        "documentation": "hash/",
-        "std": [
-            "tr1"
-        ],
-        "category": [
-            "Function-objects"
-        ]
+        "cxxstd": "03"
     },
     {
         "key": "functional/overloaded_function",
@@ -76,6 +62,7 @@
         "documentation": "overloaded_function/",
         "category": [
             "Function-objects"
-        ]
+        ],
+        "cxxstd": "03"
     }
 ]

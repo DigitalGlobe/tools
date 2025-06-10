@@ -7,11 +7,19 @@
 
 // For more information, see http://www.boost.org
 
-#include <boost/test/minimal.hpp>
+#if defined(__clang__) && defined(__has_warning)
+# if __has_warning( "-Wself-assign-overloaded" )
+#  pragma clang diagnostic ignored "-Wself-assign-overloaded"
+# endif
+#endif
+
 #include <boost/function.hpp>
+#include <boost/core/lightweight_test.hpp>
 #include <functional>
 #include <string>
 #include <utility>
+
+#define BOOST_CHECK BOOST_TEST
 
 using boost::function;
 using std::string;
@@ -624,10 +632,21 @@ test_ref()
     boost::function<int (int, int)> f(boost::ref(atc));
     BOOST_CHECK(f(1, 3) == 4);
   }
-  catch(std::runtime_error e) {
+  catch(std::runtime_error const&) {
     BOOST_ERROR("Nonthrowing constructor threw an exception");
   }
 }
+
+#if BOOST_WORKAROUND(BOOST_GCC, >= 70000 && BOOST_GCC < 80000) && __cplusplus >= 201700
+
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=81311
+#pragma message("Skipping test_empty_ref on g++ 7 -std=c++17")
+
+static void test_empty_ref()
+{
+}
+
+#else
 
 static void dummy() {}
 
@@ -640,17 +659,19 @@ static void test_empty_ref()
     f2();
     BOOST_ERROR("Exception didn't throw for reference to empty function.");
   }
-  catch(std::runtime_error e) {}
+  catch(std::runtime_error const&) {}
 
   f1 = dummy;
 
   try {
     f2();
   }
-  catch(std::runtime_error e) {
+  catch(std::runtime_error const&) {
     BOOST_ERROR("Error calling referenced function.");
   }
 }
+
+#endif
 
 
 static void test_exception()
@@ -660,7 +681,7 @@ static void test_exception()
     f(5, 4);
     BOOST_CHECK(false);
   }
-  catch(boost::bad_function_call) {
+  catch(boost::bad_function_call const&) {
     // okay
   }
 }
@@ -733,7 +754,6 @@ static void test_move_semantics()
   BOOST_CHECK(!f1.empty());
   BOOST_CHECK(global_int == 1);
   
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
   // Testing rvalue constructors
   f1_type f2(static_cast<f1_type&&>(f1));
   BOOST_CHECK(f1.empty());
@@ -775,11 +795,9 @@ static void test_move_semantics()
   BOOST_CHECK(global_int == 5);
   f4 = static_cast<f1_type&&>(f5);
   BOOST_CHECK(global_int == 4);
-  
-#endif  
 }
 
-int test_main(int, char* [])
+int main()
 {
   test_zero_args();
   test_one_arg();
@@ -794,5 +812,5 @@ int test_main(int, char* [])
   test_move_semantics<function<void()> >();
   test_move_semantics<boost::function0<void> >();
 
-  return 0;
+  return boost::report_errors();
 }

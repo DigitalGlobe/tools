@@ -8,6 +8,8 @@
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "../testfrmwk.hpp"
 
+#define CHECK_ROUNDTRIP(_PT) check_equal("from_iso_string(to_iso_string()) roundtrip of \"" + to_iso_string(_PT) + "\"", from_iso_string(to_iso_string(_PT)), _PT)
+
 int
 main() 
 {
@@ -26,20 +28,16 @@ main()
   std::string iso_ext_result = "2002-01-01T01:02:03";
   check("iso ext:     " + iso_ext_result, iso_ext_result == to_iso_extended_string(t1));
 
-
-
-#ifdef BOOST_DATE_TIME_HAS_MILLISECONDS
+  CHECK_ROUNDTRIP(t1);
 
   if (time_duration::resolution() == boost::date_time::milli) {
     ptime t4(d1,hours(1)+minutes(2)+seconds(3)+millisec(4));
     std::string r3 = to_simple_string(t4);
     check("simple subsecond: "+r3 , 
           std::string("2002-Jan-01 01:02:03.004000") == r3);
+    CHECK_ROUNDTRIP(t4);
   }
 
-#endif
-
-#ifdef BOOST_DATE_TIME_HAS_MICROSECONDS
 
   if (time_duration::resolution() == boost::date_time::micro) {
     ptime t3(d1,hours(1)+minutes(2)+seconds(3)+microsec(4));
@@ -60,10 +58,11 @@ main()
     check("to string: " + to_simple_string(tds2), to_simple_string(tds2) == s2);
     check("to string: " + to_iso_string(td1), to_iso_string(td1) == is1);
     check("to string: " + to_iso_string(tds2), to_iso_string(tds2) == is2);
-  }
-#endif
 
-#ifdef BOOST_DATE_TIME_HAS_NANOSECONDS
+    CHECK_ROUNDTRIP(t3);
+  }
+
+
 
   if (time_duration::resolution() == boost::date_time::nano) {
     ptime t2(d1,hours(12) + minutes(5) + seconds(1));
@@ -94,13 +93,24 @@ main()
     std::string r3 = to_simple_string(t4);
     check("simple subsecond: "+r3 , 
           std::string("2002-Jan-01 01:02:03.004000000") == r3);
-  }
-#endif
 
+    CHECK_ROUNDTRIP(t3);
+}
+
+
+  // Boost Trac 1078 (https://svn.boost.org/trac10/ticket/1078)
+  // from_iso_string should be able to parse output of to_iso_string
+  CHECK_ROUNDTRIP(ptime());
+  CHECK_ROUNDTRIP(ptime(not_a_date_time)); // should be same as previous
+  CHECK_ROUNDTRIP(ptime(pos_infin));
+  CHECK_ROUNDTRIP(ptime(neg_infin));
+  
+  // when min_date_time is formatted out, it is done so as an actual date/time
+  // i.e. it is not "special" in that sense
+  check_equal("from_iso_string(\"minimum-date-time\")", from_iso_string("minimum-date-time"), ptime(min_date_time));
+  check_equal("from_iso_string(\"maximum-date-time\")", from_iso_string("maximum-date-time"), ptime(max_date_time));
 
   return printTestStats();
-
-
 }
 
 

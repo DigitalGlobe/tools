@@ -11,6 +11,7 @@
 #include <boost/graph/use_mpi.hpp>
 #include <boost/config.hpp>
 #include <boost/throw_exception.hpp>
+#include <boost/serialization/vector.hpp>
 #include <boost/graph/distributed/boman_et_al_graph_coloring.hpp>
 #include <boost/graph/distributed/mpi_process_group.hpp>
 #include <boost/lexical_cast.hpp>
@@ -20,7 +21,7 @@
 #include <boost/graph/graphviz.hpp>
 #include <iostream>
 #include <boost/random.hpp>
-#include <boost/test/minimal.hpp>
+#include <boost/core/lightweight_test.hpp>
 
 #ifdef BOOST_NO_EXCEPTIONS
 void
@@ -78,7 +79,7 @@ test_distributed_graph_coloring(int n, double p, int s,
   }
 }
 
-int test_main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
   mpi::environment env(argc, argv);
 
@@ -96,5 +97,5 @@ int test_main(int argc, char* argv[])
 
   test_distributed_graph_coloring(n, p, s, seed, emit_dot_file);
 
-  return 0;
+  return boost::report_errors();
 }

@@ -6,12 +6,13 @@
 
 // For more information, see http://www.boost.org
 
+#include <boost/function.hpp>
+#include <boost/move/move.hpp>
+#include <boost/core/lightweight_test.hpp>
 #include <iostream>
 #include <cstdlib>
 
-#include <boost/test/minimal.hpp>
-#include <boost/function.hpp>
-#include <boost/move/move.hpp>
+#define BOOST_CHECK BOOST_TEST
 
 class only_movable {
 private:
@@ -58,12 +59,10 @@ struct sum_struct {
     }
 };
 
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
 int three(std::string&&) { return 1; }
 std::string&& four(std::string&& s) { return boost::move(s); }
-#endif
 
-int test_main(int, char*[])
+int main()
 {
     using boost::function;
 
@@ -94,13 +93,11 @@ int test_main(int, char*[])
         BOOST_CHECK(om2_sum_2.get_value() == 3);
     }
 
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     function <int(std::string&&)>               f3 = three;
     function <std::string&& (std::string&& s)>  f4 = four;
 
     f3(std::string("Hello"));
     BOOST_CHECK(f4(std::string("world")) == "world");
-#endif
 
-    return 0;
+    return boost::report_errors();
 }

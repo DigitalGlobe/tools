@@ -110,6 +110,7 @@ Header: `<boost/compute/algorithm.hpp>`
 * [funcref boost::compute::sort_by_key sort_by_key()]
 * [funcref boost::compute::stable_partition stable_partition()]
 * [funcref boost::compute::stable_sort stable_sort()]
+* [funcref boost::compute::stable_sort_by_key stable_sort_by_key()]
 * [funcref boost::compute::swap_ranges swap_ranges()]
 * [funcref boost::compute::transform transform()]
 * [funcref boost::compute::transform_reduce transform_reduce()]
@@ -148,6 +149,8 @@ Header: `<boost/compute/exception.hpp>`
 * [classref boost::compute::no_device_found no_device_found]
 * [classref boost::compute::opencl_error opencl_error]
 * [classref boost::compute::unsupported_extension_error unsupported_extension_error]
+* [classref boost::compute::program_build_failure program_build_failure]
+* [classref boost::compute::set_default_queue_error set_default_queue_error]
 
 [h3 Iterators]
 
@@ -160,6 +163,7 @@ Header: `<boost/compute/iterators.hpp>`
 * [classref boost::compute::discard_iterator discard_iterator]
 * [classref boost::compute::function_input_iterator function_input_iterator<Function>]
 * [classref boost::compute::permutation_iterator permutation_iterator<ElementIterator, IndexIterator>]
+* [classref boost::compute::strided_iterator strided_iterator<Iterator>]
 * [classref boost::compute::transform_iterator transform_iterator<InputIterator, UnaryFunction>]
 * [classref boost::compute::zip_iterator zip_iterator<IteratorTuple>]
 

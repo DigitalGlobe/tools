@@ -1,4 +1,4 @@
-// Copyright (c) 2009-2014 Vladimir Batov.
+// Copyright (c) 2009-2020 Vladimir Batov.
 // Use, modification and distribution are subject to the Boost Software License,
 // Version 1.0. See http://www.boost.org/LICENSE_1_0.txt.
 
@@ -18,8 +18,8 @@ namespace { namespace local
 #endif
 }}
 
-#include <boost/bind.hpp>
 #include <boost/detail/lightweight_test.hpp>
+#include <functional>
 
 static
 void
@@ -40,7 +40,7 @@ using boost::convert;
 //]
 //[getting_started_default_converter
 // Definition of the default converter (optional)
-struct boost::cnv::by_default : public boost::cnv::lexical_cast {};
+struct boost::cnv::by_default : boost::cnv::lexical_cast {};
 //]
 
 static
@@ -50,8 +50,7 @@ getting_started_example1()
     //[getting_started_example1
     try
     {
-        boost::cnv::lexical_cast cnv; // boost::lexical_cast-based converter
-
+        auto  cnv = boost::cnv::lexical_cast();        // boost::lexical_cast-based converter
         int    i1 = lexical_cast<int>("123");          // boost::lexical_cast standard deployment
         int    i2 = convert<int>("123").value();       // boost::convert with the default converter
         int    i3 = convert<int>("123", cnv).value();  // boost::convert with an explicit converter
@@ -98,9 +97,9 @@ void
 getting_started_example3()
 {
     //[getting_started_example3
-    boost::cnv::lexical_cast cnv1;
-    boost::cnv::strtol       cnv2;
-    boost::cnv::spirit       cnv3;
+    auto cnv1 = boost::cnv::lexical_cast();
+    auto cnv2 = boost::cnv::strtol();
+    auto cnv3 = boost::cnv::spirit();
 
     int i1 = convert<int>("123", cnv1).value();
     int i2 = convert<int>("123", cnv2).value(); // Two times faster than lexical_cast.
@@ -117,8 +116,6 @@ void
 getting_started_example4()
 {
     //[getting_started_example4
-    boost::cnv::cstream cnv;
-
     try
     {
         int i1 = lexical_cast<int>("   123"); // Does not work.
@@ -126,13 +123,14 @@ getting_started_example4()
     }
     catch (...) {}
 
+    auto        cnv = boost::cnv::cstream();
     int          i2 = convert<int>("   123", cnv(std::skipws)).value(); // Success
     string       s1 = lexical_cast<string>(12.34567);
     string       s2 = convert<string>(12.34567, cnv(std::fixed)(std::setprecision(3))).value();
     string       s3 = convert<string>(12.34567, cnv(std::scientific)(std::setprecision(3))).value();
     string expected = local::is_msc ? "1.235e+001" : "1.235e+01";
 
-    BOOST_TEST(i2 == 123);        // boost::cnv::cstream. Successfull conversion of "   123".
+    BOOST_TEST(i2 == 123);        // boost::cnv::cstream. Successful conversion of "   123".
     BOOST_TEST(s1 == "12.34567"); // boost::lexical_cast. Precision is not configurable.
     BOOST_TEST(s2 == "12.346");   // boost::cnv::cstream. Precision was set to 3. Fixed.
     BOOST_TEST(s3 == expected);   // boost::cnv::cstream. Precision was set to 3. Scientific.
@@ -160,11 +158,11 @@ static
 void
 getting_started_example6()
 {
-    std::string const    s1 = "123";
-    std::string const    s2 = "456";
-    int const    default_i1 = 11;
-    int const    default_i2 = 12;
-    boost::cnv::cstream cnv;
+    std::string s1 = "123";
+    std::string s2 = "456";
+    int default_i1 = 11;
+    int default_i2 = 12;
+    auto       cnv = boost::cnv::cstream();
 
     //[getting_started_example6
 
@@ -184,11 +182,11 @@ static
 void
 getting_started_example7()
 {
-    std::string const    s1 = "123";
-    std::string const    s2 = "456";
-    int const    default_i1 = 11;
-    int const    default_i2 = 12;
-    boost::cnv::cstream cnv;
+    std::string s1 = "123";
+    std::string s2 = "456";
+    int default_i1 = 11;
+    int default_i2 = 12;
+    auto       cnv = boost::cnv::cstream();
 
     //[getting_started_example7
 
@@ -207,8 +205,8 @@ fallback_fun(char const* msg, int fallback_value)
 {
     // The principal advantage of a fallback_func over a fallback_value
     // is that the former is only called when the conversion request fails.
-    // Consequently, the returned fallback_value is only calculated (which potentially
-    // might be expensive) when it is absolutely necessary.
+    // Consequently, the returned fallback_value is only calculated (which
+    // potentially might be expensive) when it is absolutely necessary.
     log(msg); return fallback_value;
 }
 //]
@@ -222,8 +220,8 @@ getting_started_example9()
     int const default_i2 = 12;
 
     //[getting_started_example9
-    int i1 = convert<int>(s1).value_or_eval(boost::bind(fallback_fun, "bad i1", default_i1));
-    int i2 = convert<int>(s2).value_or_eval(boost::bind(fallback_fun, "bad i2", default_i2));
+    int i1 = convert<int>(s1).value_or_eval(std::bind(fallback_fun, "bad i1", default_i1));
+    int i2 = convert<int>(s2).value_or_eval(std::bind(fallback_fun, "bad i2", default_i2));
     // ... proceed
     //]
     BOOST_TEST(i1 == 123);

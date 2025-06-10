@@ -1,5 +1,13 @@
 #include <boost/config.hpp>
 
+#ifndef _MSC_VER
+
+int main()
+{
+}
+
+#else
+
 #if defined(BOOST_MSVC)
 #pragma warning(disable: 4786)  // identifier truncated in debug info
 #pragma warning(disable: 4710)  // function not inlined
@@ -21,17 +29,7 @@
 
 #include <boost/mem_fn.hpp>
 #include <boost/shared_ptr.hpp>
-
-#if defined(BOOST_MSVC) && (BOOST_MSVC < 1300)
-#pragma warning(push, 3)
-#endif
-
 #include <iostream>
-
-#if defined(BOOST_MSVC) && (BOOST_MSVC < 1300)
-#pragma warning(pop)
-#endif
-
 
 struct X
 {
@@ -184,3 +182,5 @@ int main()
 
     return detect_errors(x.hash == 17610 && sp->hash == 2155);
 }
+
+#endif

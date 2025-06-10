@@ -1,6 +1,8 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 // Unit Test
 
+// Copyright (c) 2017 Adam Wulkiewicz, Lodz, Poland.
+
 // Copyright (c) 2015 Oracle and/or its affiliates.
 
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
@@ -18,7 +20,7 @@
 struct assert_failure_exception
     : std::exception
 {
-    const char * what() const throw()
+    const char * what() const noexcept
     {
         return "assertion failure";
     }
@@ -26,12 +28,12 @@ struct assert_failure_exception
 
 namespace boost { namespace geometry {
 
-inline void assertion_failed(char const * expr, char const * function, char const * file, long line)
+inline void assertion_failed(char const * /*expr*/, char const * /*function*/, char const * /*file*/, long /*line*/)
 {
     throw assert_failure_exception();
 }
 
-inline void assertion_failed_msg(char const * expr, char const * msg, char const * function, char const * file, long line)
+inline void assertion_failed_msg(char const * /*expr*/, char const * /*msg*/, char const * /*function*/, char const * /*file*/, long /*line*/)
 {
     throw assert_failure_exception();
 }

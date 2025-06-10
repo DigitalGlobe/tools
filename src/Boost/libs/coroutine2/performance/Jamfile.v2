@@ -18,8 +18,8 @@ project boost/coroutine2/performance
       <library>/boost/chrono//boost_chrono
       <library>/boost/context//boost_context
       <library>/boost/program_options//boost_program_options
-      <toolset>gcc,<segmented-stacks>on:<cxxflags>-fsplit-stack
-      <toolset>gcc,<segmented-stacks>on:<cxxflags>-DBOOST_USE_SEGMENTED_STACKS
+      <target-os>linux,<toolset>gcc,<segmented-stacks>on:<cxxflags>-fsplit-stack
+      <target-os>linux,<toolset>gcc,<segmented-stacks>on:<cxxflags>-DBOOST_USE_SEGMENTED_STACKS
       <toolset>clang,<segmented-stacks>on:<cxxflags>-fsplit-stack
       <toolset>clang,<segmented-stacks>on:<cxxflags>-DBOOST_USE_SEGMENTED_STACKS
       <link>static
@@ -61,17 +61,7 @@ alias sources
 
 explicit sources ;
 
-exe performance_create_protected
+exe performance
    : sources
-     performance_create_protected.cpp
-   ;
-
-exe performance_create_standard
-   : sources
-     performance_create_standard.cpp
-   ;
-
-exe performance_switch
-   : sources
-     performance_switch.cpp
+     performance.cpp
    ;

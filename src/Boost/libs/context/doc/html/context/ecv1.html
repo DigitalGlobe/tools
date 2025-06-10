@@ -3,7 +3,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
 <title>Class execution_context (version 1)</title>
 <link rel="stylesheet" href="../../../../../doc/src/boostbook.css" type="text/css">
-<meta name="generator" content="DocBook XSL Stylesheets V1.76.1">
+<meta name="generator" content="DocBook XSL Stylesheets V1.75.2">
 <link rel="home" href="../index.html" title="Chapter&#160;1.&#160;Context">
 <link rel="up" href="../index.html" title="Chapter&#160;1.&#160;Context">
 <link rel="prev" href="ecv2.html" title="Class execution_context (version 2)">
@@ -27,15 +27,44 @@
 <a name="context.ecv1"></a><a name="ecv1"></a><a class="link" href="ecv1.html" title="Class execution_context (version 1)">Class execution_context
     (version 1)</a>
 </h2></div></div></div>
+<div class="warning"><table border="0" summary="Warning">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Warning]" src="../../../../../doc/src/images/warning.png"></td>
+<th align="left">Warning</th>
+</tr>
+<tr><td align="left" valign="top"><p>
+        <span class="emphasis"><em>execution_context</em></span> (v1) is deprecated (does not prevent
+        UB).
+      </p></td></tr>
+</table></div>
 <div class="note"><table border="0" summary="Note">
 <tr>
 <td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="../../../../../doc/src/images/note.png"></td>
 <th align="left">Note</th>
 </tr>
 <tr><td align="left" valign="top"><p>
-        This class is only enabled if property <span class="emphasis"><em>segmented-stacks=on</em></span>
-        (enables segmented stacks) or compiler flag <span class="emphasis"><em>BOOST_EXECUTION_CONTEXT=1</em></span>
-        is specified at b2-commandline.
+        <span class="emphasis"><em>execution_context</em></span> (v1) is the reference implementation
+        of C++ proposal <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/p0099r0.pdf" target="_top">P099R0:
+        A low-level API for stackful context switching</a>.
+      </p></td></tr>
+</table></div>
+<div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="../../../../../doc/src/images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top"><p>
+        <span class="emphasis"><em>execution_context</em></span> (v1) resides in sub-namespace <code class="computeroutput"><span class="identifier">v1</span></code>.
+      </p></td></tr>
+</table></div>
+<div class="note"><table border="0" summary="Note">
+<tr>
+<td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="../../../../../doc/src/images/note.png"></td>
+<th align="left">Note</th>
+</tr>
+<tr><td align="left" valign="top"><p>
+        Segmented stacks (<span class="emphasis"><em>segmented-stacks=on</em></span>), e.g. on demand
+        growing stacks, can be used with <span class="emphasis"><em>execution_context</em></span> (v1).
       </p></td></tr>
 </table></div>
 <p>
@@ -77,8 +106,8 @@
       of <span class="emphasis"><em>execution_context</em></span></a>
     </h4>
 <pre class="programlisting"><span class="keyword">int</span> <span class="identifier">n</span><span class="special">=</span><span class="number">35</span><span class="special">;</span>
-<span class="identifier">boost</span><span class="special">::</span><span class="identifier">context</span><span class="special">::</span><span class="identifier">execution_context</span> <span class="identifier">sink</span><span class="special">(</span><span class="identifier">boost</span><span class="special">::</span><span class="identifier">context</span><span class="special">::</span><span class="identifier">execution_context</span><span class="special">::</span><span class="identifier">current</span><span class="special">());</span>
-<span class="identifier">boost</span><span class="special">::</span><span class="identifier">context</span><span class="special">::</span><span class="identifier">execution_context</span> <span class="identifier">source</span><span class="special">(</span>
+<span class="identifier">boost</span><span class="special">::</span><span class="identifier">context</span><span class="special">::</span><span class="identifier">v1</span><span class="special">::</span><span class="identifier">execution_context</span> <span class="identifier">sink</span><span class="special">(</span><span class="identifier">boost</span><span class="special">::</span><span class="identifier">context</span><span class="special">::</span><span class="identifier">v1</span><span class="special">::</span><span class="identifier">execution_context</span><span class="special">::</span><span class="identifier">current</span><span class="special">());</span>
+<span class="identifier">boost</span><span class="special">::</span><span class="identifier">context</span><span class="special">::</span><span class="identifier">v1</span><span class="special">::</span><span class="identifier">execution_context</span> <span class="identifier">source</span><span class="special">(</span>
     <span class="special">[</span><span class="identifier">n</span><span class="special">,&amp;</span><span class="identifier">sink</span><span class="special">](</span><span class="keyword">void</span><span class="special">*)</span><span class="keyword">mutable</span><span class="special">{</span>
         <span class="keyword">int</span> <span class="identifier">a</span><span class="special">=</span><span class="number">0</span><span class="special">;</span>
         <span class="keyword">int</span> <span class="identifier">b</span><span class="special">=</span><span class="number">1</span><span class="special">;</span>
@@ -133,9 +162,9 @@
 <span class="identifier">std</span><span class="special">::</span><span class="identifier">exception_ptr</span> <span class="identifier">except</span><span class="special">;</span>
 
 <span class="comment">// create handle to main execution context</span>
-<span class="keyword">auto</span> <span class="identifier">main_ctx</span><span class="special">(</span><span class="identifier">boost</span><span class="special">::</span><span class="identifier">context</span><span class="special">::</span><span class="identifier">execution_context</span><span class="special">::</span><span class="identifier">current</span><span class="special">());</span>
+<span class="keyword">auto</span> <span class="identifier">main_ctx</span><span class="special">(</span><span class="identifier">boost</span><span class="special">::</span><span class="identifier">context</span><span class="special">::</span><span class="identifier">v1</span><span class="special">::</span><span class="identifier">execution_context</span><span class="special">::</span><span class="identifier">current</span><span class="special">());</span>
 <span class="comment">// execute parser in new execution context</span>
-<span class="identifier">boost</span><span class="special">::</span><span class="identifier">context</span><span class="special">::</span><span class="identifier">execution_context</span> <span class="identifier">source</span><span class="special">(</span>
+<span class="identifier">boost</span><span class="special">::</span><span class="identifier">context</span><span class="special">::</span><span class="identifier">v1</span><span class="special">::</span><span class="identifier">execution_context</span> <span class="identifier">source</span><span class="special">(</span>
         <span class="special">[&amp;</span><span class="identifier">sink</span><span class="special">,&amp;</span><span class="identifier">is</span><span class="special">,&amp;</span><span class="identifier">done</span><span class="special">,&amp;</span><span class="identifier">except</span><span class="special">](</span><span class="keyword">void</span><span class="special">*){</span>
         <span class="comment">// create parser with callback function</span>
         <span class="identifier">Parser</span> <span class="identifier">p</span><span class="special">(</span><span class="identifier">is</span><span class="special">,</span>
@@ -189,13 +218,18 @@
       the application is terminated. <span class="emphasis"><em>std::exception_ptr</em></span> can
       be used to transfer exceptions between different execution contexts.
     </p>
+<h4>
+<a name="context.ecv1.h2"></a>
+      <span><a name="context.ecv1.stack_unwinding"></a></span><a class="link" href="ecv1.html#context.ecv1.stack_unwinding">stack
+      unwinding</a>
+    </h4>
 <p>
       Sometimes it is necessary to unwind the stack of an unfinished context to destroy
       local stack variables so they can release allocated resources (RAII pattern).
       The user is responsible for this task.
     </p>
 <a name="ecv1_prealloc"></a><h4>
-<a name="context.ecv1.h2"></a>
+<a name="context.ecv1.h3"></a>
       <span><a name="context.ecv1.allocating_control_structures_on_top_of_stack"></a></span><a class="link" href="ecv1.html#context.ecv1.allocating_control_structures_on_top_of_stack">allocating
       control structures on top of stack</a>
     </h4>
@@ -240,13 +274,13 @@
 <span class="special">};</span>
 </pre>
 <h4>
-<a name="context.ecv1.h3"></a>
+<a name="context.ecv1.h4"></a>
       <span><a name="context.ecv1.exception_handling"></a></span><a class="link" href="ecv1.html#context.ecv1.exception_handling">exception
       handling</a>
     </h4>
 <p>
       If the function executed inside a <span class="emphasis"><em>execution_context</em></span> emits
-      ans exception, the application is terminated by calling <span class="emphasis"><em>std::terminate()</em></span>.
+      an exception, the application is terminated by calling <span class="emphasis"><em>std::terminate()</em></span>.
       <span class="emphasis"><em>std::exception_ptr</em></span> can be used to transfer exceptions
       between different execution contexts.
     </p>
@@ -261,7 +295,7 @@
       </p></td></tr>
 </table></div>
 <h4>
-<a name="context.ecv1.h4"></a>
+<a name="context.ecv1.h5"></a>
       <span><a name="context.ecv1.parameter_passing"></a></span><a class="link" href="ecv1.html#context.ecv1.parameter_passing">parameter
       passing</a>
     </h4>
@@ -276,13 +310,13 @@
 <pre class="programlisting"><span class="keyword">class</span> <span class="identifier">X</span> <span class="special">{</span>
 <span class="keyword">private</span><span class="special">:</span>
     <span class="identifier">std</span><span class="special">::</span><span class="identifier">exception_ptr</span> <span class="identifier">excptr_</span><span class="special">;</span>
-    <span class="identifier">boost</span><span class="special">::</span><span class="identifier">context</span><span class="special">::</span><span class="identifier">execution_context</span> <span class="identifier">caller_</span><span class="special">;</span>
-    <span class="identifier">boost</span><span class="special">::</span><span class="identifier">context</span><span class="special">::</span><span class="identifier">execution_context</span> <span class="identifier">callee_</span><span class="special">;</span>
+    <span class="identifier">boost</span><span class="special">::</span><span class="identifier">context</span><span class="special">::</span><span class="identifier">v1</span><span class="special">::</span><span class="identifier">execution_context</span> <span class="identifier">caller_</span><span class="special">;</span>
+    <span class="identifier">boost</span><span class="special">::</span><span class="identifier">context</span><span class="special">::</span><span class="identifier">v1</span><span class="special">::</span><span class="identifier">execution_context</span> <span class="identifier">callee_</span><span class="special">;</span>
 
 <span class="keyword">public</span><span class="special">:</span>
     <span class="identifier">X</span><span class="special">()</span> <span class="special">:</span>
         <span class="identifier">excptr_</span><span class="special">(),</span>
-        <span class="identifier">caller_</span><span class="special">(</span> <span class="identifier">boost</span><span class="special">::</span><span class="identifier">context</span><span class="special">::</span><span class="identifier">execution_context</span><span class="special">::</span><span class="identifier">current</span><span class="special">()</span> <span class="special">),</span>
+        <span class="identifier">caller_</span><span class="special">(</span> <span class="identifier">boost</span><span class="special">::</span><span class="identifier">context</span><span class="special">::</span><span class="identifier">v1</span><span class="special">::</span><span class="identifier">execution_context</span><span class="special">::</span><span class="identifier">current</span><span class="special">()</span> <span class="special">),</span>
         <span class="identifier">callee_</span><span class="special">(</span> <span class="special">[=]</span> <span class="special">(</span><span class="keyword">void</span> <span class="special">*</span> <span class="identifier">vp</span><span class="special">)</span> <span class="special">{</span>
                     <span class="keyword">try</span> <span class="special">{</span>
                         <span class="keyword">int</span> <span class="identifier">i</span> <span class="special">=</span> <span class="special">*</span> <span class="keyword">static_cast</span><span class="special">&lt;</span> <span class="keyword">int</span> <span class="special">*</span> <span class="special">&gt;(</span> <span class="identifier">vp</span><span class="special">);</span>
@@ -310,7 +344,7 @@
     <span class="number">7</span>
 </pre>
 <h4>
-<a name="context.ecv1.h5"></a>
+<a name="context.ecv1.h6"></a>
       <span><a name="context.ecv1.class__code__phrase_role__identifier__execution_context__phrase___code_"></a></span><a class="link" href="ecv1.html#context.ecv1.class__code__phrase_role__identifier__execution_context__phrase___code_">Class
       <code class="computeroutput"><span class="identifier">execution_context</span></code></a>
     </h4>

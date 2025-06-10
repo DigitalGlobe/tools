@@ -15,22 +15,7 @@
     "std": [ "proposal" ],    
     "category": [
       "Domain", "System"
-    ]
-  },
-  {
-    "key": "chrono/stopwatch",
-    "name": "Chrono.Stopwatch",
-    "authors": [
-      "Vicente J. Botet Escriba"
     ],
-    "maintainers": [
-      "Vicente J. Botet Escriba <vicente.botet -at- wanadoo.fr>"
-    ],
-    "description":
-      "Useful stopclocks and stopwatches utilities.",
-    "documentation": "stopwatches/",
-    "category": [
-      "Domain"
-    ]
+    "cxxstd": "11"
   }
 ]

@@ -9,11 +9,12 @@
 
 #include <boost/graph/use_mpi.hpp>
 #include <boost/throw_exception.hpp>
+#include <boost/serialization/vector.hpp>
 #include <boost/graph/distributed/page_rank.hpp>
-#include <boost/test/minimal.hpp>
+#include <boost/core/lightweight_test.hpp>
 #include <boost/graph/distributed/adjacency_list.hpp>
 #include <boost/graph/distributed/mpi_process_group.hpp>
-#include <boost/test/minimal.hpp>
+#include <boost/core/lightweight_test.hpp>
 #include <vector>
 #include <iostream>
 #include <stdlib.h>
@@ -80,7 +81,7 @@ void test_distributed_page_rank(int iterations)
                      local_sum, sum, std::plus<double>(), 0);
   if (process_id(g.process_group()) == 0) {
     std::cout << "Sum = " << sum << "\n\n";
-    BOOST_CHECK(close_to(sum, 4)); // 1 when alpha=0
+    BOOST_TEST(close_to(sum, 4)); // 1 when alpha=0
   }
 
   //   double expected_ranks0[N] = {0.400009, 0.199993, 0.399998, 0.0};
@@ -89,12 +90,12 @@ void test_distributed_page_rank(int iterations)
     vertex_descriptor v = vertex(i, g);
     if (v != Graph::null_vertex()
         && owner(v) == process_id(g.process_group())) {
-      BOOST_CHECK(close_to(ranks[local(v)], expected_ranks[i]));
+      BOOST_TEST(close_to(ranks[local(v)], expected_ranks[i]));
     }
   }
 }
 
-int test_main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
   mpi::environment env(argc, argv);
 
@@ -105,5 +106,5 @@ int test_main(int argc, char* argv[])
 
   test_distributed_page_rank(iterations);
 
-  return 0;
+  return boost::report_errors();
 }

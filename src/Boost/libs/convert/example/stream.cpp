@@ -1,6 +1,12 @@
-// Copyright (c) 2009-2014 Vladimir Batov.
+// Copyright (c) 2009-2020 Vladimir Batov.
 // Use, modification and distribution are subject to the Boost Software License,
 // Version 1.0. See http://www.boost.org/LICENSE_1_0.txt.
+
+#include "../test/test.hpp"
+
+#if !defined(BOOST_CONVERT_CXX14)
+int main(int, char const* []) { return 0; }
+#else
 
 #include <boost/convert.hpp>
 #include <boost/convert/lexical_cast.hpp>
@@ -13,14 +19,12 @@
 using std::string;
 using boost::convert;
 
-struct boost::cnv::by_default : public boost::cnv::cstream {};
+struct boost::cnv::by_default : boost::cnv::cstream {};
 //]
 //[stream_headers2
 namespace cnv = boost::cnv;
 namespace arg = boost::cnv::parameter;
 //]
-
-#include "../test/test.hpp"
 
 static
 void
@@ -63,7 +67,7 @@ example2()
     //]
     //[stream_example4
     ccnv(arg::base = cnv::base::dec)
-        (arg::uppercase = false)
+        (arg::uppercase = true)
         (arg::notation = cnv::notation::scientific);
     //]
     //[stream_example5
@@ -99,3 +103,5 @@ main(int, char const* [])
 
     return boost::report_errors();
 }
+
+#endif

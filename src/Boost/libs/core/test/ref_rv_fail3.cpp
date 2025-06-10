@@ -8,7 +8,7 @@
 // http://www.boost.org/LICENSE_1_0.txt
 //
 
-#include <boost/ref.hpp>
+#include <boost/core/ref.hpp>
 
 #if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
@@ -19,6 +19,7 @@ X const crv() { return X(); }
 int main()
 {
     boost::reference_wrapper<X const> r = boost::ref( crv() ); // this should produce an ERROR
+    (void)r;
 }
 
 #else

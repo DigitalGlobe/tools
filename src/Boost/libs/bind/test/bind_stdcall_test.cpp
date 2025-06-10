@@ -1,5 +1,15 @@
 #include <boost/config.hpp>
 
+#ifndef _MSC_VER
+
+int main()
+{
+}
+
+#else
+
+#include <boost/config.hpp>
+
 #if defined(BOOST_MSVC)
 #pragma warning(disable: 4786)  // identifier truncated in debug info
 #pragma warning(disable: 4710)  // function not inlined
@@ -19,19 +29,10 @@
 
 #define BOOST_BIND_ENABLE_STDCALL
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
+#include <boost/core/lightweight_test.hpp>
 
-#if defined(BOOST_MSVC) && (BOOST_MSVC < 1300)
-#pragma warning(push, 3)
-#endif
-
-#include <iostream>
-
-#if defined(BOOST_MSVC) && (BOOST_MSVC < 1300)
-#pragma warning(pop)
-#endif
-
-#include <boost/detail/lightweight_test.hpp>
+using namespace boost::placeholders;
 
 //
 
@@ -108,3 +109,5 @@ int main()
     function_test();
     return boost::report_errors();
 }
+
+#endif

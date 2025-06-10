@@ -1,11 +1,12 @@
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
-<title>Chapter&#160;1.&#160;Geometry</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Chapter 1. Geometry</title>
 <link rel="stylesheet" href="../../../../doc/src/boostbook.css" type="text/css">
-<meta name="generator" content="DocBook XSL Stylesheets V1.76.1">
-<link rel="home" href="index.html" title="Chapter&#160;1.&#160;Geometry">
+<meta name="generator" content="DocBook XSL Stylesheets V1.75.2">
+<link rel="home" href="index.html" title="Chapter 1. Geometry">
 <link rel="next" href="geometry/introduction.html" title="Introduction">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
 <table cellpadding="2" width="100%"><tr>
@@ -21,7 +22,7 @@
 <div class="chapter">
 <div class="titlepage"><div>
 <div><h2 class="title">
-<a name="geometry"></a>Chapter&#160;1.&#160;Geometry</h2></div>
+<a name="geometry"></a>Chapter 1. Geometry</h2></div>
 <div><div class="author"><h3 class="author">
 <span class="firstname">Barend</span> <span class="surname">Gehrels</span>
 </h3></div></div>
@@ -37,8 +38,11 @@
 <div><div class="author"><h3 class="author">
 <span class="firstname">Menelaos</span> <span class="surname">Karavelas</span>
 </h3></div></div>
-<div><p class="copyright">Copyright &#169; 2009-2015 Barend Gehrels, Bruno Lalande,
-      Mateusz Loskot, Adam Wulkiewicz, Oracle and/or its affiliates</p></div>
+<div><div class="author"><h3 class="author">
+<span class="firstname">Vissarion</span> <span class="surname">Fisikopoulos</span>
+</h3></div></div>
+<div><p class="copyright">Copyright © 2009-2024 Barend Gehrels, Bruno Lalande, Mateusz Loskot, Adam
+      Wulkiewicz, Oracle and/or its affiliates</p></div>
 <div><div class="legalnotice">
 <a name="geometry.legal"></a><p>
         Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -79,6 +83,7 @@
 <dt><span class="section"><a href="geometry/reference/iterators.html">Iterators</a></span></dt>
 <dt><span class="section"><a href="geometry/reference/models.html">Models</a></span></dt>
 <dt><span class="section"><a href="geometry/reference/spatial_indexes.html">Spatial Indexes</a></span></dt>
+<dt><span class="section"><a href="geometry/reference/srs.html">SRS</a></span></dt>
 <dt><span class="section"><a href="geometry/reference/strategies.html">Strategies</a></span></dt>
 <dt><span class="section"><a href="geometry/reference/views.html">Views</a></span></dt>
 </dl></dd>
@@ -93,7 +98,6 @@
       source code: Adapting a legacy geometry object model</a></span></dt>
 </dl></dd>
 <dt><span class="section"><a href="geometry/release_notes.html">Release Notes</a></span></dt>
-<dt><span class="section"><a href="geometry/aboutdoc.html">About this Documentation</a></span></dt>
 <dt><span class="section"><a href="geometry/acknowledgments.html">Acknowledgments</a></span></dt>
 </dl>
 </div>
@@ -115,7 +119,7 @@
         Andrew Hundt (varray container, aka. static_vector)
       </li>
 <li class="listitem">
-        Federico Fern&#225;ndez (preliminary version of R-tree spatial index)
+        Federico Fernández (preliminary version of R-tree spatial index)
       </li>
 <li class="listitem">
         Karsten Ahnert (patch for cross-track distance)
@@ -130,12 +134,22 @@
         Samuel Debionne (variant support for distance, assign, crosses, intersection,
         ...)
       </li>
+<li class="listitem">
+        Adeel Ahmad (Karney's solution of direct and inverse geodesic problems)
+      </li>
+<li class="listitem">
+        Yaghyavardhan Singh Khangarot (discrete Frechet and Hausdorff distance)
+      </li>
+<li class="listitem">
+        Tinko Bartels (Delaunay triangulation, Voronoi diagram, random point generation,
+        ...)
+      </li>
+<li class="listitem">
+        Caian Benedicto (patch for temporary allocator support)
+      </li>
 </ul></div>
 </div>
-<table xmlns:rev="http://www.cs.rpi.edu/~gregod/boost/tools/doc/revision" width="100%"><tr>
-<td align="left"><p><small>Last revised: May 05, 2016 at 21:36:20 GMT</small></p></td>
-<td align="right"><div class="copyright-footer"></div></td>
-</tr></table>
+<div class="copyright-footer"></div>
 <hr>
 <div class="spirit-nav"><a accesskey="n" href="geometry/introduction.html"><img src="../../../../doc/src/images/next.png" alt="Next"></a></div>
 </body>

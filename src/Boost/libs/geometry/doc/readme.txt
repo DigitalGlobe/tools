@@ -14,11 +14,10 @@ Note that doxygen_xml2qbk is a tool currently (slightly) specific to Boost.Geome
 and that it translates from Doxygen-XML output to Quickbook (without xslt)
 
 1) install Doxygen
-2) install QuickBook using http://www.boost.org/doc/libs/1_45_0/doc/html/quickbook/install.html#quickbook.install.linux
-3) unpack RapidXML, see src/docutils/tools/doxygen_xml2qbk/contrib/readme.txt
-4) compile doxygen_xml2qbk, in src/docutils/tools/doxygen_xml2qbk
-5) put binary somewhere, e.g. in /usr/local/bin/doxygen_xml2qbk
-6) execute python file "make_qbk.py" (calling doxygen, doxygen_xml2qbk, bjam)
+2) install QuickBook using http://www.boost.org/doc/libs/release/doc/html/quickbook/install.html
+3) run b2 in src/docutils/tools/doxygen_xml2qbk to build doxygen_xml2qbk executable
+4) put binary in your PATH, e.g. in /usr/local/bin/doxygen_xml2qbk
+5) execute python file "make_qbk.py" (calling doxygen, doxygen_xml2qbk, bjam)
 
 Folders in this folder:
 concept: manually written documentation QBK files, on concept
@@ -32,14 +31,15 @@ reference: generated documentation QBK files (by doxygen_xml2qbk)
 src: examples used in documentation and tools (doxygen_xml2qbk)
 
 Per new algorithm (e.g. foo), one should add:
-1) in file boost/geometry/algorithms/foo.hpp, include a "\ingroup foo" in the doxygen comments
-2) in file doc/doxy/doxygen_input/groups/groups.hpp, define the group "foo"
-3) in file doc/make_qbk.py, include the algorithm "foo"
-4) in file doc/reference.qbk, include the foo.qbk ([include generated/foo.qbk])
-5) in file doc/quickref.xml, include a section on foo conform other sections
-6) in file doc/src/docutils/tools/support_status/support_status.cpp include the algorithm (3 places) (optionally)
-7) in file doc/reference/foo.qbk (to be created), include the support status and write other text, and include examples (optionally)
-8) in file doc/imports.qbk, include the example foo.cpp (if any)
-9) create file doc/src/examples/algorithm/foo.cpp (optional)
+1) in file boost/geometry/algorithms/foo.hpp, include a "\ingroup foo" in the doxygen comments 
+2) if a directory is created e.g. boost/geometry/algorithms/detail/foo the path should be added in doc/doxy/Doxyfile
+3) in file doc/doxy/doxygen_input/groups/groups.hpp, define the group "foo"
+4) in file doc/make_qbk.py, include the algorithm "foo"
+5) in file doc/reference.qbk, include the foo.qbk ([include generated/foo.qbk])
+6) in file doc/quickref.xml, include a section on foo conform other sections
+7) in file doc/src/docutils/tools/support_status/support_status.cpp include the algorithm (3 places) (optionally)
+8) in file doc/reference/foo.qbk (to be created), include the support status and write other text, and include examples (optionally)
+9) in file doc/imports.qbk, include the example foo.cpp (if any)
+10) create file doc/src/examples/algorithm/foo.cpp (optional)
 
 

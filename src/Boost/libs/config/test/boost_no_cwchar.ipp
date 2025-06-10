@@ -18,8 +18,11 @@ int test()
 {
    wchar_t c1[2] = { 0 };
    wchar_t c2[2] = { 0 };
+   char    c3[2] = { 0 };
+   mbstate_t mb = mbstate_t();
+   if(!mbsinit(&mb) || mbrlen(c3,1,&mb)) return -1;
    if(wcscmp(c1,c2) || wcslen(c1)) return -1;
-   wcscpy(c1,c2);
+   //wcscpy(c1,c2);
    wcsxfrm(c1,c2,0);
    return 0;
 }

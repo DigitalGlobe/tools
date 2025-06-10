@@ -2,7 +2,7 @@
 // icmp.cpp
 // ~~~~~~~~
 //
-// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,34 +17,49 @@
 #include <boost/asio/ip/icmp.hpp>
 
 #include <cstring>
-#include <boost/asio/io_service.hpp>
+#include <boost/asio/io_context.hpp>
 #include <boost/asio/placeholders.hpp>
 #include "../unit_test.hpp"
-#include "../archetypes/gettable_socket_option.hpp"
 #include "../archetypes/async_result.hpp"
+#include "../archetypes/gettable_socket_option.hpp"
 #include "../archetypes/io_control_command.hpp"
 #include "../archetypes/settable_socket_option.hpp"
 
 //------------------------------------------------------------------------------
 
 // ip_icmp_socket_compile test
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // The following test checks that all public member functions on the class
 // ip::icmp::socket compile and link correctly. Runtime failures are ignored.
 
 namespace ip_icmp_socket_compile {
 
-void connect_handler(const boost::system::error_code&)
+struct connect_handler
 {
-}
+  connect_handler() {}
+  void operator()(const boost::system::error_code&) {}
+  connect_handler(connect_handler&&) {}
+private:
+  connect_handler(const connect_handler&);
+};
 
-void send_handler(const boost::system::error_code&, std::size_t)
+struct send_handler
 {
-}
+  send_handler() {}
+  void operator()(const boost::system::error_code&, std::size_t) {}
+  send_handler(send_handler&&) {}
+private:
+  send_handler(const send_handler&);
+};
 
-void receive_handler(const boost::system::error_code&, std::size_t)
+struct receive_handler
 {
-}
+  receive_handler() {}
+  void operator()(const boost::system::error_code&, std::size_t) {}
+  receive_handler(receive_handler&&) {}
+private:
+  receive_handler(const receive_handler&);
+};
 
 void test()
 {
@@ -53,7 +68,8 @@ void test()
 
   try
   {
-    io_service ios;
+    io_context ioc;
+    const io_context::executor_type ioc_ex = ioc.get_executor();
     char mutable_char_buffer[128] = "";
     const char const_char_buffer[128] = "";
     socket_base::message_flags in_flags = 0;
@@ -64,46 +80,54 @@ void test()
     archetypes::gettable_socket_option<int> gettable_socket_option2;
     archetypes::gettable_socket_option<double> gettable_socket_option3;
     archetypes::io_control_command io_control_command;
+    archetypes::immediate_handler immediate;
     archetypes::lazy_handler lazy;
     boost::system::error_code ec;
 
     // basic_datagram_socket constructors.
 
-    ip::icmp::socket socket1(ios);
-    ip::icmp::socket socket2(ios, ip::icmp::v4());
-    ip::icmp::socket socket3(ios, ip::icmp::v6());
-    ip::icmp::socket socket4(ios, ip::icmp::endpoint(ip::icmp::v4(), 0));
-    ip::icmp::socket socket5(ios, ip::icmp::endpoint(ip::icmp::v6(), 0));
+    ip::icmp::socket socket1(ioc);
+    ip::icmp::socket socket2(ioc, ip::icmp::v4());
+    ip::icmp::socket socket3(ioc, ip::icmp::v6());
+    ip::icmp::socket socket4(ioc, ip::icmp::endpoint(ip::icmp::v4(), 0));
+    ip::icmp::socket socket5(ioc, ip::icmp::endpoint(ip::icmp::v6(), 0));
 #if !defined(BOOST_ASIO_WINDOWS_RUNTIME)
     ip::icmp::socket::native_handle_type native_socket1
       = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    ip::icmp::socket socket6(ios, ip::icmp::v4(), native_socket1);
+    ip::icmp::socket socket6(ioc, ip::icmp::v4(), native_socket1);
 #endif // !defined(BOOST_ASIO_WINDOWS_RUNTIME)
 
-#if defined(BOOST_ASIO_HAS_MOVE)
-    ip::icmp::socket socket7(std::move(socket6));
-#endif // defined(BOOST_ASIO_HAS_MOVE)
+    ip::icmp::socket socket7(ioc_ex);
+    ip::icmp::socket socket8(ioc_ex, ip::icmp::v4());
+    ip::icmp::socket socket9(ioc_ex, ip::icmp::v6());
+    ip::icmp::socket socket10(ioc_ex, ip::icmp::endpoint(ip::icmp::v4(), 0));
+    ip::icmp::socket socket11(ioc_ex, ip::icmp::endpoint(ip::icmp::v6(), 0));
+#if !defined(BOOST_ASIO_WINDOWS_RUNTIME)
+    ip::icmp::socket::native_handle_type native_socket2
+      = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    ip::icmp::socket socket12(ioc_ex, ip::icmp::v4(), native_socket2);
+#endif // !defined(BOOST_ASIO_WINDOWS_RUNTIME)
+
+    ip::icmp::socket socket13(std::move(socket6));
 
     // basic_datagram_socket operators.
 
-#if defined(BOOST_ASIO_HAS_MOVE)
-    socket1 = ip::icmp::socket(ios);
+    socket1 = ip::icmp::socket(ioc);
     socket1 = std::move(socket2);
-#endif // defined(BOOST_ASIO_HAS_MOVE)
 
-    // basic_io_object functions.
+    // I/O object functions.
 
-    io_service& ios_ref = socket1.get_io_service();
-    (void)ios_ref;
+    ip::icmp::socket::executor_type ex = socket1.get_executor();
+    (void)ex;
 
     // basic_socket functions.
 
     ip::icmp::socket::lowest_layer_type& lowest_layer = socket1.lowest_layer();
     (void)lowest_layer;
 
-    const ip::icmp::socket& socket8 = socket1;
+    const ip::icmp::socket& socket14 = socket1;
     const ip::icmp::socket::lowest_layer_type& lowest_layer2
-      = socket8.lowest_layer();
+      = socket14.lowest_layer();
     (void)lowest_layer2;
 
     socket1.open(ip::icmp::v4());
@@ -112,12 +136,12 @@ void test()
     socket1.open(ip::icmp::v6(), ec);
 
 #if !defined(BOOST_ASIO_WINDOWS_RUNTIME)
-    ip::icmp::socket::native_handle_type native_socket2
-      = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    socket1.assign(ip::icmp::v4(), native_socket2);
     ip::icmp::socket::native_handle_type native_socket3
       = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    socket1.assign(ip::icmp::v4(), native_socket3, ec);
+    socket1.assign(ip::icmp::v4(), native_socket3);
+    ip::icmp::socket::native_handle_type native_socket4
+      = ::socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    socket1.assign(ip::icmp::v4(), native_socket4, ec);
 #endif // !defined(BOOST_ASIO_WINDOWS_RUNTIME)
 
     bool is_open = socket1.is_open();
@@ -126,8 +150,8 @@ void test()
     socket1.close();
     socket1.close(ec);
 
-    ip::icmp::socket::native_type native_socket4 = socket1.native();
-    (void)native_socket4;
+    socket1.release();
+    socket1.release(ec);
 
     ip::icmp::socket::native_handle_type native_socket5
       = socket1.native_handle();
@@ -157,9 +181,11 @@ void test()
     socket1.connect(ip::icmp::endpoint(ip::icmp::v6(), 0), ec);
 
     socket1.async_connect(ip::icmp::endpoint(ip::icmp::v4(), 0),
-        &connect_handler);
+        connect_handler());
     socket1.async_connect(ip::icmp::endpoint(ip::icmp::v6(), 0),
-        &connect_handler);
+        connect_handler());
+    socket1.async_connect(ip::icmp::endpoint(ip::icmp::v4(), 0), immediate);
+    socket1.async_connect(ip::icmp::endpoint(ip::icmp::v6(), 0), immediate);
     int i1 = socket1.async_connect(ip::icmp::endpoint(ip::icmp::v4(), 0), lazy);
     (void)i1;
     int i2 = socket1.async_connect(ip::icmp::endpoint(ip::icmp::v6(), 0), lazy);
@@ -193,10 +219,14 @@ void test()
     socket1.native_non_blocking(false, ec);
 
     ip::icmp::endpoint endpoint1 = socket1.local_endpoint();
+    (void)endpoint1;
     ip::icmp::endpoint endpoint2 = socket1.local_endpoint(ec);
+    (void)endpoint2;
 
     ip::icmp::endpoint endpoint3 = socket1.remote_endpoint();
+    (void)endpoint3;
     ip::icmp::endpoint endpoint4 = socket1.remote_endpoint(ec);
+    (void)endpoint4;
 
     socket1.shutdown(socket_base::shutdown_both);
     socket1.shutdown(socket_base::shutdown_both, ec);
@@ -213,12 +243,18 @@ void test()
     socket1.send(buffer(const_char_buffer), in_flags, ec);
     socket1.send(null_buffers(), in_flags, ec);
 
-    socket1.async_send(buffer(mutable_char_buffer), &send_handler);
-    socket1.async_send(buffer(const_char_buffer), &send_handler);
-    socket1.async_send(null_buffers(), &send_handler);
-    socket1.async_send(buffer(mutable_char_buffer), in_flags, &send_handler);
-    socket1.async_send(buffer(const_char_buffer), in_flags, &send_handler);
-    socket1.async_send(null_buffers(), in_flags, &send_handler);
+    socket1.async_send(buffer(mutable_char_buffer), send_handler());
+    socket1.async_send(buffer(const_char_buffer), send_handler());
+    socket1.async_send(null_buffers(), send_handler());
+    socket1.async_send(buffer(mutable_char_buffer), in_flags, send_handler());
+    socket1.async_send(buffer(const_char_buffer), in_flags, send_handler());
+    socket1.async_send(null_buffers(), in_flags, send_handler());
+    socket1.async_send(buffer(mutable_char_buffer), immediate);
+    socket1.async_send(buffer(const_char_buffer), immediate);
+    socket1.async_send(null_buffers(), immediate);
+    socket1.async_send(buffer(mutable_char_buffer), in_flags, immediate);
+    socket1.async_send(buffer(const_char_buffer), in_flags, immediate);
+    socket1.async_send(null_buffers(), in_flags, immediate);
     int i3 = socket1.async_send(buffer(mutable_char_buffer), lazy);
     (void)i3;
     int i4 = socket1.async_send(buffer(const_char_buffer), lazy);
@@ -270,29 +306,53 @@ void test()
         ip::icmp::endpoint(ip::icmp::v6(), 0), in_flags, ec);
 
     socket1.async_send_to(buffer(mutable_char_buffer),
-        ip::icmp::endpoint(ip::icmp::v4(), 0), &send_handler);
+        ip::icmp::endpoint(ip::icmp::v4(), 0), send_handler());
     socket1.async_send_to(buffer(mutable_char_buffer),
-        ip::icmp::endpoint(ip::icmp::v6(), 0), &send_handler);
+        ip::icmp::endpoint(ip::icmp::v6(), 0), send_handler());
     socket1.async_send_to(buffer(const_char_buffer),
-        ip::icmp::endpoint(ip::icmp::v4(), 0), &send_handler);
+        ip::icmp::endpoint(ip::icmp::v4(), 0), send_handler());
     socket1.async_send_to(buffer(const_char_buffer),
-        ip::icmp::endpoint(ip::icmp::v6(), 0), &send_handler);
+        ip::icmp::endpoint(ip::icmp::v6(), 0), send_handler());
     socket1.async_send_to(null_buffers(),
-        ip::icmp::endpoint(ip::icmp::v4(), 0), &send_handler);
+        ip::icmp::endpoint(ip::icmp::v4(), 0), send_handler());
     socket1.async_send_to(null_buffers(),
-        ip::icmp::endpoint(ip::icmp::v6(), 0), &send_handler);
+        ip::icmp::endpoint(ip::icmp::v6(), 0), send_handler());
     socket1.async_send_to(buffer(mutable_char_buffer),
-        ip::icmp::endpoint(ip::icmp::v4(), 0), in_flags, &send_handler);
+        ip::icmp::endpoint(ip::icmp::v4(), 0), in_flags, send_handler());
     socket1.async_send_to(buffer(mutable_char_buffer),
-        ip::icmp::endpoint(ip::icmp::v6(), 0), in_flags, &send_handler);
+        ip::icmp::endpoint(ip::icmp::v6(), 0), in_flags, send_handler());
     socket1.async_send_to(buffer(const_char_buffer),
-        ip::icmp::endpoint(ip::icmp::v4(), 0), in_flags, &send_handler);
+        ip::icmp::endpoint(ip::icmp::v4(), 0), in_flags, send_handler());
     socket1.async_send_to(buffer(const_char_buffer),
-        ip::icmp::endpoint(ip::icmp::v6(), 0), in_flags, &send_handler);
+        ip::icmp::endpoint(ip::icmp::v6(), 0), in_flags, send_handler());
     socket1.async_send_to(null_buffers(),
-        ip::icmp::endpoint(ip::icmp::v4(), 0), in_flags, &send_handler);
+        ip::icmp::endpoint(ip::icmp::v4(), 0), in_flags, send_handler());
     socket1.async_send_to(null_buffers(),
-        ip::icmp::endpoint(ip::icmp::v6(), 0), in_flags, &send_handler);
+        ip::icmp::endpoint(ip::icmp::v6(), 0), in_flags, send_handler());
+    socket1.async_send_to(buffer(mutable_char_buffer),
+        ip::icmp::endpoint(ip::icmp::v4(), 0), immediate);
+    socket1.async_send_to(buffer(mutable_char_buffer),
+        ip::icmp::endpoint(ip::icmp::v6(), 0), immediate);
+    socket1.async_send_to(buffer(const_char_buffer),
+        ip::icmp::endpoint(ip::icmp::v4(), 0), immediate);
+    socket1.async_send_to(buffer(const_char_buffer),
+        ip::icmp::endpoint(ip::icmp::v6(), 0), immediate);
+    socket1.async_send_to(null_buffers(),
+        ip::icmp::endpoint(ip::icmp::v4(), 0), immediate);
+    socket1.async_send_to(null_buffers(),
+        ip::icmp::endpoint(ip::icmp::v6(), 0), immediate);
+    socket1.async_send_to(buffer(mutable_char_buffer),
+        ip::icmp::endpoint(ip::icmp::v4(), 0), in_flags, immediate);
+    socket1.async_send_to(buffer(mutable_char_buffer),
+        ip::icmp::endpoint(ip::icmp::v6(), 0), in_flags, immediate);
+    socket1.async_send_to(buffer(const_char_buffer),
+        ip::icmp::endpoint(ip::icmp::v4(), 0), in_flags, immediate);
+    socket1.async_send_to(buffer(const_char_buffer),
+        ip::icmp::endpoint(ip::icmp::v6(), 0), in_flags, immediate);
+    socket1.async_send_to(null_buffers(),
+        ip::icmp::endpoint(ip::icmp::v4(), 0), in_flags, immediate);
+    socket1.async_send_to(null_buffers(),
+        ip::icmp::endpoint(ip::icmp::v6(), 0), in_flags, immediate);
     int i9 = socket1.async_send_to(buffer(mutable_char_buffer),
         ip::icmp::endpoint(ip::icmp::v4(), 0), lazy);
     (void)i9;
@@ -337,11 +397,15 @@ void test()
     socket1.receive(buffer(mutable_char_buffer), in_flags, ec);
     socket1.receive(null_buffers(), in_flags, ec);
 
-    socket1.async_receive(buffer(mutable_char_buffer), &receive_handler);
-    socket1.async_receive(null_buffers(), &receive_handler);
+    socket1.async_receive(buffer(mutable_char_buffer), receive_handler());
+    socket1.async_receive(null_buffers(), receive_handler());
     socket1.async_receive(buffer(mutable_char_buffer), in_flags,
-        &receive_handler);
-    socket1.async_receive(null_buffers(), in_flags, &receive_handler);
+        receive_handler());
+    socket1.async_receive(null_buffers(), in_flags, receive_handler());
+    socket1.async_receive(buffer(mutable_char_buffer), immediate);
+    socket1.async_receive(null_buffers(), immediate);
+    socket1.async_receive(buffer(mutable_char_buffer), in_flags, immediate);
+    socket1.async_receive(null_buffers(), in_flags, immediate);
     int i21 = socket1.async_receive(buffer(mutable_char_buffer), lazy);
     (void)i21;
     int i22 = socket1.async_receive(null_buffers(), lazy);
@@ -361,13 +425,21 @@ void test()
     socket1.receive_from(null_buffers(), endpoint, in_flags, ec);
 
     socket1.async_receive_from(buffer(mutable_char_buffer),
-        endpoint, &receive_handler);
+        endpoint, receive_handler());
     socket1.async_receive_from(null_buffers(),
-        endpoint, &receive_handler);
+        endpoint, receive_handler());
     socket1.async_receive_from(buffer(mutable_char_buffer),
-        endpoint, in_flags, &receive_handler);
+        endpoint, in_flags, receive_handler());
     socket1.async_receive_from(null_buffers(),
-        endpoint, in_flags, &receive_handler);
+        endpoint, in_flags, receive_handler());
+    socket1.async_receive_from(buffer(mutable_char_buffer),
+        endpoint, immediate);
+    socket1.async_receive_from(null_buffers(),
+        endpoint, immediate);
+    socket1.async_receive_from(buffer(mutable_char_buffer),
+        endpoint, in_flags, immediate);
+    socket1.async_receive_from(null_buffers(),
+        endpoint, in_flags, immediate);
     int i25 = socket1.async_receive_from(buffer(mutable_char_buffer),
         endpoint, lazy);
     (void)i25;
@@ -397,10 +469,15 @@ void test()
 
 namespace ip_icmp_resolver_compile {
 
-void resolve_handler(const boost::system::error_code&,
-    boost::asio::ip::icmp::resolver::iterator)
+struct resolve_handler
 {
-}
+  resolve_handler() {}
+  void operator()(const boost::system::error_code&,
+      boost::asio::ip::icmp::resolver::results_type) {}
+  resolve_handler(resolve_handler&&) {}
+private:
+  resolve_handler(const resolve_handler&);
+};
 
 void test()
 {
@@ -409,44 +486,92 @@ void test()
 
   try
   {
-    io_service ios;
+    io_context ioc;
+    const io_context::executor_type ioc_ex = ioc.get_executor();
     archetypes::lazy_handler lazy;
     boost::system::error_code ec;
-    ip::icmp::resolver::query q(ip::icmp::v4(), "localhost", "0");
     ip::icmp::endpoint e(ip::address_v4::loopback(), 0);
 
     // basic_resolver constructors.
 
-    ip::icmp::resolver resolver(ios);
+    ip::icmp::resolver resolver(ioc);
+    ip::icmp::resolver resolver2(ioc_ex);
 
-    // basic_io_object functions.
+    ip::icmp::resolver resolver3(std::move(resolver));
 
-    io_service& ios_ref = resolver.get_io_service();
-    (void)ios_ref;
+    // basic_resolver operators.
+
+    resolver = ip::icmp::resolver(ioc);
+    resolver = std::move(resolver3);
+
+    // I/O object functions.
+
+    ip::icmp::resolver::executor_type ex = resolver.get_executor();
+    (void)ex;
 
     // basic_resolver functions.
 
     resolver.cancel();
 
-    ip::icmp::resolver::iterator iter1 = resolver.resolve(q);
-    (void)iter1;
+    ip::icmp::resolver::results_type results1 = resolver.resolve("", "");
+    (void)results1;
 
-    ip::icmp::resolver::iterator iter2 = resolver.resolve(q, ec);
-    (void)iter2;
+    ip::icmp::resolver::results_type results2 = resolver.resolve("", "", ec);
+    (void)results2;
 
-    ip::icmp::resolver::iterator iter3 = resolver.resolve(e);
-    (void)iter3;
+    ip::icmp::resolver::results_type results3 =
+      resolver.resolve("", "", ip::icmp::resolver::flags());
+    (void)results3;
 
-    ip::icmp::resolver::iterator iter4 = resolver.resolve(e, ec);
-    (void)iter4;
+    ip::icmp::resolver::results_type results4 =
+      resolver.resolve("", "", ip::icmp::resolver::flags(), ec);
+    (void)results4;
 
-    resolver.async_resolve(q, &resolve_handler);
-    int i1 = resolver.async_resolve(q, lazy);
+    ip::icmp::resolver::results_type results5 =
+      resolver.resolve(ip::icmp::v4(), "", "");
+    (void)results5;
+
+    ip::icmp::resolver::results_type results6 =
+      resolver.resolve(ip::icmp::v4(), "", "", ec);
+    (void)results6;
+
+    ip::icmp::resolver::results_type results7 =
+      resolver.resolve(ip::icmp::v4(), "", "", ip::icmp::resolver::flags());
+    (void)results7;
+
+    ip::icmp::resolver::results_type results8 =
+      resolver.resolve(ip::icmp::v4(), "", "", ip::icmp::resolver::flags(), ec);
+    (void)results8;
+
+    ip::icmp::resolver::results_type results9 = resolver.resolve(e);
+    (void)results9;
+
+    ip::icmp::resolver::results_type results10 = resolver.resolve(e, ec);
+    (void)results10;
+
+    resolver.async_resolve("", "", resolve_handler());
+    int i1 = resolver.async_resolve("", "", lazy);
     (void)i1;
 
-    resolver.async_resolve(e, &resolve_handler);
-    int i2 = resolver.async_resolve(e, lazy);
+    resolver.async_resolve("", "",
+        ip::icmp::resolver::flags(), resolve_handler());
+    int i2 = resolver.async_resolve("", "",
+        ip::icmp::resolver::flags(), lazy);
     (void)i2;
+
+    resolver.async_resolve(ip::icmp::v4(), "", "", resolve_handler());
+    int i3 = resolver.async_resolve(ip::icmp::v4(), "", "", lazy);
+    (void)i3;
+
+    resolver.async_resolve(ip::icmp::v4(),
+        "", "", ip::icmp::resolver::flags(), resolve_handler());
+    int i4 = resolver.async_resolve(ip::icmp::v4(),
+        "", "", ip::icmp::resolver::flags(), lazy);
+    (void)i4;
+
+    resolver.async_resolve(e, resolve_handler());
+    int i5 = resolver.async_resolve(e, lazy);
+    (void)i5;
   }
   catch (std::exception&)
   {
@@ -460,6 +585,6 @@ void test()
 BOOST_ASIO_TEST_SUITE
 (
   "ip/icmp",
-  BOOST_ASIO_TEST_CASE(ip_icmp_socket_compile::test)
-  BOOST_ASIO_TEST_CASE(ip_icmp_resolver_compile::test)
+  BOOST_ASIO_COMPILE_TEST_CASE(ip_icmp_socket_compile::test)
+  BOOST_ASIO_COMPILE_TEST_CASE(ip_icmp_resolver_compile::test)
 )

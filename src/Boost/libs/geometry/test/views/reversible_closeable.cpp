@@ -15,6 +15,8 @@
 
 #include <geometry_test_common.hpp>
 
+#include <boost/algorithm/string/trim.hpp>
+
 #include <boost/geometry/views/closeable_view.hpp>
 #include <boost/geometry/views/reversible_view.hpp>
 
@@ -24,7 +26,7 @@
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/adapted/boost_tuple.hpp>
 
-BOOST_GEOMETRY_REGISTER_BOOST_TUPLE_CS(cs::cartesian);
+BOOST_GEOMETRY_REGISTER_BOOST_TUPLE_CS(cs::cartesian)
 
 
 template <typename View>

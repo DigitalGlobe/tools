@@ -1,9 +1,9 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 // Unit Test
 
-// Copyright (c) 2014-2015, Oracle and/or its affiliates.
-
+// Copyright (c) 2014-2021, Oracle and/or its affiliates.
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Licensed under the Boost Software License version 1.0.
 // http://www.boost.org/users/license.html
@@ -15,27 +15,17 @@
 #include <string>
 
 #include <boost/math/special_functions/fpclassify.hpp>
-#include <boost/mpl/assert.hpp>
-#include <boost/type_traits/is_integral.hpp>
-#include <boost/type_traits/is_same.hpp>
 
-#include <boost/geometry/geometries/point.hpp>
-#include <boost/geometry/geometries/point_xy.hpp>
-#include <boost/geometry/geometries/segment.hpp>
-#include <boost/geometry/geometries/linestring.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
-#include <boost/geometry/geometries/ring.hpp>
-#include <boost/geometry/geometries/box.hpp>
-#include <boost/geometry/geometries/multi_point.hpp>
-#include <boost/geometry/geometries/multi_linestring.hpp>
-#include <boost/geometry/geometries/multi_polygon.hpp>
+#include <boost/geometry/algorithms/distance.hpp>
+#include <boost/geometry/algorithms/comparable_distance.hpp>
+#include <boost/geometry/algorithms/num_interior_rings.hpp>
+
+#include <boost/geometry/geometries/geometries.hpp>
 
 #include <boost/geometry/io/wkt/write.hpp>
 #include <boost/geometry/io/dsv/write.hpp>
 
-#include <boost/geometry/algorithms/num_interior_rings.hpp>
-#include <boost/geometry/algorithms/distance.hpp>
-#include <boost/geometry/algorithms/comparable_distance.hpp>
+#include <boost/geometry/strategies/strategies.hpp>
 
 #include <from_wkt.hpp>
 #include <string_from_type.hpp>
@@ -61,8 +51,6 @@ void test_empty_input(Geometry1 const& geometry1, Geometry2 const& geometry2)
     BOOST_CHECK_MESSAGE(false, "A empty_input_exception should have been thrown" );
 }
 #endif // BOOST_GEOMETRY_TEST_DISTANCE_HPP
-
-
 
 //========================================================================
 
@@ -170,6 +158,11 @@ struct test_distance_of_geometries
     : public test_distance_of_geometries<Geometry1, Geometry2, 0, 0>
 {};
 
+#ifdef BOOST_GEOMETRY_TEST_DEBUG
+#define ENABLE_IF_DEBUG(ID) ID
+#else
+#define ENABLE_IF_DEBUG(ID)
+#endif
 
 template <typename Geometry1, typename Geometry2>
 class test_distance_of_geometries<Geometry1, Geometry2, 0, 0>
@@ -184,7 +177,7 @@ private:
         typename Strategy
     >
     static inline
-    void base_test(std::string const& header,
+    void base_test(std::string const& ENABLE_IF_DEBUG(header),
                    G1 const& g1, G2 const& g2,
                    DistanceType const& expected_distance,
                    ComparableDistanceType const& expected_comparable_distance,
@@ -201,11 +194,11 @@ private:
                 Strategy, G1, G2
             >::type distance_result_from_strategy;
 
-        static const bool same_regular = boost::is_same
+        static const bool same_regular = std::is_same
             <
                 default_distance_result,
                 distance_result_from_strategy
-            >::type::value;
+            >::value;
 
         BOOST_CHECK( same_regular );
     
@@ -225,11 +218,11 @@ private:
                 G2
             >::type comparable_distance_result_from_strategy;
 
-        static const bool same_comparable = boost::is_same
+        static const bool same_comparable = std::is_same
             <
                 default_comparable_distance_result,
                 comparable_distance_result_from_strategy
-            >::type::value;
+            >::value;
         
         BOOST_CHECK( same_comparable );
 
@@ -362,9 +355,9 @@ struct test_distance_of_geometries
 >
     : public test_distance_of_geometries<Segment, Polygon, 0, 0>
 {
-    typedef test_distance_of_geometries<Segment, Polygon, 0, 0> base;
+    using base = test_distance_of_geometries<Segment, Polygon, 0, 0>;
 
-    typedef typename bg::ring_type<Polygon>::type ring_type;
+    using ring_type = bg::ring_type_t<Polygon>;
 
     template
     <
@@ -469,7 +462,7 @@ struct test_distance_of_geometries
 >
     : public test_distance_of_geometries<Segment, Box, 0, 0>
 {
-    typedef test_distance_of_geometries<Segment, Box, 0, 0> base;
+    using base = test_distance_of_geometries<Segment, Box, 0, 0>;
 
     template
     <
@@ -529,24 +522,46 @@ struct test_distance_of_geometries
         base::apply(segment, box, expected_distance,
                     expected_comparable_distance, strategy, is_finite);
 
-        comparable_strategy cstrategy =
-            bg::strategy::distance::services::get_comparable
-                <
-                    Strategy
-                >::apply(strategy);
+        auto strategies = bg::strategies::distance::services::strategy_converter<Strategy>::get(strategy);
+        auto cstrategies = bg::strategies::distance::detail::make_comparable(strategies);
+
+        // TODO: these algorithms are used only here. Remove them?
 
         distance_result_type distance_generic =
             bg::detail::distance::segment_to_box_2D_generic
                 <
-                    Segment, Box, Strategy
-                >::apply(segment, box, strategy);
+                    Segment, Box, decltype(strategies), false
+                >::apply(segment, box, strategies);
 
         comparable_distance_result_type comparable_distance_generic =
             bg::detail::distance::segment_to_box_2D_generic
                 <
-                    Segment, Box, comparable_strategy
-                >::apply(segment, box, cstrategy);
+                    Segment, Box, decltype(cstrategies), false
+                >::apply(segment, box, cstrategies);
 
+        check_equal
+            <
+                distance_result_type
+            >::apply(distance_generic, expected_distance, is_finite);
+
+        check_equal
+            <
+                comparable_distance_result_type
+            >::apply(comparable_distance_generic,
+                     expected_comparable_distance,
+                     is_finite);
+
+        distance_generic =
+            bg::detail::distance::segment_to_box_2D_generic
+                <
+                    Segment, Box, decltype(strategies), true
+                >::apply(segment, box, strategies);
+
+        comparable_distance_generic =
+            bg::detail::distance::segment_to_box_2D_generic
+                <
+                    Segment, Box, decltype(cstrategies), true
+                >::apply(segment, box, cstrategies);
 
         check_equal
             <

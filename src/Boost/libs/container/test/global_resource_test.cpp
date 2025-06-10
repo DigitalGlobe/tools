@@ -10,7 +10,6 @@
 #include <boost/container/pmr/global_resource.hpp>
 #include <boost/container/pmr/memory_resource.hpp>
 #include <boost/core/lightweight_test.hpp>
-#include <boost/core/no_exceptions_support.hpp>
 
 #include "derived_from_memory_resource.hpp"
 
@@ -20,14 +19,12 @@
 using namespace boost::container;
 using namespace boost::container::pmr;
 
-std::size_t allocation_count = 0;
-
 #ifdef BOOST_MSVC
 #pragma warning (push)
 #pragma warning (disable : 4290)
 #endif
 
-#if defined(BOOST_GCC) && (BOOST_GCC >= 40700) && (__cplusplus >= 201103L)
+#if __cplusplus >= 201103L
 #define BOOST_CONTAINER_NEW_EXCEPTION_SPECIFIER
 #define BOOST_CONTAINER_DELETE_EXCEPTION_SPECIFIER noexcept
 #else
@@ -38,6 +35,11 @@ std::size_t allocation_count = 0;
 #if defined(BOOST_GCC) && (BOOST_GCC >= 50000)
 #pragma GCC diagnostic ignored "-Wsized-deallocation"
 #endif
+
+//ASAN does not support operator new overloading
+#ifndef BOOST_CONTAINER_ASAN
+
+std::size_t allocation_count = 0;
 
 void* operator new[](std::size_t count) BOOST_CONTAINER_NEW_EXCEPTION_SPECIFIER
 {
@@ -51,9 +53,13 @@ void operator delete[](void *p) BOOST_CONTAINER_DELETE_EXCEPTION_SPECIFIER
    return std::free(p);
 }
 
+#endif   //BOOST_CONTAINER_ASAN
+
 #ifdef BOOST_MSVC
 #pragma warning (pop)
 #endif
+
+#ifndef BOOST_CONTAINER_ASAN
 
 void test_new_delete_resource()
 {
@@ -73,24 +79,29 @@ void test_new_delete_resource()
    BOOST_TEST(memcount == allocation_count);
 }
 
+#endif   //BOOST_CONTAINER_ASAN
+
 void test_null_memory_resource()
 {
    //Make sure it throw or returns null
    memory_resource *mr = null_memory_resource();
+   BOOST_TEST(mr != 0);
+
    #if !defined(BOOST_NO_EXCEPTIONS)
    bool bad_allocexception_thrown = false;
-   try{
+
+   BOOST_CONTAINER_TRY{
       mr->allocate(1, 1);
    }
-   catch(std::bad_alloc&) {
+   BOOST_CONTAINER_CATCH(std::bad_alloc&) {
       bad_allocexception_thrown = true;
    }
-   catch(...) {
+   BOOST_CONTAINER_CATCH(...) {
    }
+   BOOST_CONTAINER_CATCH_END
+
    BOOST_TEST(bad_allocexception_thrown == true);
-   #else
-   BOOST_TEST(0 == mr->allocate(1, 1));
-   #endif
+   #endif   //BOOST_NO_EXCEPTIONS
 }
 
 void test_default_resource()
@@ -109,7 +120,9 @@ void test_default_resource()
 
 int main()
 {
+   #ifndef BOOST_CONTAINER_ASAN
    test_new_delete_resource();
+   #endif
    test_null_memory_resource();
    test_default_resource();
    return ::boost::report_errors();

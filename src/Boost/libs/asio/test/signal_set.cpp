@@ -2,7 +2,7 @@
 // signal_set.cpp
 // ~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,7 +17,7 @@
 #include <boost/asio/signal_set.hpp>
 
 #include "archetypes/async_result.hpp"
-#include <boost/asio/io_service.hpp>
+#include <boost/asio/io_context.hpp>
 #include "unit_test.hpp"
 
 //------------------------------------------------------------------------------
@@ -39,26 +39,35 @@ void test()
 
   try
   {
-    io_service ios;
+    io_context ioc;
+    const io_context::executor_type ioc_ex = ioc.get_executor();
     archetypes::lazy_handler lazy;
     boost::system::error_code ec;
 
     // basic_signal_set constructors.
 
-    signal_set set1(ios);
-    signal_set set2(ios, 1);
-    signal_set set3(ios, 1, 2);
-    signal_set set4(ios, 1, 2, 3);
+    signal_set set1(ioc);
+    signal_set set2(ioc, 1);
+    signal_set set3(ioc, 1, 2);
+    signal_set set4(ioc, 1, 2, 3);
 
-    // basic_io_object functions.
+    signal_set set5(ioc_ex);
+    signal_set set6(ioc_ex, 1);
+    signal_set set7(ioc_ex, 1, 2);
+    signal_set set8(ioc_ex, 1, 2, 3);
 
-    io_service& ios_ref = set1.get_io_service();
-    (void)ios_ref;
+    // I/O object functions.
+
+    signal_set::executor_type ex = set1.get_executor();
+    (void)ex;
 
     // basic_signal_set functions.
 
     set1.add(1);
     set1.add(1, ec);
+
+    set1.add(1, signal_set::flags::dont_care);
+    set1.add(1, signal_set::flags::dont_care, ec);
 
     set1.remove(1);
     set1.remove(1, ec);
@@ -85,5 +94,5 @@ void test()
 BOOST_ASIO_TEST_SUITE
 (
   "signal_set",
-  BOOST_ASIO_TEST_CASE(signal_set_compile::test)
+  BOOST_ASIO_COMPILE_TEST_CASE(signal_set_compile::test)
 )

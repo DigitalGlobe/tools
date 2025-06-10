@@ -8,7 +8,16 @@
 
 // For more information, see http://www.boost.org/
 
-    
+#if defined(__clang__) && defined(__has_warning)
+# if __has_warning( "-Wdeprecated-declarations" )
+#  pragma clang diagnostic ignored "-Wdeprecated-declarations"
+# endif
+#endif
+
+#if defined(__GNUC__) && __GNUC__ >= 12
+# pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 #include <boost/function.hpp>
 #include <iostream>
 #include <functional>
@@ -20,11 +29,12 @@ int X::foo(int x) { return -x; }
 
 int main()
 {
+#ifndef BOOST_NO_CXX98_BINDERS
       boost::function1<int, int> f;
   X x;
   f = std::bind1st(
         std::mem_fun(&X::foo), &x);
   f(5); // Call x.foo(5)
-
+#endif
     return 0;
 }

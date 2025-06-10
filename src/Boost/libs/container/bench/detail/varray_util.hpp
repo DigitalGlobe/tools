@@ -18,7 +18,6 @@
 #include <limits>
 
 #include <boost/config.hpp>
-#include <boost/core/no_exceptions_support.hpp>
 
 #include <boost/container/detail/addressof.hpp>
 #if defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
@@ -41,10 +40,10 @@
 
 namespace boost { namespace container { namespace varray_detail {
 
-namespace bcd = ::boost::container::container_detail;
+namespace bcd = ::boost::container::dtl;
 
 template <typename I>
-struct are_elements_contiguous : boost::container::container_detail::is_pointer<I>
+struct are_elements_contiguous : boost::container::dtl::is_pointer<I>
 {};
 
 #if defined(BOOST_CONTAINER_VARRAY_ENABLE_VECTORS_OPTIMIZATION) && !defined(BOOST_NO_EXCEPTIONS)
@@ -175,8 +174,8 @@ template <typename I, typename O>
 inline O copy_dispatch(I first, I last, O dst, bcd::true_type const& /*use_memmove*/)
 {
    typedef typename ::boost::container::iterator_traits<I>::value_type value_type;
-   const std::size_t d = boost::container::iterator_distance(first, last);
-   ::memmove(boost::container::container_detail::addressof(*dst), boost::container::container_detail::addressof(*first), sizeof(value_type) * d);
+   const std::size_t d = boost::container::iterator_udistance(first, last);
+   ::memmove(boost::container::dtl::addressof(*dst), boost::container::dtl::addressof(*first), sizeof(value_type) * d);
    return dst + d;
 }
 
@@ -205,8 +204,8 @@ O uninitialized_copy_dispatch(I first, I last, O dst,
                               bcd::true_type const& /*use_memcpy*/)
 {
    typedef typename ::boost::container::iterator_traits<I>::value_type value_type;
-   const std::size_t d = boost::container::iterator_distance(first, last);
-   ::memcpy(boost::container::container_detail::addressof(*dst), boost::container::container_detail::addressof(*first), sizeof(value_type) * d);
+   const std::size_t d = boost::container::iterator_udistance(first, last);
+   ::memcpy(boost::container::dtl::addressof(*dst), boost::container::dtl::addressof(*first), sizeof(value_type) * d);
    return dst + d;
 }
 
@@ -237,8 +236,8 @@ O uninitialized_move_dispatch(I first, I last, O dst,
                               bcd::true_type const& /*use_memcpy*/)
 {
    typedef typename ::boost::container::iterator_traits<I>::value_type value_type;
-   const std::size_t d = boost::container::iterator_distance(first, last);
-   ::memcpy(boost::container::container_detail::addressof(*dst), boost::container::container_detail::addressof(*first), sizeof(value_type) * d);
+   const std::size_t d = boost::container::iterator_udistance(first, last);
+   ::memcpy(boost::container::dtl::addressof(*dst), boost::container::dtl::addressof(*first), sizeof(value_type) * d);
    return dst + d;
 }
 
@@ -251,18 +250,18 @@ O uninitialized_move_dispatch(I first, I last, O dst,
 
     O o = dst;
 
-    BOOST_TRY
+    BOOST_CONTAINER_TRY
     {
         typedef typename boost::container::iterator_traits<O>::value_type value_type;
         for (; first != last; ++first, ++o )
-            new (boost::container::container_detail::addressof(*o)) value_type(boost::move(*first));
+            new (boost::container::dtl::addressof(*o)) value_type(boost::move(*first));
     }
-    BOOST_CATCH(...)
+    BOOST_CONTAINER_CATCH(...)
     {
         destroy(dst, o);
-        BOOST_RETHROW;
+        BOOST_CONTAINER_RETHROW;
     }
-    BOOST_CATCH_END
+    BOOST_CONTAINER_CATCH_END
 
     return dst;
 }
@@ -288,8 +287,8 @@ O move_dispatch(I first, I last, O dst,
                 bcd::true_type const& /*use_memmove*/)
 {
    typedef typename ::boost::container::iterator_traits<I>::value_type value_type;
-   const std::size_t d = boost::container::iterator_distance(first, last);
-   ::memmove(boost::container::container_detail::addressof(*dst), boost::container::container_detail::addressof(*first), sizeof(value_type)*d );
+   const std::size_t d = boost::container::iterator_udistance(first, last);
+   ::memmove(boost::container::dtl::addressof(*dst), boost::container::dtl::addressof(*first), sizeof(value_type)*d );
    return dst + d;
 }
 
@@ -320,9 +319,9 @@ BDO move_backward_dispatch(BDI first, BDI last, BDO dst,
                            bcd::true_type const& /*use_memmove*/)
 {
     typedef typename ::boost::container::iterator_traits<BDI>::value_type value_type;
-    const std::size_t d = boost::container::iterator_distance(first, last);
+    const std::size_t d = boost::container::iterator_udistance(first, last);
     BDO foo(dst - d);
-    ::memmove(boost::container::container_detail::addressof(*foo), boost::container::container_detail::addressof(*first), sizeof(value_type) * d);
+    ::memmove(boost::container::dtl::addressof(*foo), boost::container::dtl::addressof(*first), sizeof(value_type) * d);
     return foo;
 }
 
@@ -406,7 +405,7 @@ O move_if_noexcept(I first, I last, O dst)
 
 template <typename I>
 inline
-void uninitialized_fill_dispatch(I first, I last,
+void uninitialized_fill_dispatch(I , I ,
                                  bcd::true_type const& /*is_trivially_default_constructible*/,
                                  bcd::true_type const& /*disable_trivial_init*/)
 {}
@@ -419,7 +418,7 @@ void uninitialized_fill_dispatch(I first, I last,
 {
     typedef typename ::boost::container::iterator_traits<I>::value_type value_type;
     for ( ; first != last ; ++first )
-        new (boost::container::container_detail::addressof(*first)) value_type();
+        new (boost::container::dtl::addressof(*first)) value_type();
 }
 
 template <typename I, typename DisableTrivialInit>
@@ -431,17 +430,17 @@ void uninitialized_fill_dispatch(I first, I last,
     typedef typename ::boost::container::iterator_traits<I>::value_type value_type;
     I it = first;
 
-    BOOST_TRY
+    BOOST_CONTAINER_TRY
     {
         for ( ; it != last ; ++it )
-            new (boost::container::container_detail::addressof(*it)) value_type();                           // may throw
+            new (boost::container::dtl::addressof(*it)) value_type();                           // may throw
     }
-    BOOST_CATCH(...)
+    BOOST_CONTAINER_CATCH(...)
     {
         destroy(first, it);
-        BOOST_RETHROW;
+        BOOST_CONTAINER_RETHROW;
     }
-    BOOST_CATCH_END
+    BOOST_CONTAINER_CATCH_END
 }
 
 template <typename I, typename DisableTrivialInit>
@@ -458,7 +457,7 @@ void uninitialized_fill(I first, I last, DisableTrivialInit const& disable_trivi
 
 template <typename I>
 inline
-void construct_dispatch(bcd::true_type const& /*dont_init*/, I pos)
+void construct_dispatch(bcd::true_type const& /*dont_init*/, I /*pos*/)
 {}
 
 template <typename I>
@@ -466,7 +465,7 @@ inline
 void construct_dispatch(bcd::false_type const& /*dont_init*/, I pos)
 {
     typedef typename ::boost::container::iterator_traits<I>::value_type value_type;
-    new (static_cast<void*>(::boost::container::container_detail::addressof(*pos))) value_type();                      // may throw
+    new (static_cast<void*>(::boost::container::dtl::addressof(*pos))) value_type();                      // may throw
 }
 
 template <typename DisableTrivialInit, typename I>
@@ -487,7 +486,7 @@ template <typename I, typename V>
 inline
 void construct_dispatch(I pos, V const& v, bcd::true_type const& /*use_memcpy*/)
 {
-    ::memcpy(boost::container::container_detail::addressof(*pos), boost::container::container_detail::addressof(v), sizeof(V));
+    ::memcpy(boost::container::dtl::addressof(*pos), boost::container::dtl::addressof(v), sizeof(V));
 }
 
 template <typename I, typename P>
@@ -496,7 +495,7 @@ void construct_dispatch(I pos, P const& p,
                         bcd::false_type const& /*use_memcpy*/)
 {
     typedef typename ::boost::container::iterator_traits<I>::value_type V;
-    new (static_cast<void*>(boost::container::container_detail::addressof(*pos))) V(p);                      // may throw
+    new (static_cast<void*>(boost::container::dtl::addressof(*pos))) V(p);                      // may throw
 }
 
 template <typename DisableTrivialInit, typename I, typename P>
@@ -517,7 +516,7 @@ inline
 void construct(DisableTrivialInit const&, I pos, BOOST_RV_REF(P) p)
 {
     typedef typename ::boost::container::iterator_traits<I>::value_type V;
-    new (static_cast<void*>(boost::container::container_detail::addressof(*pos))) V(::boost::move(p));                      // may throw
+    new (static_cast<void*>(boost::container::dtl::addressof(*pos))) V(::boost::move(p));                      // may throw
 }
 
 // Needed by emplace_back() and emplace()
@@ -532,7 +531,7 @@ void construct(DisableTrivialInit const&,
                BOOST_FWD_REF(Args) ...args)
 {
     typedef typename ::boost::container::iterator_traits<I>::value_type V;
-    new (static_cast<void*>(boost::container::container_detail::addressof(*pos))) V(::boost::forward<Args>(args)...);    // may throw
+    new (static_cast<void*>(boost::container::dtl::addressof(*pos))) V(::boost::forward<Args>(args)...);    // may throw
 }
 
 #else // !BOOST_NO_CXX11_VARIADIC_TEMPLATES
@@ -546,7 +545,7 @@ template <typename DisableTrivialInit, typename I, typename P BOOST_MOVE_I##N BO
 inline void construct(DisableTrivialInit const&, I pos, BOOST_FWD_REF(P) p BOOST_MOVE_I##N BOOST_MOVE_UREF##N )\
 {\
     typedef typename ::boost::container::iterator_traits<I>::value_type V;\
-    new (static_cast<void*>(boost::container::container_detail::addressof(*pos)))\
+    new (static_cast<void*>(boost::container::dtl::addressof(*pos)))\
     V(::boost::forward<P>(p) BOOST_MOVE_I##N BOOST_MOVE_FWD##N); /*may throw*/\
 }
 BOOST_MOVE_ITERATE_1TO9(BOOST_CONTAINER_VARRAY_UTIL_CONSTRUCT_CODE)
@@ -562,7 +561,7 @@ inline
 void assign_dispatch(I pos, V const& v,
                      bcd::true_type const& /*use_memcpy*/)
 {
-    ::memcpy(boost::container::container_detail::addressof(*pos), boost::container::container_detail::addressof(v), sizeof(V));
+    ::memcpy(boost::container::dtl::addressof(*pos), boost::container::dtl::addressof(v), sizeof(V));
 }
 
 template <typename I, typename V>
@@ -600,7 +599,7 @@ inline std::size_t uninitialized_copy_s(I first, I last, F dest, std::size_t max
     std::size_t count = 0;
     F it = dest;
 
-    BOOST_TRY
+    BOOST_CONTAINER_TRY
     {
         for ( ; first != last ; ++it, ++first, ++count )
         {
@@ -611,12 +610,12 @@ inline std::size_t uninitialized_copy_s(I first, I last, F dest, std::size_t max
             construct(0, it, *first);                                              // may throw
         }
     }
-    BOOST_CATCH(...)
+    BOOST_CONTAINER_CATCH(...)
     {
         destroy(dest, it);
-        BOOST_RETHROW;
+        BOOST_CONTAINER_RETHROW;
     }
-    BOOST_CATCH_END
+    BOOST_CONTAINER_CATCH_END
 
     return count;
 }

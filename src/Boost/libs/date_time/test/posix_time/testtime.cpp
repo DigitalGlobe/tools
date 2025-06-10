@@ -29,6 +29,28 @@ void special_values_tests()
   }
 #endif // DATE_TIME_NO_DEFAULT_CONSTRUCTOR
 
+#ifdef BOOST_NO_CXX14_CONSTEXPR
+  check("constexpr not configured", true);
+#else  
+  //check constexpr case
+  {
+    constexpr date d1(1970,1,1);
+    constexpr ptime t1(d1);
+    static_assert(t1.date().day() == 1,     "constexpr construction day()");
+    static_assert(t1.date().month() == 1,   "constexpr construction month()");
+    static_assert(t1.date().year() == 1970, "constexpr construction year()");
+    static_assert(t1.time_of_day().hours() == 0,   "constexpr construction hour()");
+    static_assert(t1.time_of_day().minutes() == 0, "constexpr construction minute()");
+    static_assert(t1.time_of_day().seconds() == 0,   "constexpr construction second()");
+    constexpr ptime t2(d1, time_duration(1,2,3));
+    static_assert(t2.time_of_day().hours() == 1,    "constexpr contruct with duration  hour()");
+    static_assert(t2.time_of_day().minutes() == 2,  "constexpr contruct with duration  minute()");
+    static_assert(t2.time_of_day().seconds() == 3,  "constexpr contruct with duration  second()");
+    check("constexpr tests compiled", true);    
+  }
+#endif
+
+  
   { // special values construction tests
     ptime p_sv1(pos_infin);
     std::string s("+infinity");
@@ -193,11 +215,11 @@ main()
   std::cout << to_simple_string(td2) << std::endl;
   check("add 2001-Dec-01 0:0:0 + 01:02:03", t9 == t10);
   {
-    ptime t9(date(2001,Dec,1), time_duration(12,0,0)); //Dec 1 at Noon
+    ptime t9x(date(2001,Dec,1), time_duration(12,0,0)); //Dec 1 at Noon
     time_duration td3(-4,0,0);
     check("add 2001-Dec-01 12:00:00 + (-04:00:00)", 
-    t9+td3 == ptime(date(2001,Dec,1), time_duration(8,0,0)) );
-    std::cout << to_simple_string(t9-td3) << std::endl;
+    t9x+td3 == ptime(date(2001,Dec,1), time_duration(8,0,0)) );
+    std::cout << to_simple_string(t9x-td3) << std::endl;
   }
   time_duration td3(24,0,0); // a day
   check("add 2001-Dec-01 0:0:0 + 24:00:00", t8+td3 == ptime(date(2001,Dec,2)));
@@ -284,6 +306,18 @@ main()
         t18 == ptime(date(2032,2,15), time_duration(18,47,14)));
   check("time_t conversion from 1960483634", to_time_t(t18) == tt3);
 
+#if !defined(BOOST_NO_INT64_T)
+  // 64-bit time_t test (if running with a 64-bit time_t)
+  if (sizeof(std::time_t) >= 8)
+  {
+    std::time_t tt4(INT64_C(11864480887)); 
+    t18 = from_time_t(tt4); //2345-12-21 09:08:07
+    check("time_t conversion of 11864480887", 
+          t18 == ptime(date(2345,12,21), time_duration(9,8,7)));
+    check("time_t conversion from 11864480887", to_time_t(t18) == tt4);
+  }
+#endif
+  
   special_values_tests();
 
   //min and max constructors
@@ -309,7 +343,7 @@ main()
     check("Exception not thrown (special_value to_tm)", false);
     //following code does nothing useful but stops compiler from complaining about unused pt_tm
     std::cout << pt_tm.tm_sec << std::endl;
-  }catch(std::out_of_range& e){
+  }catch(std::out_of_range&){
     check("Caught expected exception (special_value to_tm)", true);
   }catch(...){
     check("Caught un-expected exception (special_value to_tm)", false);
@@ -323,7 +357,7 @@ main()
     check("Exception not thrown (special_value to_tm)", false);
     //following code does nothing useful but stops compiler from complaining about unused pt_tm
     std::cout << pt_tm.tm_sec << std::endl;
-  }catch(std::out_of_range& e){
+  }catch(std::out_of_range&){
     check("Caught expected exception (special_value to_tm)", true);
   }catch(...){
     check("Caught un-expected exception (special_value to_tm)", false);

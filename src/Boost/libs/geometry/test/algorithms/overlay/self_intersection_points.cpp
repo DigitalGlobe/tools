@@ -5,6 +5,11 @@
 // Copyright (c) 2008-2012 Bruno Lalande, Paris, France.
 // Copyright (c) 2009-2012 Mateusz Loskot, London, UK.
 
+// This file was modified by Oracle on 2017-2024.
+// Modifications copyright (c) 2017-2024, Oracle and/or its affiliates.
+// Contributed and/or modified by Vissarion Fysikopoulos, on behalf of Oracle
+// Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
+
 // Parts of Boost.Geometry are redesigned from Geodan's Geographic Library
 // (geolib/GGL), copyright (c) 1995-2010 Geodan, Amsterdam, the Netherlands.
 
@@ -22,9 +27,8 @@
 #include <boost/geometry/algorithms/correct.hpp>
 #include <boost/geometry/algorithms/intersection.hpp>
 #include <boost/geometry/algorithms/intersects.hpp>
-//#include <boost/geometry/algorithms/detail/overlay/self_intersection_points.hpp>
+#include <boost/geometry/algorithms/detail/has_self_intersections.hpp>
 #include <boost/geometry/algorithms/detail/overlay/self_turn_points.hpp>
-#include <boost/geometry/policies/robustness/get_rescale_policy.hpp>
 
 #include <boost/geometry/geometries/point_xy.hpp>
 #include <boost/geometry/geometries/linestring.hpp>
@@ -50,36 +54,27 @@ static void test_self_intersection_points(std::string const& case_id,
             double /*precision*/ = 0.001)
 {
     typedef typename bg::point_type<Geometry>::type point_type;
-    //typedef typename bg::rescale_policy_type<point_type>::type rescale_policy_type;
-    typedef bg::detail::no_rescale_policy rescale_policy_type;
-    typedef bg::detail::overlay::turn_info
+    typedef typename bg::strategies::relate::services::default_strategy
         <
-            point_type,
-            typename bg::segment_ratio_type
-                <
-                    point_type, rescale_policy_type
-                >::type
-        > turn_info;
+            Geometry, Geometry
+        >::type strategy_type;
+    typedef bg::detail::overlay::turn_info<point_type> turn_info;
 
     std::vector<turn_info> turns;
 
-
-    rescale_policy_type rescale_policy
-    ;
-           // = bg::get_rescale_policy<rescale_policy_type>(geometry);
-    ///bg::get_intersection_points(geometry, turns);
+    strategy_type strategy;
 
     bg::detail::self_get_turn_points::no_interrupt_policy policy;
     bg::self_turns
         <
             bg::detail::overlay::assign_null_policy
-        >(geometry, rescale_policy, turns, policy);
+        >(geometry, strategy, turns, policy);
 
 
     typedef typename bg::coordinate_type<Geometry>::type ct;
     ct zero = ct();
     ct x = zero, y = zero;
-    BOOST_FOREACH(turn_info const& turn, turns)
+    for (turn_info const& turn : turns)
     {
         x += bg::get<0>(turn.point);
         y += bg::get<1>(turn.point);
@@ -101,7 +96,7 @@ static void test_self_intersection_points(std::string const& case_id,
         {
             try
             {
-                boost::geometry::detail::overlay::has_self_intersections(geometry);
+                bg::detail::overlay::has_self_intersections(geometry, strategy);
                 BOOST_CHECK_MESSAGE(false, "Case " << case_id << " there are no self-intersections detected!");
             }
             catch(...)
@@ -115,7 +110,7 @@ static void test_self_intersection_points(std::string const& case_id,
         {
             try
             {
-                boost::geometry::detail::overlay::has_self_intersections(geometry);
+                bg::detail::overlay::has_self_intersections(geometry, strategy);
             }
             catch(...)
             {
@@ -137,7 +132,7 @@ static void test_self_intersection_points(std::string const& case_id,
 
         mapper.map(geometry, "fill:rgb(255,255,128);stroke:rgb(0,0,0);stroke-width:1");
 
-        BOOST_FOREACH(turn_info const& turn, turns)
+        for (turn_info const& turn : turns)
         {
             mapper.map(turn.point, "fill:rgb(255,128,0);stroke:rgb(0,0,100);stroke-width:1");
         }

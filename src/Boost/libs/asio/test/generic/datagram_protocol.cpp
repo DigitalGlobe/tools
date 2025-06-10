@@ -2,7 +2,7 @@
 // generic/datagram_protocol.cpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,9 +17,10 @@
 #include <boost/asio/generic/datagram_protocol.hpp>
 
 #include <cstring>
-#include <boost/asio/io_service.hpp>
+#include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/udp.hpp>
 #include "../unit_test.hpp"
+#include "../archetypes/async_result.hpp"
 
 #if defined(__cplusplus_cli) || defined(__cplusplus_winrt)
 # define generic cpp_generic
@@ -59,43 +60,40 @@ void test()
 
   try
   {
-    io_service ios;
+    io_context ioc;
     char mutable_char_buffer[128] = "";
     const char const_char_buffer[128] = "";
     socket_base::message_flags in_flags = 0;
     socket_base::send_buffer_size socket_option;
     socket_base::bytes_readable io_control_command;
+    archetypes::immediate_handler immediate;
     boost::system::error_code ec;
 
     // basic_datagram_socket constructors.
 
-    dp::socket socket1(ios);
-    dp::socket socket2(ios, dp(af_inet, ipproto_udp));
-    dp::socket socket3(ios, dp::endpoint());
+    dp::socket socket1(ioc);
+    dp::socket socket2(ioc, dp(af_inet, ipproto_udp));
+    dp::socket socket3(ioc, dp::endpoint());
 #if !defined(BOOST_ASIO_WINDOWS_RUNTIME)
     dp::socket::native_handle_type native_socket1
       = ::socket(af_inet, sock_dgram, 0);
-    dp::socket socket4(ios, dp(af_inet, ipproto_udp), native_socket1);
+    dp::socket socket4(ioc, dp(af_inet, ipproto_udp), native_socket1);
 #endif // !defined(BOOST_ASIO_WINDOWS_RUNTIME)
 
-#if defined(BOOST_ASIO_HAS_MOVE)
     dp::socket socket5(std::move(socket4));
-    boost::asio::ip::udp::socket udp_socket(ios);
+    boost::asio::ip::udp::socket udp_socket(ioc);
     dp::socket socket6(std::move(udp_socket));
-#endif // defined(BOOST_ASIO_HAS_MOVE)
 
     // basic_datagram_socket operators.
 
-#if defined(BOOST_ASIO_HAS_MOVE)
-    socket1 = dp::socket(ios);
+    socket1 = dp::socket(ioc);
     socket1 = std::move(socket2);
-    socket1 = boost::asio::ip::udp::socket(ios);
-#endif // defined(BOOST_ASIO_HAS_MOVE)
+    socket1 = boost::asio::ip::udp::socket(ioc);
 
-    // basic_io_object functions.
+    // I/O object functions.
 
-    io_service& ios_ref = socket1.get_io_service();
-    (void)ios_ref;
+    dp::socket::executor_type ex = socket1.get_executor();
+    (void)ex;
 
     // basic_socket functions.
 
@@ -120,7 +118,7 @@ void test()
     socket1.close();
     socket1.close(ec);
 
-    dp::socket::native_type native_socket4 = socket1.native();
+    dp::socket::native_handle_type native_socket4 = socket1.native_handle();
     (void)native_socket4;
 
     socket1.cancel();
@@ -143,6 +141,7 @@ void test()
     socket1.connect(dp::endpoint(), ec);
 
     socket1.async_connect(dp::endpoint(), connect_handler);
+    socket1.async_connect(dp::endpoint(), immediate);
 
     socket1.set_option(socket_option);
     socket1.set_option(socket_option, ec);
@@ -154,10 +153,14 @@ void test()
     socket1.io_control(io_control_command, ec);
 
     dp::endpoint endpoint1 = socket1.local_endpoint();
+    (void)endpoint1;
     dp::endpoint endpoint2 = socket1.local_endpoint(ec);
+    (void)endpoint2;
 
     dp::endpoint endpoint3 = socket1.remote_endpoint();
+    (void)endpoint3;
     dp::endpoint endpoint4 = socket1.remote_endpoint(ec);
+    (void)endpoint4;
 
     socket1.shutdown(socket_base::shutdown_both);
     socket1.shutdown(socket_base::shutdown_both, ec);
@@ -180,6 +183,12 @@ void test()
     socket1.async_send(buffer(mutable_char_buffer), in_flags, send_handler);
     socket1.async_send(buffer(const_char_buffer), in_flags, send_handler);
     socket1.async_send(null_buffers(), in_flags, send_handler);
+    socket1.async_send(buffer(mutable_char_buffer), immediate);
+    socket1.async_send(buffer(const_char_buffer), immediate);
+    socket1.async_send(null_buffers(), immediate);
+    socket1.async_send(buffer(mutable_char_buffer), in_flags, immediate);
+    socket1.async_send(buffer(const_char_buffer), in_flags, immediate);
+    socket1.async_send(null_buffers(), in_flags, immediate);
 
     socket1.send_to(buffer(mutable_char_buffer),
         dp::endpoint());
@@ -212,6 +221,18 @@ void test()
         dp::endpoint(), in_flags, send_handler);
     socket1.async_send_to(null_buffers(),
         dp::endpoint(), in_flags, send_handler);
+    socket1.async_send_to(buffer(mutable_char_buffer),
+        dp::endpoint(), immediate);
+    socket1.async_send_to(buffer(const_char_buffer),
+        dp::endpoint(), immediate);
+    socket1.async_send_to(null_buffers(),
+        dp::endpoint(), immediate);
+    socket1.async_send_to(buffer(mutable_char_buffer),
+        dp::endpoint(), in_flags, immediate);
+    socket1.async_send_to(buffer(const_char_buffer),
+        dp::endpoint(), in_flags, immediate);
+    socket1.async_send_to(null_buffers(),
+        dp::endpoint(), in_flags, immediate);
 
     socket1.receive(buffer(mutable_char_buffer));
     socket1.receive(null_buffers());
@@ -225,6 +246,10 @@ void test()
     socket1.async_receive(buffer(mutable_char_buffer), in_flags,
         receive_handler);
     socket1.async_receive(null_buffers(), in_flags, receive_handler);
+    socket1.async_receive(buffer(mutable_char_buffer), immediate);
+    socket1.async_receive(null_buffers(), immediate);
+    socket1.async_receive(buffer(mutable_char_buffer), in_flags, immediate);
+    socket1.async_receive(null_buffers(), in_flags, immediate);
 
     dp::endpoint endpoint;
     socket1.receive_from(buffer(mutable_char_buffer), endpoint);
@@ -242,6 +267,14 @@ void test()
         endpoint, in_flags, receive_handler);
     socket1.async_receive_from(null_buffers(),
         endpoint, in_flags, receive_handler);
+    socket1.async_receive_from(buffer(mutable_char_buffer),
+        endpoint, immediate);
+    socket1.async_receive_from(null_buffers(),
+        endpoint, immediate);
+    socket1.async_receive_from(buffer(mutable_char_buffer),
+        endpoint, in_flags, immediate);
+    socket1.async_receive_from(null_buffers(),
+        endpoint, in_flags, immediate);
   }
   catch (std::exception&)
   {
@@ -255,5 +288,5 @@ void test()
 BOOST_ASIO_TEST_SUITE
 (
   "generic/datagram_protocol",
-  BOOST_ASIO_TEST_CASE(generic_datagram_protocol_socket_compile::test)
+  BOOST_ASIO_COMPILE_TEST_CASE(generic_datagram_protocol_socket_compile::test)
 )

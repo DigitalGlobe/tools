@@ -1,3 +1,11 @@
+<!--
+     Copyright (c) 2013-2015 Louis Dionne
+
+     Distributed under the Boost Software License, Version 1.0.
+     (See accompanying file LICENSE_1_0.txt or copy at
+     http://www.boost.org/LICENSE_1_0.txt)
+-->
+
 <p><body bgcolor="#ffffff" link="#0000ee" text="#000000" vlink="#551a8b" alink="#ff0000"></p>
 
 <p><img src="../../../boost.png" alt="C++ Boost" /></p>
@@ -5,19 +13,19 @@
 <h1 id="hawick_circuits"><code>hawick_circuits</code></h1>
 
 <pre><code>template &lt;typename Graph, typename Visitor, typename VertexIndexMap&gt;
-void hawick_circuits(Graph const&amp; graph, Visitor visitor, VertexIndexMap const&amp; vim = get(vertex_index, graph));
+void hawick_circuits(Graph const&amp; graph, Visitor visitor, VertexIndexMap const&amp; vim = get(vertex_index, graph), unsigned int max_length = 0);
 
 template &lt;typename Graph, typename Visitor, typename VertexIndexMap&gt;
-void hawick_unique_circuits(Graph const&amp; graph, Visitor visitor, VertexIndexMap const&amp; vim = get(vertex_index, graph));
+void hawick_unique_circuits(Graph const&amp; graph, Visitor visitor, VertexIndexMap const&amp; vim = get(vertex_index, graph), unsigned int max_length = 0);
 </code></pre>
 
-<p>Enumerate all the elementary circuits in a directed multigraph. Specifically,
+<p>Enumerate all the elementary circuits (of length &le; <code>max_length</code>, if nonzero) in a directed multigraph. Specifically,
 self-loops and redundant circuits caused by parallel edges are enumerated too.
 <code>hawick_unique_circuits</code> may be used if redundant circuits caused by parallel
 edges are not desired.</p>
 
 <p>The algorithm is described in detail in
-<a href="http://www.massey.ac.nz/~kahawick/cstn/013/cstn-013.pdf">http://www.massey.ac.nz/~kahawick/cstn/013/cstn-013.pdf</a>.</p>
+<a href="https://www.researchgate.net/publication/221440635_Enumerating_Circuits_and_Loops_in_Graphs_with_Self-Arcs_and_Multiple-Arcs">https://www.researchgate.net/publication/221440635_Enumerating_Circuits_and_Loops_in_Graphs_with_Self-Arcs_and_Multiple-Arcs</a>.</p>
 
 <h3 id="where-defined">Where defined</h3>
 
@@ -51,8 +59,14 @@ edges are not desired.</p>
   the vertex index map provided by the <code>graph</code>.</p>
 </blockquote>
 
+<p><strong>IN:</strong> <code>unsigned int max_length = 0</code></p>
+
+<blockquote>
+  <p>The maximum circuit length to consider. Beyond this it truncates the depth-first search, reducing the computation time by ignoring longer circuits. The default value of <code>max_length = 0</code> implies no maximum.</p>
+</blockquote>
+
 <hr />
 
 <div class="footer">
-    &copy; 2013 Louis Dionne
+    &copy; 2013-2015 Louis Dionne
 </div>

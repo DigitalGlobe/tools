@@ -2,7 +2,7 @@
 // buffered_write_stream.cpp
 // ~~~~~~~~~~~~~~~~~~~~~~~~~
 //
-// Copyright (c) 2003-2015 Christopher M. Kohlhoff (chris at kohlhoff dot com)
+// Copyright (c) 2003-2025 Christopher M. Kohlhoff (chris at kohlhoff dot com)
 //
 // Distributed under the Boost Software License, Version 1.0. (See accompanying
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,9 +17,10 @@
 #include <boost/asio/buffered_write_stream.hpp>
 
 #include <cstring>
+#include <functional>
 #include "archetypes/async_result.hpp"
 #include <boost/asio/buffer.hpp>
-#include <boost/asio/io_service.hpp>
+#include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/system/system_error.hpp>
 #include "unit_test.hpp"
@@ -29,12 +30,6 @@
 #else // defined(BOOST_ASIO_HAS_BOOST_ARRAY)
 # include <array>
 #endif // defined(BOOST_ASIO_HAS_BOOST_ARRAY)
-
-#if defined(BOOST_ASIO_HAS_BOOST_BIND)
-# include <boost/bind.hpp>
-#else // defined(BOOST_ASIO_HAS_BOOST_BIND)
-# include <functional>
-#endif // defined(BOOST_ASIO_HAS_BOOST_BIND)
 
 typedef boost::asio::buffered_write_stream<
     boost::asio::ip::tcp::socket> stream_type;
@@ -63,7 +58,7 @@ void test_compile()
 
   try
   {
-    io_service ios;
+    io_context ioc;
     char mutable_char_buffer[128] = "";
     const char const_char_buffer[128] = "";
     array<boost::asio::mutable_buffer, 2> mutable_buffers = {{
@@ -75,11 +70,11 @@ void test_compile()
     archetypes::lazy_handler lazy;
     boost::system::error_code ec;
 
-    stream_type stream1(ios);
-    stream_type stream2(ios, 1024);
+    stream_type stream1(ioc);
+    stream_type stream2(ioc, 1024);
 
-    io_service& ios_ref = stream1.get_io_service();
-    (void)ios_ref;
+    stream_type::executor_type ex = stream1.get_executor();
+    (void)ex;
 
     stream_type::lowest_layer_type& lowest_layer = stream1.lowest_layer();
     (void)lowest_layer;
@@ -144,17 +139,17 @@ void test_sync_operations()
 {
   using namespace std; // For memcmp.
 
-  boost::asio::io_service io_service;
+  boost::asio::io_context io_context;
 
-  boost::asio::ip::tcp::acceptor acceptor(io_service,
+  boost::asio::ip::tcp::acceptor acceptor(io_context,
       boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 0));
   boost::asio::ip::tcp::endpoint server_endpoint = acceptor.local_endpoint();
   server_endpoint.address(boost::asio::ip::address_v4::loopback());
 
-  stream_type client_socket(io_service);
+  stream_type client_socket(io_context);
   client_socket.lowest_layer().connect(server_endpoint);
 
-  stream_type server_socket(io_service);
+  stream_type server_socket(io_context);
   acceptor.accept(server_socket.lowest_layer());
 
   const char write_data[]
@@ -254,28 +249,24 @@ void test_async_operations()
 {
   using namespace std; // For memcmp.
 
-#if defined(BOOST_ASIO_HAS_BOOST_BIND)
-  namespace bindns = boost;
-#else // defined(BOOST_ASIO_HAS_BOOST_BIND)
   namespace bindns = std;
-  using std::placeholders::_1;
-  using std::placeholders::_2;
-#endif // defined(BOOST_ASIO_HAS_BOOST_BIND)
+  using bindns::placeholders::_1;
+  using bindns::placeholders::_2;
 
-  boost::asio::io_service io_service;
+  boost::asio::io_context io_context;
 
-  boost::asio::ip::tcp::acceptor acceptor(io_service,
+  boost::asio::ip::tcp::acceptor acceptor(io_context,
       boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), 0));
   boost::asio::ip::tcp::endpoint server_endpoint = acceptor.local_endpoint();
   server_endpoint.address(boost::asio::ip::address_v4::loopback());
 
-  stream_type client_socket(io_service);
+  stream_type client_socket(io_context);
   client_socket.lowest_layer().connect(server_endpoint);
 
-  stream_type server_socket(io_service);
+  stream_type server_socket(io_context);
   acceptor.async_accept(server_socket.lowest_layer(), &handle_accept);
-  io_service.run();
-  io_service.reset();
+  io_context.run();
+  io_context.restart();
 
   const char write_data[]
     = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -287,12 +278,12 @@ void test_async_operations()
     client_socket.async_write_some(
         boost::asio::buffer(write_buf + bytes_written),
         bindns::bind(handle_write, _1, _2, &bytes_written));
-    io_service.run();
-    io_service.reset();
+    io_context.run();
+    io_context.restart();
     client_socket.async_flush(
         bindns::bind(handle_flush, _1));
-    io_service.run();
-    io_service.reset();
+    io_context.run();
+    io_context.restart();
   }
 
   char read_data[sizeof(write_data)];
@@ -304,8 +295,8 @@ void test_async_operations()
     server_socket.async_read_some(
         boost::asio::buffer(read_buf + bytes_read),
         bindns::bind(handle_read, _1, _2, &bytes_read));
-    io_service.run();
-    io_service.reset();
+    io_context.run();
+    io_context.restart();
   }
 
   BOOST_ASIO_CHECK(bytes_written == sizeof(write_data));
@@ -318,12 +309,12 @@ void test_async_operations()
     server_socket.async_write_some(
         boost::asio::buffer(write_buf + bytes_written),
         bindns::bind(handle_write, _1, _2, &bytes_written));
-    io_service.run();
-    io_service.reset();
+    io_context.run();
+    io_context.restart();
     server_socket.async_flush(
         bindns::bind(handle_flush, _1));
-    io_service.run();
-    io_service.reset();
+    io_context.run();
+    io_context.restart();
   }
 
   bytes_read = 0;
@@ -332,8 +323,8 @@ void test_async_operations()
     client_socket.async_read_some(
         boost::asio::buffer(read_buf + bytes_read),
         bindns::bind(handle_read, _1, _2, &bytes_read));
-    io_service.run();
-    io_service.reset();
+    io_context.run();
+    io_context.restart();
   }
 
   BOOST_ASIO_CHECK(bytes_written == sizeof(write_data));
@@ -347,7 +338,7 @@ void test_async_operations()
 BOOST_ASIO_TEST_SUITE
 (
   "buffered_write_stream",
-  BOOST_ASIO_TEST_CASE(test_compile)
+  BOOST_ASIO_COMPILE_TEST_CASE(test_compile)
   BOOST_ASIO_TEST_CASE(test_sync_operations)
   BOOST_ASIO_TEST_CASE(test_async_operations)
 )

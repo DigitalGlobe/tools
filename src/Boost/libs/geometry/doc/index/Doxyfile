@@ -173,6 +173,8 @@ COLS_IN_ALPHA_INDEX    = 5
 IGNORE_PREFIX          = 
 #---------------------------------------------------------------------------
 # configuration options related to the HTML output
+# This is only for debug purposes. For the final documentation, XML output is
+# converted to QuickBook and then to BoostBook and DocBook and html
 #---------------------------------------------------------------------------
 GENERATE_HTML          = YES
 HTML_OUTPUT            = html_by_doxygen
@@ -260,8 +262,6 @@ MAN_LINKS              = NO
 #---------------------------------------------------------------------------
 GENERATE_XML           = YES
 XML_OUTPUT             = xml
-XML_SCHEMA             = 
-XML_DTD                = 
 XML_PROGRAMLISTING     = NO
 #---------------------------------------------------------------------------
 # configuration options for the AutoGen Definitions output

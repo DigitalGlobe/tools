@@ -1,6 +1,6 @@
 # (C) Copyright 2008 Oliver Kowalke
 #
-# Distributed under the Boost Software License, Version 1.0. (See accompanying 
+# Distributed under the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 project context/doc ;
@@ -31,3 +31,9 @@ boostbook context
         # Absolute path for images:
         <format>pdf:<xsl:param>img.src.path=$(here)/html/
     ;
+
+###############################################################################
+alias boostdoc ;
+explicit boostdoc ;
+alias boostrelease : context ;
+explicit boostrelease ;

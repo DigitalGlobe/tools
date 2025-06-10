@@ -16,8 +16,7 @@
 #define BOOST_CB_TEST
 
 #include <boost/circular_buffer.hpp>
-#include <boost/test/included/unit_test.hpp>
-#include <boost/iterator.hpp>
+#include <boost/core/lightweight_test.hpp>
 #include <iterator>
 #include <numeric>
 #include <vector>
@@ -72,6 +71,11 @@ class InstanceCounter {
 public:
     InstanceCounter() { increment(); }
     InstanceCounter(const InstanceCounter& y) { y.increment(); }
+    InstanceCounter& operator=(const InstanceCounter& y) {
+        decrement();
+        y.increment();
+        return *this;
+    }
     ~InstanceCounter() { decrement(); }
     static int count() { return ms_count; }
 private:
@@ -90,6 +94,7 @@ public:
         eVirtual
     };
     Dummy() : m_n(eVar) {}
+    virtual ~Dummy() {}
     DummyEnum fnc() { return eFnc; }
     DummyEnum const_fnc() const { return eConst; }
     virtual DummyEnum virtual_fnc() { return eVirtual; }
@@ -97,21 +102,18 @@ public:
 };
 
 // simulator of an input iterator
-struct MyInputIterator
-: boost::iterator<std::input_iterator_tag, int, ptrdiff_t, int*, int&> {
+struct MyInputIterator {
     typedef std::vector<int>::iterator vector_iterator;
+    typedef std::input_iterator_tag iterator_category;
     typedef int value_type;
     typedef int* pointer;
     typedef int& reference;
     typedef size_t size_type;
     typedef ptrdiff_t difference_type;
     explicit MyInputIterator(const vector_iterator& it) : m_it(it) {}
-    MyInputIterator& operator = (const MyInputIterator& it) {
-        if (this == &it)
-            return *this;
-        m_it = it.m_it;
-        return *this;
-    }
+
+    // Default assignment operator
+
     reference operator * () const { return *m_it; }
     pointer operator -> () const { return &(operator*()); }
     MyInputIterator& operator ++ () {
@@ -139,7 +141,6 @@ inline ptrdiff_t* distance_type(const MyInputIterator&) { return 0; }
 
 #endif // #if defined(BOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION) && !defined(BOOST_MSVC_STD_ITERATOR)
 
-using boost::unit_test::test_suite;
 using namespace boost;
 using namespace std;
 

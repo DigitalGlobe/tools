@@ -8,7 +8,6 @@
 //--------------------------------------------------------------------------------------//
 
 //#define BOOST_ENDIAN_NO_INTRINSICS
-//#define BOOST_ENDIAN_LOG
 
 #include <boost/endian/detail/disable_warnings.hpp>
 
@@ -53,7 +52,7 @@ namespace
       n = _atoi64(argv[1]);
 #endif
 
-    for (; argc > 2; ++argv, --argc) 
+    for (; argc > 2; ++argv, --argc)
     {
       if ( *(argv[2]+1) == 'p' )
         places = atoi( argv[2]+2 );
@@ -67,7 +66,7 @@ namespace
       }
     }
 
-    if (argc < 2) 
+    if (argc < 2)
     {
       cout << "Usage: speed_test n [Options]\n"
               "  The argument n specifies the number of test cases to run\n"
@@ -85,7 +84,7 @@ namespace
   {
     T x(0);
     EndianT y(0);
-    boost::timer::cpu_timer t;                  
+    boost::timer::cpu_timer t;
     for (uint64_t i = 0; i < n; ++i)
     {
       f(x, y);
@@ -161,7 +160,7 @@ namespace
 int cpp_main(int argc, char* argv[])
 {
   process_command_line(argc, argv);
-  
+
   cout
     << "<html>\n<head>\n<title>Endian Speed Test</title>\n</head>\n<body>\n"
     << "<table border=\"1\" cellpadding=\"5\" cellspacing=\"0\""

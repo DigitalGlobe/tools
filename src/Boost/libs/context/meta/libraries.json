@@ -4,12 +4,13 @@
     "authors": [
         "Oliver Kowalke"
     ],
-    "description": "Context switching library.",
+    "description": "(C++11) Context switching library.",
     "category": [
         "Concurrent",
         "System"
     ],
     "maintainers": [
         "Oliver Kowalke <oliver.kowalke -at- gmail.com>"
-    ]
+    ],
+    "cxxstd": "11"
 }

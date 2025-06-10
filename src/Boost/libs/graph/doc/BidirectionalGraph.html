@@ -1,17 +1,17 @@
 <HTML>
 <!--
      Copyright (c) Jeremy Siek 2000
-    
+
      Distributed under the Boost Software License, Version 1.0.
      (See accompanying file LICENSE_1_0.txt or copy at
      http://www.boost.org/LICENSE_1_0.txt)
   -->
 <Head>
 <Title>Bidirectional</Title>
-<BODY BGCOLOR="#ffffff" LINK="#0000ee" TEXT="#000000" VLINK="#551a8b" 
-        ALINK="#ff0000"> 
-<IMG SRC="../../../boost.png" 
-     ALT="C++ Boost" width="277" height="86"> 
+<BODY BGCOLOR="#ffffff" LINK="#0000ee" TEXT="#000000" VLINK="#551a8b"
+        ALINK="#ff0000">
+<IMG SRC="../../../boost.png"
+     ALT="C++ Boost" width="277" height="86">
 
 <BR Clear>
 
@@ -149,16 +149,21 @@ undirected graphs).
       BOOST_CONCEPT_ASSERT(( MultiPassInputIteratorConcept&lt;in_edge_iterator&gt; ));
 
       p = in_edges(v, g);
+      n = in_degree(v, g);
+      n = degree(v, g);
       e = *p.first;
       const_constraints(g);
     }
     void const_constraints(const G&amp; g) {
       p = in_edges(v, g);
+      n = in_degree(v, g);
+      n = degree(v, g);
       e = *p.first;
     }
     std::pair&lt;in_edge_iterator, in_edge_iterator&gt; p;
     typename boost::graph_traits&lt;G&gt;::vertex_descriptor v;
     typename boost::graph_traits&lt;G&gt;::edge_descriptor e;
+    typename boost::graph_traits&lt;G&gt;::degree_size_type n;
     G g;
   };
 </PRE>
@@ -172,4 +177,4 @@ undirected graphs).
 </TD></TR></TABLE>
 
 </BODY>
-</HTML> 
+</HTML>

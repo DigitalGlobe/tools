@@ -66,9 +66,9 @@ class pool_data_t
    void replenish(memory_resource &mr, std::size_t pool_block, std::size_t max_blocks_per_chunk)
    {
       //Limit max value
-      std::size_t blocks_per_chunk = boost::container::container_detail::min_value(max_blocks_per_chunk, next_blocks_per_chunk);
+      std::size_t blocks_per_chunk = boost::container::dtl::min_value(max_blocks_per_chunk, next_blocks_per_chunk);
       //Avoid overflow
-      blocks_per_chunk = boost::container::container_detail::min_value(blocks_per_chunk, std::size_t(-1)/pool_block);
+      blocks_per_chunk = boost::container::dtl::min_value(blocks_per_chunk, std::size_t(-1)/pool_block);
       
       //Minimum block size is at least max_align, so all pools allocate sizes that are multiple of max_align,
       //meaning that all blocks are max_align-aligned.
@@ -95,10 +95,10 @@ class pool_data_t
 //pool_resource
 
 //Detect overflow in ceil_pow2
-BOOST_STATIC_ASSERT(pool_options_default_max_blocks_per_chunk <= (std::size_t(-1)/2u+1u));
+BOOST_CONTAINER_STATIC_ASSERT(pool_options_default_max_blocks_per_chunk <= (std::size_t(-1)/2u+1u));
 //Sanity checks
-BOOST_STATIC_ASSERT(bi::detail::static_is_pow2<pool_options_default_max_blocks_per_chunk>::value);
-BOOST_STATIC_ASSERT(bi::detail::static_is_pow2<pool_options_minimum_largest_required_pool_block>::value);
+BOOST_CONTAINER_STATIC_ASSERT(bi::detail::static_is_pow2<pool_options_default_max_blocks_per_chunk>::value);
+BOOST_CONTAINER_STATIC_ASSERT(bi::detail::static_is_pow2<pool_options_minimum_largest_required_pool_block>::value);
 
 //unsynchronized_pool_resource
 
@@ -108,7 +108,7 @@ void pool_resource::priv_limit_option(std::size_t &val, std::size_t min, std::si
       val = max;
    }
    else{
-      val = val < min ? min : boost::container::container_detail::min_value(val, max);
+      val = val < min ? min : boost::container::dtl::min_value(val, max);
    }
 }
 
@@ -116,7 +116,7 @@ std::size_t pool_resource::priv_pool_index(std::size_t block_size) //static
 {
    //For allocations equal or less than pool_options_minimum_largest_required_pool_block
    //the smallest pool is used
-   block_size = boost::container::container_detail::max_value(block_size, pool_options_minimum_largest_required_pool_block);
+   block_size = boost::container::dtl::max_value(block_size, pool_options_minimum_largest_required_pool_block);
    return bi::detail::ceil_log2(block_size)
       - bi::detail::ceil_log2(pool_options_minimum_largest_required_pool_block);
 }
@@ -176,7 +176,7 @@ pool_resource::pool_resource(const pool_options& opts) BOOST_NOEXCEPT
    : m_options(opts), m_upstream(*get_default_resource()), m_oversized_list(), m_pool_data(), m_pool_count()
 {  this->priv_constructor_body();  }
 
-pool_resource::~pool_resource() //virtual
+pool_resource::~pool_resource()
 {
    this->release();
 
@@ -203,7 +203,7 @@ memory_resource* pool_resource::upstream_resource() const
 pool_options pool_resource::options() const
 {  return m_options; }
 
-void* pool_resource::do_allocate(std::size_t bytes, std::size_t alignment) //virtual
+void* pool_resource::do_allocate(std::size_t bytes, std::size_t alignment)
 {
    if(!m_pool_data){
       this->priv_init_pools();
@@ -224,7 +224,7 @@ void* pool_resource::do_allocate(std::size_t bytes, std::size_t alignment) //vir
    }
 }
 
-void pool_resource::do_deallocate(void* p, std::size_t bytes, std::size_t alignment) //virtual
+void pool_resource::do_deallocate(void* p, std::size_t bytes, std::size_t alignment)
 {
    (void)alignment;  //alignment ignored here, max_align is used by pools
    if(bytes > m_options.largest_required_pool_block){
@@ -236,10 +236,6 @@ void pool_resource::do_deallocate(void* p, std::size_t bytes, std::size_t alignm
       return m_pool_data[pool_idx].deallocate_block(p);
    }
 }
-
-bool pool_resource::do_is_equal(const memory_resource& other) const BOOST_NOEXCEPT //virtual
-{  return this == dynamic_cast<const pool_resource*>(&other);  }
-
 
 std::size_t pool_resource::pool_count() const
 {

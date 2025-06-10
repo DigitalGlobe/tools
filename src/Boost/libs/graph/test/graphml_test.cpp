@@ -28,6 +28,8 @@
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/graphml.hpp>
+#include <boost/core/lightweight_test.hpp>
+#include <cmath>
 #include <fstream>
 #include <string>
 
@@ -36,26 +38,36 @@ using namespace boost;
 
 int main(int argc, char** argv)
 {
-    typedef adjacency_list<vecS,vecS,directedS, 
-                           property<vertex_color_t,int,
-                             property<vertex_name_t,string> >,
-                           property<edge_weight_t,double> > graph_t;
+    typedef adjacency_list< vecS, vecS, directedS,
+        property< vertex_color_t, int, property< vertex_name_t, string > >,
+        property< edge_weight_t, double >, property< graph_name_t, string > >
+        graph_t;
     graph_t g;
     dynamic_properties dp;
-    dp.property("foo",get(vertex_color_t(),g));
-    dp.property("weight",get(edge_weight_t(),g));
-    dp.property("name",get(vertex_name_t(),g));
+    dp.property("foo", get(vertex_color_t(), g));
+    dp.property("weight", get(edge_weight_t(), g));
+    dp.property("name", get(vertex_name_t(), g));
+    boost::ref_property_map< graph_t*, std::string > gname(
+        get_property(g, graph_name));
+    dp.property("description", gname);
 
     ifstream ifile(argv[1]);
     read_graphml(ifile, g, dp);
     ifile.close();
 
-    assert(num_vertices(g) == 9);
-    assert(num_edges(g) == 9);
-    assert(get(vertex_color_t(), g, vertex(2,g)) == 100);
-    assert(get(vertex_color_t(), g, vertex(3,g)) == 42);
-    assert(get(edge_weight_t(), g, edge(vertex(0,g),vertex(1,g),g).first) == 0.0);
-    assert(get(edge_weight_t(), g, edge(vertex(1,g),vertex(2,g),g).first) == 0.8);
+    BOOST_TEST(num_vertices(g) == 9);
+    BOOST_TEST(num_edges(g) == 9);
+    BOOST_TEST(get(vertex_color_t(), g, vertex(2, g)) == 100);
+    BOOST_TEST(get(vertex_color_t(), g, vertex(3, g)) == 42);
+    BOOST_TEST(std::abs(get(edge_weight_t(), g,
+                             edge(vertex(0, g), vertex(1, g), g).first)
+                    - 0.0)
+        < 0.00001);
+    BOOST_TEST(std::abs(get(edge_weight_t(), g,
+                             edge(vertex(1, g), vertex(2, g), g).first)
+                    - 0.8)
+        < 0.00001);
+    BOOST_TEST(get("description", dp, &g) == "Root graph.");
 
     ofstream ofile("graphml_test_out.xml");
     write_graphml(ofile, g, dp);
@@ -63,23 +75,30 @@ int main(int argc, char** argv)
 
     graph_t g2;
     dynamic_properties dp2;
-    dp2.property("foo",get(vertex_color_t(),g2));
-    dp2.property("weight",get(edge_weight_t(),g2));
-    dp2.property("name",get(vertex_name_t(),g2));
+    dp2.property("foo", get(vertex_color_t(), g2));
+    dp2.property("weight", get(edge_weight_t(), g2));
+    dp2.property("name", get(vertex_name_t(), g2));
+    boost::ref_property_map< graph_t*, std::string > gname2(
+        get_property(g2, graph_name));
+    dp2.property("description", gname2);
     ifile.open("graphml_test_out.xml");
     read_graphml(ifile, g2, dp2);
     ifile.close();
 
-    assert(num_vertices(g) == num_vertices(g2));
-    assert(num_edges(g) == num_edges(g2));
+    BOOST_TEST(num_vertices(g) == num_vertices(g2));
+    BOOST_TEST(num_edges(g) == num_edges(g2));
+    BOOST_TEST(get("description", dp, &g) == get("description", dp2, &g2));
 
-    graph_traits<graph_t>::vertex_iterator v, v_end;
-    for (boost::tie(v,v_end) = vertices(g); v != v_end; ++v)
-      assert(get(vertex_color_t(), g, *v) == get(vertex_color_t(), g2, *v));
+    graph_traits< graph_t >::vertex_iterator v, v_end;
+    for (boost::tie(v, v_end) = vertices(g); v != v_end; ++v)
+        BOOST_TEST(
+            get(vertex_color_t(), g, *v) == get(vertex_color_t(), g2, *v));
 
-    graph_traits<graph_t>::edge_iterator e, e_end;
-    for (boost::tie(e,e_end) = edges(g); e != e_end; ++e)
-      assert(get(edge_weight_t(), g, *e) == get(edge_weight_t(), g2, *e));
+    graph_traits< graph_t >::edge_iterator e, e_end;
+    for (boost::tie(e, e_end) = edges(g); e != e_end; ++e)
+        BOOST_TEST(
+            std::abs(get(edge_weight_t(), g, *e) - get(edge_weight_t(), g2, *e))
+            < 0.00001);
 
-    return 0;
+    return boost::report_errors();
 }

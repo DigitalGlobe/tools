@@ -37,6 +37,11 @@ set(EXAMPLES
 # boost library link dependencies
 set(EXAMPLE_BOOST_COMPONENTS program_options)
 
+if(${BOOST_COMPUTE_USE_CPP11})
+  # allow examples to use C++11 features
+  add_definitions(-DBOOST_COMPUTE_USE_CPP11)
+endif()
+
 if (${BOOST_COMPUTE_USE_OFFLINE_CACHE})
   set(EXAMPLE_BOOST_COMPONENTS ${EXAMPLE_BOOST_COMPONENTS} system filesystem)
 endif()
@@ -52,7 +57,7 @@ endif()
 if(EXAMPLE_BOOST_COMPONENTS)
   list(REMOVE_DUPLICATES EXAMPLE_BOOST_COMPONENTS)
 endif()
-find_package(Boost 1.48 REQUIRED COMPONENTS ${EXAMPLE_BOOST_COMPONENTS})
+find_package(Boost 1.54 REQUIRED COMPONENTS ${EXAMPLE_BOOST_COMPONENTS})
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 foreach(EXAMPLE ${EXAMPLES})

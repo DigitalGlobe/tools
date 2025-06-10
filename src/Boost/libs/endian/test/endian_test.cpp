@@ -20,13 +20,16 @@
 
 #include <boost/endian/arithmetic.hpp>
 #include <boost/cstdint.hpp>
-#include <boost/detail/lightweight_main.hpp>
 
 #include <iostream>
 #include <limits>
 #include <climits>
 #include <cstdlib>    // for atoi(), exit()
 #include <cstring>    // for memcmp()
+
+#if defined(_MSC_VER)
+# pragma warning(disable: 4127)  // conditional expression is constant
+#endif
 
 using namespace std;             // Not the best programming practice, but I
 using namespace boost;           //   want to verify this combination of using
@@ -59,7 +62,7 @@ namespace
     cout << " A structure with an expected sizeof() " << expected
          << " had an actual sizeof() " << actual
          << "\n This will cause uses of endian types to fail\n";
-  } 
+  }
 
   template <class Endian, class Base>
   void verify_value_and_ops( const Base & expected, int line )
@@ -74,7 +77,9 @@ namespace
     ++v; // verify integer_cover_operators being applied to this type -
          // will fail to compile if no endian<> specialization is present
 
-    Endian x(static_cast<typename Endian::value_type>(v+v));
+    Endian v3( static_cast<Base>( 1 ) );
+
+    Endian x(static_cast<typename Endian::value_type>(v2+v3));
     if ( x == x ) // silence warning
       return;
   }
@@ -100,11 +105,7 @@ namespace
   template <class Endian>
   inline void verify_native_representation( int line )
   {
-#   ifdef BOOST_BIG_ENDIAN
-      verify_representation<Endian>( true, line );
-#   else
-      verify_representation<Endian>( false, line );
-#   endif
+    verify_representation<Endian>( order::native == order::big, line );
   }
 
   //  detect_order  -----------------------------------------------------//
@@ -112,35 +113,37 @@ namespace
   void detect_order()
   {
     union View
-    { 
+    {
       long long i;
       unsigned char c[8];
     };
 
     View v = { 0x0102030405060708LL };  // initialize v.i
-    
+
     if ( memcmp( v.c, "\x8\7\6\5\4\3\2\1", 8) == 0 )
     {
       cout << "This machine is little-endian.\n";
-  #   ifndef BOOST_LITTLE_ENDIAN
-        cout << "yet boost/detail/endian.hpp does not define BOOST_LITTLE_ENDIAN.\n"
+      if( order::native != order::little )
+      {
+        cout << "yet boost::endian::order::native does not equal boost::endian::order::little.\n"
           "The Boost Endian library must be revised to work correctly on this system.\n"
           "Please report this problem to the Boost mailing list.\n";
         exit(1);
-  #   endif
-    } 
+      }
+    }
     else if ( memcmp( v.c, "\1\2\3\4\5\6\7\x8", 8) == 0 )
     {
       cout << "This machine is big-endian.\n";
-  #   ifndef BOOST_BIG_ENDIAN
-        cout << "yet boost/detail/endian.hpp does not define BOOST_BIG_ENDIAN.\n"
+      if( order::native != order::big )
+      {
+        cout << "yet boost::endian::order::native does not equal boost::endian::order::big.\n"
           "The Boost Endian library must be revised to work correctly on this system.\n"
           "Please report this problem to the Boost mailing list.\n";
         exit(1);
-  #   endif
+      }
     }
     else
-    { 
+    {
       cout << "This machine is neither strict big-endian nor strict little-endian\n"
         "The Boost Endian library must be revised to work correctly on this system.\n"
           "Please report this problem to the Boost mailing list.\n";
@@ -223,76 +226,76 @@ namespace
     little_uint32_at little_align_uint32;
     little_uint64_at little_align_uint64;
 
-    VERIFY(big_8.data() == reinterpret_cast<const char *>(&big_8));
-    VERIFY(big_16.data() == reinterpret_cast<const char *>(&big_16));
-    VERIFY(big_24.data() == reinterpret_cast<const char *>(&big_24));
-    VERIFY(big_32.data() == reinterpret_cast<const char *>(&big_32));
-    VERIFY(big_40.data() == reinterpret_cast<const char *>(&big_40));
-    VERIFY(big_48.data() == reinterpret_cast<const char *>(&big_48));
-    VERIFY(big_56.data() == reinterpret_cast<const char *>(&big_56));
-    VERIFY(big_64.data() == reinterpret_cast<const char *>(&big_64));
+    VERIFY(big_8.data() == reinterpret_cast<const unsigned char *>(&big_8));
+    VERIFY(big_16.data() == reinterpret_cast<const unsigned char *>(&big_16));
+    VERIFY(big_24.data() == reinterpret_cast<const unsigned char *>(&big_24));
+    VERIFY(big_32.data() == reinterpret_cast<const unsigned char *>(&big_32));
+    VERIFY(big_40.data() == reinterpret_cast<const unsigned char *>(&big_40));
+    VERIFY(big_48.data() == reinterpret_cast<const unsigned char *>(&big_48));
+    VERIFY(big_56.data() == reinterpret_cast<const unsigned char *>(&big_56));
+    VERIFY(big_64.data() == reinterpret_cast<const unsigned char *>(&big_64));
 
-    VERIFY(big_u8.data() == reinterpret_cast<const char *>(&big_u8));
-    VERIFY(big_u16.data() == reinterpret_cast<const char *>(&big_u16));
-    VERIFY(big_u24.data() == reinterpret_cast<const char *>(&big_u24));
-    VERIFY(big_u32.data() == reinterpret_cast<const char *>(&big_u32));
-    VERIFY(big_u40.data() == reinterpret_cast<const char *>(&big_u40));
-    VERIFY(big_u48.data() == reinterpret_cast<const char *>(&big_u48));
-    VERIFY(big_u56.data() == reinterpret_cast<const char *>(&big_u56));
-    VERIFY(big_u64.data() == reinterpret_cast<const char *>(&big_u64));
+    VERIFY(big_u8.data() == reinterpret_cast<const unsigned char *>(&big_u8));
+    VERIFY(big_u16.data() == reinterpret_cast<const unsigned char *>(&big_u16));
+    VERIFY(big_u24.data() == reinterpret_cast<const unsigned char *>(&big_u24));
+    VERIFY(big_u32.data() == reinterpret_cast<const unsigned char *>(&big_u32));
+    VERIFY(big_u40.data() == reinterpret_cast<const unsigned char *>(&big_u40));
+    VERIFY(big_u48.data() == reinterpret_cast<const unsigned char *>(&big_u48));
+    VERIFY(big_u56.data() == reinterpret_cast<const unsigned char *>(&big_u56));
+    VERIFY(big_u64.data() == reinterpret_cast<const unsigned char *>(&big_u64));
 
-    VERIFY(little_8.data() == reinterpret_cast<const char *>(&little_8));
-    VERIFY(little_16.data() == reinterpret_cast<const char *>(&little_16));
-    VERIFY(little_24.data() == reinterpret_cast<const char *>(&little_24));
-    VERIFY(little_32.data() == reinterpret_cast<const char *>(&little_32));
-    VERIFY(little_40.data() == reinterpret_cast<const char *>(&little_40));
-    VERIFY(little_48.data() == reinterpret_cast<const char *>(&little_48));
-    VERIFY(little_56.data() == reinterpret_cast<const char *>(&little_56));
-    VERIFY(little_64.data() == reinterpret_cast<const char *>(&little_64));
+    VERIFY(little_8.data() == reinterpret_cast<const unsigned char *>(&little_8));
+    VERIFY(little_16.data() == reinterpret_cast<const unsigned char *>(&little_16));
+    VERIFY(little_24.data() == reinterpret_cast<const unsigned char *>(&little_24));
+    VERIFY(little_32.data() == reinterpret_cast<const unsigned char *>(&little_32));
+    VERIFY(little_40.data() == reinterpret_cast<const unsigned char *>(&little_40));
+    VERIFY(little_48.data() == reinterpret_cast<const unsigned char *>(&little_48));
+    VERIFY(little_56.data() == reinterpret_cast<const unsigned char *>(&little_56));
+    VERIFY(little_64.data() == reinterpret_cast<const unsigned char *>(&little_64));
 
-    VERIFY(little_u8.data() == reinterpret_cast<const char *>(&little_u8));
-    VERIFY(little_u16.data() == reinterpret_cast<const char *>(&little_u16));
-    VERIFY(little_u24.data() == reinterpret_cast<const char *>(&little_u24));
-    VERIFY(little_u32.data() == reinterpret_cast<const char *>(&little_u32));
-    VERIFY(little_u40.data() == reinterpret_cast<const char *>(&little_u40));
-    VERIFY(little_u48.data() == reinterpret_cast<const char *>(&little_u48));
-    VERIFY(little_u56.data() == reinterpret_cast<const char *>(&little_u56));
-    VERIFY(little_u64.data() == reinterpret_cast<const char *>(&little_u64));
+    VERIFY(little_u8.data() == reinterpret_cast<const unsigned char *>(&little_u8));
+    VERIFY(little_u16.data() == reinterpret_cast<const unsigned char *>(&little_u16));
+    VERIFY(little_u24.data() == reinterpret_cast<const unsigned char *>(&little_u24));
+    VERIFY(little_u32.data() == reinterpret_cast<const unsigned char *>(&little_u32));
+    VERIFY(little_u40.data() == reinterpret_cast<const unsigned char *>(&little_u40));
+    VERIFY(little_u48.data() == reinterpret_cast<const unsigned char *>(&little_u48));
+    VERIFY(little_u56.data() == reinterpret_cast<const unsigned char *>(&little_u56));
+    VERIFY(little_u64.data() == reinterpret_cast<const unsigned char *>(&little_u64));
 
-    VERIFY(native_8.data() == reinterpret_cast<const char *>(&native_8));
-    VERIFY(native_16.data() == reinterpret_cast<const char *>(&native_16));
-    VERIFY(native_24.data() == reinterpret_cast<const char *>(&native_24));
-    VERIFY(native_32.data() == reinterpret_cast<const char *>(&native_32));
-    VERIFY(native_40.data() == reinterpret_cast<const char *>(&native_40));
-    VERIFY(native_48.data() == reinterpret_cast<const char *>(&native_48));
-    VERIFY(native_56.data() == reinterpret_cast<const char *>(&native_56));
-    VERIFY(native_64.data() == reinterpret_cast<const char *>(&native_64));
+    VERIFY(native_8.data() == reinterpret_cast<const unsigned char *>(&native_8));
+    VERIFY(native_16.data() == reinterpret_cast<const unsigned char *>(&native_16));
+    VERIFY(native_24.data() == reinterpret_cast<const unsigned char *>(&native_24));
+    VERIFY(native_32.data() == reinterpret_cast<const unsigned char *>(&native_32));
+    VERIFY(native_40.data() == reinterpret_cast<const unsigned char *>(&native_40));
+    VERIFY(native_48.data() == reinterpret_cast<const unsigned char *>(&native_48));
+    VERIFY(native_56.data() == reinterpret_cast<const unsigned char *>(&native_56));
+    VERIFY(native_64.data() == reinterpret_cast<const unsigned char *>(&native_64));
 
-    VERIFY(native_u8.data() == reinterpret_cast<const char *>(&native_u8));
-    VERIFY(native_u16.data() == reinterpret_cast<const char *>(&native_u16));
-    VERIFY(native_u24.data() == reinterpret_cast<const char *>(&native_u24));
-    VERIFY(native_u32.data() == reinterpret_cast<const char *>(&native_u32));
-    VERIFY(native_u40.data() == reinterpret_cast<const char *>(&native_u40));
-    VERIFY(native_u48.data() == reinterpret_cast<const char *>(&native_u48));
-    VERIFY(native_u56.data() == reinterpret_cast<const char *>(&native_u56));
-    VERIFY(native_u64.data() == reinterpret_cast<const char *>(&native_u64));
+    VERIFY(native_u8.data() == reinterpret_cast<const unsigned char *>(&native_u8));
+    VERIFY(native_u16.data() == reinterpret_cast<const unsigned char *>(&native_u16));
+    VERIFY(native_u24.data() == reinterpret_cast<const unsigned char *>(&native_u24));
+    VERIFY(native_u32.data() == reinterpret_cast<const unsigned char *>(&native_u32));
+    VERIFY(native_u40.data() == reinterpret_cast<const unsigned char *>(&native_u40));
+    VERIFY(native_u48.data() == reinterpret_cast<const unsigned char *>(&native_u48));
+    VERIFY(native_u56.data() == reinterpret_cast<const unsigned char *>(&native_u56));
+    VERIFY(native_u64.data() == reinterpret_cast<const unsigned char *>(&native_u64));
 
-    VERIFY(big_align_int16.data() == reinterpret_cast<const char *>(&big_align_int16));
-    VERIFY(big_align_int32.data() == reinterpret_cast<const char *>(&big_align_int32));
-    VERIFY(big_align_int64.data() == reinterpret_cast<const char *>(&big_align_int64));
+    VERIFY(big_align_int16.data() == reinterpret_cast<const unsigned char *>(&big_align_int16));
+    VERIFY(big_align_int32.data() == reinterpret_cast<const unsigned char *>(&big_align_int32));
+    VERIFY(big_align_int64.data() == reinterpret_cast<const unsigned char *>(&big_align_int64));
 
-    VERIFY(big_align_uint16.data() == reinterpret_cast<const char *>(&big_align_uint16));
-    VERIFY(big_align_uint32.data() == reinterpret_cast<const char *>(&big_align_uint32));
-    VERIFY(big_align_uint64.data() == reinterpret_cast<const char *>(&big_align_uint64));
+    VERIFY(big_align_uint16.data() == reinterpret_cast<const unsigned char *>(&big_align_uint16));
+    VERIFY(big_align_uint32.data() == reinterpret_cast<const unsigned char *>(&big_align_uint32));
+    VERIFY(big_align_uint64.data() == reinterpret_cast<const unsigned char *>(&big_align_uint64));
 
-    VERIFY(little_align_int16.data() == reinterpret_cast<const char *>(&little_align_int16));
-    VERIFY(little_align_int32.data() == reinterpret_cast<const char *>(&little_align_int32));
-    VERIFY(little_align_int64.data() == reinterpret_cast<const char *>(&little_align_int64));
+    VERIFY(little_align_int16.data() == reinterpret_cast<const unsigned char *>(&little_align_int16));
+    VERIFY(little_align_int32.data() == reinterpret_cast<const unsigned char *>(&little_align_int32));
+    VERIFY(little_align_int64.data() == reinterpret_cast<const unsigned char *>(&little_align_int64));
 
-    VERIFY(little_align_uint16.data() == reinterpret_cast<const char *>(&little_align_uint16));
-    VERIFY(little_align_uint32.data() == reinterpret_cast<const char *>(&little_align_uint32));
-    VERIFY(little_align_uint64.data() == reinterpret_cast<const char *>(&little_align_uint64));
- 
+    VERIFY(little_align_uint16.data() == reinterpret_cast<const unsigned char *>(&little_align_uint16));
+    VERIFY(little_align_uint32.data() == reinterpret_cast<const unsigned char *>(&little_align_uint32));
+    VERIFY(little_align_uint64.data() == reinterpret_cast<const unsigned char *>(&little_align_uint64));
+
   }
 
   //  check_size  ------------------------------------------------------------//
@@ -475,7 +478,7 @@ namespace
     };
 
     //  aligned test cases
-  
+
     struct big_aligned_struct
     {
       big_int16_at    v0;
@@ -484,7 +487,7 @@ namespace
       // on a 32-bit system, the padding here may be 3 rather than 7 bytes
       big_int64_at    v4;
     };
-  
+
     struct little_aligned_struct
     {
       little_int16_at    v0;
@@ -506,7 +509,7 @@ namespace
     VERIFY( sizeof(little_aligned_struct) <= 24 );
 
     if ( saved_err_count == err_count )
-    { 
+    {
       cout <<
         "Size and alignment for structures of endian types are as expected.\n";
     }
@@ -518,35 +521,35 @@ namespace
   {
     // unaligned integer types
     VERIFY_BIG_REPRESENTATION( big_int8_t );
-    VERIFY_VALUE_AND_OPS( big_int8_t, int_least8_t,  0x7f );
+    VERIFY_VALUE_AND_OPS( big_int8_t, int_least8_t,  0x7e );
     VERIFY_VALUE_AND_OPS( big_int8_t, int_least8_t, -0x80 );
 
     VERIFY_BIG_REPRESENTATION( big_int16_t );
-    VERIFY_VALUE_AND_OPS( big_int16_t, int_least16_t,  0x7fff );
+    VERIFY_VALUE_AND_OPS( big_int16_t, int_least16_t,  0x7ffe );
     VERIFY_VALUE_AND_OPS( big_int16_t, int_least16_t, -0x8000 );
 
     VERIFY_BIG_REPRESENTATION( big_int24_t );
-    VERIFY_VALUE_AND_OPS( big_int24_t, int_least32_t,  0x7fffff );
+    VERIFY_VALUE_AND_OPS( big_int24_t, int_least32_t,  0x7ffffe );
     VERIFY_VALUE_AND_OPS( big_int24_t, int_least32_t, -0x800000 );
 
     VERIFY_BIG_REPRESENTATION( big_int32_t );
-    VERIFY_VALUE_AND_OPS( big_int32_t, int_least32_t,  0x7fffffff );
+    VERIFY_VALUE_AND_OPS( big_int32_t, int_least32_t,  0x7ffffffe );
     VERIFY_VALUE_AND_OPS( big_int32_t, int_least32_t, -0x7fffffff-1 );
 
     VERIFY_BIG_REPRESENTATION( big_int40_t );
-    VERIFY_VALUE_AND_OPS( big_int40_t, int_least64_t,  0x7fffffffffLL );
+    VERIFY_VALUE_AND_OPS( big_int40_t, int_least64_t,  0x7ffffffffeLL );
     VERIFY_VALUE_AND_OPS( big_int40_t, int_least64_t, -0x8000000000LL );
 
     VERIFY_BIG_REPRESENTATION( big_int48_t );
-    VERIFY_VALUE_AND_OPS( big_int48_t, int_least64_t,  0x7fffffffffffLL );
+    VERIFY_VALUE_AND_OPS( big_int48_t, int_least64_t,  0x7ffffffffffeLL );
     VERIFY_VALUE_AND_OPS( big_int48_t, int_least64_t, -0x800000000000LL );
 
     VERIFY_BIG_REPRESENTATION( big_int56_t );
-    VERIFY_VALUE_AND_OPS( big_int56_t, int_least64_t,  0x7fffffffffffffLL );
+    VERIFY_VALUE_AND_OPS( big_int56_t, int_least64_t,  0x7ffffffffffffeLL );
     VERIFY_VALUE_AND_OPS( big_int56_t, int_least64_t, -0x80000000000000LL );
 
     VERIFY_BIG_REPRESENTATION( big_int64_t );
-    VERIFY_VALUE_AND_OPS( big_int64_t, int_least64_t,  0x7fffffffffffffffLL );
+    VERIFY_VALUE_AND_OPS( big_int64_t, int_least64_t,  0x7ffffffffffffffeLL );
     VERIFY_VALUE_AND_OPS( big_int64_t, int_least64_t, -0x7fffffffffffffffLL-1 );
 
     VERIFY_BIG_REPRESENTATION( big_uint8_t );
@@ -574,35 +577,35 @@ namespace
     VERIFY_VALUE_AND_OPS( big_uint64_t, uint_least64_t, 0xffffffffffffffffULL );
 
     VERIFY_LITTLE_REPRESENTATION( little_int8_t );
-    VERIFY_VALUE_AND_OPS( little_int8_t, int_least8_t,   0x7f );
+    VERIFY_VALUE_AND_OPS( little_int8_t, int_least8_t,   0x7e );
     VERIFY_VALUE_AND_OPS( little_int8_t, int_least8_t,  -0x80 );
 
     VERIFY_LITTLE_REPRESENTATION( little_int16_t );
-    VERIFY_VALUE_AND_OPS( little_int16_t, int_least16_t,  0x7fff );
+    VERIFY_VALUE_AND_OPS( little_int16_t, int_least16_t,  0x7ffe );
     VERIFY_VALUE_AND_OPS( little_int16_t, int_least16_t, -0x8000 );
 
     VERIFY_LITTLE_REPRESENTATION( little_int24_t );
-    VERIFY_VALUE_AND_OPS( little_int24_t, int_least32_t,  0x7fffff );
+    VERIFY_VALUE_AND_OPS( little_int24_t, int_least32_t,  0x7ffffe );
     VERIFY_VALUE_AND_OPS( little_int24_t, int_least32_t, -0x800000 );
 
     VERIFY_LITTLE_REPRESENTATION( little_int32_t );
-    VERIFY_VALUE_AND_OPS( little_int32_t, int_least32_t,  0x7fffffff );
+    VERIFY_VALUE_AND_OPS( little_int32_t, int_least32_t,  0x7ffffffe );
     VERIFY_VALUE_AND_OPS( little_int32_t, int_least32_t, -0x7fffffff-1 );
 
     VERIFY_LITTLE_REPRESENTATION( little_int40_t );
-    VERIFY_VALUE_AND_OPS( little_int40_t, int_least64_t,  0x7fffffffffLL );
+    VERIFY_VALUE_AND_OPS( little_int40_t, int_least64_t,  0x7ffffffffeLL );
     VERIFY_VALUE_AND_OPS( little_int40_t, int_least64_t, -0x8000000000LL );
 
     VERIFY_LITTLE_REPRESENTATION( little_int48_t );
-    VERIFY_VALUE_AND_OPS( little_int48_t, int_least64_t,  0x7fffffffffffLL );
+    VERIFY_VALUE_AND_OPS( little_int48_t, int_least64_t,  0x7ffffffffffeLL );
     VERIFY_VALUE_AND_OPS( little_int48_t, int_least64_t, -0x800000000000LL );
 
     VERIFY_LITTLE_REPRESENTATION( little_int56_t );
-    VERIFY_VALUE_AND_OPS( little_int56_t, int_least64_t,  0x7fffffffffffffLL );
+    VERIFY_VALUE_AND_OPS( little_int56_t, int_least64_t,  0x7ffffffffffffeLL );
     VERIFY_VALUE_AND_OPS( little_int56_t, int_least64_t, -0x80000000000000LL );
 
     VERIFY_LITTLE_REPRESENTATION( little_int64_t );
-    VERIFY_VALUE_AND_OPS( little_int64_t, int_least64_t,  0x7fffffffffffffffLL );
+    VERIFY_VALUE_AND_OPS( little_int64_t, int_least64_t,  0x7ffffffffffffffeLL );
     VERIFY_VALUE_AND_OPS( little_int64_t, int_least64_t, -0x7fffffffffffffffLL-1 );
 
     VERIFY_LITTLE_REPRESENTATION( little_uint8_t );
@@ -630,35 +633,35 @@ namespace
     VERIFY_VALUE_AND_OPS( little_uint64_t, uint_least64_t, 0xffffffffffffffffULL );
 
     VERIFY_NATIVE_REPRESENTATION( native_int8_t );
-    VERIFY_VALUE_AND_OPS( native_int8_t, int_least8_t,   0x7f );
+    VERIFY_VALUE_AND_OPS( native_int8_t, int_least8_t,   0x7e );
     VERIFY_VALUE_AND_OPS( native_int8_t, int_least8_t,  -0x80 );
 
     VERIFY_NATIVE_REPRESENTATION( native_int16_t );
-    VERIFY_VALUE_AND_OPS( native_int16_t, int_least16_t,  0x7fff );
+    VERIFY_VALUE_AND_OPS( native_int16_t, int_least16_t,  0x7ffe );
     VERIFY_VALUE_AND_OPS( native_int16_t, int_least16_t, -0x8000 );
 
     VERIFY_NATIVE_REPRESENTATION( native_int24_t );
-    VERIFY_VALUE_AND_OPS( native_int24_t, int_least32_t,  0x7fffff );
+    VERIFY_VALUE_AND_OPS( native_int24_t, int_least32_t,  0x7ffffe );
     VERIFY_VALUE_AND_OPS( native_int24_t, int_least32_t, -0x800000 );
 
     VERIFY_NATIVE_REPRESENTATION( native_int32_t );
-    VERIFY_VALUE_AND_OPS( native_int32_t, int_least32_t,  0x7fffffff );
+    VERIFY_VALUE_AND_OPS( native_int32_t, int_least32_t,  0x7ffffffe );
     VERIFY_VALUE_AND_OPS( native_int32_t, int_least32_t, -0x7fffffff-1 );
 
     VERIFY_NATIVE_REPRESENTATION( native_int40_t );
-    VERIFY_VALUE_AND_OPS( native_int40_t, int_least64_t,  0x7fffffffffLL );
+    VERIFY_VALUE_AND_OPS( native_int40_t, int_least64_t,  0x7ffffffffeLL );
     VERIFY_VALUE_AND_OPS( native_int40_t, int_least64_t, -0x8000000000LL );
 
     VERIFY_NATIVE_REPRESENTATION( native_int48_t );
-    VERIFY_VALUE_AND_OPS( native_int48_t, int_least64_t,  0x7fffffffffffLL );
+    VERIFY_VALUE_AND_OPS( native_int48_t, int_least64_t,  0x7ffffffffffeLL );
     VERIFY_VALUE_AND_OPS( native_int48_t, int_least64_t, -0x800000000000LL );
 
     VERIFY_NATIVE_REPRESENTATION( native_int56_t );
-    VERIFY_VALUE_AND_OPS( native_int56_t, int_least64_t,  0x7fffffffffffffLL );
+    VERIFY_VALUE_AND_OPS( native_int56_t, int_least64_t,  0x7ffffffffffffeLL );
     VERIFY_VALUE_AND_OPS( native_int56_t, int_least64_t, -0x80000000000000LL );
 
     VERIFY_NATIVE_REPRESENTATION( native_int64_t );
-    VERIFY_VALUE_AND_OPS( native_int64_t, int_least64_t,  0x7fffffffffffffffLL );
+    VERIFY_VALUE_AND_OPS( native_int64_t, int_least64_t,  0x7ffffffffffffffeLL );
     VERIFY_VALUE_AND_OPS( native_int64_t, int_least64_t, -0x7fffffffffffffffLL-1 );
 
     VERIFY_NATIVE_REPRESENTATION( native_uint8_t );
@@ -687,15 +690,15 @@ namespace
 
     // aligned integer types
     VERIFY_BIG_REPRESENTATION( big_int16_at );
-    VERIFY_VALUE_AND_OPS( big_int16_at, int_least16_t,  0x7fff );
+    VERIFY_VALUE_AND_OPS( big_int16_at, int_least16_t,  0x7ffe );
     VERIFY_VALUE_AND_OPS( big_int16_at, int_least16_t, -0x8000 );
 
     VERIFY_BIG_REPRESENTATION( big_int32_at );
-    VERIFY_VALUE_AND_OPS( big_int32_at, int_least32_t,  0x7fffffff );
+    VERIFY_VALUE_AND_OPS( big_int32_at, int_least32_t,  0x7ffffffe );
     VERIFY_VALUE_AND_OPS( big_int32_at, int_least32_t, -0x7fffffff-1 );
 
     VERIFY_BIG_REPRESENTATION( big_int64_at );
-    VERIFY_VALUE_AND_OPS( big_int64_at, int_least64_t,  0x7fffffffffffffffLL );
+    VERIFY_VALUE_AND_OPS( big_int64_at, int_least64_t,  0x7ffffffffffffffeLL );
     VERIFY_VALUE_AND_OPS( big_int64_at, int_least64_t, -0x7fffffffffffffffLL-1 );
 
     VERIFY_BIG_REPRESENTATION( big_uint16_at );
@@ -708,15 +711,15 @@ namespace
     VERIFY_VALUE_AND_OPS( big_uint64_at, uint_least64_t, 0xffffffffffffffffULL );
 
     VERIFY_LITTLE_REPRESENTATION( little_int16_at );
-    VERIFY_VALUE_AND_OPS( little_int16_at, int_least16_t,  0x7fff );
+    VERIFY_VALUE_AND_OPS( little_int16_at, int_least16_t,  0x7ffe );
     VERIFY_VALUE_AND_OPS( little_int16_at, int_least16_t, -0x8000 );
 
     VERIFY_LITTLE_REPRESENTATION( little_int32_at );
-    VERIFY_VALUE_AND_OPS( little_int32_at, int_least32_t,  0x7fffffff );
+    VERIFY_VALUE_AND_OPS( little_int32_at, int_least32_t,  0x7ffffffe );
     VERIFY_VALUE_AND_OPS( little_int32_at, int_least32_t, -0x7fffffff-1 );
 
     VERIFY_LITTLE_REPRESENTATION( little_int64_at );
-    VERIFY_VALUE_AND_OPS( little_int64_at, int_least64_t,  0x7fffffffffffffffLL );
+    VERIFY_VALUE_AND_OPS( little_int64_at, int_least64_t,  0x7ffffffffffffffeLL );
     VERIFY_VALUE_AND_OPS( little_int64_at, int_least64_t, -0x7fffffffffffffffLL-1 );
 
     VERIFY_LITTLE_REPRESENTATION( little_uint16_at );
@@ -730,11 +733,13 @@ namespace
 
   } // check_representation_and_range
 
+/*
+
   class MyInt
   {
     int32_t mx;
   public:
-    MyInt(int32_t x) : mx(x) {}
+    MyInt(int32_t x = 0) : mx(x) {}
     operator int32_t() const {return mx;}
 
     //friend int32_t operator+(const MyInt& x) {return x;}
@@ -759,8 +764,29 @@ namespace
 //    cout << "v+v is " << +(v+v) << endl;
   }
 
+  void check_udt_le()
+  {
+    typedef boost::endian::endian_arithmetic< order::little, MyInt, 32 >  mylittle_int32_ut;
+
+    mylittle_int32_ut v(10);
+    cout << "+v is " << +v << endl;
+    v += 1;
+    cout << "v is " << +v << endl;
+    v -= 2;
+    cout << "v is " << +v << endl;
+    v *= 2;
+    cout << "v is " << +v << endl;
+    ++v;
+    cout << "v is " << +v << endl;
+    --v;
+    cout << "v is " << +v << endl;
+//    cout << "v+v is " << +(v+v) << endl;
+  }
+
+*/
+
   long iterations = 10000;
-  
+
   template< class Endian >
   Endian timing_test( const char * s)
   {
@@ -798,7 +824,8 @@ int cpp_main( int argc, char * argv[] )
   check_alignment();
   check_representation_and_range_and_ops();
   check_data();
-  check_udt();
+  //check_udt();
+  //check_udt_le();
 
   //timing_test<big_int32_t> ( "big_int32_t" );
   //timing_test<big_int32_at>( "big_int32_at" );
@@ -810,3 +837,16 @@ int cpp_main( int argc, char * argv[] )
 
   return err_count ? 1 : 0;
 } // main
+
+int main( int argc, char* argv[] )
+{
+    try
+    {
+        return cpp_main( argc, argv );
+    }
+    catch( std::exception const & x )
+    {
+        std::cout << "Exception: " << x.what() << std::endl;
+        return 1;
+    }
+}
