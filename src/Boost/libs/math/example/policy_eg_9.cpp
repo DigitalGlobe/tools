@@ -8,6 +8,7 @@
 // and comments, don't change any of the special comment mark-ups!
 
 #include <iostream>
+#include <boost/format.hpp>
 using std::cout; using std::endl; using std::cerr;
 
 //[policy_eg_9
@@ -269,7 +270,7 @@ int main()
    // Raise an underflow error:
    cout << "Result of tgamma(-190.5) is: "
       << mymath::tgamma(-190.5) << std::endl << endl;
-   // Unfortunately we can't predicably raise a denormalised
+   // Unfortunately we can't predictably raise a denormalised
    // result, nor can we raise an evaluation error in this example
    // since these should never really occur!
 } // int main()

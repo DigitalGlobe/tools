@@ -9,6 +9,7 @@ project metaparse :
   ;
 
 test-suite metaparse-unit-tests :
+  [ compile BOOST_METAPARSE_STRING.cpp ]
   [ compile accept.cpp ]
   [ compile accept_when.cpp ]
   [ compile back_inserter.cpp ]
@@ -66,6 +67,7 @@ test-suite metaparse-unit-tests :
   [ compile lit_c.cpp ]
   [ compile lit.cpp ]
   [ compile look_ahead.cpp ]
+  [ compile long_string.cpp ]
   [ compile middle_of.cpp ]
   [ compile next_digit.cpp ]
   [ compile nth_of.cpp ]
@@ -82,7 +84,6 @@ test-suite metaparse-unit-tests :
   [ compile range_c.cpp ]
   [ compile range.cpp ]
   [ compile reject.cpp ]
-  [ compile remove_trailing_no_chars.cpp ]
   [ compile repeated1.cpp ]
   [ compile repeated.cpp ]
   [ compile repeated_one_of1.cpp ]
@@ -97,12 +98,13 @@ test-suite metaparse-unit-tests :
   [ compile source_position.cpp ]
   [ compile space.cpp ]
   [ compile spaces.cpp ]
-  [ compile split_at_c.cpp ]
   [ run string.cpp ]
   [ compile string_iterator_tag.cpp ]
   [ compile string_tag.cpp ]
+  [ compile string_value.cpp ]
   [ compile swap.cpp ]
   [ compile token.cpp ]
+  [ compile-fail too_long_string.cpp ]
   [ compile transform.cpp ]
   [ compile transform_error.cpp ]
   [ compile transform_error_message.cpp ]

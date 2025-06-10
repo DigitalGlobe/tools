@@ -7,8 +7,9 @@
 #include <boost/math/concepts/real_concept.hpp>
 #define BOOST_TEST_MAIN
 #include <boost/test/unit_test.hpp>
-#include <boost/test/floating_point_comparison.hpp>
+#include <boost/test/tools/floating_point_comparison.hpp>
 #include <boost/math/special_functions/math_fwd.hpp>
+#include <boost/math/special_functions/bessel.hpp>
 #include <boost/math/constants/constants.hpp>
 #include <boost/type_traits/is_floating_point.hpp>
 #include <boost/array.hpp>
@@ -129,6 +130,7 @@ void do_test_sph_neumann_y(const T& data, const char* type_name, const char* tes
 template <class T>
 void test_bessel(T, const char* name)
 {
+   using std::ldexp;
    //
    // The actual test data is rather verbose, so it's in a separate file
    //
@@ -136,7 +138,7 @@ void test_bessel(T, const char* name)
    // three items, input value a, input value b and erf(a, b):
    // 
     // function values calculated on http://functions.wolfram.com/
-    static const boost::array<boost::array<typename table_type<T>::type, 3>, 9> y0_data = {{
+    static const std::array<std::array<typename table_type<T>::type, 3>, 9> y0_data = {{
         {{ SC_(0.0), SC_(1.0), SC_(0.0882569642156769579829267660235151628278175230906755467110438) }},
         {{ SC_(0.0), SC_(2.0), SC_(0.510375672649745119596606592727157873268139227085846135571839) }},
         {{ SC_(0.0), SC_(4.0), SC_(-0.0169407393250649919036351344471532182404925898980149027169321) }},
@@ -147,7 +149,7 @@ void test_bessel(T, const char* name)
         {{ SC_(0.0), SC_(1e+03), SC_(0.00471591797762281339977326146566525500985900489680197718528000) }},
         {{ SC_(0.0), SC_(1e+05), SC_(0.00184676615886506410434074102431546125884886798090392516843524) }}
     }};
-    static const boost::array<boost::array<typename table_type<T>::type, 3>, 9> y1_data = {{
+    static const std::array<std::array<typename table_type<T>::type, 3>, 9> y1_data = {{
         {{ SC_(1.0), SC_(1.0), SC_(-0.781212821300288716547150000047964820549906390716444607843833) }},
         {{ SC_(1.0), SC_(2.0), SC_(-0.107032431540937546888370772277476636687480898235053860525795) }},
         {{ SC_(1.0), SC_(4.0), SC_(0.397925710557100005253979972450791852271189181622908340876586) }},
@@ -158,7 +160,7 @@ void test_bessel(T, const char* name)
         {{ SC_(1.0), SC_(1e+03), SC_(-0.0247843312923517789148623560971412909386318548648705287583490) }},
         {{ SC_(1.0), SC_(1e+05), SC_(0.00171921035008825630099494523539897102954509504993494957572726) }}
     }};
-    static const boost::array<boost::array<typename table_type<T>::type, 3>, 10> yn_data = {{
+    static const std::array<std::array<typename table_type<T>::type, 3>, 10> yn_data = {{
         {{ SC_(2.0), SC_(1e-20), SC_(-1.27323954473516268615107010698011489627570899691226996904849e40) }},
         {{ SC_(5.0), SC_(10.0), SC_(0.135403047689362303197029014762241709088405766746419538495983) }},
         {{ SC_(-5.0), SC_(1e+06), SC_(0.000331052088322609048503535570014688967096938338061796192422114) }},
@@ -170,29 +172,29 @@ void test_bessel(T, const char* name)
         {{ SC_(-1e+03), SC_(7e+02), SC_(-1.88753109980945889960843803284345261796244752396992106755091e77) }},
         {{ SC_(-25.0), SC_(8.0), SC_(3.45113613777297661997458045843868931827873456761831907587263e8) }}
     }};
-    static const boost::array<boost::array<T, 3>, 11> yv_data = {{
+    static const std::array<std::array<typename table_type<T>::type, 3>, 11> yv_data = {{
         //SC_(2.25), {{ SC_(1.0) / 1024, SC_(-1.01759203636941035147948317764932151601257765988969544340275e7) }},
-        {{ SC_(0.5), T(1) / (1024*1024), SC_(-817.033790261762580469303126467917092806755460418223776544122) }},
+        {{ SC_(0.5), SC_(9.5367431640625e-7) /* 1/(1024*1024)*/, SC_(-817.033790261762580469303126467917092806755460418223776544122) }},
         {{ SC_(5.5), SC_(3.125), SC_(-2.61489440328417468776474188539366752698192046890955453259866) }},
         {{ SC_(-5.5), SC_(3.125), SC_(-0.0274994493896489729948109971802244976377957234563871795364056) }},
         {{ SC_(-5.5), SC_(1e+04), SC_(-0.00759343502722670361395585198154817047185480147294665270646578) }},
-        {{ T(-10486074) / (1024*1024), T(1)/1024, SC_(-1.50382374389531766117868938966858995093408410498915220070230e38) }},
-        {{ T(-10486074) / (1024*1024), SC_(1e+02), SC_(0.0583041891319026009955779707640455341990844522293730214223545) }},
+        {{ SC_(-10.0002994537353515625) /* -10486074 / (1024*1024)*/, SC_(0.0009765625) /*1/1024*/, SC_(-1.50382374389531766117868938966858995093408410498915220070230e38) }},
+        {{ SC_(-10.0002994537353515625) /* -10486074 / (1024*1024)*/, SC_(1e+02), SC_(0.0583041891319026009955779707640455341990844522293730214223545) }},
         {{ SC_(141.75), SC_(1e+02), SC_(-5.38829231428696507293191118661269920130838607482708483122068e9) }},
         {{ SC_(141.75), SC_(2e+04), SC_(-0.00376577888677186194728129112270988602876597726657372330194186) }},
         {{ SC_(-141.75), SC_(1e+02), SC_(-3.81009803444766877495905954105669819951653361036342457919021e9) }},
-        {{ SC_(8.5), boost::math::constants::pi<T>() * 4, SC_(0.257086543428224355151772807588810984369026142375675714560864) }},
-        {{ SC_(-8.5), boost::math::constants::pi<T>() * 4, SC_(0.0436807946352780974532519564114026730332781693877984686758680) }},
+        {{ SC_(8.5), SC_(12.56637061435917295385057353311801153678867759750042328389) /*4Pi*/, SC_(0.257086543428224355151772807588810984369026142375675714560864) }},
+        {{ SC_(-8.5), SC_(12.56637061435917295385057353311801153678867759750042328389) /*4Pi*/, SC_(0.0436807946352780974532519564114026730332781693877984686758680) }},
     }};
-    static const boost::array<boost::array<T, 3>, 7> yv_large_data = {{
+    static const std::array<std::array<typename table_type<T>::type, 3>, 7> yv_large_data = {{
         // Bug report https://svn.boost.org/trac/boost/ticket/5560:
-        {{ SC_(0.5), static_cast<T>(std::ldexp(0.5, -683)), SC_(-7.14823099969225685526188875418476476336424046896822867989728e102) }},
-        {{ SC_(-0.5), static_cast<T>(std::ldexp(0.5, -683)), SC_(8.90597649117647254543282704099383321071493400182381039079219e-104) }},
-        {{ SC_(0.0), static_cast<T>(std::ldexp(1.0, -53)), SC_(-23.4611779112897561252987257324561640034037313549011724328997) }},
-        {{ SC_(1.0), static_cast<T>(std::ldexp(1.0, -53)), SC_(-5.73416113922265864550047623401604244038331542638719289100990e15) }},
-        {{ SC_(2.0), static_cast<T>(std::ldexp(1.0, -53)), SC_(-1.03297463879542177245046832533417970379386617249046560049244e32) }},
-        {{ SC_(3.0), static_cast<T>(std::ldexp(1.0, -53)), SC_(-3.72168335868978735639260528876490232745489151562358712422544e48) }},
-        {{ SC_(10.0), static_cast<T>(std::ldexp(1.0, -53)), SC_(-4.15729476804920974669173904282420477878640623992500096231384e167) }},
+        {{ SC_(0.5), SC_(1.24589936888719594193883785188809317368782599380894e-206) /*static_cast<T>(std::ldexp(0.5, -683))*/, SC_(-7.14823099969225685526188875418476476336424046896822867989728e102) }},
+        {{ SC_(-0.5), SC_(1.24589936888719594193883785188809317368782599380894e-206) /*static_cast<T>(std::ldexp(0.5, -683))*/, SC_(8.90597649117647254543282704099383321071493400182381039079219e-104) }},
+        {{ SC_(0.0), SC_(1.1102230246251565404236316680908203125e-16) /*static_cast<T>(std::ldexp(1.0, -53))*/, SC_(-23.4611779112897561252987257324561640034037313549011724328997) }},
+        {{ SC_(1.0), SC_(1.1102230246251565404236316680908203125e-16) /*static_cast<T>(std::ldexp(1.0, -53))*/, SC_(-5.73416113922265864550047623401604244038331542638719289100990e15) }},
+        {{ SC_(2.0), SC_(1.1102230246251565404236316680908203125e-16) /*static_cast<T>(std::ldexp(1.0, -53))*/, SC_(-1.03297463879542177245046832533417970379386617249046560049244e32) }},
+        {{ SC_(3.0), SC_(1.1102230246251565404236316680908203125e-16) /*static_cast<T>(std::ldexp(1.0, -53))*/, SC_(-3.72168335868978735639260528876490232745489151562358712422544e48) }},
+        {{ SC_(10.0), SC_(1.1102230246251565404236316680908203125e-16) /*static_cast<T>(std::ldexp(1.0, -53))*/, SC_(-4.15729476804920974669173904282420477878640623992500096231384e167) }},
     }};
 
     do_test_cyl_neumann_y<T>(y0_data, name, "Y0: Mathworld Data");
@@ -202,7 +204,7 @@ void test_bessel(T, const char* name)
     do_test_cyl_neumann_y_int<T>(y1_data, name, "Y1: Mathworld Data (Integer Version)");
     do_test_cyl_neumann_y_int<T>(yn_data, name, "Yn: Mathworld Data (Integer Version)");
     do_test_cyl_neumann_y<T>(yv_data, name, "Yv: Mathworld Data");
-    if(yv_large_data[0][1] != 0)
+    if(static_cast<T>(yv_large_data[0][1]) != 0)
       do_test_cyl_neumann_y<T>(yv_large_data, name, "Yv: Mathworld Data (large values)");
 
 #include "bessel_y01_data.ipp"
@@ -214,5 +216,87 @@ void test_bessel(T, const char* name)
 
 #include "sph_neumann_data.ipp"
     do_test_sph_neumann_y<T>(sph_neumann_data, name, "y: Random Data");
+
+    //
+    // Additional test coverage:
+    //
+    BOOST_IF_CONSTEXPR (std::numeric_limits<T>::has_infinity)
+    {
+       BOOST_CHECK_EQUAL(boost::math::cyl_neumann(T(0), T(0)), -std::numeric_limits<T>::infinity());
+       BOOST_CHECK_EQUAL(boost::math::sph_neumann(2, boost::math::tools::min_value<T>() * 1.5f), -std::numeric_limits<T>::infinity());
+       T small = 5.69289e-1645L;
+       if ((small != 0) && (std::numeric_limits<T>::max_exponent10 < 4933))
+       {
+          BOOST_CHECK_EQUAL(boost::math::sph_neumann(2, small), -std::numeric_limits<T>::infinity());
+       }
+       BOOST_IF_CONSTEXPR (std::numeric_limits<T>::max_exponent <= 1024)
+       {
+          BOOST_CHECK_EQUAL(boost::math::cyl_neumann(T(121.25), T(0.25)), -std::numeric_limits<T>::infinity());
+       }
+       BOOST_CHECK_EQUAL(boost::math::cyl_neumann(T(0), std::numeric_limits<T>::infinity()), T(0));
+       BOOST_CHECK_EQUAL(boost::math::cyl_neumann(T(1), std::numeric_limits<T>::infinity()), T(0));
+       BOOST_CHECK_EQUAL(boost::math::cyl_neumann(T(2), std::numeric_limits<T>::infinity()), T(0));
+       BOOST_CHECK_EQUAL(boost::math::cyl_neumann(T(2.25), std::numeric_limits<T>::infinity()), T(0));
+       BOOST_CHECK_EQUAL(boost::math::sph_neumann(0, std::numeric_limits<T>::infinity()), T(0));
+       BOOST_CHECK_EQUAL(boost::math::sph_neumann(1, std::numeric_limits<T>::infinity()), T(0));
+       BOOST_CHECK_EQUAL(boost::math::sph_neumann(2, std::numeric_limits<T>::infinity()), T(0));
+    }
+
+    #ifndef BOOST_MATH_NO_EXCEPTIONS
+    BOOST_CHECK_THROW(boost::math::cyl_neumann(T(0), T(-1)), std::domain_error);
+    BOOST_CHECK_THROW(boost::math::cyl_neumann(T(0.2), T(-1)), std::domain_error);
+    BOOST_CHECK_THROW(boost::math::cyl_neumann(T(2), T(0)), std::domain_error);
+    BOOST_CHECK_THROW(boost::math::sph_neumann(2, T(-2)), std::domain_error);
+    #endif
+#if LDBL_MAX_EXP > 1024
+    if (std::numeric_limits<T>::max_exponent > 1024)
+    {
+       T tolerance = std::numeric_limits<T>::epsilon() * 1000;
+       BOOST_CHECK_CLOSE_FRACTION(boost::math::cyl_neumann(T(121.25), T(0.25)), SC_(-2.230082612409607659174017669618188190008214736253939486007e308), tolerance);
+    }
+#endif
+    BOOST_IF_CONSTEXPR(std::numeric_limits<T>::has_infinity && (std::numeric_limits<T>::min_exponent < -1072))
+    {
+       const std::array<std::array<T, 3>, 7> coverage_data = { {
+#if (LDBL_MAX_10_EXP > 4931) || defined(TEST_MPF_50) || defined(TEST_MPFR_50) || defined(TEST_CPP_DEC_FLOAT) || defined(TEST_FLOAT128) || defined(TEST_CPP_BIN_FLOAT)
+          {{ SC_(15.25), ldexp(T(1), -1071), SC_(-9.39553199265929955912687892204143267985847111378392154596e4931)}},
+#else
+          {{ SC_(15.25), ldexp(T(1), -1071), -std::numeric_limits<T>::infinity() }},
+#endif
+#if (LDBL_MAX_10_EXP > 4945) || defined(TEST_MPF_50) || defined(TEST_MPFR_50) || defined(TEST_CPP_DEC_FLOAT) || defined(TEST_FLOAT128) || defined(TEST_CPP_BIN_FLOAT)
+          {{ SC_(15.25), ldexp(T(1), -1074), SC_(-5.5596016779885068307086343979332299344658725430873e+4945)}},
+#else
+          {{ SC_(15.25), ldexp(T(1), -1074), -std::numeric_limits<T>::infinity() }},
+#endif
+#if (LDBL_MAX_10_EXP > 9872) || defined(TEST_MPF_50) || defined(TEST_MPFR_50) || defined(TEST_CPP_DEC_FLOAT) || defined(TEST_FLOAT128) || defined(TEST_CPP_BIN_FLOAT)
+          {{ SC_(31.25), ldexp(T(1), -1045), SC_(-1.64443614527479263825137492596041426343778386094212520006e9872)}},
+#else
+          {{ SC_(31.25), ldexp(T(1), -1045), -std::numeric_limits<T>::infinity() }},
+#endif
+#if defined(TEST_MPF_50) || defined(TEST_MPFR_50) || defined(TEST_CPP_DEC_FLOAT) || defined(TEST_FLOAT128) || defined(TEST_CPP_BIN_FLOAT)
+          // Our exponent range may be so extreme that we can't trigger the coverage cases below, so use a copy of previous cases here
+          // as a placeholder.
+          {{ SC_(15.25), ldexp(T(1), -1071), SC_(-9.39553199265929955912687892204143267985847111378392154596e4931)}},
+          {{ SC_(15.25), ldexp(T(1), -1071), SC_(-9.39553199265929955912687892204143267985847111378392154596e4931)}},
+#else
+          {{ SC_(233.0), ldexp(T(1), -63), -std::numeric_limits<T>::infinity() }},
+          {{ SC_(233.0), ldexp(T(1), -64), -std::numeric_limits<T>::infinity() }},
+#endif
+#if (LDBL_MAX_10_EXP > 413) || defined(TEST_MPF_50) || defined(TEST_MPFR_50) || defined(TEST_CPP_DEC_FLOAT) || defined(TEST_FLOAT128) || defined(TEST_CPP_BIN_FLOAT)
+          {{ SC_(200.25), SC_(1.25), SC_(-3.545198572052800784992190965856441074217589237581037286156e413)}},
+#else
+          {{ SC_(200.25), SC_(1.25), -std::numeric_limits<T>::infinity()}},
+#endif
+#if defined(TEST_MPF_50) || defined(TEST_MPFR_50) || defined(TEST_CPP_DEC_FLOAT) || defined(TEST_FLOAT128) || defined(TEST_CPP_BIN_FLOAT)
+          // Our exponent range may be so extreme that we can't trigger the coverage cases below, so use a copy of previous cases here
+          // as a placeholder.
+          {{ SC_(15.25), ldexp(T(1), -1071), SC_(-9.39553199265929955912687892204143267985847111378392154596e4931)}},
+#else
+          {{ SC_(1652.25), SC_(1.25), -std::numeric_limits<T>::infinity()}},
+#endif
+      } };
+
+       do_test_cyl_neumann_y<T>(coverage_data, name, "Extra Coverage Data");
+    }
 }
 

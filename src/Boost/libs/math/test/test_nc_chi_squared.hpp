@@ -3,12 +3,15 @@
 //  Boost Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#ifndef BOOST_MATH_OVERFLOW_ERROR_POLICY
 #define BOOST_MATH_OVERFLOW_ERROR_POLICY ignore_error
+#endif
+
 #include <boost/math/concepts/real_concept.hpp>
 #define BOOST_TEST_MAIN
 #include <boost/test/unit_test.hpp>
-#include <boost/test/floating_point_comparison.hpp>
-#include <boost/math/distributions/non_central_chi_squared.hpp> 
+#include <boost/test/tools/floating_point_comparison.hpp>
+#include <boost/math/distributions/non_central_chi_squared.hpp>
 #include <boost/type_traits/is_floating_point.hpp>
 #include <boost/array.hpp>
 #include "functor.hpp"
@@ -48,7 +51,7 @@
 template <class RealType>
 RealType naive_pdf(RealType v, RealType lam, RealType x)
 {
-   // Formula direct from 
+   // Formula direct from
    // http://mathworld.wolfram.com/NoncentralChi-SquaredDistribution.html
    // with no simplification:
    RealType sum, term, prefix(1);
@@ -77,7 +80,7 @@ void test_spot(
    boost::math::non_central_chi_squared_distribution<RealType> dist(df, ncp);
    BOOST_CHECK_CLOSE(
       cdf(dist, cs), P, tol);
-#ifndef BOOST_NO_EXCEPTIONS
+#if !defined(BOOST_NO_EXCEPTIONS) && !defined(BOOST_MATH_NO_EXCEPTIONS)
    try{
       BOOST_CHECK_CLOSE(
          pdf(dist, cs), naive_pdf(dist.degrees_of_freedom(), ncp, cs), tol * 150);
@@ -90,7 +93,7 @@ void test_spot(
    {
       //
       // We can only check this if P is not too close to 1,
-      // so that we can guarentee Q is reasonably free of error:
+      // so that we can guarantee Q is reasonably free of error:
       //
       BOOST_CHECK_CLOSE(
          cdf(complement(dist, cs)), Q, tol);
@@ -117,7 +120,7 @@ void test_spots(RealType)
       boost::math::tools::epsilon<RealType>(),
       (RealType)boost::math::tools::epsilon<double>() * 5) * 150;
    //
-   // At float precision we need to up the tolerance, since 
+   // At float precision we need to up the tolerance, since
    // the input values are rounded off to inexact quantities
    // the results get thrown off by a noticeable amount.
    //
@@ -135,10 +138,10 @@ void test_spots(RealType)
    //
    // Test against the data from Table 6 of:
    //
-   // "Self-Validating Computations of Probabilities for Selected 
+   // "Self-Validating Computations of Probabilities for Selected
    // Central and Noncentral Univariate Probability Functions."
    // Morgan C. Wang; William J. Kennedy
-   // Journal of the American Statistical Association, 
+   // Journal of the American Statistical Association,
    // Vol. 89, No. 427. (Sep., 1994), pp. 878-887.
    //
    test_spot(
@@ -271,6 +274,22 @@ void test_spots(RealType)
    BOOST_MATH_CHECK_THROW(pdf(boost::math::non_central_chi_squared_distribution<RealType>(1, -1), 0), std::domain_error);
    BOOST_MATH_CHECK_THROW(quantile(boost::math::non_central_chi_squared_distribution<RealType>(1, 1), -1), std::domain_error);
    BOOST_MATH_CHECK_THROW(quantile(boost::math::non_central_chi_squared_distribution<RealType>(1, 1), 2), std::domain_error);
+   //
+   // Some special error handling tests, if the non-centrality param is too large
+   // then we have no evaluation method and should get a domain_error:
+   //
+   using std::ldexp;
+   using distro1 = boost::math::non_central_chi_squared_distribution<RealType>;
+   using distro2 = boost::math::non_central_chi_squared_distribution<RealType, boost::math::policies::policy<boost::math::policies::domain_error<boost::math::policies::ignore_error>>>;
+   using de = std::domain_error;
+   BOOST_MATH_CHECK_THROW(distro1(2, ldexp(RealType(1), 100)), de);
+   if (std::numeric_limits<RealType>::has_quiet_NaN)
+   {
+      distro2 d2(2, ldexp(RealType(1), 100));
+      BOOST_CHECK(boost::math::isnan(pdf(d2, 0.5)));
+      BOOST_CHECK(boost::math::isnan(cdf(d2, 0.5)));
+      BOOST_CHECK(boost::math::isnan(cdf(complement(d2, 0.5))));
+   }
 #endif
 } // template <class RealType>void test_spots(RealType)
 
@@ -289,7 +308,6 @@ T nccs_ccdf(T df, T nc, T x)
 template <typename Real, typename T>
 void do_test_nc_chi_squared(T& data, const char* type_name, const char* test)
 {
-   typedef typename T::value_type row_type;
    typedef Real                   value_type;
 
    std::cout << "Testing: " << test << std::endl;
@@ -330,7 +348,6 @@ template <typename Real, typename T>
 void quantile_sanity_check(T& data, const char* type_name, const char* test)
 {
 #ifndef ERROR_REPORTING_MODE
-   typedef typename T::value_type row_type;
    typedef Real                   value_type;
 
    //
@@ -385,7 +402,7 @@ void quantile_sanity_check(T& data, const char* type_name, const char* test)
          // Sanity check mode, the accuracy of
          // the mode is at *best* the square root of the accuracy of the PDF:
          //
-#ifndef BOOST_NO_EXCEPTIONS
+#if !defined(BOOST_NO_EXCEPTIONS) && !defined(BOOST_MATH_NO_EXCEPTIONS)
          try{
             value_type m = mode(boost::math::non_central_chi_squared_distribution<value_type>(data[i][0], data[i][1]));
             value_type p = pdf(boost::math::non_central_chi_squared_distribution<value_type>(data[i][0], data[i][1]), m);
@@ -397,10 +414,10 @@ void quantile_sanity_check(T& data, const char* type_name, const char* test)
          //
          // Sanity check degrees-of-freedom finder, don't bother at float
          // precision though as there's not enough data in the probability
-         // values to get back to the correct degrees of freedom or 
-         // non-cenrality parameter:
+         // values to get back to the correct degrees of freedom or
+         // non-centrality parameter:
          //
-#ifndef BOOST_NO_EXCEPTIONS
+#if !defined(BOOST_NO_EXCEPTIONS) && !defined(BOOST_MATH_NO_EXCEPTIONS)
          try{
 #endif
             if((data[i][3] < 0.99) && (data[i][3] != 0))
@@ -421,7 +438,7 @@ void quantile_sanity_check(T& data, const char* type_name, const char* test)
                   boost::math::non_central_chi_squared_distribution<value_type>::find_non_centrality(boost::math::complement(data[i][0], data[i][2], data[i][4])),
                   data[i][1], precision, i);
             }
-#ifndef BOOST_NO_EXCEPTIONS
+#if !defined(BOOST_NO_EXCEPTIONS) && !defined(BOOST_MATH_NO_EXCEPTIONS)
          }
          catch(const std::exception& e)
          {
@@ -444,4 +461,3 @@ void test_accuracy(T, const char* type_name)
    do_test_nc_chi_squared<T>(nccs_big, type_name, "Non Central Chi Squared, large parameters");
    quantile_sanity_check<T>(nccs_big, type_name, "Non Central Chi Squared, large parameters");
 }
-

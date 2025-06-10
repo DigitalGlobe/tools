@@ -1,5 +1,7 @@
 [section:credits Credits and Acknowledgements]
 
+[note This section should be read with the 'What's New' section that gives much detail on changes for each release.]
+
 Hubert Holin started the Boost.Math library.  The
 Quaternions, Octonions, inverse
 hyperbolic functions, and the sinus cardinal functions are his.
@@ -110,10 +112,27 @@ special functions code to near destruction!
 
 Jeremy William Murphy added polynomial arithmetic tools.
 
+Thomas Luu provided improvements to the quantile of the non-central chi squared distribution quantile.
+and his thesis
+* [@http://discovery.ucl.ac.uk/1482128/ Fast and accurate parallel computation of quantile functions for random number generation, 2016].
+
+and his paper
+
+Luu, Thomas; (2015), Efficient and Accurate Parallel Inversion of the Gamma Distribution,
+SIAM Journal on Scientific Computing , 37 (1) C122 - C141,
+[@https://doi.org/10.1137/14095875X].
+
+These also promise to help improve algorithms for computation of  quantile of several distributions,
+especially for parallel computation using GPUs.
+
+Nicolas Thompson added much code to handle quadrature and interpolation and more statistical tools.
+
+Matthew Pulver provided the automatic differentiation section for inclusion in Boost.Math.
+
 [endsect] [/section:credits Credits and Acknowledgements]
 
 [/
-  Copyright 2006, 2007, 2008, 2009, 2010, 2012, 2013, 2015 John Maddock and Paul A. Bristow.
+  Copyright 2006, 2007, 2008, 2009, 2010, 2012, 2013, 2015, 2016 John Maddock and Paul A. Bristow.
   Distributed under the Boost Software License, Version 1.0.
   (See accompanying file LICENSE_1_0.txt or copy at
   http://www.boost.org/LICENSE_1_0.txt).

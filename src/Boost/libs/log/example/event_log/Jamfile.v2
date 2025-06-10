@@ -1,30 +1,63 @@
 #
-#          Copyright Andrey Semashev 2007 - 2015.
+#          Copyright Andrey Semashev 2007 - 2016.
 # Distributed under the Boost Software License, Version 1.0.
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 #
 
 import os ;
+import configure ;
+import ../../build/log-platform-config ;
+
+rule has-config-flag ( flag : properties * )
+{
+    if ( "<define>$(flag)" in $(properties) || "<define>$(flag)=1" in $(properties) )
+    {
+        return 1 ;
+    }
+    else
+    {
+        return ;
+    }
+}
+
+rule check-message-compiler ( properties * )
+{
+    local result ;
+
+    if <target-os>windows in $(properties)
+    {
+        if ! [ has-config-flag BOOST_LOG_WITHOUT_EVENT_LOG : $(properties) ]
+        {
+            local has_mc = [ configure.builds /boost/log/message-compiler//test-availability : $(properties) : message-compiler ] ;
+            if ! $(has_mc)
+            {
+                result += <build>no ;
+            }
+        }
+    }
+    else
+    {
+        result += <build>no ;
+    }
+
+    return $(result) ;
+}
 
 project
     : requirements
+        <conditional>@log-platform-config.set-platform-defines
+        <conditional>@check-message-compiler
+
         <link>shared
-        <toolset>msvc:<define>_SCL_SECURE_NO_WARNINGS
-        <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
-        <toolset>msvc:<define>_CRT_SECURE_NO_WARNINGS
-        <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
+
+        <c++-template-depth>1024
+
         <toolset>msvc:<cxxflags>/bigobj
         <toolset>msvc:<cxxflags>/wd4503 # decorated name length exceeded, name was truncated
         <toolset>msvc:<cxxflags>/wd4456 # declaration of 'A' hides previous local declaration
         <toolset>msvc:<cxxflags>/wd4459 # declaration of 'A' hides global declaration
         <toolset>msvc:<cxxflags>/wd4003 # not enough actual parameters for macro 'X' - caused by BOOST_PP_IS_EMPTY and BOOST_PP_IS_BEGIN_PARENS which are used by Fusion
-        <toolset>intel-win:<define>_SCL_SECURE_NO_WARNINGS
-        <toolset>intel-win:<define>_SCL_SECURE_NO_DEPRECATE
-        <toolset>intel-win:<define>_CRT_SECURE_NO_WARNINGS
-        <toolset>intel-win:<define>_CRT_SECURE_NO_DEPRECATE
-        <toolset>darwin:<cxxflags>-ftemplate-depth-1024
-        <toolset>gcc:<cxxflags>-ftemplate-depth-1024
         <toolset>gcc:<cxxflags>-fno-strict-aliasing  # avoids strict aliasing violations in other Boost components
 
         # Disable Intel warnings:
@@ -46,11 +79,7 @@ project
         <library>/boost/log//boost_log
         <library>/boost/date_time//boost_date_time
         <library>/boost/filesystem//boost_filesystem
-        <library>/boost/system//boost_system
-        <library>/boost/thread//boost_thread
         <threading>multi
-        <log-api>generic:<build>no
-        <log-api>unix:<build>no
     ;
 
 lib event_log_messages

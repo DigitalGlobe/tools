@@ -26,7 +26,7 @@
 
 #include <utility>
 
-#include <boost/array.hpp>
+#include <array>
 
 #include <boost/test/unit_test.hpp>
 
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE( test_rotating_buffer )
 
 BOOST_AUTO_TEST_CASE( test_copying )
 {
-    typedef boost::array< double , 1 > state_type;
+    typedef std::array< double , 1 > state_type;
     typedef adams_bashforth< 2 , state_type > stepper_type;
 
     stepper_type s1;
@@ -150,7 +150,7 @@ typedef boost::mpl::range_c< size_t , 1 , 6 > vector_of_steps;
 BOOST_AUTO_TEST_CASE_TEMPLATE( test_init_and_steps , step_type , vector_of_steps )
 {
     const static size_t steps = step_type::value;
-    typedef boost::array< value_type , 3 > state_type;
+    typedef std::array< value_type , 3 > state_type;
 
     adams_bashforth< steps , state_type > stepper;
     state_type x = {{ 10.0 , 10.0 , 10.0 }};
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( test_init_and_steps , step_type , vector_of_steps
 
 BOOST_AUTO_TEST_CASE( test_instantiation )
 {
-    typedef boost::array< double , 3 > state_type;
+    typedef std::array< double , 3 > state_type;
     adams_bashforth< 1 , state_type > s1;
     adams_bashforth< 2 , state_type > s2;
     adams_bashforth< 3 , state_type > s3;
@@ -189,7 +189,7 @@ BOOST_AUTO_TEST_CASE( test_instantiation )
 
 BOOST_AUTO_TEST_CASE( test_auto_initialization )
 {
-    typedef boost::array< double , 3 > state_type;
+    typedef std::array< double , 3 > state_type;
     state_type x = {{ 10.0 , 10.0 , 10.0 }};
 
     adams_bashforth< 3 , state_type , value_type , state_type , value_type , range_algebra , default_operations ,
@@ -208,13 +208,18 @@ BOOST_AUTO_TEST_CASE( test_auto_initialization )
     adams.do_step( lorenz() , x , 0.0 , x , 0.1 );
     BOOST_CHECK_EQUAL( adams.initializing_stepper().do_count , size_t( 2 ) );
 
+    adams.reset();
+
     adams.do_step( lorenz() , x , 0.0 , x , 0.1 );
-    BOOST_CHECK_EQUAL( adams.initializing_stepper().do_count , size_t( 2 ) );
+    BOOST_CHECK_EQUAL( adams.initializing_stepper().do_count , size_t( 3 ) );
+
+    adams.do_step( lorenz() , x , 0.0 , x , 0.1 );
+    BOOST_CHECK_EQUAL( adams.initializing_stepper().do_count , size_t( 4 ) );
 }
 
 BOOST_AUTO_TEST_CASE( test_manual_initialization )
 {
-    typedef boost::array< double , 3 > state_type;
+    typedef std::array< double , 3 > state_type;
     state_type x = {{ 10.0 , 10.0 , 10.0 }};
 
     adams_bashforth< 3 , state_type , value_type , state_type , value_type , range_algebra , default_operations ,

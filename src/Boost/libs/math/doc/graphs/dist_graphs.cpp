@@ -10,7 +10,7 @@
     \author John Maddock and Paul A. Bristow
   */
 //  Copyright John Maddock 2008.
-//  Copyright Paul A. Bristow 2008, 2009, 2012
+//  Copyright Paul A. Bristow 2008, 2009, 2012, 2016
 //  Use, modification and distribution are subject to the
 //  Boost Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -35,23 +35,24 @@
 
 template <class Dist>
 struct is_discrete_distribution
-   : public boost::mpl::false_{};
+   : public std::false_type{}; // Default is continuous distribution.
 
+// Some discrete distributions.
 template<class T, class P>
 struct is_discrete_distribution<boost::math::bernoulli_distribution<T,P> >
-   : public boost::mpl::true_{};
+   : public std::true_type{};
 template<class T, class P>
 struct is_discrete_distribution<boost::math::binomial_distribution<T,P> >
-   : public boost::mpl::true_{};
+   : public std::true_type{};
 template<class T, class P>
 struct is_discrete_distribution<boost::math::negative_binomial_distribution<T,P> >
-   : public boost::mpl::true_{};
+   : public std::true_type{};
 template<class T, class P>
 struct is_discrete_distribution<boost::math::poisson_distribution<T,P> >
-   : public boost::mpl::true_{};
+   : public std::true_type{};
 template<class T, class P>
 struct is_discrete_distribution<boost::math::hypergeometric_distribution<T,P> >
-   : public boost::mpl::true_{};
+   : public std::true_type{};
 
 
 template <class Dist>
@@ -68,7 +69,7 @@ struct value_finder
 private:
    Dist m_dist;
    typename Dist::value_type m_value;
-};
+}; // value_finder
 
 template <class Dist>
 class distribution_plotter
@@ -83,10 +84,11 @@ public:
       m_distributions.push_back(std::make_pair(name, d));
       //
       // Get the extent of the distribution from the support:
-      double a, b;
-      std::tr1::tie(a, b) = support(d);
+      std::pair<double, double> r = support(d);
+      double a = r.first;
+      double b = r.second;
       //
-      // PDF maximimum is at the mode (probably):
+      // PDF maximum is at the mode (probably):
       double mod;
       try
       {
@@ -116,7 +118,7 @@ public:
       //
       if(a <= -(std::numeric_limits<double>::max)())
       {
-         boost::uintmax_t max_iter = 500;
+         std::uintmax_t max_iter = 500;
          double guess = mod;
          if((pdf(d, 0) > min_y) || (guess == 0))
             guess = -1e-3;
@@ -130,7 +132,7 @@ public:
       }
       if(b >= (std::numeric_limits<double>::max)())
       {
-         boost::uintmax_t max_iter = 500;
+         std::uintmax_t max_iter = 500;
          double guess = mod;
          if(a <= 0)
             if((pdf(d, 0) > min_y) || (guess == 0))
@@ -177,7 +179,7 @@ public:
          if(b > m_max_x)
             m_max_x = b;
       }
-   }
+   } // add
 
    void plot(const std::string& title, const std::string& file)
    {
@@ -198,9 +200,12 @@ public:
          m_max_y = 1;
       }
 
+      std::cout << "Plotting " << title << " to " << file << std::endl;
+
       svg_2d_plot plot;
       plot.image_x_size(750);
       plot.image_y_size(400);
+      plot.copyright_holder("John Maddock").copyright_date("2008").boost_license_on(true);
       plot.coord_precision(4); // Avoids any visible steps.
       plot.title_font_size(20);
       plot.legend_title_font_size(15);
@@ -248,19 +253,17 @@ public:
 
       if(!is_discrete_distribution<Dist>::value)
       {
-         //
          // Continuous distribution:
-         //
-         for(std::list<std::pair<std::string, Dist> >::const_iterator i = m_distributions.begin();
+         for(typename std::list<std::pair<std::string, Dist> >::const_iterator i = m_distributions.begin();
             i != m_distributions.end(); ++i)
          {
             double x = m_min_x;
-            double interval = (m_max_x - m_min_x) / 200;
+            double continuous_interval = (m_max_x - m_min_x) / 200;
             std::map<double, double> data;
             while(x <= m_max_x)
             {
                data[x] = m_pdf ? pdf(i->second, x) : cdf(i->second, x);
-               x += interval;
+               x += continuous_interval;
             }
             plot.plot(data, i->first)
                .line_on(true)
@@ -275,16 +278,14 @@ public:
       }
       else
       {
-         //
          // Discrete distribution:
-         //
          double x_width = 0.75 / m_distributions.size();
          double x_off = -0.5 * 0.75;
-         for(std::list<std::pair<std::string, Dist> >::const_iterator i = m_distributions.begin();
+         for(typename std::list<std::pair<std::string, Dist> >::const_iterator i = m_distributions.begin();
             i != m_distributions.end(); ++i)
          {
             double x = ceil(m_min_x);
-            double interval = 1;
+            double discrete_interval = 1;
             std::map<double, double> data;
             while(x <= m_max_x)
             {
@@ -300,7 +301,7 @@ public:
                data[x + x_off + 0.00001] = p;
                data[x + x_off + x_width] = p;
                data[x + x_off + x_width + 0.00001] = 0;
-               x += interval;
+               x += discrete_interval;
             }
             x_off += x_width;
             svg_2d_plot_series& s = plot.plot(data, i->first);
@@ -312,9 +313,9 @@ public:
             ++color_index;
             color_index = color_index % (sizeof(colors)/sizeof(colors[0]));
          }
-      }
+      } // discrete
       plot.write(file);
-   }
+   } // void plot(const std::string& title, const std::string& file)
 
 private:
    bool m_pdf;
@@ -326,7 +327,7 @@ int main()
 {
   try
   {
-
+   std::cout << "Distribution Graphs" << std::endl;
    distribution_plotter<boost::math::gamma_distribution<> >
       gamma_plotter;
    gamma_plotter.add(boost::math::gamma_distribution<>(0.75), "shape = 0.75");
@@ -468,6 +469,22 @@ int main()
    fisher_f_plotter.add(boost::math::fisher_f_distribution<>(10, 10), "n=10, m=10");
    fisher_f_plotter.add(boost::math::fisher_f_distribution<>(4, 10), "n=4, m=10");
    fisher_f_plotter.plot("F Distribution PDF", "fisher_f_pdf.svg");
+
+   distribution_plotter<boost::math::kolmogorov_smirnov_distribution<> >
+      kolmogorov_smirnov_cdf_plotter(false);
+   kolmogorov_smirnov_cdf_plotter.add(boost::math::kolmogorov_smirnov_distribution<>(1), "n=1");
+   kolmogorov_smirnov_cdf_plotter.add(boost::math::kolmogorov_smirnov_distribution<>(2), "n=2");
+   kolmogorov_smirnov_cdf_plotter.add(boost::math::kolmogorov_smirnov_distribution<>(5), "n=5");
+   kolmogorov_smirnov_cdf_plotter.add(boost::math::kolmogorov_smirnov_distribution<>(10), "n=10");
+   kolmogorov_smirnov_cdf_plotter.plot("Kolmogorov-Smirnov Distribution CDF", "kolmogorov_smirnov_cdf.svg");
+
+   distribution_plotter<boost::math::kolmogorov_smirnov_distribution<> >
+      kolmogorov_smirnov_pdf_plotter;
+   kolmogorov_smirnov_pdf_plotter.add(boost::math::kolmogorov_smirnov_distribution<>(1), "n=1");
+   kolmogorov_smirnov_pdf_plotter.add(boost::math::kolmogorov_smirnov_distribution<>(2), "n=2");
+   kolmogorov_smirnov_pdf_plotter.add(boost::math::kolmogorov_smirnov_distribution<>(5), "n=5");
+   kolmogorov_smirnov_pdf_plotter.add(boost::math::kolmogorov_smirnov_distribution<>(10), "n=10");
+   kolmogorov_smirnov_pdf_plotter.plot("Kolmogorov-Smirnov Distribution PDF", "kolmogorov_smirnov_pdf.svg");
 
    distribution_plotter<boost::math::lognormal_distribution<> >
       lognormal_plotter;
@@ -717,6 +734,5 @@ int main()
    }
    hyperexponential_plotter3.plot("Hyperexponential Distribution PDF (Different Number of Phases, Same Mean)", "hyperexponential_pdf_samemean.svg");
    */
-
 
 } // int main()

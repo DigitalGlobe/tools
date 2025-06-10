@@ -10,28 +10,30 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 //[doc_map_code
-#include <boost/static_assert.hpp>
-#include <boost/type_traits/is_same.hpp>
 #include <boost/intrusive/set.hpp>
 #include <boost/intrusive/unordered_set.hpp>
 #include <vector>
+
+#ifdef NDEBUG
+#undef NDEBUG
+#endif
 #include <cassert>
 
 using namespace boost::intrusive;
 
 class MyClass : public set_base_hook<>
-              , public unordered_set_base_hook<>
+   , public unordered_set_base_hook<>
 {
-   public:
+public:
    int first;
    explicit MyClass(int i) : first(i){}
 };
 
 //key_of_value function object, must:
-//- be default constructible (and lightweight)
+//- be default constructible if the container constructor requires it
 //- define the key type using "type"
 //- define an operator() taking "const value_type&" and
-//    returning "const type &"
+//    returning "type" or "const type &"
 struct first_int_is_key
 {
    typedef int type;
@@ -46,9 +48,6 @@ typedef unordered_set< MyClass, key_of_value<first_int_is_key> > UnorderedMap;
 
 int main()
 {
-   BOOST_STATIC_ASSERT((boost::is_same<  OrderedMap::key_type, int>::value));
-   BOOST_STATIC_ASSERT((boost::is_same<UnorderedMap::key_type, int>::value));
-
    //Create several MyClass objects, each one with a different value
    //and insert them into the omap
    std::vector<MyClass> values;

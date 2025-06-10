@@ -1,7 +1,8 @@
 /////////////////////////////////////////////////////////////////////////////
 //
 // (C) Copyright Olaf Krzikalla 2004-2006.
-// (C) Copyright Ion Gaztanaga  2006-2013.
+// (C) Copyright Ion Gaztanaga  2006-2021.
+// (C) Copyright Daniel Steck   2021
 //
 // Distributed under the Boost Software License, Version 1.0.
 //    (See accompanying file LICENSE_1_0.txt or copy at
@@ -11,12 +12,12 @@
 //
 /////////////////////////////////////////////////////////////////////////////
 #include <boost/container/vector.hpp> //vector
-#include <algorithm> //sort, random_shuffle
 #include <boost/intrusive/detail/config_begin.hpp>
 #include "common_functors.hpp"
 #include <boost/intrusive/options.hpp>
 #include <boost/intrusive/detail/mpl.hpp>
-#include <boost/detail/lightweight_test.hpp>
+#include <boost/intrusive/detail/iterator.hpp>
+#include <boost/core/lightweight_test.hpp>
 #include "test_macros.hpp"
 #include "test_container.hpp"
 
@@ -32,20 +33,18 @@ BOOST_INTRUSIVE_HAS_MEMBER_FUNC_CALLED(has_insert_before, insert_before)
 
 BOOST_INTRUSIVE_HAS_MEMBER_FUNC_CALLED(is_treap, priority_comp)
 
-template<class ValueTraits, class ContainerDefiner>
+template<class ContainerDefiner>
 struct test_generic_assoc
 {
-   typedef typename ValueTraits::value_type value_type;
-   typedef typename ValueTraits::pointer pointer;
-   typedef typename ValueTraits::const_pointer const_pointer;
-   typedef typename ValueContainer< value_type >::type value_cont_type;
-   typedef typename pointer_traits<pointer>::reference      reference;
-   typedef typename pointer_traits
-      <const_pointer>::reference                            const_reference;
+   typedef typename ContainerDefiner::value_cont_type    value_cont_type;
 
    static void test_all(value_cont_type&);
+   static void test_root(value_cont_type&);
    static void test_clone(value_cont_type&);
    static void test_insert_erase_burst();
+   static void test_swap_nodes();
+   template <class Assoc>
+      static void test_perfect_binary_tree_of_height_2(value_cont_type &values, Assoc &assoc);
    static void test_container_from_end(value_cont_type&, detail::true_type);
    static void test_container_from_end(value_cont_type&, detail::false_type) {}
    static void test_splay_up(value_cont_type&, detail::true_type);
@@ -60,8 +59,8 @@ struct test_generic_assoc
    static void test_container_from_iterator(value_cont_type&, detail::false_type) {}
 };
 
-template<class ValueTraits, class ContainerDefiner>
-void test_generic_assoc<ValueTraits, ContainerDefiner>::
+template<class ContainerDefiner>
+void test_generic_assoc<ContainerDefiner>::
    test_container_from_iterator(value_cont_type& values, detail::true_type)
 {
    typedef typename ContainerDefiner::template container
@@ -84,14 +83,14 @@ void test_generic_assoc<ValueTraits, ContainerDefiner>::
    }
 }
 
-template<class ValueTraits, class ContainerDefiner>
-void test_generic_assoc<ValueTraits, ContainerDefiner>::test_insert_erase_burst()
+template<class ContainerDefiner>
+void test_generic_assoc<ContainerDefiner>::test_insert_erase_burst()
 {
    //value_cont_type values;
    const std::size_t MaxValues = 200;
    value_cont_type values(MaxValues);
    for(std::size_t i = 0; i != MaxValues; ++i){
-      (&values[i])->value_ = i;
+      (&values[i])->value_ = (int)i;
    }
 
    typedef typename ContainerDefiner::template container
@@ -99,7 +98,7 @@ void test_generic_assoc<ValueTraits, ContainerDefiner>::test_insert_erase_burst(
    typedef typename assoc_type::iterator iterator;
 
    {  //Ordered insertion + erasure
-      assoc_type testset (values.begin(), values.begin() + values.size());
+      assoc_type testset (values.begin(), values.end());
       TEST_INTRUSIVE_SEQUENCE_EXPECTED(testset, testset.begin());
       testset.check();
       iterator it(testset.begin()), itend(testset.end());
@@ -127,7 +126,7 @@ void test_generic_assoc<ValueTraits, ContainerDefiner>::test_insert_erase_burst(
       }
       TEST_INTRUSIVE_SEQUENCE_EXPECTED(testset, testset.begin());
       //Random erasure
-      std::random_shuffle(it_vector.begin(), it_vector.end());
+      random_shuffle(it_vector.begin(), it_vector.end());
       for(std::size_t i = 0; i != MaxValues; ++i){
          testset.erase(testset.iterator_to(*it_vector[i]));
          testset.check();
@@ -136,11 +135,232 @@ void test_generic_assoc<ValueTraits, ContainerDefiner>::test_insert_erase_burst(
    }
 }
 
-template<class ValueTraits, class ContainerDefiner>
-void test_generic_assoc<ValueTraits, ContainerDefiner>::test_all(value_cont_type& values)
+// Perfect binary tree of height 2
+//            3                  |
+//          /   \                |
+//         1     5               |
+//        / \   / \              |
+//       0   2 4   6             |
+template<class ContainerDefiner>
+template <class Assoc>
+void test_generic_assoc<ContainerDefiner>::test_perfect_binary_tree_of_height_2
+   (value_cont_type &values, Assoc &assoc)
+{
+   //value_cont_type values;
+   const std::size_t MaxValues = 7;
+   BOOST_TEST(values.size() == MaxValues);
+   for(std::size_t i = 0; i != MaxValues; ++i){
+      (&values[i])->value_ = (int)i;
+   }
+
+   typedef typename Assoc::iterator iterator;
+
+   BOOST_TEST( assoc.empty() );
+   assoc.clear();
+
+   const iterator it3 = assoc.insert_before(assoc.end(), values[3]);
+   const iterator it1 = assoc.insert_before(it3, values[1]);
+   const iterator it5 = assoc.insert_before(assoc.end(), values[5]);
+   assoc.insert_before(it1, values[0]);
+   assoc.insert_before(it3, values[2]);
+   assoc.insert_before(it5, values[4]);
+   assoc.insert_before(assoc.end(), values[6]);
+}
+
+
+template<class ContainerDefiner>
+void test_generic_assoc<ContainerDefiner>::test_swap_nodes()
+{
+// Perfect binary tree of height 2
+//            3                  |
+//          /   \                |
+//         1     5               |
+//        / \   / \              |
+//       0   2 4   6             |
+
+   typedef typename ContainerDefiner::template container
+      <>::type  assoc_type;
+   typedef typename assoc_type::value_traits value_traits_t;
+   typedef typename assoc_type::node_algorithms node_algorithms_t;
+   const std::size_t MaxValues = 7;
+
+   {  //Unrelated swap
+      value_cont_type values(MaxValues);
+      assoc_type testset;
+      test_perfect_binary_tree_of_height_2(values, testset);
+
+      node_algorithms_t::swap_nodes
+         ( value_traits_t::to_node_ptr(values[0])
+         , value_traits_t::to_node_ptr(values[4])
+         );
+
+      BOOST_TEST( (&*iterator_next(testset.begin(), 0) == &values[4]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 1) == &values[1]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 2) == &values[2]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 3) == &values[3]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 4) == &values[0]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 5) == &values[5]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 6) == &values[6]) );
+
+      node_algorithms_t::swap_nodes
+         ( value_traits_t::to_node_ptr(values[4])
+         , value_traits_t::to_node_ptr(values[0])
+         );
+
+      BOOST_TEST( (&*iterator_next(testset.begin(), 0) == &values[0]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 1) == &values[1]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 2) == &values[2]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 3) == &values[3]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 4) == &values[4]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 5) == &values[5]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 6) == &values[6]) );
+      
+      testset.check();
+   }
+
+   {  //sibling leaf nodes
+      value_cont_type values(MaxValues);
+      assoc_type testset;
+      test_perfect_binary_tree_of_height_2(values, testset);
+
+      node_algorithms_t::swap_nodes
+         ( value_traits_t::to_node_ptr(values[0])
+         , value_traits_t::to_node_ptr(values[2])
+         );
+
+      BOOST_TEST( (&*iterator_next(testset.begin(), 0) == &values[2]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 1) == &values[1]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 2) == &values[0]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 3) == &values[3]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 4) == &values[4]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 5) == &values[5]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 6) == &values[6]) );
+
+      node_algorithms_t::swap_nodes
+         ( value_traits_t::to_node_ptr(values[0])
+         , value_traits_t::to_node_ptr(values[2])
+         );
+
+      BOOST_TEST( (&*iterator_next(testset.begin(), 0) == &values[0]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 1) == &values[1]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 2) == &values[2]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 3) == &values[3]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 4) == &values[4]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 5) == &values[5]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 6) == &values[6]) );
+      
+      testset.check();
+   }
+
+   {  //sibling nodes
+      value_cont_type values(MaxValues);
+      assoc_type testset;
+      test_perfect_binary_tree_of_height_2(values, testset);
+
+      node_algorithms_t::swap_nodes
+         ( value_traits_t::to_node_ptr(values[1])
+         , value_traits_t::to_node_ptr(values[5])
+         );
+
+      BOOST_TEST( (&*iterator_next(testset.begin(), 0) == &values[0]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 1) == &values[5]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 2) == &values[2]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 3) == &values[3]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 4) == &values[4]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 5) == &values[1]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 6) == &values[6]) );
+
+      node_algorithms_t::swap_nodes
+         ( value_traits_t::to_node_ptr(values[1])
+         , value_traits_t::to_node_ptr(values[5])
+         );
+
+      BOOST_TEST( (&*iterator_next(testset.begin(), 0) == &values[0]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 1) == &values[1]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 2) == &values[2]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 3) == &values[3]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 4) == &values[4]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 5) == &values[5]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 6) == &values[6]) );
+      
+      testset.check();
+   }
+
+   {  //left child
+      value_cont_type values(MaxValues);
+      assoc_type testset;
+      test_perfect_binary_tree_of_height_2(values, testset);
+
+      node_algorithms_t::swap_nodes
+         ( value_traits_t::to_node_ptr(values[0])
+         , value_traits_t::to_node_ptr(values[1])
+         );
+
+      BOOST_TEST( (&*iterator_next(testset.begin(), 0) == &values[1]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 1) == &values[0]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 2) == &values[2]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 3) == &values[3]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 4) == &values[4]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 5) == &values[5]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 6) == &values[6]) );
+
+      node_algorithms_t::swap_nodes
+         ( value_traits_t::to_node_ptr(values[0])
+         , value_traits_t::to_node_ptr(values[1])
+         );
+
+      BOOST_TEST( (&*iterator_next(testset.begin(), 0) == &values[0]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 1) == &values[1]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 2) == &values[2]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 3) == &values[3]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 4) == &values[4]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 5) == &values[5]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 6) == &values[6]) );
+      
+      testset.check();
+   }
+
+   {  //right child
+      value_cont_type values(MaxValues);
+      assoc_type testset;
+      test_perfect_binary_tree_of_height_2(values, testset);
+
+      node_algorithms_t::swap_nodes
+         ( value_traits_t::to_node_ptr(values[1])
+         , value_traits_t::to_node_ptr(values[2])
+         );
+
+      BOOST_TEST( (&*iterator_next(testset.begin(), 0) == &values[0]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 1) == &values[2]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 2) == &values[1]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 3) == &values[3]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 4) == &values[4]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 5) == &values[5]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 6) == &values[6]) );
+
+      node_algorithms_t::swap_nodes
+         ( value_traits_t::to_node_ptr(values[1])
+         , value_traits_t::to_node_ptr(values[2])
+         );
+
+      BOOST_TEST( (&*iterator_next(testset.begin(), 0) == &values[0]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 1) == &values[1]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 2) == &values[2]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 3) == &values[3]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 4) == &values[4]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 5) == &values[5]) );
+      BOOST_TEST( (&*iterator_next(testset.begin(), 6) == &values[6]) );
+      
+      testset.check();
+   }
+}
+
+template<class ContainerDefiner>
+void test_generic_assoc<ContainerDefiner>::test_all(value_cont_type& values)
 {
    typedef typename ContainerDefiner::template container
       <>::type assoc_type;
+   test_root(values);
    test_clone(values);
    test_container_from_end(values, detail::bool_< assoc_type::has_container_from_iterator >());
    test_splay_up(values, detail::bool_< has_splay< assoc_type >::value >());
@@ -148,20 +368,53 @@ void test_generic_assoc<ValueTraits, ContainerDefiner>::test_all(value_cont_type
    test_rebalance(values, detail::bool_< has_rebalance< assoc_type >::value >());
    test_insert_before(values, detail::bool_< has_insert_before< assoc_type >::value >());
    test_insert_erase_burst();
+   test_swap_nodes();
    test_container_from_iterator(values, detail::bool_< assoc_type::has_container_from_iterator >());
 }
 
-template<class ValueTraits, class ContainerDefiner>
-void test_generic_assoc<ValueTraits, ContainerDefiner>
-   ::test_clone(value_cont_type& values)
+template<class ContainerDefiner>
+void test_generic_assoc<ContainerDefiner>::test_root(value_cont_type& values)
+{
+   typedef typename ContainerDefiner::template container<>::type  assoc_type;
+   typedef typename assoc_type::iterator                          iterator;
+   typedef typename assoc_type::const_iterator                    const_iterator;
+
+   assoc_type testset1;
+   const assoc_type &ctestset1 = testset1;;
+
+   BOOST_TEST( testset1.root()  ==  testset1.end());
+   BOOST_TEST(ctestset1.root()  == ctestset1.cend());
+   BOOST_TEST( testset1.croot() == ctestset1.cend());
+
+
+   testset1.insert(values.begin(), values.end());
+
+   iterator i = testset1.root();
+   iterator i2(i);
+   BOOST_TEST( i.go_parent().go_parent() == i2);
+
+   const_iterator ci = ctestset1.root();
+   const_iterator ci2(ci);
+   BOOST_TEST( ci.go_parent().go_parent() == ci2);
+
+   ci = testset1.croot();
+   ci2 = ci;
+   BOOST_TEST( ci.go_parent().go_parent() == ci2);
+}
+
+template<class ContainerDefiner>
+void test_generic_assoc<ContainerDefiner>::test_clone(value_cont_type& values)
 {
    {
       typedef typename ContainerDefiner::template container
          <>::type assoc_type;
-      assoc_type testset1 (values.begin(), values.begin() + values.size());
+      typedef typename assoc_type::value_type value_type;
+      typedef typename assoc_type::size_type size_type;
+
+      assoc_type testset1 (values.begin(), values.end());
       assoc_type testset2;
 
-      typedef typename assoc_type::size_type size_type;
+
       size_type const testset1_oldsize = testset1.size();
       testset2.clone_from(testset1, test::new_cloner<value_type>(), test::delete_disposer<value_type>());
       BOOST_TEST (testset1.size() == testset1_oldsize);
@@ -177,19 +430,19 @@ void test_generic_assoc<ValueTraits, ContainerDefiner>
    }
 }
 
-template<class ValueTraits, class ContainerDefiner>
-void test_generic_assoc<ValueTraits, ContainerDefiner>
+template<class ContainerDefiner>
+void test_generic_assoc<ContainerDefiner>
    ::test_container_from_end(value_cont_type& values, detail::true_type)
 {
    typedef typename ContainerDefiner::template container
       <>::type assoc_type;
-   assoc_type testset (values.begin(), values.begin() + values.size());
+   assoc_type testset (values.begin(), values.end());
    BOOST_TEST (testset == assoc_type::container_from_end_iterator(testset.end()));
    BOOST_TEST (testset == assoc_type::container_from_end_iterator(testset.cend()));
 }
 
-template<class ValueTraits, class ContainerDefiner>
-void test_generic_assoc<ValueTraits, ContainerDefiner>::test_splay_up
+template<class ContainerDefiner>
+void test_generic_assoc<ContainerDefiner>::test_splay_up
 (value_cont_type& values, detail::true_type)
 {
    typedef typename ContainerDefiner::template container
@@ -223,8 +476,8 @@ void test_generic_assoc<ValueTraits, ContainerDefiner>::test_splay_up
    }
 }
 
-template<class ValueTraits, class ContainerDefiner>
-void test_generic_assoc<ValueTraits, ContainerDefiner>::test_splay_down
+template<class ContainerDefiner>
+void test_generic_assoc<ContainerDefiner>::test_splay_down
 (value_cont_type& values, detail::true_type)
 {
    typedef typename ContainerDefiner::template container
@@ -259,8 +512,8 @@ void test_generic_assoc<ValueTraits, ContainerDefiner>::test_splay_down
    }
 }
 
-template<class ValueTraits, class ContainerDefiner>
-void test_generic_assoc<ValueTraits, ContainerDefiner>::test_rebalance
+template<class ContainerDefiner>
+void test_generic_assoc<ContainerDefiner>::test_rebalance
 (value_cont_type& values, detail::true_type)
 {
    typedef typename ContainerDefiner::template container
@@ -294,8 +547,8 @@ void test_generic_assoc<ValueTraits, ContainerDefiner>::test_rebalance
    }
 }
 
-template<class ValueTraits, class ContainerDefiner>
-void test_generic_assoc<ValueTraits, ContainerDefiner>::test_insert_before
+template<class ContainerDefiner>
+void test_generic_assoc<ContainerDefiner>::test_insert_before
 (value_cont_type& values, detail::true_type)
 {
    typedef typename ContainerDefiner::template container

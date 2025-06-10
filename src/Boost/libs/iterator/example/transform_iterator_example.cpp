@@ -1,4 +1,4 @@
-// (C) Copyright Jeremy Siek 2000-2004. 
+// (C) Copyright Jeremy Siek 2000-2004.
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -15,10 +15,11 @@
 
 namespace boost {
 
-  template <class Operation> 
-  class binder1st
-    : public std::unary_function<typename Operation::second_argument_type,
-                                 typename Operation::result_type> {
+  template <class Operation>
+  class binder1st {
+  public:
+    typedef typename Operation::result_type result_type;
+    typedef typename Operation::second_argument_type argument_type;
   protected:
     Operation op;
     typename Operation::first_argument_type value;
@@ -29,7 +30,7 @@ namespace boost {
         : op(x), value(y) {}
     typename Operation::result_type
     operator()(const typename Operation::second_argument_type& x) const {
-      return op(value, x); 
+      return op(value, x);
     }
   };
 
@@ -69,8 +70,6 @@ main(int, char*[])
             boost::make_transform_iterator(x + N, boost::bind1st(std::plus<int>(), 4)),
             std::ostream_iterator<int>(std::cout, " "));
   std::cout << std::endl;
-  
+
   return 0;
 }
-
-

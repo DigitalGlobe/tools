@@ -6,7 +6,7 @@
  /]
 
 [library Boost.Intrusive
-    [quickbook 1.6]
+    [quickbook 1.7]
     [authors [Krzikalla, Olaf], [Gaztanaga, Ion]]
     [copyright 2005 Olaf Krzikalla, 2006-2015 Ion Gaztanaga]
     [id intrusive]
@@ -46,6 +46,17 @@ STL-like interfaces. Hence anyone familiar with standard containers can easily u
 There is no need to compile anything to use [*Boost.Intrusive], since it's
 a header only library. Just include your Boost header directory in your
 compiler include path.
+
+[endsect]
+
+[section:tested_compilers Tested compilers]
+
+[*Boost.Intrusive] has been tested on the following compilers/platforms:
+
+*  Visual C++ >= 7.1.
+*  GCC >= 4.1.
+
+[warning GCC < 4.3 and MSVC < 9.0 are deprecated and will be removed in the next version.]
 
 [endsect]
 
@@ -144,9 +155,11 @@ A non-intrusive container has some limitations:
    a size overhead for each allocation to store bookkeeping information and a
    synchronization to protected concurrent allocation from different threads.
 
-*  Only copies of objects are stored in non-intrusive containers. Hence copy
-   or move constructors and copy or move assignment operators are required. Non-copyable
-   and non-movable objects can't be stored in non-intrusive containers.
+*  Before C++11, only copies of objects could be stored in non-intrusive containers. Still
+   copy or move constructors and copy or move assignment operators are required
+   and non-copyable and non-movable objects can't be stored in some containers. In any case,
+   [*new] objects have to be created inside the container using constructors and the same
+   object can't be shared between two containers.
 
 *  It's not possible to store a derived object in a STL-container while
    retaining its original type.
@@ -155,6 +168,9 @@ Intrusive containers have some important advantages:
 
 *  Operating with intrusive containers doesn't invoke any memory management at all.
    The time and size overhead associated with dynamic memory can be minimized.
+
+*  The same object can be inserted in more than one container at the same time with
+   a tiny overhead in the object size.
 
 *  Iterating an Intrusive container needs less memory accesses than the semantically
    equivalent container of pointers: iteration is faster.
@@ -208,7 +224,7 @@ Intrusive containers have also downsides:
     [[Memory management]                                                         [External]                          [Internal through allocator]]
     [[Insertion/Erasure time]                                                    [Faster]                            [Slower]]
     [[Memory locality]                                                           [Better]                            [Worse]]
-    [[Can hold non-copyable and non-movable objects by value]                    [Yes]                               [No]]
+    [[Can insert the same object in more than one container]                     [Yes]                               [No]]
     [[Exception guarantees]                                                      [Better]                            [Worse]]
     [[Computation of iterator from value]                                        [Constant]                          [Non-constant]]
     [[Insertion/erasure predictability]                                          [High]                              [Low]]
@@ -331,7 +347,7 @@ and optionally, the user can specify options. We have 3 option types:
    containers can have a `size_type` that might be different from `std::size_t`
    (for example, STL-like containers use the `size_type` defined by their allocator).
    [*Boost.Intrusive] can be used to implement such containers specifying the
-   the type of the size. By default the type is `std::size_t`.
+   type of the size. By default the type is `std::size_t`.
 
 Example of a constant-time size intrusive list that will store Foo objects, using
 the base hook with the default tag:
@@ -360,7 +376,7 @@ using:
    struct my_tag1;
    struct my_tag2;
 
-   typedef list_base_hook< tag<my_tag>  > BaseHook;
+   typedef list_base_hook< tag<my_tag1> > BaseHook;
    typedef list_base_hook< tag<my_tag2> > BaseHook2;
    class Foo   :  public BaseHook, public BaseHook2
    { /**/ };
@@ -701,7 +717,7 @@ with the name of the file to include:
 
 These hooks have exactly the same size overhead as their analog non auto-unlinking
 hooks, but they have a restriction: they can only be used with
-[link intrusive.presenting_containers non-constant time containers].
+[link intrusive.presenting_containers non-constant time size containers].
 There is a reason for this:
 
 * Auto-unlink hooks don't store any reference to the container where they are inserted.
@@ -863,14 +879,14 @@ the section [link intrusive.usage How to use Boost.Intrusive]:
 *  [*`constant_time_size<bool Enabled>`]: To activate the constant-time `size()` operation.
    Default: `constant_time_size<true>`
 
-*  [*`size_type<bool Enabled>`]: To specify the type that will be used to store the size
+*  [*`size_type<typename SizeType>`]: To specify the type that will be used to store the size
    of the container. Default: `size_type<std::size_t>`.
 
 [classref boost::intrusive::slist slist] can receive additional options:
 
 *  [*`linear<bool Enable>`]: the singly linked list is implemented as a
    null-terminated list instead of a circular list. This allows `O(1)` swap,
-   but losses some operations like `container_from_end_iterator`.
+   but loses some operations like `container_from_end_iterator`.
 *  [*`cache_last<bool Enable>`]: `slist` also stores a pointer to the
    last element of the singly linked list. This allows `O(1)` swap,
    `splice_after(iterator, slist &)` and makes the list offer new functions
@@ -965,7 +981,7 @@ the section [link intrusive.usage How to use Boost.Intrusive]:
 *  [*`constant_time_size<bool Enabled>`]: To activate the constant-time `size()` operation.
    Default: `constant_time_size<true>`
 
-*  [*`size_type<bool Enabled>`]: To specify the type that will be used to store the size
+*  [*`size_type<typename SizeType>`]: To specify the type that will be used to store the size
    of the container. Default: `size_type<std::size_t>`
 
 [endsect]
@@ -1089,7 +1105,7 @@ These containers receive the same options explained in the section
 *  [*`constant_time_size<bool Enabled>`]: To activate the constant-time `size()` operation.
    Default: `constant_time_size<true>`
 
-*  [*`size_type<bool Enabled>`]: To specify the type that will be used to store the size
+*  [*`size_type<typename SizeType>`]: To specify the type that will be used to store the size
    of the container. Default: `size_type<std::size_t>`
 
 And they also can receive an additional option:
@@ -1279,7 +1295,7 @@ receive the same options explained in the section
 *  [*`constant_time_size<bool Enabled>`]: To activate the constant-time `size()` operation.
    Default: `constant_time_size<true>`
 
-*  [*`size_type<bool Enabled>`]: To specify the type that will be used to store the size
+*  [*`size_type<typename SizeType>`]: To specify the type that will be used to store the size
    of the container. Default: `size_type<std::size_t>`
 
 And they also can receive additional options:
@@ -1288,7 +1304,11 @@ And they also can receive additional options:
    in containers. Default: `equal< std::equal_to<T> >`
 
 *  [*`hash<class Hash>`]: Hash function to be used in the container.
-   Default: `hash< boost::hash<T> >`
+   Default: internal hash functor that hashes scalar types, triggering unqualified call to
+           `hash_value`for non-scalar types (boost::hash<T> compatible protocol). If
+           the ADL call does not find a viable candidate a boost::hash<T>() call is tried
+           in case the user has included boost/container_hash/hash.hpp and a viable
+           candidate is found there. Fails otherwise.
 
 *  [*`bucket_traits<class BucketTraits>`]: A type that wraps the bucket vector to
    be used by the unordered container. Default: a type initialized by the address
@@ -1393,9 +1413,15 @@ The option is called [classref boost::intrusive::key_of_value].
 
 If a user specifies that option when defining a `set/multiset` intrusive container, it specifies a function object
 that will tell the container which is the type of the ['key] that `value_type` holds and how to obtain it. This
-function object must be lightweight, `DefaultConstructible`, it shall define a `type` member that defines the type
-of the key and a member function to obtain a const reference to the key stored inside a `value_type`. Let's
-see an example of how a set can be configured as a map indexed by an integer stored in the `value_type`.
+function object must be:
+
+* Lightweight to copy.
+* Default constructible (when the container constructor overload requires it).
+* It shall define:
+   * A `type` member that defines the type of the key
+   * A member function that returns the key derived a `value_type`, either by value or by const-reference.
+
+Let's see an example of how a set can be configured as a map indexed by an integer stored in the `value_type`:
  
 [import ../example/doc_map.cpp]
 [doc_map_code]
@@ -1505,7 +1531,7 @@ These containers receive the same options explained in the section
 *  [*`constant_time_size<bool Enabled>`]: To activate the constant-time `size()` operation.
    Default: `constant_time_size<true>`
 
-*  [*`size_type<bool Enabled>`]: To specify the type that will be used to store the size
+*  [*`size_type<typename SizeType>`]: To specify the type that will be used to store the size
    of the container. Default: `size_type<std::size_t>`
 
 And they also can receive an additional option:
@@ -1607,7 +1633,7 @@ These containers receive the same options explained in the section
 *  [*`constant_time_size<bool Enabled>`]: To activate the constant-time `size()` operation.
    Default: `constant_time_size<true>`
 
-*  [*`size_type<bool Enabled>`]: To specify the type that will be used to store the size
+*  [*`size_type<typename SizeType>`]: To specify the type that will be used to store the size
    of the container. Default: `size_type<std::size_t>`
 
 And they also can receive an additional option:
@@ -1718,7 +1744,7 @@ These containers receive the same options explained in the section
    to configure the container. (To learn about value traits go to the section
    [link intrusive.value_traits Containers with custom ValueTraits].)
 
-*  [*`size_type<bool Enabled>`]: To specify the type that will be used to store the size
+*  [*`size_type<typename SizeType>`]: To specify the type that will be used to store the size
    of the container. Default: `size_type<std::size_t>`
 
 And they also can receive additional options:
@@ -1821,7 +1847,7 @@ These containers receive the same options explained in the section
 *  [*`constant_time_size<bool Enabled>`]: To activate the constant-time `size()` operation.
    Default: `constant_time_size<true>`
 
-*  [*`size_type<bool Enabled>`]: To specify the type that will be used to store the size
+*  [*`size_type<typename SizeType>`]: To specify the type that will be used to store the size
    of the container. Default: `size_type<std::size_t>`
 
 And they also can receive additional options:
@@ -1830,9 +1856,14 @@ And they also can receive additional options:
    in containers. The comparison functor must induce a strict weak ordering.
    Default: `compare< std::less<key_type> >`
 
+*  [*`priority_of_value<class PriorityOfValue>`]: A function object
+   that specifies the type of the priority (`priority_type`) of a treap
+   container and an operator to obtain it from a value type.
+   Default: `priority_type` is equal to `value_type` (set-like interface).
+
 *  [*`priority<class PriorityCompare>`]: Priority Comparison function for the objects to be inserted
    in containers. The comparison functor must induce a strict weak ordering.
-   Default: `priority< priority_compare<key_type> >`
+   Default: `priority< priority_compare<priority_type> >`
 
 *  [*`key_of_value<class KeyOfValueFunctionObject>`]: A function object that will
    define the `key_type` of the value type to be stored. This type will allow a map-like interface. See
@@ -2365,7 +2396,7 @@ Let's see a small function that shows the use of `iterator_to` and
 [section:any_hooks Any Hooks: A single hook for any Intrusive container]
 
 Sometimes, a class programmer wants to place a class in several intrusive
-containers but no at the same time. In this case, the programmer might
+containers but not at the same time. In this case, the programmer might
 decide to insert two hooks in the same class.
 
 [c++]
@@ -2413,7 +2444,7 @@ This section will expand the explanation of previously presented basic concepts
 before explaining the customization options of [*Boost.Intrusive].
 
 *  [*Node Algorithms]: A set of static functions that implement basic operations
-   on a group of nodes: initialize a node, link_mode_type a node to a group of nodes,
+   on a group of nodes: initialize a node, link a node to a group of nodes,
    unlink a node from another group of nodes, etc. For example, a circular
    singly linked list is a group of nodes, where each node has a pointer to the
    next node. [*Node Algorithms] just require a [*NodeTraits]
@@ -3316,6 +3347,28 @@ To analyze the thread safety, consider the following points:
 
 [endsect]
 
+[section:boost_intrusive_iterators Boost.Intrusive Iterator features]
+
+[section:null_forward_iterators Null forward iterators]
+
+[*Boost.Intrusive] implements
+[@http://www.open-std.org/JTC1/sc22/WG21/docs/papers/2013/n3644.pdf C++14 Null Forward Iterators],
+a feature that was introduced with C++14. This means that equality and inequality comparison are defined
+over all iterators for the same underlying sequence and the value initialized-iterators.
+
+Value initialized iterators behave as if they refer past the end of the same empty sequence:
+
+[c++]
+
+   list<MyType> l = { ... };
+   auto ni = list<MyType>::iterator();
+   auto nd = list<MyType2>::iterator();
+   ni == ni; // True.
+   nd != nd; // False.
+   ni == nd; // Won't compile.
+
+[endsect]
+
 [section:scary_iterators Scary Iterators]
 
 The paper N2913, titled [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2009/n2913.pdf,
@@ -3343,6 +3396,8 @@ More concretely, the following options and conditions guarantee that iterator ty
 * [*`treap_[multi]set`]: `priority<>`
 * [*`bs_[multi]set`, `sg_[multi]set`, `treap_[multi]set`, `splay_[multi]set`]:
    They share the same iterator type when configured with the same options.
+
+[endsect]
 
 [endsect]
 
@@ -3833,7 +3888,188 @@ to be inserted in intrusive containers are allocated using `std::vector` or `std
 
 [endsect]
 
+[import ../../../tools/auto_index/include/auto_index_helpers.qbk]
+
+[section:index Indexes]
+
+[named_index class_name Class Index]
+[named_index typedef_name Typedef Index]
+[named_index function_name Function Index]
+[/named_index macro_name Macro Index]
+[/index]
+
+[endsect]
+
 [section:release_notes Release Notes]
+
+[section:release_notes_boost_1_86_00 Boost 1.86 Release]
+
+* Fixed bugs:
+   * [@https://github.com/boostorg/intrusive/issues/86 GitHub #86: ['Invalid UTF-8 character in comment]]
+
+[endsect]
+
+[section:release_notes_boost_1_85_00 Boost 1.85 Release]
+
+* Fixed bugs:
+   * [@https://github.com/boostorg/intrusive/issues/81 GitHub #81: ['unordered_set rehash breaks insert_commit_data]]
+   * [@https://github.com/boostorg/intrusive/issues/83 GitHub #83: ['\[docs\] Index is missing]]
+
+* Potentially breaking: Unordered containers use now by default an internal a `boost::hash`-protocol compatible internal hash functor.
+   * Reasons:
+      * Since Boost 1.84 Boost.ContainerHash requires C++11, breaking Boost.Intrusive C++03 users.
+      * To avoid header inclusion dependency on Boost.ContainerHash, which indirectly also brings other libraries (Boost.Describe, Boost.Mp11...).
+   * The new default hash function:
+       * Handles scalar types directly (in case scalar types are used with `key_of_value`) with trivial hashes (similar to `boost::hash`).
+       * For other types (most Boost.Intrusive users are here), uses ADL-based `hash_function` call, just like `boost::hash`.
+       * If that ADL lookup fails, forward declares `boost::hash` and calls through an object of that type. If the user has included `boost/container_hash/hash.hpp`
+         before or after including Boost.Intrusive, `boost::hash` will be properly called.
+   * It's possible that some Boost.Intrusive users were using Boost.ContainerHash functions/features without including the needed
+     `boost/container_hash/hash.hpp` header, since it was indirectly included through Boost.Intrusive. Those users will need to
+     explicitly include `boost/container_hash/hash.hpp`to obtain Boost.ContainerHash features.
+
+* Boost.Intrusive no longer depends on Boost.StaticCast.
+
+[endsect]
+
+[section:release_notes_boost_1_82_00 Boost 1.82 Release]
+
+* Fixed bugs:
+   * [@https://github.com/boostorg/intrusive/pull/77 GitHub #77: ['Suppress unused variable warnings on node_count (clang 15)]]
+
+[endsect]
+
+[section:release_notes_boost_1_81_00 Boost 1.81 Release]
+
+* Semi-intrusive hash containers rewritten to reduce compilation times and improve runtime performance.
+
+[endsect]
+
+[section:release_notes_boost_1_80_00 Boost 1.80 Release]
+
+* Unordered containers optimized for performance. Experimental `linear_buckets` and `fastmod_buckets` options.
+* Fixed bugs:
+   * [@https://github.com/boostorg/intrusive/issues/75 GitHub #75: ['Bug: Rehashing an empty unordered_set with cache_begin set to true hits an assert]]
+
+[endsect]
+
+[section:release_notes_boost_1_79_00 Boost 1.79 Release]
+
+* The library now compiles without warnings with GCC's -Wcast-align=strict
+* Fixed bugs:
+   * [@https://github.com/boostorg/intrusive/pull/66   GitHub #66: ['Fix declaration of node shadowing member]]
+   * [@https://github.com/boostorg/intrusive/pull/70   GitHub #70: ['list: fix remove / remove_and_dispose]]
+
+[endsect]
+
+[section:release_notes_boost_1_77_00 Boost 1.77 Release]
+
+* Added `noexcept` support to the library to obtain better performance and diagnostics.
+
+* Fixed bugs:
+   * [@https://github.com/boostorg/intrusive/pull/57   GitHub #57: ['UB: comparing unrelated pointers]]
+   * [@https://github.com/boostorg/intrusive/issues/59 GitHub #59: ['Add noexcept support to the library]]
+   * [@https://github.com/boostorg/intrusive/issues/60 GitHub #60: ['Licensing question for math.hpp]]
+   * [@https://github.com/boostorg/intrusive/pull/61   GitHub #61: ['Fix bstree_algorithms<>::swap_nodes]]
+   * [@https://github.com/boostorg/intrusive/issues/63 GitHub #63: ['nop splice removes element]]
+
+[endsect]
+
+
+[section:release_notes_boost_1_76_00 Boost 1.76 Release]
+
+*  Reduced compile-time dependencies:
+    *   `linear_slist_algorithms` use a simple node_ptr instead of std::pair on return.
+    *   `list`/`slist` use `operator <`/`operator ==` instead of `std::equal_to`/`std::less`.
+*  Fixed bugs:
+   * [@https://github.com/boostorg/intrusive/issues/54  GitHub #54: ['set.rbegin() looks like O(log(N))]]
+
+[endsect]
+
+[section:release_notes_boost_1_75_00 Boost 1.75 Release]
+
+*  Fixed bugs:
+   *  [@https://github.com/boostorg/intrusive/pull/48    GitHub #48: ['MSVC "assignment within conditional" warning fix]]
+   *  [@https://github.com/boostorg/intrusive/pull/49    GitHub #49: ['Fix empty control statement warnings]]
+   *  [@https://github.com/boostorg/intrusive/issues/52  GitHub #52: ['Invalid casting in BOOST_INTRUSIVE_BSR_INTRINSIC]]
+
+[endsect]
+
+
+[section:release_notes_boost_1_73_00 Boost 1.73 Release]
+
+*  Fixed bugs:
+   *  [@https://github.com/boostorg/intrusive/issues/46  GitHub #46: ['UB due to union based type punning]]
+ 
+[endsect]
+
+[section:release_notes_boost_1_71_00 Boost 1.71 Release]
+
+*  Fixed bugs:
+   *  [@https://github.com/boostorg/intrusive/pull/42  GitHub #42: ['Documentation does not describe treap priority_of_value changes]]
+   *  [@https://github.com/boostorg/intrusive/pull/43  GitHub #43: ['Fix tests with BOOST_INTRUSIVE_VARIADIC_TEMPLATES enabled]]
+   *  [@https://github.com/boostorg/intrusive/pull/45  GitHub #45: ['Disable variadic templates for MSVC-12 to avoid ICEs]]
+ 
+[endsect]
+
+[section:release_notes_boost_1_70_00 Boost 1.70 Release]
+
+*  Fixed bugs:
+   *  [@https://github.com/boostorg/intrusive/pull/33 GitHub Pull #33: ['Fix compilation in case if key is void*, again]]
+   *  [@https://github.com/boostorg/intrusive/issues/34 GitHub Issue #34: ['-Wdeprecated-copy on gcc9]]
+   *  [@https://github.com/boostorg/intrusive/issues/35 GitHub Issue #35: ['key_of_value on treap_set seems to be broken in 1.69]]
+   *  [@https://github.com/boostorg/intrusive/issues/38 GitHub Issue #38: ['treap: Same type for priority and key comparison leads to ambiguous base class error]]
+   *  [@https://github.com/boostorg/intrusive/pull/39 GitHub Pull #39: ['Fix -Wextra-semi clang warnings]]
+
+[endsect]
+
+[section:release_notes_boost_1_67_00 Boost 1.67 Release]
+
+*  Fixed bugs:
+   *  [@https://github.com/boostorg/intrusive/issues/29 GitHub Issues #29: ['Uninitialized variable warning pointer_plus_bits.hpp]]
+
+[endsect]
+
+[section:release_notes_boost_1_65_00 Boost 1.65 Release]
+
+*  Fixed bugs:
+   *  [@https://svn.boost.org/trac/boost/ticket/12894 Boost Trac #12894: ['Allow non std::size_t size_type]]
+   *  [@https://svn.boost.org/trac/boost/ticket/12698 Boost Trac #12698: ['base64 iterators can't be used with iterator_advance]]
+   *  [@https://github.com/boostorg/intrusive/pull/23 GitHub Pull #23: ['Conditionally replace deprecated/removed C++98 std::random_shuffle by...]]
+   *  [@https://github.com/boostorg/intrusive/pull/24 GitHub Pull #24: ['Adds support for MSVC ARM64 target]]
+
+[endsect]
+
+[section:release_notes_boost_1_64_00 Boost 1.64 Release]
+
+*  Fixed bugs:
+   *  [@https://svn.boost.org/trac/boost/ticket/12745 Boost Trac #12745: ['key_nodeptr_comp broken if the key type is void*]]
+   *  [@https://svn.boost.org/trac/boost/ticket/12761 Boost Trac #12761: ['intrusive::set::swap doesn't swap the comparison function*]]
+
+[endsect]
+
+[section:release_notes_boost_1_63_00 Boost 1.63 Release]
+
+*  Fixed bugs:
+   *  [@https://svn.boost.org/trac/boost/ticket/12556 Boost Trac #12556: ['member_value_traits.hpp has a missing #include]]
+
+[endsect]
+
+[section:release_notes_boost_1_62_00 Boost 1.62 Release]
+
+*  Fixed bugs:
+   *  [@https://svn.boost.org/trac/boost/ticket/11476 Boost Trac #11476: ['has_member_function_callable_with.hpp is massively broken with BOOST_NO_CXX11_DECLTYPE]]
+   *  [@https://svn.boost.org/trac/boost/ticket/11994 Boost Trac #11994: ['Support intrusive container key extractors that return the key by value]]
+   *  [@https://svn.boost.org/trac/boost/ticket/12184 Boost Trac #12184: ['clang -Wdocumentation warning]]
+   *  [@https://svn.boost.org/trac/boost/ticket/12190 Boost Trac #12190: ['Intrusive List + Flat Map combination crashes]]
+   *  [@https://svn.boost.org/trac/boost/ticket/12229 Boost Trac #12229: ['intrusive::unordered_set<T>::rehash() broken]]
+   *  [@https://svn.boost.org/trac/boost/ticket/12245 Boost Trac #12245: ['bstree uses a shared static size_traits for constant_time_size<false>]]
+   *  [@https://svn.boost.org/trac/boost/ticket/12432 Boost Trac #12432: ['Forced KeyOfValue creation when using custom compare on insert_check]]
+
+*  Implemented `merge` functions in ordered associative containers.
+*  Officially documented `root()` function for tree-based containers.
+
+[endsect]
 
 [section:release_notes_boost_1_61_00 Boost 1.61 Release]
 
@@ -3930,7 +4166,7 @@ to be inserted in intrusive containers are allocated using `std::vector` or `std
 *  Big refactoring in order to reduce template and debug symbol bloat. Test object files have been slashed
    to half in MSVC compilers in Debug mode. Toolchains without Identical COMDAT Folding (ICF) should notice size improvements.
 
-*  Implemented [link intrusive.scary_iterators SCARY iterators].
+*  Implemented [link intrusive.boost_intrusive_iterators.scary_iterators SCARY iterators].
 
 [endsect]
 
@@ -4074,16 +4310,6 @@ to be inserted in intrusive containers are allocated using `std::vector` or `std
 
 [endsect]
 
-[section:tested_compilers Tested compilers]
-
-[*Boost.Intrusive] has been tested on the following compilers/platforms:
-
-*  Visual >= 7.1
-*  GCC >= 4.1
-*  Intel 11
-
-[endsect]
-
 [section:references References]
 
 * SGI's [@http://www.sgi.com/tech/stl/ STL Programmer's Guide].
@@ -4130,18 +4356,6 @@ helpful discussions.
 
 *  Special thanks to [*Steven Watanabe] and [*Tobias Schwinger] for their
    invaluable suggestions and improvements.
-
-[endsect]
-
-[include auto_index_helpers.qbk]
-
-[section:index Indexes]
-
-[named_index class_name Class Index]
-[named_index typedef_name Typedef Index]
-[named_index function_name Function Index]
-[named_index macro_name Macro Index]
-[/index]
 
 [endsect]
 

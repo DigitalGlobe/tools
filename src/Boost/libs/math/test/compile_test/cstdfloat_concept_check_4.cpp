@@ -3,16 +3,20 @@
 //  Boost Software License, Version 1.0. (See accompanying file
 //  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#ifndef BOOST_MATH_STANDALONE
+
 #define BOOST_MATH_ASSERT_UNDEFINED_POLICY false
 
 #include <boost/cstdfloat.hpp>
 #include "poison.hpp"
-#include <boost/math/concepts/distributions.hpp>
-
 #include "instantiate.hpp"
 
 
-int main(int argc, char*[])
+int main(int 
+#ifdef BOOST_FLOAT32_C
+   argc
+#endif
+   , char*[])
 {
 #ifdef BOOST_FLOAT32_C
    if(argc > 1000)
@@ -20,3 +24,6 @@ int main(int argc, char*[])
 #endif
 }
 
+#else
+int main(void) { return 0; }
+#endif

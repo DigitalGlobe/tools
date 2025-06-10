@@ -1,4 +1,4 @@
-// Copyright Paul A. Bristow 2006.
+// Copyright Paul A. Bristow 2006, 2017.
 // Copyright John Maddock 2006.
 
 // Use, modification and distribution are subject to the
@@ -18,15 +18,22 @@
 #  pragma warning (disable :4127) // conditional expression is constant.
 #endif
 
+#include <boost/math/tools/config.hpp>
+
 #define BOOST_TEST_MAIN
 #include <boost/test/unit_test.hpp> // Boost.Test
-#include <boost/test/floating_point_comparison.hpp>
+#include <boost/test/tools/floating_point_comparison.hpp>
+#include <boost/math/special_functions/next.hpp>  // for has_denorm_now
 
+#include "../include_private/boost/math/tools/test.hpp"
+
+#ifndef BOOST_MATH_NO_REAL_CONCEPT_TESTS
 #include <boost/math/concepts/real_concept.hpp> // for real_concept
+#endif
+
+#include "test_out_of_range.hpp"
 #include <boost/math/distributions/students_t.hpp>
     using boost::math::students_t_distribution;
-#include <boost/math/tools/test.hpp> // for real_concept
-#include "test_out_of_range.hpp"
 
 #include <iostream>
    using std::cout;
@@ -34,6 +41,7 @@
    using std::setprecision;
 #include <limits>
   using std::numeric_limits;
+#include <type_traits>
 
 template <class RealType>
 RealType naive_pdf(RealType v, RealType t)
@@ -265,9 +273,15 @@ void test_spots(RealType)
       // Some special tests to exercise the double-precision approximations
       // to the quantile:
       //
-      // tolerance is 50 eps expressed as a persent:
+      // tolerance is 50 eps expressed as a percent:
       //
       tolerance = boost::math::tools::epsilon<RealType>() * 5000;
+      //
+      // But higher error rates at 128 bit precision?
+      //
+      if (boost::math::tools::digits<RealType>() > 100)
+         tolerance *= 500;
+
       BOOST_CHECK_CLOSE(boost::math::quantile(
          students_t_distribution<RealType>(2.00390625L),                     // degrees_of_freedom.
          static_cast<RealType>(0.5625L)),                                    //  probability.
@@ -381,6 +395,13 @@ void test_spots(RealType)
                boost::math::quantile(
                   students_t_distribution<RealType>(static_cast<RealType>(0x0fffffff)), static_cast<RealType>(0.25f))), 
             static_cast<RealType>(0.25f), tolerance);
+         //
+         // Bug cases:
+         //
+         if (std::numeric_limits<RealType>::is_specialized && boost::math::detail::has_denorm_now<RealType>())
+         {
+            BOOST_CHECK_THROW(boost::math::quantile(students_t_distribution<RealType>((std::numeric_limits<RealType>::min)() / 2), static_cast<RealType>(0.0025f)), std::overflow_error);
+         }
       }
 
   // Student's t pdf tests.
@@ -451,6 +472,13 @@ void test_spots(RealType)
        kurtosis_excess(dist)
        , static_cast<RealType>(1.5), tol2);
 
+    using std::log;
+    using std::sqrt;
+    RealType expected_entropy = (RealType(9)/2)*(boost::math::digamma(RealType(9)/2) - boost::math::digamma(RealType(4))) + log(sqrt(RealType(8))*boost::math::beta(RealType(4), RealType(1)/2));
+    BOOST_CHECK_CLOSE(
+       entropy(dist)
+       , expected_entropy, 300*tol2);
+
     // Parameter estimation. These results are close to but
     // not identical to those reported on the NIST website at
     // http://www.itl.nist.gov/div898/handbook/prc/section2/prc222.htm
@@ -507,7 +535,10 @@ void test_spots(RealType)
 
     std::string type = typeid(RealType).name();
 //    if (type != "class boost::math::concepts::real_concept") fails for gcc
-    if (typeid(RealType) != typeid(boost::math::concepts::real_concept))
+
+    #ifndef BOOST_MATH_NO_REAL_CONCEPT_TESTS
+    BOOST_MATH_IF_CONSTEXPR(!std::is_same<RealType, boost::math::concepts::real_concept>::value)
+    #endif
     { // Ordinary floats only.
       RealType limit = 1/ boost::math::tools::epsilon<RealType>();
       // Default policy to get full accuracy.
@@ -519,14 +550,15 @@ void test_spots(RealType)
       boost::math::normal_distribution<RealType> n(0, 1); // 
       students_t_distribution<RealType> st(boost::math::tools::max_value<RealType>()); // Well over the switchover point,
       // PDF
-      BOOST_CHECK_EQUAL(pdf(st, 0), pdf(n, 0.)); // should be exactly equal.
-      students_t_distribution<RealType> st2(limit /5 ); // Just below the switchover point,
-      BOOST_CHECK_CLOSE_FRACTION(pdf(st2, 0), pdf(n, 0.), tolerance); // should be very close to normal.
-      // CDF
-      BOOST_CHECK_EQUAL(cdf(st, 0), cdf(n, 0.)); // should be exactly equal.
-      BOOST_CHECK_CLOSE_FRACTION(cdf(st2, 0), cdf(n, 0.), tolerance); // should be very close to normal.
+      BOOST_CHECK_EQUAL(pdf(st, 0), pdf(n, 0.)); // Should be exactly equal.
 
-     // Tests for df = infinity.
+      students_t_distribution<RealType> st2(limit /5 ); // Just below the switchover point,
+      BOOST_CHECK_CLOSE_FRACTION(pdf(st2, 0), pdf(n, 0.), tolerance); // Should be very close to normal.
+      // CDF
+      BOOST_CHECK_EQUAL(cdf(st, 0), cdf(n, 0.)); // Should be exactly equal.
+      BOOST_CHECK_CLOSE_FRACTION(cdf(st2, 0), cdf(n, 0.), tolerance); // Should be very close to normal.
+
+      // Tests for df = infinity.
       students_t_distribution<RealType> infdf(inf);
       BOOST_CHECK_EQUAL(infdf.degrees_of_freedom(), inf);
       BOOST_CHECK_EQUAL(mean(infdf), 0); // OK.
@@ -535,6 +567,10 @@ void test_spots(RealType)
       BOOST_MATH_CHECK_THROW(students_t_distribution<RealType> minfdf(nan), std::domain_error);
       BOOST_MATH_CHECK_THROW(students_t_distribution<RealType> minfdf(-nan), std::domain_error);
 #endif
+      BOOST_CHECK_EQUAL(pdf(infdf, -inf), 0);
+      BOOST_CHECK_EQUAL(pdf(infdf, +inf), 0);
+      BOOST_CHECK_EQUAL(cdf(infdf, -inf), 0);
+      BOOST_CHECK_EQUAL(cdf(infdf, +inf), 1);
 
      // BOOST_CHECK_CLOSE_FRACTION(pdf(infdf, 0), static_cast<RealType>(0.3989422804014326779399460599343818684759L), tolerance);
       BOOST_CHECK_CLOSE_FRACTION(pdf(infdf, 0),boost::math::constants::one_div_root_two_pi<RealType>() , tolerance);
@@ -555,7 +591,6 @@ void test_spots(RealType)
     BOOST_MATH_CHECK_THROW(mean(students_t_distribution<RealType>(1)), std::domain_error); // df == k
     BOOST_CHECK_EQUAL(mean(students_t_distribution<RealType>(2)), 0); // OK.
     BOOST_CHECK_EQUAL(mean(students_t_distribution<RealType>(inf)), 0); // OK.
-
 
     // Check on df for variance (moment 2)
     BOOST_MATH_CHECK_THROW(variance(students_t_distribution<RealType>(nan)), std::domain_error);
@@ -715,10 +750,11 @@ void test_spots(RealType)
   BOOST_CHECK(boost::math::isfinite(kurtosis(ignore_error_students_t(static_cast<RealType>(4.0001L)))));
 
   // check_out_of_range<students_t_distribution<RealType> >(1);
-  // Cannot be used because fails "exception std::domain_error is expected" 
-  // because df = +infinity is allowed.
+  // Cannot be used because fails "exception std::domain_error is expected but not raised" 
+  // if df = +infinity is allowed, must use new version that allows skipping infinity tests.
+  // Infinite == true
 
-   check_support<students_t_distribution<RealType> >(students_t_distribution<RealType>(1));
+  check_support<students_t_distribution<RealType> >(students_t_distribution<RealType>(1), true);
 
 } // template <class RealType>void test_spots(RealType)
 
@@ -736,7 +772,7 @@ BOOST_AUTO_TEST_CASE( test_main )
   test_spots(0.0); // Test double. OK at decdigits 7, tolerance = 1e07 %
 #ifndef BOOST_MATH_NO_LONG_DOUBLE_MATH_FUNCTIONS
   test_spots(0.0L); // Test long double.
-#if !BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(0x582))
+#if !BOOST_WORKAROUND(BOOST_BORLANDC, BOOST_TESTED_AT(0x582)) && !defined(BOOST_MATH_NO_REAL_CONCEPT_TESTS)
   test_spots(boost::math::concepts::real_concept(0.)); // Test real concept.
 #endif
 #else

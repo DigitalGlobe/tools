@@ -6,6 +6,7 @@
 // Basic sanity check that header <boost/math/tr1.hpp>
 // #includes all the files that it needs to.
 //
+#ifndef BOOST_MATH_STANDALONE
 #include <boost/math/tr1.hpp>
 //
 // Note this header includes no other headers, this is
@@ -15,10 +16,6 @@
 
 void compile_and_link_test()
 {
-   float f = 0;
-   double d = 0;
-   long double l = 0;
-   int i = 0;
    unsigned ui = 0;
 
    check_result<float>(boost::math::tr1::assoc_laguerre(ui, ui, f));
@@ -368,3 +365,4 @@ void compile_and_link_test()
    check_result<double>(boost::math::tr1::trunc(i));
 
 }
+#endif

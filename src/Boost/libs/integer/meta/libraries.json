@@ -7,6 +7,8 @@
     ],
     "authors": "",
     "maintainers": [
-        "Daryle Walker <darylew -at- hotmail.com>"
-    ]
+        "Daryle Walker <darylew -at- hotmail.com>",
+        "Andrey Semashev <andrey.semashev -at- gmail.com>"
+    ],
+    "cxxstd": "03"
 }

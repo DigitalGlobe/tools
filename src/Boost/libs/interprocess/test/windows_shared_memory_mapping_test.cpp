@@ -8,10 +8,9 @@
 //
 //////////////////////////////////////////////////////////////////////////////
 
-#include <boost/interprocess/detail/config_begin.hpp>
-#include <boost/interprocess/detail/workaround.hpp>
+#include <boost/config.hpp>
 
-#ifdef BOOST_INTERPROCESS_WINDOWS
+#ifdef BOOST_WINDOWS
 
 #include <fstream>
 #include <iostream>
@@ -24,7 +23,7 @@ using namespace boost::interprocess;
 
 int main ()
 {
-   try{
+   BOOST_INTERPROCESS_TRY{
       const char *names[2] = { test::get_process_id_name(), 0 };
       for(unsigned int i_name = 0; i_name < sizeof(names)/sizeof(names[0]); ++i_name)
       {
@@ -32,7 +31,7 @@ int main ()
          //Create a file mapping
          windows_shared_memory mapping
             (create_only, names[i_name], read_write, FileSize);
-         if(mapping.get_size() < FileSize)
+         if(static_cast<std::size_t>(mapping.get_size()) < FileSize)
             return 1;
          {
 
@@ -117,11 +116,11 @@ int main ()
          }
       }
    }
-   catch(std::exception &exc){
+   BOOST_INTERPROCESS_CATCH(std::exception &exc){
       //shared_memory_object::remove(test::get_process_id_name());
       std::cout << "Unhandled exception: " << exc.what() << std::endl;
       return 1;
-   }
+   } BOOST_INTERPROCESS_CATCH_END
 
    return 0;
 }
@@ -135,4 +134,3 @@ int main()
 
 #endif
 
-#include <boost/interprocess/detail/config_end.hpp>

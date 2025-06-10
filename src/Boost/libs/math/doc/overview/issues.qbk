@@ -1,30 +1,16 @@
 [section:issues Known Issues, and TODO List]
 
 Predominantly this is a TODO list, or a list of possible
-future enhancements.  Items labled "High Priority" effect
+future enhancements.  Items labeled "High Priority" effect
 the proper functioning of the component, and should be fixed
-as soon as possible.  Items labled "Medium Priority" are
+as soon as possible.  Items labeled "Medium Priority" are
 desirable enhancements, often pertaining to the performance
 of the component, but do not effect it's accuracy or functionality.
-Items labled "Low Priority" should probably be investigated at
+Items labeled "Low Priority" should probably be investigated at
 some point.  Such classifications are obviously highly subjective.
 
 If you don't see a component listed here, then we don't have any known
 issues with it.
-
-[h4 Derivatives of Bessel functions (and their zeros)]
-
-Potentially, there could be native support
-for `cyl_bessel_j_prime()` and `cyl_neumann_prime()`.
-One could also imagine supporting the zeros
-thereof, but they might be slower to calculate
-since root bracketing might be needed instead
-of Newton iteration (for the lack of 2nd derivatives).
-
-Since Boost.Math's Bessel functions are so excellent,
-the quick way to `cyl_bessel_j_prime()` and
-`cyl_neumann_prime()` would be via relationship with
-`cyl_bessel_j()` and `cyl_neumann()`.
 
 [h4 tgamma]
 
@@ -72,18 +58,12 @@ difference between ['T(h, a)] and ['T(h, 1)].  Unfortunately this doesn't improv
 convergence of those series in that area.  It certainly looks as though a new series in terms
 of ['(1-a)[super k]] is both possible and desirable in this area, but it remains elusive at present.
 
-[h4 Jocobi elliptic functions]
-
-These are useful in engineering applications - we have had a request to add these.
-
 [h4 Statistical distributions]
 
 * Student's t Perhaps switch to normal distribution
 as a better approximation for very large degrees of freedom?
 
 [h4 Feature Requests]
-
-We have a request for the Lambert W function, see [@https://svn.boost.org/trac/boost/ticket/11027 #11027].
 
 The following table lists distributions that are found in other packages
 but which are not yet present here, the more frequently the distribution

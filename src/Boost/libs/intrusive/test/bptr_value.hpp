@@ -18,10 +18,10 @@
 #include <iostream>
 #include "bounded_pointer.hpp"
 #include "common_functors.hpp"
+#include "int_holder.hpp"
+#include <boost/intrusive/link_mode.hpp>
 
 
-namespace boost {
-namespace intrusive {
 
 struct BPtr_Value
 {
@@ -84,6 +84,15 @@ struct BPtr_Value
 
    friend bool operator< (const BPtr_Value &other1, int other2)
    {  return other1.value_ < other2;  }
+
+   friend bool operator> (const BPtr_Value &other1, const BPtr_Value &other2)
+   {  return other1.value_ > other2.value_;  }
+
+   friend bool operator> (int other1, const BPtr_Value &other2)
+   {  return other1 > other2.value_;  }
+
+   friend bool operator> (const BPtr_Value &other1, int other2)
+   {  return other1.value_ > other2;  }
 
    friend bool operator== (const BPtr_Value &other1, const BPtr_Value &other2)
    {  return other1.value_ == other2.value_;  }
@@ -199,6 +208,8 @@ struct ValueContainer< BPtr_Value >
    typedef bounded_reference_cont< BPtr_Value > type;
 };
 
+namespace boost {
+namespace intrusive {
 namespace test{
 
 template <>

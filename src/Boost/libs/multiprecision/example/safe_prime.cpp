@@ -1,10 +1,11 @@
 ///////////////////////////////////////////////////////////////
 //  Copyright 2012 John Maddock. Distributed under the Boost
 //  Software License, Version 1.0. (See accompanying file
-//  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_
+//  LICENSE_1_0.txt or copy at https://www.boost.org/LICENSE_1_0.txt
 
 //[safe_prime
 
+#include <boost/random.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
 #include <boost/multiprecision/miller_rabin.hpp>
 #include <iostream>
@@ -38,8 +39,8 @@ int main()
          }
       }
    }
-   std::cout << "Ooops, no safe primes were found" << std::endl;
-   return 1;
+   std::cout << "Ooops, no safe primes were found - probably a bad choice of seed values!" << std::endl;
+   return 0;
 }
 
 //]

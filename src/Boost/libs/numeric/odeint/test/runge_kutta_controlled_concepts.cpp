@@ -29,12 +29,11 @@
 
 #include <boost/numeric/odeint/config.hpp>
 
-#include <boost/array.hpp>
+#include <array>
 
 #include <boost/test/unit_test.hpp>
 
 #include <boost/ref.hpp>
-#include <boost/bind.hpp>
 #include <boost/utility.hpp>
 #include <boost/type_traits/add_reference.hpp>
 
@@ -87,6 +86,7 @@ struct perform_controlled_stepper_test
     typedef T vector_space_type;
     void operator()( void ) const
     {
+        using std::abs;
         vector_space_type x;
         x = 2.0;
         ControlledStepper controlled_stepper;
@@ -134,6 +134,7 @@ struct perform_controlled_stepper_test< ControlledStepper , vector_space_type >
 {
     void operator()( void ) const
     {
+        using std::abs;
         vector_space_type x;
         x = 2.0;
         ControlledStepper controlled_stepper;
@@ -152,9 +153,9 @@ struct perform_controlled_stepper_test< ControlledStepper , vector_space_type >
 };
 
 template< class ControlledStepper , typename T >
-struct perform_controlled_stepper_test< ControlledStepper , boost::array<T,1> >
+struct perform_controlled_stepper_test< ControlledStepper , std::array<T,1> >
 {
-    typedef boost::array<T,1> array_type;
+    typedef std::array<T,1> array_type;
     void operator()( void )
     {
         using std::abs;

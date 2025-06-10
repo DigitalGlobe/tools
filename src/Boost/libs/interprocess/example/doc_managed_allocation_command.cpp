@@ -7,7 +7,7 @@
 // See http://www.boost.org/libs/interprocess for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#include <boost/interprocess/detail/config_begin.hpp>
+
 //[doc_managed_allocation_command
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <cassert>
@@ -22,17 +22,8 @@ int main()
    //Remove shared memory on construction and destruction
    struct shm_remove
    {
-   //<-
-   #if 1
       shm_remove() { shared_memory_object::remove(test::get_process_id_name()); }
       ~shm_remove(){ shared_memory_object::remove(test::get_process_id_name()); }
-   #else
-   //->
-      shm_remove() { shared_memory_object::remove("MySharedMemory"); }
-      ~shm_remove(){ shared_memory_object::remove("MySharedMemory"); }
-   //<-
-   #endif
-   //->
    } remover;
    //<-
    (void)remover;
@@ -40,15 +31,7 @@ int main()
 
    //Managed memory segment that allocates portions of a shared memory
    //segment with the default management algorithm
-   //<-
-   #if 1
    managed_shared_memory managed_shm(create_only, test::get_process_id_name(), 10000*sizeof(std::size_t));
-   #else
-   //->
-   managed_shared_memory managed_shm(create_only, "MySharedMemory", 10000*sizeof(std::size_t));
-   //<-
-   #endif
-   //->
 
    //Allocate at least 100 bytes, 1000 bytes if possible
    managed_shared_memory::size_type min_size = 100;
@@ -88,6 +71,9 @@ int main()
    //Get free memory and compare
    managed_shared_memory::size_type free_memory_after_expansion = managed_shm.get_free_memory();
    assert(free_memory_after_expansion < free_memory_after_allocation);
+   //<-
+   (void)free_memory_after_expansion;
+   //->
 
    //Write new values
    for(std::size_t i = first_received_size; i < expanded_size; ++i)  ptr[i] = i;
@@ -109,10 +95,13 @@ int main()
    //Get free memory and compare
    managed_shared_memory::size_type free_memory_after_shrinking = managed_shm.get_free_memory();
    assert(free_memory_after_shrinking > free_memory_after_expansion);
+   //<-
+   (void)free_memory_after_shrinking;
+   //->
 
    //Deallocate the buffer
    managed_shm.deallocate(ptr);
    return 0;
 }
 //]
-#include <boost/interprocess/detail/config_end.hpp>
+

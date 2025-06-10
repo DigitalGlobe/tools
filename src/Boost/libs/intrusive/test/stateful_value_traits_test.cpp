@@ -13,7 +13,6 @@
 #include <boost/intrusive/slist.hpp>
 #include <boost/intrusive/set.hpp>
 #include <boost/intrusive/unordered_set.hpp>
-#include <boost/functional/hash.hpp>
 #include <boost/intrusive/pointer_traits.hpp>
 #include <vector>
 
@@ -35,7 +34,7 @@ class MyClass
    {  return l.int_ == r.int_; }
 
    friend std::size_t hash_value(const MyClass &v)
-   {  return boost::hash_value(v.int_); }
+   {  return std::size_t(v.int_); }
 };
 
 template<class T, class NodeTraits>
@@ -63,10 +62,10 @@ struct stateful_value_traits
    const_node_ptr to_node_ptr (const value_type &value) const
    {  return node_array_ + (&value - values_); }
 
-   pointer to_value_ptr(const node_ptr &n) const
+   pointer to_value_ptr(node_ptr n) const
    {  return values_ + (n - node_array_); }
 
-   const_pointer to_value_ptr(const const_node_ptr &n) const
+   const_pointer to_value_ptr(const_node_ptr n) const
    {  return values_ + (n - node_array_); }
 
    pointer  values_;
@@ -113,8 +112,8 @@ int main()
    Slist my_slist(slist_traits(values, slist_hook_array));
    Set   my_set  (std::less<MyClass>(), rbtree_traits(values, rbtree_hook_array));
    Uset  my_uset ( Uset::bucket_traits(buckets, NumElements)
-                 , boost::hash<MyClass>()
-                 , std::equal_to<MyClass>()
+                 , Uset::hasher()
+                 , Uset::key_equal()
                  , slist_traits(values, uset_hook_array)
                  );
 
@@ -142,14 +141,14 @@ int main()
       List::const_iterator   list_it (my_list.cbegin());
       Slist::const_iterator  slist_it(my_slist.cbegin());
       Set::const_reverse_iterator set_rit(my_set.crbegin());
-      MyClass *it_val(&values[NumElements-1]), *it_rbeg_val(&values[0]-1);
+      MyClass *it_val(&values[NumElements]), *it_rbeg_val(&values[0]);
 
       //Test the objects inserted in the base hook list
       for(; it_val != it_rbeg_val; --it_val, ++list_it, ++slist_it, ++set_rit){
-         if(&*list_it  != &*it_val)   return 1;
-         if(&*slist_it != &*it_val)   return 1;
-         if(&*set_rit  != &*it_val)   return 1;
-         if(my_uset.find(*it_val) == my_uset.cend())  return 1;
+         if(&*list_it  != &it_val[-1])   return 1;
+         if(&*slist_it != &it_val[-1])   return 1;
+         if(&*set_rit  != &it_val[-1])   return 1;
+         if(my_uset.find(it_val[-1]) == my_uset.cend())  return 1;
       }
    }
 

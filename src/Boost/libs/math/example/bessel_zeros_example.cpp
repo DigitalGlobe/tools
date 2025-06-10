@@ -20,7 +20,7 @@
 
 // Weisstein, Eric W. "Bessel Function Zeros." From MathWorld--A Wolfram Web Resource.
 // http://mathworld.wolfram.com/BesselFunctionZeros.html
-// Test values can be calculated using [@wolframalpha.com WolframAplha]
+// Test values can be calculated using [@wolframalpha.com WolframAlpha]
 // See also http://dlmf.nist.gov/10.21
 
 //[bessel_zero_example_1
@@ -231,7 +231,7 @@ We set the precision of the output stream and show trailing zeros to display a f
 
 /*`Finally we show how the output iterator can be used to compute a sum of zeros.
 
-(See [@http://dx.doi.org/10.1017/S2040618500034067 Ian N. Sneddon, Infinite Sums of Bessel Zeros],
+(See [@https://doi.org/10.1017/S2040618500034067 Ian N. Sneddon, Infinite Sums of Bessel Zeros],
 page 150 equation 40).
 */
 //] [/bessel_zero_example_2]

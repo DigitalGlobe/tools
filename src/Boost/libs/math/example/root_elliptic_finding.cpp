@@ -16,8 +16,6 @@
 
 #include <boost/cstdlib.hpp>
 #include <boost/config.hpp>
-#include <boost/array.hpp>
-#include <boost/type_traits/is_floating_point.hpp>
 #include <boost/math/tools/roots.hpp>
 #include <boost/math/special_functions/ellint_1.hpp>
 #include <boost/math/special_functions/ellint_2.hpp>
@@ -49,6 +47,7 @@ using boost::multiprecision::cpp_bin_float_50;
 #include <fstream> // std::ofstream
 #include <cmath>
 #include <typeinfo> // for type name using typid(thingy).name();
+#include <type_traits>
 
 #ifdef __FILE__
   std::string sourcefilename = __FILE__;
@@ -107,7 +106,6 @@ const std::string full_roots_name(boost_root + "/libs/math/doc/roots/");
 
 const std::size_t nooftypes = 4;
 const std::size_t noofalgos = 4;
-const std::size_t noofroots = 3;
 
 double digits_accuracy = 1.0; // 1 == maximum possible accuracy.
 
@@ -136,9 +134,9 @@ struct root_info
   int get_digits; // fraction of maximum possible accuracy required.
   // = digits * digits_accuracy
   // Vector of values (4) for each algorithm, TOMS748, Newton, Halley & Schroder.
-  //std::vector< boost::int_least64_t> times;  converted to int.
-  std::vector<int> times; // arbirary units (ticks).
-  //boost::int_least64_t min_time = std::numeric_limits<boost::int_least64_t>::max(); // Used to normalize times (as int).
+  //std::vector< std::int_least64_t> times;  converted to int.
+  std::vector<int> times; // arbitrary units (ticks).
+  //std::int_least64_t min_time = std::numeric_limits<std::int_least64_t>::max(); // Used to normalize times (as int).
   std::vector<double> normed_times;
   int min_time = (std::numeric_limits<int>::max)(); // Used to normalize times.
   std::vector<uintmax_t> iterations;
@@ -205,8 +203,8 @@ T elliptic_root_noderiv(T radius, T arc)
    T guess = sqrt(arc * arc / 16 - radius * radius);
    T factor = 1.2;                     // How big steps to take when searching.
 
-   const boost::uintmax_t maxit = 50;  // Limit to maximum iterations.
-   boost::uintmax_t it = maxit;        // Initally our chosen max iterations, but updated with actual.
+   const std::uintmax_t maxit = 50;  // Limit to maximum iterations.
+   std::uintmax_t it = maxit;        // Initially our chosen max iterations, but updated with actual.
    bool is_rising = true;              // arc-length increases if one radii increases, so function is rising
    // Define a termination condition, stop when nearly all digits are correct, but allow for
    // the fact that we are returning a range, and must have some inaccuracy in the elliptic integral:
@@ -224,8 +222,8 @@ T elliptic_root_noderiv(T radius, T arc)
 //[elliptic_1deriv_func
 template <class T = double>
 struct elliptic_root_functor_1deriv
-{ // Functor also returning 1st derviative.
-   BOOST_STATIC_ASSERT_MSG(boost::is_integral<T>::value == false, "Only floating-point type types can be used!");
+{ // Functor also returning 1st derivative.
+   static_assert(boost::is_integral<T>::value == false, "Only floating-point type types can be used!");
 
    elliptic_root_functor_1deriv(T const& arc, T const& radius) : m_arc(arc), m_radius(radius)
    { // Constructor just stores value a to find root of.
@@ -261,7 +259,7 @@ T elliptic_root_1deriv(T radius, T arc)
    using namespace std;  // Help ADL of std functions.
    using namespace boost::math::tools; // For newton_raphson_iterate.
 
-   BOOST_STATIC_ASSERT_MSG(boost::is_integral<T>::value == false, "Only floating-point type types can be used!");
+   static_assert(boost::is_integral<T>::value == false, "Only floating-point type types can be used!");
 
    T guess = sqrt(arc * arc / 16 - radius * radius);
    T min = 0;   // Minimum possible value is zero.
@@ -270,8 +268,8 @@ T elliptic_root_1deriv(T radius, T arc)
    // Accuracy doubles at each step, so stop when just over half of the digits are
    // correct, and rely on that step to polish off the remainder:
    int get_digits = static_cast<int>(std::numeric_limits<T>::digits * 0.6);
-   const boost::uintmax_t maxit = 20;
-   boost::uintmax_t it = maxit;
+   const std::uintmax_t maxit = 20;
+   std::uintmax_t it = maxit;
    T result = newton_raphson_iterate(elliptic_root_functor_1deriv<T>(arc, radius), guess, min, max, get_digits, it);
    //<-
    iters = it;
@@ -285,7 +283,7 @@ T elliptic_root_1deriv(T radius, T arc)
 template <class T = double>
 struct elliptic_root_functor_2deriv
 { // Functor returning both 1st and 2nd derivatives.
-   BOOST_STATIC_ASSERT_MSG(boost::is_integral<T>::value == false, "Only floating-point type types can be used!");
+   static_assert(boost::is_integral<T>::value == false, "Only floating-point type types can be used!");
 
    elliptic_root_functor_2deriv(T const& arc, T const& radius) : m_arc(arc), m_radius(radius) {}
    std::tuple<T, T, T> operator()(T const& x)
@@ -319,7 +317,7 @@ T elliptic_root_2deriv(T radius, T arc)
    using namespace std;                // Help ADL of std functions.
    using namespace boost::math::tools; // For halley_iterate.
 
-   BOOST_STATIC_ASSERT_MSG(boost::is_integral<T>::value == false, "Only floating-point type types can be used!");
+   static_assert(boost::is_integral<T>::value == false, "Only floating-point type types can be used!");
 
    T guess = sqrt(arc * arc / 16 - radius * radius);
    T min = 0;                                   // Minimum possible value is zero.
@@ -328,8 +326,8 @@ T elliptic_root_2deriv(T radius, T arc)
    // Accuracy triples at each step, so stop when just over one-third of the digits
    // are correct, and the last iteration will polish off the remaining digits:
    int get_digits = static_cast<int>(std::numeric_limits<T>::digits * 0.4);
-   const boost::uintmax_t maxit = 20;
-   boost::uintmax_t it = maxit;
+   const std::uintmax_t maxit = 20;
+   std::uintmax_t it = maxit;
    T result = halley_iterate(elliptic_root_functor_2deriv<T>(arc, radius), guess, min, max, get_digits, it);
    //<-
    iters = it;
@@ -346,7 +344,7 @@ T elliptic_root_2deriv_s(T arc, T radius)
   using namespace std;  // Help ADL of std functions.
   using namespace boost::math::tools; // For schroder_iterate.
 
-  BOOST_STATIC_ASSERT_MSG(boost::is_integral<T>::value == false, "Only floating-point type types can be used!");
+  static_assert(boost::is_integral<T>::value == false, "Only floating-point type types can be used!");
 
   T guess = sqrt(arc * arc / 16 - radius * radius);
   T min = 0; // Minimum possible value is zero.
@@ -354,8 +352,8 @@ T elliptic_root_2deriv_s(T arc, T radius)
 
   int digits = std::numeric_limits<T>::digits; // Maximum possible binary digits accuracy for type T.
   int get_digits = static_cast<int>(digits * digits_accuracy);
-  const boost::uintmax_t maxit = 20;
-  boost::uintmax_t it = maxit;
+  const std::uintmax_t maxit = 20;
+  std::uintmax_t it = maxit;
   T result = schroder_iterate(elliptic_root_functor_2deriv<T>(arc, radius), guess, min, max, get_digits, it);
   iters = it;
 
@@ -478,7 +476,7 @@ int test_root(cpp_bin_float_100 big_radius, cpp_bin_float_100 big_arc, cpp_bin_f
   using boost::timer::cpu_times;
   using boost::timer::cpu_timer;
 
-  long eval_count = boost::is_floating_point<T>::value ? 1000000 : 10000; // To give a sufficiently stable timing for the fast built-in types,
+  long eval_count = std::is_floating_point<T>::value ? 1000000 : 10000; // To give a sufficiently stable timing for the fast built-in types,
   // This takes an inconveniently long time for multiprecision cpp_bin_float_50 etc  types.
 
   cpu_times now; // Holds wall, user and system times.
@@ -582,7 +580,7 @@ int test_root(cpp_bin_float_100 big_radius, cpp_bin_float_100 big_arc, cpp_bin_f
   return 4;  // eval_count of how many algorithms used.
 } // test_root
 
-/*! Fill array of times, interations, etc for Nth root for all 4 types,
+/*! Fill array of times, iterations, etc for Nth root for all 4 types,
  and write a table of results in Quickbook format.
  */
 void table_root_info(cpp_bin_float_100 radius, cpp_bin_float_100 arc)
@@ -599,14 +597,13 @@ void table_root_info(cpp_bin_float_100 radius, cpp_bin_float_100 arc)
   // Compute the 'right' answer for root N at 100 decimal digits.
   cpp_bin_float_100 full_answer = elliptic_root_noderiv(radius, arc);
 
-  int type_count = 0;
   root_infos.clear(); // Erase any previous data.
   // Fill the elements of the array for each floating-point type.
 
-  type_count = test_root<float>(radius, arc, full_answer, "float", 0);
-  type_count = test_root<double>(radius, arc, full_answer,  "double", 1);
-  type_count = test_root<long double>(radius, arc, full_answer, "long double", 2);
-  type_count = test_root<cpp_bin_float_50>(radius, arc, full_answer, "cpp_bin_float_50", 3);
+  test_root<float>(radius, arc, full_answer, "float", 0);
+  test_root<double>(radius, arc, full_answer,  "double", 1);
+  test_root<long double>(radius, arc, full_answer, "long double", 2);
+  test_root<cpp_bin_float_50>(radius, arc, full_answer, "cpp_bin_float_50", 3);
 
   // Use info from 4 floating point types to
 
@@ -868,7 +865,7 @@ int main()
 
     return boost::exit_success;
   }
-  catch (std::exception ex)
+  catch (std::exception const& ex)
   {
     std::cout << "exception thrown: " << ex.what() << std::endl;
     return boost::exit_failure;

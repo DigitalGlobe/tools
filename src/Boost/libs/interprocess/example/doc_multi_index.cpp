@@ -7,12 +7,13 @@
 // See http://www.boost.org/libs/interprocess for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#include <boost/interprocess/detail/config_begin.hpp>
+
 #include <boost/interprocess/detail/workaround.hpp>
+#if BOOST_CXX_VERSION >= 201103L
 //[doc_multi_index
 #include <boost/interprocess/managed_shared_memory.hpp>
 #include <boost/interprocess/allocators/allocator.hpp>
-#include <boost/interprocess/containers/string.hpp>
+#include <boost/container/string.hpp>
 
 //<-
 //Shield against external warnings
@@ -32,7 +33,7 @@ using namespace boost::interprocess;
 namespace bmi = boost::multi_index;
 
 typedef managed_shared_memory::allocator<char>::type              char_allocator;
-typedef basic_string<char, std::char_traits<char>, char_allocator>shm_string;
+typedef boost::container::basic_string<char, std::char_traits<char>, char_allocator>shm_string;
 
 //Data to insert in shared memory
 struct employee
@@ -61,11 +62,11 @@ typedef bmi::multi_index_container<
   employee,
   bmi::indexed_by<
     bmi::ordered_unique
-      <bmi::tag<id>,  BOOST_MULTI_INDEX_MEMBER(employee,int,id)>,
+      <bmi::tag<id>,  bmi::member<employee,int,&employee::id> >,
     bmi::ordered_non_unique<
-      bmi::tag<name>,BOOST_MULTI_INDEX_MEMBER(employee,shm_string,name)>,
+      bmi::tag<name>, bmi::member<employee,shm_string,&employee::name> >,
     bmi::ordered_non_unique
-      <bmi::tag<age>, BOOST_MULTI_INDEX_MEMBER(employee,int,age)> >,
+      <bmi::tag<age>, bmi::member<employee,int,&employee::age> > >,
   managed_shared_memory::allocator<employee>::type
 > employee_set;
 
@@ -74,32 +75,15 @@ int main ()
    //Remove shared memory on construction and destruction
    struct shm_remove
    {
-   //<-
-   #if 1
       shm_remove() { shared_memory_object::remove(test::get_process_id_name()); }
       ~shm_remove(){ shared_memory_object::remove(test::get_process_id_name()); }
-   #else
-   //->
-      shm_remove() { shared_memory_object::remove("MySharedMemory"); }
-      ~shm_remove(){ shared_memory_object::remove("MySharedMemory"); }
-   //<-
-   #endif
-   //->
    } remover;
    //<-
    (void)remover;
    //->
 
    //Create shared memory
-   //<-
-   #if 1
    managed_shared_memory segment(create_only,test::get_process_id_name(), 65536);
-   #else
-   //->
-   managed_shared_memory segment(create_only,"MySharedMemory", 65536);
-   //<-
-   #endif
-   //->
 
    //Construct the multi_index in shared memory
    employee_set *es = segment.construct<employee_set>
@@ -115,4 +99,12 @@ int main ()
    return 0;
 }
 //]
-#include <boost/interprocess/detail/config_end.hpp>
+
+#else ////#if BOOST_CXX_VERSION >= 201103L
+
+int main()
+{
+   return 0;
+}
+
+#endif   //#if BOOST_CXX_VERSION >= 201103L

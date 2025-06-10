@@ -15,8 +15,6 @@
 #include <boost/cstdlib.hpp>
 #include <boost/config.hpp>
 #include <boost/array.hpp>
-#include <boost/type_traits/is_floating_point.hpp>
-
 #include "table_type.hpp"
 // Copy of i:\modular-boost\libs\math\test\table_type.hpp
 // #include "handle_test_result.hpp"
@@ -54,6 +52,7 @@ using boost::multiprecision::cpp_bin_float_50;
 #include <fstream> // std::ofstream
 #include <cmath>
 #include <typeinfo> // for type name using typid(thingy).name();
+#include <type_traits>
 
 #ifndef BOOST_ROOT
 # define BOOST_ROOT i:/modular-boost/
@@ -130,8 +129,6 @@ std::vector<std::string> names; // short name.
 
 uintmax_t iters; // Global as iterations is not returned by rooting function.
 
-const int convert = 1000; // convert nanoseconds to microseconds (assuming this is resolution).
-
 const int count = 1000000; // Number of iterations to average.
  
 struct root_info
@@ -144,11 +141,11 @@ struct root_info
   int get_digits; // fraction of maximum possible accuracy required.
   // = digits * digits_accuracy
   // Vector of values for each algorithm, std::cbrt, boost::math::cbrt, TOMS748, Newton, Halley.
-  //std::vector< boost::int_least64_t> times;  converted to int.
+  //std::vector< std::int_least64_t> times;  converted to int.
   std::vector<int> times;
-  //boost::int_least64_t min_time = std::numeric_limits<boost::int_least64_t>::max(); // Used to normalize times (as int).
+  //std::int_least64_t min_time = std::numeric_limits<std::int_least64_t>::max(); // Used to normalize times (as int).
   std::vector<double> normed_times;
-  boost::int_least64_t min_time = (std::numeric_limits<boost::int_least64_t>::max)(); // Used to normalize times.
+  std::int_least64_t min_time = (std::numeric_limits<std::int_least64_t>::max)(); // Used to normalize times.
   std::vector<uintmax_t> iterations;
   std::vector<long int> distances;
   std::vector<cpp_bin_float_100> full_results;
@@ -204,7 +201,7 @@ T cbrt_noderiv(T x)
 
   // Maybe guess should be double, or use enable_if to avoid warning about conversion double to float here?
   T guess;
-  if (boost::is_fundamental<T>::value)
+  if (std::is_fundamental<T>::value)
   { 
     int exponent;
     frexp(x, &exponent); // Get exponent of z (ignore mantissa).
@@ -218,10 +215,9 @@ T cbrt_noderiv(T x)
   
   T factor = 2; // How big steps to take when searching.
 
-  const boost::uintmax_t maxit = 50; // Limit to maximum iterations.
-  boost::uintmax_t it = maxit; // Initally our chosen max iterations, but updated with actual.
+  const std::uintmax_t maxit = 50; // Limit to maximum iterations.
+  std::uintmax_t it = maxit; // Initially our chosen max iterations, but updated with actual.
   bool is_rising = true; // So if result if guess^3 is too low, then try increasing guess.
-  int digits = std::numeric_limits<T>::digits; // Maximum possible binary digits accuracy for type T.
   // Some fraction of digits is used to control how accurate to try to make the result.
   int get_digits = static_cast<int>(std::numeric_limits<T>::digits - 2);
 
@@ -238,7 +234,7 @@ T cbrt_noderiv(T x)
 
 template <class T>
 struct cbrt_functor_deriv
-{ // Functor also returning 1st derviative.
+{ // Functor also returning 1st derivative.
   cbrt_functor_deriv(T const& to_find_root_of) : a(to_find_root_of)
   { // Constructor stores value a to find root of,
     // for example: calling cbrt_functor_deriv<T>(x) to use to get cube root of x.
@@ -259,7 +255,7 @@ T cbrt_deriv(T x)
   using namespace boost::math::tools;
   int exponent;
   T guess;
-  if(boost::is_fundamental<T>::value)
+  if(std::is_fundamental<T>::value)
   {
      frexp(x, &exponent); // Get exponent of z (ignore mantissa).
      guess = ldexp(static_cast<T>(1), exponent / 3); // Rough guess is to divide the exponent by three.
@@ -268,10 +264,9 @@ T cbrt_deriv(T x)
      guess = boost::math::cbrt(static_cast<double>(x));
   T min = guess / 2; // Minimum possible value is half our guess.
   T max = 2 * guess; // Maximum possible value is twice our guess.
-  const int digits = std::numeric_limits<T>::digits; // Maximum possible binary digits accuracy for type T.
   int get_digits = static_cast<int>(std::numeric_limits<T>::digits * 0.6);
-  const boost::uintmax_t maxit = 20;
-  boost::uintmax_t it = maxit;
+  const std::uintmax_t maxit = 20;
+  std::uintmax_t it = maxit;
   T result = newton_raphson_iterate(cbrt_functor_deriv<T>(x), guess, min, max, get_digits, it);
   iters = it;
   return result;
@@ -304,7 +299,7 @@ T cbrt_2deriv(T x)
   using namespace boost::math::tools;
   int exponent;
   T guess;
-  if(boost::is_fundamental<T>::value)
+  if(std::is_fundamental<T>::value)
   {
      frexp(x, &exponent); // Get exponent of z (ignore mantissa).
      guess = ldexp(static_cast<T>(1), exponent / 3); // Rough guess is to divide the exponent by three.
@@ -313,11 +308,10 @@ T cbrt_2deriv(T x)
      guess = boost::math::cbrt(static_cast<double>(x));
   T min = guess / 2; // Minimum possible value is half our guess.
   T max = 2 * guess; // Maximum possible value is twice our guess.
-  const int digits = std::numeric_limits<T>::digits; // Maximum possible binary digits accuracy for type T.
   // digits used to control how accurate to try to make the result.
   int get_digits = static_cast<int>(std::numeric_limits<T>::digits * 0.4);
-  boost::uintmax_t maxit = 20;
-  boost::uintmax_t it = maxit;
+  std::uintmax_t maxit = 20;
+  std::uintmax_t it = maxit;
   T result = halley_iterate(cbrt_functor_2deriv<T>(x), guess, min, max, get_digits, it);
   iters = it;
   return result;
@@ -332,7 +326,7 @@ T cbrt_2deriv_s(T x)
   using namespace boost::math::tools;
   int exponent;
   T guess;
-  if(boost::is_fundamental<T>::value)
+  if(std::is_fundamental<T>::value)
   {
      frexp(x, &exponent); // Get exponent of z (ignore mantissa).
      guess = ldexp(static_cast<T>(1), exponent / 3); // Rough guess is to divide the exponent by three.
@@ -341,11 +335,10 @@ T cbrt_2deriv_s(T x)
      guess = boost::math::cbrt(static_cast<double>(x));
   T min = guess / 2; // Minimum possible value is half our guess.
   T max = 2 * guess; // Maximum possible value is twice our guess.
-  const int digits = std::numeric_limits<T>::digits; // Maximum possible binary digits accuracy for type T.
   // digits used to control how accurate to try to make the result.
   int get_digits = static_cast<int>(std::numeric_limits<T>::digits * 0.4);
-  const boost::uintmax_t maxit = 20;
-  boost::uintmax_t it = maxit;
+  const std::uintmax_t maxit = 20;
+  std::uintmax_t it = maxit;
   T result = schroder_iterate(cbrt_functor_2deriv<T>(x), guess, min, max, get_digits, it);
   iters = it;
   return result;
@@ -450,7 +443,6 @@ int test_root(cpp_bin_float_100 big_value, cpp_bin_float_100 answer, const char*
       sum += result;
     }
     now = ti.elapsed();
-    boost:int_least64_t n = now.user;
 
     long time = static_cast<long>(now.user/1000); // convert nanoseconds to microseconds (assuming this is resolution).
     root_infos[type_no].times.push_back(time); // CPU time taken.
@@ -572,12 +564,11 @@ int test_root(cpp_bin_float_100 big_value, cpp_bin_float_100 answer, const char*
 void table_root_info(cpp_bin_float_100 full_value, cpp_bin_float_100 full_answer)
 {
    // Fill the elements. 
-  int type_count = 0;
-  type_count = test_root<float>(full_value, full_answer, "float");
-  type_count = test_root<double>(full_value, full_answer, "double");
-  type_count = test_root<long double>(full_value, full_answer, "long double");
-  type_count = test_root<cpp_bin_float_50>(full_value, full_answer, "cpp_bin_float_50");
-  //type_count = test_root<cpp_bin_float_100>(full_value, full_answer, "cpp_bin_float_100");
+  test_root<float>(full_value, full_answer, "float");
+  test_root<double>(full_value, full_answer, "double");
+  test_root<long double>(full_value, full_answer, "long double");
+  test_root<cpp_bin_float_50>(full_value, full_answer, "cpp_bin_float_50");
+  //test_root<cpp_bin_float_100>(full_value, full_answer, "cpp_bin_float_100");
 
   std::cout << root_infos.size() << " floating-point types tested:" << std::endl;
 #ifndef NDEBUG
@@ -605,10 +596,9 @@ void table_root_info(cpp_bin_float_100 full_value, cpp_bin_float_100 full_answer
 
     // Header row.
     std::cout << "Algorithm         " << "Iterations  " << "Times  " << "Norm_times  " << "Distance" << std::endl;
-    std::vector<std::string>::iterator al_iter = algo_names.begin();
 
     // Row for all algorithms.
-    for (int algo = 0; algo != algo_names.size(); algo++)
+    for (unsigned algo = 0; algo != algo_names.size(); algo++)
     { 
       std::cout
         << std::left << std::setw(20) << algo_names[algo] << "  "
@@ -646,7 +636,7 @@ void table_root_info(cpp_bin_float_100 full_value, cpp_bin_float_100 full_answer
   fout << "]" << std::endl;
 
   // Row for all algorithms.
-  for (int algo = 0; algo != algo_names.size(); algo++)
+  for (size_t algo = 0; algo != algo_names.size(); algo++)
   {
     fout << "[[" << std::left << std::setw(9) << algo_names[algo] << "]";
     for (size_t tp = 0; tp != root_infos.size(); tp++)
@@ -736,7 +726,7 @@ int main()
 
     return boost::exit_success;
   }
-  catch (std::exception ex)
+  catch (std::exception const& ex)
   {
     std::cout << "exception thrown: " << ex.what() << std::endl;
     return boost::exit_failure;

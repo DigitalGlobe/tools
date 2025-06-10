@@ -16,20 +16,20 @@
 #include <boost/log/detail/config.hpp>
 #include <cstddef>
 #include <new>
+#include <chrono>
 #include <vector>
 #include <algorithm>
 #include <boost/cstdint.hpp>
 #include <boost/assert.hpp>
-#include <boost/core/swap.hpp>
+#include <boost/core/invoke_swap.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/smart_ptr/weak_ptr.hpp>
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/smart_ptr/make_shared_object.hpp>
 #include <boost/range/iterator_range_core.hpp>
-#include <boost/date_time/posix_time/posix_time_types.hpp>
 #include <boost/random/taus88.hpp>
 #include <boost/move/core.hpp>
-#include <boost/move/utility.hpp>
+#include <boost/move/utility_core.hpp>
 #include <boost/log/core/core.hpp>
 #include <boost/log/core/record.hpp>
 #include <boost/log/core/record_view.hpp>
@@ -37,8 +37,9 @@
 #include <boost/log/attributes/attribute_value_set.hpp>
 #include <boost/log/detail/singleton.hpp>
 #if !defined(BOOST_LOG_NO_THREADS)
+#include <boost/memory_order.hpp>
+#include <boost/atomic/atomic.hpp>
 #include <boost/thread/tss.hpp>
-#include <boost/thread/exceptions.hpp>
 #include <boost/log/detail/locks.hpp>
 #include <boost/log/detail/light_rw_mutex.hpp>
 #include <boost/log/detail/thread_id.hpp>
@@ -57,9 +58,9 @@ namespace aux {
 
 BOOST_LOG_ANONYMOUS_NAMESPACE {
 
-//! Sequence shuffling algorithm. Very similar to std::random_shuffle, used for forward portability with compilers that removed it from STL.
+//! Sequence shuffling algorithm. Very similar to std::random_shuffle, used for forward portability with compilers that removed it from the standard library (C++17).
 template< typename Iterator, typename RandomNumberGenerator >
-void random_shuffle(Iterator begin, Iterator end, RandomNumberGenerator& rng)
+inline void random_shuffle(Iterator begin, Iterator end, RandomNumberGenerator& rng)
 {
     Iterator it = begin;
     ++it;
@@ -67,7 +68,7 @@ void random_shuffle(Iterator begin, Iterator end, RandomNumberGenerator& rng)
     {
         Iterator where = begin + rng() % (it - begin + 1u);
         if (where != it)
-            boost::swap(*where, *it);
+            boost::core::invoke_swap(*where, *it);
         ++it;
     }
 }
@@ -97,7 +98,7 @@ private:
 
 private:
     //! Initializing constructor
-    private_data(BOOST_RV_REF(attribute_value_set) values, uint32_t capacity) :
+    private_data(BOOST_RV_REF(attribute_value_set) values, uint32_t capacity) BOOST_NOEXCEPT :
         public_data(boost::move(values)),
         m_accepting_sink_count(0),
         m_accepting_sink_capacity(capacity),
@@ -122,10 +123,10 @@ public:
     //! Destroys the object and frees the underlying storage
     void destroy() BOOST_NOEXCEPT
     {
-        sink_list s = get_accepting_sinks();
-        for (sink_list::iterator it = s.begin(), end = s.end(); it != end; ++it)
+        sink_ptr* psink = begin();
+        for (uint32_t i = 0u, n = m_accepting_sink_count; i < n; ++i)
         {
-            it->~sink_ptr();
+            psink[i].~sink_ptr();
         }
 
         const uint32_t capacity = m_accepting_sink_capacity;
@@ -248,7 +249,8 @@ public:
         //! Creates a seed for RNG
         static uint32_t get_random_seed()
         {
-            uint32_t seed = static_cast< uint32_t >(posix_time::microsec_clock::universal_time().time_of_day().ticks());
+            uint64_t now = static_cast< uint64_t >(std::chrono::system_clock::now().time_since_epoch().count());
+            uint32_t seed = static_cast< uint32_t >(now) ^ static_cast< uint32_t >(now >> 32u);
 #if !defined(BOOST_LOG_NO_THREADS)
             seed += static_cast< uint32_t >(log::aux::this_thread::get_id().native_id());
 #endif
@@ -284,7 +286,11 @@ public:
 #endif
 
     //! The global state of logging
-    volatile bool m_enabled;
+#if !defined(BOOST_LOG_NO_THREADS)
+    boost::atomic< bool > m_enabled;
+#else
+    bool m_enabled;
+#endif
     //! Global filter
     filter m_filter;
 
@@ -299,58 +305,39 @@ public:
     {
     }
 
-    //! Invokes sink-specific filter and adds the sink to the record if the filter passes the log record
-    void apply_sink_filter(shared_ptr< sinks::sink > const& sink, record& rec, attribute_value_set*& attr_values, uint32_t remaining_capacity)
-    {
-        try
-        {
-            if (sink->will_consume(*attr_values))
-            {
-                // If at least one sink accepts the record, it's time to create it
-                if (!rec.m_impl)
-                {
-                    rec.m_impl = record_view::private_data::create(boost::move(*attr_values), remaining_capacity);
-                    attr_values = &rec.m_impl->m_attribute_values;
-                }
-
-                static_cast< record_view::private_data* >(rec.m_impl)->push_back_accepting_sink(sink);
-            }
-        }
-#if !defined(BOOST_LOG_NO_THREADS)
-        catch (thread_interrupted&)
-        {
-            throw;
-        }
-#endif // !defined(BOOST_LOG_NO_THREADS)
-        catch (...)
-        {
-            if (m_exception_handler.empty())
-                throw;
-            m_exception_handler();
-        }
-    }
-
     //! Opens a record
     template< typename SourceAttributesT >
     BOOST_FORCEINLINE record open_record(BOOST_FWD_REF(SourceAttributesT) source_attributes)
     {
+        record_view::private_data* rec_impl = NULL;
+        bool invoke_exception_handler = true;
+
         // Try a quick win first
-        if (m_enabled) try
+#if !defined(BOOST_LOG_NO_THREADS)
+        if (BOOST_LIKELY(m_enabled.load(boost::memory_order_relaxed)))
+#else
+        if (BOOST_LIKELY(m_enabled))
+#endif
+        try
         {
             thread_data* tsd = get_thread_data();
 
+#if !defined(BOOST_LOG_NO_THREADS)
             // Lock the core to be safe against any attribute or sink set modifications
-            BOOST_LOG_EXPR_IF_MT(scoped_read_lock lock(m_mutex);)
+            scoped_read_lock lock(m_mutex);
 
-            if (m_enabled)
+            if (BOOST_LIKELY(m_enabled.load(boost::memory_order_relaxed)))
+#endif
             {
                 // Compose a view of attribute values (unfrozen, yet)
                 attribute_value_set attr_values(boost::forward< SourceAttributesT >(source_attributes), tsd->m_thread_attributes, m_global_attributes);
                 if (m_filter(attr_values))
                 {
                     // The global filter passed, trying the sinks
-                    record rec;
                     attribute_value_set* values = &attr_values;
+
+                    // apply_sink_filter will invoke the exception handler if it has to
+                    invoke_exception_handler = false;
 
                     if (!m_sinks.empty())
                     {
@@ -358,46 +345,53 @@ public:
                         sink_list::iterator it = m_sinks.begin(), end = m_sinks.end();
                         for (; it != end; ++it, --remaining_capacity)
                         {
-                            apply_sink_filter(*it, rec, values, remaining_capacity);
+                            apply_sink_filter(*it, rec_impl, values, remaining_capacity);
                         }
                     }
                     else
                     {
                         // Use the default sink
-                        apply_sink_filter(m_default_sink, rec, values, 1);
+                        apply_sink_filter(m_default_sink, rec_impl, values, 1);
                     }
 
-                    record_view::private_data* rec_impl = static_cast< record_view::private_data* >(rec.m_impl);
+                    invoke_exception_handler = true;
+
                     if (rec_impl && rec_impl->accepting_sink_count() == 0)
                     {
                         // No sinks accepted the record
-                        return record();
+                        rec_impl->destroy();
+                        rec_impl = NULL;
+                        goto done;
                     }
 
                     // Some sinks have accepted the record
                     values->freeze();
-
-                    return boost::move(rec);
                 }
             }
         }
-    #if !defined(BOOST_LOG_NO_THREADS)
-        catch (thread_interrupted&)
-        {
-            throw;
-        }
-    #endif // !defined(BOOST_LOG_NO_THREADS)
         catch (...)
         {
-            // Lock the core to be safe against any attribute or sink set modifications
-            BOOST_LOG_EXPR_IF_MT(scoped_read_lock lock(m_mutex);)
-            if (m_exception_handler.empty())
-                throw;
+            if (rec_impl)
+            {
+                rec_impl->destroy();
+                rec_impl = NULL;
+            }
 
-            m_exception_handler();
+            if (invoke_exception_handler)
+            {
+                // Lock the core to be safe against any attribute or sink set modifications
+                BOOST_LOG_EXPR_IF_MT(scoped_read_lock lock(m_mutex);)
+                if (m_exception_handler.empty())
+                    throw;
+
+                m_exception_handler();
+            }
+            else
+                throw;
         }
 
-        return record();
+    done:
+        return record(rec_impl);
     }
 
     //! The method returns the current thread-specific data
@@ -408,7 +402,7 @@ public:
 #else
         thread_data* p = m_thread_data.get();
 #endif
-        if (!p)
+        if (BOOST_UNLIKELY(!p))
         {
             init_thread_data();
 #if defined(BOOST_LOG_USE_COMPILER_TLS)
@@ -442,6 +436,32 @@ private:
 #endif
         }
     }
+
+    //! Invokes sink-specific filter and adds the sink to the record if the filter passes the log record
+    void apply_sink_filter(shared_ptr< sinks::sink > const& sink, record_view::private_data*& rec_impl, attribute_value_set*& attr_values, uint32_t remaining_capacity)
+    {
+        try
+        {
+            if (sink->will_consume(*attr_values))
+            {
+                // If at least one sink accepts the record, it's time to create it
+                record_view::private_data* impl = rec_impl;
+                if (!impl)
+                {
+                    rec_impl = impl = record_view::private_data::create(boost::move(*attr_values), remaining_capacity);
+                    attr_values = &impl->m_attribute_values;
+                }
+
+                impl->push_back_accepting_sink(sink);
+            }
+        }
+        catch (...)
+        {
+            if (m_exception_handler.empty())
+                throw;
+            m_exception_handler();
+        }
+    }
 };
 
 #if defined(BOOST_LOG_USE_COMPILER_TLS)
@@ -471,18 +491,23 @@ BOOST_LOG_API core_ptr core::get()
 //! The method enables or disables logging and returns the previous state of logging flag
 BOOST_LOG_API bool core::set_logging_enabled(bool enabled)
 {
-    BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
+#if !defined(BOOST_LOG_NO_THREADS)
+    return m_impl->m_enabled.exchange(enabled, boost::memory_order_relaxed);
+#else
     const bool old_value = m_impl->m_enabled;
     m_impl->m_enabled = enabled;
     return old_value;
+#endif
 }
 
 //! The method allows to detect if logging is enabled
 BOOST_LOG_API bool core::get_logging_enabled() const
 {
-    // Should have a read barrier here, but for performance reasons it is omitted.
-    // The function should be used as a quick check and doesn't need to be reliable.
+#if !defined(BOOST_LOG_NO_THREADS)
+    return m_impl->m_enabled.load(boost::memory_order_relaxed);
+#else
     return m_impl->m_enabled;
+#endif
 }
 
 //! The method adds a new sink
@@ -596,19 +621,29 @@ BOOST_LOG_API void core::flush()
 {
     // Acquire exclusive lock to prevent any logging attempts while flushing
     BOOST_LOG_EXPR_IF_MT(implementation::scoped_write_lock lock(m_impl->m_mutex);)
-    implementation::sink_list::iterator it = m_impl->m_sinks.begin(), end = m_impl->m_sinks.end();
-    for (; it != end; ++it)
+    if (BOOST_LIKELY(!m_impl->m_sinks.empty()))
+    {
+        implementation::sink_list::iterator it = m_impl->m_sinks.begin(), end = m_impl->m_sinks.end();
+        for (; it != end; ++it)
+        {
+            try
+            {
+                it->get()->flush();
+            }
+            catch (...)
+            {
+                if (m_impl->m_exception_handler.empty())
+                    throw;
+                m_impl->m_exception_handler();
+            }
+        }
+    }
+    else
     {
         try
         {
-            it->get()->flush();
+            m_impl->m_default_sink->flush();
         }
-#if !defined(BOOST_LOG_NO_THREADS)
-        catch (thread_interrupted&)
-        {
-            throw;
-        }
-#endif // !defined(BOOST_LOG_NO_THREADS)
         catch (...)
         {
             if (m_impl->m_exception_handler.empty())
@@ -701,12 +736,6 @@ BOOST_LOG_API void core::push_record_move(record& rec)
             else
                 break;
         }
-#if !defined(BOOST_LOG_NO_THREADS)
-        catch (thread_interrupted&)
-        {
-            throw;
-        }
-#endif // !defined(BOOST_LOG_NO_THREADS)
         catch (...)
         {
             // Lock the core to be safe against any attribute or sink set modifications
@@ -721,12 +750,6 @@ BOOST_LOG_API void core::push_record_move(record& rec)
             end->swap(*it);
         }
     }
-#if !defined(BOOST_LOG_NO_THREADS)
-    catch (thread_interrupted&)
-    {
-        throw;
-    }
-#endif // !defined(BOOST_LOG_NO_THREADS)
     catch (...)
     {
         // Lock the core to be safe against any attribute or sink set modifications

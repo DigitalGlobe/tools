@@ -10,18 +10,21 @@
 // You are welcome to contact the author at:
 //  fernando_cacciola@hotmail.com
 
-#include <sstream>
 #include "boost/optional/optional.hpp"
 #include "boost/optional/optional_io.hpp"
+#include "boost/core/lightweight_test.hpp"
 
-#ifdef __BORLANDC__
+#ifndef BOOST_NO_IOSTREAM
+
+#include <sstream>
+
+#ifdef BOOST_BORLANDC
 #pragma hdrstop
 #endif
 
-#include "boost/core/lightweight_test.hpp"
+
 
 using boost::optional;
-using boost::make_optional;
 
 template<class Opt>
 void test2( Opt o, Opt buff )
@@ -30,7 +33,7 @@ void test2( Opt o, Opt buff )
 
   const int markv = 123 ;
   int mark = 0 ;
-  
+
   s << o << " " << markv ;
   s >> buff >> mark ;
 
@@ -42,10 +45,10 @@ void test2( Opt o, Opt buff )
 template<class T>
 void test( T v, T w )
 {
-  test2( make_optional(v), optional<T>  ());
-  test2( make_optional(v), make_optional(w));
+  test2( boost::make_optional(v), optional<T>  ());
+  test2( boost::make_optional(v), boost::make_optional(w));
   test2( optional<T>  () , optional<T>  ());
-  test2( optional<T>  () , make_optional(w));
+  test2( optional<T>  () , boost::make_optional(w));
 }
 
 
@@ -86,3 +89,12 @@ int main()
 
   return boost::report_errors();
 }
+
+#else // BOOST_NO_IOSTREAM
+
+int main()
+{
+  return boost::report_errors();
+}
+
+#endif // BOOST_NO_IOSTREAM

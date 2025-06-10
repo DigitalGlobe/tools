@@ -115,12 +115,15 @@ class heap_allocator_v1
    {
       (void)hint;
       char *raw_mem = ::new char[sizeof(value_type)*count];
-      return boost::intrusive::pointer_traits<pointer>::pointer_to(reinterpret_cast<value_type &>(*raw_mem));
+      return boost::intrusive::pointer_traits<pointer>::pointer_to(*reinterpret_cast<value_type *>((void*)raw_mem));
    }
 
    //!Deallocates memory previously allocated. Never throws
    void deallocate(const pointer &ptr, size_type)
-   {  return ::delete[] ipcdetail::to_raw_pointer(ptr) ;  }
+   {
+      char *ptr_raw = (char*)ipcdetail::to_raw_pointer(ptr);
+      ::delete[] ptr_raw;
+   }
 
    //!Construct object, calling constructor.
    //!Throws if T(const T&) throws
