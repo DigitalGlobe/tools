@@ -54,7 +54,6 @@ class Program :
     _PATH_NAME_CMAKE_SOURCE = "."
     _PATH_NAME_CMAKE_BUILD = "build"
 
-    _FILE_NAME_SOLUTION = "PACKAGE.vcxproj"
     # --------------------------------------------------------------------------
     # constructors
 
@@ -87,9 +86,6 @@ class Program :
         systemManager.initializeIncludeEnvironmentVariable(buildSettings.X64Specified())
         systemManager.initializeLibraryEnvironmentVariable(buildSettings.X64Specified())
 
-        # systemManager.appendToPathEnvironmentVariable( pathFinder.getVisualStudioBinPathName( buildSettings.X64Specified() ) )
-        # systemManager.appendToPathEnvironmentVariable( Program._QT_DIR_X64 if buildSettings.X64Specified() else Program._QT_DIR_X86  + '\\bin')
-
         # MSBuild is under "Program Files (x86)"
         systemManager.appendToPathEnvironmentVariable(
             pathFinder.getMSBuildFileName(buildSettings.X64Specified())
@@ -112,6 +108,9 @@ class Program :
                 Program._PATH_NAME_SOURCE
             )
 
+        buildSourceName = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
+        cmakeBuildPath = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
+
         sdkOutDir = (
                 buildPathName
                 + "\\..\\"
@@ -124,47 +123,57 @@ class Program :
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
-        # systemManager.removeDirectory(buildPathName)
+        systemManager.removeDirectory(buildPathName)
 
-        # copy UriParser to the Build area
-        # systemManager.copyDirectory(sourcePathName, buildPathName)
+        # copy Boost source to the Build area
+        systemManager.copyDirectory(sourcePathName, buildPathName)
 
         # start building
         systemManager.changeDirectory(buildPathName)
 
-        buildSourceName = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
-        cmakebuild = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
-
-        systemManager.makeDirectory(cmakebuild)
-        systemManager.changeDirectory(cmakebuild)
-
-        cmakeCommandLine = (
-            f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
-            + f'-DBUILD_SHARED_LIBS=ON '
-            + f'-A {("x64" if buildSettings.X64Specified() else "Win32")} '
-            + f"{buildSourceName}"
-        )
-
-        print("cmake: " + cmakeCommandLine)
-        #cmakeResult = systemManager.execute(cmakeCommandLine)
-        #if cmakeResult != 0:
-        #    sys.exit(-1)
+        systemManager.makeDirectory(cmakeBuildPath)
+        systemManager.changeDirectory(cmakeBuildPath)
 
         conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
         platform = "x64" if buildSettings.X64Specified() else "Win32"
 
         cmakeCommandLine = (
-            f'{pathFinder.getCMakeFileName()} '
+            f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
+            + f'-DBUILD_SHARED_LIBS=ON '
+            + f'-A {platform} '
+            + f"{buildSourceName}"
+        )
+
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
+
+        cmakeCommandLine = (
+            f"{pathFinder.getCMakeFileName()} "
             + f"--build "
             + f". "
             + f"--config {conf} "
         )
 
         print("cmake: " + cmakeCommandLine)
-        #cmakeResult = systemManager.execute(cmakeCommandLine)
-        #if cmakeResult != 0:
-        #    sys.exit(-1)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
 
+        cmakeCommandLine = (
+            f"{pathFinder.getCMakeFileName()} "
+            + f"--install "
+            + f". "
+            + f"--config {conf} "
+            + f"--prefix "
+            + f"{os.path.join(cmakeBuildPath, "install")}"
+        )
+
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
 
         systemManager.removeDirectory(os.path.join( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE))
         systemManager.distributeFiles(
