@@ -145,9 +145,9 @@ class Program :
         )
 
         print("cmake: " + cmakeCommandLine)
-        # cmakeResult = systemManager.execute(cmakeCommandLine)
-        # if cmakeResult != 0:
-        #     sys.exit(-1)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
 
         cmakeCommandLine = (
             f"{pathFinder.getCMakeFileName()} "
@@ -157,9 +157,9 @@ class Program :
         )
 
         print("cmake: " + cmakeCommandLine)
-        # cmakeResult = systemManager.execute(cmakeCommandLine)
-        # if cmakeResult != 0:
-        #     sys.exit(-1)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
 
         cmakeCommandLine = (
             f"{pathFinder.getCMakeFileName()} "
@@ -171,9 +171,9 @@ class Program :
         )
 
         print("cmake: " + cmakeCommandLine)
-        # cmakeResult = systemManager.execute(cmakeCommandLine)
-        # if cmakeResult != 0:
-        #     sys.exit(-1)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
 
         srcIncludePath = os.path.join(
             cmakeInstallPath,
