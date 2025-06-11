@@ -4,12 +4,14 @@
 #
 # ------------------------------------------------------------------------------
 
+
 import glob
 import os
 import shutil
 import subprocess
 import time
 
+from dirsync import sync
 from PathFinder import *
 
 
@@ -203,44 +205,17 @@ class SystemManager:
         sourcePathName,
         targetPathName,
         filePattern,
-        releaseSpecified,
-        dConsidered,
+        releaseSpecified = True,
+        dConsidered = True,
         hierarchical=False,
         flattenhierarchy=False,
     ):
 
-        sourceFileNames = glob.glob(os.path.join(sourcePathName, filePattern))
-        first = True
+        regexPattern = filePattern.replace(".", "\.")
+        regexPattern = regexPattern.replace("*", ".*")
+        regexPattern = f"^{regexPattern}$"
 
-        for sourceFileName in sourceFileNames:
-            if os.path.isfile(sourceFileName):
-                targetFileName = os.path.join(
-                    targetPathName, os.path.basename(sourceFileName)
-                )
-                if not releaseSpecified:
-                    targetFileName = self.getDebugFileName(targetFileName, dConsidered)
-
-                print('Copying file "%s" to "%s".' % (sourceFileName, targetFileName))
-                if first:
-                    first = False
-                    self.makeDirectory(targetPathName)
-
-                self._copyfile(sourceFileName, targetFileName)
-
-        if hierarchical:
-            for f in os.listdir(sourcePathName):
-                if os.path.isdir(os.path.join(sourcePathName, f)):
-                    tpn = os.path.join(targetPathName, ("" if flattenhierarchy else f))
-                    spn = os.path.join(sourcePathName, f)
-                    self.distributeFiles(
-                        spn,
-                        tpn,
-                        filePattern,
-                        releaseSpecified,
-                        dConsidered,
-                        hierarchical,
-                        flattenhierarchy,
-                    )
+        sync(sourcedir=sourcePathName, targetdir=targetPathName, action='sync', create=True, only=(regexPattern,))
 
     # ----------------------------------------------------------------------
     # Executes a specified command line.
@@ -546,6 +521,7 @@ class SystemManager:
     # ----------------------------------------------------------------------
 
     def _copyfile(self, src, dst):
+
         if not os.path.exists(dst):
             os.makedirs(dst)
 
@@ -553,35 +529,7 @@ class SystemManager:
         shutil.copy2(src=src, dst=dst)
 
     def _copytree(self, src, dst, symlinks=False, ignore=[]):
-
-        shutil.copytree(src, dst, symlinks=symlinks)
-
-        # print("copying " + src + " to " + dst)
-        # names = os.listdir(src)
-
-        # if not os.path.exists(dst):
-        #     os.makedirs(dst)
-        # errors = []
-        # for name in names:
-        #     if name in ignore:
-        #         continue
-        #     srcname = os.path.join(src, name)
-        #     dstname = os.path.join(dst, name)
-        #     try:
-        #         if symlinks and os.path.islink(srcname):
-        #             linkto = os.readlink(srcname)
-        #             os.symlink(linkto, dstname)
-        #         elif os.path.isdir(srcname):
-        #             self._copytree(srcname, dstname, symlinks, ignore)
-        #         else:
-        #             self._copyfile(srcname, dstname)
-        #         # XXX What about devices, sockets etc.?
-        #     except (IOError, os.error) as why:
-        #         errors.append((srcname, dstname, str(why)))
-        #     except CTError as err:
-        #         errors.extend(err.errors)
-        # if errors:
-        #     raise CTError(errors)
+        sync(src, dst, 'sync', create=True)
 
 
 # ------------------------------------------------------------------------------
