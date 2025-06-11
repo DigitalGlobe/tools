@@ -25,6 +25,8 @@ class Program :
     # a description of what the script does
     DESCRIPTION = "Builds the Boost libraries."
     # ----------------------------------------------------------------------
+
+    _BOOST_VERSION = "1.88"
     # ----------------------------------------------------------------------
     # the name of the path that will contain built 32-bit binary files
     _PATH_NAME_BINARY_X86 = "..\\sdk\\x86\\bin"
@@ -53,6 +55,7 @@ class Program :
     # the name of the path that contains the cmake files
     _PATH_NAME_CMAKE_SOURCE = "."
     _PATH_NAME_CMAKE_BUILD = "build"
+    _PATH_NAME_CMAKE_INSTALL = "install"
 
     # --------------------------------------------------------------------------
     # constructors
@@ -101,15 +104,12 @@ class Program :
             )
 
         # get the paths
-        buildPathName = systemManager.getCurrentRelativePathName(
-                Program._PATH_NAME_BUILD
-            )
-        sourcePathName = systemManager.getCurrentRelativePathName(
-                Program._PATH_NAME_SOURCE
-            )
+        buildPathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD)
+        sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
 
         buildSourceName = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
         cmakeBuildPath = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
+        cmakeInstallPath = os.path.join(cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL)
 
         sdkOutDir = (
                 buildPathName
@@ -123,7 +123,7 @@ class Program :
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
-        systemManager.removeDirectory(buildPathName)
+        # systemManager.removeDirectory(buildPathName)
 
         # copy Boost source to the Build area
         systemManager.copyDirectory(sourcePathName, buildPathName)
@@ -145,9 +145,9 @@ class Program :
         )
 
         print("cmake: " + cmakeCommandLine)
-        cmakeResult = systemManager.execute(cmakeCommandLine)
-        if cmakeResult != 0:
-            sys.exit(-1)
+        # cmakeResult = systemManager.execute(cmakeCommandLine)
+        # if cmakeResult != 0:
+        #     sys.exit(-1)
 
         cmakeCommandLine = (
             f"{pathFinder.getCMakeFileName()} "
@@ -157,9 +157,9 @@ class Program :
         )
 
         print("cmake: " + cmakeCommandLine)
-        cmakeResult = systemManager.execute(cmakeCommandLine)
-        if cmakeResult != 0:
-            sys.exit(-1)
+        # cmakeResult = systemManager.execute(cmakeCommandLine)
+        # if cmakeResult != 0:
+        #     sys.exit(-1)
 
         cmakeCommandLine = (
             f"{pathFinder.getCMakeFileName()} "
@@ -171,27 +171,39 @@ class Program :
         )
 
         print("cmake: " + cmakeCommandLine)
-        cmakeResult = systemManager.execute(cmakeCommandLine)
-        if cmakeResult != 0:
-            sys.exit(-1)
+        # cmakeResult = systemManager.execute(cmakeCommandLine)
+        # if cmakeResult != 0:
+        #     sys.exit(-1)
 
-        systemManager.removeDirectory(os.path.join( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE))
+        srcIncludePath = os.path.join(
+            cmakeInstallPath,
+            "include",
+            f'boost-{Program._BOOST_VERSION.replace(".", "_")}',
+            "boost"
+            )
+
         systemManager.distributeFiles(
-            buildPathName,
+            srcIncludePath,
             os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
-            "*.hpp",
-            True,
-            False,
-            True,
+            "*.h*"
+        )
+
+        systemManager.distributeFiles(
+            os.path.join(cmakeInstallPath, "lib"),
+            sdkOutDir,
+            "*.lib",
         )
         systemManager.distributeFiles(
-            buildPathName,
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
-            "*.h",
-            True,
-            False,
-            True,
+            os.path.join(cmakeInstallPath, "bin"),
+            sdkOutDir,
+            "*.dll",
         )
+        if not buildSettings.ReleaseSpecified():
+            systemManager.distributeFiles(
+                os.path.join(cmakeInstallPath, "bin"),
+                sdkOutDir, "lib",
+                "*.pdb",
+            )
 
     # ----------------------------------------------------------------------
 

@@ -120,9 +120,12 @@ class Program:
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
         )
+
         buildSourceName = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
         cmakeBuildPath = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
-        cmakeInstallPath = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_INSTALL)
+        cmakeInstallPath = os.path.join(cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL)
+
+        systemManager.removeDirectory(cmakeBuildPath)
 
         sdkOutDir = (
             buildPathName
@@ -136,7 +139,7 @@ class Program:
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
-        systemManager.removeDirectory(buildPathName)
+        # systemManager.removeDirectory(buildPathName)
 
         # copy APR source to the Build area
         systemManager.copyDirectory(sourcePathName, buildPathName)
@@ -190,15 +193,15 @@ class Program:
         if cmakeResult != 0:
             sys.exit(-1)
 
-        systemManager.removeDirectory(
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
-        )
-        systemManager.distributeFiles(
+        srcIncludePath = os.path.join(
             cmakeInstallPath,
+            "include"
+        )
+
+        systemManager.distributeFiles(
+            srcIncludePath,
             os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
-            "*.h",
-            True,
-            False,
+            "*.h*"
         )
 
         dllName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".dll"
