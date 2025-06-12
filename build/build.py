@@ -218,9 +218,8 @@ class Program :
                     # self._build(Program._FILE_NAME_BUILD_APR        )
                     # self._build(Program._FILE_NAME_BUILD_BISON      )
                     # self._build(Program._FILE_NAME_BUILD_BOOST      )
-                    #self._build(Program._FILE_NAME_BUILD_CPPUNIT    )
-                    self._build(Program._FILE_NAME_BUILD_CRYPTO     )
-                    self._build(Program._FILE_NAME_BUILD_CURL       )
+                    # self._build(Program._FILE_NAME_BUILD_CPPUNIT    )
+                    # self._build(Program._FILE_NAME_BUILD_CRYPTO     )
                     self._build(Program._FILE_NAME_BUILD_EXPAT      )
                     self._build(Program._FILE_NAME_BUILD_FIREBIRD   )
                     self._build(Program._FILE_NAME_BUILD_GALIB      )
@@ -251,6 +250,7 @@ class Program :
 
                 # build libraries that depend on other libraries
                 #     (order does matter)
+                self._build(Program._FILE_NAME_BUILD_CURL       )
                 self._build(Program._FILE_NAME_BUILD_QT         )
                 self._build(Program._FILE_NAME_BUILD_QXRUNNER   )
                 self._build(Program._FILE_NAME_BUILD_FREETYPE   )
