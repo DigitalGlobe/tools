@@ -77,14 +77,15 @@ class Program:
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
         )
-        sdkOutDir = (
-            buildPathName
-            + "\\..\\"
-            + (
+
+        sdkOutDir = os.path.join(
+            buildPathName,
+            "..",
+            (
                 Program._PATH_NAME_DISTRIBUTION_X64
                 if buildSettings.X64Specified()
                 else Program._PATH_NAME_DISTRIBUTION_X86
-            )
+            ),
         )
 
         # remove build dir

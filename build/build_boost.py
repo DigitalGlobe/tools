@@ -111,15 +111,15 @@ class Program :
         cmakeBuildPath = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
         cmakeInstallPath = os.path.join(cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL)
 
-        sdkOutDir = (
-                buildPathName
-                + "\\..\\"
-                + (
-                    Program._PATH_NAME_DISTRIBUTION_X64
-                    if buildSettings.X64Specified()
-                    else Program._PATH_NAME_DISTRIBUTION_X86
-                )
-            )
+        sdkOutDir = os.path.join(
+            buildPathName,
+            "..",
+            (
+                Program._PATH_NAME_DISTRIBUTION_X64
+                if buildSettings.X64Specified()
+                else Program._PATH_NAME_DISTRIBUTION_X86
+            ),
+        )
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
