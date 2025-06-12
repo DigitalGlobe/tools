@@ -1,4 +1,5 @@
-/*
+/* Interface to some helper routines used to accumulate and check
+   structured content.
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
                         / _ \\  /| '_ \ / _` | __|
@@ -6,9 +7,7 @@
                         \___/_/\_\ .__/ \__,_|\__|
                                  |_| XML parser
 
-   Copyright (c) 2000      Clark Cooper <coopercc@users.sourceforge.net>
-   Copyright (c) 2000-2004 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
-   Copyright (c) 2021      Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2017 Rhodri James <rhodri@wildebeest.org.uk>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -31,17 +30,40 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/* Stop not using half the screen */
-body {
-  max-width: none; /* was: 80ch */
-}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-.cpp-symbols dt {
-  font-family: monospace;
-}
+#ifndef XML_STRUCTDATA_H
+#  define XML_STRUCTDATA_H 1
 
-/* Resemble style of <footer> which is not part of xhtml1-strict */
-.footer {
-  font-size: var(--ok-fs-5);
-  color: var(--ok-tc-1);
+#  include "expat.h"
+
+typedef struct {
+  const XML_Char *str;
+  int data0;
+  int data1;
+  int data2;
+} StructDataEntry;
+
+typedef struct {
+  int count;     /* Number of entries used */
+  int max_count; /* Number of StructDataEntry items in `entries` */
+  StructDataEntry *entries;
+} StructData;
+
+void StructData_Init(StructData *storage);
+
+void StructData_AddItem(StructData *storage, const XML_Char *s, int data0,
+                        int data1, int data2);
+
+void StructData_CheckItems(StructData *storage, const StructDataEntry *expected,
+                           int count);
+
+void StructData_Dispose(StructData *storage);
+
+#endif /* XML_STRUCTDATA_H */
+
+#ifdef __cplusplus
 }
+#endif

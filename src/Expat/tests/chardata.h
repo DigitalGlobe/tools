@@ -1,4 +1,5 @@
-/*
+/* Interface to some helper routines used to accumulate and check text
+   and attribute content.
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
                         / _ \\  /| '_ \ / _` | __|
@@ -6,9 +7,9 @@
                         \___/_/\_\ .__/ \__,_|\__|
                                  |_| XML parser
 
-   Copyright (c) 2000      Clark Cooper <coopercc@users.sourceforge.net>
-   Copyright (c) 2000-2004 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
-   Copyright (c) 2021      Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2002-2004 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
+   Copyright (c) 2017      Rhodri James <rhodri@wildebeest.org.uk>
+   Copyright (c) 2017      Sebastian Pipping <sebastian@pipping.org>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -31,17 +32,30 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/* Stop not using half the screen */
-body {
-  max-width: none; /* was: 80ch */
-}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-.cpp-symbols dt {
-  font-family: monospace;
-}
+#ifndef XML_CHARDATA_H
+#  define XML_CHARDATA_H 1
 
-/* Resemble style of <footer> which is not part of xhtml1-strict */
-.footer {
-  font-size: var(--ok-fs-5);
-  color: var(--ok-tc-1);
+#  ifndef XML_VERSION
+#    include "expat.h" /* need XML_Char */
+#  endif
+
+typedef struct {
+  int count; /* # of chars, < 0 if not set */
+  XML_Char data[2048];
+} CharData;
+
+void CharData_Init(CharData *storage);
+
+void CharData_AppendXMLChars(CharData *storage, const XML_Char *s, int len);
+
+int CharData_CheckXMLChars(CharData *storage, const XML_Char *s);
+
+#endif /* XML_CHARDATA_H */
+
+#ifdef __cplusplus
 }
+#endif

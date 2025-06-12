@@ -6,9 +6,8 @@
                         \___/_/\_\ .__/ \__,_|\__|
                                  |_| XML parser
 
-   Copyright (c) 2000      Clark Cooper <coopercc@users.sourceforge.net>
-   Copyright (c) 2000-2004 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
-   Copyright (c) 2021      Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2022 Mark Brand <markbrand@google.com>
+   Copyright (c) 2025 Sebastian Pipping <sebastian@pipping.org>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -31,17 +30,29 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/* Stop not using half the screen */
-body {
-  max-width: none; /* was: 80ch */
+syntax = "proto2";
+package xml_lpm_fuzzer;
+
+enum Encoding {
+  UTF8 = 0;
+  UTF16 = 1;
+  ISO88591 = 2;
+  ASCII = 3;
+  UNKNOWN = 4;
+  NONE = 5;
 }
 
-.cpp-symbols dt {
-  font-family: monospace;
+message Action {
+  oneof action {
+    string chunk = 1;
+    string last_chunk = 2;
+    bool reset = 3;
+    string external_entity = 4;
+  }
 }
 
-/* Resemble style of <footer> which is not part of xhtml1-strict */
-.footer {
-  font-size: var(--ok-fs-5);
-  color: var(--ok-tc-1);
+message Testcase {
+  required Encoding encoding = 1;
+  repeated Action actions = 2;
+  repeated int32 fail_allocations = 3;
 }

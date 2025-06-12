@@ -7,8 +7,10 @@
                                  |_| XML parser
 
    Copyright (c) 2000      Clark Cooper <coopercc@users.sourceforge.net>
-   Copyright (c) 2000-2004 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
-   Copyright (c) 2021      Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2002      Greg Stein <gstein@users.sourceforge.net>
+   Copyright (c) 2005      Karl Waclawek <karl@waclawek.net>
+   Copyright (c) 2017-2023 Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2023      Orgad Shaneh <orgad.shaneh@audiocodes.com>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -31,17 +33,16 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/* Stop not using half the screen */
-body {
-  max-width: none; /* was: 80ch */
-}
+#ifndef WINCONFIG_H
+#define WINCONFIG_H
 
-.cpp-symbols dt {
-  font-family: monospace;
-}
+#ifndef WIN32_LEAN_AND_MEAN
+#  define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#undef WIN32_LEAN_AND_MEAN
 
-/* Resemble style of <footer> which is not part of xhtml1-strict */
-.footer {
-  font-size: var(--ok-fs-5);
-  color: var(--ok-tc-1);
-}
+#include <memory.h>
+#include <string.h>
+
+#endif /* ndef WINCONFIG_H */

@@ -6,9 +6,9 @@
                         \___/_/\_\ .__/ \__,_|\__|
                                  |_| XML parser
 
-   Copyright (c) 2000      Clark Cooper <coopercc@users.sourceforge.net>
-   Copyright (c) 2000-2004 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
-   Copyright (c) 2021      Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 1997-2000 Thai Open Source Software Center Ltd
+   Copyright (c) 2016-2021 Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2017      Rhodri James <rhodri@wildebeest.org.uk>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -31,17 +31,49 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/* Stop not using half the screen */
-body {
-  max-width: none; /* was: 80ch */
-}
+/* Ensures compile-time constants are consistent */
+#include "expat_external.h"
 
-.cpp-symbols dt {
-  font-family: monospace;
-}
-
-/* Resemble style of <footer> which is not part of xhtml1-strict */
-.footer {
-  font-size: var(--ok-fs-5);
-  color: var(--ok-tc-1);
-}
+#ifdef XML_UNICODE
+#  ifndef XML_UNICODE_WCHAR_T
+#    error xmlwf requires a 16-bit Unicode-compatible wchar_t
+#  endif
+#  define _PREPEND_BIG_L(x) L##x
+#  define T(x) _PREPEND_BIG_L(x)
+#  define ftprintf fwprintf
+#  define tfopen _wfopen
+#  define fputts fputws
+#  define puttc putwc
+#  define tcscmp wcscmp
+#  define tcscpy wcscpy
+#  define tcscat wcscat
+#  define tcschr wcschr
+#  define tcsrchr wcsrchr
+#  define tcslen wcslen
+#  define tperror _wperror
+#  define topen _wopen
+#  define tmain wmain
+#  define tremove _wremove
+#  define tchar wchar_t
+#  define tcstof wcstof
+#  define tcstoull wcstoull
+#else /* not XML_UNICODE */
+#  define T(x) x
+#  define ftprintf fprintf
+#  define tfopen fopen
+#  define fputts fputs
+#  define puttc putc
+#  define tcscmp strcmp
+#  define tcscpy strcpy
+#  define tcscat strcat
+#  define tcschr strchr
+#  define tcsrchr strrchr
+#  define tcslen strlen
+#  define tperror perror
+#  define topen open
+#  define tmain main
+#  define tremove remove
+#  define tchar char
+#  define tcstof strtof
+#  define tcstoull strtoull
+#endif /* not XML_UNICODE */

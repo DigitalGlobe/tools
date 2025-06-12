@@ -6,9 +6,9 @@
                         \___/_/\_\ .__/ \__,_|\__|
                                  |_| XML parser
 
-   Copyright (c) 2000      Clark Cooper <coopercc@users.sourceforge.net>
-   Copyright (c) 2000-2004 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
-   Copyright (c) 2021      Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 1997-2000 Thai Open Source Software Center Ltd
+   Copyright (c) 2002      Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
+   Copyright (c) 2016-2017 Sebastian Pipping <sebastian@pipping.org>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -31,17 +31,22 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/* Stop not using half the screen */
-body {
-  max-width: none; /* was: 80ch */
-}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-.cpp-symbols dt {
-  font-family: monospace;
-}
+/* Registered charset names are at most 40 characters long. */
 
-/* Resemble style of <footer> which is not part of xhtml1-strict */
-.footer {
-  font-size: var(--ok-fs-5);
-  color: var(--ok-tc-1);
+#define CHARSET_MAX 41
+
+/* Figure out the charset to use from the ContentType.
+   buf contains the body of the header field (the part after "Content-Type:").
+   charset gets the charset to use.  It must be at least CHARSET_MAX chars
+   long.  charset will be empty if the default charset should be used.
+*/
+
+void getXMLCharset(const char *buf, char *charset);
+
+#ifdef __cplusplus
 }
+#endif

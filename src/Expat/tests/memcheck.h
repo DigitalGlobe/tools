@@ -1,4 +1,5 @@
-/*
+/* Interface to allocation functions that will track what has or has
+   not been freed.
                             __  __            _
                          ___\ \/ /_ __   __ _| |_
                         / _ \\  /| '_ \ / _` | __|
@@ -6,9 +7,8 @@
                         \___/_/\_\ .__/ \__,_|\__|
                                  |_| XML parser
 
-   Copyright (c) 2000      Clark Cooper <coopercc@users.sourceforge.net>
-   Copyright (c) 2000-2004 Fred L. Drake, Jr. <fdrake@users.sourceforge.net>
-   Copyright (c) 2021      Sebastian Pipping <sebastian@pipping.org>
+   Copyright (c) 2017 Rhodri James <rhodri@wildebeest.org.uk>
+   Copyright (c) 2017 Sebastian Pipping <sebastian@pipping.org>
    Licensed under the MIT license:
 
    Permission is  hereby granted,  free of charge,  to any  person obtaining
@@ -31,17 +31,27 @@
    USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/* Stop not using half the screen */
-body {
-  max-width: none; /* was: 80ch */
-}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-.cpp-symbols dt {
-  font-family: monospace;
-}
+#ifndef XML_MEMCHECK_H
+#  define XML_MEMCHECK_H 1
 
-/* Resemble style of <footer> which is not part of xhtml1-strict */
-.footer {
-  font-size: var(--ok-fs-5);
-  color: var(--ok-tc-1);
+/* Allocation declarations */
+
+void *tracking_malloc(size_t size);
+void tracking_free(void *ptr);
+void *tracking_realloc(void *ptr, size_t size);
+
+/* End-of-test check to see if unfreed allocations remain. Returns
+ * TRUE (1) if there is nothing, otherwise prints a report of the
+ * remaining allocations and returns FALSE (0).
+ */
+int tracking_report(void);
+
+#endif /* XML_MEMCHECK_H */
+
+#ifdef __cplusplus
 }
+#endif
