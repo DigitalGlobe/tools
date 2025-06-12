@@ -111,6 +111,8 @@ class Program :
         cmakeBuildPath = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
         cmakeInstallPath = os.path.join(cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL)
 
+        systemManager.removeDirectory(cmakeBuildPath)
+
         sdkOutDir = os.path.join(
             buildPathName,
             "..",
