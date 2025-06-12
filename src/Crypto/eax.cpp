@@ -1,4 +1,4 @@
-// eax.cpp - written and placed in the public domain by Wei Dai
+// eax.cpp - originally written and placed in the public domain by Wei Dai
 
 #include "pch.h"
 #include "eax.h"
@@ -16,7 +16,7 @@ void EAX_Base::Resync(const byte *iv, size_t len)
 	MessageAuthenticationCode &mac = AccessMAC();
 	unsigned int blockSize = mac.TagSize();
 
-	memset(m_buffer, 0, blockSize);
+	std::memset(m_buffer, 0, blockSize);
 	mac.Update(m_buffer, blockSize);
 	mac.CalculateDigest(m_buffer+blockSize, iv, len);
 
@@ -34,21 +34,21 @@ size_t EAX_Base::AuthenticateBlocks(const byte *data, size_t len)
 
 void EAX_Base::AuthenticateLastHeaderBlock()
 {
-	assert(m_bufferedDataLength == 0);
+	CRYPTOPP_ASSERT(m_bufferedDataLength == 0);
 	MessageAuthenticationCode &mac = AccessMAC();
-	unsigned int blockSize = mac.TagSize();
+	const unsigned int blockSize = mac.TagSize();
 
 	mac.Final(m_buffer);
 	xorbuf(m_buffer+blockSize, m_buffer, blockSize);
 
-	memset(m_buffer, 0, blockSize);
+	std::memset(m_buffer, 0, blockSize);
 	m_buffer[blockSize-1] = 2;
 	mac.Update(m_buffer, blockSize);
 }
 
 void EAX_Base::AuthenticateLastFooterBlock(byte *tag, size_t macSize)
 {
-	assert(m_bufferedDataLength == 0);
+	CRYPTOPP_ASSERT(m_bufferedDataLength == 0);
 	MessageAuthenticationCode &mac = AccessMAC();
 	unsigned int blockSize = mac.TagSize();
 

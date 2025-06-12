@@ -1,4 +1,4 @@
-// nbtheory.cpp - written and placed in the public domain by Wei Dai
+// nbtheory.cpp - originally written and placed in the public domain by Wei Dai
 
 #include "pch.h"
 
@@ -10,9 +10,7 @@
 #include "algparam.h"
 #include "smartptr.h"
 #include "misc.h"
-
-#include <math.h>
-#include <vector>
+#include "stdcpp.h"
 
 #ifdef _OPENMP
 # include <omp.h>
@@ -20,43 +18,15 @@
 
 NAMESPACE_BEGIN(CryptoPP)
 
+// Keep sync'd with primetab.cpp
+const unsigned int maxPrimeTableSize = 3511;
 const word s_lastSmallPrime = 32719;
-
-struct NewPrimeTable
-{
-	std::vector<word16> * operator()() const
-	{
-		const unsigned int maxPrimeTableSize = 3511;
-
-		member_ptr<std::vector<word16> > pPrimeTable(new std::vector<word16>);
-		std::vector<word16> &primeTable = *pPrimeTable;
-		primeTable.reserve(maxPrimeTableSize);
-
-		primeTable.push_back(2);
-		unsigned int testEntriesEnd = 1;
-
-		for (unsigned int p=3; p<=s_lastSmallPrime; p+=2)
-		{
-			unsigned int j;
-			for (j=1; j<testEntriesEnd; j++)
-				if (p%primeTable[j] == 0)
-					break;
-			if (j == testEntriesEnd)
-			{
-				primeTable.push_back(word16(p));
-				testEntriesEnd = UnsignedMin(54U, primeTable.size());
-			}
-		}
-
-		return pPrimeTable.release();
-	}
-};
 
 const word16 * GetPrimeTable(unsigned int &size)
 {
-	const std::vector<word16> &primeTable = Singleton<std::vector<word16>, NewPrimeTable>().Ref();
-	size = (unsigned int)primeTable.size();
-	return &primeTable[0];
+	extern const word16 precomputedPrimeTable[maxPrimeTableSize];
+	size = maxPrimeTableSize;
+	return precomputedPrimeTable;
 }
 
 bool IsSmallPrime(const Integer &p)
@@ -75,7 +45,7 @@ bool TrialDivision(const Integer &p, unsigned bound)
 	unsigned int primeTableSize;
 	const word16 * primeTable = GetPrimeTable(primeTableSize);
 
-	assert(primeTable[primeTableSize-1] >= bound);
+	CRYPTOPP_ASSERT(primeTable[primeTableSize-1] >= bound);
 
 	unsigned int i;
 	for (i = 0; primeTable[i]<bound; i++)
@@ -100,7 +70,7 @@ bool IsFermatProbablePrime(const Integer &n, const Integer &b)
 	if (n <= 3)
 		return n==2 || n==3;
 
-	assert(n>3 && b>1 && b<n-1);
+	CRYPTOPP_ASSERT(n>3 && b>1 && b<n-1);
 	return a_exp_b_mod_c(b, n-1, n)==1;
 }
 
@@ -109,7 +79,7 @@ bool IsStrongProbablePrime(const Integer &n, const Integer &b)
 	if (n <= 3)
 		return n==2 || n==3;
 
-	assert(n>3 && b>1 && b<n-1);
+	CRYPTOPP_ASSERT(n>3 && b>1 && b<n-1);
 
 	if ((n.IsEven() && n!=2) || GCD(b, n) != 1)
 		return false;
@@ -142,7 +112,7 @@ bool RabinMillerTest(RandomNumberGenerator &rng, const Integer &n, unsigned int 
 	if (n <= 3)
 		return n==2 || n==3;
 
-	assert(n>3);
+	CRYPTOPP_ASSERT(n>3);
 
 	Integer b;
 	for (unsigned int i=0; i<rounds; i++)
@@ -162,7 +132,7 @@ bool IsLucasProbablePrime(const Integer &n)
 	if (n.IsEven())
 		return n==2;
 
-	assert(n>2);
+	CRYPTOPP_ASSERT(n>2);
 
 	Integer b=3;
 	unsigned int i=0;
@@ -189,7 +159,7 @@ bool IsStrongLucasProbablePrime(const Integer &n)
 	if (n.IsEven())
 		return n==2;
 
-	assert(n>2);
+	CRYPTOPP_ASSERT(n>2);
 
 	Integer b=3;
 	unsigned int i=0;
@@ -310,7 +280,7 @@ PrimeSieve::PrimeSieve(const Integer &first, const Integer &last, const Integer 
 bool PrimeSieve::NextCandidate(Integer &c)
 {
 	bool safe = SafeConvert(std::find(m_sieve.begin()+m_next, m_sieve.end(), false) - m_sieve.begin(), m_next);
-	CRYPTOPP_UNUSED(safe); assert(safe);
+	CRYPTOPP_UNUSED(safe); CRYPTOPP_ASSERT(safe);
 	if (m_next == m_sieve.size())
 	{
 		m_first += long(m_sieve.size())*m_step;
@@ -363,7 +333,7 @@ void PrimeSieve::DoSieve()
 	}
 	else
 	{
-		assert(m_step%2==0);
+		CRYPTOPP_ASSERT(m_step%2==0);
 		Integer qFirst = (m_first-m_delta) >> 1;
 		Integer halfStep = m_step >> 1;
 		for (unsigned int i = 0; i < primeTableSize; ++i)
@@ -380,7 +350,7 @@ void PrimeSieve::DoSieve()
 
 bool FirstPrime(Integer &p, const Integer &max, const Integer &equiv, const Integer &mod, const PrimeSelector *pSelector)
 {
-	assert(!equiv.IsNegative() && equiv < mod);
+	CRYPTOPP_ASSERT(!equiv.IsNegative() && equiv < mod);
 
 	Integer gcd = GCD(equiv, mod);
 	if (gcd != Integer::One())
@@ -420,7 +390,7 @@ bool FirstPrime(Integer &p, const Integer &max, const Integer &equiv, const Inte
 		p = primeTable[primeTableSize-1]+1;
 	}
 
-	assert(p > primeTable[primeTableSize-1]);
+	CRYPTOPP_ASSERT(p > primeTable[primeTableSize-1]);
 
 	if (mod.IsOdd())
 		return FirstPrime(p, max, CRT(equiv, mod, 1, 2, 1), mod<<1, pSelector);
@@ -444,13 +414,13 @@ bool FirstPrime(Integer &p, const Integer &max, const Integer &equiv, const Inte
 // the following two functions are based on code and comments provided by Preda Mihailescu
 static bool ProvePrime(const Integer &p, const Integer &q)
 {
-	assert(p < q*q*q);
-	assert(p % q == 1);
+	CRYPTOPP_ASSERT(p < q*q*q);
+	CRYPTOPP_ASSERT(p % q == 1);
 
 // this is the Quisquater test. Numbers p having passed the Lucas - Lehmer test
 // for q and verifying p < q^3 can only be built up of two factors, both = 1 mod q,
 // or be prime. The next two lines build the discriminant of a quadratic equation
-// which holds iff p is built up of two factors (excercise ... )
+// which holds iff p is built up of two factors (exercise ... )
 
 	Integer r = (p-1)/q;
 	if (((r%q).Squared()-4*(r/q)).IsSquare())
@@ -459,7 +429,7 @@ static bool ProvePrime(const Integer &p, const Integer &q)
 	unsigned int primeTableSize;
 	const word16 * primeTable = GetPrimeTable(primeTableSize);
 
-	assert(primeTableSize >= 50);
+	CRYPTOPP_ASSERT(primeTableSize >= 50);
 	for (int i=0; i<50; i++)
 	{
 		Integer b = a_exp_b_mod_c(primeTable[i], r, p);
@@ -492,7 +462,7 @@ Integer MihailescuProvablePrime(RandomNumberGenerator &rng, unsigned int pbits)
 		// progression p = p_0 + \lambda * q2 = p_0 + 2 * \lambda * q,
 		// with q the recursively generated prime above. We will be able
 		// to use Lucas tets for proving primality. A trick of Quisquater
-		// allows taking q > cubic_root(p) rather then square_root: this
+		// allows taking q > cubic_root(p) rather than square_root: this
 		// decreases the recursion.
 
 		p.Randomize(rng, minP, maxP, Integer::ANY, 1, q2);
@@ -528,7 +498,7 @@ Integer MaurerProvablePrime(RandomNumberGenerator &rng, unsigned int bits)
 		const unsigned margin = bits > 50 ? 20 : (bits-10)/2;
 		double relativeSize;
 		do
-			relativeSize = pow(2.0, double(rng.GenerateWord32())/0xffffffff - 1);
+			relativeSize = std::pow(2.0, double(rng.GenerateWord32())/0xffffffff - 1);
 		while (bits * relativeSize >= bits - margin);
 
 		Integer a,b;
@@ -616,7 +586,7 @@ Integer ModularSquareRoot(const Integer &a, const Integer &p)
 		b = tempb*y%p;
 	}
 
-	assert(x.Squared()%p == a);
+	CRYPTOPP_ASSERT(x.Squared()%p == a);
 	return x;
 }
 
@@ -626,21 +596,21 @@ bool SolveModularQuadraticEquation(Integer &r1, Integer &r2, const Integer &a, c
 	switch (Jacobi(D, p))
 	{
 	default:
-		assert(false);	// not reached
+		CRYPTOPP_ASSERT(false);	// not reached
 		return false;
 	case -1:
 		return false;
 	case 0:
 		r1 = r2 = (-b*(a+a).InverseMod(p)) % p;
-		assert(((r1.Squared()*a + r1*b + c) % p).IsZero());
+		CRYPTOPP_ASSERT(((r1.Squared()*a + r1*b + c) % p).IsZero());
 		return true;
 	case 1:
 		Integer s = ModularSquareRoot(D, p);
 		Integer t = (a+a).InverseMod(p);
 		r1 = (s-b)*t % p;
 		r2 = (-s-b)*t % p;
-		assert(((r1.Squared()*a + r1*b + c) % p).IsZero());
-		assert(((r2.Squared()*a + r2*b + c) % p).IsZero());
+		CRYPTOPP_ASSERT(((r1.Squared()*a + r1*b + c) % p).IsZero());
+		CRYPTOPP_ASSERT(((r2.Squared()*a + r2*b + c) % p).IsZero());
 		return true;
 	}
 }
@@ -648,6 +618,8 @@ bool SolveModularQuadraticEquation(Integer &r1, Integer &r2, const Integer &a, c
 Integer ModularRoot(const Integer &a, const Integer &dp, const Integer &dq,
 					const Integer &p, const Integer &q, const Integer &u)
 {
+	// GCC warning bug, https://stackoverflow.com/q/12842306/608639
+#ifdef _OPENMP
 	Integer p2, q2;
 	#pragma omp parallel
 		#pragma omp sections
@@ -657,6 +629,11 @@ Integer ModularRoot(const Integer &a, const Integer &dp, const Integer &dq,
 			#pragma omp section
 				q2 = ModularExponentiation((a % q), dq, q);
 		}
+#else
+	const Integer p2 = ModularExponentiation((a % p), dp, p);
+	const Integer q2 = ModularExponentiation((a % q), dq, q);
+#endif
+
 	return CRT(p2, p, q2, q, u);
 }
 
@@ -666,7 +643,7 @@ Integer ModularRoot(const Integer &a, const Integer &e,
 	Integer dp = EuclideanMultiplicativeInverse(e, p-1);
 	Integer dq = EuclideanMultiplicativeInverse(e, q-1);
 	Integer u = EuclideanMultiplicativeInverse(p, q);
-	assert(!!dp && !!dq && !!u);
+	CRYPTOPP_ASSERT(!!dp && !!dq && !!u);
 	return ModularRoot(a, dp, dq, p, q, u);
 }
 
@@ -676,7 +653,7 @@ Integer GCDI(const Integer &x, const Integer &y)
 	Integer a=x, b=y;
 	unsigned k=0;
 
-	assert(!!a && !!b);
+	CRYPTOPP_ASSERT(!!a && !!b);
 
 	while (a[0]==0 && b[0]==0)
 	{
@@ -711,14 +688,14 @@ Integer GCDI(const Integer &x, const Integer &y)
 				break;
 
 			default:
-				assert(false);
+				CRYPTOPP_ASSERT(false);
 		}
 	}
 }
 
 Integer EuclideanMultiplicativeInverse(const Integer &a, const Integer &b)
 {
-	assert(b.Positive());
+	CRYPTOPP_ASSERT(b.Positive());
 
 	if (a.Negative())
 		return EuclideanMultiplicativeInverse(a%b, b);
@@ -786,7 +763,7 @@ Integer EuclideanMultiplicativeInverse(const Integer &a, const Integer &b)
 
 int Jacobi(const Integer &aIn, const Integer &bIn)
 {
-	assert(bIn.IsOdd());
+	CRYPTOPP_ASSERT(bIn.IsOdd());
 
 	Integer b = bIn, a = aIn%bIn;
 	int result = 1;
@@ -842,7 +819,7 @@ Integer Lucas(const Integer &e, const Integer &pIn, const Integer &n)
 	return m.ConvertOut(v);
 }
 
-// This is Peter Montgomery's unpublished Lucas sequence evalutation algorithm.
+// This is Peter Montgomery's unpublished Lucas sequence evaluation algorithm.
 // The total number of multiplies and squares used is less than the binary
 // algorithm (see above).  Unfortunately I can't get it to run as fast as
 // the binary algorithm because of the extra overhead.
@@ -979,7 +956,7 @@ Integer Lucas(const Integer &n, const Integer &P, const Integer &modulus)
 				continue;
 			}
 
-			assert(em2 == 0);
+			CRYPTOPP_ASSERT(em2 == 0);
 			// #9
 			e >>= 1;
 			C = f(C, B, A);
@@ -999,8 +976,10 @@ Integer Lucas(const Integer &n, const Integer &P, const Integer &modulus)
 
 Integer InverseLucas(const Integer &e, const Integer &m, const Integer &p, const Integer &q, const Integer &u)
 {
-	Integer d = (m*m-4);
-	Integer p2, q2;
+
+	// GCC warning bug, https://stackoverflow.com/q/12842306/608639
+#ifdef _OPENMP
+	Integer d = (m*m-4), p2, q2;
 	#pragma omp parallel
 		#pragma omp sections
 		{
@@ -1015,6 +994,15 @@ Integer InverseLucas(const Integer &e, const Integer &m, const Integer &p, const
 				q2 = Lucas(EuclideanMultiplicativeInverse(e,q2), m, q);
 			}
 		}
+#else
+	const Integer d = (m*m-4);
+	const Integer t1 = p-Jacobi(d,p);
+	const Integer p2 = Lucas(EuclideanMultiplicativeInverse(e,t1), m, p);
+
+	const Integer t2 = q-Jacobi(d,q);
+	const Integer q2 = Lucas(EuclideanMultiplicativeInverse(e,t2), m, q);
+#endif
+
 	return CRT(p2, p, q2, q, u);
 }
 
@@ -1023,14 +1011,14 @@ unsigned int FactoringWorkFactor(unsigned int n)
 	// extrapolated from the table in Odlyzko's "The Future of Integer Factorization"
 	// updated to reflect the factoring of RSA-130
 	if (n<5) return 0;
-	else return (unsigned int)(2.4 * pow((double)n, 1.0/3.0) * pow(log(double(n)), 2.0/3.0) - 5);
+	else return (unsigned int)(2.4 * std::pow((double)n, 1.0/3.0) * std::pow(log(double(n)), 2.0/3.0) - 5);
 }
 
 unsigned int DiscreteLogWorkFactor(unsigned int n)
 {
 	// assuming discrete log takes about the same time as factoring
 	if (n<5) return 0;
-	else return (unsigned int)(2.4 * pow((double)n, 1.0/3.0) * pow(log(double(n)), 2.0/3.0) - 5);
+	else return (unsigned int)(2.4 * std::pow((double)n, 1.0/3.0) * std::pow(log(double(n)), 2.0/3.0) - 5);
 }
 
 // ********************************************************
@@ -1038,8 +1026,8 @@ unsigned int DiscreteLogWorkFactor(unsigned int n)
 void PrimeAndGenerator::Generate(signed int delta, RandomNumberGenerator &rng, unsigned int pbits, unsigned int qbits)
 {
 	// no prime exists for delta = -1, qbits = 4, and pbits = 5
-	assert(qbits > 4);
-	assert(pbits > qbits);
+	CRYPTOPP_ASSERT(qbits > 4);
+	CRYPTOPP_ASSERT(pbits > qbits);
 
 	if (qbits+1 == pbits)
 	{
@@ -1054,9 +1042,9 @@ void PrimeAndGenerator::Generate(signed int delta, RandomNumberGenerator &rng, u
 
 			while (sieve.NextCandidate(p))
 			{
-				assert(IsSmallPrime(p) || SmallDivisorsTest(p));
+				CRYPTOPP_ASSERT(IsSmallPrime(p) || SmallDivisorsTest(p));
 				q = (p-delta) >> 1;
-				assert(IsSmallPrime(q) || SmallDivisorsTest(q));
+				CRYPTOPP_ASSERT(IsSmallPrime(q) || SmallDivisorsTest(q));
 				if (FastProbablePrimeTest(q) && FastProbablePrimeTest(p) && IsPrime(q) && IsPrime(p))
 				{
 					success = true;
@@ -1071,11 +1059,11 @@ void PrimeAndGenerator::Generate(signed int delta, RandomNumberGenerator &rng, u
 			// g=4 always works, but this way we get the smallest quadratic residue (other than 1)
 			for (g=2; Jacobi(g, p) != 1; ++g) {}
 			// contributed by Walt Tuvell: g should be the following according to the Law of Quadratic Reciprocity
-			assert((p%8==1 || p%8==7) ? g==2 : (p%12==1 || p%12==11) ? g==3 : g==4);
+			CRYPTOPP_ASSERT((p%8==1 || p%8==7) ? g==2 : (p%12==1 || p%12==11) ? g==3 : g==4);
 		}
 		else
 		{
-			assert(delta == -1);
+			CRYPTOPP_ASSERT(delta == -1);
 			// find g such that g*g-4 is a quadratic non-residue,
 			// and such that g has order q
 			for (g=3; ; ++g)
@@ -1103,11 +1091,11 @@ void PrimeAndGenerator::Generate(signed int delta, RandomNumberGenerator &rng, u
 				Integer h(rng, 2, p-2, Integer::ANY);
 				g = a_exp_b_mod_c(h, (p-1)/q, p);
 			} while (g <= 1);
-			assert(a_exp_b_mod_c(g, q, p)==1);
+			CRYPTOPP_ASSERT(a_exp_b_mod_c(g, q, p)==1);
 		}
 		else
 		{
-			assert(delta==-1);
+			CRYPTOPP_ASSERT(delta==-1);
 			do
 			{
 				Integer h(rng, 3, p-1, Integer::ANY);
@@ -1115,7 +1103,7 @@ void PrimeAndGenerator::Generate(signed int delta, RandomNumberGenerator &rng, u
 					continue;
 				g = Lucas((p+1)/q, h, p);
 			} while (g <= 2);
-			assert(Lucas(q, g, p) == 2);
+			CRYPTOPP_ASSERT(Lucas(q, g, p) == 2);
 		}
 	}
 }

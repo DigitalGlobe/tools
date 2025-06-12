@@ -1,4 +1,4 @@
-// ccm.cpp - written and placed in the public domain by Wei Dai
+// ccm.cpp - originally written and placed in the public domain by Wei Dai
 
 #include "pch.h"
 
@@ -11,7 +11,6 @@ NAMESPACE_BEGIN(CryptoPP)
 void CCM_Base::SetKeyWithoutResync(const byte *userKey, size_t keylength, const NameValuePairs &params)
 {
 	BlockCipher &blockCipher = AccessBlockCipher();
-
 	blockCipher.SetKey(userKey, keylength, params);
 
 	if (blockCipher.BlockSize() != REQUIRED_BLOCKSIZE)
@@ -30,13 +29,13 @@ void CCM_Base::Resync(const byte *iv, size_t len)
 	BlockCipher &cipher = AccessBlockCipher();
 
 	m_L = REQUIRED_BLOCKSIZE-1-(int)len;
-	assert(m_L >= 2);
+	CRYPTOPP_ASSERT(m_L >= 2);
 	if (m_L > 8)
 		m_L = 8;
 
 	m_buffer[0] = byte(m_L-1);	// flag
-	memcpy(m_buffer+1, iv, len);
-	memset(m_buffer+1+len, 0, REQUIRED_BLOCKSIZE-1-len);
+	std::memcpy(m_buffer+1, iv, len);
+	std::memset(m_buffer+1+len, 0, REQUIRED_BLOCKSIZE-1-len);
 
 	if (m_state >= State_IVSet)
 		m_ctr.Resynchronize(m_buffer, REQUIRED_BLOCKSIZE);
@@ -61,12 +60,12 @@ void CCM_Base::UncheckedSpecifyDataLengths(lword headerLength, lword messageLeng
 
 	cbcBuffer[0] = byte(64*(headerLength>0) + 8*((m_digestSize-2)/2) + (m_L-1));	// flag
 	PutWord<word64>(true, BIG_ENDIAN_ORDER, cbcBuffer+REQUIRED_BLOCKSIZE-8, m_messageLength);
-	memcpy(cbcBuffer+1, m_buffer+1, REQUIRED_BLOCKSIZE-1-m_L);
+	std::memcpy(cbcBuffer+1, m_buffer+1, REQUIRED_BLOCKSIZE-1-m_L);
 	cipher.ProcessBlock(cbcBuffer);
 
 	if (headerLength>0)
 	{
-		assert(m_bufferedDataLength == 0);
+		CRYPTOPP_ASSERT(m_bufferedDataLength == 0);
 
 		if (headerLength < ((1<<16) - (1<<8)))
 		{

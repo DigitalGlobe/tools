@@ -288,12 +288,30 @@ class PathFinder:
     #     the name of the Visual Studio include path
     def getATLPathName(self, x64Specified):
 
-        pathName = os.path.join(
-            self._getMSVCPathName(x64Specified),
-            "atlmfc"
-        )
+        pathName = os.path.join(self._getMSVCPathName(x64Specified), "atlmfc")
         if not os.path.exists(pathName):
             raise Exception(f"Bad ATL pathname {pathName}")
+        return pathName
+
+    # ----------------------------------------------------------------------
+    # Gets the name of the ATL  path.
+    #
+    # Parameters :
+    #     self         : this finder
+    #     x64Specified : if <code>true</code>, 64-bit is specified; if
+    #                    <code>false</code>, 32-bit is specified
+    # Returns :
+    #     the name of the Visual Studio include path
+    def getVCVARSPathName(self, x64Specified):
+
+        pathName = os.path.join(
+            self._getVisualStudioPathName(x64Specified),
+            "VC",
+            "Auxiliary",
+            "Build",
+        )
+        if not os.path.exists(pathName):
+            raise Exception(f"Bad VCVars pathname {pathName}")
         return pathName
 
     # ----------------------------------------------------------------------

@@ -1,18 +1,21 @@
-// cmac.cpp - written and placed in the public domain by Wei Dai
+// cmac.cpp - originally written and placed in the public domain by Wei Dai
 
 #include "pch.h"
 
 #ifndef CRYPTOPP_IMPORTS
 
 #include "cmac.h"
+#include "misc.h"
 
-NAMESPACE_BEGIN(CryptoPP)
+ANONYMOUS_NAMESPACE_BEGIN
 
-static void MulU(byte *k, unsigned int length)
+using CryptoPP::byte;
+using CryptoPP::IsPowerOf2;
+
+void MulU(byte *k, unsigned int len)
 {
 	byte carry = 0;
-
-	for (int i=length-1; i>=1; i-=2)
+	for (int i=len-1; i>=1; i-=2)
 	{
 		byte carry2 = k[i] >> 7;
 		k[i] += k[i] + carry;
@@ -20,9 +23,22 @@ static void MulU(byte *k, unsigned int length)
 		k[i-1] += k[i-1] + carry2;
 	}
 
+#ifndef CRYPTOPP_CMAC_WIDE_BLOCK_CIPHERS
+	CRYPTOPP_ASSERT(len == 16);
+
 	if (carry)
 	{
-		switch (length)
+		k[15] ^= 0x87;
+		return;
+	}
+#else
+	CRYPTOPP_ASSERT(IsPowerOf2(len));
+	CRYPTOPP_ASSERT(len >= 8);
+	CRYPTOPP_ASSERT(len <= 128);
+
+	if (carry)
+	{
+		switch (len)
 		{
 		case 8:
 			k[7] ^= 0x1b;
@@ -31,33 +47,53 @@ static void MulU(byte *k, unsigned int length)
 			k[15] ^= 0x87;
 			break;
 		case 32:
+			// https://crypto.stackexchange.com/q/9815/10496
+			// Polynomial x^256 + x^10 + x^5 + x^2 + 1
 			k[30] ^= 4;
-			k[31] ^= 0x23;
+			k[31] ^= 0x25;
+			break;
+		case 64:
+			// https://crypto.stackexchange.com/q/9815/10496
+			// Polynomial x^512 + x^8 + x^5 + x^2 + 1
+			k[62] ^= 1;
+			k[63] ^= 0x25;
+			break;
+		case 128:
+			// https://crypto.stackexchange.com/q/9815/10496
+			// Polynomial x^1024 + x^19 + x^6 + x + 1
+			k[125] ^= 8;
+			k[126] ^= 0x00;
+			k[127] ^= 0x43;
 			break;
 		default:
-			throw InvalidArgument("CMAC: " + IntToString(length) + " is not a supported cipher block size");
+			CRYPTOPP_ASSERT(0);
 		}
 	}
+#endif  // CRYPTOPP_CMAC_WIDE_BLOCK_CIPHERS
 }
+
+ANONYMOUS_NAMESPACE_END
+
+NAMESPACE_BEGIN(CryptoPP)
 
 void CMAC_Base::UncheckedSetKey(const byte *key, unsigned int length, const NameValuePairs &params)
 {
 	BlockCipher &cipher = AccessCipher();
-	unsigned int blockSize = cipher.BlockSize();
-
 	cipher.SetKey(key, length, params);
+
+	unsigned int blockSize = cipher.BlockSize();
 	m_reg.CleanNew(3*blockSize);
 	m_counter = 0;
 
 	cipher.ProcessBlock(m_reg, m_reg+blockSize);
 	MulU(m_reg+blockSize, blockSize);
-	memcpy(m_reg+2*blockSize, m_reg+blockSize, blockSize);
+	std::memcpy(m_reg+2*blockSize, m_reg+blockSize, blockSize);
 	MulU(m_reg+2*blockSize, blockSize);
 }
 
 void CMAC_Base::Update(const byte *input, size_t length)
 {
-	assert((input && length) || !(input || length));
+	CRYPTOPP_ASSERT((input && length) || !(input || length));
 	if (!length)
 		return;
 
@@ -84,7 +120,7 @@ void CMAC_Base::Update(const byte *input, size_t length)
 
 	if (length > blockSize)
 	{
-		assert(m_counter == 0);
+		CRYPTOPP_ASSERT(m_counter == 0);
 		size_t leftOver = 1 + cipher.AdvancedProcessBlocks(m_reg, input, m_reg, length-1, BlockTransformation::BT_DontIncrementInOutPointers|BlockTransformation::BT_XorInput);
 		input += (length - leftOver);
 		length = leftOver;
@@ -92,12 +128,12 @@ void CMAC_Base::Update(const byte *input, size_t length)
 
 	if (length > 0)
 	{
-		assert(m_counter + length <= blockSize);
+		CRYPTOPP_ASSERT(m_counter + length <= blockSize);
 		xorbuf(m_reg+m_counter, input, length);
 		m_counter += (unsigned int)length;
 	}
 
-	assert(m_counter > 0);
+	CRYPTOPP_ASSERT(m_counter > 0);
 }
 
 void CMAC_Base::TruncatedFinal(byte *mac, size_t size)
@@ -115,10 +151,12 @@ void CMAC_Base::TruncatedFinal(byte *mac, size_t size)
 	else
 		cipher.AdvancedProcessBlocks(m_reg, m_reg+blockSize, m_reg, blockSize, BlockTransformation::BT_DontIncrementInOutPointers|BlockTransformation::BT_XorInput);
 
-	memcpy(mac, m_reg, size);
+	// UBsan finding
+	if (mac)
+		std::memcpy(mac, m_reg, size);
 
 	m_counter = 0;
-	memset(m_reg, 0, blockSize);
+	std::memset(m_reg, 0, blockSize);
 }
 
 NAMESPACE_END

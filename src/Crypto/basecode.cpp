@@ -1,15 +1,7 @@
-// basecode.cpp - written and placed in the public domain by Wei Dai
+// basecode.cpp - originally written and placed in the public domain by Wei Dai
 
 #include "pch.h"
 #include "config.h"
-
-#if CRYPTOPP_MSC_VERSION
-# pragma warning(disable: 4100)
-#endif
-
-#if CRYPTOPP_GCC_DIAGNOSTIC_AVAILABLE
-# pragma GCC diagnostic ignored "-Wunused-value"
-#endif
 
 #ifndef CRYPTOPP_IMPORTS
 
@@ -51,13 +43,13 @@ size_t BaseN_Encoder::Put2(const byte *begin, size_t length, int messageEnd, boo
 	while (m_inputPosition < length)
 	{
 		if (m_bytePos == 0)
-			memset(m_outBuf, 0, m_outputBlockSize);
+			std::memset(m_outBuf, 0, m_outputBlockSize);
 
 		{
 		unsigned int b = begin[m_inputPosition++], bitsLeftInSource = 8;
 		while (true)
 		{
-			assert(m_bitsPerChar-m_bitPos >= 0);
+			CRYPTOPP_ASSERT(m_bitsPerChar-m_bitPos >= 0);
 			unsigned int bitsLeftInTarget = (unsigned int)(m_bitsPerChar-m_bitPos);
 			m_outBuf[m_bytePos] |= b >> (8-bitsLeftInTarget);
 			if (bitsLeftInSource >= bitsLeftInTarget)
@@ -78,13 +70,13 @@ size_t BaseN_Encoder::Put2(const byte *begin, size_t length, int messageEnd, boo
 		}
 		}
 
-		assert(m_bytePos <= m_outputBlockSize);
+		CRYPTOPP_ASSERT(m_bytePos <= m_outputBlockSize);
 		if (m_bytePos == m_outputBlockSize)
 		{
 			int i;
 			for (i=0; i<m_bytePos; i++)
 			{
-				assert(m_outBuf[i] < (1 << m_bitsPerChar));
+				CRYPTOPP_ASSERT(m_outBuf[i] < (1 << m_bitsPerChar));
 				m_outBuf[i] = m_alphabet[m_outBuf[i]];
 			}
 			FILTER_OUTPUT(1, m_outBuf, m_outputBlockSize, 0);
@@ -103,7 +95,7 @@ size_t BaseN_Encoder::Put2(const byte *begin, size_t length, int messageEnd, boo
 
 		if (m_padding != -1 && m_bytePos > 0)
 		{
-			memset(m_outBuf+m_bytePos, m_padding, m_outputBlockSize-m_bytePos);
+			std::memset(m_outBuf+m_bytePos, m_padding, m_outputBlockSize-m_bytePos);
 			m_bytePos = m_outputBlockSize;
 		}
 		FILTER_OUTPUT(2, m_outBuf, m_bytePos, messageEnd);
@@ -141,7 +133,7 @@ size_t BaseN_Decoder::Put2(const byte *begin, size_t length, int messageEnd, boo
 			continue;
 
 		if (m_bytePos == 0 && m_bitPos == 0)
-			memset(m_outBuf, 0, m_outputBlockSize);
+			std::memset(m_outBuf, 0, m_outputBlockSize);
 
 		{
 			int newBitPos = m_bitPos + m_bitsPerChar;
@@ -181,16 +173,16 @@ void BaseN_Decoder::InitializeDecodingLookupArray(int *lookup, const byte *alpha
 
 	for (unsigned int i=0; i<base; i++)
 	{
+		// Debug asserts for 'lookup[alphabet[i]] == -1' removed because the self tests
+		// have unusual tests that try to break the encoders and decoders. Tests include
+		// a string of the same characters. I.,e., a string of stars like '********...'.
 		if (caseInsensitive && isalpha(alphabet[i]))
 		{
-			assert(lookup[toupper(alphabet[i])] == -1);
 			lookup[toupper(alphabet[i])] = i;
-			assert(lookup[tolower(alphabet[i])] == -1);
 			lookup[tolower(alphabet[i])] = i;
 		}
 		else
 		{
-			assert(lookup[alphabet[i]] == -1);
 			lookup[alphabet[i]] = i;
 		}
 	}
@@ -225,7 +217,7 @@ size_t Grouper::Put2(const byte *begin, size_t length, int messageEnd, bool bloc
 			}
 
 			size_t len;
-			FILTER_OUTPUT2(2, len = STDMIN(length-m_inputPosition, m_groupSize-m_counter),
+			FILTER_OUTPUT2(2, (len = STDMIN(length-m_inputPosition, m_groupSize-m_counter)),
 				begin+m_inputPosition, len, 0);
 			m_inputPosition += len;
 			m_counter += len;

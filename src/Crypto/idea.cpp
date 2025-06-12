@@ -1,4 +1,4 @@
-// idea.cpp - written and placed in the public domain by Wei Dai
+// idea.cpp - originally written and placed in the public domain by Wei Dai
 
 #include "pch.h"
 #include "idea.h"
@@ -17,8 +17,6 @@ CRYPTOPP_COMPILE_ASSERT(sizeof(IDEA::Word) >= 2);
 // should use an inline function but macros are still faster in MSVC 4.0
 #define DirectMUL(a,b)					\
 {										\
-	assert(b <= 0xffff);				\
-										\
 	word32 p=(word32)low16(a)*b;		\
 										\
 	if (p)								\

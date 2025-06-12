@@ -1,4 +1,4 @@
-// square.cpp - written and placed in the public domain by Wei Dai
+// square.cpp - originally written and placed in the public domain by Wei Dai
 // Based on Paulo S.L.M. Barreto's public domain implementation
 
 #include "pch.h"
@@ -23,10 +23,10 @@ static void SquareTransform (word32 in[4], word32 out[4])
 {
 	static const byte G[4][4] =
 	{
-		0x02U, 0x01U, 0x01U, 0x03U,
-		0x03U, 0x02U, 0x01U, 0x01U,
-		0x01U, 0x03U, 0x02U, 0x01U,
-		0x01U, 0x01U, 0x03U, 0x02U
+		{0x02U, 0x01U, 0x01U, 0x03U},
+		{0x03U, 0x02U, 0x01U, 0x01U},
+		{0x01U, 0x03U, 0x02U, 0x01U},
+		{0x01U, 0x01U, 0x03U, 0x02U}
 	};
 
 	GF256 gf256(0xf5);
@@ -58,7 +58,7 @@ void Square::Base::UncheckedSetKey(const byte *userKey, unsigned int length, con
 	/* apply the key evolution function */
 	for (int i = 1; i < ROUNDS+1; i++)
 	{
-		roundkeys(i, 0) = roundkeys(i-1, 0) ^ rotlFixed(roundkeys(i-1, 3), 8U) ^ offset[i-1];
+		roundkeys(i, 0) = roundkeys(i-1, 0) ^ rotlConstant<8>(roundkeys(i-1, 3)) ^ offset[i-1];
 		roundkeys(i, 1) = roundkeys(i-1, 1) ^ roundkeys(i, 0);
 		roundkeys(i, 2) = roundkeys(i-1, 2) ^ roundkeys(i, 1);
 		roundkeys(i, 3) = roundkeys(i-1, 3) ^ roundkeys(i, 2);
