@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2016, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -17,6 +17,8 @@
  *
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
+ *
+ * SPDX-License-Identifier: curl
  *
  ***************************************************************************/
 #include "test.h"
@@ -34,7 +36,7 @@
  * Example based on source code provided by Erick Nuwendam. Thanks!
  */
 
-int test(char *URL)
+CURLcode test(char *URL)
 {
   CURL *curl;
   CURLcode res = CURLE_OK;
@@ -42,46 +44,47 @@ int test(char *URL)
   int hd;
   struct_stat file_info;
   struct curl_slist *hl;
-  int error;
 
-  struct curl_slist *headerlist=NULL;
+  struct curl_slist *headerlist = NULL;
   const char *buf_1 = "RNFR 505";
   const char *buf_2 = "RNTO 505-forreal";
 
   if(!libtest_arg2) {
-    fprintf(stderr, "Usage: <url> <file-to-upload>\n");
+    curl_mfprintf(stderr, "Usage: <url> <file-to-upload>\n");
     return TEST_ERR_USAGE;
   }
 
   hd_src = fopen(libtest_arg2, "rb");
-  if(NULL == hd_src) {
-    error = ERRNO;
-    fprintf(stderr, "fopen failed with error: %d %s\n",
-            error, strerror(error));
-    fprintf(stderr, "Error opening file: %s\n", libtest_arg2);
+  if(!hd_src) {
+    curl_mfprintf(stderr, "fopen failed with error (%d) %s\n",
+                  errno, strerror(errno));
+    curl_mfprintf(stderr, "Error opening file '%s'\n", libtest_arg2);
     return TEST_ERR_MAJOR_BAD; /* if this happens things are major weird */
   }
 
   /* get the file size of the local file */
+#ifdef UNDER_CE
+  hd = stat(libtest_arg2, &file_info);
+#else
   hd = fstat(fileno(hd_src), &file_info);
+#endif
   if(hd == -1) {
     /* can't open file, bail out */
-    error = ERRNO;
-    fprintf(stderr, "fstat() failed with error: %d %s\n",
-            error, strerror(error));
-    fprintf(stderr, "ERROR: cannot open file %s\n", libtest_arg2);
+    curl_mfprintf(stderr, "fstat() failed with error (%d) %s\n",
+                  errno, strerror(errno));
+    curl_mfprintf(stderr, "Error opening file '%s'\n", libtest_arg2);
     fclose(hd_src);
     return TEST_ERR_MAJOR_BAD;
   }
 
-  if(! file_info.st_size) {
-    fprintf(stderr, "ERROR: file %s has zero size!\n", libtest_arg2);
+  if(!file_info.st_size) {
+    curl_mfprintf(stderr, "File %s has zero size!\n", libtest_arg2);
     fclose(hd_src);
     return TEST_ERR_MAJOR_BAD;
   }
 
   if(curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
-    fprintf(stderr, "curl_global_init() failed\n");
+    curl_mfprintf(stderr, "curl_global_init() failed\n");
     fclose(hd_src);
     return TEST_ERR_MAJOR_BAD;
   }
@@ -89,7 +92,7 @@ int test(char *URL)
   /* get a curl handle */
   curl = curl_easy_init();
   if(!curl) {
-    fprintf(stderr, "curl_easy_init() failed\n");
+    curl_mfprintf(stderr, "curl_easy_init() failed\n");
     curl_global_cleanup();
     fclose(hd_src);
     return TEST_ERR_MAJOR_BAD;
@@ -99,7 +102,7 @@ int test(char *URL)
 
   hl = curl_slist_append(headerlist, buf_1);
   if(!hl) {
-    fprintf(stderr, "curl_slist_append() failed\n");
+    curl_mfprintf(stderr, "curl_slist_append() failed\n");
     curl_easy_cleanup(curl);
     curl_global_cleanup();
     fclose(hd_src);
@@ -107,7 +110,7 @@ int test(char *URL)
   }
   headerlist = curl_slist_append(hl, buf_2);
   if(!headerlist) {
-    fprintf(stderr, "curl_slist_append() failed\n");
+    curl_mfprintf(stderr, "curl_slist_append() failed\n");
     curl_slist_free_all(hl);
     curl_easy_cleanup(curl);
     curl_global_cleanup();

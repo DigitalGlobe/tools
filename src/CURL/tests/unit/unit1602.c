@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2016, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -18,28 +18,30 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
+ * SPDX-License-Identifier: curl
+ *
  ***************************************************************************/
 #include "curlcheck.h"
 
-#define ENABLE_CURLX_PRINTF
-#include "curlx.h"
+#include <curlx.h>
 
 #include "hash.h"
 
-#include "memdebug.h" /* LAST include file */
+#include <memdebug.h> /* LAST include file */
 
-static struct curl_hash hash_static;
+static struct Curl_hash hash_static;
 
 static void mydtor(void *p)
 {
-  int *ptr = (int*)p;
+  int *ptr = (int *)p;
   free(ptr);
 }
 
 static CURLcode unit_setup(void)
 {
-  return Curl_hash_init(&hash_static, 7, Curl_hash_str,
-                        Curl_str_key_compare, mydtor);
+  Curl_hash_init(&hash_static, 7, Curl_hash_str,
+                 curlx_str_key_compare, mydtor);
+  return CURLE_OK;
 }
 
 static void unit_stop(void)

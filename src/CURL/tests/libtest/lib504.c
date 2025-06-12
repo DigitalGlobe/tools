@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2016, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -17,6 +17,8 @@
  *
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
+ *
+ * SPDX-License-Identifier: curl
  *
  ***************************************************************************/
 #include "test.h"
@@ -34,10 +36,10 @@
  * Use multi interface to get document over proxy with bad port number.
  * This caused the interface to "hang" in libcurl 7.10.2.
  */
-int test(char *URL)
+CURLcode test(char *URL)
 {
   CURL *c = NULL;
-  int res = 0;
+  CURLcode res = CURLE_OK;
   CURLM *m = NULL;
   fd_set rd, wr, exc;
   int running;
@@ -66,9 +68,24 @@ int test(char *URL)
     interval.tv_sec = 1;
     interval.tv_usec = 0;
 
-    fprintf(stderr, "curl_multi_perform()\n");
+    curl_mfprintf(stderr, "curl_multi_perform()\n");
 
     multi_perform(m, &running);
+
+    while(running) {
+      CURLMcode mres;
+      int num;
+      mres = curl_multi_wait(m, NULL, 0, TEST_HANG_TIMEOUT, &num);
+      if(mres != CURLM_OK) {
+        curl_mprintf("curl_multi_wait() returned %d\n", mres);
+        res = TEST_ERR_MAJOR_BAD;
+        goto test_cleanup;
+      }
+
+      abort_on_test_timeout();
+      multi_perform(m, &running);
+      abort_on_test_timeout();
+    }
 
     abort_on_test_timeout();
 
@@ -76,26 +93,26 @@ int test(char *URL)
       /* This is where this code is expected to reach */
       int numleft;
       CURLMsg *msg = curl_multi_info_read(m, &numleft);
-      fprintf(stderr, "Expected: not running\n");
+      curl_mfprintf(stderr, "Expected: not running\n");
       if(msg && !numleft)
         res = TEST_ERR_SUCCESS; /* this is where we should be */
       else
         res = TEST_ERR_FAILURE; /* not correct */
       break; /* done */
     }
-    fprintf(stderr, "running == %d\n", running);
+    curl_mfprintf(stderr, "running == %d\n", running);
 
     FD_ZERO(&rd);
     FD_ZERO(&wr);
     FD_ZERO(&exc);
 
-    fprintf(stderr, "curl_multi_fdset()\n");
+    curl_mfprintf(stderr, "curl_multi_fdset()\n");
 
     multi_fdset(m, &rd, &wr, &exc, &maxfd);
 
     /* At this point, maxfd is guaranteed to be greater or equal than -1. */
 
-    select_test(maxfd+1, &rd, &wr, &exc, &interval);
+    select_test(maxfd + 1, &rd, &wr, &exc, &interval);
 
     abort_on_test_timeout();
   }
@@ -111,4 +128,3 @@ test_cleanup:
 
   return res;
 }
-

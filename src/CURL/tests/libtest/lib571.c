@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2016, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -17,6 +17,8 @@
  *
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
+ *
+ * SPDX-License-Identifier: curl
  *
  ***************************************************************************/
 #include "test.h"
@@ -46,47 +48,49 @@
                              ((int)((unsigned char)((p)[3]))))
 
 #define RTP_DATA_SIZE 12
-static const char *RTP_DATA = "$_1234\n\0asdf";
+static const char *RTP_DATA = "$_1234\n\0Rsdf";
 
 static int rtp_packet_count = 0;
 
-static size_t rtp_write(void *ptr, size_t size, size_t nmemb, void *stream) {
+static size_t rtp_write(char *ptr, size_t size, size_t nmemb, void *stream)
+{
   char *data = (char *)ptr;
   int channel = RTP_PKT_CHANNEL(data);
   int message_size;
   int coded_size = RTP_PKT_LENGTH(data);
-  size_t failure = (size * nmemb) ? 0 : 1;
+  size_t failure = (size && nmemb) ? 0 : 1;
   int i;
   (void)stream;
 
   message_size = curlx_uztosi(size * nmemb) - 4;
 
-  printf("RTP: message size %d, channel %d\n", message_size, channel);
+  curl_mprintf("RTP: message size %d, channel %d\n", message_size, channel);
   if(message_size != coded_size) {
-    printf("RTP embedded size (%d) does not match the write size (%d).\n",
-           coded_size, message_size);
+    curl_mprintf("RTP embedded size (%d) does not match "
+                 "the write size (%d).\n",
+                 coded_size, message_size);
     return failure;
   }
 
   data += 4;
-  for(i = 0; i < message_size; i+= RTP_DATA_SIZE) {
+  for(i = 0; i < message_size; i += RTP_DATA_SIZE) {
     if(message_size - i > RTP_DATA_SIZE) {
       if(memcmp(RTP_DATA, data + i, RTP_DATA_SIZE) != 0) {
-        printf("RTP PAYLOAD CORRUPTED [%s]\n", data + i);
-        return failure;
+        curl_mprintf("RTP PAYLOAD CORRUPTED [%s]\n", data + i);
+        /* return failure; */
       }
     }
     else {
       if(memcmp(RTP_DATA, data + i, message_size - i) != 0) {
-        printf("RTP PAYLOAD END CORRUPTED (%d), [%s]\n",
+        curl_mprintf("RTP PAYLOAD END CORRUPTED (%d), [%s]\n",
                message_size - i, data + i);
-        return failure;
+        /* return failure; */
       }
     }
   }
 
   rtp_packet_count++;
-  fprintf(stderr, "packet count is %d\n", rtp_packet_count);
+  curl_mfprintf(stderr, "packet count is %d\n", rtp_packet_count);
 
   return size * nmemb;
 }
@@ -97,44 +101,45 @@ static char *suburl(const char *base, int i)
   return curl_maprintf("%s%.4d", base, i);
 }
 
-int test(char *URL)
+CURLcode test(char *URL)
 {
-  int res;
+  CURLcode res;
   CURL *curl;
   char *stream_uri = NULL;
-  int request=1;
-  FILE *protofile = NULL;
+  int request = 1;
 
-  protofile = fopen(libtest_arg2, "wb");
-  if(protofile == NULL) {
-    fprintf(stderr, "Couldn't open the protocol dump file\n");
+  FILE *protofile = fopen(libtest_arg2, "wb");
+  if(!protofile) {
+    curl_mfprintf(stderr, "Couldn't open the protocol dump file\n");
     return TEST_ERR_MAJOR_BAD;
   }
 
   if(curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
-    fprintf(stderr, "curl_global_init() failed\n");
+    curl_mfprintf(stderr, "curl_global_init() failed\n");
     fclose(protofile);
     return TEST_ERR_MAJOR_BAD;
   }
 
-  if((curl = curl_easy_init()) == NULL) {
-    fprintf(stderr, "curl_easy_init() failed\n");
+  curl = curl_easy_init();
+  if(!curl) {
+    curl_mfprintf(stderr, "curl_easy_init() failed\n");
     fclose(protofile);
     curl_global_cleanup();
     return TEST_ERR_MAJOR_BAD;
   }
   test_setopt(curl, CURLOPT_URL, URL);
 
-  if((stream_uri = suburl(URL, request++)) == NULL) {
+  stream_uri = suburl(URL, request++);
+  if(!stream_uri) {
     res = TEST_ERR_MAJOR_BAD;
     goto test_cleanup;
   }
   test_setopt(curl, CURLOPT_RTSP_STREAM_URI, stream_uri);
-  free(stream_uri);
+  curl_free(stream_uri);
   stream_uri = NULL;
 
   test_setopt(curl, CURLOPT_INTERLEAVEFUNCTION, rtp_write);
-  test_setopt(curl, CURLOPT_TIMEOUT, 3L);
+  test_setopt(curl, CURLOPT_TIMEOUT, 30L);
   test_setopt(curl, CURLOPT_VERBOSE, 1L);
   test_setopt(curl, CURLOPT_WRITEDATA, protofile);
 
@@ -146,12 +151,13 @@ int test(char *URL)
     goto test_cleanup;
 
   /* This PLAY starts the interleave */
-  if((stream_uri = suburl(URL, request++)) == NULL) {
+  stream_uri = suburl(URL, request++);
+  if(!stream_uri) {
     res = TEST_ERR_MAJOR_BAD;
     goto test_cleanup;
   }
   test_setopt(curl, CURLOPT_RTSP_STREAM_URI, stream_uri);
-  free(stream_uri);
+  curl_free(stream_uri);
   stream_uri = NULL;
   test_setopt(curl, CURLOPT_RTSP_REQUEST, CURL_RTSPREQ_PLAY);
 
@@ -160,12 +166,13 @@ int test(char *URL)
     goto test_cleanup;
 
   /* The DESCRIBE request will try to consume data after the Content */
-  if((stream_uri = suburl(URL, request++)) == NULL) {
+  stream_uri = suburl(URL, request++);
+  if(!stream_uri) {
     res = TEST_ERR_MAJOR_BAD;
     goto test_cleanup;
   }
   test_setopt(curl, CURLOPT_RTSP_STREAM_URI, stream_uri);
-  free(stream_uri);
+  curl_free(stream_uri);
   stream_uri = NULL;
   test_setopt(curl, CURLOPT_RTSP_REQUEST, CURL_RTSPREQ_DESCRIBE);
 
@@ -173,12 +180,13 @@ int test(char *URL)
   if(res)
     goto test_cleanup;
 
-  if((stream_uri = suburl(URL, request++)) == NULL) {
+  stream_uri = suburl(URL, request++);
+  if(!stream_uri) {
     res = TEST_ERR_MAJOR_BAD;
     goto test_cleanup;
   }
   test_setopt(curl, CURLOPT_RTSP_STREAM_URI, stream_uri);
-  free(stream_uri);
+  curl_free(stream_uri);
   stream_uri = NULL;
   test_setopt(curl, CURLOPT_RTSP_REQUEST, CURL_RTSPREQ_PLAY);
 
@@ -186,17 +194,17 @@ int test(char *URL)
   if(res)
     goto test_cleanup;
 
-  fprintf(stderr, "PLAY COMPLETE\n");
+  curl_mfprintf(stderr, "PLAY COMPLETE\n");
 
   /* Use Receive to get the rest of the data */
-  while(!res && rtp_packet_count < 13) {
-    fprintf(stderr, "LOOPY LOOP!\n");
+  while(!res && rtp_packet_count < 19) {
+    curl_mfprintf(stderr, "LOOPY LOOP!\n");
     test_setopt(curl, CURLOPT_RTSP_REQUEST, CURL_RTSPREQ_RECEIVE);
     res = curl_easy_perform(curl);
   }
 
 test_cleanup:
-  free(stream_uri);
+  curl_free(stream_uri);
 
   if(protofile)
     fclose(protofile);
@@ -206,4 +214,3 @@ test_cleanup:
 
   return res;
 }
-

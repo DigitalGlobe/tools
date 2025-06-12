@@ -32,25 +32,28 @@ ftp
 lib585
 </tool>
 
- <name>
+<name>
 verify close callbacks with passive FTP
- </name>
- <command>
-ftp://%HOSTIP:%FTPPORT/595 log/ip595
+</name>
+<command>
+ftp://%HOSTIP:%FTPPORT/%TESTNUMBER %LOGDIR/ip%TESTNUMBER
 </command>
 </client>
 
 #
 # Verify data after the test has been "shot"
 <verify>
+<strip>
+QUIT
+</strip>
 <protocol>
 USER anonymous
 PASS ftp@example.com
 PWD
 EPSV
 TYPE I
-SIZE 595
-RETR 595
+SIZE %TESTNUMBER
+RETR %TESTNUMBER
 QUIT
 </protocol>
 </verify>

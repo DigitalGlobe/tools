@@ -16,9 +16,9 @@ SMTP
 <server>
 smtp
 </server>
- <name>
+<name>
 SMTP with CRLF-dot-CRLF in data
- </name>
+</name>
 <stdin>
 From: different
 To: another
@@ -31,8 +31,8 @@ To: another
 
 body
 </stdin>
- <command>
-smtp://%HOSTIP:%SMTPPORT/901 --mail-rcpt recipient@example.com --mail-from sender@example.com -T -
+<command>
+smtp://%HOSTIP:%SMTPPORT/%TESTNUMBER --mail-rcpt recipient@example.com --mail-from sender@example.com -T -
 </command>
 </client>
 
@@ -40,7 +40,7 @@ smtp://%HOSTIP:%SMTPPORT/901 --mail-rcpt recipient@example.com --mail-from sende
 # Verify data after the test has been "shot"
 <verify>
 <protocol>
-EHLO 901
+EHLO %TESTNUMBER
 MAIL FROM:<sender@example.com>
 RCPT TO:<recipient@example.com>
 DATA

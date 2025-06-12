@@ -20,16 +20,19 @@ REPLY NLST 550 Have a taste on this!
 <server>
 ftp
 </server>
- <name>
+<name>
 FTP NLST dir list with weird reply code, using PORT
- </name>
- <command>
+</name>
+<command>
 ftp://%HOSTIP:%FTPPORT/ -P - -l
 </command>
 </client>
 
 # Verify data after the test has been "shot"
 <verify>
+<strip>
+QUIT
+</strip>
 <errorcode>
 19
 </errorcode>

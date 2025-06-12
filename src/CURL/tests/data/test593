@@ -33,20 +33,23 @@ ftp
 <tool>
 lib591
 </tool>
- <name>
+<name>
 FTP multi PORT upload, no data conn and no transient neg. reply
- </name>
- <command>
-ftp://%HOSTIP:%FTPPORT/path/593 %FTPTIME2 log/upload593
+</name>
+<command>
+ftp://%HOSTIP:%FTPPORT/path/%TESTNUMBER %FTPTIME2 %LOGDIR/upload%TESTNUMBER
 </command>
-<file name="log/upload593">
-Moooooooooooo for 593
+<file name="%LOGDIR/upload%TESTNUMBER">
+Moooooooooooo for %TESTNUMBER
  upload this
 </file>
 </client>
 
 # Verify data after the test has been "shot"
 <verify>
+<strip>
+QUIT
+</strip>
 # Strip off parts of the PORT and EPRT commands that might differ
 <strippart>
 s/^PORT (.*)/PORT/
@@ -60,7 +63,7 @@ CWD path
 EPRT |1|
 PORT
 TYPE I
-STOR 593
+STOR %TESTNUMBER
 QUIT
 </protocol>
 <errorcode>

@@ -1,79 +1,135 @@
+#***************************************************************************
+#                                  _   _ ____  _
+#  Project                     ___| | | |  _ \| |
+#                             / __| | | | |_) | |
+#                            | (__| |_| |  _ <| |___
+#                             \___|\___/|_| \_\_____|
+#
+# Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
+#
+# This software is licensed as described in the file COPYING, which
+# you should have received as part of this distribution. The terms
+# are also available at https://curl.se/docs/copyright.html.
+#
+# You may opt to use, copy, modify, merge, publish, distribute and/or sell
+# copies of the Software, and permit persons to whom the Software is
+# furnished to do so, under the terms of the COPYING file.
+#
+# This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
+# KIND, either express or implied.
+#
+# SPDX-License-Identifier: curl
+#
+###########################################################################
 set(EXE_NAME curl)
+set_property(DIRECTORY APPEND PROPERTY COMPILE_DEFINITIONS "${CURL_DEBUG_MACROS}")
 
-if(USE_MANUAL)
-  find_package(Perl REQUIRED)
-  # Use the C locale to ensure that only ASCII characters appear in the
-  # embedded text. NROFF and MANOPT are set in the parent CMakeLists.txt
+set(_curl_cfiles_gen "")
+set(_curl_hfiles_gen "")
+set(_curl_definitions "")
+
+if(ENABLE_CURL_MANUAL AND HAVE_MANUAL_TOOLS)
+  list(APPEND _curl_definitions "USE_MANUAL")
   add_custom_command(
-    OUTPUT tool_hugehelp.c
-    COMMAND ${CMAKE_COMMAND} -E echo "#include \"tool_setup.h\"" > tool_hugehelp.c
-    COMMAND ${CMAKE_COMMAND} -E echo "#ifndef HAVE_LIBZ" >> tool_hugehelp.c
-    COMMAND env LC_ALL=C "${NROFF}" ${NROFF_MANOPT}
-            "${CURL_SOURCE_DIR}/docs/curl.1" |
-            "${PERL}" "${CMAKE_CURRENT_SOURCE_DIR}/mkhelp.pl"
-            "${CURL_SOURCE_DIR}/docs/MANUAL" >> tool_hugehelp.c
-    COMMAND ${CMAKE_COMMAND} -E echo "#else" >> tool_hugehelp.c
-    COMMAND env LC_ALL=C "${NROFF}" ${NROFF_MANOPT}
-            "${CURL_SOURCE_DIR}/docs/curl.1" |
-            "${PERL}" "${CMAKE_CURRENT_SOURCE_DIR}/mkhelp.pl" -c
-            "${CURL_SOURCE_DIR}/docs/MANUAL" >> tool_hugehelp.c
-    COMMAND ${CMAKE_COMMAND} -E echo "#endif /* HAVE_LIBZ */" >> tool_hugehelp.c
+    OUTPUT "tool_hugehelp.c"
+    COMMAND ${CMAKE_COMMAND} -E echo "#include \"tool_setup.h\"" > "tool_hugehelp.c"
+    COMMAND ${CMAKE_COMMAND} -E echo "/* !checksrc! disable COPYRIGHT all */" >> "tool_hugehelp.c"
+    COMMAND ${CMAKE_COMMAND} -E echo "/* !checksrc! disable INCLUDEDUP all */" >> "tool_hugehelp.c"
+    COMMAND ${CMAKE_COMMAND} -E echo "/* !checksrc! disable LONGLINE all */" >> "tool_hugehelp.c"
+    COMMAND ${CMAKE_COMMAND} -E echo "#ifndef HAVE_LIBZ" >> "tool_hugehelp.c"
+    COMMAND "${PERL_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/mkhelp.pl"    < "${CURL_ASCIIPAGE}" >> "tool_hugehelp.c"
+    COMMAND ${CMAKE_COMMAND} -E echo "#else" >> "tool_hugehelp.c"
+    COMMAND "${PERL_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/mkhelp.pl" -c < "${CURL_ASCIIPAGE}" >> "tool_hugehelp.c"
+    COMMAND ${CMAKE_COMMAND} -E echo "#endif /* HAVE_LIBZ */" >> "tool_hugehelp.c"
     DEPENDS
-      "${CURL_SOURCE_DIR}/docs/MANUAL"
-      "${CURL_SOURCE_DIR}/docs/curl.1"
+      generate-curl.1
       "${CMAKE_CURRENT_SOURCE_DIR}/mkhelp.pl"
       "${CMAKE_CURRENT_SOURCE_DIR}/tool_hugehelp.h"
+      "${CURL_ASCIIPAGE}"
     VERBATIM)
-else()
-  add_custom_command(
-    OUTPUT tool_hugehelp.c
-    COMMAND ${CMAKE_COMMAND} -E echo "/* built-in manual is disabled, blank function */" > tool_hugehelp.c
-    COMMAND ${CMAKE_COMMAND} -E echo "#include \"tool_hugehelp.h\"" >> tool_hugehelp.c
-    COMMAND ${CMAKE_COMMAND} -E echo "void hugehelp(void) {}" >> tool_hugehelp.c
-    DEPENDS
-      "${CMAKE_CURRENT_SOURCE_DIR}/tool_hugehelp.h"
-    VERBATIM)
-
+  list(APPEND _curl_cfiles_gen "tool_hugehelp.c")
+  list(APPEND _curl_hfiles_gen "tool_hugehelp.h")
 endif()
 
-transform_makefile_inc("Makefile.inc" "${CMAKE_CURRENT_BINARY_DIR}/Makefile.inc.cmake")
-include(${CMAKE_CURRENT_BINARY_DIR}/Makefile.inc.cmake)
-
-if(MSVC)
-  list(APPEND CURL_SOURCE curl.rc)
+if(CURL_CA_EMBED_SET)
+  if(PERL_FOUND)
+    list(APPEND _curl_definitions "CURL_CA_EMBED")
+    add_custom_command(
+      OUTPUT "tool_ca_embed.c"
+      COMMAND "${PERL_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/mk-file-embed.pl" --var curl_ca_embed
+        < "${CURL_CA_EMBED}" > "tool_ca_embed.c"
+      DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/mk-file-embed.pl"
+        "${CURL_CA_EMBED}"
+      VERBATIM)
+    list(APPEND _curl_cfiles_gen "tool_ca_embed.c")
+  else()
+    message(WARNING "Perl not found. Will not embed the CA bundle.")
+  endif()
 endif()
 
-# CURL_FILES comes from Makefile.inc
+# Get 'CURL_CFILES', 'CURLX_CFILES', 'CURL_HFILES' variables
+curl_transform_makefile_inc("Makefile.inc" "${CMAKE_CURRENT_BINARY_DIR}/Makefile.inc.cmake")
+include("${CMAKE_CURRENT_BINARY_DIR}/Makefile.inc.cmake")
+
+if(WIN32)
+  list(APPEND CURL_CFILES "curl.rc")
+endif()
+
+if(BUILD_STATIC_CURL)
+  set(CURLX_CFILES "")
+endif()
+
+set_property(DIRECTORY APPEND PROPERTY INCLUDE_DIRECTORIES
+  "${PROJECT_BINARY_DIR}/lib"  # for "curl_config.h"
+  "${PROJECT_SOURCE_DIR}/lib"  # for "curl_setup.h"
+  "${PROJECT_SOURCE_DIR}/lib/curlx"  # for curlx functions
+  # This is needed as tool_hugehelp.c is generated in the binary dir
+  "${PROJECT_SOURCE_DIR}/src"  # for "tool_hugehelp.h"
+)
+
 add_executable(
   ${EXE_NAME}
-  ${CURL_FILES}
-  )
+  ${CURL_CFILES} ${_curl_cfiles_gen} ${CURLX_CFILES} ${CURL_HFILES} ${_curl_hfiles_gen}
+)
+target_compile_definitions(${EXE_NAME} PRIVATE ${_curl_definitions})
 
-source_group("cURLX source files" FILES ${CURLX_CFILES})
-source_group("cURL source files" FILES ${CURL_CFILES})
-source_group("cURL header files" FILES ${CURL_HFILES})
+add_executable(${PROJECT_NAME}::${EXE_NAME} ALIAS ${EXE_NAME})
 
-include_directories(
-  ${CURL_SOURCE_DIR}/lib        # To be able to reach "curl_setup_once.h"
-  ${CURL_BINARY_DIR}/lib        # To be able to reach "curl_config.h"
-  ${CURL_BINARY_DIR}/include    # To be able to reach "curl/curlbuild.h"
-  # This is needed as tool_hugehelp.c is generated in the binary dir
-  ${CURL_SOURCE_DIR}/src        # To be able to reach "tool_hugehelp.h"
-  )
+add_executable(
+  curlinfo
+  EXCLUDE_FROM_ALL
+  curlinfo.c
+)
 
-#Build cURL executable
-target_link_libraries( ${EXE_NAME} libcurl ${CURL_LIBS})
+add_library(
+  curltool  # special libcurltool library just for unittests
+  STATIC
+  EXCLUDE_FROM_ALL
+  ${CURL_CFILES} ${CURL_HFILES}
+)
+target_compile_definitions(curltool PUBLIC "CURL_STATICLIB" "UNITTESTS")
+target_link_libraries(curltool PRIVATE ${CURL_LIBS})
+
+if(CURL_HAS_LTO)
+  set_target_properties(${EXE_NAME} PROPERTIES INTERPROCEDURAL_OPTIMIZATION TRUE)
+endif()
+
+if(ENABLE_UNICODE AND MINGW AND NOT MINGW32CE)
+  target_link_libraries(${EXE_NAME} "-municode")
+endif()
+
+source_group("curlX source files" FILES ${CURLX_CFILES})
+source_group("curl source files" FILES ${CURL_CFILES} ${_curl_cfiles_gen})
+source_group("curl header files" FILES ${CURL_HFILES} ${_curl_hfiles_gen})
+
+# Build curl executable
+target_link_libraries(${EXE_NAME} ${LIB_SELECTED_FOR_EXE} ${CURL_LIBS})
 
 ################################################################################
 
-#SET_TARGET_PROPERTIES(${EXE_NAME} ARCHIVE_OUTPUT_DIRECTORY "blah blah blah")
-#SET_TARGET_PROPERTIES(${EXE_NAME} RUNTIME_OUTPUT_DIRECTORY "blah blah blah")
-#SET_TARGET_PROPERTIES(${EXE_NAME} LIBRARY_OUTPUT_DIRECTORY "blah blah blah")
-
-# Add the postfix to the executable since it is not added automatically as for modules and shared libraries
-set_target_properties(${EXE_NAME} PROPERTIES
-  DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
-
-#INCLUDE(ModuleInstall OPTIONAL)
-
-install(TARGETS ${EXE_NAME} DESTINATION bin)
+install(TARGETS ${EXE_NAME} EXPORT ${TARGETS_EXPORT_NAME} DESTINATION ${CMAKE_INSTALL_BINDIR})
+export(TARGETS ${EXE_NAME}
+  FILE "${PROJECT_BINARY_DIR}/curl-target.cmake"
+  NAMESPACE ${PROJECT_NAME}::
+)

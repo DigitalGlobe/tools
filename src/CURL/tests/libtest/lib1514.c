@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2014, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -17,6 +17,8 @@
  *
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
+ *
+ * SPDX-License-Identifier: curl
  *
  ***************************************************************************/
 /*
@@ -28,14 +30,14 @@
 
 #include "memdebug.h"
 
-static char data[]="dummy";
+static char testdata[]="dummy";
 
 struct WriteThis {
   char *readptr;
   size_t sizeleft;
 };
 
-static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *userp)
+static size_t read_callback(char *ptr, size_t size, size_t nmemb, void *userp)
 {
   struct WriteThis *pooh = (struct WriteThis *)userp;
 
@@ -43,7 +45,7 @@ static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *userp)
     return 0;
 
   if(pooh->sizeleft) {
-    *(char *)ptr = pooh->readptr[0]; /* copy one single byte */
+    *ptr = pooh->readptr[0]; /* copy one single byte */
     pooh->readptr++;                 /* advance pointer */
     pooh->sizeleft--;                /* less data left */
     return 1;                        /* we return 1 byte at a time! */
@@ -52,12 +54,12 @@ static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *userp)
   return 0;                         /* no more data left to deliver */
 }
 
-int test(char *URL)
+CURLcode test(char *URL)
 {
   CURL *curl;
   CURLcode result = CURLE_OK;
-  int res = 0;
-  struct WriteThis pooh = { data, sizeof(data)-1 };
+  CURLcode res = CURLE_OK;
+  struct WriteThis pooh = { testdata, sizeof(testdata)-1 };
 
   global_init(CURL_GLOBAL_ALL);
 
@@ -68,6 +70,10 @@ int test(char *URL)
   /* Purposely omit to set CURLOPT_POSTFIELDSIZE */
   easy_setopt(curl, CURLOPT_READFUNCTION, read_callback);
   easy_setopt(curl, CURLOPT_READDATA, &pooh);
+#ifdef LIB1539
+  /* speak HTTP 1.0 - no chunked! */
+  easy_setopt(curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
+#endif
 
   result = curl_easy_perform(curl);
 
@@ -76,5 +82,5 @@ test_cleanup:
   curl_easy_cleanup(curl);
   curl_global_cleanup();
 
-  return (int)result;
+  return result;
 }

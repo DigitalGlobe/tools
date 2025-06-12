@@ -19,11 +19,11 @@ CUSTOMREQUEST
 <server>
 imap
 </server>
- <name>
+<name>
 IMAP CREATE mailbox (CUSTOMREQUEST)
- </name>
- <command>
-imap://%HOSTIP:%IMAPPORT -u user:secret -X 'CREATE 811'
+</name>
+<command>
+imap://%HOSTIP:%IMAPPORT -u user:secret -X 'CREATE %TESTNUMBER'
 </command>
 </client>
 
@@ -33,7 +33,7 @@ imap://%HOSTIP:%IMAPPORT -u user:secret -X 'CREATE 811'
 <protocol>
 A001 CAPABILITY
 A002 LOGIN user secret
-A003 CREATE 811
+A003 CREATE %TESTNUMBER
 A004 LOGOUT
 </protocol>
 </verify>

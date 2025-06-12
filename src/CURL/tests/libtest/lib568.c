@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2016, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -17,6 +17,8 @@
  *
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
+ *
+ * SPDX-License-Identifier: curl
  *
  ***************************************************************************/
 #include "test.h"
@@ -39,24 +41,25 @@ static char *suburl(const char *base, int i)
 /*
  * Test the Client->Server ANNOUNCE functionality (PUT style)
  */
-int test(char *URL)
+CURLcode test(char *URL)
 {
-  int res;
+  CURLcode res;
   CURL *curl;
   int sdp;
   FILE *sdpf = NULL;
   struct_stat file_info;
   char *stream_uri = NULL;
-  int request=1;
-  struct curl_slist *custom_headers=NULL;
+  int request = 1;
+  struct curl_slist *custom_headers = NULL;
 
   if(curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
-    fprintf(stderr, "curl_global_init() failed\n");
+    curl_mfprintf(stderr, "curl_global_init() failed\n");
     return TEST_ERR_MAJOR_BAD;
   }
 
-  if((curl = curl_easy_init()) == NULL) {
-    fprintf(stderr, "curl_easy_init() failed\n");
+  curl = curl_easy_init();
+  if(!curl) {
+    curl_mfprintf(stderr, "curl_easy_init() failed\n");
     curl_global_cleanup();
     return TEST_ERR_MAJOR_BAD;
   }
@@ -66,21 +69,27 @@ int test(char *URL)
 
   test_setopt(curl, CURLOPT_URL, URL);
 
-  if((stream_uri = suburl(URL, request++)) == NULL) {
+  stream_uri = suburl(URL, request++);
+  if(!stream_uri) {
     res = TEST_ERR_MAJOR_BAD;
     goto test_cleanup;
   }
   test_setopt(curl, CURLOPT_RTSP_STREAM_URI, stream_uri);
-  free(stream_uri);
+  curl_free(stream_uri);
   stream_uri = NULL;
 
-  sdp = open("log/file568.txt", O_RDONLY);
+  sdp = open(libtest_arg2, O_RDONLY);
+  if(sdp == -1) {
+    curl_mfprintf(stderr, "can't open %s\n", libtest_arg2);
+    res = TEST_ERR_MAJOR_BAD;
+    goto test_cleanup;
+  }
   fstat(sdp, &file_info);
   close(sdp);
 
-  sdpf = fopen("log/file568.txt", "rb");
-  if(sdpf == NULL) {
-    fprintf(stderr, "can't open log/file568.txt\n");
+  sdpf = fopen(libtest_arg2, "rb");
+  if(!sdpf) {
+    curl_mfprintf(stderr, "can't fopen %s\n", libtest_arg2);
     res = TEST_ERR_MAJOR_BAD;
     goto test_cleanup;
   }
@@ -89,6 +98,7 @@ int test(char *URL)
   test_setopt(curl, CURLOPT_READDATA, sdpf);
   test_setopt(curl, CURLOPT_UPLOAD, 1L);
   test_setopt(curl, CURLOPT_INFILESIZE_LARGE, (curl_off_t) file_info.st_size);
+  test_setopt(curl, CURLOPT_VERBOSE, 1L);
 
   /* Do the ANNOUNCE */
   res = curl_easy_perform(curl);
@@ -100,12 +110,13 @@ int test(char *URL)
   sdpf = NULL;
 
   /* Make sure we can do a normal request now */
-  if((stream_uri = suburl(URL, request++)) == NULL) {
+  stream_uri = suburl(URL, request++);
+  if(!stream_uri) {
     res = TEST_ERR_MAJOR_BAD;
     goto test_cleanup;
   }
   test_setopt(curl, CURLOPT_RTSP_STREAM_URI, stream_uri);
-  free(stream_uri);
+  curl_free(stream_uri);
   stream_uri = NULL;
 
   test_setopt(curl, CURLOPT_RTSP_REQUEST, CURL_RTSPREQ_DESCRIBE);
@@ -115,12 +126,13 @@ int test(char *URL)
 
   /* Now do a POST style one */
 
-  if((stream_uri = suburl(URL, request++)) == NULL) {
+  stream_uri = suburl(URL, request++);
+  if(!stream_uri) {
     res = TEST_ERR_MAJOR_BAD;
     goto test_cleanup;
   }
   test_setopt(curl, CURLOPT_RTSP_STREAM_URI, stream_uri);
-  free(stream_uri);
+  curl_free(stream_uri);
   stream_uri = NULL;
 
   custom_headers = curl_slist_append(custom_headers,
@@ -144,12 +156,13 @@ int test(char *URL)
   custom_headers = NULL;
 
   /* Make sure we can do a normal request now */
-  if((stream_uri = suburl(URL, request++)) == NULL) {
+  stream_uri = suburl(URL, request++);
+  if(!stream_uri) {
     res = TEST_ERR_MAJOR_BAD;
     goto test_cleanup;
   }
   test_setopt(curl, CURLOPT_RTSP_STREAM_URI, stream_uri);
-  free(stream_uri);
+  curl_free(stream_uri);
   stream_uri = NULL;
 
   test_setopt(curl, CURLOPT_RTSP_REQUEST, CURL_RTSPREQ_OPTIONS);
@@ -160,7 +173,7 @@ test_cleanup:
   if(sdpf)
     fclose(sdpf);
 
-  free(stream_uri);
+  curl_free(stream_uri);
 
   if(custom_headers)
     curl_slist_free_all(custom_headers);
@@ -170,4 +183,3 @@ test_cleanup:
 
   return res;
 }
-

@@ -1,72 +1,112 @@
-noinst_PROGRAMS = getpart resolve rtspd sockfilt sws tftpd fake_ntlm
+#***************************************************************************
+#                                  _   _ ____  _
+#  Project                     ___| | | |  _ \| |
+#                             / __| | | | |_) | |
+#                            | (__| |_| |  _ <| |___
+#                             \___|\___/|_| \_\_____|
+#
+# Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
+#
+# This software is licensed as described in the file COPYING, which
+# you should have received as part of this distribution. The terms
+# are also available at https://curl.se/docs/copyright.html.
+#
+# You may opt to use, copy, modify, merge, publish, distribute and/or sell
+# copies of the Software, and permit persons to whom the Software is
+# furnished to do so, under the terms of the COPYING file.
+#
+# This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
+# KIND, either express or implied.
+#
+# SPDX-License-Identifier: curl
+#
+###########################################################################
+
+SERVERPROGS = resolve rtspd sockfilt sws tftpd socksd mqttd dnsd
+
+MEMDEBUG = \
+  ../../lib/memdebug.c \
+  ../../lib/memdebug.h
 
 CURLX_SRCS = \
- ../../lib/mprintf.c \
- ../../lib/nonblock.c \
- ../../lib/strequal.c \
- ../../lib/strtoofft.c \
- ../../lib/timeval.c \
- ../../lib/warnless.c
+  ../../lib/curlx/base64.c \
+  ../../lib/curlx/multibyte.c \
+  ../../lib/curlx/nonblock.c \
+  ../../lib/curlx/strparse.c \
+  ../../lib/curlx/timediff.c \
+  ../../lib/curlx/timeval.c \
+  ../../lib/curlx/version_win32.c \
+  ../../lib/curlx/warnless.c \
+  ../../lib/curlx/winapi.c
 
 CURLX_HDRS = \
- ../../lib/curlx.h \
- ../../lib/nonblock.h \
- ../../lib/strequal.h \
- ../../lib/strtoofft.h \
- ../../lib/timeval.h \
- ../../lib/warnless.h
-
-USEFUL = \
- getpart.c \
- getpart.h \
- server_setup.h \
- ../../lib/base64.c \
- ../../lib/curl_base64.h \
- ../../lib/memdebug.c \
- ../../lib/memdebug.h
+  ../../lib/curlx/base64.h \
+  ../../lib/curlx/curlx.h \
+  ../../lib/curlx/multibyte.h \
+  ../../lib/curlx/nonblock.h \
+  ../../lib/curlx/timediff.h \
+  ../../lib/curlx/timeval.h \
+  ../../lib/curlx/version_win32.h \
+  ../../lib/curlx/warnless.h \
+  ../../lib/curlx/winapi.h
 
 UTIL = \
- util.c \
- util.h
+  getpart.c \
+  getpart.h \
+  util.c \
+  util.h \
+  server_setup.h
 
-getpart_SOURCES = $(CURLX_SRCS) $(CURLX_HDRS) $(USEFUL) \
- testpart.c
-getpart_LDADD = @CURL_NETWORK_AND_TIME_LIBS@
-getpart_CFLAGS = $(AM_CFLAGS)
+FIRSTFILES = \
+  first.c \
+  first.h
 
-resolve_SOURCES = $(CURLX_SRCS) $(CURLX_HDRS) $(USEFUL) $(UTIL) \
- resolve.c
+INET_PTON = \
+  ../../lib/curlx/inet_pton.c
+
+resolve_SOURCES = $(MEMDEBUG) $(CURLX_SRCS) $(CURLX_HDRS) $(UTIL) \
+  resolve.c
 resolve_LDADD = @CURL_NETWORK_AND_TIME_LIBS@
 resolve_CFLAGS = $(AM_CFLAGS)
 
-rtspd_SOURCES = $(CURLX_SRCS) $(CURLX_HDRS) $(USEFUL) $(UTIL) \
- server_sockaddr.h \
- rtspd.c
+rtspd_SOURCES = $(MEMDEBUG) $(CURLX_SRCS) $(CURLX_HDRS) $(UTIL) \
+  server_sockaddr.h \
+  rtspd.c
 rtspd_LDADD = @CURL_NETWORK_AND_TIME_LIBS@
 rtspd_CFLAGS = $(AM_CFLAGS)
 
-sockfilt_SOURCES = $(CURLX_SRCS) $(CURLX_HDRS) $(USEFUL) $(UTIL) \
- server_sockaddr.h \
- sockfilt.c \
- ../../lib/inet_pton.c
+sockfilt_SOURCES = $(MEMDEBUG) $(CURLX_SRCS) $(CURLX_HDRS) $(UTIL) $(INET_PTON) \
+  server_sockaddr.h \
+  sockfilt.c
 sockfilt_LDADD = @CURL_NETWORK_AND_TIME_LIBS@
 sockfilt_CFLAGS = $(AM_CFLAGS)
 
-sws_SOURCES = $(CURLX_SRCS) $(CURLX_HDRS) $(USEFUL) $(UTIL) \
- server_sockaddr.h \
- sws.c \
- ../../lib/inet_pton.c
+socksd_SOURCES = $(MEMDEBUG) $(CURLX_SRCS) $(CURLX_HDRS) $(UTIL) $(INET_PTON) \
+  server_sockaddr.h \
+  socksd.c
+socksd_LDADD = @CURL_NETWORK_AND_TIME_LIBS@
+socksd_CFLAGS = $(AM_CFLAGS)
+
+mqttd_SOURCES = $(MEMDEBUG) $(CURLX_SRCS) $(CURLX_HDRS) $(UTIL) \
+  server_sockaddr.h \
+  mqttd.c
+mqttd_LDADD = @CURL_NETWORK_AND_TIME_LIBS@
+mqttd_CFLAGS = $(AM_CFLAGS)
+
+sws_SOURCES = $(MEMDEBUG) $(CURLX_SRCS) $(CURLX_HDRS) $(UTIL) $(INET_PTON) \
+  server_sockaddr.h \
+  sws.c
 sws_LDADD = @CURL_NETWORK_AND_TIME_LIBS@
 sws_CFLAGS = $(AM_CFLAGS)
 
-tftpd_SOURCES = $(CURLX_SRCS) $(CURLX_HDRS) $(USEFUL) $(UTIL) \
- server_sockaddr.h \
- tftpd.c \
- tftp.h
+tftpd_SOURCES = $(MEMDEBUG) $(CURLX_SRCS) $(CURLX_HDRS) $(UTIL) \
+  server_sockaddr.h \
+  tftpd.c \
+  tftp.h
 tftpd_LDADD = @CURL_NETWORK_AND_TIME_LIBS@
 tftpd_CFLAGS = $(AM_CFLAGS)
 
-fake_ntlm_SOURCES = $(CURLX_SRCS) $(CURLX_HDRS) $(USEFUL) $(UTIL) \
- fake_ntlm.c
-fake_ntlm_LDADD = @CURL_NETWORK_AND_TIME_LIBS@
-fake_ntlm_CFLAGS = $(AM_CFLAGS)
+dnsd_SOURCES = $(MEMDEBUG) $(CURLX_SRCS) $(CURLX_HDRS) $(UTIL) \
+  dnsd.c
+dnsd_LDADD = @CURL_NETWORK_AND_TIME_LIBS@
+dnsd_CFLAGS = $(AM_CFLAGS)

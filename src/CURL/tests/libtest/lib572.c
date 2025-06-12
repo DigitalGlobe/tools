@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2016, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -17,6 +17,8 @@
  *
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
+ *
+ * SPDX-License-Identifier: curl
  *
  ***************************************************************************/
 #include "test.h"
@@ -39,24 +41,25 @@ static char *suburl(const char *base, int i)
 /*
  * Test GET_PARAMETER: PUT, HEARTBEAT, and POST
  */
-int test(char *URL)
+CURLcode test(char *URL)
 {
-  int res;
+  CURLcode res;
   CURL *curl;
   int params;
   FILE *paramsf = NULL;
   struct_stat file_info;
   char *stream_uri = NULL;
-  int request=1;
-  struct curl_slist *custom_headers=NULL;
+  int request = 1;
+  struct curl_slist *custom_headers = NULL;
 
   if(curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
-    fprintf(stderr, "curl_global_init() failed\n");
+    curl_mfprintf(stderr, "curl_global_init() failed\n");
     return TEST_ERR_MAJOR_BAD;
   }
 
-  if((curl = curl_easy_init()) == NULL) {
-    fprintf(stderr, "curl_easy_init() failed\n");
+  curl = curl_easy_init();
+  if(!curl) {
+    curl_mfprintf(stderr, "curl_easy_init() failed\n");
     curl_global_cleanup();
     return TEST_ERR_MAJOR_BAD;
   }
@@ -69,12 +72,13 @@ int test(char *URL)
   test_setopt(curl, CURLOPT_URL, URL);
 
   /* SETUP */
-  if((stream_uri = suburl(URL, request++)) == NULL) {
+  stream_uri = suburl(URL, request++);
+  if(!stream_uri) {
     res = TEST_ERR_MAJOR_BAD;
     goto test_cleanup;
   }
   test_setopt(curl, CURLOPT_RTSP_STREAM_URI, stream_uri);
-  free(stream_uri);
+  curl_free(stream_uri);
   stream_uri = NULL;
 
   test_setopt(curl, CURLOPT_RTSP_TRANSPORT, "Planes/Trains/Automobiles");
@@ -83,22 +87,28 @@ int test(char *URL)
   if(res)
     goto test_cleanup;
 
-  if((stream_uri = suburl(URL, request++)) == NULL) {
+  stream_uri = suburl(URL, request++);
+  if(!stream_uri) {
     res = TEST_ERR_MAJOR_BAD;
     goto test_cleanup;
   }
   test_setopt(curl, CURLOPT_RTSP_STREAM_URI, stream_uri);
-  free(stream_uri);
+  curl_free(stream_uri);
   stream_uri = NULL;
 
   /* PUT style GET_PARAMETERS */
-  params = open("log/file572.txt", O_RDONLY);
+  params = open(libtest_arg2, O_RDONLY);
+  if(params == -1) {
+    curl_mfprintf(stderr, "can't open %s\n", libtest_arg2);
+    res = TEST_ERR_MAJOR_BAD;
+    goto test_cleanup;
+  }
   fstat(params, &file_info);
   close(params);
 
-  paramsf = fopen("log/file572.txt", "rb");
-  if(paramsf == NULL) {
-    fprintf(stderr, "can't open log/file572.txt\n");
+  paramsf = fopen(libtest_arg2, "rb");
+  if(!paramsf) {
+    curl_mfprintf(stderr, "can't fopen %s\n", libtest_arg2);
     res = TEST_ERR_MAJOR_BAD;
     goto test_cleanup;
   }
@@ -117,12 +127,13 @@ int test(char *URL)
   paramsf = NULL;
 
   /* Heartbeat GET_PARAMETERS */
-  if((stream_uri = suburl(URL, request++)) == NULL) {
+  stream_uri = suburl(URL, request++);
+  if(!stream_uri) {
     res = TEST_ERR_MAJOR_BAD;
     goto test_cleanup;
   }
   test_setopt(curl, CURLOPT_RTSP_STREAM_URI, stream_uri);
-  free(stream_uri);
+  curl_free(stream_uri);
   stream_uri = NULL;
 
   res = curl_easy_perform(curl);
@@ -131,12 +142,13 @@ int test(char *URL)
 
   /* POST GET_PARAMETERS */
 
-  if((stream_uri = suburl(URL, request++)) == NULL) {
+  stream_uri = suburl(URL, request++);
+  if(!stream_uri) {
     res = TEST_ERR_MAJOR_BAD;
     goto test_cleanup;
   }
   test_setopt(curl, CURLOPT_RTSP_STREAM_URI, stream_uri);
-  free(stream_uri);
+  curl_free(stream_uri);
   stream_uri = NULL;
 
   test_setopt(curl, CURLOPT_RTSP_REQUEST, CURL_RTSPREQ_GET_PARAMETER);
@@ -149,12 +161,13 @@ int test(char *URL)
   test_setopt(curl, CURLOPT_POSTFIELDS, NULL);
 
   /* Make sure we can do a normal request now */
-  if((stream_uri = suburl(URL, request++)) == NULL) {
+  stream_uri = suburl(URL, request++);
+  if(!stream_uri) {
     res = TEST_ERR_MAJOR_BAD;
     goto test_cleanup;
   }
   test_setopt(curl, CURLOPT_RTSP_STREAM_URI, stream_uri);
-  free(stream_uri);
+  curl_free(stream_uri);
   stream_uri = NULL;
 
   test_setopt(curl, CURLOPT_RTSP_REQUEST, CURL_RTSPREQ_OPTIONS);
@@ -165,7 +178,7 @@ test_cleanup:
   if(paramsf)
     fclose(paramsf);
 
-  free(stream_uri);
+  curl_free(stream_uri);
 
   if(custom_headers)
     curl_slist_free_all(custom_headers);
@@ -175,4 +188,3 @@ test_cleanup:
 
   return res;
 }
-

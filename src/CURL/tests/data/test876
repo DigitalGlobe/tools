@@ -30,11 +30,11 @@ pop3
 <features>
 crypto
 </features>
- <name>
+<name>
 POP3 CRAM-MD5 graceful cancellation
- </name>
- <command>
-pop3://%HOSTIP:%POP3PORT/876 -u user:secret
+</name>
+<command>
+pop3://%HOSTIP:%POP3PORT/%TESTNUMBER -u user:secret
 </command>
 </client>
 

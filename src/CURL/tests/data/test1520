@@ -13,12 +13,12 @@ SMTP
 smtp
 </server>
 <tool>
-lib1520
+lib%TESTNUMBER
 </tool>
 
- <name>
+<name>
 SMTP with CRLF-dot-CRLF in data
- </name>
+</name>
 <stdin>
 From: different
 To: another
@@ -31,8 +31,8 @@ To: another
 
 body
 </stdin>
- <command>
-smtp://%HOSTIP:%SMTPPORT/1520
+<command>
+smtp://%HOSTIP:%SMTPPORT/%TESTNUMBER
 </command>
 </client>
 
@@ -40,7 +40,7 @@ smtp://%HOSTIP:%SMTPPORT/1520
 # Verify data after the test has been "shot"
 <verify>
 <protocol>
-EHLO 1520
+EHLO %TESTNUMBER
 MAIL FROM:<sender@example.com>
 RCPT TO:<recipient@example.com>
 DATA

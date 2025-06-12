@@ -12,6 +12,7 @@ FAILURE
 <servercmd>
 REPLY RETR 314 bluah you f00l!
 REPLY EPSV 314 bluah you f00l!
+REPLY SIZE 500 command not understood
 </servercmd>
 </reply>
 
@@ -20,16 +21,19 @@ REPLY EPSV 314 bluah you f00l!
 <server>
 ftp
 </server>
- <name>
+<name>
 FTP download, failed RETR
- </name>
- <command>
-ftp://%HOSTIP:%FTPPORT/118
+</name>
+<command>
+ftp://%HOSTIP:%FTPPORT/%TESTNUMBER
 </command>
 </client>
 
 # Verify data after the test has been "shot"
 <verify>
+<strip>
+QUIT
+</strip>
 <errorcode>
 19
 </errorcode>
@@ -40,8 +44,8 @@ PWD
 EPSV
 PASV
 TYPE I
-SIZE 118
-RETR 118
+SIZE %TESTNUMBER
+RETR %TESTNUMBER
 QUIT
 </protocol>
 </verify>

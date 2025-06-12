@@ -21,16 +21,19 @@ bla bla bla
 <server>
 ftp
 </server>
- <name>
+<name>
 FTP CWD with --ftp-method multicwd
- </name>
- <command>
---ftp-method multicwd ftp://%HOSTIP:%FTPPORT/first/second/third/296
+</name>
+<command>
+--ftp-method multicwd ftp://%HOSTIP:%FTPPORT/first/second/third/%TESTNUMBER
 </command>
 </client>
 
 # Verify data after the test has been "shot"
 <verify>
+<strip>
+QUIT
+</strip>
 <protocol>
 USER anonymous
 PASS ftp@example.com
@@ -40,8 +43,8 @@ CWD second
 CWD third
 EPSV
 TYPE I
-SIZE 296
-RETR 296
+SIZE %TESTNUMBER
+RETR %TESTNUMBER
 QUIT
 </protocol>
 </verify>

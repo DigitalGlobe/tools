@@ -34,25 +34,28 @@ ftp
 <tool>
 lib585
 </tool>
- <name>
+<name>
 FTP and open/close socket callbacks
- </name>
- <command>
-ftp://%HOSTIP:%FTPPORT/586
+</name>
+<command>
+ftp://%HOSTIP:%FTPPORT/%TESTNUMBER
 </command>
 </client>
 
 #
 # Verify data after the test has been "shot"
 <verify>
+<strip>
+QUIT
+</strip>
 <protocol>
 USER anonymous
 PASS ftp@example.com
 PWD
 EPSV
 TYPE I
-SIZE 586
-RETR 586
+SIZE %TESTNUMBER
+RETR %TESTNUMBER
 QUIT
 </protocol>
 </verify>

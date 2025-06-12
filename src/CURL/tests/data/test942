@@ -25,14 +25,14 @@ REPLY dXNlcg== 235 Authenticated
 <server>
 smtp
 </server>
- <name>
+<name>
 SMTP external authentication
- </name>
+</name>
 <stdin>
 mail body
 </stdin>
- <command>
-'smtp://user;AUTH=EXTERNAL@%HOSTIP:%SMTPPORT/942' --mail-rcpt recipient@example.com --mail-from sender@example.com -T -
+<command>
+'smtp://user;AUTH=EXTERNAL@%HOSTIP:%SMTPPORT/%TESTNUMBER' --mail-rcpt recipient@example.com --mail-from sender@example.com -T -
 </command>
 </client>
 
@@ -40,7 +40,7 @@ mail body
 # Verify data after the test has been "shot"
 <verify>
 <protocol>
-EHLO 942
+EHLO %TESTNUMBER
 AUTH EXTERNAL
 dXNlcg==
 MAIL FROM:<sender@example.com>

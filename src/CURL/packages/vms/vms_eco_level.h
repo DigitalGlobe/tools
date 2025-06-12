@@ -1,8 +1,6 @@
 /* File: vms_eco_level.h
  *
- * $Id$
- *
- * Copyright 2012, John Malmberg
+ * Copyright (C) John Malmberg
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -15,11 +13,13 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT
  * OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-
+ *
+ * SPDX-License-Identifier: ISC
+ *
  */
 
 /* This file should be incremented for each ECO that is kit */
-/* for a specific cURL x.y-z release. */
+/* for a specific curl x.y-z release. */
 /* When any part of x.y-z is incremented, the ECO should be set back to 0 */
 
 #ifndef _VMS_ECO_LEVEL_H

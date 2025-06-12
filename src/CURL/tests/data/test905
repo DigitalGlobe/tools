@@ -28,14 +28,14 @@ smtp
 <features>
 crypto
 </features>
- <name>
+<name>
 SMTP CRAM-MD5 authentication
- </name>
+</name>
 <stdin>
 mail body
 </stdin>
- <command>
-smtp://%HOSTIP:%SMTPPORT/905 --mail-rcpt recipient@example.com --mail-from sender@example.com -u user:secret -T -
+<command>
+smtp://%HOSTIP:%SMTPPORT/%TESTNUMBER --mail-rcpt recipient@example.com --mail-from sender@example.com -u user:secret -T -
 </command>
 </client>
 
@@ -43,7 +43,7 @@ smtp://%HOSTIP:%SMTPPORT/905 --mail-rcpt recipient@example.com --mail-from sende
 # Verify data after the test has been "shot"
 <verify>
 <protocol>
-EHLO 905
+EHLO %TESTNUMBER
 AUTH CRAM-MD5
 dXNlciA3MDMxNzI1NTk5ZmRiYjVkNDEyNjg5YWEzMjNlM2UwYg==
 MAIL FROM:<sender@example.com>

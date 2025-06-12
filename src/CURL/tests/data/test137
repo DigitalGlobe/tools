@@ -21,16 +21,19 @@ RETRNOSIZE
 <server>
 ftp
 </server>
- <name>
+<name>
 FTP download without size in RETR string
- </name>
- <command>
-ftp://%HOSTIP:%FTPPORT/blalbla/lululul/137
+</name>
+<command>
+ftp://%HOSTIP:%FTPPORT/blalbla/lululul/%TESTNUMBER
 </command>
 </client>
 
 # Verify data after the test has been "shot"
 <verify>
+<strip>
+QUIT
+</strip>
 <protocol>
 USER anonymous
 PASS ftp@example.com
@@ -39,8 +42,8 @@ CWD blalbla
 CWD lululul
 EPSV
 TYPE I
-SIZE 137
-RETR 137
+SIZE %TESTNUMBER
+RETR %TESTNUMBER
 QUIT
 </protocol>
 </verify>

@@ -21,11 +21,11 @@ HELP
 <server>
 smtp
 </server>
- <name>
+<name>
 SMTP HELP
- </name>
- <command>
-smtp://%HOSTIP:%SMTPPORT/928
+</name>
+<command>
+smtp://%HOSTIP:%SMTPPORT/%TESTNUMBER
 </command>
 </client>
 
@@ -33,7 +33,7 @@ smtp://%HOSTIP:%SMTPPORT/928
 # Verify data after the test has been "shot"
 <verify>
 <protocol>
-EHLO 928
+EHLO %TESTNUMBER
 HELP
 QUIT
 </protocol>

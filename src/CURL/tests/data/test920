@@ -25,14 +25,14 @@ REPLY c2VjcmV0 235 Authenticated
 <server>
 smtp
 </server>
- <name>
+<name>
 SMTP login authentication with initial response
- </name>
+</name>
 <stdin>
 mail body
 </stdin>
- <command>
-smtp://%HOSTIP:%SMTPPORT/920 --mail-rcpt recipient@example.com --mail-from sender@example.com -u user:secret --sasl-ir -T -
+<command>
+smtp://%HOSTIP:%SMTPPORT/%TESTNUMBER --mail-rcpt recipient@example.com --mail-from sender@example.com -u user:secret --sasl-ir -T -
 </command>
 </client>
 
@@ -40,7 +40,7 @@ smtp://%HOSTIP:%SMTPPORT/920 --mail-rcpt recipient@example.com --mail-from sende
 # Verify data after the test has been "shot"
 <verify>
 <protocol>
-EHLO 920
+EHLO %TESTNUMBER
 AUTH LOGIN dXNlcg==
 c2VjcmV0
 MAIL FROM:<sender@example.com>

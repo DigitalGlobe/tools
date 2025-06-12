@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2016, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -17,6 +17,8 @@
  *
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
+ *
+ * SPDX-License-Identifier: curl
  *
  ***************************************************************************/
 #include "test.h"
@@ -31,28 +33,13 @@
 
 /* 500 milliseconds allowed. An extreme number but lets be really conservative
    to allow old and slow machines to run this test too */
-#define MAX_BLOCKED_TIME_US 500000
+#define MAX_BLOCKED_TIME_MS 500
 
-/* return the number of microseconds between two time stamps */
-static int elapsed(struct timeval *before,
-                   struct timeval *after)
-{
-  ssize_t result;
-
-  result = (after->tv_sec - before->tv_sec) * 1000000 +
-    after->tv_usec - before->tv_usec;
-  if(result < 0)
-    result = 0;
-
-  return curlx_sztosi(result);
-}
-
-
-int test(char *URL)
+CURLcode test(char *URL)
 {
   CURL *handle = NULL;
   CURLM *mhandle = NULL;
-  int res = 0;
+  CURLcode res = CURLE_OK;
   int still_running = 0;
 
   start_test_timing();
@@ -80,7 +67,7 @@ int test(char *URL)
     int maxfd = -99;
     struct timeval before;
     struct timeval after;
-    int e;
+    long e;
 
     timeout.tv_sec = 0;
     timeout.tv_usec = 100000L; /* 100 ms */
@@ -93,11 +80,11 @@ int test(char *URL)
 
     /* At this point, maxfd is guaranteed to be greater or equal than -1. */
 
-    select_test(maxfd+1, &fdread, &fdwrite, &fdexcep, &timeout);
+    select_test(maxfd + 1, &fdread, &fdwrite, &fdexcep, &timeout);
 
     abort_on_test_timeout();
 
-    fprintf(stderr, "ping\n");
+    curl_mfprintf(stderr, "ping\n");
     before = tutil_tvnow();
 
     multi_perform(mhandle, &still_running);
@@ -105,11 +92,11 @@ int test(char *URL)
     abort_on_test_timeout();
 
     after = tutil_tvnow();
-    e = elapsed(&before, &after);
-    fprintf(stderr, "pong = %d\n", e);
+    e = tutil_tvdiff(after, before);
+    curl_mfprintf(stderr, "pong = %ld\n", e);
 
-    if(e > MAX_BLOCKED_TIME_US) {
-      res = 100;
+    if(e > MAX_BLOCKED_TIME_MS) {
+      res = CURLE_TOO_LARGE;
       break;
     }
   }

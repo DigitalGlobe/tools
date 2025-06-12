@@ -7,8 +7,6 @@ Range
 </info>
 
 <reply>
-<data>
-</data>
 </reply>
 
 # Client-side
@@ -19,13 +17,13 @@ none
 <features>
 file
 </features>
- <name>
+<name>
 X-X range on a file:// URL to stdout
- </name>
- <command>
--r 4-4 file://localhost/%PWD/log/test1018.txt 
+</name>
+<command option="no-include">
+-r 4-4 file://localhost%FILE_PWD/%LOGDIR/test%TESTNUMBER.txt
 </command>
-<file name="log/test1018.txt">
+<file name="%LOGDIR/test%TESTNUMBER.txt">
 1234567890
 </file>
 </client>

@@ -2,6 +2,7 @@
 <info>
 <keywords>
 FTP
+connect to non-listen
 </keywords>
 </info>
 
@@ -21,16 +22,19 @@ here are some bytes
 <server>
 ftp
 </server>
- <name>
+<name>
 FTP failing to connect to EPSV port, switching to PASV
- </name>
- <command>
-ftp://%HOSTIP:%FTPPORT/1233
+</name>
+<command>
+ftp://%HOSTIP:%FTPPORT/%TESTNUMBER
 </command>
 </client>
 
 # Verify data after the test has been "shot"
 <verify>
+<strip>
+QUIT
+</strip>
 <protocol>
 USER anonymous
 PASS ftp@example.com
@@ -38,8 +42,8 @@ PWD
 EPSV
 PASV
 TYPE I
-SIZE 1233
-RETR 1233
+SIZE %TESTNUMBER
+RETR %TESTNUMBER
 QUIT
 </protocol>
 </verify>

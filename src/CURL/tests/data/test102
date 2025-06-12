@@ -26,17 +26,20 @@ REPLY EPSV 500 no such command
 <server>
 ftp
 </server>
- <name>
+<name>
 FTP RETR PASV
- </name>
- <command>
-ftp://%HOSTIP:%FTPPORT/102
+</name>
+<command>
+ftp://%HOSTIP:%FTPPORT/%TESTNUMBER
 </command>
 
 </client>
 
 # Verify data after the test has been "shot"
 <verify>
+<strip>
+QUIT
+</strip>
 <protocol>
 USER anonymous
 PASS ftp@example.com
@@ -44,8 +47,8 @@ PWD
 EPSV
 PASV
 TYPE I
-SIZE 102
-RETR 102
+SIZE %TESTNUMBER
+RETR %TESTNUMBER
 QUIT
 </protocol>
 </verify>

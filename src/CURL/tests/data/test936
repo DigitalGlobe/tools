@@ -19,7 +19,7 @@ REPLY "AUTH NTLM" 334 NTLM supported
 REPLY TlRMTVNTUAABAAAABoIIAAAAAAAAAAAAAAAAAAAAAAA= 334 Rubbish
 REPLY * 501 AUTH exchange cancelled by client
 REPLY "AUTH PLAIN" 334 PLAIN supported
-REPLY dXNlcgB1c2VyAHNlY3JldA== 235 Authenticated
+REPLY AHVzZXIAc2VjcmV0 235 Authenticated
 </servercmd>
 </reply>
 
@@ -31,38 +31,30 @@ smtp
 </server>
 <features>
 NTLM
+SSL
 !SSPI
 </features>
- <name>
+<name>
 SMTP NTLM authentication with SASL downgrade
- </name>
+</name>
 <stdin>
 mail body
 </stdin>
- <setenv>
-# we force our own host name, in order to make the test machine independent
-CURL_GETHOSTNAME=curlhost
-# we try to use the LD_PRELOAD hack, if not a debug build
-LD_PRELOAD=%PWD/libtest/.libs/libhostname.so
- </setenv>
- <command>
-smtp://%HOSTIP:%SMTPPORT/936 --mail-rcpt recipient@example.com --mail-from sender@example.com -u user:secret -T -
+<command>
+smtp://%HOSTIP:%SMTPPORT/%TESTNUMBER --mail-rcpt recipient@example.com --mail-from sender@example.com -u user:secret -T -
 </command>
-<precheck>
-chkhostname curlhost
-</precheck>
 </client>
 
 #
 # Verify data after the test has been "shot"
 <verify>
 <protocol>
-EHLO 936
+EHLO %TESTNUMBER
 AUTH NTLM
 TlRMTVNTUAABAAAABoIIAAAAAAAAAAAAAAAAAAAAAAA=
 *
 AUTH PLAIN
-dXNlcgB1c2VyAHNlY3JldA==
+AHVzZXIAc2VjcmV0
 MAIL FROM:<sender@example.com>
 RCPT TO:<recipient@example.com>
 DATA

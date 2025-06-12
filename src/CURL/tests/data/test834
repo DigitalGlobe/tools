@@ -18,7 +18,7 @@ REPLY "AUTHENTICATE NTLM" +
 REPLY TlRMTVNTUAABAAAABoIIAAAAAAAAAAAAAAAAAAAAAAA= + Rubbish
 REPLY * A002 NO AUTH exchange cancelled by client
 REPLY "AUTHENTICATE PLAIN" +
-REPLY dXNlcgB1c2VyAHNlY3JldA== A003 OK AUTHENTICATE completed
+REPLY AHVzZXIAc2VjcmV0 A003 OK AUTHENTICATE completed
 </servercmd>
 <data>
 From: me@somewhere
@@ -39,23 +39,15 @@ imap
 </server>
 <features>
 NTLM
+SSL
 !SSPI
 </features>
- <name>
+<name>
 IMAP NTLM authentication with SASL downgrade
- </name>
- <setenv>
-# we force our own host name, in order to make the test machine independent
-CURL_GETHOSTNAME=curlhost
-# we try to use the LD_PRELOAD hack, if not a debug build
-LD_PRELOAD=%PWD/libtest/.libs/libhostname.so
- </setenv>
- <command>
-'imap://%HOSTIP:%IMAPPORT/834/;UID=1' -u user:secret
+</name>
+<command>
+'imap://%HOSTIP:%IMAPPORT/%TESTNUMBER/;MAILINDEX=1' -u user:secret
 </command>
-<precheck>
-chkhostname curlhost
-</precheck>
 </client>
 
 #
@@ -67,8 +59,8 @@ A002 AUTHENTICATE NTLM
 TlRMTVNTUAABAAAABoIIAAAAAAAAAAAAAAAAAAAAAAA=
 *
 A003 AUTHENTICATE PLAIN
-dXNlcgB1c2VyAHNlY3JldA==
-A004 SELECT 834
+AHVzZXIAc2VjcmV0
+A004 SELECT %TESTNUMBER
 A005 FETCH 1 BODY[]
 A006 LOGOUT
 </protocol>

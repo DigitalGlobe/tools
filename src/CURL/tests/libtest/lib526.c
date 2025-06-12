@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2011, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -17,6 +17,8 @@
  *
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
+ *
+ * SPDX-License-Identifier: curl
  *
  ***************************************************************************/
 /*
@@ -29,7 +31,7 @@
  * controlling the small differences.
  *
  * - lib526 closes all easy handles after
- *   they all have transfered the file over the single connection
+ *   they all have transferred the file over the single connection
  * - lib527 closes each easy handle after each single transfer.
  * - lib532 uses only a single easy handle that is removed, reset and then
  *   re-added for each transfer
@@ -50,16 +52,16 @@
 
 #define NUM_HANDLES 4
 
-int test(char *URL)
+CURLcode test(char *URL)
 {
-  int res = 0;
+  CURLcode res = CURLE_OK;
   CURL *curl[NUM_HANDLES];
   int running;
   CURLM *m = NULL;
   int current = 0;
   int i;
 
-  for(i=0; i < NUM_HANDLES; i++)
+  for(i = 0; i < NUM_HANDLES; i++)
     curl[i] = NULL;
 
   start_test_timing();
@@ -67,7 +69,7 @@ int test(char *URL)
   global_init(CURL_GLOBAL_ALL);
 
   /* get NUM_HANDLES easy handles */
-  for(i=0; i < NUM_HANDLES; i++) {
+  for(i = 0; i < NUM_HANDLES; i++) {
     easy_init(curl[i]);
     /* specify target */
     easy_setopt(curl[i], CURLOPT_URL, URL);
@@ -79,7 +81,7 @@ int test(char *URL)
 
   multi_add_handle(m, curl[current]);
 
-  fprintf(stderr, "Start at URL 0\n");
+  curl_mfprintf(stderr, "Start at URL 0\n");
 
   for(;;) {
     struct timeval interval;
@@ -102,12 +104,12 @@ int test(char *URL)
       curl[current] = NULL;
 #endif
       if(++current < NUM_HANDLES) {
-        fprintf(stderr, "Advancing to URL %d\n", current);
+        curl_mfprintf(stderr, "Advancing to URL %d\n", current);
 #ifdef LIB532
         /* first remove the only handle we use */
         curl_multi_remove_handle(m, curl[0]);
 
-        /* make us re-use the same handle all the time, and try resetting
+        /* make us reuse the same handle all the time, and try resetting
            the handle first too */
         curl_easy_reset(curl[0]);
         easy_setopt(curl[0], CURLOPT_URL, URL);
@@ -133,7 +135,7 @@ int test(char *URL)
 
     /* At this point, maxfd is guaranteed to be greater or equal than -1. */
 
-    select_test(maxfd+1, &rd, &wr, &exc, &interval);
+    select_test(maxfd + 1, &rd, &wr, &exc, &interval);
 
     abort_on_test_timeout();
   }
@@ -145,7 +147,7 @@ test_cleanup:
   /* test 526 and 528 */
   /* proper cleanup sequence - type PB */
 
-  for(i=0; i < NUM_HANDLES; i++) {
+  for(i = 0; i < NUM_HANDLES; i++) {
     curl_multi_remove_handle(m, curl[i]);
     curl_easy_cleanup(curl[i]);
   }
@@ -161,8 +163,8 @@ test_cleanup:
      cleanup'ed yet, in this case we have to cleanup them or otherwise these
      will be leaked, let's use undocumented cleanup sequence - type UB */
 
-  if(res)
-    for(i=0; i < NUM_HANDLES; i++)
+  if(res != CURLE_OK)
+    for(i = 0; i < NUM_HANDLES; i++)
       curl_easy_cleanup(curl[i]);
 
   curl_multi_cleanup(m);
@@ -173,7 +175,7 @@ test_cleanup:
   /* test 532 */
   /* undocumented cleanup sequence - type UB */
 
-  for(i=0; i < NUM_HANDLES; i++)
+  for(i = 0; i < NUM_HANDLES; i++)
     curl_easy_cleanup(curl[i]);
   curl_multi_cleanup(m);
   curl_global_cleanup();

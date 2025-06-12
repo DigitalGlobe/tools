@@ -23,16 +23,19 @@ REPLY CWD 250 CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 <server>
 ftp
 </server>
- <name>
+<name>
 FTP with excessively large server command response line
- </name>
- <command>
-ftp://%HOSTIP:%FTPPORT/path/1003
+</name>
+<command>
+ftp://%HOSTIP:%FTPPORT/path/%TESTNUMBER
 </command>
 </client>
 
 # Verify data after the test has been "shot"
 <verify>
+<strip>
+QUIT
+</strip>
 <protocol>
 USER anonymous
 PASS ftp@example.com
@@ -40,8 +43,8 @@ PWD
 CWD path
 EPSV
 TYPE I
-SIZE 1003
-RETR 1003
+SIZE %TESTNUMBER
+RETR %TESTNUMBER
 QUIT
 </protocol>
 </verify>

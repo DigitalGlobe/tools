@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2016, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -17,6 +17,8 @@
  *
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
+ *
+ * SPDX-License-Identifier: curl
  *
  ***************************************************************************/
 #include "test.h"
@@ -26,7 +28,7 @@
 
 #ifdef LIB585
 
-static int counter;
+static int testcounter;
 
 static curl_socket_t tst_opensocket(void *clientp,
                                     curlsocktype purpose,
@@ -34,14 +36,14 @@ static curl_socket_t tst_opensocket(void *clientp,
 {
   (void)clientp;
   (void)purpose;
-  printf("[OPEN] counter: %d\n", ++counter);
+  curl_mprintf("[OPEN] counter: %d\n", ++testcounter);
   return socket(addr->family, addr->socktype, addr->protocol);
 }
 
 static int tst_closesocket(void *clientp, curl_socket_t sock)
 {
   (void)clientp;
-  printf("[CLOSE] counter: %d\n", counter--);
+  curl_mprintf("[CLOSE] counter: %d\n", testcounter--);
   return sclose(sock);
 }
 
@@ -49,7 +51,7 @@ static void setupcallbacks(CURL *curl)
 {
   curl_easy_setopt(curl, CURLOPT_OPENSOCKETFUNCTION, tst_opensocket);
   curl_easy_setopt(curl, CURLOPT_CLOSESOCKETFUNCTION, tst_closesocket);
-  counter = 0;
+  testcounter = 0;
 }
 
 #else
@@ -57,19 +59,20 @@ static void setupcallbacks(CURL *curl)
 #endif
 
 
-int test(char *URL)
+CURLcode test(char *URL)
 {
   CURLcode res;
   CURL *curl;
-  char *ipstr=NULL;
+  char *ipstr = NULL;
 
   if(curl_global_init(CURL_GLOBAL_ALL) != CURLE_OK) {
-    fprintf(stderr, "curl_global_init() failed\n");
+    curl_mfprintf(stderr, "curl_global_init() failed\n");
     return TEST_ERR_MAJOR_BAD;
   }
 
-  if((curl = curl_easy_init()) == NULL) {
-    fprintf(stderr, "curl_easy_init() failed\n");
+  curl = curl_easy_init();
+  if(!curl) {
+    curl_mfprintf(stderr, "curl_easy_init() failed\n");
     curl_global_cleanup();
     return TEST_ERR_MAJOR_BAD;
   }
@@ -95,36 +98,75 @@ int test(char *URL)
     if(libtest_arg2) {
       FILE *moo = fopen(libtest_arg2, "wb");
       if(moo) {
-        double time_namelookup;
-        double time_connect;
-        double time_pretransfer;
-        double time_starttransfer;
-        double time_total;
-        fprintf(moo, "IP: %s\n", ipstr);
-        curl_easy_getinfo(curl, CURLINFO_NAMELOOKUP_TIME, &time_namelookup);
-        curl_easy_getinfo(curl, CURLINFO_CONNECT_TIME, &time_connect);
-        curl_easy_getinfo(curl, CURLINFO_PRETRANSFER_TIME, &time_pretransfer);
-        curl_easy_getinfo(curl, CURLINFO_STARTTRANSFER_TIME,
+        curl_off_t time_namelookup;
+        curl_off_t time_connect;
+        curl_off_t time_pretransfer;
+        curl_off_t time_posttransfer;
+        curl_off_t time_starttransfer;
+        curl_off_t time_total;
+        curl_mfprintf(moo, "IP %s\n", ipstr);
+        curl_easy_getinfo(curl, CURLINFO_NAMELOOKUP_TIME_T, &time_namelookup);
+        curl_easy_getinfo(curl, CURLINFO_CONNECT_TIME_T, &time_connect);
+        curl_easy_getinfo(curl, CURLINFO_PRETRANSFER_TIME_T,
+                          &time_pretransfer);
+        curl_easy_getinfo(curl, CURLINFO_POSTTRANSFER_TIME_T,
+                          &time_posttransfer);
+        curl_easy_getinfo(curl, CURLINFO_STARTTRANSFER_TIME_T,
                           &time_starttransfer);
-        curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &time_total);
+        curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME_T, &time_total);
 
         /* since the timing will always vary we only compare relative
            differences between these 5 times */
         if(time_namelookup > time_connect) {
-          fprintf(moo, "namelookup vs connect: %f %f\n",
-                  time_namelookup, time_connect);
+          curl_mfprintf(moo, "namelookup vs connect: %" CURL_FORMAT_CURL_OFF_T
+                        ".%06ld %" CURL_FORMAT_CURL_OFF_T ".%06ld\n",
+                        (time_namelookup / 1000000),
+                        (long)(time_namelookup % 1000000),
+                        (time_connect / 1000000),
+                        (long)(time_connect % 1000000));
         }
         if(time_connect > time_pretransfer) {
-          fprintf(moo, "connect vs pretransfer: %f %f\n",
-                  time_connect, time_pretransfer);
+          curl_mfprintf(moo, "connect vs pretransfer: %"
+                        CURL_FORMAT_CURL_OFF_T
+                        ".%06ld %" CURL_FORMAT_CURL_OFF_T ".%06ld\n",
+                        (time_connect / 1000000),
+                        (long)(time_connect % 1000000),
+                        (time_pretransfer / 1000000),
+                        (long)(time_pretransfer % 1000000));
+        }
+        if(time_pretransfer > time_posttransfer) {
+          curl_mfprintf(moo, "pretransfer vs posttransfer: %"
+                        CURL_FORMAT_CURL_OFF_T
+                        ".%06ld %" CURL_FORMAT_CURL_OFF_T ".%06ld\n",
+                        (time_pretransfer / 1000000),
+                        (long)(time_pretransfer % 1000000),
+                        (time_posttransfer / 1000000),
+                        (long)(time_posttransfer % 1000000));
         }
         if(time_pretransfer > time_starttransfer) {
-          fprintf(moo, "pretransfer vs starttransfer: %f %f\n",
-                  time_pretransfer, time_starttransfer);
+          curl_mfprintf(moo, "pretransfer vs starttransfer: %"
+                        CURL_FORMAT_CURL_OFF_T
+                        ".%06ld %" CURL_FORMAT_CURL_OFF_T ".%06ld\n",
+                        (time_pretransfer / 1000000),
+                        (long)(time_pretransfer % 1000000),
+                        (time_starttransfer / 1000000),
+                        (long)(time_starttransfer % 1000000));
         }
         if(time_starttransfer > time_total) {
-          fprintf(moo, "starttransfer vs total: %f %f\n",
-                  time_starttransfer, time_total);
+          curl_mfprintf(moo, "starttransfer vs total: %" CURL_FORMAT_CURL_OFF_T
+                        ".%06ld %" CURL_FORMAT_CURL_OFF_T ".%06ld\n",
+                        (time_starttransfer / 1000000),
+                        (long)(time_starttransfer % 1000000),
+                        (time_total / 1000000),
+                        (long)(time_total % 1000000));
+        }
+        if(time_posttransfer > time_total) {
+          curl_mfprintf(moo, "posttransfer vs total: %" CURL_FORMAT_CURL_OFF_T
+                        ".%06ld %" CURL_FORMAT_CURL_OFF_T ".%06ld\n",
+                        (time_posttransfer / 1000000),
+                        (long)(time_posttransfer % 1000000),
+                        (time_total / 1000000),
+                        (long)(time_total % 1000000));
         }
 
         fclose(moo);
@@ -137,6 +179,7 @@ test_cleanup:
   curl_easy_cleanup(curl);
   curl_global_cleanup();
 
-  return (int)res;
+  return res;
 }
 
+#undef setupcallbacks

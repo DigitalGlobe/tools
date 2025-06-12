@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 2015 - 2016, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -18,18 +18,17 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
+ * SPDX-License-Identifier: curl
+ *
  ***************************************************************************/
 #include "curlcheck.h"
 
-#define ENABLE_CURLX_PRINTF
-#include "curlx.h"
-
+#include <curlx.h>
 #include "hash.h"
+#include <memdebug.h> /* LAST include file */
 
-#include "memdebug.h" /* LAST include file */
-
-static struct curl_hash hash_static;
-static const int slots = 3;
+static struct Curl_hash hash_static;
+static const size_t slots = 3;
 
 static void mydtor(void *p)
 {
@@ -37,10 +36,21 @@ static void mydtor(void *p)
  (void)p; /* unused */
 }
 
+static size_t elem_dtor_calls;
+
+static void my_elem_dtor(void *key, size_t key_len, void *p)
+{
+  (void)p; /* unused */
+  (void)key; /* unused */
+  (void)key_len; /* unused */
+  ++elem_dtor_calls;
+}
+
 static CURLcode unit_setup(void)
 {
-  return Curl_hash_init(&hash_static, slots, Curl_hash_str,
-                        Curl_str_key_compare, mydtor);
+  Curl_hash_init(&hash_static, slots, Curl_hash_str,
+                 curlx_str_key_compare, mydtor);
+  return CURLE_OK;
 }
 
 static void unit_stop(void)
@@ -64,8 +74,9 @@ UNITTEST_START
      Curl_hash_str(key2, strlen(key2), slots) != 0 ||
      Curl_hash_str(key3, strlen(key3), slots) != 2 ||
      Curl_hash_str(key4, strlen(key4), slots) != 1)
-    fprintf(stderr, "Warning: hashes are not computed as expected on this "
-            "architecture; test coverage will be less comprehensive\n");
+    curl_mfprintf(stderr,
+                  "Warning: hashes are not computed as expected on this "
+                  "architecture; test coverage will be less comprehensive\n");
 
   nodep = Curl_hash_add(&hash_static, &key1, strlen(key1), &key1);
   fail_unless(nodep, "insertion into hash failed");
@@ -143,6 +154,22 @@ UNITTEST_START
   fail_unless(nodep == key2, "hash retrieval failed");
   nodep = Curl_hash_pick(&hash_static, &key3, strlen(key3));
   fail_unless(nodep == key3, "hash retrieval failed");
+
+  /* Add element with own destructor */
+  nodep = Curl_hash_add2(&hash_static, &key1, strlen(key1), &key1,
+                         my_elem_dtor);
+  fail_unless(nodep, "add2 insertion into hash failed");
+  fail_unless(elem_dtor_calls == 0, "element destructor count should be 0");
+  /* Add it again, should invoke destructor on first */
+  nodep = Curl_hash_add2(&hash_static, &key1, strlen(key1), &key1,
+                         my_elem_dtor);
+  fail_unless(nodep, "add2 again, insertion into hash failed");
+  fail_unless(elem_dtor_calls == 1, "element destructor count should be 1");
+  /* remove, should invoke destructor */
+  rc = Curl_hash_delete(&hash_static, &key1, strlen(key1));
+  fail_unless(rc == 0, "hash delete failed");
+  fail_unless(elem_dtor_calls == 2, "element destructor count should be 1");
+
 
   /* Clean up */
   Curl_hash_clean(&hash_static);

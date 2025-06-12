@@ -19,16 +19,19 @@ FAILURE
 <server>
 ftp
 </server>
- <name>
+<name>
 FTP download resume beyond file size
- </name>
- <command>
-ftp://%HOSTIP:%FTPPORT/111 -C 2000
+</name>
+<command>
+ftp://%HOSTIP:%FTPPORT/%TESTNUMBER -C 2000
 </command>
 </client>
 
 # Verify data after the test has been "shot"
 <verify>
+<strip>
+QUIT
+</strip>
 <errorcode>
 36
 </errorcode>
@@ -38,7 +41,7 @@ PASS ftp@example.com
 PWD
 EPSV
 TYPE I
-SIZE 111
+SIZE %TESTNUMBER
 QUIT
 </protocol>
 </verify>

@@ -23,11 +23,11 @@ CUSTOMREQUEST
 <server>
 smtp
 </server>
- <name>
+<name>
 SMTP mailing list EXPN (CUSTOMREQUEST)
- </name>
- <command>
-smtp://%HOSTIP:%SMTPPORT/927 --mail-rcpt Friends -X EXPN
+</name>
+<command>
+smtp://%HOSTIP:%SMTPPORT/%TESTNUMBER --mail-rcpt Friends -X EXPN
 </command>
 </client>
 
@@ -35,7 +35,7 @@ smtp://%HOSTIP:%SMTPPORT/927 --mail-rcpt Friends -X EXPN
 # Verify data after the test has been "shot"
 <verify>
 <protocol>
-EHLO 927
+EHLO %TESTNUMBER
 EXPN Friends
 QUIT
 </protocol>

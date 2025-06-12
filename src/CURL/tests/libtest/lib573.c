@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2016, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -17,6 +17,8 @@
  *
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
+ *
+ * SPDX-License-Identifier: curl
  *
  ***************************************************************************/
 #include "test.h"
@@ -32,11 +34,11 @@
  * Get a single URL without select().
  */
 
-int test(char *URL)
+CURLcode test(char *URL)
 {
   CURL *c = NULL;
   CURLM *m = NULL;
-  int res = 0;
+  CURLcode res = CURLE_OK;
   int running = 1;
   double connect_time = 0.0;
   double dbl_epsilon;
@@ -88,14 +90,14 @@ int test(char *URL)
 
     /* At this point, maxfd is guaranteed to be greater or equal than -1. */
 
-    select_test(maxfd+1, &fdread, &fdwrite, &fdexcep, &timeout);
+    select_test(maxfd + 1, &fdread, &fdwrite, &fdexcep, &timeout);
 
     abort_on_test_timeout();
   }
 
   curl_easy_getinfo(c, CURLINFO_CONNECT_TIME, &connect_time);
   if(connect_time < dbl_epsilon) {
-    fprintf(stderr, "connect time %e is < epsilon %e\n",
+    curl_mfprintf(stderr, "connect time %e is < epsilon %e\n",
             connect_time, dbl_epsilon);
     res = TEST_ERR_MAJOR_BAD;
   }
@@ -111,4 +113,3 @@ test_cleanup:
 
   return res;
 }
-

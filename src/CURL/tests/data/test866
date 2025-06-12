@@ -35,11 +35,11 @@ body
 <server>
 pop3
 </server>
- <name>
+<name>
 POP3 login authentication
- </name>
- <command>
-pop3://%HOSTIP:%POP3PORT/866 -u user:secret
+</name>
+<command>
+pop3://%HOSTIP:%POP3PORT/%TESTNUMBER -u user:secret
 </command>
 </client>
 
@@ -51,7 +51,7 @@ CAPA
 AUTH LOGIN
 dXNlcg==
 c2VjcmV0
-RETR 866
+RETR %TESTNUMBER
 QUIT
 </protocol>
 </verify>

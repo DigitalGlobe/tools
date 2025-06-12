@@ -16,12 +16,9 @@ none
 <features>
 unittest
 </features>
- <name>
+<name>
 curl_easy_escape and curl_easy_unescape
- </name>
-<tool>
-unit1396
-</tool>
+</name>
 </client>
 
 </testcase>

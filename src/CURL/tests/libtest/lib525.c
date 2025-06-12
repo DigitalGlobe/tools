@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2016, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -17,6 +17,8 @@
  *
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
+ *
+ * SPDX-License-Identifier: curl
  *
  ***************************************************************************/
 #include "test.h"
@@ -29,13 +31,12 @@
 
 #define TEST_HANG_TIMEOUT 60 * 1000
 
-int test(char *URL)
+CURLcode test(char *URL)
 {
-  int res = 0;
+  CURLcode res = CURLE_OK;
   CURL *curl = NULL;
   FILE *hd_src = NULL;
   int hd;
-  int error;
   struct_stat file_info;
   CURLM *m = NULL;
   int running;
@@ -45,31 +46,33 @@ int test(char *URL)
   if(!libtest_arg2) {
 #ifdef LIB529
     /* test 529 */
-    fprintf(stderr, "Usage: lib529 [url] [uploadfile]\n");
+    curl_mfprintf(stderr, "Usage: lib529 [url] [uploadfile]\n");
 #else
     /* test 525 */
-    fprintf(stderr, "Usage: lib525 [url] [uploadfile]\n");
+    curl_mfprintf(stderr, "Usage: lib525 [url] [uploadfile]\n");
 #endif
     return TEST_ERR_USAGE;
   }
 
   hd_src = fopen(libtest_arg2, "rb");
-  if(NULL == hd_src) {
-    error = ERRNO;
-    fprintf(stderr, "fopen failed with error: %d (%s)\n",
-            error, strerror(error));
-    fprintf(stderr, "Error opening file: (%s)\n", libtest_arg2);
+  if(!hd_src) {
+    curl_mfprintf(stderr, "fopen failed with error (%d) %s\n",
+            errno, strerror(errno));
+    curl_mfprintf(stderr, "Error opening file '%s'\n", libtest_arg2);
     return TEST_ERR_FOPEN;
   }
 
   /* get the file size of the local file */
+#ifdef UNDER_CE
+  hd = stat(libtest_arg2, &file_info);
+#else
   hd = fstat(fileno(hd_src), &file_info);
+#endif
   if(hd == -1) {
     /* can't open file, bail out */
-    error = ERRNO;
-    fprintf(stderr, "fstat() failed with error: %d (%s)\n",
-            error, strerror(error));
-    fprintf(stderr, "ERROR: cannot open file (%s)\n", libtest_arg2);
+    curl_mfprintf(stderr, "fstat() failed with error (%d) %s\n",
+            errno, strerror(errno));
+    curl_mfprintf(stderr, "Error opening file '%s'\n", libtest_arg2);
     fclose(hd_src);
     return TEST_ERR_FSTAT;
   }
@@ -135,7 +138,7 @@ int test(char *URL)
 
     /* At this point, maxfd is guaranteed to be greater or equal than -1. */
 
-    select_test(maxfd+1, &rd, &wr, &exc, &interval);
+    select_test(maxfd + 1, &rd, &wr, &exc, &interval);
 
     abort_on_test_timeout();
   }

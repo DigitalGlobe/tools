@@ -26,10 +26,10 @@ ftp
 lib520
 </tool>
 
- <name>
+<name>
 FTP RETR with FILETIME
- </name>
- <command>
+</name>
+<command>
 ftp://%HOSTIP:%FTPPORT/520
 </command>
 </client>
@@ -37,6 +37,9 @@ ftp://%HOSTIP:%FTPPORT/520
 #
 # Verify data after the test has been "shot"
 <verify>
+<strip>
+QUIT
+</strip>
 
 <protocol>
 USER anonymous

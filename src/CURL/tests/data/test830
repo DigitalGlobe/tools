@@ -29,11 +29,11 @@ imap
 <features>
 crypto
 </features>
- <name>
+<name>
 IMAP CRAM-MD5 graceful cancellation
- </name>
- <command>
-'imap://%HOSTIP:%IMAPPORT/830/;UID=1' -u user:secret
+</name>
+<command>
+'imap://%HOSTIP:%IMAPPORT/%TESTNUMBER/;MAILINDEX=1' -u user:secret
 </command>
 </client>
 

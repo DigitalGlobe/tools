@@ -20,11 +20,11 @@ VRFY
 <server>
 smtp
 </server>
- <name>
+<name>
 SMTP external VRFY
- </name>
- <command>
-smtp://%HOSTIP:%SMTPPORT/925 --mail-rcpt user@example.net
+</name>
+<command>
+smtp://%HOSTIP:%SMTPPORT/%TESTNUMBER --mail-rcpt user@example.net
 </command>
 </client>
 
@@ -32,7 +32,7 @@ smtp://%HOSTIP:%SMTPPORT/925 --mail-rcpt user@example.net
 # Verify data after the test has been "shot"
 <verify>
 <protocol>
-EHLO 925
+EHLO %TESTNUMBER
 VRFY user@example.net
 QUIT
 </protocol>

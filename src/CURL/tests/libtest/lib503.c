@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2012, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -17,6 +17,8 @@
  *
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
+ *
+ * SPDX-License-Identifier: curl
  *
  ***************************************************************************/
 #include "test.h"
@@ -35,11 +37,11 @@
  * auth info.
  */
 
-int test(char *URL)
+CURLcode test(char *URL)
 {
   CURL *c = NULL;
   CURLM *m = NULL;
-  int res = 0;
+  CURLcode res = CURLE_OK;
   int running;
 
   start_test_timing();
@@ -51,7 +53,8 @@ int test(char *URL)
   easy_setopt(c, CURLOPT_PROXY, libtest_arg2); /* set in first.c */
   easy_setopt(c, CURLOPT_URL, URL);
   easy_setopt(c, CURLOPT_USERPWD, "test:ing");
-  easy_setopt(c, CURLOPT_PROXYUSERPWD, "test:ing");
+  easy_setopt(c, CURLOPT_PROXYUSERNAME, "test%20");
+  easy_setopt(c, CURLOPT_PROXYPASSWORD, "ing%41");
   easy_setopt(c, CURLOPT_HTTPPROXYTUNNEL, 1L);
   easy_setopt(c, CURLOPT_HEADER, 1L);
   easy_setopt(c, CURLOPT_VERBOSE, 1L);
@@ -83,7 +86,7 @@ int test(char *URL)
 
     /* At this point, maxfd is guaranteed to be greater or equal than -1. */
 
-    select_test(maxfd+1, &rd, &wr, &exc, &interval);
+    select_test(maxfd + 1, &rd, &wr, &exc, &interval);
 
     abort_on_test_timeout();
   }
@@ -99,4 +102,3 @@ test_cleanup:
 
   return res;
 }
-

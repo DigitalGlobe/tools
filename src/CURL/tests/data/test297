@@ -21,16 +21,19 @@ bla bla bla
 <server>
 ftp
 </server>
- <name>
+<name>
 FTP CWD with --ftp-method singlecwd
- </name>
- <command>
---ftp-method singlecwd ftp://%HOSTIP:%FTPPORT/first/second/third/297
+</name>
+<command>
+--ftp-method singlecwd ftp://%HOSTIP:%FTPPORT/first/second/third/%TESTNUMBER
 </command>
 </client>
 
 # Verify data after the test has been "shot"
 <verify>
+<strip>
+QUIT
+</strip>
 <protocol>
 USER anonymous
 PASS ftp@example.com
@@ -38,8 +41,8 @@ PWD
 CWD first/second/third
 EPSV
 TYPE I
-SIZE 297
-RETR 297
+SIZE %TESTNUMBER
+RETR %TESTNUMBER
 QUIT
 </protocol>
 </verify>

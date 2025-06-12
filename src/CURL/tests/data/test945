@@ -25,14 +25,14 @@ REPLY AUTH 235 Authenticated
 <server>
 smtp
 </server>
- <name>
+<name>
 SMTP external authentication with initial response without credentials
- </name>
+</name>
 <stdin>
 mail body
 </stdin>
- <command>
-'smtp://;AUTH=EXTERNAL@%HOSTIP:%SMTPPORT/945' --mail-rcpt recipient@example.com --mail-from sender@example.com --sasl-ir -T -
+<command>
+'smtp://;AUTH=EXTERNAL@%HOSTIP:%SMTPPORT/%TESTNUMBER' --mail-rcpt recipient@example.com --mail-from sender@example.com --sasl-ir -T -
 </command>
 </client>
 
@@ -40,7 +40,7 @@ mail body
 # Verify data after the test has been "shot"
 <verify>
 <protocol>
-EHLO 945
+EHLO %TESTNUMBER
 AUTH EXTERNAL =
 MAIL FROM:<sender@example.com>
 RCPT TO:<recipient@example.com>

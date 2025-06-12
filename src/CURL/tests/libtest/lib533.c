@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2011, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -18,8 +18,10 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
+ * SPDX-License-Identifier: curl
+ *
  ***************************************************************************/
-/* used for test case 533, 534 and 535 */
+/* used for test case 533, 534, 535 and 546 */
 
 #include "test.h"
 
@@ -31,13 +33,13 @@
 
 #define TEST_HANG_TIMEOUT 60 * 1000
 
-int test(char *URL)
+CURLcode test(char *URL)
 {
-  int res = 0;
+  CURLcode res = CURLE_OK;
   CURL *curl = NULL;
   int running;
   CURLM *m = NULL;
-  int current=0;
+  int current = 0;
 
   start_test_timing();
 
@@ -53,7 +55,7 @@ int test(char *URL)
 
   multi_add_handle(m, curl);
 
-  fprintf(stderr, "Start at URL 0\n");
+  curl_mfprintf(stderr, "Start at URL 0\n");
 
   for(;;) {
     struct timeval interval;
@@ -69,11 +71,11 @@ int test(char *URL)
 
     if(!running) {
       if(!current++) {
-        fprintf(stderr, "Advancing to URL 1\n");
+        curl_mfprintf(stderr, "Advancing to URL 1\n");
         /* remove the handle we use */
         curl_multi_remove_handle(m, curl);
 
-        /* make us re-use the same handle all the time, and try resetting
+        /* make us reuse the same handle all the time, and try resetting
            the handle first too */
         curl_easy_reset(curl);
         easy_setopt(curl, CURLOPT_URL, libtest_arg2);
@@ -95,7 +97,7 @@ int test(char *URL)
 
     /* At this point, maxfd is guaranteed to be greater or equal than -1. */
 
-    select_test(maxfd+1, &rd, &wr, &exc, &interval);
+    select_test(maxfd + 1, &rd, &wr, &exc, &interval);
 
     abort_on_test_timeout();
   }

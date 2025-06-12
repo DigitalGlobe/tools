@@ -24,16 +24,19 @@ REPLY CWD 250-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 <server>
 ftp
 </server>
- <name>
+<name>
 FTP with excessively long server command response lines, boundary condition
- </name>
- <command>
-ftp://%HOSTIP:%FTPPORT/path/1062
+</name>
+<command>
+ftp://%HOSTIP:%FTPPORT/path/%TESTNUMBER
 </command>
 </client>
 
 # Verify data after the test has been "shot"
 <verify>
+<strip>
+QUIT
+</strip>
 <protocol>
 USER anonymous
 PASS ftp@example.com
@@ -41,8 +44,8 @@ PWD
 CWD path
 EPSV
 TYPE I
-SIZE 1062
-RETR 1062
+SIZE %TESTNUMBER
+RETR %TESTNUMBER
 QUIT
 </protocol>
 </verify>

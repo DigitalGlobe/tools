@@ -5,11 +5,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2016, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at https://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -17,6 +17,8 @@
  *
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
+ *
+ * SPDX-License-Identifier: curl
  *
  ***************************************************************************/
 
@@ -29,9 +31,7 @@
 #    include <pthread.h>
 #  endif
 #elif defined(USE_THREADS_WIN32)
-#  ifdef HAVE_PROCESS_H
-#    include <process.h>
-#  endif
+#  include <process.h>
 #endif
 
 #include "curl_threads.h"
@@ -41,14 +41,14 @@
 
 #if defined(USE_THREADS_POSIX)
 
-struct curl_actual_call {
+struct Curl_actual_call {
   unsigned int (*func)(void *);
   void *arg;
 };
 
 static void *curl_thread_create_thunk(void *arg)
 {
-  struct curl_actual_call * ac = arg;
+  struct Curl_actual_call *ac = arg;
   unsigned int (*func)(void *) = ac->func;
   void *real_arg = ac->arg;
 
@@ -59,10 +59,10 @@ static void *curl_thread_create_thunk(void *arg)
   return 0;
 }
 
-curl_thread_t Curl_thread_create(unsigned int (*func) (void*), void *arg)
+curl_thread_t Curl_thread_create(unsigned int (*func) (void *), void *arg)
 {
   curl_thread_t t = malloc(sizeof(pthread_t));
-  struct curl_actual_call *ac = malloc(sizeof(struct curl_actual_call));
+  struct Curl_actual_call *ac = malloc(sizeof(struct Curl_actual_call));
   if(!(ac && t))
     goto err;
 
@@ -80,11 +80,12 @@ err:
   return curl_thread_t_null;
 }
 
-void Curl_thread_destroy(curl_thread_t hnd)
+void Curl_thread_destroy(curl_thread_t *hnd)
 {
-  if(hnd != curl_thread_t_null) {
-    pthread_detach(*hnd);
-    free(hnd);
+  if(*hnd != curl_thread_t_null) {
+    pthread_detach(**hnd);
+    free(*hnd);
+    *hnd = curl_thread_t_null;
   }
 }
 
@@ -100,23 +101,48 @@ int Curl_thread_join(curl_thread_t *hnd)
 
 #elif defined(USE_THREADS_WIN32)
 
-curl_thread_t Curl_thread_create(unsigned int (CURL_STDCALL *func) (void*),
+curl_thread_t Curl_thread_create(
+#if defined(CURL_WINDOWS_UWP) || defined(UNDER_CE)
+                                 DWORD
+#else
+                                 unsigned int
+#endif
+                                 (CURL_STDCALL *func) (void *),
                                  void *arg)
 {
-#ifdef _WIN32_WCE
-  return CreateThread(NULL, 0, func, arg, 0, NULL);
+#if defined(CURL_WINDOWS_UWP) || defined(UNDER_CE)
+  typedef HANDLE curl_win_thread_handle_t;
 #else
-  curl_thread_t t;
-  t = (curl_thread_t)_beginthreadex(NULL, 0, func, arg, 0, NULL);
-  if((t == 0) || (t == (curl_thread_t)-1L))
-    return curl_thread_t_null;
-  return t;
+  typedef uintptr_t curl_win_thread_handle_t;
 #endif
+  curl_thread_t t;
+  curl_win_thread_handle_t thread_handle;
+#if defined(CURL_WINDOWS_UWP) || defined(UNDER_CE)
+  thread_handle = CreateThread(NULL, 0, func, arg, 0, NULL);
+#else
+  thread_handle = _beginthreadex(NULL, 0, func, arg, 0, NULL);
+#endif
+  t = (curl_thread_t)thread_handle;
+  if((t == 0) || (t == LongToHandle(-1L))) {
+#ifdef UNDER_CE
+    DWORD gle = GetLastError();
+    /* !checksrc! disable ERRNOVAR 1 */
+    int err = (gle == ERROR_ACCESS_DENIED ||
+               gle == ERROR_NOT_ENOUGH_MEMORY) ?
+               EACCES : EINVAL;
+    CURL_SETERRNO(err);
+#endif
+    return curl_thread_t_null;
+  }
+  return t;
 }
 
-void Curl_thread_destroy(curl_thread_t hnd)
+void Curl_thread_destroy(curl_thread_t *hnd)
 {
-  CloseHandle(hnd);
+  if(*hnd != curl_thread_t_null) {
+    CloseHandle(*hnd);
+    *hnd = curl_thread_t_null;
+  }
 }
 
 int Curl_thread_join(curl_thread_t *hnd)
@@ -128,9 +154,7 @@ int Curl_thread_join(curl_thread_t *hnd)
   int ret = (WaitForSingleObjectEx(*hnd, INFINITE, FALSE) == WAIT_OBJECT_0);
 #endif
 
-  Curl_thread_destroy(*hnd);
-
-  *hnd = curl_thread_t_null;
+  Curl_thread_destroy(hnd);
 
   return ret;
 }

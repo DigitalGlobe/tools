@@ -10,6 +10,9 @@ FAILURE
 #
 # Server-side
 <reply>
+<servercmd>
+REPLY PASS -ERR Login failure
+</servercmd>
 </reply>
 
 #
@@ -18,11 +21,11 @@ FAILURE
 <server>
 pop3
 </server>
- <name>
+<name>
 POP3 invalid login
- </name>
- <command>
-pop3://%HOSTIP:%POP3PORT/856 -u user:wrong
+</name>
+<command>
+pop3://%HOSTIP:%POP3PORT/%TESTNUMBER -u user:wrong
 </command>
 </client>
 

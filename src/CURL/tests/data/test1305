@@ -16,15 +16,11 @@ none
 <features>
 unittest
 </features>
- <name>
+<name>
 internal hash create/destroy testing
- </name>
-<tool>
-unit1305
-</tool>
+</name>
 <command>
-1305
+%TESTNUMBER
 </command>
 </client>
-
 </testcase>

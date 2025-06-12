@@ -1,122 +1,88 @@
-set(TARGET_LABEL_PREFIX "Test ")
+#***************************************************************************
+#                                  _   _ ____  _
+#  Project                     ___| | | |  _ \| |
+#                             / __| | | | |_) | |
+#                            | (__| |_| |  _ <| |___
+#                             \___|\___/|_| \_\_____|
+#
+# Copyright (C) Daniel Stenberg, <daniel@haxx.se>, et al.
+#
+# This software is licensed as described in the file COPYING, which
+# you should have received as part of this distribution. The terms
+# are also available at https://curl.se/docs/copyright.html.
+#
+# You may opt to use, copy, modify, merge, publish, distribute and/or sell
+# copies of the Software, and permit persons to whom the Software is
+# furnished to do so, under the terms of the COPYING file.
+#
+# This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
+# KIND, either express or implied.
+#
+# SPDX-License-Identifier: curl
+#
+###########################################################################
 
-function(SETUP_TEST TEST_NAME)          # ARGN are the files in the test
-  add_executable( ${TEST_NAME} ${ARGN} )
-  string(TOUPPER ${TEST_NAME} UPPER_TEST_NAME)
+# Get 'LIBTESTPROGS', '*_SOURCES', 'TESTUTIL', 'TSTTRACE', 'WARNLESS', 'MULTIBYTE', 'INET_PTON', 'TIMEDIFF', 'THREADS', 'MEMPTR'
+# 'FIRSTFILES' variables
+curl_transform_makefile_inc("Makefile.inc" "${CMAKE_CURRENT_BINARY_DIR}/Makefile.inc.cmake")
+include("${CMAKE_CURRENT_BINARY_DIR}/Makefile.inc.cmake")
 
-  include_directories(
-    ${CURL_SOURCE_DIR}/lib          # To be able to reach "curl_setup_once.h"
-    ${CURL_BINARY_DIR}/lib          # To be able to reach "curl_config.h"
-    ${CURL_BINARY_DIR}/include      # To be able to reach "curl/curlbuild.h"
-    )
-  if(USE_ARES)
-    include_directories(${CARES_INCLUDE_DIR})
+add_custom_command(
+  OUTPUT "lib1521.c"
+  COMMAND ${PERL_EXECUTABLE} "${CMAKE_CURRENT_SOURCE_DIR}/mk-lib1521.pl" < "${PROJECT_SOURCE_DIR}/include/curl/curl.h" "lib1521.c"
+  DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/mk-lib1521.pl"
+    "${PROJECT_SOURCE_DIR}/include/curl/curl.h"
+  VERBATIM)
+
+if(CURL_TEST_BUNDLES)
+  add_custom_command(
+    OUTPUT "libtest_bundle.c"
+    COMMAND ${PERL_EXECUTABLE} "${PROJECT_SOURCE_DIR}/tests/mk-bundle.pl" "${CMAKE_CURRENT_SOURCE_DIR}" > "libtest_bundle.c"
+    DEPENDS
+      "${PROJECT_SOURCE_DIR}/tests/mk-bundle.pl" ${FIRSTFILES} "lib1521.c"
+      "${CMAKE_CURRENT_SOURCE_DIR}/Makefile.inc"
+    VERBATIM)
+
+  set(LIBTESTPROGS "libtests")
+  set(libtests_SOURCES "libtest_bundle.c")
+  list(APPEND libtests_SOURCES ${TESTUTIL} ${TSTTRACE})
+  if(LIB_SELECTED STREQUAL LIB_SHARED)
+    # These are part of the libcurl static lib. Add them here when linking shared.
+    list(APPEND libtests_SOURCES ${WARNLESS} ${MULTIBYTE} ${INET_PTON} ${TIMEDIFF} ${THREADS} ${MEMPTR})
   endif()
-
-  target_link_libraries( ${TEST_NAME} libcurl ${CURL_LIBS})
-
-  set_target_properties(${TEST_NAME}
-    PROPERTIES COMPILE_DEFINITIONS ${UPPER_TEST_NAME})
-  set_target_properties(${TEST_NAME}
-    PROPERTIES PROJECT_LABEL "${TARGET_LABEL_PREFIX}${TEST_NAME}")
-
-  # Add the postfix to the executable since it is
-  # not added automatically as for modules and shared libraries
-  set_target_properties(${TEST_NAME}
-    PROPERTIES DEBUG_POSTFIX "${CMAKE_DEBUG_POSTFIX}")
-
-endfunction()
-
-
-transform_makefile_inc("Makefile.inc" "${CMAKE_CURRENT_BINARY_DIR}/Makefile.inc.cmake")
-include(${CMAKE_CURRENT_BINARY_DIR}/Makefile.inc.cmake)
-
-foreach(TEST_NAME ${noinst_PROGRAMS})
-  setup_test(${TEST_NAME} ${${TEST_NAME}_SOURCES})
-endforeach()
-
-# Allows for hostname override to make tests machine independent.
-# TODO this cmake build assumes a shared build, detect static linking here!
-if(NOT WIN32)
-  add_library(hostname MODULE sethostname.c sethostname.h)
-  # Output to .libs for compatibility with autotools, the test data expects a
-  # library at (tests)/libtest/.libs/libhostname.so
-  set_target_properties(hostname PROPERTIES
-      LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/.libs)
 endif()
 
-# # files used only in some libcurl test programs
-# SET(TESTUTIL testutil.c testutil.h)
+foreach(_target IN LISTS LIBTESTPROGS)
+  if(DEFINED ${_target}_SOURCES)
+    set(_sources ${${_target}_SOURCES})
+  else()
+    set(_sources ${nodist_${_target}_SOURCES})
+  endif()
 
-# # these files are used in every single test program below
-# SET(SUPPORTFILES first.c test.h)
+  if(LIB_SELECTED STREQUAL LIB_STATIC)
+    # These are part of the libcurl static lib. Do not compile/link them again.
+    list(REMOVE_ITEM _sources ${WARNLESS} ${MULTIBYTE} ${INET_PTON} ${TIMEDIFF} ${THREADS})
+  endif()
 
-# # These are all libcurl test programs
-# SET(noinst_PROGRAMS
-# lib500 lib501 lib502 lib503 lib504 lib505 lib506
-# lib507 lib508 lib510 lib511 lib512 lib513 lib514 lib515 lib516
-# lib517 lib518 lib519 lib520 lib521 lib523 lib524 lib525 lib526
-# #lib527
-# #lib529
-# lib530
-# #lib532
-# lib533 lib536 lib537 lib540 lib541 lib542 lib543
-# lib544
-# #lib545
-# lib547
-# #lib548
-# lib549 lib552 lib553 lib554 lib555 lib556
-# lib539 lib557
-# lib560
-# )
-
-# SET(noinst_PROGRAMS_USE_TESTUTIL
-# lib502 lib503 lib504
-# lib507
-# lib525 lib526 lib527
-# lib529
-# lib530
-# lib532
-# lib533 lib536
-# lib555
-# )
-
-# MACRO(ADD_TESTUTIL_IF_NECESSARY TEST_NAME)
-# LIST(FIND noinst_PROGRAMS_USE_TESTUTIL ${TEST_NAME} USES_TESTUTIL)
-# IF(NOT ${USES_TESTUTIL} EQUAL -1)
-# LIST(APPEND SOURCE ${TESTUTIL})               # Need TestUtil
-# ENDIF()
-# ENDMACRO()
-
-# # General case
-# FOREACH(TEST_NAME ${noinst_PROGRAMS})
-# SET(SOURCE "${TEST_NAME}.c" ${SUPPORTFILES})
-# ADD_TESTUTIL_IF_NECESSARY(${TEST_NAME})
-# SETUP_TEST(${TEST_NAME} ${SOURCE})
-# ENDFOREACH()
-
-# # Special cases
-# SET(TEST_NAME lib527)
-# SET(SOURCE "lib526.c" ${SUPPORTFILES})
-# ADD_TESTUTIL_IF_NECESSARY(${TEST_NAME})
-# SETUP_TEST(${TEST_NAME} ${SOURCE})
-
-# SET(TEST_NAME lib529)
-# SET(SOURCE "lib525.c" ${SUPPORTFILES})
-# ADD_TESTUTIL_IF_NECESSARY(${TEST_NAME})
-# SETUP_TEST(${TEST_NAME} ${SOURCE})
-
-# SET(TEST_NAME lib532)
-# SET(SOURCE "lib526.c" ${SUPPORTFILES})
-# ADD_TESTUTIL_IF_NECESSARY(${TEST_NAME})
-# SETUP_TEST(${TEST_NAME} ${SOURCE})
-
-# SET(TEST_NAME lib545)
-# SET(SOURCE "lib544.c" ${SUPPORTFILES})
-# ADD_TESTUTIL_IF_NECESSARY(${TEST_NAME})
-# SETUP_TEST(${TEST_NAME} ${SOURCE})
-
-# SET(TEST_NAME lib548)
-# SET(SOURCE "lib547.c" ${SUPPORTFILES})
-# ADD_TESTUTIL_IF_NECESSARY(${TEST_NAME})
-# SETUP_TEST(${TEST_NAME} ${SOURCE})
+  string(TOUPPER ${_target} _upper_target)
+  set(_target_name "${_target}")
+  add_executable(${_target_name} EXCLUDE_FROM_ALL ${_sources})
+  add_dependencies(testdeps ${_target_name})
+  target_link_libraries(${_target_name} ${LIB_SELECTED} ${CURL_LIBS})
+  target_include_directories(${_target_name} PRIVATE
+    "${PROJECT_BINARY_DIR}/lib"            # for "curl_config.h"
+    "${PROJECT_SOURCE_DIR}/lib"            # for "curl_setup.h"
+    "${PROJECT_SOURCE_DIR}/lib/curlx"      # for curlx
+    "${PROJECT_SOURCE_DIR}/src"            # for "tool_binmode.h"
+    "${PROJECT_SOURCE_DIR}/tests/libtest"  # to be able to build generated tests
+    "${PROJECT_SOURCE_DIR}/tests/unit"     # for curlcheck.h
+  )
+  set_property(TARGET ${_target_name} APPEND PROPERTY COMPILE_DEFINITIONS "${CURL_DEBUG_MACROS}")
+  if(NOT CURL_TEST_BUNDLES)
+    set_property(TARGET ${_target_name} APPEND PROPERTY COMPILE_DEFINITIONS ${_upper_target})
+  endif()
+  set_target_properties(${_target_name} PROPERTIES
+    OUTPUT_NAME "${_target}"
+    PROJECT_LABEL "Test libtest ${_target}")
+endforeach()
