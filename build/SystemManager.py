@@ -344,6 +344,16 @@ class SystemManager:
         )
 
     # ----------------------------------------------------------------------
+    # Gets the value of an environment variable.
+    #
+    # Parameters :
+    #     self : this manager
+    # Return :
+    #     the value of the path environment variable
+    def getEnvironmentVariableValue(self, environmentVariableName):
+        return self._getEnvironmentVariableName(environmentVariableName)
+
+    # ----------------------------------------------------------------------
     # Gets the path name of the program-files directory.
     #
     # Parameters :
@@ -448,6 +458,16 @@ class SystemManager:
                 print(ex)
                 print("Retrying...")
                 time.sleep(RETRY_DELAY)
+
+    # ----------------------------------------------------------------------
+    # Set the value of an environment variable.
+    #
+    # Parameters :
+    #     self : this manager
+    # Return :
+    #     the value of the path environment variable
+    def setEnvironmentVariableValue(self, environmentVariableName, environmentVariableValue):
+        os.environ[environmentVariableName] = environmentVariableValue
 
     # ----------------------------------------------------------------------
 

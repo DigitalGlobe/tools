@@ -315,6 +315,25 @@ class PathFinder:
         return pathName
 
     # ----------------------------------------------------------------------
+    # Gets the name of the ATL  path.
+    #
+    # Parameters :
+    #     self         : this finder
+    #     x64Specified : if <code>true</code>, 64-bit is specified; if
+    #                    <code>false</code>, 32-bit is specified
+    # Returns :
+    #     the name of the Visual Studio include path
+    def getVCVARSFileName(self, x64Specified):
+
+        fileName = os.path.join(
+            self.getVCVARSPathName(x64Specified),
+            "vcvars64.bat" if x64Specified else "vcvars32.bat",
+        )
+        if not os.path.exists(fileName):
+            raise Exception(f"Bad VCVars filename {fileName}")
+        return fileName
+
+    # ----------------------------------------------------------------------
     # Gets the name of the ATL include path.
     #
     # Parameters :
