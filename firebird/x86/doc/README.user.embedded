@@ -1,5 +1,5 @@
 -----------------------------------------------------------
-Firebird 2.5 Embedded Server notes
+Firebird 3.0 Embedded Server notes
 -----------------------------------------------------------
 
 1. GENERIC INFORMATION
@@ -19,9 +19,9 @@ Firebird 2.5 Embedded Server notes
 
   2.2. Database access
 
-    Client access can be only via the local protocol,
-    i.e. NOT a TCP/IP connection string that includes
-    the server name "localhost" or IP address 127.0.0.1.
+    Client access can be only via the local protocol, 
+    i.e. NOT a TCP/IP connection string that includes 
+    the server name "localhost" or IP address 127.0.0.1. 
 
     The embedded server supports only the local connection
     to a database file path without a server name.

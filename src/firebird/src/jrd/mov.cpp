@@ -27,12 +27,13 @@
  */
 
 #include "firebird.h"
-#include "../jrd/common.h"
-#include "../jrd/gdsassert.h"
+#include "../common/gdsassert.h"
+#include "../common/classes/VaryStr.h"
 #include "../jrd/jrd.h"
 #include "../jrd/val.h"
 #include "../jrd/intl.h"
 #include "../jrd/blb_proto.h"
+#include "../jrd/blb.h"
 #include "../jrd/cvt_proto.h"
 #include "../common/cvt.h"
 #include "../jrd/cvt2_proto.h"
@@ -42,7 +43,7 @@
 
 using namespace Firebird;
 
-int MOV_compare(const dsc* arg1, const dsc* arg2)
+int MOV_compare(Jrd::thread_db* tdbb, const dsc* arg1, const dsc* arg2)
 {
 /**************************************
  *
@@ -54,8 +55,10 @@ int MOV_compare(const dsc* arg1, const dsc* arg2)
  *	Compare two descriptors.  Return (-1, 0, 1) if a<b, a=b, or a>b.
  *
  **************************************/
+	fb_assert(!(arg1->dsc_flags & DSC_null));
+	fb_assert(!(arg2->dsc_flags & DSC_null));
 
-	return CVT2_compare(arg1, arg2);
+	return CVT2_compare(arg1, arg2, tdbb->getAttachment()->att_dec_status);
 }
 
 
@@ -76,44 +79,6 @@ double MOV_date_to_double(const dsc* desc)
 	return CVT_date_to_double(desc);
 }
 
-
-#ifdef NOT_USED_OR_REPLACED
-// Strange, I don't see this function surfaced as public.
-void MOV_double_to_date2(double real, dsc* desc)
-{
-/**************************************
- *
- *	M O V _ d o u b l e _ t o _ d a t e 2
- *
- **************************************
- *
- * Functional description
- *	Move a double to one of the many forms of a date
- *
- **************************************/
-	SLONG fixed[2];
-
-	MOV_double_to_date(real, fixed);
-	switch (desc->dsc_dtype)
-	{
-	case dtype_timestamp:
-		((SLONG *) desc->dsc_address)[0] = fixed[0];
-		((SLONG *) desc->dsc_address)[1] = fixed[1];
-		break;
-	case dtype_sql_time:
-		((SLONG *) desc->dsc_address)[0] = fixed[1];
-		break;
-	case dtype_sql_date:
-		((SLONG *) desc->dsc_address)[0] = fixed[0];
-		break;
-	default:
-		fb_assert(FALSE);
-		break;
-	}
-}
-#endif
-
-
 void MOV_double_to_date(double real, SLONG fixed[2])
 {
 /**************************************
@@ -133,7 +98,14 @@ void MOV_double_to_date(double real, SLONG fixed[2])
 }
 
 
-double MOV_get_double(const dsc* desc)
+// Get the value of a boolean descriptor.
+bool MOV_get_boolean(const dsc* desc)
+{
+	return CVT_get_boolean(desc, ERR_post);
+}
+
+
+double MOV_get_double(Jrd::thread_db* tdbb, const dsc* desc)
 {
 /**************************************
  *
@@ -146,11 +118,11 @@ double MOV_get_double(const dsc* desc)
  *
  **************************************/
 
-	return CVT_get_double(desc, ERR_post);
+	return CVT_get_double(desc, tdbb->getAttachment()->att_dec_status, ERR_post);
 }
 
 
-SLONG MOV_get_long(const dsc* desc, SSHORT scale)
+SLONG MOV_get_long(Jrd::thread_db* tdbb, const dsc* desc, SSHORT scale)
 {
 /**************************************
  *
@@ -164,11 +136,11 @@ SLONG MOV_get_long(const dsc* desc, SSHORT scale)
  *
  **************************************/
 
-	return CVT_get_long(desc, scale, ERR_post);
+	return CVT_get_long(desc, scale, tdbb->getAttachment()->att_dec_status, ERR_post);
 }
 
 
-SINT64 MOV_get_int64(const dsc* desc, SSHORT scale)
+SINT64 MOV_get_int64(Jrd::thread_db* tdbb, const dsc* desc, SSHORT scale)
 {
 /**************************************
  *
@@ -182,61 +154,34 @@ SINT64 MOV_get_int64(const dsc* desc, SSHORT scale)
  *
  **************************************/
 
-	return CVT_get_int64(desc, scale, ERR_post);
+	return CVT_get_int64(desc, scale, tdbb->getAttachment()->att_dec_status, ERR_post);
 }
 
 
-void MOV_get_metadata_str(const dsc* desc, TEXT* buffer, USHORT buffer_length)
+void MOV_get_metaname(Jrd::thread_db* tdbb, const dsc* desc, Jrd::MetaName& name)
 {
 /**************************************
  *
- *	M O V _ g e t _ m e t a d a t a _ s t r
+ *	M O V _ g e t _ m e t a n a m e
  *
  **************************************
  *
  * Functional description
  *	Copy string, which will afterward's
  *	be treated as a metadata name value,
- *	to the user-supplied buffer.
- *
- **************************************/
-	USHORT dummy_type;
-	UCHAR *ptr;
-
-	USHORT length = CVT_get_string_ptr(desc, &dummy_type, &ptr, NULL, 0);
-
-#ifdef DEV_BUILD
-	if ((dummy_type != ttype_metadata) &&
-		(dummy_type != ttype_none) && (dummy_type != ttype_ascii))
-	{
-		ERR_bugcheck_msg("Expected METADATA name");
-	}
-#endif
-
-	length = ptr ? MIN(length, buffer_length - 1) : 0;
-	memcpy(buffer, ptr, length);
-	buffer[length] = 0;
-}
-
-
-void MOV_get_name(const dsc* desc, TEXT* string)
-{
-/**************************************
- *
- *	M O V _ g e t _ n a m e
- *
- **************************************
- *
- * Functional description
- *	Get a name (max length 31, blank terminated) from a descriptor.
+ *	to the user-supplied object.
  *
  **************************************/
 
-	CVT2_get_name(desc, string);
+	VaryStr<MAX_SQL_IDENTIFIER_SIZE> temp;
+	const char* str = NULL;
+	const auto len = MOV_make_string(tdbb, desc, ttype_metadata, &str,
+									 &temp, MAX_SQL_IDENTIFIER_SIZE);
+	name.assign(str, len);
 }
 
 
-SQUAD MOV_get_quad(const dsc* desc, SSHORT scale)
+SQUAD MOV_get_quad(Jrd::thread_db* tdbb, const dsc* desc, SSHORT scale)
 {
 /**************************************
  *
@@ -250,11 +195,12 @@ SQUAD MOV_get_quad(const dsc* desc, SSHORT scale)
  *
  **************************************/
 
-	return CVT_get_quad(desc, scale, ERR_post);
+	return CVT_get_quad(desc, scale, tdbb->getAttachment()->att_dec_status, ERR_post);
 }
 
 
-int MOV_get_string_ptr(const dsc* desc,
+int MOV_get_string_ptr(Jrd::thread_db* tdbb,
+					   const dsc* desc,
 					   USHORT* ttype,
 					   UCHAR** address, vary* temp, USHORT length)
 {
@@ -275,11 +221,11 @@ int MOV_get_string_ptr(const dsc* desc,
  *
  **************************************/
 
-	return CVT_get_string_ptr(desc, ttype, address, temp, length);
+	return CVT_get_string_ptr(desc, ttype, address, temp, length, tdbb->getAttachment()->att_dec_status);
 }
 
 
-int MOV_get_string(const dsc* desc, UCHAR** address, vary* temp, USHORT length)
+int MOV_get_string(Jrd::thread_db* tdbb, const dsc* desc, UCHAR** address, vary* temp, USHORT length)
 {
 /**************************************
  *
@@ -292,7 +238,7 @@ int MOV_get_string(const dsc* desc, UCHAR** address, vary* temp, USHORT length)
  **************************************/
 	USHORT ttype;
 
-	return MOV_get_string_ptr(desc, &ttype, address, temp, length);
+	return MOV_get_string_ptr(tdbb, desc, &ttype, address, temp, length);
 }
 
 
@@ -330,6 +276,23 @@ GDS_TIME MOV_get_sql_time(const dsc* desc)
 }
 
 
+ISC_TIME_TZ MOV_get_sql_time_tz(const dsc* desc)
+{
+/**************************************
+ *
+ *	M O V _ g e t _ s q l _ t i m e _ t z
+ *
+ **************************************
+ *
+ * Functional description
+ *	Convert something arbitrary to a SQL time with time zone
+ *
+ **************************************/
+
+	return CVT_get_sql_time_tz(desc);
+}
+
+
 GDS_TIMESTAMP MOV_get_timestamp(const dsc* desc)
 {
 /**************************************
@@ -347,7 +310,25 @@ GDS_TIMESTAMP MOV_get_timestamp(const dsc* desc)
 }
 
 
-int MOV_make_string(const dsc*	     desc,
+ISC_TIMESTAMP_TZ MOV_get_timestamp_tz(const dsc* desc)
+{
+/**************************************
+ *
+ *	M O V _ g e t _ t i m e s t a m p _ t z
+ *
+ **************************************
+ *
+ * Functional description
+ *	Convert something arbitrary to a timestamp with time zone
+ *
+ **************************************/
+
+	return CVT_get_timestamp_tz(desc);
+}
+
+
+USHORT MOV_make_string(Jrd::thread_db* tdbb,
+					const dsc*	 desc,
 					USHORT	     ttype,
 					const char** address,
 					vary*	     temp,
@@ -372,11 +353,11 @@ int MOV_make_string(const dsc*	     desc,
  *
  **************************************/
 
-	return CVT_make_string(desc, ttype, address, temp, length, ERR_post);
+	return CVT_make_string(desc, ttype, address, temp, length, tdbb->getAttachment()->att_dec_status, ERR_post);
 }
 
 
-int MOV_make_string2(Jrd::thread_db* tdbb,
+ULONG MOV_make_string2(Jrd::thread_db* tdbb,
 					 const dsc* desc,
 					 USHORT ttype,
 					 UCHAR** address,
@@ -406,7 +387,7 @@ int MOV_make_string2(Jrd::thread_db* tdbb,
 		Firebird::UCharBuffer bpb;
 		BLB_gen_bpb_from_descs(desc, &temp, bpb);
 
-		Jrd::blb* blob = BLB_open2(tdbb, tdbb->getRequest()->req_transaction,
+		Jrd::blb* blob = Jrd::blb::open2(tdbb, tdbb->getRequest()->req_transaction,
 			reinterpret_cast<Jrd::bid*>(desc->dsc_address), bpb.getCount(), bpb.begin());
 
 		ULONG size;
@@ -423,16 +404,28 @@ int MOV_make_string2(Jrd::thread_db* tdbb,
 
 		*address = buffer.getBuffer(size);
 
-		size = BLB_get_data(tdbb, blob, *address, size, true);
+		size = blob->BLB_get_data(tdbb, *address, size, true);
 
 		if (limit && size > MAX_COLUMN_SIZE)
+		{
 			ERR_post(Arg::Gds(isc_arith_except) <<
 					 Arg::Gds(isc_blob_truncation));
+		}
 
 		return size;
 	}
 
-	return CVT2_make_string2(desc, ttype, address, buffer);
+	return CVT2_make_string2(desc, ttype, address, buffer, tdbb->getAttachment()->att_dec_status);
+}
+
+
+Firebird::string MOV_make_string2(Jrd::thread_db* tdbb, const dsc* desc, USHORT ttype, bool limit)
+{
+	Jrd::MoveBuffer buffer;
+	UCHAR* ptr;
+	int len = MOV_make_string2(tdbb, desc, ttype, &ptr, buffer, limit);
+
+	return string((const char*) ptr, len);
 }
 
 
@@ -449,11 +442,113 @@ void MOV_move(Jrd::thread_db* tdbb, /*const*/ dsc* from, dsc* to)
  *
  **************************************/
 
-	if (DTYPE_IS_BLOB_OR_QUAD(from->dsc_dtype) ||
-		DTYPE_IS_BLOB_OR_QUAD(to->dsc_dtype))
-	{
-		BLB_move(tdbb, from, to, NULL);
-	}
+	if (DTYPE_IS_BLOB_OR_QUAD(from->dsc_dtype) || DTYPE_IS_BLOB_OR_QUAD(to->dsc_dtype))
+		Jrd::blb::move(tdbb, from, to);
 	else
-		CVT_move(from, to);
+		CVT_move(from, to, tdbb->getAttachment()->att_dec_status);
 }
+
+
+Decimal64 MOV_get_dec64(Jrd::thread_db* tdbb, const dsc* desc)
+{
+/**************************************
+ *
+ *	M O V _ g e t _ d e c 6 4
+ *
+ **************************************/
+
+	return CVT_get_dec64(desc, tdbb->getAttachment()->att_dec_status, ERR_post);
+}
+
+
+Decimal128 MOV_get_dec128(Jrd::thread_db* tdbb, const dsc* desc)
+{
+/**************************************
+ *
+ *	M O V _ g e t _ d e c 1 2 8
+ *
+ **************************************/
+
+	return CVT_get_dec128(desc, tdbb->getAttachment()->att_dec_status, ERR_post);
+}
+
+
+Int128 MOV_get_int128(Jrd::thread_db* tdbb, const dsc* desc, SSHORT scale)
+{
+/**************************************
+ *
+ *	M O V _ g e t _ d e c _ f i x e d
+ *
+ **************************************/
+
+	return CVT_get_int128(desc, scale, tdbb->getAttachment()->att_dec_status, ERR_post);
+}
+
+
+namespace Jrd
+{
+
+DescPrinter::DescPrinter(thread_db* tdbb, const dsc* desc, FB_SIZE_T mLen, USHORT charSetId)
+	: maxLen(mLen)
+{
+	const char* const NULL_KEY_STRING = "NULL";
+
+	if (!desc)
+	{
+		value = NULL_KEY_STRING;
+		return;
+	}
+
+	fb_assert(!desc->isBlob());
+
+	const bool isBinary = (desc->isText() && desc->getCharSet() == CS_BINARY);
+	value = MOV_make_string2(tdbb, desc, isBinary ? CS_BINARY : charSetId);
+
+	const char* const str = value.c_str();
+
+	if (desc->isText() || desc->isDateTime())
+	{
+		if (desc->dsc_dtype == dtype_text)
+		{
+			const char* const pad = (desc->getCharSet() == CS_BINARY) ? "\0" : " ";
+			value.rtrim(pad);
+		}
+
+		if (isBinary)
+		{
+			string hex;
+
+			FB_SIZE_T len = value.length();
+			const bool cut = (len > (maxLen - 3) / 2);	// 3 is a length of enclosing symbols: x' and '
+			if (cut)
+				len = (maxLen - 5) / 2;					// 5 is a length of enclosing symbols: x' and ...
+
+			char* s = hex.getBuffer(2 * len);			// each raw byte represented by 2 chars in string
+
+			for (FB_SIZE_T i = 0; i < len; i++)
+			{
+				sprintf(s, "%02X", (int)(unsigned char) str[i]);
+				s += 2;
+			}
+			value = "x'" + hex + (cut ? "..." : "'");
+		}
+		else
+			value = "'" + value + "'";
+	}
+
+	if (value.length() > maxLen)
+	{
+		fb_assert(desc->isText());
+
+		value.resize(maxLen);
+
+		const CharSet* const cs = INTL_charset_lookup(tdbb, charSetId);
+
+		while (value.hasData() && !cs->wellFormed(value.length(), (const UCHAR*) value.c_str()))
+			value.resize(value.length() - 1);
+
+		value += "...";
+	}
+}
+
+}	// namespace Jrd

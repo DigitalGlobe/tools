@@ -36,7 +36,7 @@ void Extender::alloc(size_t n)
 	{
 		delete[] m_buf;
 
-		m_buf = new char[m_size = n];
+		m_buf = FB_NEW char[m_size = n];
 		m_buf[0] = 0;
 	}
 	m_pos = m_buf;
@@ -99,7 +99,7 @@ void Extender::grow(size_t n)
 		const size_t old_pos = getUsed();
 		char* const old_buf = m_buf;
 
-		m_buf = new char[m_size = n];
+		m_buf = FB_NEW char[m_size = n];
 		memcpy(m_buf, old_buf, old_pos); // Copy only the used bytes.
 		m_pos = m_buf + old_pos; // Reposition the current insertion point.
 		m_pos[0] = 0; // Same as alloc().

@@ -29,17 +29,17 @@
 
 #include "firebird.h"
 #include <stdio.h>
-#include "../jrd/common.h"
-#include "../jrd/ibase.h"
-//#include "../jrd/license.h"
+#include "ibase.h"
 #include "../alice/alice.h"
 #include "../alice/alice_meta.h"
-#include "../jrd/gds_proto.h"
-#include "../include/fb_exception.h"
+#include "../yvalve/gds_proto.h"
+#include "fb_exception.h"
 #include "../common/classes/alloc.h"
 #include "../common/classes/array.h"
 #include "../common/classes/UserBlob.h"
 #include "../alice/alice_proto.h"
+#include "../common/utils_proto.h"
+#include "../common/isc_f_proto.h"
 
 #include <string.h>
 
@@ -55,7 +55,7 @@ DATABASE DB = STATIC FILENAME "yachts.lnk";
 
 typedef Firebird::HalfStaticArray<TEXT, 1024> TextBuffer;
 
-static alice_str* alloc_string(const TEXT**);
+static void get_string(const TEXT**, Firebird::string&);
 static USHORT get_capabilities(ISC_STATUS*);
 static tdr* get_description(ISC_QUAD*);
 static void parse_fullpath(tdr*);
@@ -165,7 +165,7 @@ void MET_get_state(ISC_STATUS* user_status, tdr* trans)
  *		in other databases.
  */
 
-tdr* MET_get_transaction(ISC_STATUS* user_status, isc_db_handle handle, SLONG id)
+tdr* MET_get_transaction(ISC_STATUS* user_status, isc_db_handle handle, TraNumber id)
 {
 	FB_API_HANDLE request = 0;
 	tdr* trans = NULL;
@@ -243,19 +243,15 @@ void MET_set_capabilities(ISC_STATUS* user_status, tdr* trans)
  *		Eat a string with a byte-encoded length.
  */
 
-static alice_str* alloc_string(const TEXT** ptr)
+static void get_string(const TEXT** ptr, Firebird::string& str)
 {
 	AliceGlobals* tdgbl = AliceGlobals::getSpecific();
 
 	const TEXT* p = *ptr;
-
 	const USHORT length = (USHORT) *p++;
-	alice_str* string = FB_NEW_RPT(*tdgbl->getDefaultPool(), length + 1) alice_str;
-	memcpy(string->str_data, p, length);
-	string->str_data[length] = 0;
 	*ptr = p + length;
 
-	return string;
+	str.assign(p, length);
 }
 
 
@@ -320,46 +316,48 @@ static tdr* get_description(ISC_QUAD* blob_id)
 		return NULL;
 
 	tdr* trans = NULL;
-	alice_str* host_site = NULL;
-	alice_str* database_path = NULL;
+	Firebird::string host_site;
+	Firebird::string database_path;
 
 	const TEXT* p = buffer.begin();
+	Firebird::MemoryPool& pool(*tdgbl->getDefaultPool());
 
 	// skip version number
 	++p;
 
 	tdr* ptr = NULL; // silence uninitialized warning
-	SLONG id_length, id;
+	SLONG id_length;
+	TraNumber id;
 
 	while (*p)
 	{
 		switch (*p++)
 		{
 		case TDR_HOST_SITE:
-			host_site = alloc_string(&p);
+			get_string(&p, host_site);
 			break;
 
 		case TDR_DATABASE_PATH:
-			database_path = alloc_string(&p);
+			get_string(&p, database_path);
 			break;
 
 		case TDR_TRANSACTION_ID:
 			id_length = *p++;
-			id = gds__vax_integer(reinterpret_cast<const UCHAR*>(p), id_length);
+			id = isc_portable_integer(reinterpret_cast<const UCHAR*>(p), id_length);
 			p += id_length;
 			if (!trans) {
-				trans = ptr = FB_NEW(*tdgbl->getDefaultPool()) tdr;
+				trans = ptr = FB_NEW_POOL(pool) tdr(pool);
 			}
 			else
 			{
-				ptr->tdr_next = FB_NEW(*tdgbl->getDefaultPool()) tdr;
+				ptr->tdr_next = FB_NEW_POOL(pool) tdr(pool);
 				ptr = ptr->tdr_next;
 			}
 			ptr->tdr_host_site = host_site;
 			ptr->tdr_fullpath = database_path;
 			parse_fullpath(ptr);
 			ptr->tdr_id = id;
-			database_path = NULL;
+			database_path.clear();
 			break;
 
 		default:
@@ -382,74 +380,17 @@ static tdr* get_description(ISC_QUAD* blob_id)
 
 static void parse_fullpath(tdr* trans)
 {
-	AliceGlobals* tdgbl = AliceGlobals::getSpecific();
+	Firebird::PathName filename = trans->tdr_fullpath.c_str();
+	Firebird::PathName hostname;
 
-	// start at the end of the full pathname
+	// Find the last remote node in the path
 
- 	const TEXT* p = (TEXT*) trans->tdr_fullpath->str_data;
-	const TEXT* const start = p;
-	while (*p)
-		p++;
-	const TEXT* const end = p;
+	while (ISC_analyze_tcp(filename, hostname))
+		trans->tdr_remote_site = hostname.c_str();
 
-	// Check for a named pipes name - \\node\path\db or //node/path/db
-	while (p > start && !(*p == '/' && p[-1] == '/') && !(*p == '\\' && p[-1] == '\\'))
-	{
-		--p;
-	}
+	// At this point the filename is clear from any remote nodes
 
-	if (p > start)
-	{
-		// Increment p past slash, & search forward for end of node name
-		p = p + 1;
-		const TEXT* q = p;
-
-		while (*q && *q != '/' && *q != '\\')
-			q++;
-		if (*q)
-		{
-			trans->tdr_filename = q + 1;
-
-			trans->tdr_remote_site = FB_NEW_RPT(*tdgbl->getDefaultPool(), q - p + 1) alice_str;
-			strncpy((char*) trans->tdr_remote_site->str_data, (char*) p, q - p);
-			trans->tdr_remote_site->str_data[q - p] = '\0';
-		}
-	}
-	else
-	{
-		p = end;
-
-		// If not named pipes, check the other protocols
-		// work backwards until we find a remote protocol specifier
-
-
-		while (p >= start && (*p != '^' && *p != ':' && *p != '@'))
-			p--;
-		// dimitr:	make sure that the remote path is parsed correctly
-		//			for win32 servers, i.e. the drive separator is taken into account
-		if ((p - 2 >= start) && p[-2] == ':' && (p[0] == ':'))
-			p -= 2;
-		trans->tdr_filename = p + 1;
-
-		// now find the last remote node in the chain
-
-		while (p > start && (*p == ':' || *p == '^' || *p == '@'))
-			p--;
-
-		USHORT length = 0;
-		for (; p >= start && (*p != '^' && *p != ':' && *p != '@'); ++length)
-			--p;
-		++p;
-
-		if (length)
-		{
-			trans->tdr_remote_site = FB_NEW_RPT(*tdgbl->getDefaultPool(), length + 1) alice_str;
-			TEXT* q = (TEXT *) trans->tdr_remote_site->str_data;
-			while (length--)
-				*q++ = *p++;
-			*q = 0;
-		}
-	}
+	trans->tdr_filename = filename.c_str();
 }
 
 
@@ -468,13 +409,13 @@ static bool snarf_blob(ISC_QUAD* blob_id, TextBuffer& buffer)
 
 	SLONG blob_size;
 	if (!getBlobSize(blob, &blob_size, NULL, NULL))
-		return NULL;
+		return false;
 
-	size_t len = blob_size;
+	FB_SIZE_T len = blob_size;
 	TEXT* ptr = buffer.getBuffer(blob_size + 1);
 	while (len)
 	{
-		size_t real_len;
+		FB_SIZE_T real_len;
 		if (len && blob.getSegment(len, ptr, real_len))
 		{
 			len -= real_len;
@@ -490,6 +431,7 @@ static bool snarf_blob(ISC_QUAD* blob_id, TextBuffer& buffer)
 
 		return false;
 	}
+
 	blob.close();
 	*ptr = 0;
 
@@ -497,4 +439,3 @@ static bool snarf_blob(ISC_QUAD* blob_id, TextBuffer& buffer)
 
 	return true;
 }
-

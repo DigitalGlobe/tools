@@ -28,49 +28,164 @@
 // Definition of block types for data allocation in JRD
 #include "../include/fb_blk.h"
 
-#include "../jrd/ibase.h"
-#include "../jrd/common.h"
 #include "../jrd/ods.h"
 #include "../jrd/lck.h"
 #include "../jrd/Database.h"
 #include "../jrd/nbak.h"
 #include "../jrd/tra.h"
+#include "../jrd/met_proto.h"
+#include "../jrd/pag_proto.h"
+#include "../jrd/tpc_proto.h"
 #include "../jrd/lck_proto.h"
+#include "../jrd/CryptoManager.h"
 #include "../jrd/os/pio_proto.h"
+#include "../common/os/os_utils.h"
+//#include "../dsql/Parser.h"
 
 // Thread data block
-#include "../jrd/ThreadData.h"
+#include "../common/ThreadData.h"
 
-// recursive mutexes
-#include "../common/thd.h"
+using namespace Firebird;
 
 namespace Jrd
 {
 	bool Database::onRawDevice() const
 	{
-#ifdef SUPPORT_RAW_DEVICES
-		return PIO_on_raw_device(dbb_filename);
-#else
-		return false;
-#endif
+		const PageSpace* const pageSpace = dbb_page_manager.findPageSpace(DB_PAGE_SPACE);
+		return pageSpace->onRawDevice();
 	}
 
-	Firebird::string Database::getUniqueFileId() const
+	ULONG Database::getIOBlockSize() const
 	{
-		const PageSpace* const pageSpace = dbb_page_manager.findPageSpace(DB_PAGE_SPACE);
+		if ((dbb_flags & DBB_no_fs_cache) || onRawDevice())
+			return DIRECT_IO_BLOCK_SIZE;
 
-		Firebird::UCharBuffer buffer;
-		PIO_get_unique_file_id(pageSpace->file, buffer);
+		return PAGE_ALIGNMENT;
+	}
 
-		Firebird::string file_id;
-		char* s = file_id.getBuffer(2 * buffer.getCount());
-		for (size_t i = 0; i < buffer.getCount(); i++)
+	AttNumber Database::generateAttachmentId()
+	{
+		fb_assert(dbb_tip_cache);
+		return dbb_tip_cache->generateAttachmentId();
+	}
+
+	TraNumber Database::generateTransactionId()
+	{
+		fb_assert(dbb_tip_cache);
+		return dbb_tip_cache->generateTransactionId();
+	}
+
+	/***
+	void Database::assignLatestTransactionId(TraNumber number)
+	{
+		fb_assert(dbb_tip_cache);
+		dbb_tip_cache->assignLatestTransactionId(number);
+	}
+	***/
+
+	void Database::assignLatestAttachmentId(AttNumber number)
+	{
+		if (dbb_tip_cache)
+			dbb_tip_cache->assignLatestAttachmentId(number);
+	}
+
+	StmtNumber Database::generateStatementId()
+	{
+		if (!dbb_tip_cache)
+			return 0;
+		return dbb_tip_cache->generateStatementId();
+	}
+
+	AttNumber Database::getLatestAttachmentId() const
+	{
+		if (!dbb_tip_cache)
+			return 0;
+		return dbb_tip_cache->getLatestAttachmentId();
+	}
+
+	StmtNumber Database::getLatestStatementId() const
+	{
+		if (!dbb_tip_cache)
+			return 0;
+		return dbb_tip_cache->getLatestStatementId();
+	}
+
+	ULONG Database::getMonitorGeneration() const
+	{
+		if (!dbb_tip_cache)
+			return 0;
+		return dbb_tip_cache->getMonitorGeneration();
+	}
+
+	ULONG Database::newMonitorGeneration() const
+	{
+		fb_assert(dbb_tip_cache);
+		return dbb_tip_cache->newMonitorGeneration();
+	}
+
+	const Firebird::string& Database::getUniqueFileId()
+	{
+		if (dbb_file_id.isEmpty())
 		{
-			sprintf(s, "%02x", (int) buffer[i]);
-			s += 2;
+			const PageSpace* const pageSpace = dbb_page_manager.findPageSpace(DB_PAGE_SPACE);
+
+			UCharBuffer buffer;
+			os_utils::getUniqueFileId(pageSpace->file->fil_desc, buffer);
+
+			auto ptr = dbb_file_id.getBuffer(2 * buffer.getCount());
+			for (const auto val : buffer)
+			{
+				sprintf(ptr, "%02x", (int) val);
+				ptr += 2;
+			}
 		}
 
-		return file_id;
+		return dbb_file_id;
+	}
+
+	Database::~Database()
+	{
+		if (dbb_linger_timer)
+		{
+			dbb_linger_timer->destroy();
+		}
+
+		{ // scope
+			SyncLockGuard guard(&dbb_sortbuf_sync, SYNC_EXCLUSIVE, "Database::~Database");
+
+			while (dbb_sort_buffers.hasData())
+				delete[] dbb_sort_buffers.pop();
+		}
+
+		{ // scope
+			SyncLockGuard guard(&dbb_pools_sync, SYNC_EXCLUSIVE, "Database::~Database");
+
+			fb_assert(dbb_pools[0] == dbb_permanent);
+
+			for (FB_SIZE_T i = 1; i < dbb_pools.getCount(); ++i)
+				MemoryPool::deletePool(dbb_pools[i]);
+		}
+
+		delete dbb_tip_cache;
+		delete dbb_monitoring_data;
+		delete dbb_backup_manager;
+		delete dbb_crypto_manager;
+	}
+
+	void Database::deletePool(MemoryPool* pool)
+	{
+		if (pool)
+		{
+			{
+				SyncLockGuard guard(&dbb_pools_sync, SYNC_EXCLUSIVE, "Database::deletePool");
+				FB_SIZE_T pos;
+
+				if (dbb_pools.find(pool, pos))
+					dbb_pools.remove(pos);
+			}
+
+			MemoryPool::deletePool(pool);
+		}
 	}
 
 	int Database::blocking_ast_sweep(void* ast_object)
@@ -78,17 +193,27 @@ namespace Jrd
 		try
 		{
 			Database* dbb = static_cast<Database*>(ast_object);
+			AsyncContextHolder tdbb(dbb, FB_FUNCTION);
 
-			AstContextHolder tdbb(dbb);
-			Jrd::ContextPoolHolder context(tdbb, dbb->dbb_permanent);
-
-			if (dbb->dbb_flags & DBB_sweep_starting && !(dbb->dbb_flags &  DBB_sweep_in_progress))
+			while (true)
 			{
-				dbb->dbb_flags &= ~DBB_sweep_starting;
-				LCK_release(tdbb, dbb->dbb_sweep_lock);
+				AtomicCounter::counter_type old = dbb->dbb_flags;
+				if ((old & DBB_sweep_in_progress) || !(old & DBB_sweep_starting))
+				{
+					SPTHR_DEBUG(fprintf(stderr, "blocking_ast_sweep %p false wrong flags %lx\n", dbb, old));
+					break;
+				}
+
+				if (dbb->dbb_flags.compareExchange(old, old & ~DBB_sweep_starting))
+				{
+					SPTHR_DEBUG(fprintf(stderr, "blocking_ast_sweep true %p\n", dbb));
+					dbb->dbb_thread_mutex.leave();
+					LCK_release(tdbb, dbb->dbb_sweep_lock);
+					break;
+				}
 			}
 		}
-		catch (const Firebird::Exception&)
+		catch (const Exception&)
 		{} // no-op
 
 		return 0;
@@ -96,33 +221,45 @@ namespace Jrd
 
 	Lock* Database::createSweepLock(thread_db* tdbb)
 	{
-		if (!dbb_sweep_lock) 
+		if (!dbb_sweep_lock)
 		{
-			dbb_sweep_lock = FB_NEW_RPT(*dbb_permanent, 0) Lock();
-			dbb_sweep_lock->lck_dbb = this;
-			dbb_sweep_lock->lck_type = LCK_sweep;
-			dbb_sweep_lock->lck_owner_handle = LCK_get_owner_handle(tdbb, dbb_sweep_lock->lck_type);
-			dbb_sweep_lock->lck_parent = dbb_lock;
-			dbb_sweep_lock->lck_length = 0;
-			dbb_sweep_lock->lck_ast = blocking_ast_sweep;
-			dbb_sweep_lock->lck_object = this;
+			dbb_sweep_lock = FB_NEW_RPT(*dbb_permanent, 0)
+				Lock(tdbb, 0, LCK_sweep, this, blocking_ast_sweep);
 		}
+
 		return dbb_sweep_lock;
 	}
 
 	bool Database::allowSweepThread(thread_db* tdbb)
 	{
-		if (dbb_flags & DBB_read_only)
+		SPTHR_DEBUG(fprintf(stderr, "allowSweepThread %p\n", this));
+		if (readOnly())
 			return false;
 
 		Jrd::Attachment* const attachment = tdbb->getAttachment();
 		if (attachment->att_flags & ATT_no_cleanup)
 			return false;
 
-		if ((dbb_flags & (DBB_sweep_in_progress | DBB_sweep_starting)) || (dbb_ast_flags & DBB_shutdown))
+		if (!dbb_thread_mutex.tryEnter(FB_FUNCTION))
+		{
+			SPTHR_DEBUG(fprintf(stderr, "allowSweepThread %p false, dbb_thread_mutex busy\n", this));
 			return false;
+		}
 
-		dbb_flags |= DBB_sweep_starting;
+		while (true)
+		{
+			AtomicCounter::counter_type old = dbb_flags;
+			if ((old & (DBB_sweep_in_progress | DBB_sweep_starting)) || (dbb_ast_flags & DBB_shutdown))
+			{
+				dbb_thread_mutex.leave();
+				return false;
+			}
+
+			if (dbb_flags.compareExchange(old, old | DBB_sweep_starting))
+				break;
+		}
+
+        SPTHR_DEBUG(fprintf(stderr, "allowSweepThread - set DBB_sweep_starting\n"));
 
 		createSweepLock(tdbb);
 		if (!LCK_lock(tdbb, dbb_sweep_lock, LCK_EX, LCK_NO_WAIT))
@@ -130,29 +267,65 @@ namespace Jrd
 			// clear lock error from status vector
 			fb_utils::init_status(tdbb->tdbb_status_vector);
 
-			dbb_flags &= ~DBB_sweep_starting;
+			clearSweepStarting();
+			SPTHR_DEBUG(fprintf(stderr, "allowSweepThread - !LCK_lock\n"));
 			return false;
 		}
 
+        SPTHR_DEBUG(fprintf(stderr, "allowSweepThread - TRUE\n"));
 		return true;
+	}
+
+	bool Database::clearSweepStarting()
+	{
+		while (true)
+		{
+			AtomicCounter::counter_type old = dbb_flags;
+			if (!(old & DBB_sweep_starting))
+			{
+				SPTHR_DEBUG(fprintf(stderr, "clearSweepStarting false %p\n", this));
+				return false;
+			}
+
+			if (dbb_flags.compareExchange(old, old & ~DBB_sweep_starting))
+			{
+				SPTHR_DEBUG(fprintf(stderr, "clearSweepStarting true %p\n", this));
+				dbb_thread_mutex.leave();
+				return true;
+			}
+		}
 	}
 
 	bool Database::allowSweepRun(thread_db* tdbb)
 	{
-		if (dbb_flags & DBB_read_only)
+		SPTHR_DEBUG(fprintf(stderr, "allowSweepRun %p\n", this));
+
+		if (readOnly())
 			return false;
 
 		Jrd::Attachment* const attachment = tdbb->getAttachment();
 		if (attachment->att_flags & ATT_no_cleanup)
 			return false;
 
-		if (dbb_flags & DBB_sweep_in_progress)
-			return false;
+		while (true)
+		{
+			AtomicCounter::counter_type old = dbb_flags;
+			if (old & DBB_sweep_in_progress)
+			{
+				clearSweepStarting();
+				return false;
+			}
 
-		dbb_flags |= DBB_sweep_in_progress;
+			if (dbb_flags.compareExchange(old, old | DBB_sweep_in_progress))
+				break;
+		}
+
+		SPTHR_DEBUG(fprintf(stderr, "allowSweepRun - set DBB_sweep_in_progress\n"));
 
 		if (!(dbb_flags & DBB_sweep_starting))
 		{
+			SPTHR_DEBUG(fprintf(stderr, "allowSweepRun - createSweepLock\n"));
+
 			createSweepLock(tdbb);
 			if (!LCK_lock(tdbb, dbb_sweep_lock, LCK_EX, -1))
 			{
@@ -165,7 +338,9 @@ namespace Jrd
 		}
 		else
 		{
-			dbb_flags &= ~DBB_sweep_starting;
+			SPTHR_DEBUG(fprintf(stderr, "allowSweepRun - clearSweepStarting\n"));
+			attachment->att_flags |= ATT_from_thread;
+			clearSweepStarting();
 		}
 
 		return true;
@@ -173,117 +348,363 @@ namespace Jrd
 
 	void Database::clearSweepFlags(thread_db* tdbb)
 	{
-		if (!(dbb_flags & (DBB_sweep_starting | DBB_sweep_in_progress)))
+		if (!(dbb_flags & DBB_sweep_in_progress))
 			return;
 
-		if (dbb_sweep_lock) {
+		if (dbb_sweep_lock)
 			LCK_release(tdbb, dbb_sweep_lock);
-		}
-		dbb_flags &= ~(DBB_sweep_in_progress | DBB_sweep_starting);
+
+		dbb_flags &= ~DBB_sweep_in_progress;
 	}
 
-	Database::~Database()
+	void Database::registerModule(Module& module)
 	{
-		delete dbb_sys_trans;
+		Sync sync(&dbb_modules_sync, FB_FUNCTION);
+		sync.lock(SYNC_SHARED);
+		if (dbb_modules.exist(module))
+			return;
 
-		destroyIntlObjects();
-
-		while (dbb_sort_buffers.hasData())
-			delete dbb_sort_buffers.pop();
-
-		fb_assert(dbb_pools[0] == dbb_permanent);
-		for (size_t i = 1; i < dbb_pools.getCount(); ++i)
-		{
-			MemoryPool::deletePool(dbb_pools[i]);
-		}
-
-		delete dbb_monitoring_data;
-		delete dbb_backup_manager;
-
-		fb_assert(!locked());
-		// This line decrements the usage counter and may cause the destructor to be called.
-		// It should happen with the dbb_sync unlocked.
-		LockManager::destroy(dbb_lock_mgr);
-		EventManager::destroy(dbb_event_mgr);
+		sync.unlock();
+		sync.lock(SYNC_EXCLUSIVE);
+		if (!dbb_modules.exist(module))
+			dbb_modules.add(module);
 	}
 
-	void Database::deletePool(MemoryPool* pool)
+	void Database::ensureGuid(thread_db* tdbb)
 	{
-		if (pool)
+		if (readOnly())
+			return;
+
+		if (!dbb_guid.Data1) // It would be better to full check but one field should be enough
 		{
-			size_t pos;
-			if (dbb_pools.find(pool, pos))
+			GenerateGuid(&dbb_guid);
+			PAG_set_db_guid(tdbb, dbb_guid);
+		}
+	}
+
+	FB_UINT64 Database::getReplSequence(thread_db* tdbb)
+	{
+		USHORT length = sizeof(FB_UINT64);
+		if (!PAG_get_clump(tdbb, Ods::HDR_repl_seq, &length, (UCHAR*) &dbb_repl_sequence))
+			return 0;
+
+		return dbb_repl_sequence;
+	}
+
+	void Database::setReplSequence(thread_db* tdbb, FB_UINT64 sequence)
+	{
+		if (dbb_repl_sequence != sequence)
+		{
+			PAG_set_repl_sequence(tdbb, sequence);
+			dbb_repl_sequence = sequence;
+		}
+	}
+
+	bool Database::isReplicating(thread_db* tdbb)
+	{
+		if (!replConfig())
+			return false;
+
+		Sync sync(&dbb_repl_sync, FB_FUNCTION);
+		sync.lock(SYNC_SHARED);
+
+		if (dbb_repl_state.isUnknown())
+		{
+			sync.unlock();
+			sync.lock(SYNC_EXCLUSIVE);
+
+			if (dbb_repl_state.isUnknown())
 			{
-				dbb_pools.remove(pos);
+				if (!dbb_repl_lock)
+				{
+					dbb_repl_lock = FB_NEW_RPT(*dbb_permanent, 0)
+						Lock(tdbb, 0, LCK_repl_state, this, replStateAst);
+				}
+
+				dbb_repl_state = MET_get_repl_state(tdbb, "");
+
+				fb_assert(dbb_repl_lock->lck_logical == LCK_none);
+				LCK_lock(tdbb, dbb_repl_lock, LCK_SR, LCK_WAIT);
+			}
+		}
+
+		return dbb_repl_state.value;
+	}
+
+	void Database::invalidateReplState(thread_db* tdbb, bool broadcast)
+	{
+		SyncLockGuard guard(&dbb_repl_sync, SYNC_EXCLUSIVE, FB_FUNCTION);
+
+		dbb_repl_state.invalidate();
+
+		if (broadcast)
+		{
+			if (!dbb_repl_lock)
+			{
+				dbb_repl_lock = FB_NEW_RPT(*dbb_permanent, 0)
+					Lock(tdbb, 0, LCK_repl_state, this, replStateAst);
 			}
 
-			MemoryPool::deletePool(pool);
+			// Signal other processes about the changed state
+			if (dbb_repl_lock->lck_logical == LCK_none)
+				LCK_lock(tdbb, dbb_repl_lock, LCK_EX, LCK_WAIT);
+			else
+				LCK_convert(tdbb, dbb_repl_lock, LCK_EX, LCK_WAIT);
 		}
+
+		LCK_release(tdbb, dbb_repl_lock);
 	}
 
-	// Database::SharedCounter implementation
-
-	Database::SharedCounter::SharedCounter()
+	int Database::replStateAst(void* ast_object)
 	{
-		memset(m_counters, 0, sizeof(m_counters));
+		Database* const dbb = static_cast<Database*>(ast_object);
+
+		try
+		{
+			AsyncContextHolder tdbb(dbb, FB_FUNCTION);
+
+			dbb->invalidateReplState(tdbb, false);
+		}
+		catch (const Exception&)
+		{} // no-op
+
+		return 0;
 	}
 
-	Database::SharedCounter::~SharedCounter()
+	void Database::initGlobalObjects()
 	{
-		for (size_t i = 0; i < TOTAL_ITEMS; i++)
-		{
-			delete m_counters[i].lock;
-		}
+		dbb_gblobj_holder.assignRefNoIncr(GlobalObjectHolder::init(getUniqueFileId(),
+			dbb_filename, dbb_config));
 	}
 
-	void Database::SharedCounter::shutdown(thread_db* tdbb)
+	void Database::startTipCache(thread_db* tdbb)
 	{
-		for (size_t i = 0; i < TOTAL_ITEMS; i++)
+		fb_assert(!dbb_tip_cache);
+
+		TipCache* cache = FB_NEW_POOL(*dbb_permanent) TipCache(this);
+		try
 		{
-			if (m_counters[i].lock)
-				LCK_release(tdbb, m_counters[i].lock);
+			cache->initializeTpc(tdbb);
 		}
+		catch(const Exception&)
+		{
+			cache->finalizeTpc(tdbb);
+			delete cache;
+			throw;
+		}
+
+		dbb_tip_cache = cache;
 	}
 
-	SLONG Database::SharedCounter::generate(thread_db* tdbb, ULONG space, ULONG prefetch)
+	// Methods encapsulating operations with vectors of known pages
+
+	ULONG Database::getKnownPagesCount(SCHAR ptype)
 	{
-		fb_assert(space < TOTAL_ITEMS);
-		ValueCache* const counter = &m_counters[space];
-		Database* const dbb = tdbb->getDatabase();
+		fb_assert(ptype == pag_transactions || ptype == pag_ids);
 
-		if (!counter->lock)
-		{
-			Lock* const lock = FB_NEW_RPT(*dbb->dbb_permanent, sizeof(SLONG)) Lock();
-			counter->lock = lock;
-			lock->lck_type = LCK_shared_counter;
-			lock->lck_owner_handle = LCK_get_owner_handle(tdbb, lock->lck_type);
-			lock->lck_parent = dbb->dbb_lock;
-			lock->lck_length = sizeof(SLONG);
-			lock->lck_key.lck_long = space;
-			lock->lck_dbb = dbb;
-			LCK_lock(tdbb, lock, LCK_PW, LCK_WAIT);
+		SyncLockGuard guard(&dbb_pages_sync, SYNC_SHARED, FB_FUNCTION);
 
-			counter->curVal = 1;
-			counter->maxVal = 0;
-		}
+		const auto vector =
+			(ptype == pag_transactions) ? dbb_tip_pages :
+			(ptype == pag_ids) ? dbb_gen_pages :
+			nullptr;
 
-		if (counter->curVal > counter->maxVal)
-		{
-			LCK_convert(tdbb, counter->lock, LCK_PW, LCK_WAIT);
-			counter->curVal = LCK_read_data(tdbb, counter->lock);
-
-			if (!counter->curVal)
-			{
-				// zero IDs are somewhat special, so let's better skip them
-				counter->curVal = 1;
-			}
-
-			counter->maxVal = counter->curVal + prefetch - 1;
-			LCK_write_data(tdbb, counter->lock, counter->maxVal + 1);
-			LCK_convert(tdbb, counter->lock, LCK_SR, LCK_WAIT);
-		}
-
-		return counter->curVal++;
+		return vector ? (ULONG) vector->count() : 0;
 	}
+
+	ULONG Database::getKnownPage(SCHAR ptype, ULONG sequence)
+	{
+		fb_assert(ptype == pag_transactions || ptype == pag_ids);
+
+		SyncLockGuard guard(&dbb_pages_sync, SYNC_SHARED, FB_FUNCTION);
+
+		const auto vector =
+			(ptype == pag_transactions) ? dbb_tip_pages :
+			(ptype == pag_ids) ? dbb_gen_pages :
+			nullptr;
+
+		if (!vector || sequence >= vector->count())
+			return 0;
+
+		return (*vector)[sequence];
+	}
+
+	void Database::setKnownPage(SCHAR ptype, ULONG sequence, ULONG value)
+	{
+		fb_assert(ptype == pag_transactions || ptype == pag_ids);
+
+		SyncLockGuard guard(&dbb_pages_sync, SYNC_EXCLUSIVE, FB_FUNCTION);
+
+		auto& rvector = (ptype == pag_transactions) ? dbb_tip_pages : dbb_gen_pages;
+
+		rvector = vcl::newVector(*dbb_permanent, rvector, sequence + 1);
+
+		(*rvector)[sequence] = value;
+	}
+
+	void Database::copyKnownPages(SCHAR ptype, ULONG count, ULONG* data)
+	{
+		fb_assert(ptype == pag_transactions || ptype == pag_ids);
+
+		SyncLockGuard guard(&dbb_pages_sync, SYNC_EXCLUSIVE, FB_FUNCTION);
+
+		auto& rvector = (ptype == pag_transactions) ? dbb_tip_pages : dbb_gen_pages;
+
+		rvector = vcl::newVector(*dbb_permanent, rvector, count);
+
+		memcpy(rvector->memPtr(), data, count * sizeof(ULONG));
+	}
+
+	// Database::Linger class implementation
+
+	void Database::Linger::handler()
+	{
+		JRD_shutdown_database(dbb, SHUT_DBB_RELEASE_POOLS);
+	}
+
+	void Database::Linger::reset()
+	{
+		if (active)
+		{
+			FbLocalStatus s;
+			TimerInterfacePtr()->stop(&s, this);
+			if (!(s->getState() & IStatus::STATE_ERRORS))
+				active = false;
+		}
+	}
+
+	void Database::Linger::set(unsigned seconds)
+	{
+		if (dbb && !active)
+		{
+			FbLocalStatus s;
+			TimerInterfacePtr()->start(&s, this, seconds * 1000 * 1000);
+			check(&s);
+			active = true;
+		}
+	}
+
+	void Database::Linger::destroy()
+	{
+		dbb = NULL;
+		reset();
+	}
+
+	// Database::GlobalObjectHolder class implementation
+
+	int Database::GlobalObjectHolder::release() const
+	{
+		// Release should be executed under g_mutex protection
+		// in order to modify reference counter & hash table atomically
+		MutexLockGuard guard(g_mutex, FB_FUNCTION);
+
+		return RefCounted::release();
+	}
+
+	Database::GlobalObjectHolder* Database::GlobalObjectHolder::init(const string& id,
+																	 const PathName& filename,
+																	 RefPtr<const Config> config)
+	{
+		MutexLockGuard guard(g_mutex, FB_FUNCTION);
+
+		Database::GlobalObjectHolder::DbId* entry = g_hashTable->lookup(id);
+		if (!entry)
+		{
+			const auto holder = FB_NEW Database::GlobalObjectHolder(id, filename, config);
+			entry = FB_NEW Database::GlobalObjectHolder::DbId(id, holder);
+			g_hashTable->add(entry);
+		}
+
+		entry->holder->addRef();
+		return entry->holder;
+	}
+
+	Database::GlobalObjectHolder::~GlobalObjectHolder()
+	{
+		// dtor is executed under g_mutex protection
+		Database::GlobalObjectHolder::DbId* entry = g_hashTable->lookup(m_id);
+		if (!g_hashTable->remove(m_id))
+			fb_assert(false);
+
+		{ // scope
+			// here we cleanup what should not be globally protected
+			MutexUnlockGuard guard(g_mutex, FB_FUNCTION);
+			if (m_replMgr)
+				m_replMgr->shutdown();
+		}
+
+		m_lockMgr = nullptr;
+		m_eventMgr = nullptr;
+		m_replMgr = nullptr;
+
+		delete entry;
+
+		fb_assert(m_tempCacheUsage == 0);
+	}
+
+	LockManager* Database::GlobalObjectHolder::getLockManager()
+	{
+		if (!m_lockMgr)
+		{
+			MutexLockGuard guard(m_mutex, FB_FUNCTION);
+
+			if (!m_lockMgr)
+				m_lockMgr = FB_NEW LockManager(m_id, m_config);
+		}
+		return m_lockMgr;
+	}
+
+	EventManager* Database::GlobalObjectHolder::getEventManager()
+	{
+		if (!m_eventMgr)
+		{
+			MutexLockGuard guard(m_mutex, FB_FUNCTION);
+
+			if (!m_eventMgr)
+				m_eventMgr = FB_NEW EventManager(m_id, m_config);
+		}
+		return m_eventMgr;
+	}
+
+	Replication::Manager* Database::GlobalObjectHolder::getReplManager(bool create)
+	{
+		if (!m_replConfig)
+			return nullptr;
+
+		if (!m_replMgr && create)
+		{
+			MutexLockGuard guard(m_mutex, FB_FUNCTION);
+
+			if (!m_replMgr)
+				m_replMgr = FB_NEW Replication::Manager(m_id, m_replConfig);
+		}
+		return m_replMgr;
+	}
+
+	bool Database::GlobalObjectHolder::incTempCacheUsage(FB_SIZE_T size)
+	{
+		if (m_tempCacheUsage + size > m_tempCacheLimit)
+			return false;
+
+		const auto old = m_tempCacheUsage.fetch_add(size);
+		if (old + size > m_tempCacheLimit)
+		{
+			m_tempCacheUsage.fetch_sub(size);
+			return false;
+		}
+
+		return true;
+	}
+
+	void Database::GlobalObjectHolder::decTempCacheUsage(FB_SIZE_T size)
+	{
+		fb_assert(m_tempCacheUsage >= size);
+
+		m_tempCacheUsage.fetch_sub(size);
+	}
+
+	GlobalPtr<Database::GlobalObjectHolder::DbIdHash>
+		Database::GlobalObjectHolder::g_hashTable;
+	GlobalPtr<Mutex> Database::GlobalObjectHolder::g_mutex;
 
 } // namespace

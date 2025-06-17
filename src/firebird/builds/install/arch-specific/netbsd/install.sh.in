@@ -8,30 +8,30 @@
 #  version 2.1 of the License, or (at your option) any later version.
 #  You may obtain a copy of the Licence at
 #  http://www.gnu.org/licences/lgpl.html
-#  
+#
 #  As a special exception this file can also be included in modules
-#  with other source code as long as that source code has been 
-#  released under an Open Source Initiative certificed licence.  
-#  More information about OSI certification can be found at: 
-#  http://www.opensource.org 
-#  
+#  with other source code as long as that source code has been
+#  released under an Open Source Initiative certificed licence.
+#  More information about OSI certification can be found at:
+#  http://www.opensource.org
+#
 #  This module is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #  GNU Lesser General Public Licence for more details.
-#  
-#  This module was created by members of the firebird development 
-#  team.  All individual contributions remain the Copyright (C) of 
-#  those individuals and all rights are reserved.  Contributors to 
-#  this file are either listed below or can be obtained from a CVS 
+#
+#  This module was created by members of the firebird development
+#  team.  All individual contributions remain the Copyright (C) of
+#  those individuals and all rights are reserved.  Contributors to
+#  this file are either listed below or can be obtained from a CVS
 #  history command.
-# 
-#   Created by: Chris Knight <chris@e-easy.com.au> 
-# 
+#
+#   Created by: Chris Knight <chris@e-easy.com.au>
+#
 #   Contributor(s):
 #  	James K. Lowden <jklowden@schemamania.org>
-# 
-# 
+#
+#
 
 #  Install script for FirebirdSQL database engine
 
@@ -70,7 +70,7 @@ fi
 
 #
 #  Establish the values of the Firebird user and group ids
-# 
+#
 echo Establishing user 'firebird'
 fbGID=0
 if ! groupinfo -e firebird; then # create the group
@@ -97,7 +97,7 @@ fi
 
 #
 #  Create the Firebird user, if not extant
-# 
+#
 fbUID=0
 if ! userinfo -e firebird; then # create the user
 	fbUID=90
@@ -111,8 +111,8 @@ if ! userinfo -e firebird; then # create the user
 	useradd -v -u $fbUID -g $fbGID -s /bin/sh \
 		$m -d @prefix@ \
 		-c "Firebird Database Administrator" \
-		firebird 
-else 
+		firebird
+else
 	fbUID=`id -u firebird 2>/dev/null`
 fi
 
@@ -133,14 +133,13 @@ DestDir=@prefix@
 # The guts of the tranfer of files and other directories
 # (mkdir -p <dirname> does not elicit an error message if the <dirname> exists.)
 echo Installing binaries
-for D in "bin examples help include intl doc/sql.extensions UDF"
+for D in "bin examples include intl doc/sql.extensions UDF"
 do
 	mkdir -p $DestDir/$D || exit
 done
 
-cp -f $BuiltFBDir/bin/fb_inet_server $DestDir/bin/fb_inet_server  || exit
+cp -f $BuiltFBDir/bin/fb_inet_server $DestDir/bin/fb_smp_server  || exit
 cp $BuiltFBDir/bin/gbak $DestDir/bin/gbak  || exit
-cp $BuiltFBDir/bin/gdef $DestDir/bin/gdef  || exit
 cp $BuiltFBDir/bin/gds_drop $DestDir/bin/gds_drop  || exit
 copyIfExists $BuiltFBDir/bin/fb_lock_mgr $DestDir/bin/fb_lock_mgr  || exit
 copyIfExists $BuiltFBDir/bin/fb_lock_print $DestDir/bin/fb_lock_print  || exit
@@ -152,7 +151,6 @@ copyIfExists $BuiltFBDir/bin/gsplit $DestDir/bin/gsplit  || exit
 cp $BuiltFBDir/bin/gstat $DestDir/bin/gstat  || exit
 copyIfExists $BuiltFBDir/bin/isc4.gbak $DestDir/bin/isc4.gbk  || exit
 cp $BuiltFBDir/bin/isql $DestDir/bin/isql  || exit
-cp $BuiltFBDir/bin/qli $DestDir/bin/qli  || exit
 
 # Copy examples only if we have them
 exampleFiles=`find $BuiltFBDir/examples/ -type f -print`
@@ -166,13 +164,10 @@ else
 	done
 fi
 
-copyIfExists $BuiltFBDir/help/help.gbak $DestDir/help  || exit
-cp $BuiltFBDir/help/help.fdb $DestDir/help  || exit
-
 cp $BuiltFBDir/firebird.msg $DestDir/firebird.msg  || exit
 cp $BuiltFBDir/security2.fdb $DestDir/security2.fdb.sample || exit
 
-cp $BuiltFBDir/include/*.h $DestDir/include || exit 
+cp $BuiltFBDir/include/*.h $DestDir/include || exit
 
 cp -Rf $BuiltFBDir/lib/libfbembed.so* $DestDir/lib || exit
 cp -Rf $BuiltFBDir/lib/libfbclient.so* $DestDir/lib || exit
@@ -180,33 +175,26 @@ cp -Rf $BuiltFBDir/lib/libfbclient.so* $DestDir/lib || exit
 cp -f $BuiltFBDir/lib/libib_util.so $DestDir/lib/libib_util.so  || exit
 
 cp $BuiltFBDir/intl/libfbintl.so $DestDir/intl/fbintl || exit
-cp $BuiltFBDir/UDF/ib_udf.so $DestDir/UDF/ || exit
-cp $BuiltFBDir/UDF/fbudf.so $DestDir/UDF/ || exit
 
-# Copy the sql-declarations into the UDF-directory  
-cp $BuildRootDir/src/extlib/ib_udf.sql $DestDir/UDF/ || exit
-cp $BuildRootDir/src/extlib/fbudf/fbudf.sql $DestDir/UDF/ || exit
-	    
 # Note that this copies files from outside the build tree.
 echo Installing documentation
-cp $BuildRootDir/doc/README.*  		$DestDir/doc || exit 
-cp $BuildRootDir/doc/WhatsNew 		$DestDir || exit
-cp $BuildRootDir/doc/README.user 	$DestDir/README	|| exit
+cp $BuildRootDir/doc/README.*  		$DestDir/doc || exit
+cp $BuildRootDir/*.md 		$DestDir || exit
 
 SQLEXTENSIONS=`find $BuildRootDir/doc/sql.extensions ! -type d | grep -v CVS`
 cp ${SQLEXTENSIONS}	$DestDir/doc/sql.extensions || exit
 
 cp $BuiltFBDir/misc/firebird.conf $DestDir/firebird.conf.sample || exit
 
-echo "#" >> $DestDir/aliases.conf.sample
-echo "# List of known database aliases" >> $DestDir/aliases.conf.sample
-echo "# ------------------------------" >> $DestDir/aliases.conf.sample
-echo "#" >> $DestDir/aliases.conf.sample
-echo "# Examples:" >> $DestDir/aliases.conf.sample
-echo "#" >> $DestDir/aliases.conf.sample
-echo "# employee = /$DestDir/examples/employee.fdb" >> $DestDir/aliases.conf.sample
-echo "#" >> $DestDir/aliases.conf.sample
-    
+echo "#" >> $DestDir/databases.conf.sample
+echo "# List of known database aliases" >> $DestDir/databases.conf.sample
+echo "# ------------------------------" >> $DestDir/databases.conf.sample
+echo "#" >> $DestDir/databases.conf.sample
+echo "# Examples:" >> $DestDir/databases.conf.sample
+echo "#" >> $DestDir/databases.conf.sample
+echo "# employee = /$DestDir/examples/employee.fdb" >> $DestDir/databases.conf.sample
+echo "#" >> $DestDir/databases.conf.sample
+
 
 echo Setting ownership and permissions on installed files
 
@@ -228,7 +216,7 @@ done
 chown -R root:wheel @prefix@/lib || exit
 
 # make the following read-only
-chmod -R a=r @prefix@/WhatsNew || exit
+chmod -R a=r @prefix@/*.md || exit
 for i in `find @prefix@/doc -type f -print`
 do
 	chmod a=r $i || exit
@@ -248,10 +236,10 @@ do
 	chmod ug=rx,o= $i || exit
 done
 
-chmod a=rx isql qli
+chmod a=rx isql
 
 # SUID is needed for running server programs.
-for i in fb_lock_mgr gds_drop fb_inet_server
+for i in fb_lock_mgr gds_drop fb_smp_server
 do
 	if [ -f $i ]; then
 		chmod ug=rx,o= $i || exit
@@ -282,10 +270,9 @@ chmod ug=r,o= *.sample || exit
 # make databases writable by firebird only
 # local database connections are not a good idea
 chmod ug=rw,o= examples/*.fdb || exit
-chmod ug=rw,o= help/*.fdb || exit
 
 # install the samples if they don't exist
-[ -f aliases.conf ] || install -o firebird -g firebird -m 440 aliases.conf.sample aliases.conf
+[ -f databases.conf ] || install -o firebird -g firebird -m 440 databases.conf.sample databases.conf
 [ -f firebird.conf ] || install -o firebird -g firebird -m 440 firebird.conf.sample firebird.conf
 [ -f security2.fdb ] || install -o firebird -g firebird -m 660 security2.fdb.sample security2.fdb
 
@@ -304,7 +291,7 @@ if ! grep ^@FB_SERVICE_NAME@ /etc/inetd.conf
 then
 echo Adding firebird to /etc/inetd.conf
 cat >>/etc/inetd.conf <<EOF
-@FB_SERVICE_NAME@	stream	tcp	nowait	firebird	@prefix@/bin/fb_inet_server  fb_inet_server
+@FB_SERVICE_NAME@	stream	tcp	nowait	firebird	@prefix@/bin/fb_smp_server  fb_smp_server
 EOF
 fi
 

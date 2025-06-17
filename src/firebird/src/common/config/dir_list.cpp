@@ -22,9 +22,10 @@
 #include "firebird.h"
 #include "../common/config/config.h"
 #include "../common/config/dir_list.h"
-#include "../jrd/os/path_utils.h"
-#include "../jrd/gds_proto.h"
+#include "../common/os/path_utils.h"
+#include "../yvalve/gds_proto.h"
 #include "../jrd/TempSpace.h"
+#include "../common/utils_proto.h"
 
 namespace Firebird {
 
@@ -32,31 +33,57 @@ void ParsedPath::parse(const PathName& path)
 {
 	clear();
 
-	if (path.length() == 1) {
-		add(path);
-		return;
-	}
-
 	PathName oldpath = path;
-	do {
+	int toSkip = 0;
+
+	do
+	{
 		PathName newpath, elem;
 		PathUtils::splitLastComponent(newpath, elem, oldpath);
 		oldpath = newpath;
+
+		if (elem.isEmpty()) // Skip double dir separator
+			continue;
+
+		if (elem == PathUtils::curr_dir_link) // Skip current dir reference
+			continue;
+
+		if (elem == PathUtils::up_dir_link) // skip next up dir
+		{
+			toSkip++;
+			continue;
+		}
+
+		if (toSkip > 0)
+		{
+			toSkip--;
+			continue;
+		}
+
 		insert(0, elem);
-	} while (oldpath.length() > 0);
+	} while (oldpath.hasData());
+
+	if (toSkip != 0)
+	{
+		// Malformed path, attempt to hack?..
+		// Let it be, consequent comparison will rule it out
+	}
 }
 
-PathName ParsedPath::subPath(size_t n) const
+PathName ParsedPath::subPath(FB_SIZE_T n) const
 {
-	PathName rc = (*this)[0];
-	if (PathUtils::isRelative(rc + PathUtils::dir_sep))
-		rc = PathUtils::dir_sep + rc;
-	for (size_t i = 1; i < n; i++)
+	PathName rc;
+#ifndef WIN_NT
+	// Code in DirectoryList::initialize() ensured that the path is absolute
+	rc = PathUtils::dir_sep;
+#endif
+	for (FB_SIZE_T i = 0; i < n; i++)
 	{
 		PathName newpath;
 		PathUtils::concatPath(newpath, rc, (*this)[i]);
 		rc = newpath;
 	}
+
 	return rc;
 }
 
@@ -69,7 +96,7 @@ ParsedPath::operator PathName() const
 
 bool ParsedPath::contains(const ParsedPath& pPath) const
 {
-	size_t nFullElem = getCount();
+	FB_SIZE_T nFullElem = getCount();
 	if (nFullElem > 1 && (*this)[nFullElem - 1].length() == 0)
 		nFullElem--;
 
@@ -77,14 +104,14 @@ bool ParsedPath::contains(const ParsedPath& pPath) const
 		return false;
 	}
 
-	for (size_t i = 0; i < nFullElem; i++)
+	for (FB_SIZE_T i = 0; i < nFullElem; i++)
 	{
 		if (pPath[i] != (*this)[i]) {
 			return false;
 		}
 	}
 
-	for (size_t i = nFullElem + 1; i <= pPath.getCount(); i++)
+	for (FB_SIZE_T i = nFullElem + 1; i <= pPath.getCount(); i++)
 	{
 		const PathName x = pPath.subPath(i);
 		if (PathUtils::isSymLink(x)) {
@@ -154,49 +181,37 @@ void DirectoryList::initialize(bool simple_mode)
 		}
 	}
 
-	size_t last = 0;
 	PathName root = Config::getRootDirectory();
-	size_t i;
-	for (i = 0; i < val.length(); i++)
+
+	while (val.hasData())
 	{
-		if (val[i] == ';')
+		string::size_type sep = val.find(';');
+		if (sep == string::npos)
+			sep = val.length();
+
+		PathName dir(val.c_str(), sep);
+		dir.alltrim(" \t\r");
+
+		val.erase(0, sep + 1);
+
+		if (PathUtils::isRelative(dir))
 		{
-			PathName dir = "";
-			if (i > last)
-			{
-				dir = val.substr(last, i - last);
-				dir.trim();
-			}
-			if (PathUtils::isRelative(dir))
-			{
-				PathName newdir;
-				PathUtils::concatPath(newdir, root, dir);
-				dir = newdir;
-			}
-			add(ParsedPath(dir));
-			last = i + 1;
+			PathName fullPath;
+			PathUtils::concatPath(fullPath, root, dir);
+			dir = fullPath;
 		}
+
+		add(ParsedPath(dir));
 	}
-	PathName dir = "";
-	if (i > last)
-	{
-		dir = val.substr(last, i - last);
-		dir.trim();
-	}
-	if (PathUtils::isRelative(dir))
-	{
-		PathName newdir;
-		PathUtils::concatPath(newdir, root, dir);
-		dir = newdir;
-	}
-	add(ParsedPath(dir));
 }
 
 bool DirectoryList::isPathInList(const PathName& path) const
 {
-#ifdef BOOT_BUILD
-	return true;
-#else  //BOOT_BUILD
+	if (fb_utils::bootBuild())
+	{
+		return true;
+	}
+
 	fb_assert(mode != NotInitialized);
 
 	// Handle special cases
@@ -208,15 +223,6 @@ bool DirectoryList::isPathInList(const PathName& path) const
 		return true;
 	}
 
-	// Disable any up-dir(..) references - in case our path_utils
-	// and OS handle paths in slightly different ways,
-	// this is "wonderful" potential hole for hacks
-	// Example of IIS attack attempt:
-	// "GET /scripts/..%252f../winnt/system32/cmd.exe?/c+dir HTTP/1.0"
-	//								(live from apache access.log :)
-	if (path.find(PathUtils::up_dir_link) != PathName::npos)
-		return false;
-
 	PathName varpath(path);
 	if (PathUtils::isRelative(path)) {
 		PathUtils::concatPath(varpath, PathName(Config::getRootDirectory()), path);
@@ -224,7 +230,7 @@ bool DirectoryList::isPathInList(const PathName& path) const
 
 	ParsedPath pPath(varpath);
 	bool rc = false;
-	for (size_t i = 0; i < getCount(); i++)
+	for (FB_SIZE_T i = 0; i < getCount(); i++)
 	{
 		if ((*this)[i].contains(pPath))
 		{
@@ -233,13 +239,12 @@ bool DirectoryList::isPathInList(const PathName& path) const
 		}
 	}
 	return rc;
-#endif //BOOT_BUILD
 }
 
 bool DirectoryList::expandFileName(PathName& path, const PathName& name) const
 {
 	fb_assert(mode != NotInitialized);
-	for (size_t i = 0; i < getCount(); i++)
+	for (FB_SIZE_T i = 0; i < getCount(); i++)
 	{
 		PathUtils::concatPath(path, (*this)[i], name);
 		if (PathUtils::canAccess(path, 4)) {

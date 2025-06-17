@@ -7,7 +7,7 @@
  *  Developer's Public License Version 1.0 (the "License");
  *  you may not use this file except in compliance with the
  *  License. You may obtain a copy of the License at
- *  http://www.ibphoenix.com/main.nfs?a=ibphoenix&page=ibp_idpl.
+ *  https://www.ibphoenix.com/about/firebird/idpl.
  *
  *  Software distributed under the License is distributed AS IS,
  *  WITHOUT WARRANTY OF ANY KIND, either express or implied.
@@ -49,17 +49,8 @@
 #error compile_time_failure: SIZEOF_LONG not specified
 #endif
 
-typedef struct {
-	SLONG high;
-	ULONG low;
-} SQUAD;
-
 /* Basic data types */
 
-/* typedef signed char SCHAR;
- * TMN: TODO It seems SCHAR is used just about *everywhere* where a plain
- * "char" is really intended. This currently forces us to this bad definition.
- */
 typedef char SCHAR;
 
 typedef unsigned char UCHAR;
@@ -85,7 +76,9 @@ typedef ULONG ISC_ULONG;
 typedef SINT64 ISC_INT64;
 typedef FB_UINT64 ISC_UINT64;
 
-#include "types_pub.h"
+#include "firebird/impl/types_pub.h"
+
+typedef ISC_QUAD SQUAD;
 
 /*
  * TMN: some misc data types from all over the place
@@ -105,10 +98,7 @@ struct lstring
 
 typedef unsigned char BOOLEAN;
 typedef char TEXT;				/* To be expunged over time */
-/*typedef unsigned char STEXT;	Signed text - not used
-typedef unsigned char UTEXT;	Unsigned text - not used */
 typedef unsigned char BYTE;		/* Unsigned byte - common */
-/*typedef char SBYTE;			Signed byte - not used */
 typedef intptr_t IPTR;
 typedef uintptr_t U_IPTR;
 
@@ -135,21 +125,38 @@ typedef void (*ErrorFunction) (const Firebird::Arg::StatusVector& v);
 typedef void (*FPTR_ERROR) (ISC_STATUS, ...);
 
 typedef ULONG RCRD_OFFSET;
+typedef ULONG RCRD_LENGTH;
 typedef USHORT FLD_LENGTH;
 /* CVC: internal usage. I suspect the only reason to return int is that
 vmslock.cpp:LOCK_convert() calls VMS' sys$enq that may require this signature,
 but our code never uses the return value. */
 typedef int (*lock_ast_t)(void*);
 
-typedef IPTR FB_THREAD_ID;
-
 /* Number of elements in an array */
 #define FB_NELEM(x)	((int)(sizeof(x) / sizeof(x[0])))
-#define FB_ALIGN(n, b) ((n + b - 1) & ~(b - 1))
 
 // Intl types
 typedef SSHORT CHARSET_ID;
 typedef SSHORT COLLATE_ID;
 typedef USHORT TTYPE_ID;
+
+// Stream type, had to move it from dsql/Nodes.h due to circular dependencies.
+typedef ULONG StreamType;
+
+// Alignment rule
+template <typename T>
+inline T FB_ALIGN(T n, uintptr_t b)
+{
+	return (T) ((((uintptr_t) n) + b - 1) & ~(b - 1));
+}
+
+// Various object IDs (longer-than-32-bit)
+
+typedef FB_UINT64 AttNumber;
+typedef FB_UINT64 TraNumber;
+typedef FB_UINT64 StmtNumber;
+typedef FB_UINT64 CommitNumber;
+typedef ULONG SnapshotHandle;
+typedef SINT64 SavNumber;
 
 #endif /* INCLUDE_FB_TYPES_H */

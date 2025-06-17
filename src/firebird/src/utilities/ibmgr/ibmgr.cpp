@@ -42,8 +42,7 @@
 #ifdef HAVE_PWD_H
 #include <pwd.h>
 #endif
-#include "../jrd/common.h"
-#include "../jrd/ibase.h"
+#include "ibase.h"
 #include "../utilities/ibmgr/ibmgr.h"
 #include "../utilities/ibmgr/ibmgrswi.h"
 #include "../jrd/license.h"
@@ -55,7 +54,7 @@ const int MAXARGS		= 20;		// max number of args allowed on command line
 const USHORT MAXSTUFF	= 1000;		// longest interactive command line
 
 
-// Codes returned by get_switchesi()
+// Codes returned by get_switches()
 // FB_SUCCESS is defined in common.h
 
 const SSHORT ERR_SYNTAX	= -1;
@@ -71,7 +70,7 @@ const SSHORT ACT_PROMPT	= 2;
 
 static void copy_str_upper(TEXT*, const TEXT*);
 static bool get_line(int*, SCHAR**, TEXT*);
-static SSHORT get_switches(int argc, TEXT** argv, const in_sw_tab_t* in_sw_table,
+static SSHORT get_switches(int argc, TEXT** argv, const Switches::in_sw_tab_t* in_sw_table,
 						   ibmgr_data_t* ibmgr_data, bool* quitflag, bool zapPasswd);
 static SSHORT parse_cmd_line(int, TEXT**, bool);
 static void print_config();
@@ -132,7 +131,7 @@ int CLIB_ROUTINE main( int argc, char **argv)
 		!strcmp(pw->pw_name, INTERBASE_USER_NAME) ||
 		!strcmp(pw->pw_name, INTERBASE_USER_SHORT))
 	{
-		strcpy(ibmgr_data.user, SYSDBA_USER_NAME);
+		strcpy(ibmgr_data.user, DBA_USER_NAME);
 	}
 	else
 		copy_str_upper(ibmgr_data.user, pw->pw_name);
@@ -303,7 +302,7 @@ static bool get_line( int *argc, SCHAR** argv, TEXT* stuff)
 
 static SSHORT get_switches(int argc,
 						   TEXT** argv,
-						   const in_sw_tab_t* in_sw_table,
+						   const Switches::in_sw_tab_t* in_sw_table,
 						   ibmgr_data_t* ibmgr_data, bool * quitflag, bool zapPasswd)
 {
 /**************************************
@@ -397,11 +396,11 @@ static SSHORT get_switches(int argc,
 				break;
 
 			case IN_SW_IBMGR_PIDFILE:
-			{
-				Firebird::PathName pf(string);
-				pf.copyTo(ibmgr_data->pidfile, sizeof(ibmgr_data->pidfile));
+				{
+					Firebird::PathName pf(string);
+					pf.copyTo(ibmgr_data->pidfile, sizeof(ibmgr_data->pidfile));
+				}
 				break;
-			}
 
 			case IN_SW_IBMGR_0:
 				SRVRMGR_msg_get(MSG_INVPAR, msg);
@@ -441,7 +440,7 @@ static SSHORT get_switches(int argc,
 			// iterate through the switch table, looking for matches
 			USHORT in_sw = IN_SW_IBMGR_0;
 			const TEXT* q;
-			for (const in_sw_tab_t* in_sw_tab = in_sw_table; q = in_sw_tab->in_sw_name; in_sw_tab++)
+			for (const Switches::in_sw_tab_t* in_sw_tab = in_sw_table; q = in_sw_tab->in_sw_name; in_sw_tab++)
 			{
 				const TEXT* p = string + 1;
 
@@ -710,7 +709,7 @@ static SSHORT get_switches(int argc,
 				if (!sw_version)
 				{
 					SRVRMGR_msg_get(MSG_VERSION, msg);
-					fprintf(OUTFILE, "%s %s\n", msg, GDS_VERSION);
+					fprintf(OUTFILE, "%s %s\n", msg, FB_VERSION);
 				}
 				break;
 
@@ -883,7 +882,7 @@ static SSHORT parse_cmd_line( int argc, TEXT** argv, bool zapPasswd)
 	switch (ibmgr_data.operation)
 	{
 	case OP_SHUT:
-		if (strcmp(ibmgr_data.user, SYSDBA_USER_NAME))
+		if (strcmp(ibmgr_data.user, DBA_USER_NAME))
 		{
 			SRVRMGR_msg_get(MSG_NOPERM, msg);
 			fprintf(OUTFILE, "%s\n", msg);
@@ -907,7 +906,7 @@ static SSHORT parse_cmd_line( int argc, TEXT** argv, bool zapPasswd)
 				strcmp(ibmgr_data.real_user, FIREBIRD_USER_NAME) &&
 				strcmp(ibmgr_data.real_user, INTERBASE_USER_NAME) &&
 				strcmp(ibmgr_data.real_user, INTERBASE_USER_SHORT)) ||
-			strcmp(ibmgr_data.user, SYSDBA_USER_NAME))
+			strcmp(ibmgr_data.user, DBA_USER_NAME))
 		{
 			SRVRMGR_msg_get(MSG_NOPERM, msg);
 			fprintf(OUTFILE, "%s\n", msg);

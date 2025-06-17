@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Include xmlns="http://schemas.microsoft.com/wix/2006/wi">
+
+
+    <?define UPGRADE_CODE=f6522f77-7364-4a51-a1f7-f7c0d27ea52b ?>
+
+    <?define CPUArch="x64" ?>
+
+
+</Include>
+
+

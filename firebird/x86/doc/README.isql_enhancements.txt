@@ -154,3 +154,292 @@ is not accounted for when you type
 SET;
 in isql to see the state for most options.
 
+
+
+Isql enhancements in Firebird v3.
+---------------------------------
+
+9) SET KEEP_TRAN_PARAMS option.
+
+Author: Vladyslav Khorsun <hvlad at users sourceforge net>
+
+When set to ON, isql keeps text of following successful SET TRANSACTION statement and
+new DML transactions is started using the same SQL text (instead of defaul CONCURRENCY
+WAIT mode).
+When set to OFF, isql start new DML transaction as usual.
+Name KEEP_TRAN_PARAMS could be cut down to the KEEP_TRAN.
+
+In Firebird 3 KEEP_TRAN_PARAMS value is OFF by default, preserving backward compatibility
+with old behaviour.
+In Firebird 4 KEEP_TRAN_PARAMS is ON by default to make isql behaviour more logical.
+
+
+Example:
+
+-- check current value
+SQL> SET;
+...
+Keep transaction params: OFF
+
+-- toggle value
+SQL> SET KEEP_TRAN;
+SQL> SET;
+...
+Keep transaction params: ON
+SET TRANSACTION
+
+
+SQL>commit;
+
+-- start new transaction, check KEEP_TRAN value and actual transaction's
+-- parameters
+SQL>SET TRANSACTION READ COMMITTED WAIT;
+SQL>SET;
+...
+Keep transaction params: ON
+  SET TRANSACTION READ COMMITTED WAIT
+SQL> SELECT RDB$GET_CONTEXT('SYSTEM', 'ISOLATION_LEVEL') FROM RDB$DATABASE;
+
+RDB$GET_CONTEXT
+
+=============================================================
+READ COMMITTED
+
+SQL> commit;
+
+-- start new transaction, ensure is have parameters as KEEP_TRAN value
+SQL> SELECT RDB$GET_CONTEXT('SYSTEM', 'ISOLATION_LEVEL') FROM RDB$DATABASE;
+
+RDB$GET_CONTEXT
+
+=============================================================
+READ COMMITTED
+
+-- disable KEEP_TRAN, current transaction is not changed
+SQL> SET KEEP_TRAN OFF;
+SQL> SELECT RDB$GET_CONTEXT('SYSTEM', 'ISOLATION_LEVEL') FROM RDB$DATABASE;
+
+RDB$GET_CONTEXT
+
+=============================================================
+READ COMMITTED
+
+SQL> commit;
+
+-- start new transaction, ensure is have default parameters (SNAPSHOT)
+SQL> SELECT RDB$GET_CONTEXT('SYSTEM', 'ISOLATION_LEVEL') FROM RDB$DATABASE;
+
+RDB$GET_CONTEXT
+
+=============================================================
+SNAPSHOT
+
+SQL> SET;
+...
+Keep transaction params: OFF
+SQL>
+
+
+
+Isql enhancements in Firebird v4.0.1.
+---------------------------------
+
+10) SET EXEC_PATH_DISPLAY BLR/OFF
+
+Retrieves the execution path of a DML statement formatted as BLR text.
+
+It requires server v4.0.1 or greater to work.
+
+Warning: this feature is very tied to engine internals and its usage is discouraged
+if you do not understand very well how these internals are subject to change between
+versions.
+
+
+
+Isql enhancements in Firebird v5.
+---------------------------------
+
+11) SET PER_TABLE_STATS option.
+
+Author: Vladyslav Khorsun <hvlad at users sourceforge net>
+
+When set to ON show per-table run-time statistics after query execution.
+It is set to OFF by default. Also, it is independent of SET STATS option.
+The name PER_TABLE_STATS could be shortened up to PER_TAB. Tables in output
+are sorted by its relation id's.
+
+Example:
+
+-- check current value
+SQL> SET;
+...
+Print per-table stats:   OFF
+...
+
+-- turn per-table stats on
+SQL> SET PER_TABLE_STATS ON;
+SQL>
+SQL> SELECT COUNT(*) FROM RDB$RELATIONS JOIN RDB$RELATION_FIELDS USING (RDB$RELATION_NAME);
+
+                COUNT
+=====================
+                  534
+
+Per table statistics:
+--------------------------------+---------+---------+---------+---------+---------+---------+---------+---------+
+ Table name                     | Natural | Index   | Insert  | Update  | Delete  | Backout | Purge   | Expunge |
+--------------------------------+---------+---------+---------+---------+---------+---------+---------+---------+
+RDB$INDICES                     |         |        3|         |         |         |         |         |         |
+RDB$RELATION_FIELDS             |         |      534|         |         |         |         |         |         |
+RDB$RELATIONS                   |       59|         |         |         |         |         |         |         |
+RDB$SECURITY_CLASSES            |         |        3|         |         |         |         |         |         |
+--------------------------------+---------+---------+---------+---------+---------+---------+---------+---------+
+
+Note, here are present some system tables that was not listed in query - it is
+because engine reads some metadata when preparing the query.
+
+-- turn common stats on
+SQL> SET STATS ON;
+SQL> SELECT COUNT(*) FROM RDB$RELATIONS JOIN RDB$RELATION_FIELDS USING (RDB$RELATION_NAME);
+
+                COUNT
+=====================
+                  534
+
+Current memory = 3828960
+Delta memory = 208
+Max memory = 3858576
+Elapsed time = 0.001 sec
+Buffers = 256
+Reads = 0
+Writes = 0
+Fetches = 715
+Per table statistics:
+--------------------------------+---------+---------+---------+---------+---------+---------+---------+---------+
+ Table name                     | Natural | Index   | Insert  | Update  | Delete  | Backout | Purge   | Expunge |
+--------------------------------+---------+---------+---------+---------+---------+---------+---------+---------+
+RDB$RELATION_FIELDS             |         |      534|         |         |         |         |         |         |
+RDB$RELATIONS                   |       59|         |         |         |         |         |         |         |
+--------------------------------+---------+---------+---------+---------+---------+---------+---------+---------+
+
+-- turn per-table stats off, using shortened name
+SQL> SET PER_TAB OFF;
+
+
+
+12) SET WIRE_STATS option.
+
+Author: Vladyslav Khorsun <hvlad at users sourceforge net>
+
+  When set to ON shows wire (network) statistics after query execution.
+It is set to OFF by default. The name WIRE_STATS could be shortened up to WIRE.
+
+The statistics counters shown in two groups: 'logical' and 'physical':
+  - logical counters show numbers of packets in terms of Firebird wire protocol
+	and number of bytes send before compression and received after decompression;
+  - physical counters show number of physical packets and bytes send and 
+	received over the wire, number of bytes could be affected by wire compression, 
+	if present. Also, number of network roundtrips is shown: it is number of
+	changes of IO direction from 'send' to 'receive'.
+
+  Note, wire statistics is gathered by Remote provider only, i.e. it is always
+zero for embedded connections. Also, it is collected by client and IO direction
+(send, receive) is shown from client point of view.
+
+Examples:
+
+1. INET protocol with wire compression.
+Set WireCompression = true in firebird.conf
+
+>isql inet://employee
+
+SQL> SET;
+Print statistics:        OFF
+Print per-table stats:   OFF
+Print wire stats:        OFF
+...
+
+SQL> SET WIRE;
+SQL>
+SQL> SELECT COUNT(*) FROM RDB$RELATIONS;
+
+                COUNT
+=====================
+                   67
+
+Wire logical statistics:
+  send packets =        6
+  recv packets =        5
+  send bytes   =      184
+  recv bytes   =      224
+Wire physical statistics:
+  send packets =        3
+  recv packets =        2
+  send bytes   =      123
+  recv bytes   =       88
+  roundtrips   =        2
+
+  Note difference due to wire compression in send/recv bytes for logical and
+physical stats.
+
+
+2. XNET protocol (wire compression is not used).
+
+>isql xnet://employee
+
+SQL> SET WIRE;
+SQL>
+SQL> SELECT COUNT(*) FROM RDB$RELATIONS;
+
+                COUNT
+=====================
+                   67
+
+Wire logical statistics:
+  send packets =        5
+  recv packets =        6
+  send bytes   =      176
+  recv bytes   =      256
+Wire physical statistics:
+  send packets =        5
+  recv packets =        5
+  send bytes   =      176
+  recv bytes   =      256
+  roundtrips   =        5
+  
+  Note, send/recv bytes for logical and physical stats are equal.
+
+
+3. Embedded connection (wire statistics is absent).
+
+SQL> SET WIRE;
+SQL>
+SQL> select count(*) from rdb$relations;
+
+                COUNT
+=====================
+                   67
+
+Wire logical statistics:
+  send packets =        0
+  recv packets =        0
+  send bytes   =        0
+  recv bytes   =        0
+Wire physical statistics:
+  send packets =        0
+  recv packets =        0
+  send bytes   =        0
+  recv bytes   =        0
+  roundtrips   =        0
+
+
+
+13) SHOW WIRE_STATISTICS command.
+
+Author: Vladyslav Khorsun <hvlad at users sourceforge net>
+
+  New ISQL command that shows accumulated wire statistics. There is also
+shortened alias WIRE_STATS.
+
+  The command show values of wire statistics counters, accumulated since the
+connection start time. Format is the same as of SET STATS above.

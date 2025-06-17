@@ -32,6 +32,7 @@
 #define CLASSES_AUTO_PTR_H
 
 #include <stdio.h>
+#include <functional>
 
 namespace Firebird {
 
@@ -40,11 +41,21 @@ template <typename What>
 class SimpleDelete
 {
 public:
-	static void clear(What *ptr)
+	static void clear(What* ptr)
 	{
+		static_assert(sizeof(What) > 0, "can't delete pointer to incomplete type");
 		delete ptr;
 	}
 };
+
+template <>
+inline void SimpleDelete<FILE>::clear(FILE* f)
+{
+	if (f) {
+		fclose(f);
+	}
+}
+
 
 template <typename What>
 class ArrayDelete
@@ -52,30 +63,92 @@ class ArrayDelete
 public:
 	static void clear(What* ptr)
 	{
+		static_assert(sizeof(What) > 0, "can't delete pointer to incomplete type");
 		delete[] ptr;
 	}
 };
 
-template <typename Where, typename Clear = SimpleDelete<Where> >
+
+template <typename T>
+class SimpleRelease
+{
+public:
+	static void clear(T* ptr)
+	{
+		if (ptr)
+		{
+			ptr->release();
+		}
+	}
+};
+
+
+template <typename T>
+class SimpleDispose
+{
+public:
+	static void clear(T* ptr)
+	{
+		if (ptr)
+		{
+			ptr->dispose();
+		}
+	}
+};
+
+
+template <typename Where, template <typename W> class Clear = SimpleDelete >
 class AutoPtr
 {
 private:
 	Where* ptr;
 public:
-	AutoPtr<Where, Clear>(Where* v = NULL)
+	AutoPtr(Where* v = NULL)
 		: ptr(v)
 	{}
 
-	~AutoPtr()
+	AutoPtr(AutoPtr&& v)
+		: ptr(v.ptr)
 	{
-		Clear::clear(ptr);
+		v.ptr = nullptr;
 	}
 
-	AutoPtr<Where, Clear>& operator= (Where* v)
+	~AutoPtr()
 	{
-		Clear::clear(ptr);
+		Clear<Where>::clear(ptr);
+	}
+
+	AutoPtr& operator= (Where* v)
+	{
+		Clear<Where>::clear(ptr);
 		ptr = v;
 		return *this;
+	}
+
+	AutoPtr& operator=(AutoPtr&& r)
+	{
+		if (this != &r)
+		{
+			ptr = r.ptr;
+			r.ptr = nullptr;
+		}
+
+		return *this;
+	}
+
+	const Where* get() const
+	{
+		return ptr;
+	}
+
+	operator const Where*() const
+	{
+		return ptr;
+	}
+
+	Where* get()
+	{
+		return ptr;
 	}
 
 	operator Where*()
@@ -88,7 +161,12 @@ public:
 		return !ptr;
 	}
 
-	Where* operator->()
+	bool hasData() const
+	{
+		return ptr != NULL;
+	}
+
+	Where* operator->() const
 	{
 		return ptr;
 	}
@@ -102,42 +180,111 @@ public:
 
 	void reset(Where* v = NULL)
 	{
-		if (v != ptr) {
-			Clear::clear(ptr);
+		if (v != ptr)
+		{
+			Clear<Where>::clear(ptr);
 			ptr = v;
 		}
 	}
 
 private:
-	AutoPtr<Where, Clear>(AutoPtr<Where, Clear>&);
-	void operator=(AutoPtr<Where, Clear>&);
+	AutoPtr(AutoPtr&);
+	void operator=(AutoPtr&);
+};
+
+
+template <typename Where>
+class AutoDispose : public AutoPtr<Where, SimpleDispose>
+{
+public:
+	AutoDispose(Where* v = nullptr)
+		: AutoPtr<Where, SimpleDispose>(v)
+	{ }
+};
+
+
+template <typename Where>
+class AutoRelease : public AutoPtr<Where, SimpleRelease>
+{
+public:
+	AutoRelease(Where* v = nullptr)
+		: AutoPtr<Where, SimpleRelease>(v)
+	{ }
 };
 
 
 template <typename T>
-class AutoSetRestore
+class AutoSaveRestore
 {
 public:
-	AutoSetRestore(T* aValue, T newValue)
+	AutoSaveRestore(T* aValue)
 		: value(aValue),
 		  oldValue(*aValue)
-	{
-		*value = newValue;
-	}
+	{ }
 
-	~AutoSetRestore()
+	~AutoSaveRestore()
 	{
 		*value = oldValue;
 	}
 
 private:
 	// copying is prohibited
-	AutoSetRestore(const AutoSetRestore&);
-	AutoSetRestore& operator =(const AutoSetRestore&);
+	AutoSaveRestore(const AutoSaveRestore&);
+	AutoSaveRestore& operator =(const AutoSaveRestore&);
 
 	T* value;
 	T oldValue;
 };
+
+template <typename T>
+class AutoSetRestore : public AutoSaveRestore<T>
+{
+public:
+	AutoSetRestore(T* aValue, T newValue)
+		: AutoSaveRestore<T>(aValue)
+	{
+		*aValue = newValue;
+	}
+};
+
+
+template <typename T>
+class AutoSetRestoreFlag
+{
+public:
+	AutoSetRestoreFlag(T* aValue, T newBit, bool set)
+		: value(aValue),
+		  bit(newBit),
+		  oldValue((*value) & bit)
+	{
+		if (set)
+			*value |= bit;
+		else
+			*value &= ~bit;
+	}
+
+	~AutoSetRestoreFlag()
+	{
+		*value &= ~bit;
+		*value |= oldValue;
+	}
+
+	void release(T cleanBit)
+	{
+		bit &= ~cleanBit;
+		oldValue &= ~cleanBit;
+	}
+
+private:
+	// copying is prohibited
+	AutoSetRestoreFlag(const AutoSetRestoreFlag&);
+	AutoSetRestoreFlag& operator =(const AutoSetRestoreFlag&);
+
+	T* value;
+	T bit;
+	T oldValue;
+};
+
 
 template <typename T, typename T2>
 class AutoSetRestore2
@@ -172,18 +319,21 @@ private:
 };
 
 
-// One more typical class for AutoPtr cleanup
-class FileClose
+class Cleanup
 {
 public:
-	static void clear(FILE *f)
-	{
-		if (f) {
-			fclose(f);
-		}
-	}
-};
+	Cleanup(std::function<void()> clFunc)
+		: clean(clFunc)
+	{ }
 
+	~Cleanup()
+	{
+		clean();
+	}
+
+private:
+	std::function<void()> clean;
+};
 
 } //namespace Firebird
 

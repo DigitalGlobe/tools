@@ -49,15 +49,9 @@ endif
 
 COMM_SOLX_FLAGS:= $(COMM_SOLX_FLAGS) -I$(STLPort) -KPIC -pentium
 
-PROD_FLAGS=-DNDEBUG +w $(COMM_SOLX_FLAGS) -O2  
+PROD_FLAGS=+w $(COMM_SOLX_FLAGS) -O2  
 DEV_FLAGS=$(COMM_SOLX_FLAGS) -g  $(WARNINGS)  
-
-OS_ServerFiles=inet_server.cpp
 
 LIB_LINK_OPTIONS= -G 
 LIB_PLATFORM_RPATH= -R $(1)
 LIB_LINK_SONAME= -h $(1)
-EMBED_UTIL_TARGETS=gstat gsec fbguard nbackup fb_lock_print
-CLIENT_UTIL_TARGETS=gstat gsec fbguard fbmgr_bin nbackup fb_lock_print
-
-Physical_IO_Module=os/posix/unix.cpp

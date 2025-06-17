@@ -24,8 +24,8 @@
 #include "firebird.h"
 #include "../common/classes/alloc.h"
 #include "../intl/ldcommon.h"
-#include "../jrd/CharSet.h"
-#include "../jrd/IntlUtil.h"
+#include "../common/CharSet.h"
+#include "../common/IntlUtil.h"
 #include "ld_proto.h"
 #include "lc_ascii.h"
 
@@ -64,8 +64,7 @@ static void famasc_destroy(texttype* obj)
 
 	if (impl)
 	{
-		if (impl->cs.charset_fn_destroy)
-			impl->cs.charset_fn_destroy(&impl->cs);
+		Firebird::IntlUtil::finiCharset(&impl->cs);
 
 		delete impl->charSet;
 		delete impl;
@@ -131,7 +130,7 @@ static inline bool FAMILY_ASCII(texttype* cache,
 		cache->texttype_fn_str_to_upper	= famasc_str_to_upper;
 		cache->texttype_fn_str_to_lower	= famasc_str_to_lower;
 
-		TextTypeImpl* impl = FB_NEW(*getDefaultMemoryPool()) TextTypeImpl;
+		TextTypeImpl* impl = FB_NEW_POOL(*getDefaultMemoryPool()) TextTypeImpl;
 		cache->texttype_impl = impl;
 
 		memset(&impl->cs, 0, sizeof(impl->cs));
@@ -524,8 +523,6 @@ USHORT famasc_string_to_key(texttype* obj, USHORT iInLen, const BYTE* pInChar, U
 {
 	fb_assert(pOutChar != NULL);
 	fb_assert(pInChar != NULL);
-	fb_assert(iInLen <= LANGASCII_MAX_KEY);
-	fb_assert(iOutLen <= LANGASCII_MAX_KEY);
 	fb_assert(iOutLen >= famasc_key_length(obj, iInLen));
 
 	// point inbuff at last character

@@ -29,13 +29,12 @@
 
 #include "firebird.h"
 #include <stdio.h>
-#include "../jrd/common.h"
 #include <stdarg.h>
-#include "../jrd/ibase.h"
+#include "ibase.h"
 #include "../gpre/gpre.h"
 #include "../gpre/gpre_proto.h"
 #include "../gpre/lang_proto.h"
-#include "../jrd/gds_proto.h"
+#include "../yvalve/gds_proto.h"
 #include "../common/utils_proto.h"
 
 static void align(const int);
@@ -104,6 +103,8 @@ void INT_CXX_action( const act* action, int column)
 	case ACT_s_start:
 		begin(column);
 		align(column);
+	default:
+		break;
 	}
 
 	switch (action->act_type)
@@ -215,9 +216,8 @@ static void asgn_from( ref* reference, int column)
 		if (!field || field->fld_dtype == dtype_text)
 			fprintf(gpreGlob.out_file, VTO_CALL, JRD_VTOF, value, variable,
 					   field ? field->fld_length : 0);
-		else if (!field || field->fld_dtype == dtype_cstring)
-			fprintf(gpreGlob.out_file, VTO_CALL, GDS_VTOV, value, variable,
-					   field ? field->fld_length : 0);
+		else if (field->fld_dtype == dtype_cstring)
+			fprintf(gpreGlob.out_file, VTO_CALL, GDS_VTOV, value, variable, field->fld_length);
 		else
 			fprintf(gpreGlob.out_file, "%s = %s;", variable, value);
 	}
@@ -244,7 +244,7 @@ static void asgn_to( ref* reference)
 	if (!field || field->fld_dtype == dtype_text)
 		fprintf(gpreGlob.out_file, "gds__ftov (%s, %d, %s, sizeof(%s));",
 				   s, field ? field->fld_length : 0, reference->ref_value, reference->ref_value);
-	else if (!field || field->fld_dtype == dtype_cstring)
+	else if (field->fld_dtype == dtype_cstring)
 		fprintf(gpreGlob.out_file, "gds__vtov((const char*) %s, (char*) %s, sizeof(%s));",
 				   s, reference->ref_value, reference->ref_value);
 	else
@@ -287,10 +287,9 @@ static void gen_compile( const gpre_req* request, int column)
 	column += INDENT;
 	//const gpre_dbb* db = request->req_database;
 	//const gpre_sym* symbol = db->dbb_name;
-	fprintf(gpreGlob.out_file, "if (!%s)", request->req_handle);
-	align(column);
+	//align(column);
 	fprintf(gpreGlob.out_file,
-		"%s = CMP_compile2 (tdbb, (UCHAR*) jrd_%" ULONGFORMAT ", sizeof(jrd_%" ULONGFORMAT "), true);",
+		"%s.compile(tdbb, (UCHAR*) jrd_%" ULONGFORMAT", sizeof(jrd_%" ULONGFORMAT"));",
 			   request->req_handle, request->req_ident, request->req_ident);
 }
 
@@ -478,7 +477,7 @@ static void gen_receive( const gpre_req* request, const gpre_port* port)
 {
 
 	fprintf(gpreGlob.out_file,
-			   "EXE_receive (tdbb, %s, %d, %d, (UCHAR*) &jrd_%" ULONGFORMAT ");",
+			   "EXE_receive (tdbb, %s, %d, %d, (UCHAR*) &jrd_%" ULONGFORMAT");",
 			   request->req_handle, port->por_msg_number, port->por_length,
 			   port->por_ident);
 }
@@ -495,7 +494,7 @@ static void gen_request( const gpre_req* request)
 	if (!(request->req_flags & REQ_exp_hand))
 		fprintf(gpreGlob.out_file, "static void\t*%s;\t// request handle \n", request->req_handle);
 
-	fprintf(gpreGlob.out_file, "static const UCHAR\tjrd_%" ULONGFORMAT " [%d] =",
+	fprintf(gpreGlob.out_file, "static const UCHAR\tjrd_%" ULONGFORMAT" [%d] =",
 			   request->req_ident, request->req_length);
 	align(INDENT);
 	fprintf(gpreGlob.out_file, "{\t// blr string \n");
@@ -584,11 +583,11 @@ static void gen_send( const gpre_req* request, const gpre_port* port, int column
 		align(column);
 		fprintf(gpreGlob.out_file, "if (ignore_perm)");
 		align(column);
-		fprintf(gpreGlob.out_file, "\trequest->req_flags |= req_ignore_perm;");
+		fprintf(gpreGlob.out_file, "\trequest->getStatement()->flags |= Statement::FLAG_IGNORE_PERM;");
 	}
 	align(column);
 
-	fprintf(gpreGlob.out_file, "EXE_send (tdbb, %s, %d, %d, (UCHAR*) &jrd_%" ULONGFORMAT ");",
+	fprintf(gpreGlob.out_file, "EXE_send (tdbb, %s, %d, %d, (UCHAR*) &jrd_%" ULONGFORMAT");",
 			   request->req_handle, port->por_msg_number, port->por_length, port->por_ident);
 }
 
@@ -703,6 +702,10 @@ static void make_port( const gpre_port* port, int column)
 			fmtstr = "    double  jrd_%d;\t// %s ";
 			break;
 
+		case dtype_boolean:
+			fmtstr = "    FB_BOOLEAN jrd_%d;\t// %s ";
+			break;
+
 		default:
 			{
 				TEXT s[ERROR_LENGTH];
@@ -716,7 +719,7 @@ static void make_port( const gpre_port* port, int column)
 			fprintf(gpreGlob.out_file, fmtstr, reference->ref_ident, name);
 	}
 	align(column);
-	fprintf(gpreGlob.out_file, "} jrd_%" ULONGFORMAT ";", port->por_ident);
+	fprintf(gpreGlob.out_file, "} jrd_%" ULONGFORMAT";", port->por_ident);
 }
 
 

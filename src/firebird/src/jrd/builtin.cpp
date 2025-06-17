@@ -26,9 +26,8 @@
 #include "firebird.h"
 #include <string.h>
 #include "../jrd/flu.h"
-#include "../jrd/common.h"
 #include "../jrd/flu_proto.h"
-#include "../jrd/gds_proto.h"
+#include "../yvalve/gds_proto.h"
 
 struct FN
 {

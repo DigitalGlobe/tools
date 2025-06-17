@@ -27,26 +27,41 @@
 #include "firebird.h"
 #include "init.h"
 #include "alloc.h"
+#include "auto.h"
+#include "../common/SimpleStatusVector.h"
+#include "../common/dllinst.h"
+#include "../common/os/os_utils.h"
+
+#ifdef WIN_NT
+#include <windows.h>
+
+#ifndef PATH_MAX
+#define PATH_MAX MAX_PATH
+#endif
+#endif
 
 // Setting this define helps (with AV at exit time) detect globals
 // with destructors, declared not using InstanceControl.
 // The reason for AV is that process memory pool (from where globals should allocate memory)
-// is destoyed in atexit(), before destructors are called. Therefore each delete
+// is destroyed in atexit(), before destructors are called. Therefore each delete
 // operator in destructor will cause AV.
 #undef DEBUG_INIT
+
+static bool dontCleanup = false;
 
 namespace
 {
 #ifdef DEV_BUILD
 	void cleanError(const Firebird::Exception* e)
 	{
-		// This is done to be able to look at status in debugger
-		ISC_STATUS_ARRAY status;
 		if (e)
 		{
-			e->stuff_exception(status);
+			// This is done to be able to look at status in debugger
+			Firebird::StaticStatusVector status;
+			e->stuffException(status);
 		}
-		// we do not have big choice in error reporting when running destructors
+
+		// we do not have big choice in error reporting when running global destructors
 		abort();
 	}
 #else
@@ -54,11 +69,50 @@ namespace
 #endif
 
 	// This helps initialize globals, needed before regular ctors run
-	bool initDone = false;
+	int initDone = 0;
+
+#ifdef HAVE_PTHREAD_ATFORK
+	void child(void)
+	{
+		// turn off dtors execution in forked process
+		initDone = 2;
+	}
+#endif
 
 	void allClean()
 	{
+		if (initDone != 1)
+		{
+			return;
+		}
+		initDone = 2;
+
+#ifdef WIN_NT
+		if (Firebird::bDllProcessExiting)
+			dontCleanup = true;
+#endif
+		if (dontCleanup)
+			return;
+
+#ifdef DEBUG_GDS_ALLOC
+		Firebird::AutoPtr<FILE> file;
+
+		{	// scope
+			char name[PATH_MAX];
+
+			if (os_utils::getCurrentModulePath(name, sizeof(name)))
+				strncat(name, ".memdebug.log", sizeof(name) - 1);
+			else
+				strcpy(name, "memdebug.log");
+
+			file = os_utils::fopen(name, "w+t");
+		}
+#endif	// DEBUG_GDS_ALLOC
+
 		Firebird::InstanceControl::destructors();
+
+		if (dontCleanup)
+			return;
 
 		try
 		{
@@ -71,7 +125,16 @@ namespace
 
 		try
 		{
-			Firebird::MemoryPool::cleanup();
+#ifdef DEBUG_GDS_ALLOC
+			// In Debug mode - this will report all memory leaks
+			if (file)
+			{
+				getDefaultMemoryPool()->print_contents(file,
+					Firebird::MemoryPool::PRINT_USED_ONLY | Firebird::MemoryPool::PRINT_RECURSIVE);
+				file = NULL;
+			}
+#endif
+			Firebird::MemoryPool::cleanupDefaultPool();
 		}
 		catch (...)
 		{
@@ -80,17 +143,10 @@ namespace
 	}
 
 #ifndef DEBUG_INIT
-	// This class with it's single instance ensures global cleanup
-	class Cleanup
-	{
-	public:
-		~Cleanup()
-		{
-			allClean();
-		}
-	};
 
-	Cleanup global;
+	// This instance ensures dtors run when program exits
+	Firebird::Cleanup global(allClean);
+
 #endif //DEBUG_INIT
 
 	void init()
@@ -104,20 +160,24 @@ namespace
 		// are constructed (which may happen in parallel in different threads),
 		// races are prevented by StaticMutex::mutex.
 
-		if (initDone)
+		if (initDone != 0)
 		{
 			return;
 		}
 
 		Firebird::Mutex::initMutexes();
-		Firebird::MemoryPool::init();
+		Firebird::MemoryPool::initDefaultPool();
 		Firebird::StaticMutex::create();
 
 #ifdef DEBUG_INIT
 		atexit(allClean);
 #endif //DEBUG_INIT
 
-		initDone = true;
+		initDone = 1;
+#ifdef HAVE_PTHREAD_ATFORK
+		int ret = pthread_atfork(NULL, NULL, child);
+		(void) ret;
+#endif
 
 		Firebird::MemoryPool::contextPoolInit();
 	}
@@ -139,14 +199,39 @@ namespace Firebird
 	InstanceControl::InstanceList::InstanceList(DtorPriority p)
 		: priority(p)
 	{
-		MutexLockGuard guard(*StaticMutex::mutex);
+		MutexLockGuard guard(*StaticMutex::mutex, "InstanceControl::InstanceList::InstanceList");
 		next = instanceList;
+		prev = nullptr;
+		if (instanceList)
+			instanceList->prev = this;
 		instanceList = this;
 	}
 
 	InstanceControl::InstanceList::~InstanceList()
 	{
-		delete next;
+		fb_assert(next == nullptr);
+		fb_assert(prev == nullptr);
+	}
+
+	void InstanceControl::InstanceList::remove()
+	{
+		MutexLockGuard guard(*StaticMutex::mutex, FB_FUNCTION);
+		unlist();
+	}
+
+	void InstanceControl::InstanceList::unlist()
+	{
+		if (instanceList == this)
+			instanceList = next;
+
+		if (next)
+			next->prev = this->prev;
+
+		if (prev)
+			prev->next = this->next;
+
+		prev = nullptr;
+		next = nullptr;
 	}
 
 	void InstanceControl::destructors()
@@ -190,7 +275,7 @@ namespace Firebird
 		{
 			currentPriority = nextPriority;
 
-			for (InstanceList* i = instanceList; i; i = i->next)
+			for (InstanceList* i = instanceList; i && !dontCleanup; i = i->next)
 			{
 				if (i->priority == currentPriority)
 				{
@@ -213,8 +298,13 @@ namespace Firebird
 			}
 		} while (nextPriority != currentPriority);
 
-		delete instanceList;
-		instanceList = 0;
+
+		while (instanceList)
+		{
+			InstanceList* item = instanceList;
+			item->unlist();
+			delete item;
+		}
 	}
 
 	void InstanceControl::registerGdsCleanup(FPTR_VOID cleanup)
@@ -225,8 +315,13 @@ namespace Firebird
 
 	void InstanceControl::registerShutdown(FPTR_VOID shutdown)
 	{
-		fb_assert(!gdsShutdown || !shutdown || gdsShutdown == shutdown);
+		fb_assert(!gdsShutdown || !shutdown);
 		gdsShutdown = shutdown;
+	}
+
+	void InstanceControl::cancelCleanup()
+	{
+		dontCleanup = true;
 	}
 
 	namespace StaticMutex
@@ -236,7 +331,7 @@ namespace Firebird
 		void create()
 		{
 			static char place[sizeof(Firebird::Mutex) + FB_ALIGNMENT];
-			mutex = new((void*)(IPTR) FB_ALIGN((size_t)(IPTR) place, FB_ALIGNMENT)) Firebird::Mutex;
+			mutex = new((void*) FB_ALIGN(place, FB_ALIGNMENT)) Firebird::Mutex;
 		}
 
 		void release()

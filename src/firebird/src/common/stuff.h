@@ -36,7 +36,7 @@ inline void add_word(UCHAR* &blr, const int word)
 	add_byte(blr, (word) >> 8);
 }
 
-inline void add_long(UCHAR* &blr, const long lg)
+inline void add_long(UCHAR* &blr, const SLONG lg)
 {
 	add_word(blr, lg);
 	add_word(blr, (lg) >> 16);
@@ -50,7 +50,7 @@ inline void add_int64(UCHAR* &blr, const SINT64 i64)
 
 inline void add_string(UCHAR* &blr, const TEXT* string)
 {
-	add_byte(blr, strlen (string));
+	add_byte(blr, static_cast<int>(strlen(string)));
 	while (*string)
 		add_byte(blr, *string++);
 }

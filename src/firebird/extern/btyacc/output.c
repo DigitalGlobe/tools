@@ -809,9 +809,17 @@ void output_defines()
     register char *s;
     FILE *dc_file;
 
+    /* ASF: changed to separate (_yacc_defines_keywords and _yacc_defines_yystype instead of
+       _yacc_defines_h_) keyword definitions of YYSTYPE because keywords may conflict with other
+       things */
+
     if(dflag) {
+      /***
       fprintf(defines_file, "#ifndef _yacc_defines_h_\n");
       fprintf(defines_file, "#define _yacc_defines_h_\n\n");
+      ***/
+      fprintf(defines_file, "#ifndef _yacc_defines_keywords\n");
+      fprintf(defines_file, "#define _yacc_defines_keywords\n\n");
     }
 
     /* VM: Print to either code file or defines file but not to both */
@@ -847,20 +855,32 @@ void output_defines()
     ++outline;
     fprintf(dc_file, "#define YYERRCODE %d\n", symbol_value[1]);
 
+    if(dflag) {
+      fprintf(defines_file, "\n#endif /* _yacc_defines_keywords */\n\n");
+    }
+
     if (dflag && unionized)
     {
+    fprintf(defines_file, "#ifndef _yacc_defines_yystype\n");
+    fprintf(defines_file, "#define _yacc_defines_yystype\n");
+
 	fclose(union_file);
 	union_file = fopen(union_file_name, "r");
 	if (union_file == NULL) open_error(union_file_name);
 	while ((c = getc(union_file)) != EOF) {
 	  putc(c, defines_file);
 	}
-	fprintf(defines_file, "extern YYSTYPE yylval;\n");
+	/* ASF: we define it on the Parser class
+	   fprintf(defines_file, "extern YYSTYPE yylval;\n"); */
+
+    fprintf(defines_file, "\n#endif /* _yacc_defines_yystype */\n\n");
     }
 
+    /***
     if(dflag) {
       fprintf(defines_file, "\n#endif\n");
     }
+    ***/
 }
 
 

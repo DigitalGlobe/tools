@@ -24,33 +24,65 @@
 #define JRD_USER_MANAGEMENT_H
 
 #include "firebird.h"
-#include "../common/classes/array.h"
-#include "../jrd/ibase.h"
-
-struct internal_user_data;
+#include "../common/classes/objects_array.h"
+#include "../common/classes/fb_string.h"
+#include "../jrd/Monitoring.h"
+#include "../jrd/recsrc/RecordSource.h"
+#include "firebird/Interface.h"
+#include "../common/security.h"
 
 namespace Jrd {
 
 class thread_db;
 class jrd_tra;
+class RecordBuffer;
+
+class UsersTableScan: public VirtualTableScan
+{
+public:
+	UsersTableScan(CompilerScratch* csb, const Firebird::string& alias,
+				   StreamType stream, jrd_rel* relation)
+		: VirtualTableScan(csb, alias, stream, relation)
+	{}
+
+protected:
+	const Format* getFormat(thread_db* tdbb, jrd_rel* relation) const override;
+	bool retrieveRecord(thread_db* tdbb, jrd_rel* relation, FB_UINT64 position,
+		Record* record) const override;
+};
 
 // User management argument for deferred work
-class UserManagement
+class UserManagement : public SnapshotData
 {
 public:
 	explicit UserManagement(jrd_tra* tra);
 	~UserManagement();
 
 	// store userData for DFW-time processing
-	USHORT put(internal_user_data* userData);
+	USHORT put(Auth::UserData* userData);
 	// execute command with ID
 	void execute(USHORT id);
 	// commit transaction in security database
 	void commit();
+	// return users list for SEC$USERS
+	RecordBuffer* getList(thread_db* tdbb, jrd_rel* relation);
+	// callback for users display
+	void list(Firebird::IUser* u, unsigned cachePosition);
 
 private:
-	FB_API_HANDLE database, transaction;
-	Firebird::HalfStaticArray<internal_user_data*, 8> commands;
+	thread_db* threadDbb;
+	Firebird::HalfStaticArray<Auth::UserData*, 8> commands;
+	typedef Firebird::Pair<Firebird::NonPooled<MetaName, Firebird::IManagement*> > Manager;
+	Firebird::ObjectsArray<Manager> managers;
+	Firebird::NoCaseString plugins;
+	Attachment* att;
+	jrd_tra* tra;
+
+	Firebird::IManagement* getManager(const char* name);
+	void openAllManagers();
+	Firebird::IManagement* registerManager(Auth::Get& getPlugin, const char* plugName);
+	static void checkSecurityResult(int errcode, Firebird::IStatus* status,
+		const char* userName, unsigned operation);
 };
 
 }	// namespace

@@ -27,25 +27,44 @@
 #include "../jrd/scl.h"
 #include "../common/classes/array.h"
 
+//namespace Jrd {
+//	class SecurityClass;
+//}
+
 struct dsc;
 
-void SCL_check_access(Jrd::thread_db*, const Jrd::SecurityClass*, SLONG, const Firebird::MetaName&,
-					  const Firebird::MetaName&, Jrd::SecurityClass::flags_t,
-					  const TEXT*, const Firebird::MetaName&, const Firebird::MetaName& = "");
-void SCL_check_index(Jrd::thread_db*, const Firebird::MetaName&, UCHAR, Jrd::SecurityClass::flags_t);
-void SCL_check_procedure(Jrd::thread_db* tdbb, const dsc*, Jrd::SecurityClass::flags_t);
-void SCL_check_relation(Jrd::thread_db* tdbb, const dsc*, Jrd::SecurityClass::flags_t);
+void SCL_check_access(Jrd::thread_db*, const Jrd::SecurityClass*,
+					  SLONG, const Jrd::MetaName&,
+					  Jrd::SecurityClass::flags_t, ObjectType type, bool recursive, const Jrd::MetaName&,
+					  const Jrd::MetaName& = "");
+void SCL_check_create_access(Jrd::thread_db*, ObjectType type);
+void SCL_check_charset(Jrd::thread_db* tdbb, const Jrd::MetaName&, Jrd::SecurityClass::flags_t);
+void SCL_check_collation(Jrd::thread_db* tdbb, const Jrd::MetaName&, Jrd::SecurityClass::flags_t);
+void SCL_check_database(Jrd::thread_db* tdbb, Jrd::SecurityClass::flags_t mask);
+void SCL_check_domain(Jrd::thread_db* tdbb, const Jrd::MetaName&, Jrd::SecurityClass::flags_t);
+bool SCL_check_exception(Jrd::thread_db* tdbb, const Jrd::MetaName&, Jrd::SecurityClass::flags_t);
+bool SCL_check_generator(Jrd::thread_db* tdbb, const Jrd::MetaName&, Jrd::SecurityClass::flags_t);
+void SCL_check_index(Jrd::thread_db*, const Jrd::MetaName&, UCHAR, Jrd::SecurityClass::flags_t);
+bool SCL_check_package(Jrd::thread_db* tdbb, const dsc*, Jrd::SecurityClass::flags_t);
+bool SCL_check_procedure(Jrd::thread_db* tdbb, const dsc*, Jrd::SecurityClass::flags_t);
+bool SCL_check_function(Jrd::thread_db* tdbb, const dsc*, Jrd::SecurityClass::flags_t);
+void SCL_check_filter(Jrd::thread_db* tdbb, const Jrd::MetaName &name, Jrd::SecurityClass::flags_t);
+void SCL_check_relation(Jrd::thread_db* tdbb, const dsc*, Jrd::SecurityClass::flags_t, bool protectSys = true);
+bool SCL_check_view(Jrd::thread_db* tdbb, const dsc*, Jrd::SecurityClass::flags_t);
+void SCL_check_role(Jrd::thread_db* tdbb, const Jrd::MetaName&, Jrd::SecurityClass::flags_t);
 Jrd::SecurityClass* SCL_get_class(Jrd::thread_db*, const TEXT*);
 Jrd::SecurityClass::flags_t SCL_get_mask(Jrd::thread_db* tdbb, const TEXT*, const TEXT*);
-void SCL_init(Jrd::thread_db* tdbb, bool, const Jrd::UserId& tempId);
-Jrd::SecurityClass* SCL_recompute_class(Jrd::thread_db*, const TEXT*);
+void SCL_clear_classes(Jrd::thread_db*, const TEXT*);
 void SCL_release_all(Jrd::SecurityClassList*&);
+bool SCL_role_granted(Jrd::thread_db* tdbb, const Jrd::UserId& usr, const TEXT* sql_role);
+Jrd::SecurityClass::flags_t SCL_get_object_mask(ObjectType object_type);
+ULONG SCL_get_number(const UCHAR*);
+USHORT SCL_convert_privilege(Jrd::thread_db* tdbb, Jrd::jrd_tra* transaction, const Firebird::string& priv);
 
 namespace Jrd {
 typedef Firebird::Array<UCHAR> Acl;
 }
-void SCL_move_priv(Jrd::SecurityClass::flags_t, Jrd::Acl&);
+bool SCL_move_priv(Jrd::SecurityClass::flags_t, Jrd::Acl&);
 
 
 #endif // JRD_SCL_PROTO_H
-

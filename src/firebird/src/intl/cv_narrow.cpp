@@ -38,7 +38,7 @@ void CV_convert_init(csconvert* csptr,
 	csptr->csconvert_name = "DIRECT";
 	csptr->csconvert_fn_convert = cvt_fn;
 	csptr->csconvert_fn_destroy = CV_convert_destroy;
-	csptr->csconvert_impl = new CsConvertImpl();
+	csptr->csconvert_impl = FB_NEW CsConvertImpl();
 	csptr->csconvert_impl->csconvert_datatable = (const BYTE*) datatable;
 	csptr->csconvert_impl->csconvert_misc = (const BYTE*) datatable2;
 }
@@ -151,7 +151,7 @@ ULONG CV_wc_to_wc(csconvert* obj,
 			*err_code = CS_TRUNCATION_ERROR;
 	}
 	*err_position = src_start - src_len;
-	return ((dest_ptr - start) * sizeof(*dest_ptr));
+	return static_cast<ULONG>((dest_ptr - start) * sizeof(*dest_ptr));
 }
 
 

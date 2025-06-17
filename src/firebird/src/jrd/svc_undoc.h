@@ -24,16 +24,16 @@
 #ifndef SVC_UNDOC_H
 #define SVC_UNDOC_H
 
-/* Service Action Flags */
-const int isc_action_svc_lock_stats		= 13;	/* Retrieves lock manager statistics */
-const int isc_action_svc_set_config		= 14;	/* Sets configuration file values */
-const int isc_action_svc_default_config	= 15;	/* Sets the configuration options to their default values */
-const int isc_action_svc_set_env		= 16;	/* Sets the value for $FIREBIRD */
-const int isc_action_svc_set_env_lock	= 17;	/* Sets the value for $FIREBIRD_LOCK */
-const int isc_action_svc_set_env_msg	= 18;	/* Sets the value for $FIREBIRD_MSG */
+// Service Action Flags
+const int isc_action_svc_lock_stats		= 13;	// Retrieves lock manager statistics
+const int isc_action_svc_set_config		= 14;	// Sets configuration file values
+const int isc_action_svc_default_config	= 15;	// Sets the configuration options to their default values
+const int isc_action_svc_set_env		= 16;	// Sets the value for $FIREBIRD
+const int isc_action_svc_set_env_lock	= 17;	// Sets the value for $FIREBIRD_LOCK
+const int isc_action_svc_set_env_msg	= 18;	// Sets the value for $FIREBIRD_MSG
 
 
-/* Service Info Flags */
+// Service Info Flags
 const int isc_info_svc_total_length		= 69;
 const int isc_info_svc_response			= 70;
 const int isc_info_svc_response_more	= 71;
@@ -92,5 +92,4 @@ const int isc_info_svc_dump_pool_info	= 77;
 //#define isc_spb_lck_wait		0x04
 //#define isc_spb_lck_stats		0x08
 
-#endif	/* SVC_UNDOC_H */
-
+#endif	// SVC_UNDOC_H

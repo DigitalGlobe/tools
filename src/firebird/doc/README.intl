@@ -270,12 +270,12 @@ Example: DISABLE-EXPANSIONS=1
 
 ICU-VERSION: Specify what version of ICU library will be used. Valid values are the ones defined in
 the config file (intl/fbintl.conf) in entry intl_module/icu_versions.
-Valid for: UNICODE and UNICODE_CI.
+Valid for: UNICODE collations.
 Format: ICU-VERSION={default | major.minor}
 Example: ICU-VERSION=3.0
 
 LOCALE: Specify the collation locale.
-Valid for: UNICODE and UNICODE_CI.
+Valid for: UNICODE collations.
 Requires: Complete version of ICU libraries.
 Format: LOCALE=xx_XX
 Example: LOCALE=en_US

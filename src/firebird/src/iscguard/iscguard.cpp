@@ -17,9 +17,8 @@
  * Contributor(s): ______________________________________.
  */
 #include "firebird.h"
-#include "../jrd/common.h"
 #include <stdio.h>
-#include "../jrd/gds_proto.h"
+#include "../yvalve/gds_proto.h"
 #include <stdlib.h>
 #include <windows.h>
 #include <shellapi.h>
@@ -39,10 +38,11 @@
 #include "../iscguard/iscguard.h"
 #include "../iscguard/cntlg_proto.h"
 #include "../utilities/install/install_nt.h"
-#include "../remote/os/win32/window.h"
-#include "../remote/os/win32/chop_proto.h"
+#include "../remote/server/os/win32/window.h"
+#include "../remote/server/os/win32/chop_proto.h"
 #include "../common/config/config.h"
 #include "../common/classes/init.h"
+#include "../common/os/path_utils.h"
 
 #ifdef WIN_NT
 #include <process.h>			// _beginthread
@@ -75,7 +75,8 @@ static bool parse_args(LPCSTR);
 
 THREAD_ENTRY_DECLARE start_and_watch_server(THREAD_ENTRY_PARAM);
 THREAD_ENTRY_DECLARE swap_icons(THREAD_ENTRY_PARAM);
-void write_log(int, const char*);
+static void addTaskBarIcons(HINSTANCE hInstance, HWND hWnd, BOOL& bInTaskBar);
+static void write_log(int, const char*);
 
 HWND DisplayPropSheet(HWND, HINSTANCE);
 LRESULT CALLBACK GeneralPage(HWND, UINT, WPARAM, LPARAM);
@@ -91,7 +92,8 @@ static Firebird::GlobalPtr<Firebird::string> remote_name;
 static Firebird::GlobalPtr<Firebird::string> mutex_name;
 // unsigned short shutdown_flag = FALSE;
 static log_info* log_entry;
-static ThreadHandle watcher_thd = 0;
+static Thread::Handle watcher_thd = 0;
+static Thread::Handle swap_icons_thd = 0;
 
 int WINAPI WinMain(HINSTANCE hInstance,
 				   HINSTANCE /*hPrevInstance*/, LPSTR lpszCmdLine, int /*nCmdShow*/)
@@ -257,7 +259,11 @@ static THREAD_ENTRY_DECLARE WINDOW_main(THREAD_ENTRY_PARAM)
 	// If we're a service, don't create a window
 	if (service_flag)
 	{
-		if (gds__thread_start(start_and_watch_server, 0, THREAD_medium, 0, &watcher_thd))
+		try
+		{
+			Thread::start(start_and_watch_server, 0, THREAD_medium, &watcher_thd);
+		}
+		catch (const Firebird::Exception&)
 		{
 			// error starting server thread
 			char szMsgString[256];
@@ -274,7 +280,7 @@ static THREAD_ENTRY_DECLARE WINDOW_main(THREAD_ENTRY_PARAM)
 	{
 		char szMsgString[256];
 		LoadString(hInstance_gbl, IDS_ALREADYSTARTED, szMsgString, 256);
-		MessageBox(NULL, szMsgString, GUARDIAN_APP_LABEL, MB_OK | MB_ICONHAND);
+		MessageBox(NULL, szMsgString, GUARDIAN_APP_LABEL, MB_OK | MB_ICONSTOP);
 		gds__log(szMsgString);
 		return 0;
 	}
@@ -296,7 +302,7 @@ static THREAD_ENTRY_DECLARE WINDOW_main(THREAD_ENTRY_PARAM)
 	{
 		char szMsgString[256];
 		LoadString(hInstance_gbl, IDS_REGERROR, szMsgString, 256);
-		MessageBox(NULL, szMsgString, GUARDIAN_APP_LABEL, MB_OK);
+		MessageBox(NULL, szMsgString, GUARDIAN_APP_LABEL, MB_OK | MB_ICONSTOP);
 		return 0;
 	}
 
@@ -314,12 +320,16 @@ static THREAD_ENTRY_DECLARE WINDOW_main(THREAD_ENTRY_PARAM)
 	hWndGbl = hWnd;
 
 	// begin a new thread for calling the start_and_watch_server
-	if (gds__thread_start(start_and_watch_server, 0, THREAD_medium, 0, NULL))
+	try
+	{
+		Thread::start(start_and_watch_server, 0, THREAD_medium, NULL);
+	}
+	catch (const Firebird::Exception&)
 	{
 		// error starting server thread
 		char szMsgString[256];
 		LoadString(hInstance_gbl, IDS_CANT_START_THREAD, szMsgString, 256);
-		MessageBox(NULL, szMsgString, GUARDIAN_APP_LABEL, MB_OK);
+		MessageBox(NULL, szMsgString, GUARDIAN_APP_LABEL, MB_OK | MB_ICONSTOP);
 		gds__log(szMsgString);
 		DestroyWindow(hWnd);
 		return 0;
@@ -342,6 +352,11 @@ static THREAD_ENTRY_DECLARE WINDOW_main(THREAD_ENTRY_PARAM)
 			{
 				DestroyWindow(hPSDlg);
 				hPSDlg = NULL;
+				if (swap_icons_thd)
+				{
+					CloseHandle(swap_icons_thd);
+					swap_icons_thd = 0;
+				};
 			}
 			if (bPSMsg)
 				continue;
@@ -371,6 +386,7 @@ static LRESULT CALLBACK WindowFunc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 	static BOOL bInTaskBar = FALSE;
 	static bool bStartup = false;
 	static HINSTANCE hInstance = NULL;
+	static UINT s_uTaskbarRestart;
 
 	hInstance = (HINSTANCE) GetWindowLongPtr(hWnd, GWLP_HINSTANCE);
 	switch (message)
@@ -449,7 +465,15 @@ static LRESULT CALLBACK WindowFunc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 
 	case WM_SWITCHICONS:
 		nRestarts++;
-		gds__thread_start(swap_icons, hWnd, THREAD_medium, 0, NULL);
+		{ // scope
+			DWORD thr_exit = 0;
+			if (swap_icons_thd == 0 ||
+				!GetExitCodeThread(swap_icons_thd, &thr_exit) ||
+				thr_exit != STILL_ACTIVE)
+			{
+				Thread::start(swap_icons, hWnd, THREAD_medium, &swap_icons_thd);
+			}
+		} // scope
 		break;
 
 	case ON_NOTIFYICON:
@@ -474,42 +498,8 @@ static LRESULT CALLBACK WindowFunc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 		break;
 
 	case WM_CREATE:
-		if (!service_flag)
-		{
-			HICON hIcon = (HICON) LoadImage(hInstance, MAKEINTRESOURCE(IDI_IBGUARD),
-									  IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
-
-			NOTIFYICONDATA nid;
-			nid.cbSize = sizeof(NOTIFYICONDATA);
-			nid.hWnd = hWnd;
-			nid.uID = IDI_IBGUARD;
-			nid.uFlags = NIF_TIP | NIF_ICON | NIF_MESSAGE;
-			nid.uCallbackMessage = ON_NOTIFYICON;
-			nid.hIcon = hIcon;
-			lstrcpy(nid.szTip, GUARDIAN_APP_LABEL);
-
-			// This will be true if we are using the explorer interface
-			bInTaskBar = Shell_NotifyIcon(NIM_ADD, &nid);
-
-			if (hIcon)
-				DestroyIcon(hIcon);
-
-			// This will be true if we are using the program manager interface
-			if (!bInTaskBar)
-			{
-				char szMsgString[256];
-				HMENU hSysMenu = GetSystemMenu(hWnd, FALSE);
-				DeleteMenu(hSysMenu, SC_RESTORE, MF_BYCOMMAND);
-				AppendMenu(hSysMenu, MF_SEPARATOR, 0, NULL);
-				LoadString(hInstance, IDS_SVRPROPERTIES, szMsgString, 256);
-				AppendMenu(hSysMenu, MF_STRING, IDM_SVRPROPERTIES, szMsgString);
-				LoadString(hInstance, IDS_SHUTDOWN, szMsgString, 256);
-				AppendMenu(hSysMenu, MF_STRING, IDM_SHUTDOWN, szMsgString);
-				LoadString(hInstance, IDS_PROPERTIES, szMsgString, 256);
-				AppendMenu(hSysMenu, MF_STRING, IDM_PROPERTIES, szMsgString);
-				DestroyMenu(hSysMenu);
-			}
-		}
+		s_uTaskbarRestart = RegisterWindowMessage("TaskbarCreated");
+		addTaskBarIcons(hInstance, hWnd, bInTaskBar);
 		break;
 
 	case WM_QUERYOPEN:
@@ -519,6 +509,7 @@ static LRESULT CALLBACK WindowFunc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 
 	case WM_SYSCOMMAND:
 		if (!bInTaskBar)
+		{
 			switch (wParam)
 			{
 			case SC_RESTORE:
@@ -545,6 +536,7 @@ static LRESULT CALLBACK WindowFunc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 				}
 				return TRUE;
 			}
+		}
 		return DefWindowProc(hWnd, message, wParam, lParam);
 
 	case WM_DESTROY:
@@ -562,8 +554,11 @@ static LRESULT CALLBACK WindowFunc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 		break;
 
 	default:
+		if (message == s_uTaskbarRestart)
+			addTaskBarIcons(hInstance, hWnd, bInTaskBar);
 		return DefWindowProc(hWnd, message, wParam, lParam);
 	}
+
 	return FALSE;
 }
 
@@ -591,7 +586,7 @@ THREAD_ENTRY_DECLARE start_and_watch_server(THREAD_ENTRY_PARAM)
 	SC_HANDLE hScManager = 0, hService = 0;
 
 	// get the guardian startup information
-	const short option = Config::getGuardianOption();
+	const short option = Firebird::Config::getGuardianOption();
 
 	char prefix_buffer[MAXPATHLEN];
 	GetModuleFileName(NULL, prefix_buffer, sizeof(prefix_buffer));
@@ -717,7 +712,7 @@ THREAD_ENTRY_DECLARE start_and_watch_server(THREAD_ENTRY_PARAM)
 			}
 			else
 			{
-				MessageBox(NULL, out_buf, NULL, MB_OK);
+				MessageBox(NULL, out_buf, NULL, MB_OK | MB_ICONSTOP);
 				PostMessage(hWndGbl, WM_CLOSE, 0, 0);
 			}
 			return 0;
@@ -750,7 +745,8 @@ THREAD_ENTRY_DECLARE start_and_watch_server(THREAD_ENTRY_PARAM)
 		}
 		else
 		{
-			while (WaitForSingleObject(procHandle, INFINITE) == WAIT_FAILED);
+			while (WaitForSingleObject(procHandle, INFINITE) == WAIT_FAILED)
+				;
 			GetExitCodeProcess(procHandle, &exit_status);
 			CloseHandle(procHandle);
 		}
@@ -986,7 +982,7 @@ LRESULT CALLBACK GeneralPage(HWND hDlg, UINT unMsg, WPARAM /*wParam*/, LPARAM lP
 }
 
 
-THREAD_ENTRY_DECLARE  swap_icons(THREAD_ENTRY_PARAM param)
+THREAD_ENTRY_DECLARE swap_icons(THREAD_ENTRY_PARAM param)
 {
 /******************************************************************************
  *
@@ -1045,7 +1041,48 @@ THREAD_ENTRY_DECLARE  swap_icons(THREAD_ENTRY_PARAM param)
 }
 
 
-void write_log(int log_action, const char* buff)
+static void addTaskBarIcons(HINSTANCE hInstance, HWND hWnd, BOOL& bInTaskBar)
+{
+	if (!service_flag)
+	{
+		HICON hIcon = (HICON) LoadImage(hInstance, MAKEINTRESOURCE(IDI_IBGUARD),
+								  IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+
+		NOTIFYICONDATA nid;
+		nid.cbSize = sizeof(NOTIFYICONDATA);
+		nid.hWnd = hWnd;
+		nid.uID = IDI_IBGUARD;
+		nid.uFlags = NIF_TIP | NIF_ICON | NIF_MESSAGE;
+		nid.uCallbackMessage = ON_NOTIFYICON;
+		nid.hIcon = hIcon;
+		lstrcpy(nid.szTip, GUARDIAN_APP_LABEL);
+
+		// This will be true if we are using the explorer interface
+		bInTaskBar = Shell_NotifyIcon(NIM_ADD, &nid);
+
+		if (hIcon)
+			DestroyIcon(hIcon);
+
+		// This will be true if we are using the program manager interface
+		if (!bInTaskBar)
+		{
+			char szMsgString[256];
+			HMENU hSysMenu = GetSystemMenu(hWnd, FALSE);
+			DeleteMenu(hSysMenu, SC_RESTORE, MF_BYCOMMAND);
+			AppendMenu(hSysMenu, MF_SEPARATOR, 0, NULL);
+			LoadString(hInstance, IDS_SVRPROPERTIES, szMsgString, 256);
+			AppendMenu(hSysMenu, MF_STRING, IDM_SVRPROPERTIES, szMsgString);
+			LoadString(hInstance, IDS_SHUTDOWN, szMsgString, 256);
+			AppendMenu(hSysMenu, MF_STRING, IDM_SHUTDOWN, szMsgString);
+			LoadString(hInstance, IDS_PROPERTIES, szMsgString, 256);
+			AppendMenu(hSysMenu, MF_STRING, IDM_PROPERTIES, szMsgString);
+			DestroyMenu(hSysMenu);
+		}
+	}
+}
+
+
+static void write_log(int log_action, const char* buff)
 {
 /******************************************************************************
  *
@@ -1114,8 +1151,8 @@ void write_log(int log_action, const char* buff)
 						  FORMAT_MESSAGE_FROM_STRING,
 						  tmp_buff, 0, 0, (LPTSTR) &lpMsgBuf, 0,
 						  reinterpret_cast<va_list*>(act_buff));
-			
-			const int len = MIN(BUFF_SIZE-1, strlen(lpMsgBuf) - 1);
+
+			const int len = static_cast<int>(MIN(BUFF_SIZE - 1, strlen(lpMsgBuf) - 1));
 			strncpy(act_buff[0], lpMsgBuf, len);
 			act_buff[0][len] = 0;
 			LocalFree(lpMsgBuf);

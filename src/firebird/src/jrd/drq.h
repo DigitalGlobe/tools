@@ -47,178 +47,207 @@
 #ifndef JRD_DRQ_H
 #define JRD_DRQ_H
 
-#define DYN_REQUEST(drt) dbb->dbb_dyn_req[drt]
+enum drq_type_t
+{
+	drq_s_rel_con,			// store relation constraints
+	drq_s_chk_con,			// store check constraints
+	drq_s_ref_con,			// store ref constraints
+	drq_f_nxt_con,			// find next relation constraint name
+	drq_f_nxt_fld,			// find next field name
+	drq_f_nxt_idx,			// find next index name
+	drq_f_nxt_trg,			// find next trigger name
+	drq_c_unq_nam,			// check for unique field names
+	drq_e_rel_con,			// erase relation constraints
+	drq_n_idx_seg,			// count index segments
+	drq_c_dup_con,			// check for duplicate contraint
+	drq_l_intg_con,			// lookup an integrity constraint
+	drq_s_files,			// store files
+	drq_s_filters,			// store filters
+	drq_s_gens,				// store generators
+	drq_l_gens,				// lookup a generator
+	drq_s_gfields,			// store global fields
+	drq_s_lfields,			// store local fields
+	drq_s_gfields2,			// store global fields
+	drq_s_rels,				// store relations
+	drq_l_rel_name,			// lookup relation name
+	drq_l_view_rels,		// lookup relations in view
+	drq_s_usr_prvs,			// store user privileges
+	drq_s_sql_gfld,			// store sql fields
+	drq_s_triggers,			// store triggers
+	drq_s_view_rels,		// store view relations
+	drq_e_dims,				// erase dimensions
+	drq_e_filters,			// erase filters
+	drq_e_func_args,		// erase functions
+	drq_e_funcs,			// erase function arguments
+	drq_l_fld_src,			// lookup a field source
+	drq_e_gfields,			// erase global fields
+	drq_e_indices,			// erase indices
+	drq_e_idx_segs,			// erase index segments
+	drq_l_dep_flds,			// lookup field referenced by view
+	drq_e_lfield,			// erase a local field
+	drq_e_rel_con2,			// erase relation constraints
+	drq_e_rel_idxs,			// erase indices
+	drq_e_rel_flds,			// erase relation fields
+	drq_e_view_rels,		// erase view relations
+	drq_e_relation,			// erase relation
+	drq_e_rel_con3,			// erase relation constraints
+	drq_e_usr_prvs,			// erase user privileges using relation name
+	drq_e_shadow,			// erase shadow
+	drq_e_trg_msg,			// erase trigger message
+	drq_e_class,			// erase security class
+	drq_l_grant1,			// lookup grant
+	drq_s_grant,			// store grant
+	drq_l_fld_src2,			// lookup a field source
+	drq_m_database,			// modify database
+	drq_m_index,			// modify index
+	drq_m_set_statistics,	// modify index (set statistics)
+	drq_e_grant1,			// erase grant
+	drq_e_grant2,			// erase grant
+	drq_s_indices,			// store indices
+	drq_l_lfield,			// lookup local field
+	drq_s_idx_segs,			// store index segments
+	drq_l_unq_idx,			// lookup a unique index
+	drq_l_primary,			// lookup a primary something
+	drq_e_trg_msgs2,		// erase trigger messages
+	drq_e_trigger2,			// erase trigger
+	drq_l_prc_name,			// lookup procedure name
+	drq_s_xcp,				// store an exception
+	drq_m_xcp,				// modify an exception
+	drq_e_trg_prv,			// erase trigger's privileges
+	drq_g_nxt_con,			// generate next relation constraint name
+	drq_g_nxt_fld,			// generate next field name
+	drq_g_nxt_idx,			// generate next index name
+	drq_g_nxt_trg,			// generate next trigger name
+	drq_l_fld_pos,			// lookup max field position
+	drq_e_xcp,				// drop a exception
+	drq_l_shadow,			// look up a shadow set
+	drq_l_files,			// look up for defined files
+	drq_e_l_idx,			// erase indices defined on a local field
+	drq_e_l_gfld,			// erase global field for a local fields
+	drq_gcg1,				// grantor_can_grant
+	drq_gcg2,				// grantor_can_grant
+	drq_gcg3,				// grantor_can_grant
+	drq_gcg4,				// grantor_can_grant
+	drq_gcg5,				// grantor_can_grant
+	drq_l_view_idx,			// table is view?
+	drq_get_role_nm,		// get SQL role
+	drq_get_role_au,		// get SQL role auth
+	drq_del_role_1,			// delete SQL role from rdb$user_privilege
+	drq_del_role_2,			// delete SQL role from rdb$db_creators
+	drq_drop_role,			// delete SQL role from rdb$roles
+	drq_get_rel_owner,		// get the owner of any relations
+	drq_get_user_priv,		// get the grantor of user privileges or
+							// the user who was granted the privileges
+	drq_g_rel_constr_nm,	// get relation constraint name
+	drq_e_rel_const,		// erase relation constraints
+	drq_e_gens,				// erase generators
+	drq_s_f_class,			// set the security class name for a field
+	drq_s_u_class,			// find a unique security class name for a field
+	drq_l_difference,		// Look up a backup difference file
+	drq_s_difference,		// Store backup difference file, DYN_define_difference
+	drq_d_difference,		// Delete backup difference file
+	drq_l_fld_src3,			// lookup a field source
+	drq_e_fld_prvs,			// erase user privileges on relation field
+	drq_e_view_prv,			// erase view's privileges
+	drq_m_fun,				// modify udf
+	drq_m_view,				// modify view
+	drq_s_colls,			// store collations
+	drq_l_rel_info,			// lookup name and flags of one master relation
+	drq_l_rel_info2,		// lookup names and flags of all master relations
+	drq_l_rel_type,			// lookup relation type
+	drq_e_colls,			// erase collations
+	drq_l_rfld_coll,		// lookup relation field collation
+	drq_l_fld_coll,			// lookup field collation
+	drq_l_prp_src,			// lookup a procedure parameter source
+	drq_l_arg_src,			// lookup a function argument source
+	drq_l_prm_coll,			// lookup procedure parameter collation
+	drq_l_arg_coll,			// lookup function argument collation
+	drq_map_sto,			// store login mapping
+	drq_map_mod,			// modify/erase login mapping
+	drq_l_idx_name,			// lookup index name
+	drq_l_collation,		// DSQL/DdlNodes: lookup collation
+	drq_m_charset,			// DSQL/DdlNodes: modify character set
+	drq_g_nxt_gen_id,		// generate next generator id
+	drq_g_nxt_prc_id,		// generate next procedure id
+	drq_g_nxt_xcp_id,		// generate next exception id
+	drq_l_xcp_name,			// lookup exception name
+	drq_l_gen_name,			// lookup generator name
+	drq_e_grant3,			// revoke all on all
+	drq_s_funcs2,			// store functions (CreateAlterFunctionNode)
+	drq_s_func_args2,		// store function arguments (CreateAlterFunctionNode)
+	drq_m_funcs2,			// modify functions (CreateAlterFunctionNode)
+	drq_e_func_args2,		// erase function arguments (CreateAlterFunctionNode)
+	drq_s_prcs2,
+	drq_s_prms4,
+	drq_s_prm_src2,
+	drq_m_prcs2,
+	drq_e_prms2,
+	drq_m_trigger2,
+	drq_e_prcs2,
+	drq_e_prc_prv,
+	drq_e_trg_msgs3,
+	drq_e_trigger3,
+	drq_e_trg_prv2,
+	drq_l_view_rel3,
+	drq_m_rel_flds2,
+	drq_e_trg_prv3,
+	drq_s_pkg,				// store package
+	drq_e_pkg,				// erase package
+	drq_m_pkg_body,			// create package body
+	drq_m_pkg_body2,		// drop package body
+	drq_m_pkg_prc,			// drop package body
+	drq_m_pkg_fun,			// drop package body
+	drq_m_pkg,				// alter package
+	drq_l_pkg_funcs,		// lookup packaged functions
+	drq_l_pkg_func_args,	// lookup packaged function arguments
+	drq_l_pkg_procs,		// lookup packaged procedures
+	drq_l_pkg_proc_args,	// lookup packaged procedure arguments
+	drq_e_pkg_prv,			// erase package privileges
+	drq_s2_difference,		// Store backup difference file, DYN_mod's change_backup_mode
+	drq_l_relation,			// lookup relation before erase
+	drq_l_fun_name,			// lookup function name
+	drq_g_nxt_fun_id,		// lookup next function ID
+	drq_e_arg_gfld,			// erase argument's global field
+	drq_e_fun_prv,			// erase function privileges
+	drq_s_fld_src,			// store field source
+	drq_e_prm_gfld,			// erase parameter source
+	drq_g_nxt_sec_id,		// lookup next security class ID
+	drq_f_nxt_gen,			// find next generator name
+	drq_g_nxt_gen,			// generate next generator name
+	drq_e_ident_gens,		// erase generators (identity column)
+	drq_l_ident_gens,		// lookup generators (identity column)
+	drq_m_prm_view,			// modify view's field source inherited from parameters
+	drq_l_max_coll_id,		// lookup max collation id
+	drq_m_fld,				// create domain field
+	drq_s_fld_dym,			// store field dymension
+	drq_m_fld2,				// alter domain
+	drq_c_unq_nam2,			// check for unique field names
+	drq_s_rels2,			// store relations
+	drq_g_nxt_nbakhist_id,	// generate next history ID for nbackup
+	drq_l_index_relname,	// lookup relation name for index
+	drq_l_trigger_relname,	// lookup relation name for trigger
+	drq_l_grant_option,		// lookup grant option for privilege
+	drq_l_granted_roles,	// lookup granted roles
+	drq_l_grant_object,		// check grantor can grant object
+	drq_proc_exist,			// check if procedure exists
+	drq_udf_exist,			// check if udf exists
+	drq_package_exist,		// check if package exists
+	drq_trigger_exist,		// check if trigger exists
+	drq_rel_exist,			// check if relation or view exists
+	drq_exception_exist,	// check if exception exists
+	drq_generator_exist,	// check if generator exists
+	drq_rel_field_exist,	// check if a field of relation or view exists
+	drq_m_coll_attrs,		// modify collation attributes
+	drq_l_pub_mode,			// lookup publication auto-enable mode
+	drq_m_pub_state,		// modify publication state
+	drq_m_pub_mode,			// modify publication auto-enable mode
+	drq_s_pub_tab,			// store relation into publication
+	drq_e_pub_tab,			// erase relation from publication
+	drq_l_pub_rel_name,		// lookup relation by name
+	drq_l_pub_all_rels,		// iterate through all user relations
+	drq_e_pub_tab_all,		// erase relation from all publication
 
-const int drq_l_prot_mask		= 0;	// lookup protection mask
-const int drq_l_user_name		= 1;	// lookup user name
-const int drq_s_rel_con			= 2;	// store relation constraints
-const int drq_s_chk_con			= 3;	// store check constraints
-const int drq_s_ref_con			= 4;	// store ref constraints
-const int drq_f_nxt_con			= 5;	// find next relation constraint name
-const int drq_f_nxt_fld			= 6;	// find next field name
-const int drq_f_nxt_idx			= 7;	// find next index name
-const int drq_f_nxt_trg			= 8;	// find next trigger name
-const int drq_c_unq_nam			= 9;	// check for unique field names
-const int drq_e_rel_con			= 10;	// erase relation constraints
-const int drq_n_idx_seg			= 11;	// count index segments
-const int drq_c_dup_con			= 12;	// check for duplicate contraint
-const int drq_l_intg_con		= 13;	// lookup an integrity constraint
-const int drq_s_dims			= 14;	// store dimensions
-const int drq_s_files			= 15;	// store files
-const int drq_s_filters			= 16;	// store filters
-const int drq_s_gens			= 17;	// store generators
-const int drq_s_funcs			= 18;	// store functions
-const int drq_s_func_args		= 19;	// store function arguments
-const int drq_s_gfields			= 20;	// store global fields
-const int drq_s_lfields			= 21;	// store local fields
-const int drq_s_gfields2		= 22;	// store global fields
-const int drq_s_rels			= 23;	// store relations
-const int drq_l_rel_name		= 24;	// lookup relation name
-const int drq_l_view_rels		= 25;	// lookup relations in view
-const int drq_s_usr_prvs		= 26;	// store user privileges
-const int drq_s_classes			= 27;	// store security classes
-const int drq_s_sql_lfld		= 28;	// store sql fields
-const int drq_s_sql_gfld		= 29;	// store sql fields
-const int drq_s_triggers		= 30;	// store triggers
-const int drq_s_trg_msgs		= 31;	// store trigger messages
-const int drq_s_view_rels		= 32;	// store view relations
-const int drq_e_dims			= 33;	// erase dimensions
-const int drq_e_filters			= 34;	// erase filters
-const int drq_e_func_args		= 35;	// erase functions
-const int drq_e_funcs			= 36;	// erase function arguments
-const int drq_l_fld_src			= 37;	// lookup a field source
-const int drq_e_gfields			= 38;	// erase global fields
-const int drq_e_indices			= 39;	// erase indices
-const int drq_e_idx_segs		= 40;	// erase index segments
-const int drq_l_dep_flds		= 41;	// lookup field referenced by view
-const int drq_e_lfield			= 42;	// erase a local field
-const int drq_e_rel_con2		= 43;	// erase relation constraints
-const int drq_e_rel_idxs		= 44;	// erase indices
-const int drq_e_rel_flds		= 45;	// erase relation fields
-const int drq_e_view_rels		= 46;	// erase view relations
-const int drq_e_relation		= 47;	// erase relation
-const int drq_e_rel_con3		= 48;	// erase relation constraints
-const int drq_e_usr_prvs		= 49;	// erase user privileges on relation
-const int drq_e_shadow			= 50;	// erase shadow
-const int drq_e_trg_msgs		= 51;	// erase trigger messages
-const int drq_e_trigger			= 52;	// erase trigger
-const int drq_l_view_rel2		= 53;	// lookup relations in view
-const int drq_m_rel_flds		= 54;	// modify relation fields
-const int drq_e_trg_msg			= 55;	// erase trigger message
-const int drq_e_class			= 56;	// erase security class
-const int drq_l_grant1			= 57;	// lookup grant
-const int drq_l_grant2			= 58;	// lookup grant
-const int drq_s_grant			= 59;	// store grant
-const int drq_l_fld_src2		= 60;	// lookup a field source
-const int drq_m_database		= 61;	// modify database
-const int drq_m_gfield			= 62;	// modify global field
-const int drq_m_index			= 63;	// modify index
-const int drq_m_lfield			= 64;	// modify local field
-const int drq_m_relation		= 65;	// modify relation
-const int drq_m_trigger			= 66;	// modify trigger
-const int drq_m_trg_msg			= 67;	// modify trigger message
-const int drq_e_grant1			= 68;	// erase grant
-const int drq_e_grant2			= 69;	// erase grant
-const int drq_s_indices			= 70;	// store indices
-const int drq_l_lfield			= 71;	// lookup local field
-const int drq_s_idx_segs		= 72;	// store index segments
-const int drq_l_unq_idx			= 73;	// lookup a unique index
-const int drq_l_primary			= 74;	// lookup a primary something
-const int drq_e_trg_msgs2		= 75;	// erase trigger messages
-const int drq_e_trigger2		= 76;	// erase trigger
-const int drq_s_prcs			= 77;	// store procedure
-const int drq_l_prc_name		= 78;	// lookup procedure name
-const int drq_s_prc_usr_prvs	= 79;	// store procedure priviledges
-const int drq_s_prms			= 80;	// store parameters
-const int drq_e_prcs			= 81;	// erase procedure
-const int drq_e_prms			= 82;	// erase all of procedure's parameters
-const int drq_s_prm_src			= 83;	// store parameter global field
-//const int drq_s_intl_info		= 84;	// store RDB$CHARACTER_FIELDS
-const int drq_m_prcs			= 85;	// modify procedure
-//const int drq_s_log_files		= 86;	// store log files
-//const int drq_s_cache			= 87;	// store cache
-const int drq_e_prm				= 88;	// erase a procedure parameter
-const int drq_s_xcp				= 89;	// store an exception
-const int drq_m_xcp				= 90;	// modify an exception
-const int drq_e_prc_prvs		= 91;	// erase user privileges on procedure
-const int drq_e_prc_prv			= 92;	// erase procedure's privileges
-const int drq_e_trg_prv			= 93;	// erase trigger's privileges
-//const int drq_d_log			= 94;	// drop log
-//const int drq_d_cache			= 95;	// drop cache
-//const int drq_l_log_files		= 96;	// lookup log files
-//const int drq_l_cache			= 97;	// lookup cache
-//const int drq_e_sec_class		= 98;	// delete security classes
-//const int drq_l_gfield		= 99;	// lookup global field
-const int drq_g_nxt_con			= 100;	// generate next relation constraint name
-const int drq_g_nxt_fld			= 101;	// generate next field name
-const int drq_g_nxt_idx			= 102;	// generate next index name
-const int drq_g_nxt_trg			= 103;	// generate next trigger name
-const int drq_l_fld_pos			= 104;	// lookup max field position
-const int drq_e_xcp				= 105;	// drop a exception
-const int drq_d_gfields			= 106;	// drop a global field for procedure param
-const int drq_l_shadow			= 107;	// look up a shadow set
-const int drq_l_files			= 108;	// look up for defined files
-const int drq_e_l_idx			= 109;	// erase indices defined on a local field
-//const int drq_l_idx_seg		= 110;	// Lookup index segments
-const int drq_e_l_gfld			= 111;	// erase global field for a local fields
-const int drq_gcg1				= 112;	// grantor_can_grant
-const int drq_gcg2				= 113;	// grantor_can_grant
-const int drq_gcg3				= 114;	// grantor_can_grant
-const int drq_gcg4				= 115;	// grantor_can_grant
-const int drq_gcg5				= 116;	// grantor_can_grant
-const int drq_l_view_idx		= 117;	// table is view?
-const int drq_role_gens			= 118;	// store SQL role
-const int drq_get_role_nm		= 119;	// get SQL role
-const int drq_get_role_au		= 120;	// get SQL role auth
-const int drq_del_role_1		= 121;	// delete SQL role from rdb$user_privilege
-const int drq_drop_role			= 122;	// delete SQL role from rdb$roles
-const int drq_get_rel_owner		= 123;	// get the owner of any relations
-const int drq_get_user_priv		= 124;	// get the grantor of user privileges or
-										// the user who was granted the privileges
-const int drq_g_rel_constr_nm	= 125;	// get relation constraint name
-const int drq_e_rel_const		= 126;	// erase relation constraints
-const int drq_e_gens			= 127;	// erase generators
-const int drq_s_f_class			= 128;	// set the security class name for a field
-const int drq_s_u_class			= 129;	// find a unique security class name for a field
-const int drq_l_difference		= 130;	// Look up a backup difference file
-const int drq_s_difference		= 131;	// Store backup difference file, DYN_define_difference
-const int drq_d_difference		= 132;	// Delete backup difference file
-const int drq_l_fld_src3		= 133;	// lookup a field source
-const int drq_e_fld_prvs		= 134;	// erase user privileges on relation field
-const int drq_e_view_prv		= 135;	// erase view's privileges
-const int drq_m_chset       	= 136;  // modify charset
-const int drq_m_coll        	= 137;  // modify collation
-const int drq_m_bfil        	= 138;  // modify blob filter
-const int drq_m_fun         	= 139;  // modify udf
-const int drq_m_gen         	= 140;  // modify generator
-const int drq_m_prm         	= 141;  // modify procedure's parameter
-const int drq_m_rol         	= 142;  // modify sql role
-const int drq_m_view        	= 143;  // modify view
-const int drq_s_colls			= 144;  // store collations
-const int drq_l_charset			= 145;	// lookup charset
-const int drq_dom_is_array 		= 146;  // lookup domain to see if it's an array
-const int drq_l_rel_info		= 147;	// lookup name and flags of one master relation
-const int drq_l_rel_info2		= 148;	// lookup names and flags of all master relations
-const int drq_l_rel_type		= 149;	// lookup relation type
-const int drq_e_colls			= 150;	// erase collations
-const int drq_l_rfld_coll		= 151;	// lookup relation field collation
-const int drq_l_fld_coll		= 152;	// lookup field collation
-const int drq_l_prp_src			= 153;	// lookup a procedure parameter source
-const int drq_s_prms2			= 154;	// store parameters (ODS 11.1)
-const int drq_l_prm_coll		= 155;	// lookup procedure parameter collation
-const int drq_s_prms3			= 156;	// store parameters (ODS 11.2)
-const int drq_d_gfields2		= 157;	// drop a global field for procedure param (ODS 11.2)
-const int drq_m_map				= 158;  // modify os=>db names mapping
-const int drq_l_idx_name		= 159;	// lookup index name
-const int drq_l_collation		= 160;	// DSQL/DdlNodes: lookup collation
-const int drq_m_charset			= 161;	// DSQL/DdlNodes: modify character set
-const int drq_g_nxt_gen_id		= 162;	// generate next generator id
-const int drq_g_nxt_prc_id		= 163;	// generate next procedure id
-const int drq_g_nxt_xcp_id		= 164;	// generate next exception id
-const int drq_l_xcp_name		= 165;	// lookup exception name
-const int drq_l_gen_name		= 166;	// lookup generator name
-const int drq_e_grant3			= 167;	// revoke all on all
-const int drq_s2_difference		= 168;	// Store backup difference file, DYN_mod's change_backup_mode
-const int drq_MAX				= 169;
+	drq_MAX
+};
 
 #endif // JRD_DRQ_H

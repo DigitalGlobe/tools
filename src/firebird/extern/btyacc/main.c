@@ -2,7 +2,7 @@
 #include <signal.h>
 #include <stdio.h>
 
-#if defined(WIN32)
+#if defined(_WIN32)
 #include <io.h>
 #else
 #include <unistd.h>

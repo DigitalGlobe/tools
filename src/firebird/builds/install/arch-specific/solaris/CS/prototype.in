@@ -18,9 +18,10 @@ d none @prefix@ 0751 firebird firebird
 
 v CONFIG.prsv @prefix@/security2.fdb=$SRCDIR/security2.fdb  0660 firebird firebird
 v CONFIG.prsv @prefix@/firebird.conf=$SRCDIR/misc/firebird.conf  0444 firebird firebird
-v CONFIG.prsv @prefix@/aliases.conf=$SRCDIR/../../builds/install/misc/aliases.conf.in  0444 firebird firebird
+v CONFIG.prsv @prefix@/databases.conf=$SRCDIR/../../builds/install/misc/databases.conf  0444 firebird firebird
 v CONFIG.prsv @prefix@/intl/fbintl.conf=$SRCDIR/misc/fbintl.conf 0644 firebird firebird
-f none @prefix@/WhatsNew=$SRCDIR/../../doc/WhatsNew 0644 firebird firebird
+f none @prefix@/CHANGELOG.md=$SRCDIR/../../CHANGELOG.md 0644 firebird firebird
+f none @prefix@/README.md=$SRCDIR/../../README.md 0644 firebird firebird
 
 d none @prefix@/bin  0751 firebird firebird
 
@@ -37,7 +38,6 @@ s none /usr/lib/libfbclient.so.2=@prefix@/lib/libfbclient.so.2
 
 d none @prefix@/include 0751 firebird firebird
 f none @prefix@/include/ib_util.h=$SRCDIR/include/ib_util.h 0444 firebird firebird
-f none @prefix@/include/perf.h=$SRCDIR/include/perf.h 0444 firebird firebird
 f none @prefix@/include/iberror.h=$SRCDIR/include/iberror.h 0444 firebird firebird
 f none @prefix@/include/ibase.h=$SRCDIR/include/ibase.h 0444 firebird firebird
 
@@ -59,7 +59,7 @@ f none @prefix@/UDF/fbudf.sql=$SRCDIR/../../src/extlib/fbudf/fbudf.sql 0644 fire
 # bin
 
 d none @prefix@/bin 0751 firebird firebird
-f none @prefix@/bin/fb_inet_server=$SRCDIR/bin/fb_inet_server 0451 firebird firebird
+f none @prefix@/bin/fb_smp_server=$SRCDIR/bin/fb_smp_server 0451 firebird firebird
 f none @prefix@/bin/gfix=$SRCDIR/bin/gfix 0451 firebird firebird
 f none @prefix@/bin/gbak=$SRCDIR/bin/gbak 0451 firebird firebird
 f none @prefix@/bin/gsplit=$SRCDIR/bin/gsplit 0451 firebird firebird
@@ -70,19 +70,14 @@ f none @prefix@/bin/gstat=$SRCDIR/bin/gstat 0451 firebird firebird
 #f none @prefix@/bin/fbguard=$SRCDIR/bin/fbguard 0451 firebird firebird
 #f none @prefix@/bin/fbmgr.bin=$SRCDIR/bin/fbmgr.bin 0451 firebird firebird
 f none @prefix@/bin/fb_lock_print=$SRCDIR/bin/fb_lock_print 0451 firebird firebird
-f none @prefix@/bin/gdef=$SRCDIR/bin/gdef 0451 firebird firebird
-f none @prefix@/bin/qli=$SRCDIR/bin/qli 0555 firebird firebird
 # from 2.0
 f none @prefix@/bin/nbackup=$SRCDIR/bin/nbackup 0451 firebird firebird
 
 # upgrade
 
 d none @prefix@/upgrade 0751 firebird firebird
-f none @prefix@/upgrade/ib_udf2_params.txt=$SRCDIR/../../src/misc/upgrade/v2/ib_udf2_params.txt 0644 firebird firebird
-f none @prefix@/upgrade/ib_udf_params.txt=$SRCDIR/../../src/misc/upgrade/v2/ib_udf_params.txt 0644 firebird firebird
-f none @prefix@/upgrade/ib_udf_upgrade.sql=$SRCDIR/../../src/misc/upgrade/v2/ib_udf_upgrade.sql 0644 firebird firebird
-f none @prefix@/upgrade/security_database.sql=$SRCDIR/../../src/misc/upgrade/v2/security_database.sql 0644 firebird firebird
-f none @prefix@/upgrade/security_database.txt=$SRCDIR/../../src/misc/upgrade/v2/security_database.txt 0644 firebird firebird
+f none @prefix@/upgrade/security_database.sql=$SRCDIR/../../src/misc/upgrade/v3.0/security_database.sql 0644 firebird firebird
+f none @prefix@/upgrade/security_database.txt=$SRCDIR/../../src/misc/upgrade/v3.0/security_database.txt 0644 firebird firebird
 
 # examples
 
@@ -168,11 +163,6 @@ s none @prefix@/lib/libfbembed.so=@prefix@/lib/libfbembed.so.2
 
 f none @prefix@/lib/libib_util.so=$SRCDIR/lib/libib_util.so 0555 firebird firebird
 
-# help 
-
-d none @prefix@/help 0751 firebird firebird
-f none @prefix@/help/help.fdb=$SRCDIR/help/help.fdb 0444 firebird firebird
-
 # messages
 
 f none @prefix@/firebird.msg=$SRCDIR/firebird.msg 0444 firebird firebird
@@ -249,7 +239,6 @@ f none @prefix@/doc/README.perforamance_monitoring=$SRCDIR/../../doc/README.perf
 f none @prefix@/doc/README.raw_devices=$SRCDIR/../../doc/README.raw_devices 0644 firebird firebird
 f none @prefix@/doc/README.sha1=$SRCDIR/../../doc/README.sha1 0644 firebird firebird
 f none @prefix@/doc/README.trusted_authentication=$SRCDIR/../../doc/README.trusted_authentication 0644 firebird firebird
-f none @prefix@/doc/README.user=$SRCDIR/../../doc/README.user 0644 firebird firebird
 f none @prefix@/doc/README.user.embedded=$SRCDIR/../../doc/README.user.embedded 0644 firebird firebird
 f none @prefix@/doc/README.user.troubleshooting=$SRCDIR/../../doc/README.user.troubleshooting 0644 firebird firebird
 f none @prefix@/doc/README.Win32LibraryInstallation=$SRCDIR/../../doc/README.Win32LibraryInstallation.txt 0644 firebird firebird

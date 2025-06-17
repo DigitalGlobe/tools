@@ -24,10 +24,20 @@
 #ifndef JRD_LCK_H
 #define JRD_LCK_H
 
+//#define DEBUG_LCK
+
+#include "../lock/lock_proto.h"
+
+#ifdef DEBUG_LCK
+#include "../common/classes/SyncObject.h"
+#endif
+
+#include "../jrd/Attachment.h"
+
 namespace Jrd {
 
 class Database;
-class Attachment;
+class thread_db;
 
 // Lock types
 
@@ -41,7 +51,6 @@ enum lck_t {
 	LCK_attachment,				// Attachment lock
 	LCK_shadow,					// Lock to synchronize addition of shadows
 	LCK_sweep,					// Sweep lock for single sweeper
-	LCK_retaining,				// Youngest commit retaining transaction
 	LCK_expression,				// Expression index caching mechanism
 	LCK_prc_exist,				// Procedure existence lock
 	LCK_update_shadow,			// shadow update sync lock
@@ -55,10 +64,19 @@ enum lck_t {
 	LCK_tt_exist,				// TextType existence lock
 	LCK_cancel,					// Cancellation lock
 	LCK_btr_dont_gc,			// Prevent removal of b-tree page from index
-	LCK_shared_counter,			// Database-wide shared counter
-	LCK_tra_pc,					// Precommitted transaction lock
 	LCK_rel_gc,					// Allow garbage collection for relation
-	LCK_rel_rescan				// Relation forced rescan lock
+	LCK_tpc_init,				// TPC initializer lock
+	LCK_tpc_block,				// TPC memory block file existence lock
+	LCK_fun_exist,				// Function existence lock
+	LCK_rel_rescan,				// Relation forced rescan lock
+	LCK_crypt,					// Crypt lock for single crypt thread
+	LCK_crypt_status,			// Notifies about changed database encryption status
+	LCK_record_gc,				// Record-level GC lock
+	LCK_alter_database,			// ALTER DATABASE lock
+	LCK_repl_state,				// Replication state lock
+	LCK_repl_tables,			// Replication set lock
+	LCK_dsql_statement_cache,	// DSQL statement cache lock
+	LCK_profiler_listener		// Remote profiler listener
 };
 
 // Lock owner types
@@ -71,60 +89,92 @@ enum lck_owner_t {
 class Lock : public pool_alloc_rpt<UCHAR, type_lck>
 {
 public:
-	Lock()
-	:	lck_parent(0),
-		lck_next(0),
-		lck_prior(0),
-		lck_collision(0),
-		lck_identical(0),
-		lck_compatible(0),
-		lck_compatible2(0),
-		lck_dbb(0),
-		lck_attachment(0),
-		lck_ast(0),
-		lck_object(0),
-		lck_id(0),
-		lck_owner_handle(0),
-		lck_length(0),
-		lck_logical(0),
-		lck_physical(0),
-		lck_data(0)
+	Lock(thread_db* tdbb, USHORT length, lck_t type, void* object = NULL, lock_ast_t ast = NULL);
+	~Lock();
+
+	Lock* detach();
+
+	Firebird::RefPtr<StableAttachmentPart> getLockStable()
 	{
-		lck_key.lck_long = 0;
-		lck_tail[0] = 0;
+		return lck_attachment;
 	}
 
-	Lock* lck_parent;
+	Attachment* getLockAttachment()
+	{
+		return lck_attachment ? lck_attachment->getHandle() : NULL;
+	}
 
-	Lock* lck_next;					// lck_next and lck_prior form a doubly linked list of locks
-	Lock* lck_prior;				// bound to attachment
+	void setLockAttachment(Attachment* att);
 
-	Lock* lck_collision;			// Collisions in compatibility table
-	Lock* lck_identical;			// Identical locks in compatibility table
-	void* lck_compatible;			// Enter into internal_enqueue() and treat as compatible
-	void* lck_compatible2;			// Sub-level for internal compatibility
+#ifdef DEBUG_LCK
+	Firebird::SyncObject	lck_sync;
+#endif
 
 	Database* lck_dbb;				// Database object is contained in
-	Attachment* lck_attachment;		// Attachment that owns lock, set only using set_lock_attachment()
+
+private:
+	Firebird::RefPtr<StableAttachmentPart> lck_attachment;		// Attachment that owns lock, set only using set_lock_attachment()
+
+public:
+	void* lck_compatible;			// Enter into internal_enqueue() and treat as compatible
+	void* lck_compatible2;			// Sub-level for internal compatibility
 
 	lock_ast_t lck_ast;				// Blocking AST routine
 	void* lck_object;				// Argument to be passed to AST
 
-	lck_t lck_type;					// Lock type
+//private:
+	Lock* lck_next;					// lck_next and lck_prior form a doubly linked list of locks
+	Lock* lck_prior;				// bound to attachment
+
+#ifdef DEBUG_LCK_LIST
+	UCHAR lck_next_type;			// Lock type of next lock in list
+	UCHAR lck_prev_type;			// Lock type of prev lock in list
+#endif
+
+	Lock* lck_collision;			// Collisions in compatibility table
+	Lock* lck_identical;			// Identical locks in compatibility table
+
 	SLONG lck_id;					// Lock id from the lock manager
 	SLONG lck_owner_handle;			// Lock owner handle from the lock manager's point of view
-	SSHORT lck_length;				// Length of lock key string
+	USHORT lck_length;				// Length of lock key string
+	lck_t lck_type;					// Lock type
+
+public:
 	UCHAR lck_logical;				// Logical lock level
 	UCHAR lck_physical;				// Physical lock level
-	SLONG lck_data;					// Data associated with a lock
+	LOCK_DATA_T lck_data;			// Data associated with a lock
 
+	static constexpr size_t KEY_STATIC_SIZE = sizeof(SINT64);
+
+private:
 	union
 	{
-		UCHAR lck_string[1];
-		SLONG lck_long;
+		UCHAR key_string[KEY_STATIC_SIZE];
+		SINT64 key_long;
 	} lck_key;						// Lock key string
 
-	UCHAR lck_tail[1];				// Makes the allocator happy
+	static_assert(KEY_STATIC_SIZE >= sizeof(lck_key), "Wrong KEY_STATIC_SIZE");
+
+public:
+
+	UCHAR* getKeyPtr()
+	{
+#ifdef WORDS_BIGENDIAN
+		if (lck_length < KEY_STATIC_SIZE)
+			return &lck_key.key_string[KEY_STATIC_SIZE - lck_length];
+#endif
+		return &lck_key.key_string[0];
+	}
+
+	SINT64 getKey() const
+	{
+		return lck_key.key_long;
+	}
+
+	void setKey(SINT64 value)
+	{
+		lck_key.key_long = value;
+	}
 };
 
 } // namespace Jrd

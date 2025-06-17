@@ -28,7 +28,7 @@
 #ifndef CLASSES_CONDITION_H
 #define CLASSES_CONDITION_H
 
-#include "../jrd/gdsassert.h"
+#include "../common/gdsassert.h"
 
 #ifdef WIN_NT
 
@@ -61,15 +61,25 @@ private:
 									 FALSE, // non-signaled initially
     	                             NULL); // unnamed
 
+		if (!events[SIGNAL])
+			system_call_failed::raise("CreateEvent(SIGNAL)");
+
 		// Create a manual-reset event.
 		events[BROADCAST] = CreateEvent(NULL,  // no security
     	                                TRUE,  // manual-reset
     	                                FALSE, // non-signaled initially
     	                                NULL); // unnamed
 
-		if (!events[SIGNAL] || !events[BROADCAST])
-			system_call_failed::raise("CreateCondition(Event)");
+		if (!events[BROADCAST])
+		{
+			CloseHandle(events[SIGNAL]);
+			system_call_failed::raise("CreateEvent(BROADCAST)");
+		}
 	}
+
+	// Forbid copying
+	Condition(const Condition&);
+	Condition& operator=(const Condition&);
 
 public:
 	Condition()	{ init(); }
@@ -98,7 +108,7 @@ public:
 				system_call_failed::raise("ResetEvent(BROADCAST)");
 		}
 
-		m.enter();
+		m.enter("Condition::wait");
 	}
 
 	void notifyOne()
@@ -124,7 +134,7 @@ public:
 
 #else // WIN_NT
 
-#include <pthread.h>
+#include "fb_pthread.h"
 #include <errno.h>
 
 namespace Firebird
@@ -138,11 +148,16 @@ private:
 	void init()
 	{
 		int err = pthread_cond_init(&cv, NULL);
-		if (err != 0) {
+		if (err != 0)
+		{
 			//gds__log("Error on semaphore.h: constructor");
 			system_call_failed::raise("pthread_cond_init", err);
 		}
 	}
+
+	// Forbid copying
+	Condition(const Condition&);
+	Condition& operator=(const Condition&);
 
 public:
 	Condition() { init(); }
@@ -151,7 +166,8 @@ public:
 	~Condition()
 	{
 		int err = pthread_cond_destroy(&cv);
-		if (err != 0) {
+		if (err != 0)
+		{
 			//gds__log("Error on semaphore.h: destructor");
 			//system_call_failed::raise("pthread_cond_destroy", err);
 		}
@@ -175,7 +191,7 @@ public:
 	{
 		int err = pthread_cond_wait(&cv, &m.mlock);
 		if (err != 0)
-			system_call_failed::raise("pthread_mutex_lock", err);
+			system_call_failed::raise("pthread_cond_wait", err);
 	}
 };
 
@@ -183,4 +199,4 @@ public:
 
 #endif // WIN_NT
 
-#endif // CLASSES_SEMAPHORE_H
+#endif // CLASSES_CONDITION_H

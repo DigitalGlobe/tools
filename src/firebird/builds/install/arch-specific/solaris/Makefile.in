@@ -40,7 +40,7 @@ include     $(ROOT)/gen/make.shared.variables
 
 PGK_FILES=pkginfo prototype preinstall postinstall postremove
 PKG_DIR=$(GEN_ROOT)/install
-PKG_NAME=Firebird@ARCH_TYPE_SUFFIX@-$(FirebirdVersion).$(BuildNum)-$(PackageVersion)-Solaris10-@CPU_TYPE@.pkg
+PKG_NAME=Firebird-$(FirebirdVersion).$(BuildNum)-$(PackageVersion)-Solaris10-@CPU_TYPE@.pkg
 GCC_PKG_NAME=Firebird-libgcc-Solaris10-@CPU_TYPE@.pkg
 
 install package packages dist:

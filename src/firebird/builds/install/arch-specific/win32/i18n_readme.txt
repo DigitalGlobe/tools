@@ -9,12 +9,13 @@ documentatation i18n should be available separately. I18n is a
 good thing, but bloating the installer with large amounts of translated
 documentation is not desirable. 
 
-The current version of InnoSetup used by Firebird 2.0 - 5.3.5 - provides 
+The current version of InnoSetup used by Firebird - 5.5.8 - provides 
 generic support for the following languages:
 
-	Basque, BrazilianPortuguese, Catalan, Czech, Danish, Dutch, Finnish, French,
-	German, Hebrew, Hungarian, Italian, Norwegian, Polish, Portuguese, Russian,
-	Slovak, Slovenian, and Spanish	
+	BrazilianPortuguese, Catalan, Corsican, Czech, Danish, Dutch, Finnish, French,
+	German, Greek, Hebrew, Hungarian, Italian, Japanese, Nepali, Norwegian, Polish, 
+	Portuguese, Russian,ScottishGaelic, SerbianCyrillic, SerbianLatin, Slovenian,
+	Spanish, Turkish and Ukrainian
 
 In addition, the InnoSetup user community has made other language packs
 available for download. See here for details:
@@ -39,8 +40,8 @@ an existing translation. The steps to follow are these:
 o The Win32 install files are located in install\arch-specific\win32.
   This sub-directory is located as follows:
 
-    Firebird 1.5  - firebird2\src
-    Firebird 2.n  - firebird2\builds
+    Firebird 1.5            - firebird2\src
+    Firebird 2.n and newer  - firebird2\builds
 
 o You can use a tool such as TortoiseSVN to checkout the Win32 install 
   kit. Just open the SVN checkout dialogue and enter something similar 
@@ -114,10 +115,6 @@ o Adding the new language to the InnoSetup install script
     [Languages]
     Name: en; MessagesFile: compiler:Default.isl; InfoBeforeFile: output\doc\installation_readme.txt; InfoAfterFile: src\install\arch-specific\win32\readme.txt;
     Name: fr; MessagesFile: compiler:Languages\French.isl; InfoBeforeFile: src\install\arch-specific\win32\fr\installation_lisezmoi.txt; InfoAfterFile: src\install\arch-specific\win32\fr\lisezmoi.txt;
-
-    [Messages]
-    en.BeveledLabel=English
-    fr.BeveledLabel=Français
 
     [CustomMessages]
     #include "custom_messages.inc"

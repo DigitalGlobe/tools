@@ -25,20 +25,22 @@
  */
 
 #include "firebird.h"
-#include "consts_pub.h"
+#include "firebird/impl/consts_pub.h"
 #include "fb_exception.h"
 #include "iberror.h"
-#include "../../jrd/ibase.h"
 #include "../../common/classes/fb_string.h"
 #include "../../common/classes/timestamp.h"
 #include "../../common/config/config.h"
 #include "../../common/StatusArg.h"
-#include "../../common/thd.h"
+#include "../../common/ThreadStart.h"
+#include "../../common/db_alias.h"
 #include "../../jrd/svc.h"
-#include "../../jrd/os/guid.h"
+#include "../../common/os/guid.h"
 #include "../../jrd/trace/TraceLog.h"
 #include "../../jrd/trace/TraceManager.h"
 #include "../../jrd/trace/TraceService.h"
+#include "../../jrd/scl.h"
+#include "../../jrd/Mapping.h"
 
 using namespace Firebird;
 using namespace Jrd;
@@ -55,8 +57,8 @@ public:
 
 	virtual ~TraceSvcJrd() {};
 
-	virtual void setAttachInfo(const string& service_name, const string& user,
-		const string& pwd, bool isAdmin);
+	virtual void setAttachInfo(const string& service_name, const string& user, const string& role,
+		const string& pwd, bool trusted);
 
 	virtual void startSession(TraceSession& session, bool interactive);
 	virtual void stopSession(ULONG id);
@@ -68,17 +70,35 @@ private:
 	bool changeFlags(ULONG id, int setFlags, int clearFlags);
 	bool checkAliveAndFlags(ULONG sesId, int& flags);
 
+	// Check if current service is allowed to list\stop given other session
+	bool checkPrivileges(TraceSession& session);
+
 	Service& m_svc;
 	string m_user;
+	string m_role;
+	AuthReader::AuthBlock m_authBlock;
 	bool   m_admin;
 	ULONG  m_chg_number;
 };
 
-void TraceSvcJrd::setAttachInfo(const string& /*service_name*/, const string& user,
-	const string& /*pwd*/, bool isAdmin)
+void TraceSvcJrd::setAttachInfo(const string& /*svc_name*/, const string& user, const string& role,
+	const string& /*pwd*/, bool /*trusted*/)
 {
-	m_user = user;
-	m_admin = isAdmin || (m_user == SYSDBA_USER_NAME);
+	const unsigned char* bytes;
+	unsigned int authBlockSize = m_svc.getAuthBlock(&bytes);
+	if (authBlockSize)
+	{
+		m_authBlock.add(bytes, authBlockSize);
+		m_user = "";
+		m_role = "";
+		m_admin = false;
+	}
+	else
+	{
+		m_user = user;
+		m_role = role;
+		m_admin = (m_user == DBA_USER_NAME) || (m_role == ADMIN_ROLE);
+	}
 }
 
 void TraceSvcJrd::startSession(TraceSession& session, bool interactive)
@@ -88,13 +108,17 @@ void TraceSvcJrd::startSession(TraceSession& session, bool interactive)
 		m_svc.printf(false, "Can not start trace session. There are no trace plugins loaded\n");
 		return;
 	}
-	
+
 	ConfigStorage* storage = TraceManager::getStorage();
 
 	{	// scope
 		StorageGuard guard(storage);
 
-		session.ses_user = m_user;
+		session.ses_auth = m_authBlock;
+		session.ses_user = m_user.hasData() ? m_user : m_svc.getUserName();
+		MetaString role = m_role.hasData() ? m_role : m_svc.getRoleName();
+		UserId::makeRoleName(role, SQL_DIALECT_V6);
+		session.ses_role = role.c_str();
 
 		session.ses_flags = trs_active;
 		if (m_admin) {
@@ -103,13 +127,13 @@ void TraceSvcJrd::startSession(TraceSession& session, bool interactive)
 
 		if (interactive)
 		{
-			FB_GUID guid;
+			Guid guid;
 			GenerateGuid(&guid);
 
 			char* buff = session.ses_logfile.getBuffer(GUID_BUFF_SIZE);
 			GuidToString(buff, &guid);
 
-			session.ses_logfile.insert(0, "fb_trace.");
+			session.ses_logfile.insert(0, FB_TRACE_FILE);
 		}
 
 		storage->addSession(session);
@@ -136,15 +160,11 @@ void TraceSvcJrd::stopSession(ULONG id)
 	ConfigStorage* storage = TraceManager::getStorage();
 	StorageGuard guard(storage);
 
-	storage->restart();
-
 	TraceSession session(*getDefaultMemoryPool());
-	while (storage->getNextSession(session))
+	session.ses_id = id;
+	if (storage->getSession(session, ConfigStorage::AUTH))
 	{
-		if (id != session.ses_id)
-			continue;
-
-		if (m_admin || m_user == session.ses_user)
+		if (checkPrivileges(session))
 		{
 			storage->removeSession(id);
 			m_svc.printf(false, "Trace session ID %ld stopped\n", id);
@@ -179,24 +199,19 @@ bool TraceSvcJrd::changeFlags(ULONG id, int setFlags, int clearFlags)
 	ConfigStorage* storage = TraceManager::getStorage();
 	StorageGuard guard(storage);
 
-	storage->restart();
-
 	TraceSession session(*getDefaultMemoryPool());
-	while (storage->getNextSession(session))
+	session.ses_id = id;
+	if (storage->getSession(session, ConfigStorage::AUTH))
 	{
-		if (id != session.ses_id)
-			continue;
-
-		if (m_admin || m_user == session.ses_user)
+		if (checkPrivileges(session))
 		{
 			const int saveFlags = session.ses_flags;
 
 			session.ses_flags |= setFlags;
 			session.ses_flags &= ~clearFlags;
 
-			if (saveFlags != session.ses_flags) {
-				storage->updateSession(session);
-			}
+			if (saveFlags != session.ses_flags)
+				storage->updateFlags(session);
 
 			return true;
 		}
@@ -213,15 +228,17 @@ void TraceSvcJrd::listSessions()
 {
 	m_svc.started();
 
-	ConfigStorage* storage = TraceManager::getStorage();
-	StorageGuard guard(storage);
+	// Writing into service when storage is locked could lead to deadlock,
+	// therefore don't use StorageGuard here.
 
-	storage->restart();
+	ConfigStorage* storage = TraceManager::getStorage();
+	ConfigStorage::Accessor acc(storage);
 
 	TraceSession session(*getDefaultMemoryPool());
-	while (storage->getNextSession(session))
+
+	while (acc.getNext(session, ConfigStorage::ALL))
 	{
-		if (m_admin || m_user == session.ses_user)
+		if (checkPrivileges(session))
 		{
 			m_svc.printf(false, "\nSession ID: %d\n", session.ses_id);
 			if (!session.ses_name.empty()) {
@@ -263,8 +280,6 @@ void TraceSvcJrd::listSessions()
 
 void TraceSvcJrd::readSession(TraceSession& session)
 {
-	const size_t maxLogSize = Config::getMaxUserTraceLogSize(); // in MB
-
 	if (session.ses_logfile.empty())
 	{
 		m_svc.printf(false, "Can't open trace data log file");
@@ -272,13 +287,13 @@ void TraceSvcJrd::readSession(TraceSession& session)
 	}
 
 	MemoryPool& pool = *getDefaultMemoryPool();
-	AutoPtr<TraceLog> log(FB_NEW(pool) TraceLog(pool, session.ses_logfile, true));
+	AutoPtr<TraceLog> log(FB_NEW_POOL(pool) TraceLog(pool, session.ses_logfile, true));
 
 	UCHAR buff[1024];
 	int flags = session.ses_flags;
 	while (!m_svc.finished() && checkAliveAndFlags(session.ses_id, flags))
 	{
-		const size_t len = log->read(buff, sizeof(buff));
+		const FB_SIZE_T len = log->read(buff, sizeof(buff));
 		if (!len)
 		{
 			if (!checkAliveAndFlags(session.ses_id, flags))
@@ -292,7 +307,7 @@ void TraceSvcJrd::readSession(TraceSession& session)
 			m_svc.putBytes(buff, len);
 
 			const bool logFull = (flags & trs_log_full);
-			if (logFull && log->getApproxLogSize() <= maxLogSize)
+			if (logFull && !log->isFull())
 			{
 				// resume session
 				changeFlags(session.ses_id, 0, trs_log_full);
@@ -312,15 +327,11 @@ bool TraceSvcJrd::checkAliveAndFlags(ULONG sesId, int& flags)
 		StorageGuard guard(storage);
 
 		TraceSession readSession(*getDefaultMemoryPool());
-		storage->restart();
-		while (storage->getNextSession(readSession))
+		readSession.ses_id = sesId;
+		if (storage->getSession(readSession, ConfigStorage::FLAGS))
 		{
-			if (readSession.ses_id == sesId)
-			{
-				alive = true;
-				flags = readSession.ses_flags;
-				break;
-			}
+			flags = readSession.ses_flags;
+			alive = true;
 		}
 
 		m_chg_number = storage->getChangeNumber();
@@ -329,9 +340,56 @@ bool TraceSvcJrd::checkAliveAndFlags(ULONG sesId, int& flags)
 	return alive;
 }
 
+bool TraceSvcJrd::checkPrivileges(TraceSession& session)
+{
+	// Our service run in embedded mode and have no auth info - trust user name as is
+	if (m_admin || (m_user.hasData() && (m_user == session.ses_user)))
+		return true;
+
+	// Other session is fully authorized - try to map our auth info using other's
+	// security database
+	if (session.ses_auth.hasData())
+	{
+		AuthReader::Info info;
+		for (AuthReader rdr(session.ses_auth); rdr.getInfo(info); rdr.moveNext())
+		{
+			string s_user, t_role;
+
+			PathName dummy;
+			RefPtr<const Config> config;
+			expandDatabaseName(info.secDb.hasData() ?
+				info.secDb.ToPathName() : m_svc.getExpectedDb(), dummy, &config);
+
+			Mapping mapping(Mapping::MAP_NO_FLAGS, m_svc.getCryptCallback());
+			UserId::Privileges priv;
+			mapping.needSystemPrivileges(priv);
+			mapping.setAuthBlock(m_authBlock);
+			mapping.setErrorMessagesContextName("services manager");
+			mapping.setSqlRole(m_svc.getRoleName());
+			mapping.setSecurityDbAlias(config->getSecurityDatabase(), nullptr);
+
+			if (mapping.mapUser(s_user, t_role) & Mapping::MAP_ERROR_NOT_THROWN)
+			{
+				// Error in mapUser() means missing context, therefore...
+				continue;
+			}
+
+			t_role.upper();
+
+			// TODO: add privileges for list\manage sessions and check it here
+			if (s_user == DBA_USER_NAME || t_role == ADMIN_ROLE || s_user == session.ses_user)
+				return true;
+		}
+	}
+	// Other session's service run in embedded mode - check our user name as is
+	else if (m_svc.getUserName() == session.ses_user || m_svc.getUserAdminFlag())
+		return true;
+
+	return false;
+}
 
 // service entrypoint
-THREAD_ENTRY_DECLARE TRACE_main(THREAD_ENTRY_PARAM arg)
+int TRACE_main(UtilSvc* arg)
 {
 	Service* svc = (Service*) arg;
 	int exit_code = FB_SUCCESS;
@@ -343,15 +401,14 @@ THREAD_ENTRY_DECLARE TRACE_main(THREAD_ENTRY_PARAM arg)
 	}
 	catch (const Exception& e)
 	{
-		ISC_STATUS_ARRAY status;
-		e.stuff_exception(status);
-		svc->initStatus();
-		svc->setServiceStatus(status);
+		StaticStatusVector status;
+		e.stuffException(status);
+
+		UtilSvc::StatusAccessor sa = svc->getStatusAccessor();
+		sa.init();
+		sa.setServiceStatus(status.begin());
 		exit_code = FB_FAILURE;
 	}
 
-	svc->started();
-	svc->finish();
-
-	return (THREAD_ENTRY_RETURN)(IPTR) exit_code;
+	return exit_code;
 }

@@ -34,15 +34,23 @@
 #include "../../common/classes/array.h"
 #include "../../common/classes/fb_string.h"
 #include "../../common/classes/init.h"
-#include "../../common/classes/locks.h"
+#include "../../common/classes/rwlock.h"
+#include "../../common/classes/ImplementHelper.h"
 #include "../../jrd/trace/TraceConfigStorage.h"
 #include "../../jrd/trace/TraceSession.h"
+
+namespace Firebird {
+
+class ICryptKeyCallback;
+
+}
 
 namespace Jrd {
 
 class Database;
 class Attachment;
 class jrd_tra;
+class DsqlRequest;
 class Service;
 
 class TraceManager
@@ -51,103 +59,109 @@ public:
     /* Initializes plugins. */
 	explicit TraceManager(Attachment* in_att);
 	explicit TraceManager(Service* in_svc);
-	explicit TraceManager(const char* in_filename);
+	TraceManager(const char* in_filename, Firebird::ICryptKeyCallback* callback, bool failedAttach);
 
 	/* Finalize plugins. Called when database is closed by the engine */
 	~TraceManager();
-
-	static void shutdown()
-	{
-		if (storageInstance->initialized())
-			storageInstance->getStorage()->shutdown();
-	}
 
 	static ConfigStorage* getStorage()
 	{ return storageInstance->getStorage(); }
 
 	static size_t pluginsCount()
-	{ return modules->getCount(); }
+	{ return factories->getCount(); }
 
-	void event_attach(TraceDatabaseConnection* connection, bool create_db,
+	void event_attach(Firebird::ITraceDatabaseConnection* connection, bool create_db,
 		ntrace_result_t att_result);
 
-	void event_detach(TraceDatabaseConnection* connection, bool drop_db);
+	void event_detach(Firebird::ITraceDatabaseConnection* connection, bool drop_db);
 
 	/* Start/end transaction */
-	void event_transaction_start(TraceDatabaseConnection* connection, TraceTransaction* transaction,
-		size_t tpb_length, const ntrace_byte_t* tpb, ntrace_result_t tra_result);
+	void event_transaction_start(Firebird::ITraceDatabaseConnection* connection, Firebird::ITraceTransaction* transaction,
+		unsigned tpb_length, const ntrace_byte_t* tpb, ntrace_result_t tra_result);
 
-	void event_transaction_end(TraceDatabaseConnection* connection, TraceTransaction* transaction,
+	void event_transaction_end(Firebird::ITraceDatabaseConnection* connection, Firebird::ITraceTransaction* transaction,
 		bool commit, bool retain_context, ntrace_result_t tra_result);
 
-	void event_set_context(TraceDatabaseConnection* connection,
-		TraceTransaction* transaction, TraceContextVariable* variable);
+	void event_set_context(Firebird::ITraceDatabaseConnection* connection,
+		Firebird::ITraceTransaction* transaction, Firebird::ITraceContextVariable* variable);
 
-	void event_proc_execute(TraceDatabaseConnection* connection, TraceTransaction* transaction,
-		TraceProcedure* procedure, bool started, ntrace_result_t proc_result);
+	void event_proc_compile(Firebird::ITraceDatabaseConnection* connection,
+		Firebird::ITraceProcedure* procedure, ntrace_counter_t time_millis, ntrace_result_t proc_result);
 
-	void event_trigger_execute(TraceDatabaseConnection* connection, TraceTransaction* transaction,
-		TraceTrigger* trigger, bool started, ntrace_result_t trig_result);
+	void event_proc_execute(Firebird::ITraceDatabaseConnection* connection, Firebird::ITraceTransaction* transaction,
+		Firebird::ITraceProcedure* procedure, bool started, ntrace_result_t proc_result);
 
-	void event_blr_compile(TraceDatabaseConnection* connection,
-		TraceTransaction* transaction, TraceBLRStatement* statement,
+	void event_func_compile(Firebird::ITraceDatabaseConnection* connection,
+		Firebird::ITraceFunction* function, ntrace_counter_t time_millis, ntrace_result_t func_result);
+
+	void event_func_execute(Firebird::ITraceDatabaseConnection* connection, Firebird::ITraceTransaction* transaction,
+		Firebird::ITraceFunction* function, bool started, ntrace_result_t func_result);
+
+	void event_trigger_compile(Firebird::ITraceDatabaseConnection* connection,
+		Firebird::ITraceTrigger* trigger, ntrace_counter_t time_millis, ntrace_result_t trig_result);
+
+	void event_trigger_execute(Firebird::ITraceDatabaseConnection* connection, Firebird::ITraceTransaction* transaction,
+		Firebird::ITraceTrigger* trigger, bool started, ntrace_result_t trig_result);
+
+	void event_blr_compile(Firebird::ITraceDatabaseConnection* connection,
+		Firebird::ITraceTransaction* transaction, Firebird::ITraceBLRStatement* statement,
 		ntrace_counter_t time_millis, ntrace_result_t req_result);
 
-	void event_blr_execute(TraceDatabaseConnection* connection,
-		TraceTransaction* transaction, TraceBLRStatement* statement,
+	void event_blr_execute(Firebird::ITraceDatabaseConnection* connection,
+		Firebird::ITraceTransaction* transaction, Firebird::ITraceBLRStatement* statement,
 		ntrace_result_t req_result);
 
-	void event_dyn_execute(TraceDatabaseConnection* connection,
-		TraceTransaction* transaction, TraceDYNRequest* request,
+	void event_dyn_execute(Firebird::ITraceDatabaseConnection* connection,
+		Firebird::ITraceTransaction* transaction, Firebird::ITraceDYNRequest* request,
 		ntrace_counter_t time_millis, ntrace_result_t req_result);
 
-	void event_service_attach(TraceServiceConnection* service, ntrace_result_t att_result);
+	void event_service_attach(Firebird::ITraceServiceConnection* service, ntrace_result_t att_result);
 
-	void event_service_start(TraceServiceConnection* service,
-		size_t switches_length, const char* switches,
+	void event_service_start(Firebird::ITraceServiceConnection* service,
+		unsigned switches_length, const char* switches,
 		ntrace_result_t start_result);
 
-	void event_service_query(TraceServiceConnection* service,
-		size_t send_item_length, const ntrace_byte_t* send_items,
-		size_t recv_item_length, const ntrace_byte_t* recv_items,
+	void event_service_query(Firebird::ITraceServiceConnection* service,
+		unsigned send_item_length, const ntrace_byte_t* send_items,
+		unsigned recv_item_length, const ntrace_byte_t* recv_items,
 		ntrace_result_t query_result);
 
-	void event_service_detach(TraceServiceConnection* service, ntrace_result_t detach_result);
+	void event_service_detach(Firebird::ITraceServiceConnection* service, ntrace_result_t detach_result);
 
-	void event_error(TraceBaseConnection* connection, TraceStatusVector* status, const char* function);
+	void event_error(Firebird::ITraceConnection* connection, Firebird::ITraceStatusVector* status, const char* function);
 
-	void event_sweep(TraceDatabaseConnection* connection, TraceSweepInfo* sweep, 
+	void event_sweep(Firebird::ITraceDatabaseConnection* connection, Firebird::ITraceSweepInfo* sweep,
 		ntrace_process_state_t sweep_state);
 
-	struct NotificationNeeds
-	{
-		// Set if event is tracked
-		bool event_attach;
-		bool event_detach;
-		bool event_transaction_start;
-		bool event_transaction_end;
-		bool event_set_context;
-		bool event_proc_execute;
-		bool event_trigger_execute;
-		bool event_dsql_prepare;
-		bool event_dsql_free;
-		bool event_dsql_execute;
-		bool event_blr_compile;
-		bool event_blr_execute;
-		bool event_dyn_execute;
-		bool event_service_attach;
-		bool event_service_start;
-		bool event_service_query;
-		bool event_service_detach;
-		bool event_error;
-		bool event_sweep;
-	};
+	typedef ntrace_mask_t NotificationNeeds;
 
-	inline const NotificationNeeds& needs()
+	inline bool needs(unsigned e)
 	{
+		if (!active || !init_factories)
+			return false;
+
 		if (changeNumber != getStorage()->getChangeNumber())
 			update_sessions();
-		return trace_needs;
+
+		return trace_needs & (FB_CONST64(1) << e);
+	}
+
+	// should be called after attachment user is authenticated
+	void activate()
+	{
+		active = true;
+	}
+
+	// helps avoid early use
+	bool isActive()
+	{
+		return active;
+	}
+
+	// external access to stored attachment
+	Attachment* getAttachment()
+	{
+		return attachment;
 	}
 
 	/* DSQL-friendly routines to call Trace API hooks.
@@ -156,71 +170,111 @@ public:
 	static bool need_dsql_free(Attachment* att);
 	static bool need_dsql_execute(Attachment* att);
 
-	static void event_dsql_prepare(Attachment* att, jrd_tra* transaction, TraceSQLStatement* statement,
+	static void event_dsql_prepare(Attachment* att, jrd_tra* transaction, Firebird::ITraceSQLStatement* statement,
 		ntrace_counter_t time_millis, ntrace_result_t req_result);
 
-	static void event_dsql_free(Attachment* att, TraceSQLStatement* statement,
+	static void event_dsql_free(Attachment* att, Firebird::ITraceSQLStatement* statement,
 		unsigned short option);
 
-	static void event_dsql_execute(Attachment* att, jrd_tra* transaction, TraceSQLStatement* statement,
+	static void event_dsql_execute(Attachment* att, jrd_tra* transaction, Firebird::ITraceSQLStatement* statement,
 		bool started, ntrace_result_t req_result);
+
+	static void event_dsql_restart(Attachment* att, jrd_tra* transaction, DsqlRequest* statement,
+		int number);
+
+	static void shutdown();
 
 private:
 	Attachment*	attachment;
 	Service* service;
 	const char* filename;
-	NotificationNeeds trace_needs;
+	Firebird::ICryptKeyCallback* callback;
+	NotificationNeeds trace_needs, new_needs;
 
 	// This structure should be POD-like to be stored in Array
-	struct ModuleInfo
+	struct FactoryInfo
 	{
-		ModuleInfo()
+		FactoryInfo() : factory(NULL)
 		{
-			ntrace_attach = NULL;
-			memset(module, 0, sizeof(module));
+			memset(name, 0, sizeof(name));
 		}
 
-		ntrace_attach_t ntrace_attach;
-		char module[MAXPATHLEN];
+		Firebird::ITraceFactory* factory;
+		char name[MAXPATHLEN];
 	};
-	static Firebird::GlobalPtr<Firebird::Array<ModuleInfo> > modules;
-	static Firebird::GlobalPtr<Firebird::Mutex> init_modules_mtx;
-	static volatile bool init_modules;
+
+	class Factories : public Firebird::Array<FactoryInfo>
+	{
+	public:
+		explicit Factories(Firebird::MemoryPool& p)
+			: Firebird::Array<FactoryInfo>(p)
+		{ }
+
+		~Factories()
+		{
+			Firebird::PluginManagerInterfacePtr pi;
+
+			for (unsigned int i = 0; i < getCount(); ++i)
+				pi->releasePlugin(getElement(i).factory);
+		}
+	};
+
+	static Factories* factories;
+	static Firebird::GlobalPtr<Firebird::RWLock> init_factories_lock;
+	static volatile bool init_factories;
 
 	struct SessionInfo
 	{
-		const TracePlugin* plugin;
-		ModuleInfo* module_info;
+		FactoryInfo* factory_info;
+		Firebird::ITracePlugin* plugin;
 		ULONG ses_id;
 
-		static ULONG generate(const void*, const SessionInfo& item)
+		static ULONG generate(const SessionInfo& item)
 		{ return item.ses_id; }
 	};
-	Firebird::SortedArray<SessionInfo, Firebird::EmptyStorage<SessionInfo>,
-		ULONG, SessionInfo> trace_sessions;
+	class Sessions : public Firebird::SortedArray<SessionInfo, Firebird::EmptyStorage<SessionInfo>, ULONG, SessionInfo>
+	{
+	public:
+		explicit Sessions(MemoryPool& p)
+			: Firebird::SortedArray<SessionInfo, Firebird::EmptyStorage<SessionInfo>, ULONG, SessionInfo>(p)
+		{ }
+
+		~Sessions()
+		{
+			for (unsigned int i = 0; i < getCount(); ++i)
+			{
+				getElement(i).plugin->release();
+			}
+		}
+	};
+	Sessions trace_sessions;
 
 	void init();
-	void load_modules();
+	void load_plugins();
 	void update_sessions();
 	void update_session(const Firebird::TraceSession& session);
 
-	bool check_result(const TracePlugin* plugin, const char* module, const char* function, bool result);
+	bool check_result(Firebird::ITracePlugin* plugin, const char* module, const char* function, bool result);
 
 	/* DSQL statement lifecycle. To be moved to public and used directly when DSQL becomes a part of JRD */
-	void event_dsql_prepare(TraceDatabaseConnection* connection, TraceTransaction* transaction,
-		TraceSQLStatement* statement,
+	void event_dsql_prepare(Firebird::ITraceDatabaseConnection* connection, Firebird::ITraceTransaction* transaction,
+		Firebird::ITraceSQLStatement* statement,
 		ntrace_counter_t time_millis, ntrace_result_t req_result);
 
-	void event_dsql_free(TraceDatabaseConnection* connection,
-		TraceSQLStatement* statement, unsigned short option);
+	void event_dsql_free(Firebird::ITraceDatabaseConnection* connection,
+		Firebird::ITraceSQLStatement* statement, unsigned short option);
 
-	void event_dsql_execute(TraceDatabaseConnection* connection, TraceTransaction* transaction,
-		TraceSQLStatement* statement,
+	void event_dsql_execute(Firebird::ITraceDatabaseConnection* connection, Firebird::ITraceTransaction* transaction,
+		Firebird::ITraceSQLStatement* statement,
 		bool started, ntrace_result_t req_result);
+
+	void event_dsql_restart(Firebird::ITraceDatabaseConnection* connection, Firebird::ITraceTransaction* transaction, Firebird::ITraceSQLStatement* statement,
+		unsigned number);
 
 	static Firebird::GlobalPtr<StorageInstance, Firebird::InstanceControl::PRIORITY_DELETE_FIRST> storageInstance;
 
 	ULONG changeNumber;
+	bool active, failedAttach;
 };
 
 }

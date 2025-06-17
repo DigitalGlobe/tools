@@ -18,27 +18,21 @@
  *
  *  All Rights Reserved.
  *  Contributor(s): ______________________________________.
+ *  Adriano dos Santos Fernandes
  */
 
 #ifndef JRD_VIRTUAL_TABLE_H
 #define JRD_VIRTUAL_TABLE_H
 
-namespace Jrd {
-
-// To be refactored to a class
-
-namespace VirtualTable {
-
-void close(Jrd::thread_db*, Jrd::RecordSource*);
-void erase(Jrd::thread_db*, Jrd::record_param*);
-void fini(Jrd::jrd_rel*);
-bool get(Jrd::thread_db*, Jrd::RecordSource*);
-void modify(Jrd::thread_db*, Jrd::record_param*, Jrd::record_param*);
-void open(Jrd::thread_db*, Jrd::RecordSource*);
-Jrd::RecordSource* optimize(Jrd::thread_db*, Jrd::OptimizerBlk*, SSHORT);
-void store(Jrd::thread_db*, Jrd::record_param*);
-
-} // namespace VirtualTable
+namespace Jrd
+{
+	class VirtualTable
+	{
+	public:
+		static void erase(thread_db*, record_param*);
+		static void modify(thread_db*, record_param*, record_param*);
+		static void store(thread_db*, record_param*);
+	};
 
 } // namespace Jrd
 

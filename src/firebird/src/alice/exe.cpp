@@ -36,14 +36,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../jrd/ibase.h"
-#include "../jrd/common.h"
+#include "ibase.h"
 #include "../alice/alice.h"
 #include "../alice/alice_proto.h"
+#include "../common/classes/Switches.h"
 #include "../alice/aliceswi.h"
 #include "../alice/alice_meta.h"
 #include "../alice/tdr_proto.h"
-#include "../jrd/gds_proto.h"
+#include "../yvalve/gds_proto.h"
 #include "../jrd/constants.h"
 #include "../common/classes/ClumpletWriter.h"
 
@@ -56,7 +56,11 @@ static const TEXT val_errors[] =
 {
 	isc_info_page_errors, isc_info_record_errors, isc_info_bpage_errors,
 	isc_info_dpage_errors, isc_info_ipage_errors, isc_info_ppage_errors,
-	isc_info_tpage_errors, isc_info_end
+	isc_info_tpage_errors,
+	fb_info_page_warns, fb_info_record_warns, fb_info_bpage_warns,
+	fb_info_dpage_warns, fb_info_ipage_warns, fb_info_ppage_warns,
+	fb_info_tpage_warns, fb_info_pip_errors, fb_info_pip_warns,
+	isc_info_end
 };
 
 
@@ -97,12 +101,7 @@ int EXE_action(const TEXT* database, const SINT64 switches)
 
 		if (tdgbl->status[2] == isc_arg_warning)
 		{
-			Firebird::makePermanentVector(tdgbl->status);
 			ALICE_print_status(false, tdgbl->status);
-		}
-		else if (error)
-		{
-			Firebird::makePermanentVector(tdgbl->status);
 		}
 
 		if (handle != 0)
@@ -127,7 +126,7 @@ int EXE_action(const TEXT* database, const SINT64 switches)
 
 		if (error)
 		{
-			tdgbl->uSvc->setServiceStatus(tdgbl->status);
+			tdgbl->uSvc->getStatusAccessor().setServiceStatus(tdgbl->status);
 		}
 	}
 
@@ -183,7 +182,7 @@ int EXE_two_phase(const TEXT* database, const SINT64 switches)
 
 		if (error)
 		{
-			tdgbl->uSvc->setServiceStatus(tdgbl->status);
+			tdgbl->uSvc->getStatusAccessor().setServiceStatus(tdgbl->status);
 		}
 	}
 
@@ -202,7 +201,7 @@ static void buildDpb(Firebird::ClumpletWriter& dpb, const SINT64 switches)
 	AliceGlobals* tdgbl = AliceGlobals::getSpecific();
 	dpb.reset(isc_dpb_version1);
 	dpb.insertTag(isc_dpb_gfix_attach);
-	tdgbl->uSvc->getAddressPath(dpb);
+	tdgbl->uSvc->fillDpb(dpb);
 
 	if (switches & sw_sweep) {
 		dpb.insertByte(isc_dpb_sweep, isc_dpb_records);
@@ -257,8 +256,6 @@ static void buildDpb(Firebird::ClumpletWriter& dpb, const SINT64 switches)
 		UCHAR b = 0;
 		if (switches & sw_attach)
 			b |= isc_dpb_shut_attachment;
-		else if (switches & sw_cache)
-			b |= isc_dpb_shut_cache;
 		else if (switches & sw_force)
 			b |= isc_dpb_shut_force;
 		else if (switches & sw_tran)
@@ -322,36 +319,58 @@ static void buildDpb(Firebird::ClumpletWriter& dpb, const SINT64 switches)
 	else if (switches & sw_set_db_dialect) {
 		dpb.insertInt(isc_dpb_set_db_sql_dialect, tdgbl->ALICE_data.ua_db_SQL_dialect);
 	}
+	else if (switches & sw_replica) {
+		dpb.insertByte(isc_dpb_set_db_replica, tdgbl->ALICE_data.ua_replica_mode);
+	}
 
-	if (tdgbl->ALICE_data.ua_user)
-	{
-		dpb.insertString(isc_dpb_user_name,
-						 tdgbl->ALICE_data.ua_user, strlen(tdgbl->ALICE_data.ua_user));
+	if (tdgbl->ALICE_data.ua_parallel_workers > 0) {
+		dpb.insertInt(isc_dpb_parallel_workers, tdgbl->ALICE_data.ua_parallel_workers);
 	}
-	if (tdgbl->ALICE_data.ua_password)
+
+	if (switches & sw_nolinger)
+		dpb.insertTag(isc_dpb_nolinger);
+
+	if (switches & sw_icu)
+		dpb.insertTag(isc_dpb_reset_icu);
+
+	if (switches & sw_upgrade)
+		dpb.insertTag(isc_dpb_upgrade_db);
+
+	const unsigned char* authBlock;
+	unsigned int authBlockSize = tdgbl->uSvc->getAuthBlock(&authBlock);
+
+	if (authBlockSize)
 	{
-		dpb.insertString(tdgbl->uSvc->isService() ? isc_dpb_password_enc : isc_dpb_password,
-						 tdgbl->ALICE_data.ua_password, strlen(tdgbl->ALICE_data.ua_password));
+		dpb.insertBytes(isc_dpb_auth_block, authBlock, authBlockSize);
 	}
-	if (tdgbl->ALICE_data.ua_tr_user)
+	else
 	{
-		tdgbl->uSvc->checkService();
-		dpb.insertString(isc_dpb_trusted_auth,
-						 tdgbl->ALICE_data.ua_tr_user, strlen(tdgbl->ALICE_data.ua_tr_user));
-	}
-	if (tdgbl->ALICE_data.ua_tr_role)
-	{
-		tdgbl->uSvc->checkService();
-		dpb.insertString(isc_dpb_trusted_role, ADMIN_ROLE, strlen(ADMIN_ROLE));
-	}
-#ifdef TRUSTED_AUTH
-	if (tdgbl->ALICE_data.ua_trusted)
-	{
-		if (!dpb.find(isc_dpb_trusted_auth)) {
-			dpb.insertTag(isc_dpb_trusted_auth);
+		if (tdgbl->ALICE_data.ua_user)
+		{
+			dpb.insertString(isc_dpb_user_name,
+							 tdgbl->ALICE_data.ua_user, fb_strlen(tdgbl->ALICE_data.ua_user));
 		}
-	}
+
+		if (tdgbl->ALICE_data.ua_password)
+		{
+			dpb.insertString(tdgbl->uSvc->isService() ? isc_dpb_password_enc : isc_dpb_password,
+							 tdgbl->ALICE_data.ua_password, fb_strlen(tdgbl->ALICE_data.ua_password));
+		}
+
+#ifdef TRUSTED_AUTH
+		if (tdgbl->ALICE_data.ua_trusted)
+		{
+			if (!dpb.find(isc_dpb_trusted_auth))
+				dpb.insertTag(isc_dpb_trusted_auth);
+		}
 #endif
+	}
+
+	if (tdgbl->ALICE_data.ua_role)
+	{
+		dpb.insertString(isc_dpb_sql_role_name,
+						 tdgbl->ALICE_data.ua_role, fb_strlen(tdgbl->ALICE_data.ua_role));
+	}
 }
 
 
@@ -408,6 +427,43 @@ static void extract_db_info(const UCHAR* db_info_buffer, size_t buf_size)
 		case isc_info_tpage_errors:
 			pos = VAL_TIP_PAGE_ERRORS;
 			break;
+
+		case fb_info_page_warns:
+			pos = VAL_PAGE_WARNS;
+			break;
+
+		case fb_info_record_warns:
+			pos = VAL_RECORD_WARNS;
+			break;
+
+		case fb_info_bpage_warns:
+			pos = VAL_BLOB_PAGE_WARNS;
+			break;
+
+		case fb_info_dpage_warns:
+			pos = VAL_DATA_PAGE_WARNS;
+			break;
+
+		case fb_info_ipage_warns:
+			pos = VAL_INDEX_PAGE_WARNS;
+			break;
+
+		case fb_info_ppage_warns:
+			pos = VAL_POINTER_PAGE_WARNS;
+			break;
+
+		case fb_info_tpage_warns:
+			pos = VAL_TIP_PAGE_WARNS;
+			break;
+
+		case fb_info_pip_errors:
+			pos = VAL_PIP_PAGE_ERRORS;
+			break;
+
+		case fb_info_pip_warns:
+			pos = VAL_PIP_PAGE_WARNS;
+			break;
+
 
 		case isc_info_error:
 			// has to be a < V4 database.

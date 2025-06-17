@@ -65,7 +65,8 @@ stat12.e    Event wait and signaling.
 stat12t.e
 
 WHENEVER SQLERROR and BASED_ON clause are illustrated by many programs.
-^L
+
+
 
 Embedded Dynamic SQL
 
@@ -84,7 +85,8 @@ dyn5.e      Demonstrate dynamic reallocation of SQLDA and 'describe' statement.
 dynfull.e   A full_dsql program (process unknown statements).
 
 VARY struct is used by dyn3.e, dynfull.e.
-^L
+
+
 
 API Interface
 
@@ -112,7 +114,7 @@ api7.c      Demonstrate blob_open, get_segment.
 api8.c      Demonstrate create_blob, put_segment.
 
 api9.c      Demonstrate blob_open2 (using blob filter).
-api9f.c     Filter for api9.c.  (Not part of Windows 3.1 clients)
+api9f.c     Filter for api9.c.
 
 api10.c     Update an array using get_slice/put_slice.
 
@@ -126,11 +128,10 @@ api14.e     Combine the three programming styles in one program.
 
 api15.c	    Construct a database parameter buffer.  db_info calls.
 
-api16.c	    Demonstrate asynchronous event trapping
-            (Not available on Windows 3.1 clients)
+api16.c	    Demonstrate asynchronous event trapping.            
 
 winevent.c  Demonstrate asynchronous event trapping
-            (Replacement for api16.c on Windows 3.1 Client)
+            (Replacement for api16.c on Windows Client)
 
 api16t.c    Identical to stat12t, this triggers the event for api16.
 
@@ -141,3 +142,43 @@ SQLCODE extraction from status is covered by several programs.
 Zero transaction handle is covered in several programs, ex. api14.e.
 
 
+
+Object-oriented API (interfaces)
+
+Program               Description
+---------             --------------------------------------------------------
+01.create.cpp /       A sample of creating new database and new table in it.
+01.create.pas         Has pascal (delphi) implementation.
+
+02.update.cpp         UPDATE statement with parameters.
+
+03.select.cpp         SELECT statement without input parameters.
+
+04.print_table.cpp    Open cursor from attachment and access blob data.
+
+05.user_metadata.cpp  Cursor with user-implemented interface of message format.
+
+06.fb_message.cpp     Use of static messages and decfloat values.
+
+07.blob.cpp           Loading data into blob and reading it.
+
+08.events.cpp         Working with events.
+
+09.service.cpp        Using services: prints server version and db statistics.
+
+10.backup.cpp         Using services: backup database.
+
+11.batch.cpp          Working with batch interface.
+
+12.batch_isc.cpp      Working with batch interface from ISC API.
+
+
+FbSampleAtomic        typedef required in many examples.
+
+
+
+dbcrypt - a sample of XOR database encryption (do not use in production!!!)
+
+extauth - authentication for cross-server connections based on having same secret key on all servers
+
+replication - a sample or replication. Doesn't do anything useful just write log of calls from the engine.

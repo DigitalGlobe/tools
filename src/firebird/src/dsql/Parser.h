@@ -23,23 +23,48 @@
 #ifndef DSQL_PARSER_H
 #define DSQL_PARSER_H
 
-#include "../jrd/common.h"
 #include "../dsql/dsql.h"
-#include "../dsql/node.h"
 #include "../dsql/DdlNodes.h"
+#include "../dsql/BoolNodes.h"
+#include "../dsql/ExprNodes.h"
+#include "../dsql/AggNodes.h"
+#include "../dsql/WinNodes.h"
+#include "../dsql/PackageNodes.h"
 #include "../dsql/StmtNodes.h"
+#include "../jrd/RecordSourceNodes.h"
+#include "../common/classes/Nullable.h"
 #include "../common/classes/stack.h"
+
+#include "gen/parse.h"
+
+namespace Firebird {
+namespace Arg {
+	class StatusVector;
+} // namespace
+} // namespace
 
 namespace Jrd {
 
-class dsql_nod;
+class CharSet;
 
 class Parser : public Firebird::PermanentStorage
 {
 private:
+	// User-defined text position type.
+	struct Position
+	{
+		ULONG firstLine;
+		ULONG firstColumn;
+		ULONG lastLine;
+		ULONG lastColumn;
+		const char* firstPos;
+		const char* lastPos;
+		const char* leadingFirstPos;
+		const char* trailingLastPos;
+	};
+
+	typedef Position YYPOSN;
 	typedef int Yshort;
-	typedef dsql_nod* YYSTYPE;
-	typedef int YYPOSN;	// user-defined text position type
 
 	struct yyparsestate
 	{
@@ -62,18 +87,11 @@ private:
 	struct LexerState
 	{
 		// This is, in fact, parser state. Not used in lexer itself
-		dsql_fld* g_field;
-		dsql_fil* g_file;
-		YYSTYPE g_field_name;
 		int dsql_debug;
 
 		// Actual lexer state begins from here
 
-		// hvlad: if at some day 16 levels of nesting would be not enough
-		// then someone must add LexerState constructor and pass memory
-		// pool into Stack's constructor or change Capacity value in template
-		// instantiation below
-		Firebird::Stack<const TEXT*> beginnings;
+		const TEXT* leadingPtr;
 		const TEXT* ptr;
 		const TEXT* end;
 		const TEXT* last_token;
@@ -81,8 +99,8 @@ private:
 		const TEXT* line_start;
 		const TEXT* last_token_bk;
 		const TEXT* line_start_bk;
-		SSHORT lines, att_charset;
-		SSHORT lines_bk;
+		SSHORT att_charset;
+		SLONG lines, lines_bk;
 		int prev_keyword;
 		USHORT param_number;
 	};
@@ -105,16 +123,19 @@ private:
 		bool introduced;
 		unsigned pos;
 		unsigned length;
-		dsql_str* str;
+		IntlString* str;
 	};
 
 public:
-	Parser(MemoryPool& pool, USHORT aClientDialect, USHORT aDbDialect, USHORT aParserVersion,
-		const TEXT* string, USHORT length, SSHORT characterSet);
+	static const int MAX_TOKEN_LEN = 256;
+
+public:
+	Parser(thread_db* tdbb, MemoryPool& pool, MemoryPool* aStatementPool, DsqlCompilerScratch* aScratch,
+		USHORT aClientDialect, USHORT aDbDialect, const TEXT* string, size_t length, SSHORT characterSet);
 	~Parser();
 
 public:
-	YYSTYPE parse();
+	DsqlStatement* parse();
 
 	const Firebird::string& getTransformedString() const
 	{
@@ -126,16 +147,221 @@ public:
 		return stmt_ambiguous;
 	}
 
+	Firebird::string* newString(const Firebird::string& s)
+	{
+		return FB_NEW_POOL(getPool()) Firebird::string(getPool(), s);
+	}
+
+	Lim64String* newLim64String(const Firebird::string& s, int scale)
+	{
+		return FB_NEW_POOL(getPool()) Lim64String(getPool(), s, scale);
+	}
+
+	IntlString* newIntlString(const Firebird::string& s, const char* charSet = NULL)
+	{
+		return FB_NEW_POOL(getPool()) IntlString(getPool(), s, charSet);
+	}
+
+	// newNode overloads
+
+	template <typename T>
+	T* newNode()
+	{
+		return setupNode<T>(FB_NEW_POOL(getPool()) T(getPool()));
+	}
+
+	template <typename T, typename T1>
+	T* newNode(T1 a1)
+	{
+		return setupNode<T>(FB_NEW_POOL(getPool()) T(getPool(), a1));
+	}
+
+	template <typename T, typename T1, typename T2>
+	T* newNode(T1 a1, T2 a2)
+	{
+		return setupNode<T>(FB_NEW_POOL(getPool()) T(getPool(), a1, a2));
+	}
+
+	template <typename T, typename T1, typename T2, typename T3>
+	T* newNode(T1 a1, T2 a2, T3 a3)
+	{
+		return setupNode<T>(FB_NEW_POOL(getPool()) T(getPool(), a1, a2, a3));
+	}
+
+	template <typename T, typename T1, typename T2, typename T3, typename T4>
+	T* newNode(T1 a1, T2 a2, T3 a3, T4 a4)
+	{
+		return setupNode<T>(FB_NEW_POOL(getPool()) T(getPool(), a1, a2, a3, a4));
+	}
+
+	template <typename T, typename T1, typename T2, typename T3, typename T4, typename T5>
+	T* newNode(T1 a1, T2 a2, T3 a3, T4 a4, T5 a5)
+	{
+		return setupNode<T>(FB_NEW_POOL(getPool()) T(getPool(), a1, a2, a3, a4, a5));
+	}
+
 private:
+	template <typename T> T* setupNode(Node* node)
+	{
+		setNodeLineColumn(node);
+		return static_cast<T*>(node);
+	}
+
+	// Overload to not make LineColumnNode data wrong after its construction.
+	template <typename T> T* setupNode(LineColumnNode* node)
+	{
+		return node;
+	}
+
+	// Overload for non-Node classes constructed with newNode.
+	template <typename T> T* setupNode(void* node)
+	{
+		return static_cast<T*>(node);
+	}
+
+	BoolExprNode* valueToBool(ValueExprNode* value)
+	{
+		BoolAsValueNode* node = nodeAs<BoolAsValueNode>(value);
+		if (node)
+			return node->boolean;
+
+		ComparativeBoolNode* cmpNode = newNode<ComparativeBoolNode>(
+			blr_eql, value, MAKE_constant("1", CONSTANT_BOOLEAN));
+		cmpNode->dsqlCheckBoolean = true;
+
+		return cmpNode;
+	}
+
+	void yyReducePosn(YYPOSN& ret, YYPOSN* termPosns, YYSTYPE* termVals,
+		int termNo, int stkPos, int yychar, YYPOSN& yyposn, void*);
+
+	int yylex();
+	bool yylexSkipSpaces();
+	bool yylexSkipEol();	// returns true if EOL is detected and skipped
+	int yylexAux();
+
+	void yyerror(const TEXT* error_string);
+	void yyerror_detailed(const TEXT* error_string, int yychar, YYSTYPE&, YYPOSN&);
+	void yyerrorIncompleteCmd(const YYPOSN& pos);
+
+	void check_bound(const char* const to, const char* const string);
+	void check_copy_incr(char*& to, const char ch, const char* const string);
+
+	void yyabandon(const Position& position, SLONG, ISC_STATUS);
+	void yyabandon(const Position& position, SLONG, const Firebird::Arg::StatusVector& status);
+
+	MetaName optName(MetaName* name)
+	{
+		return (name ? *name : MetaName());
+	}
+
 	void transformString(const char* start, unsigned length, Firebird::string& dest);
+	Firebird::string makeParseStr(const Position& p1, const Position& p2);
+	ParameterNode* make_parameter();
+
+	// Set the value of a clause, checking if it was already specified.
+
+	template <typename T>
+	void setClause(T& clause, const char* duplicateMsg, const T& value)
+	{
+		checkDuplicateClause(clause, duplicateMsg);
+		clause = value;
+	}
+
+	template <typename T, template <typename C> class Delete>
+	void setClause(Firebird::AutoPtr<T, Delete>& clause, const char* duplicateMsg, T* value)
+	{
+		checkDuplicateClause(clause, duplicateMsg);
+		clause = value;
+	}
+
+	template <typename T>
+	void setClause(BaseNullable<T>& clause, const char* duplicateMsg, const T& value)
+	{
+		checkDuplicateClause(clause, duplicateMsg);
+		clause = value;
+	}
+
+	template <typename T>
+	void setClause(BaseNullable<T>& clause, const char* duplicateMsg, const BaseNullable<T>& value)
+	{
+		if (value.specified)
+		{
+			checkDuplicateClause(clause, duplicateMsg);
+			clause = value.value;
+		}
+	}
+
+	template <typename T1, typename T2>
+	void setClause(NestConst<T1>& clause, const char* duplicateMsg, const T2& value)
+	{
+		setClause(*clause.getAddress(), duplicateMsg, value);
+	}
+
+	void setClause(bool& clause, const char* duplicateMsg)
+	{
+		setClause(clause, duplicateMsg, true);
+	}
+
+	void setClauseFlag(unsigned& clause, const unsigned flag, const char* duplicateMsg)
+	{
+		using namespace Firebird;
+		if (clause & flag)
+		{
+			status_exception::raise(
+				Arg::Gds(isc_sqlerr) << Arg::Num(-637) <<
+				Arg::Gds(isc_dsql_duplicate_spec) << duplicateMsg);
+		}
+		clause |= flag;
+	}
+
+	template <typename T>
+	void checkDuplicateClause(const T& clause, const char* duplicateMsg)
+	{
+		using namespace Firebird;
+		if (isDuplicateClause(clause))
+		{
+			status_exception::raise(
+				Arg::Gds(isc_sqlerr) << Arg::Num(-637) <<
+				Arg::Gds(isc_dsql_duplicate_spec) << duplicateMsg);
+		}
+	}
+
+	template <typename T>
+	bool isDuplicateClause(const T& clause)
+	{
+		return clause != 0;
+	}
+
+	bool isDuplicateClause(const MetaName& clause)
+	{
+		return clause.hasData();
+	}
+
+	template <typename T>
+	bool isDuplicateClause(const BaseNullable<T>& clause)
+	{
+		return clause.specified;
+	}
+
+	template <typename T>
+	bool isDuplicateClause(const Firebird::Array<T>& clause)
+	{
+		return clause.hasData();
+	}
+
+	void checkTimeDialect();
 
 // start - defined in btyacc_fb.ske
 private:
 	static void yySCopy(YYSTYPE* to, YYSTYPE* from, int size);
 	static void yyPCopy(YYPOSN* to, YYPOSN* from, int size);
-	static void yyMoreStack(yyparsestate* yyps);
-	static yyparsestate* yyNewState(int size);
 	static void yyFreeState(yyparsestate* p);
+
+	void yyMoreStack(yyparsestate* yyps);
+	yyparsestate* yyNewState(int size);
+
+	void setNodeLineColumn(Node* node);
 
 private:
 	int parseAux();
@@ -143,31 +369,18 @@ private:
 	int yyexpand();
 // end - defined in btyacc_fb.ske
 
-// start - defined in parse.y
 private:
-	int yylex();
-	int yylexAux();
-
-	void yyerror(const TEXT* error_string);
-	void yyerror_detailed(const TEXT* error_string, int yychar, YYSTYPE&, YYPOSN&);
-
-	const TEXT* lex_position();
-	YYSTYPE make_list (YYSTYPE node);
-	YYSTYPE make_parameter();
-	YYSTYPE make_node(Dsql::nod_t type, int count, ...);
-	YYSTYPE makeClassNode(Node* node);
-	YYSTYPE make_flag_node(Dsql::nod_t type, SSHORT flag, int count, ...);
-// end - defined in parse.y
-
-private:
+	MemoryPool* statementPool;
+	DsqlCompilerScratch* scratch;
 	USHORT client_dialect;
 	USHORT db_dialect;
 	USHORT parser_version;
 
+	CharSet* metadataCharSet;
 	Firebird::string transformedString;
-	Firebird::GenericMap<Firebird::NonPooled<dsql_str*, StrMark> > strMarks;
+	Firebird::GenericMap<Firebird::NonPooled<IntlString*, StrMark> > strMarks;
 	bool stmt_ambiguous;
-	YYSTYPE DSQL_parse;
+	DsqlStatement* parsedStatement;
 
 	// These value/posn are taken from the lexer
 	YYSTYPE yylval;
@@ -175,9 +388,10 @@ private:
 
 	// These value/posn of the root non-terminal are returned to the caller
 	YYSTYPE yyretlval;
-	int yyretposn;
+	Position yyretposn;
 
 	int yynerrs;
+	int yym;	// ASF: moved from local variable of Parser::parseAux()
 
 	// Current parser state
 	yyparsestate* yyps;
@@ -192,13 +406,13 @@ private:
 	// The last allocated position at the lexical value queue
 	YYSTYPE* yylvlim;
 	// Base of the lexical position queue
-	int* yylpsns;
+	Position* yylpsns;
 	// Current posistion at lexical position queue
-	int* yylpp;
+	Position* yylpp;
 	// End position of lexical position queue
-	int* yylpe;
+	Position* yylpe;
 	// The last allocated position at the lexical position queue
-	int* yylplim;
+	Position* yylplim;
 	// Current position at lexical token queue
 	Yshort* yylexp;
 	Yshort* yylexemes;

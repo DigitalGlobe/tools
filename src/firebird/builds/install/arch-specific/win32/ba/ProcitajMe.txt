@@ -1,12 +1,10 @@
-
-==================================
+﻿==================================
 Firebird $MAJOR.$MINOR.$RELEASE    (Windows Build)
 ==================================
 
 
 o Uvod
 o Kome je namjenjen?
-o Poznati nedostaci
 o Odlike ovog release-a (sve platforme)
 o Instalacija
 o Prijavljivanje Bug-ova
@@ -41,17 +39,6 @@ prije instalacije ovog release-a na produkcioni server. tj:
    instalacije u produkciju.
 
 
-Poznati nedostaci
-============
-
-Windows Vista - Binarni installer ne uspjeva pokrenuti
-Firebird kao service prilikom instalacije, medjutim,
-service se ispravno pokrece nakon restarta racunara. Kao
-workaround, mozete uraditi sljedece: shift-right click na
-Firebird control panel applet, izabrati 'Run as...' i
-pokrenuti service tim putem.
-
-
 Odlike ovog release-a (sve platforme)
 =====================================
 
@@ -64,7 +51,7 @@ Instalacija
 
 Problemi prilikom instalacije su pokriveni u detalje u
 Installation Guide-u koji je dostupan u doc directoriju nakon
-instalacije. Kratak sadr�aj instalacionih problema se moze
+instalacije. Kratak sadržaj instalacionih problema se moze
 naci i u Instalacija_ProcitajMe.txt, koji je takodje
 dostupan u doc directoriju nakon instalacije.
 

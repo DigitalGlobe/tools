@@ -17,5 +17,7 @@
  * Contributor(s): ______________________________________.
  */
 
+#define ISC_FILE_VER_STRING "WI-T6.3.4.24643"
+#define ISC_FILE_VER_NUMBER 6, 3, 4, 24643
 #define ISC_MAJOR_VER "6"
 #define ISC_MINOR_VER "3"

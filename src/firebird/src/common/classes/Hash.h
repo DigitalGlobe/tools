@@ -28,7 +28,9 @@
 #ifndef CLASSES_HASH_H
 #define CLASSES_HASH_H
 
-#include "../common/classes/vector.h"
+#include "../common/classes/array.h"
+
+struct dsc;
 
 namespace Firebird
 {
@@ -36,12 +38,12 @@ namespace Firebird
 	class DefaultHash
 	{
 	public:
-		static size_t hash(const void* value, size_t length, size_t hashSize)
+		static FB_SIZE_T hash(const void* value, FB_SIZE_T length, FB_SIZE_T hashSize)
 		{
 			size_t sum = 0;
 			size_t val;
 
-			const char* data = static_cast<const char*>(value);
+			const UCHAR* data = static_cast<const UCHAR*>(value);
 
 			while (length >= sizeof(size_t))
 			{
@@ -68,20 +70,20 @@ namespace Firebird
 			return rc % hashSize;
 		}
 
-		static size_t hash(const K& value, size_t hashSize)
+		static FB_SIZE_T hash(const K& value, FB_SIZE_T hashSize)
 		{
 			return hash(&value, sizeof value, hashSize);
 		}
-
-		const static size_t DEFAULT_SIZE = 97;		// largest prime number < 100
 	};
 
+	const FB_SIZE_T DEFAULT_HASH_SIZE = 97;			// largest prime number < 100
+
 	template <typename C,
-			  size_t HASHSIZE = DefaultHash<C>::DEFAULT_SIZE,
+			  FB_SIZE_T HASHSIZE = DEFAULT_HASH_SIZE,
 			  typename K = C,						// default key
 			  typename KeyOfValue = DefaultKeyValue<C>,	// default keygen
 			  typename F = DefaultHash<K> >			// hash function definition
-	class Hash
+	class HashTable
 	{
 	public:
 		// This class is supposed to be used as a BASE class for class to be hashed
@@ -144,39 +146,63 @@ namespace Firebird
 				return nextElement;
 			}
 
+			C* next(const K& key)
+			{
+				Entry* e = next();
+				return (e && e->isEqual(key)) ? e->get() : NULL;
+			}
+
 			virtual bool isEqual(const K&) const = 0;
 			virtual C* get() = 0;
 		}; // class Entry
 
 	private:
-		Hash(const Hash&);	// not implemented
+		HashTable(const HashTable&);	// not implemented
 
 	public:
-		explicit Hash(MemoryPool&)
+		explicit HashTable(MemoryPool&)
+			: duplicates(false)
 		{
-			memset(data, 0, sizeof data);
+			clean();
 		}
 
-		Hash()
+		HashTable()
+			: duplicates(false)
 		{
-			memset(data, 0, sizeof data);
+			clean();
 		}
 
-		~Hash()
+		~HashTable()
 		{
-			for (size_t n = 0; n < HASHSIZE; ++n)
+			// by default we let hash entries be cleaned by someone else
+			cleanup(NULL);
+		}
+
+		typedef void CleanupRoutine(C* toClean);
+		void cleanup(CleanupRoutine* cleanupRoutine)
+		{
+			for (FB_SIZE_T n = 0; n < HASHSIZE; ++n)
 			{
 				while (data[n])
 				{
-					 data[n]->unLink();
+					Entry* entry = data[n];
+					entry->unLink();
+					if (cleanupRoutine)
+						cleanupRoutine(entry->get());
 				}
 			}
 		}
 
+		void enableDuplicates()
+		{
+			duplicates = true;
+		}
+
 	private:
 		Entry* data[HASHSIZE];
+		bool duplicates;
 
-		Entry** locate(const K& key, size_t h)
+		Entry** locate(const K& key, FB_SIZE_T h)
 		{
 			Entry** pointer = &data[h];
 			while (*pointer)
@@ -193,7 +219,7 @@ namespace Firebird
 
 		Entry** locate(const K& key)
 		{
-			size_t hashValue = F::hash(key, HASHSIZE);
+			FB_SIZE_T hashValue = F::hash(key, HASHSIZE);
 			fb_assert(hashValue < HASHSIZE);
 			return locate(key, hashValue % HASHSIZE);
 		}
@@ -201,8 +227,8 @@ namespace Firebird
 	public:
 		bool add(C* value)
 		{
-			Entry** e = locate(KeyOfValue::generate(this, *value));
-			if (*e)
+			Entry** e = locate(KeyOfValue::generate(*value));
+			if ((!duplicates) && (*e))
 			{
 				return false;	// sorry, duplicate
 			}
@@ -230,14 +256,19 @@ namespace Firebird
 
 	private:
 		// disable use of default operator=
-		Hash& operator= (const Hash&);
+		HashTable& operator= (const HashTable&);
+
+		void clean()
+		{
+			memset(data, 0, sizeof data);
+		}
 
 	public:
 		class iterator
 		{
 		private:
-			const Hash* hash;
-			size_t elem;
+			const HashTable* hash;
+			FB_SIZE_T elem;
 			Entry* current;
 
 			iterator(const iterator& i);
@@ -256,7 +287,7 @@ namespace Firebird
 			}
 
 		public:
-			explicit iterator(const Hash& h)
+			explicit iterator(const HashTable& h)
 				: hash(&h), elem(0), current(hash->data[elem])
 			{
 				next();
@@ -299,9 +330,128 @@ namespace Firebird
 				return !(*this == h);
 			}
 		}; // class iterator
-	}; // class Hash
+	}; // class HashTable
+
+	class InternalHash
+	{
+	public:
+		static unsigned int hash(unsigned int length, const UCHAR* value);
+
+		static unsigned int hash(unsigned int length, const UCHAR* value, unsigned int hashSize)
+		{
+			return hash(length, value) % hashSize;
+		}
+	};
+
+	class HashContext
+	{
+	public:
+		virtual ~HashContext()
+		{
+		}
+
+	public:
+		virtual void update(const void* data, FB_SIZE_T length) = 0;
+		virtual void finish(dsc& result) = 0;
+	};
+
+	class WeakHashContext final : public HashContext
+	{
+	public:
+		virtual void update(const void* data, FB_SIZE_T length);
+		virtual void finish(dsc& result);
+
+	private:
+		SINT64 hashNumber = 0;
+	};
+
+	class LibTomCryptHashContext : public HashContext
+	{
+	public:
+		struct Descriptor;
+
+	private:
+		struct State;
+
+	protected:
+		LibTomCryptHashContext(MemoryPool& pool, const Descriptor* descriptor);
+
+	public:
+		virtual ~LibTomCryptHashContext();
+
+	public:
+		virtual void update(const void* data, FB_SIZE_T length);
+		virtual void finish(dsc& result);
+
+	private:
+		const Descriptor* descriptor;
+		State* statePtr;
+		UCharBuffer buffer;
+	};
+
+	class Md5HashContext final : public LibTomCryptHashContext
+	{
+	public:
+		Md5HashContext(MemoryPool& pool);
+	};
+
+	class Sha1HashContext final : public LibTomCryptHashContext
+	{
+	public:
+		Sha1HashContext(MemoryPool& pool);
+	};
+
+	class Sha3_512_HashContext final : public LibTomCryptHashContext
+	{
+	public:
+		Sha3_512_HashContext(MemoryPool& pool);
+	};
+
+	class Sha3_384_HashContext final : public LibTomCryptHashContext
+	{
+	public:
+		Sha3_384_HashContext(MemoryPool& pool);
+	};
+
+	class Sha3_256_HashContext final : public LibTomCryptHashContext
+	{
+	public:
+		Sha3_256_HashContext(MemoryPool& pool);
+	};
+
+	class Sha3_224_HashContext final : public LibTomCryptHashContext
+	{
+	public:
+		Sha3_224_HashContext(MemoryPool& pool);
+	};
+
+	class Sha256HashContext final : public LibTomCryptHashContext
+	{
+	public:
+		Sha256HashContext(MemoryPool& pool);
+	};
+
+	class Sha512HashContext final : public LibTomCryptHashContext
+	{
+	public:
+		Sha512HashContext(MemoryPool& pool);
+	};
+
+	class Crc32HashContext final : public HashContext
+	{
+	public:
+		Crc32HashContext(MemoryPool& pool);
+		~Crc32HashContext();
+
+		virtual void update(const void* data, FB_SIZE_T length);
+		virtual void finish(dsc& result);
+
+	private:
+		struct State;
+		State* statePtr;
+		SLONG hash;
+	};
 
 } // namespace Firebird
 
 #endif // CLASSES_HASH_H
-

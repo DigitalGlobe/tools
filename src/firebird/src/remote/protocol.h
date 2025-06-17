@@ -33,6 +33,11 @@
 #ifndef REMOTE_PROTOCOL_H
 #define REMOTE_PROTOCOL_H
 
+// forward
+namespace Firebird {
+	class DynamicStatusVector;
+}
+
 // dimitr: ask for asymmetric protocols only.
 // Comment it out to return back to FB 1.0 behaviour.
 #define ASYMMETRIC_PROTOCOLS_ONLY
@@ -40,39 +45,8 @@
 // The protocol is defined blocks, rather than messages, to
 // separate the protocol from the transport layer.
 
-// p_cnct_version
-const USHORT CONNECT_VERSION2	= 2;
-
-// Protocol 4 is protocol 3 plus server management functions
-
-const USHORT PROTOCOL_VERSION3	= 3;
-const USHORT PROTOCOL_VERSION4	= 4;
-
-// Protocol 5 includes support for a d_float data type
-
-const USHORT PROTOCOL_VERSION5	= 5;
-
-// Protocol 6 includes support for cancel remote events, blob seek,
-// and unknown message type
-
-const USHORT PROTOCOL_VERSION6	= 6;
-
-// Protocol 7 includes DSQL support
-
-const USHORT PROTOCOL_VERSION7	= 7;
-
-// Protocol 8 includes collapsing first receive into a send, drop database,
-// DSQL execute 2, DSQL execute immediate 2, DSQL insert, services, and
-// transact request
-
-const USHORT PROTOCOL_VERSION8	= 8;
-
-// Protocol 9 includes support for SPX32
-// SPX32 uses WINSOCK instead of Novell SDK
-// In order to differentiate between the old implementation
-// of SPX and this one, different PROTOCOL VERSIONS are used
-
-const USHORT PROTOCOL_VERSION9	= 9;
+// p_cnct_cversion
+const USHORT CONNECT_VERSION3	= 3;
 
 // Protocol 10 includes support for warnings and removes the requirement for
 // encoding and decoding status codes
@@ -94,60 +68,53 @@ const USHORT FB_PROTOCOL_MASK = static_cast<USHORT>(~FB_PROTOCOL_FLAG);
 const USHORT PROTOCOL_VERSION11	= (FB_PROTOCOL_FLAG | 11);
 
 // Protocol 12 has support for asynchronous call op_cancel.
-// Currently implemented asynchronously only for TCP/IP
-// on superserver and superclassic.
+// Currently implemented asynchronously only for TCP/IP.
 
 const USHORT PROTOCOL_VERSION12	= (FB_PROTOCOL_FLAG | 12);
 
-#ifdef SCROLLABLE_CURSORS
-This Protocol includes support for scrollable cursors
-and is purposely being undefined so that changes can be made
-to the remote protocol version to support new features without the 'fear' that
-they will be turned off once SCROLLABLE_CURSORS is turned on.
+// Protocol 13 has support for authentication plugins (op_cont_auth).
+// It also transfers SQL messages in the packed (null aware) format.
 
-#error PROTOCOL_SCROLLABLE_CURSORS	this needs to be defined
+const USHORT PROTOCOL_VERSION13	= (FB_PROTOCOL_FLAG | 13);
 
-#endif
+// Protocol 14:
+//	- fixes a bug in database crypt key callback
+
+const USHORT PROTOCOL_VERSION14	= (FB_PROTOCOL_FLAG | 14);
+
+// Protocol 15:
+//	- supports crypt key callback at connect phase
+
+const USHORT PROTOCOL_VERSION15 = (FB_PROTOCOL_FLAG | 15);
+
+// Protocol 16:
+//	- supports statement timeouts
+
+const USHORT PROTOCOL_VERSION16 = (FB_PROTOCOL_FLAG | 16);
+const USHORT PROTOCOL_STMT_TOUT = PROTOCOL_VERSION16;
+
+// Protocol 17:
+//	- supports op_batch_sync, op_info_batch
+
+const USHORT PROTOCOL_VERSION17 = (FB_PROTOCOL_FLAG | 17);
+
+// Protocol 18:
+//	- supports op_fetch_scroll
+
+const USHORT PROTOCOL_VERSION18 = (FB_PROTOCOL_FLAG | 18);
+const USHORT PROTOCOL_FETCH_SCROLL = PROTOCOL_VERSION18;
 
 // Architecture types
 
 enum P_ARCH
 {
 	arch_generic		= 1,	// Generic -- always use canonical forms
-	//arch_apollo		= 2,
 	arch_sun			= 3,
-	//arch_vms			= 4,
-	//arch_ultrix		= 5,
-	//arch_alliant		= 6,
-	//arch_msdos		= 7,
 	arch_sun4			= 8,
 	arch_sunx86			= 9,
 	arch_hpux			= 10,
-	//arch_hpmpexl		= 11,
-	//arch_mac			= 12,
-	//arch_macaux		= 13,
 	arch_rt				= 14,
-	//arch_mips_ultrix	= 15,
-	//arch_hpux_68k		= 16,
-	//arch_xenix		= 17,
-	//arch_aviion		= 18,
-	//arch_sgi			= 19,
-	//arch_apollo_dn10k	= 20,
-	//arch_cray			= 21,
-	//arch_imp			= 22,
-	//arch_delta		= 23,
-	//arch_sco			= 24,
-	//arch_next			= 25,
-	//arch_next_386		= 26,
-	//arch_m88k			= 27,
-	//arch_unixware		= 28,
 	arch_intel_32		= 29,	// generic Intel chip w/32-bit compilation
-	//arch_epson		= 30,
-	//arch_decosf		= 31,
-	//arch_ncr3000		= 32,
-	//arch_nt_ppc		= 33,
-	//arch_dg_x86		= 34,
-	//arch_sco_ev		= 35,
 	arch_linux			= 36,
 	arch_freebsd		= 37,
 	arch_netbsd			= 38,
@@ -155,16 +122,22 @@ enum P_ARCH
 	arch_winnt_64		= 40,
 	arch_darwin_x64		= 41,
 	arch_darwin_ppc64	= 42,
-	arch_max			= 43	// Keep this at the end
+	arch_arm            = 43,
+	arch_max			= 44	// Keep this at the end
 };
 
 // Protocol Types
 // p_acpt_type
 //const USHORT ptype_page		= 1;	// Page server protocol
-const USHORT ptype_rpc			= 2;	// Simple remote procedure call
+//const USHORT ptype_rpc		= 2;	// Simple remote procedure call
 const USHORT ptype_batch_send	= 3;	// Batch sends, no asynchrony
 const USHORT ptype_out_of_band	= 4;	// Batch sends w/ out of band notification
 const USHORT ptype_lazy_send	= 5;	// Deferred packets delivery
+const USHORT ptype_MASK			= 0xFF;	// Mask - up to 255 types of protocol
+//
+// upper byte is used for protocol flags
+const USHORT pflag_compress			= 0x100;	// Turn on compression if possible
+const USHORT pflag_win_sspi_nego	= 0x200;	// Win_SSPI supports Negotiate security package
 
 // Generic object id
 
@@ -174,9 +147,21 @@ const int INVALID_OBJECT = MAX_USHORT;
 
 // Statement flags
 
-const USHORT STMT_BLOB			= 1;
+//const USHORT STMT_BLOB			= 1;
 const USHORT STMT_NO_BATCH		= 2;
 const USHORT STMT_DEFER_EXECUTE	= 4;
+
+enum P_FETCH
+{
+	fetch_next		= 0,
+	fetch_prior		= 1,
+	fetch_first		= 2,
+	fetch_last		= 3,
+	fetch_absolute	= 4,
+	fetch_relative	= 5
+};
+
+const P_FETCH fetch_execute = fetch_next;
 
 // Operation (packet) types
 
@@ -302,17 +287,53 @@ enum P_OP
 
 	op_cancel				= 91,
 
+	op_cont_auth			= 92,
+
+	op_ping					= 93,
+
+	op_accept_data			= 94,	// Server accepts connection and returns some data to client
+
+	op_abort_aux_connection	= 95,	// Async operation - stop waiting for async connection to arrive
+
+	op_crypt				= 96,
+	op_crypt_key_callback	= 97,
+	op_cond_accept			= 98,	// Server accepts connection, returns some data to client
+									// and asks client to continue authentication before attach call
+
+	op_batch_create			= 99,
+	op_batch_msg			= 100,
+	op_batch_exec			= 101,
+	op_batch_rls			= 102,
+	op_batch_cs				= 103,
+	op_batch_regblob		= 104,
+	op_batch_blob_stream	= 105,
+	op_batch_set_bpb		= 106,
+
+	op_repl_data			= 107,
+	op_repl_req				= 108,
+
+	op_batch_cancel			= 109,
+	op_batch_sync			= 110,
+	op_info_batch			= 111,
+
+	op_fetch_scroll			= 112,
+	op_info_cursor			= 113,
+
 	op_max
 };
 
 
 // Count String Structure
 
+struct RemoteXdr;
+
 typedef struct cstring
 {
-	USHORT	cstr_length;
-	USHORT	cstr_allocated;
+	ULONG	cstr_length;
+	ULONG	cstr_allocated;
 	UCHAR*	cstr_address;
+
+	void	free(RemoteXdr* xdrs = nullptr);
 } CSTRING;
 
 // CVC: Only used in p_blob, p_sgmt & p_ddl, to validate constness.
@@ -323,8 +344,8 @@ typedef struct cstring
 // in the case of send/batch commands.
 typedef struct cstring_const
 {
-	USHORT	cstr_length;
-	USHORT	cstr_allocated;
+	ULONG	cstr_length;
+	ULONG	cstr_allocated;
 	const UCHAR*	cstr_address;
 } CSTRING_CONST;
 
@@ -340,7 +361,6 @@ typedef struct p_malloc
 	P_OP	p_operation;	// Operation/packet type
 	ULONG	p_allocated;	// Memory length
 	UCHAR*	p_address;		// Memory address
-//	UCHAR*	p_xdrvar;  		// XDR variable
 } P_MALLOC;
 
 #endif	// DEBUG_XDR_MEMORY
@@ -350,7 +370,7 @@ typedef struct p_malloc
 
 typedef struct p_cnct
 {
-	P_OP	p_cnct_operation;			// OP_CREATE or OP_OPEN
+	USHORT	p_cnct_operation;			// unused
 	USHORT	p_cnct_cversion;			// Version of connect protocol
 	P_ARCH	p_cnct_client;				// Architecture of client
 	CSTRING_CONST	p_cnct_file;		// File name
@@ -360,19 +380,19 @@ typedef struct p_cnct
 	{
 		USHORT	p_cnct_version;			// Protocol version number
 		P_ARCH	p_cnct_architecture;	// Architecture of client
-		USHORT	p_cnct_min_type;		// Minimum type
+		USHORT	p_cnct_min_type;		// Minimum type (unused)
 		USHORT	p_cnct_max_type;		// Maximum type
 		USHORT	p_cnct_weight;			// Preference weight
 	}		p_cnct_versions[10];
 } P_CNCT;
 
 #ifdef ASYMMETRIC_PROTOCOLS_ONLY
-#define REMOTE_PROTOCOL(version, min_type, max_type, weight) \
-	{version, arch_generic, min_type, max_type, weight * 2}
+#define REMOTE_PROTOCOL(version, type, weight) \
+	{version, arch_generic, 0, type, weight * 2}
 #else
-#define REMOTE_PROTOCOL(version, min_type, max_type, weight) \
-	{version, arch_generic, min_type, max_type, weight * 2}, \
-	{version, ARCHITECTURE, min_type, max_type, weight * 2 + 1}
+#define REMOTE_PROTOCOL(version, type, weight) \
+	{version, arch_generic, 0, type, weight * 2}, \
+	{version, ARCHITECTURE, 0, type, weight * 2 + 1}
 #endif
 
 /* User identification data, if any, is of form:
@@ -394,14 +414,11 @@ const UCHAR CNCT_host		= 4;
 const UCHAR CNCT_group		= 5;			// Effective Unix group id
 const UCHAR CNCT_user_verification	= 6;	// Attach/create using this connection
 					 						// will use user verification
-
-
-typedef struct bid	// BLOB ID
-{
-	ULONG	bid_quad_high;
-	ULONG	bid_quad_low;
-} *BID;
-
+const UCHAR CNCT_specific_data		= 7;	// Some data, needed for user verification on server
+const UCHAR CNCT_plugin_name		= 8;	// Name of plugin, which generated that data
+const UCHAR CNCT_login				= 9;	// Same data as isc_dpb_user_name
+const UCHAR CNCT_plugin_list		= 10;	// List of plugins, available on client
+const UCHAR CNCT_client_crypt		= 11;	// Client encryption level (DISABLED/ENABLED/REQUIRED)
 
 // Accept Block (Server response to connect block)
 
@@ -412,14 +429,25 @@ typedef struct p_acpt
 	USHORT	p_acpt_type;			// Minimum type
 } P_ACPT;
 
+// Accept Block with Data (Server response to connect block, start with P.13)
+
+struct p_acpd : public p_acpt
+{
+	CSTRING	p_acpt_data;			// Returned auth data
+	CSTRING	p_acpt_plugin;			// Plugin to continue with
+	USHORT	p_acpt_authenticated;	// Auth complete in single step (few! strange...)
+	CSTRING p_acpt_keys;			// Keys known to the server
+};
+typedef p_acpd P_ACPD;
+
 // Generic Response block
 
 typedef struct p_resp
 {
 	OBJCT		p_resp_object;		// Object id
-	struct bid	p_resp_blob_id;		// Blob id
+	SQUAD		p_resp_blob_id;		// Blob id
 	CSTRING		p_resp_data;		// Data
-	ISC_STATUS*	p_resp_status_vector;
+	Firebird::DynamicStatusVector* p_resp_status_vector;
 } P_RESP;
 
 #define p_resp_partner	p_resp_blob_id.bid_number
@@ -465,10 +493,6 @@ typedef struct p_data
     OBJCT	p_data_transaction;		// Transaction object id
     USHORT	p_data_message_number;	// Message number in request
     USHORT	p_data_messages;		// Number of messages
-#ifdef SCROLLABLE_CURSORS
-    USHORT	p_data_direction;		// direction to scroll before returning records
-    ULONG	p_data_offset;			// offset to scroll before returning records
-#endif
 } P_DATA;
 
 // Execute stored procedure block
@@ -478,8 +502,6 @@ typedef struct p_trrq
     OBJCT	p_trrq_database;		// Database object id
     OBJCT	p_trrq_transaction;		// Transaction object id
     CSTRING	p_trrq_blr;				// Message blr
-    USHORT	p_trrq_in_msg_length;
-    USHORT	p_trrq_out_msg_length;
     USHORT	p_trrq_messages;		// Number of messages
 } P_TRRQ;
 
@@ -488,7 +510,7 @@ typedef struct p_trrq
 typedef struct p_blob
 {
     OBJCT	p_blob_transaction;		// Transaction
-    struct bid	p_blob_id;			// Blob id for open
+    SQUAD	p_blob_id;				// Blob id for open
     CSTRING_CONST	p_blob_bpb;		// Blob parameter block
 } P_BLOB;
 
@@ -514,7 +536,7 @@ typedef struct p_info
     USHORT	p_info_incarnation;			// Incarnation of object
     CSTRING_CONST	p_info_items;		// Information
     CSTRING_CONST	p_info_recv_items;	// Receive information
-    USHORT	p_info_buffer_length;		// Target buffer length
+    ULONG	p_info_buffer_length;		// Target buffer length
 } P_INFO;
 
 // Event request block
@@ -562,7 +584,7 @@ typedef struct p_ddl
 typedef struct p_slc
 {
     OBJCT	p_slc_transaction;	// Transaction
-    struct bid	p_slc_id;		// Slice id
+    SQUAD	p_slc_id;			// Slice id
     CSTRING	p_slc_sdl;			// Slice description language
     CSTRING	p_slc_parameters;	// Slice parameters
     lstring	p_slc_slice;		// Slice proper
@@ -587,7 +609,7 @@ typedef struct p_sqlst
     OBJCT	p_sqlst_statement;			// statement object
     USHORT	p_sqlst_SQL_dialect;		// the SQL dialect
     CSTRING_CONST	p_sqlst_SQL_str;	// statement to be prepared
-    USHORT	p_sqlst_buffer_length;		// Target buffer length
+    ULONG	p_sqlst_buffer_length;		// Target buffer length
     CSTRING_CONST	p_sqlst_items;		// Information
     // This should be CSTRING_CONST
     CSTRING	p_sqlst_blr;				// blr describing message
@@ -608,6 +630,10 @@ typedef struct p_sqldata
     CSTRING	p_sqldata_out_blr;			// blr describing output message
     USHORT	p_sqldata_out_message_number;
     ULONG	p_sqldata_status;			// final eof status
+	ULONG	p_sqldata_timeout;			// statement timeout
+	ULONG	p_sqldata_cursor_flags;		// cursor flags
+	P_FETCH	p_sqldata_fetch_op;			// Fetch operation
+	SLONG	p_sqldata_fetch_pos;		// Fetch position
 } P_SQLDATA;
 
 typedef struct p_sqlfree
@@ -628,6 +654,14 @@ typedef struct p_trau
 	CSTRING	p_trau_data;					// Context
 } P_TRAU;
 
+typedef struct p_auth_continue
+{
+	CSTRING	p_data;							// Specific data
+	CSTRING p_name;							// Plugin name
+	CSTRING p_list;							// Plugin list
+	CSTRING p_keys;							// Keys available on server
+} P_AUTH_CONT;
+
 struct p_update_account
 {
     OBJCT			p_account_database;		// Database object id
@@ -640,7 +674,7 @@ struct p_authenticate
     CSTRING_CONST	p_auth_dpb;				// Database parameter block w/ user credentials
 	CSTRING			p_auth_items;			// Information
 	CSTRING			p_auth_recv_items;		// Receive information
-	USHORT			p_auth_buffer_length;	// Target buffer length
+	USHORT			p_auth_buffer_length;	// Target buffer length (transmitted but not used)
 };
 
 typedef struct p_cancel_op
@@ -648,6 +682,83 @@ typedef struct p_cancel_op
     USHORT	p_co_kind;			// Kind of cancelation
 } P_CANCEL_OP;
 
+typedef struct p_crypt
+{
+	CSTRING p_plugin;						// Crypt plugin name
+	CSTRING p_key;							// Key name / keys available on server
+} P_CRYPT;
+
+typedef struct p_crypt_callback
+{
+	CSTRING	p_cc_data;						// User's data
+	USHORT p_cc_reply;
+} P_CRYPT_CALLBACK;
+
+
+// Batch definitions
+
+typedef struct p_batch_create
+{
+    OBJCT			p_batch_statement;	// statement object
+    CSTRING_CONST	p_batch_blr;		// blr describing input messages
+    ULONG			p_batch_msglen;		// explicit message length
+    CSTRING_CONST   p_batch_pb;			// parameters block
+} P_BATCH_CREATE;
+
+typedef struct p_batch_msg
+{
+	OBJCT	p_batch_statement;			// statement object
+	ULONG	p_batch_messages;			// number of messages
+	CSTRING p_batch_data;
+} P_BATCH_MSG;
+
+typedef struct p_batch_exec
+{
+	OBJCT	p_batch_statement;			// statement object
+	OBJCT   p_batch_transaction;		// transaction object
+} P_BATCH_EXEC;
+
+typedef struct p_batch_cs				// completion state
+{
+    OBJCT	p_batch_statement;			// statement object
+	ULONG	p_batch_reccount;			// total records
+	ULONG	p_batch_updates;			// update counters
+	ULONG	p_batch_vectors;			// recnum + status vector pairs
+	ULONG	p_batch_errors;				// error's recnums
+} P_BATCH_CS;
+
+typedef struct p_batch_free_cancel
+{
+	OBJCT	p_batch_statement;			// statement object
+} P_BATCH_FREE_CANCEL;
+
+typedef struct p_batch_blob
+{
+	OBJCT			p_batch_statement;	// statement object
+	CSTRING			p_batch_blob_data;	// data
+} P_BATCH_BLOB;
+
+typedef struct p_batch_regblob
+{
+	OBJCT			p_batch_statement;	// statement object
+	SQUAD			p_batch_exist_id;	// id of blob to register
+	SQUAD			p_batch_blob_id;	// blob id
+} P_BATCH_REGBLOB;
+
+typedef struct p_batch_setbpb
+{
+	OBJCT			p_batch_statement;	// statement object
+	CSTRING_CONST	p_batch_blob_bpb;	// BPB
+} P_BATCH_SETBPB;
+
+
+// Replication support
+
+typedef struct p_replicate
+{
+     OBJCT			p_repl_database;	// database object id
+     CSTRING_CONST	p_repl_data;		// replication data
+} P_REPLICATE;
 
 
 // Generalize packet (sic!)
@@ -664,6 +775,7 @@ typedef struct packet
     P_OP	p_operation;		// Operation/packet type
     P_CNCT	p_cnct;				// Connect block
     P_ACPT	p_acpt;				// Accept connection
+    P_ACPD	p_acpd;				// Accept connection with data
     P_RESP	p_resp;				// Generic response to a call
     P_ATCH	p_atch;				// Attach or create database
     P_RLSE	p_rlse;				// Release object
@@ -688,7 +800,19 @@ typedef struct packet
 	P_TRAU	p_trau;				// Trusted authentication
 	p_update_account p_account_update;
 	p_authenticate p_authenticate_user;
-	P_CANCEL_OP p_cancel_op;	// cancel operation
+	P_CANCEL_OP p_cancel_op;	// Cancel operation
+	P_AUTH_CONT p_auth_cont;	// Request more auth data
+	P_CRYPT p_crypt;			// Start wire crypt
+	P_CRYPT_CALLBACK p_cc;		// Database crypt callback
+	P_BATCH_CREATE p_batch_create; // Create batch interface
+	P_BATCH_MSG p_batch_msg;	// Add messages to batch
+	P_BATCH_EXEC p_batch_exec;	// Run batch
+	P_BATCH_FREE_CANCEL p_batch_free_cancel;	// Cancel or destroy batch
+	P_BATCH_CS p_batch_cs;		// Batch completion state
+	P_BATCH_BLOB p_batch_blob;	// BLOB stream portion in batch
+	P_BATCH_REGBLOB p_batch_regblob;	// Register already existing BLOB in batch
+	P_BATCH_SETBPB p_batch_setbpb;		// Set default BPB for batch
+	P_REPLICATE p_replicate;	// replicate
 
 public:
 	packet()

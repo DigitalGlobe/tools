@@ -27,7 +27,15 @@ Function Prototypes
 
   function IsWin32: boolean;
   function Is32BitInstallMode: boolean;
+  function IsWinTen: boolean;
+  function IsWinEightOne: boolean;
+  function IsWinEight: boolean;
+  function IsW2K12: boolean;
   function IsVista: boolean;
+  function IsVistaSP1: boolean;
+  function IsWin2K8R1: boolean;
+  function IsWinSeven: boolean;
+  function IsWin2K8R2: boolean;
   function IsWin2k3: boolean;
   function IsWinXP: boolean;
   function IsWin2K: boolean;
@@ -45,9 +53,8 @@ Function Prototypes
   function GetInstalledVersion(BinaryFile: String): Array of Integer;
   function ConvertIBVerStrToFbVerStr( VerStr: String) : String;
   function GetRegistryEntry(RegKey, RegEntry: string): String;
-  procedure CreateHelpDlg;
-  function ShowHelpDlg: Integer;
-  procedure CloseHelpDlg;
+  function SplitKeyValue( AString: String; theKey: Boolean): String;
+
  *)
 
 (*
@@ -63,52 +70,23 @@ Windows NT versions:
 4.0.1381      Windows NT 4.0
 5.0.2195      Windows 2000
 5.01.2600     Windows XP
-  or Windows XP 64-Bit Edition Version 2002 (Itanium)
-5.02.3790 Windows Server 2003
-  or Windows XP x64 Edition (AMD64/EM64T)
-  or Windows XP 64-Bit Edition Version 2003 (Itanium)
-6.0.6000 Windows Vista
+              or Windows XP 64-Bit Edition Version 2002 (Itanium)
+5.02.3790     Windows Server 2003
+              or Windows XP x64 Edition (AMD64/EM64T)
+              or Windows XP 64-Bit Edition Version 2003 (Itanium)
+6.0.6000       Windows Vista
+6.0.6001       Windows Vista with Service Pack 1
+                or Windows Server 2008
+6.0.6002       Windows Vista with Service Pack 2
+6.1.7600       Windows 7
+                or Windows Server 2008 R2
+6.2.9200       Windows 8 or Windows Server 2012
+6.3.9200       Windows 8.1 or Windows Server 2012 R2
+6.3.9600       Windows 8.1 with Update 1
+10.0.10240     Windows 10
 
 *)
 
-(*
-Windows Installer versions: (extracted from MSDN)
-Release Version                     Description
------------------------------------------------
-v2.0    2.0.2600.0                  Released with Windows XP.
-v2.0    2.0.2600.1                  Released with Windows 2000 Server SP3.
-v2.0    2.0.2600.1183               Released with Windows 2000 Server SP4.
-v2.0    2.0.2600.2                  Released as a redistributable.
-v2.0    2.0.2600.1106               Released with Windows XP SP1.
-v2.0    2.0.3790.0                  Released with Windows Server 2003.
-v3.0    3.0.3790.2180               Released with Windows XP SP2.
-                                    Released as a redistributable.
-v3.1    3.1.4000.1823               Released as a redistributable.
-                                    This version has the same functionality as version 3.1.4000.2435.
-v3.1    3.1.4000.1830               Released with Windows Server 2003 SP1 and
-                                    Windows XP Professional x64 Edition.
-                                    Update this version to version 3.1.4000.2435
-                                    to address the issue discussed in KB898628.
-v3.1    3.1.4000.2435               Released with a fix to address the issue
-                                    discussed in KB898628. This is the latest version
-                                    of Windows Installer 3.1.
-v4.0    4.0.6000.16386              Released with Windows Vista.
-v4.0    4.0.6001.16531 or greater   Released with Windows Vista SP1 and
-                                    Windows Server 2008.
-
-(NB1 - msi.dll stores the correct version number and is updated
-        automatically by Windows Update. msiexec.exe will be the original shipped version.
-
- NB2 - Re v3.1 build numbers and KB 898628 - This KB article refers to the
-        fact that initial releases of WI 3.1 would error and STOP if an attempt
-        was made to overwrite a system file in the WFP list. Previous behaviour
-        was to error, log and continue. This behaviour is irrelevant to us because
-        we don't do anything sophisticated with the msi. OTOH, if we used msi
-        for all our installation needs this would be a serious problem.
-
- NB3 - Our installer will not run msiexec on systems before XP. However, some early XP and W2K3
-       systems do not have v3.0 of the Windows Installer.
-*)
 
 
 function IsWin32: boolean;
@@ -123,14 +101,92 @@ begin
   result := not Is64BitInstallMode;
 end;
 
+
+function IsWinTen: boolean;
+var
+  Version: TWindowsVersion;
+begin
+  GetWindowsVersionEx(Version);
+  if (Version.Major = 10) and (Version.Minor = 0) then
+     result := true;
+end;
+
+
+function IsWinEightOne: boolean;
+var
+  Version: TWindowsVersion;
+begin
+  GetWindowsVersionEx(Version);
+  if (Version.Major = 6) and (Version.Minor = 3) then
+     result := true;
+end;
+
+function IsWinEight: boolean;
+var
+  Version: TWindowsVersion;
+begin
+  GetWindowsVersionEx(Version);
+  if (Version.Major = 6) and (Version.Minor = 2) then
+     result := true;
+end;
+
+//this test is identical to IsWinEight
+function IsW2K12: boolean;
+var
+  Version: TWindowsVersion;
+begin
+  GetWindowsVersionEx(Version);
+  if (Version.Major = 6) and (Version.Minor = 2) then
+     result := true;
+end;
+
+
 function IsVista: boolean;
 var
   Version: TWindowsVersion;
 begin
   GetWindowsVersionEx(Version);
-  if (Version.Major = 6) and (Version.Minor = 0) then
+  if ( Version.Major = 6 ) and ( Version.Minor = 0 ) and ( Version.build = 6000 ) then
      result := true;
 end;
+
+function IsVistaSP1: boolean;
+var
+  Version: TWindowsVersion;
+begin
+  GetWindowsVersionEx(Version);
+  if ( Version.Major = 6 ) and ( Version.Minor = 0 ) and ( Version.build = 6001 )then
+     result := true;
+end;
+
+function IsWin2K8R1: boolean;
+var
+  Version: TWindowsVersion;
+begin
+  GetWindowsVersionEx(Version);
+  if ( Version.Major = 6 ) and ( Version.Minor = 0 ) and ( Version.build = 6001 )then
+     result := true;
+end;
+
+function IsWinSeven: boolean;
+var
+  Version: TWindowsVersion;
+begin
+  GetWindowsVersionEx(Version);
+  if (Version.Major = 6) and (Version.Minor = 1) then
+     result := true;
+end;
+
+//This test is identical to the test for Win7
+function IsWin2K8R2: boolean;
+var
+  Version: TWindowsVersion;
+begin
+  GetWindowsVersionEx(Version);
+  if (Version.Major = 6) and (Version.Minor = 1) then
+     result := true;
+end;
+
 
 function IsWin2k3: boolean;
 var
@@ -199,6 +255,7 @@ begin
      result := true;
 end;
 
+
 const
   sWinSock2 = 'ws2_32.dll';
   sNoWinsock2 = 'Please Install Winsock 2 Update before continuing';
@@ -234,6 +291,7 @@ begin
 //  Result := '"' + Result +'"';
 end;
 
+
 function WIVersion: string;
 //Get version of Windows Installer
 var
@@ -261,8 +319,9 @@ begin
   CommentSize := Length(CommentType);
   ArraySize := GetArrayLength(Lines)-1;
 
-  // Search through all textlines for given text
-  for i := 0 to ArraySize do begin
+  // Search through all textlines in reverse order for given text
+  // this way we can be sure to only change the active entry
+  for i := ArraySize downto 0 do begin
     // Overwrite textline when text searched for is part of it
     if Pos(StringToFind,Lines[i]) > 0 then begin
       // does this line start with a comment ?
@@ -271,13 +330,22 @@ begin
         // only replace if line does not start with a comment
         if CompareText(Copy(TempStr,1,CommentSize),CommentType) <> 0 then begin
           Lines[i] := NewLine;
-          FileChanged := true
+          FileChanged := true;
+          Break;
           end
+        else begin
+          // Otherwise add new line after commented line
+          Lines[i] := Lines[i] + #13#10 + NewLine;
+          FileChanged := true;
+          Break;
         end
+      end
       else begin
         Lines[i] := NewLine;
-        FileChanged := true
-      end
+        FileChanged := true;
+        Break;
+      end;
+      // break after first match.
     end
   end;
 
@@ -286,6 +354,20 @@ begin
     SaveStringsToFile(Filename, Lines, false);
 
   Result := FileChanged;
+end;
+
+
+function FindInFile( Filename, StringToFind: String): Boolean;
+var
+  i: Integer;
+  AString: AnsiString;
+begin
+  Result := False;
+  LoadStringFromFile( Filename, Astring );
+  i := Length( Astring );
+  if i <> 0 then
+    i := Pos ( StringToFind, Astring );
+  if i <> 0 then Result := True;
 end;
 
 
@@ -397,56 +479,25 @@ begin
 end;
 
 
+// Split a key value pair in two and return the value by default
+function SplitKeyValue( AString: String; theKey: Boolean): String;
 var
-  HelpDlg: TForm;
-
-procedure CreateHelpDlg;
-var
-  HelpFileName: String;
-  HelpMemo: TMemo;
-  OKButton: TButton;
+ apos: integer;
+ akey: String;
+ avalue: String;
 begin
-  ExtractTemporaryFile ('installation_scripted.txt');
-  HelpFileName := ExpandConstant ('{tmp}\installation_scripted.txt');
-  HelpDlg := TForm.create(nil);
-  with HelpDlg do begin
-      BorderStyle := bsDialog;
-      Position := poScreenCenter;
-      ClientWidth := 450;
-      ClientHeight := 550;
-      Caption := 'Firebird Installation - command-line parameters.';
+  Result := '';
+  apos := pos( '=', AString );
+  if apos <> 0 then begin
+    akey := Copy( Astring, 1, apos - 1 );
+    aValue := Copy ( AString, apos + 1, length (Astring) - apos );
   end;
-  HelpMemo := TMemo.Create(HelpDlg);
-  with HelpMemo do begin
-      Parent := HelpDlg;
-      ScrollBars := ssVertical;
-      Lines.LoadFromFile(HelpFileName);
-      Align := alTop;
-      Height := 500;
-      ReadOnly := True;
-    end;
-  OKButton := TButton.create(HelpDlg);
-  with OKButton do begin
-      Parent := HelpDlg;
-      Left := (Parent.width  div 2) - width div 2;
-      top := Parent.ClientHeight - 40;
-      Caption := 'OK';
-      ModalResult := mrOK;
-  end;
-  HelpDlg.ActiveControl := OKButton;
-end;
-
-function ShowHelpDlg: Integer;
-begin
-  result := HelpDlg.ShowModal;
-end;
-
-procedure CloseHelpDlg;
-begin
-  with HelpDlg do begin
-     Close;
-     Free;
-  end;
+  if theKey then 
+    Result := aKey
+  else 
+    Result := aValue;
 end;
 
 
+
+// kate: replace-tabs on; indent-width 2; tab-width 2; replace-tabs-save on; syntax Pascal;

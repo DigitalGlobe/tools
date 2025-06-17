@@ -35,7 +35,7 @@ origDir=`pwd`
 if [ "$1" = "install-embedded" ]
 then
 	# remove server files not needed for embedded usage
-    rm -f @FB_SBINDIR@/fb_inet_server @FB_SBINDIR@/fb_smp_server
+    rm -f @FB_SBINDIR@/fb_smp_server @FB_SBINDIR@/fb_smp_server
     exit 0
 fi
 
@@ -62,7 +62,7 @@ fi
 fixFilePermissions
 
 # Install script in /etc/init.d (exact location is distro dependent)
-installInitdScript @FIREBIRD_ARCH_TYPE@
+installInitdScript
 
 # Create libgds.so links
 createLinksForBackCompatibility
@@ -77,7 +77,7 @@ updateInetdServiceEntry
 resetInetdServer
 
 # start the db server so we can change the password
-startService @FIREBIRD_ARCH_TYPE@
+startService
 
 # Change sysdba password
 changeDBAPassword

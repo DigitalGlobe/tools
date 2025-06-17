@@ -19,24 +19,12 @@
 #
 # compile flags for GCC compiler
 
-PROD_FLAGS= -pipe -fPIC -O3 -MMD -DNDEBUG -DHP11 -DHPUX -D_HPUX_SOURCE -D_XOPEN_SOURCE_EXTENDED -D_REENTRANT -march=2.0
+PROD_FLAGS= -pipe -fPIC -O3 -MMD -DHP11 -DHPUX -D_HPUX_SOURCE -D_XOPEN_SOURCE_EXTENDED -D_REENTRANT -march=2.0
 DEV_FLAGS= -ggdb -pipe -fPIC -MMD -DHP11 -DHPUX -D_HPUX_SOURCE -D_XOPEN_SOURCE_EXTENDED -D_REENTRANT -march=2.0 
-
-OS_ServerFiles=inet_server.cpp
 
 LIB_LINK_OPTIONS= -fPIC -shared
 LIB_LINK_RPATH= -Wl,+b,$(1)
 LIB_LINK_SONAME= -Wl,+h,$(1)
-LIB_LINK_MAPFILE= -Wl,-c,
-LINK_FBINTL_SYMBOLS= $(LIB_LINK_MAPFILE)$(ROOT)/builds/posix/fbintl.hpux.vers
-LINK_IBUTIL_SYMBOLS= $(LIB_LINK_MAPFILE)$(ROOT)/builds/posix/ib_util.hpux.vers
-LINK_FIREBIRD_SYMBOLS= $(LIB_LINK_MAPFILE)$(ROOT)/builds/posix/firebird.hpux.vers
-LINK_TRACE_SYMBOLS = $(LIB_LINK_MAPFILE)$(ROOT)/builds/posix/fbtrace.hpux.vers
-LINK_EMPTY_SYMBOLS = $(LIB_LINK_MAPFILE)$(ROOT)/builds/posix/empty.hpux.vers
-
-EMBED_UTIL_TARGETS=gstat gds_relay gsec nbackup fbguard fb_lock_print fbsvcmgr fbtracemgr
-CLIENT_UTIL_TARGETS=gds_relay gstat gsec nbackup fbguard fbmgr_bin fb_lock_print fbsvcmgr fbtracemgr
-
-Physical_IO_Module=unix.cpp
+LIB_LINK_MAPFILE= -Wl,-c,$(1)
 
 UNDEF_PLATFORM=

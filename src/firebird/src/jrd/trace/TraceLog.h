@@ -29,52 +29,55 @@
 #define TRACE_LOG
 
 #include "../../common/classes/fb_string.h"
-#include "../../jrd/isc.h"
+#include "../../common/isc_s_proto.h"
 
 namespace Jrd {
 
-class TraceLog
+struct TraceLogHeader : public Firebird::MemoryHeader
+{
+	static const USHORT TRACE_LOG_VERSION = 2;
+
+	ULONG readPos;
+	ULONG writePos;
+	ULONG maxSize;
+	ULONG allocated;		// zero when reader gone
+	ULONG flags;
+};
+
+class TraceLog : public Firebird::IpcObject
 {
 public:
 	TraceLog(Firebird::MemoryPool& pool, const Firebird::PathName& fileName, bool reader);
 	virtual ~TraceLog();
 
-	size_t read(void* buf, size_t size);
-	size_t write(const void* buf, size_t size);
+	FB_SIZE_T read(void* buf, FB_SIZE_T size);
+	FB_SIZE_T write(const void* buf, FB_SIZE_T size);
 
-	// returns approximate log size in MB
-	size_t getApproxLogSize() const;
+	bool isFull();		// true if free space left is less than threshold
+	void setFullMsg(const char* str);
 
 private:
-	static void checkMutex(const TEXT*, int);
-	static void initShMem(void*, sh_mem*, bool);
+	// flags in header
+	const ULONG FLAG_FULL = 0x0001;		// log is full, set by writer, reset by reader
+	const ULONG FLAG_DONE = 0x0002;		// set when reader is gone
+
+	void mutexBug(int osErrorCode, const char* text) override;
+	bool initialize(Firebird::SharedMemoryBase*, bool) override;
+
+	USHORT getType() const override { return Firebird::SharedMemoryBase::SRAM_TRACE_LOG; }
+	USHORT getVersion() const override { return TraceLogHeader::TRACE_LOG_VERSION; }
+	const char* getName() const override { return "TraceLog"; }
 
 	void lock();
 	void unlock();
 
-	int openFile(int fileNum);
-	int removeFile(int fileNum);
+	FB_SIZE_T getUsed();	// available to read
+	FB_SIZE_T getFree(bool useMax);	// available for write
+	void extend(FB_SIZE_T size);
 
-	struct ShMemHeader
-	{
-		volatile unsigned int readFileNum;
-		volatile unsigned int writeFileNum;
-#ifndef WIN_NT
-		struct mtx mutex;
-#endif
-	};
-
-	sh_mem m_handle;
-	ShMemHeader* m_base;
-#ifdef WIN_NT
-	struct mtx m_winMutex;
-#endif
-	struct mtx* m_mutex;
-
-	Firebird::PathName m_baseFileName;
-	unsigned int m_fileNum;
-	int m_fileHandle;
+	Firebird::AutoPtr<Firebird::SharedMemory<TraceLogHeader> > m_sharedMemory;
 	bool m_reader;
+	Firebird::string m_fullMsg;
 
 	class TraceLogGuard
 	{

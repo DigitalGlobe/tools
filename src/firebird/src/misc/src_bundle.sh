@@ -1,4 +1,4 @@
-#/bin/sh
+#!/bin/bash
 #
 #  The contents of this file are subject to the Initial
 #  Developer's Public License Version 1.0 (the "License");
@@ -36,7 +36,7 @@ popd >/dev/null 2>&1
 
 # What and where to bundle
 MODULE=$SRCROOT/temp/src
-MEMBERS="builds doc examples extern lang_helpers src ChangeLog Makefile.in acx_pthread.m4 autogen.sh binreloc.m4 configure.in"
+MEMBERS="builds doc examples extern src CHANGELOG.md Makefile.in acx_pthread.m4 autogen.sh binreloc.m4 configure.ac CMakeLists.txt README.md"
 
 # Cleanup
 rm -rf $MODULE
@@ -50,7 +50,7 @@ tar -C $SRCROOT -cf - $MEMBERS $MAKEFILES | tar -C $MODULE -xf -
 
 # Load version information from the tree
 source $MODULE/src/misc/writeBuildNum.sh
-PACKNAME="Firebird-$PRODUCT_VER_STRING-$FIREBIRD_PACKAGE_VERSION"
+PACKNAME="Firebird-$PRODUCT_VER_STRING-$FIREBIRD_PACKAGE_VERSION-source"
 DIRNAME="$SRCROOT/temp/$PACKNAME"
 
 echo "Cleaning up"
@@ -58,9 +58,6 @@ rm -rf $DIRNAME
 mv $MODULE $DIRNAME
 pushd $DIRNAME >/dev/null 2>&1
 
-# Remove CVS/SVN information
-rm -rf `find . -name CVS -print`
-rm -rf `find . -name .svn -print`
 
 # Clean gpre-generated files and extern
 cd gen
@@ -73,5 +70,5 @@ cp $SRCROOT/configure .
 
 echo "Creating tarball for $PACKNAME"
 cd ..
-tar cjf $SRCROOT/gen/$PACKNAME.tar.bz2 $PACKNAME
+tar cf - $PACKNAME | xz -9e >$SRCROOT/gen/$PACKNAME.tar.xz
 popd >/dev/null 2>&1

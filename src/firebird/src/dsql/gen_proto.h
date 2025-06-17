@@ -24,20 +24,21 @@
 #ifndef DSQL_GEN_PROTO_H
 #define DSQL_GEN_PROTO_H
 
-void	GEN_descriptor(Jrd::CompiledStatement* statement, const dsc* desc, bool texttype);
-void	GEN_expr(Jrd::CompiledStatement*, Jrd::dsql_nod*);
-void	GEN_hidden_variables(Jrd::CompiledStatement* statement, bool inExpression);
-void	GEN_port(Jrd::CompiledStatement*, Jrd::dsql_msg*);
-void	GEN_request(Jrd::CompiledStatement*, Jrd::dsql_nod*);
-void	GEN_return(Jrd::CompiledStatement*, const Jrd::dsql_nod*, bool);
-void	GEN_start_transaction(Jrd::CompiledStatement*, const Jrd::dsql_nod*);
-void	GEN_statement(Jrd::CompiledStatement*, Jrd::dsql_nod*);
-
-// CVC: I think this can be replaced by statement->append_uchar(byte) in the calling code.
-inline void stuff(Jrd::CompiledStatement* statement, const UCHAR byte)
+namespace Jrd
 {
-	statement->req_blr_data.add(byte);
+	class ExprNode;
+	class ValueListNode;
 }
 
-#endif //  DSQL_GEN_PROTO_H
+void	GEN_descriptor(Jrd::DsqlCompilerScratch* dsqlScratch, const dsc* desc, bool texttype);
+void	GEN_expr(Jrd::DsqlCompilerScratch*, Jrd::ExprNode*);
+void	GEN_hidden_variables(Jrd::DsqlCompilerScratch* dsqlScratch);
+void	GEN_parameter(Jrd::DsqlCompilerScratch*, const Jrd::dsql_par*);
+void	GEN_port(Jrd::DsqlCompilerScratch*, Jrd::dsql_msg*);
+void	GEN_statement(Jrd::DsqlCompilerScratch*, Jrd::DmlNode*);
+void	GEN_rse(Jrd::DsqlCompilerScratch*, Jrd::RseNode*);
+void	GEN_sort(Jrd::DsqlCompilerScratch*, UCHAR, Jrd::ValueListNode*);
+void	GEN_stuff_context(Jrd::DsqlCompilerScratch*, const Jrd::dsql_ctx*);
+void	GEN_stuff_context_number(Jrd::DsqlCompilerScratch*, USHORT);
 
+#endif //  DSQL_GEN_PROTO_H

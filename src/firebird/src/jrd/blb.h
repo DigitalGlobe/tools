@@ -27,190 +27,161 @@
 #ifndef JRD_BLB_H
 #define JRD_BLB_H
 
+#include "../include/fb_blk.h"
+
 #include "../jrd/RecordNumber.h"
+#include "../jrd/EngineInterface.h"
 #include "../common/classes/array.h"
 #include "../common/classes/File.h"
+#include "../common/classes/auto.h"
 
-namespace Jrd {
+#include "firebird/Interface.h"
+#include "../common/classes/ImplementHelper.h"
+#include "../common/dsc.h"
 
-/* Blob id.  A blob has two states -- temporary and permanent.  In each
-   case, the blob id is 8 bytes (2 longwords) long.  In the case of a
-   temporary blob, the first word is NULL and the second word points to
-   an internal blob block.  In the case of a permanent blob, the first
-   word contains the relation id of the blob and the second the record
-   number of the first segment-clump.  The two types of blobs can be
-   reliably distinguished by a zero or non-zero relation id. */
+namespace Ods
+{
+	struct blob_page;
+	struct blh;
+}
+
+namespace Jrd
+{
 
 class Attachment;
 class BlobControl;
 class jrd_rel;
-class jrd_req;
+class Request;
 class jrd_tra;
 class vcl;
+class thread_db;
+struct win;
+class Record;
+class ArrayField;
+struct impure_value;
 
-// This structure must occupy 8 bytes
-struct bid
-{
-	// This is how bid structure represented in public API.
-	// Must be present to enforce alignment rules when structure is declared on stack
-	struct bid_quad_struct
-	{
-		ULONG bid_quad_high;
-		ULONG bid_quad_low;
-	};
-	union // anonymous union
-	{
-		// Internal decomposition of the structure
-		RecordNumber::Packed bid_internal;
-		bid_quad_struct bid_quad;
-	};
 
-	ULONG& bid_temp_id()
-	{
-		// Make sure that compiler packed structure like we wanted
-		fb_assert(sizeof(*this) == 8);
-
-		return bid_internal.bid_temp_id();
-	}
-
-	ULONG bid_temp_id() const
-	{
-		// Make sure that compiler packed structure like we wanted
-		fb_assert(sizeof(*this) == 8);
-
-		return bid_internal.bid_temp_id();
-	}
-
-	bool isEmpty() const
-	{
-		// Make sure that compiler packed structure like we wanted
-		fb_assert(sizeof(*this) == 8);
-
-		return bid_quad.bid_quad_high == 0 && bid_quad.bid_quad_low == 0;
-	}
-
-	void clear()
-	{
-		// Make sure that compiler packed structure like we wanted
-		fb_assert(sizeof(*this) == 8);
-
-		bid_quad.bid_quad_high = 0;
-		bid_quad.bid_quad_low = 0;
-	}
-
-	void set_temporary(ULONG temp_id)
-	{
-		// Make sure that compiler packed structure like we wanted
-		fb_assert(sizeof(*this) == 8);
-
-		clear();
-		bid_temp_id() = temp_id;
-	}
-
-	void set_permanent(USHORT relation_id, RecordNumber num)
-	{
-		// Make sure that compiler packed structure like we wanted
-		fb_assert(sizeof(*this) == 8);
-
-		clear();
-		bid_internal.bid_relation_id = relation_id;
-		num.bid_encode(&bid_internal);
-	}
-
-	RecordNumber get_permanent_number() const
-	{
-		// Make sure that compiler packed structure like we wanted
-		fb_assert(sizeof(*this) == 8);
-
-		RecordNumber temp;
-		temp.bid_decode(&bid_internal);
-		return temp;
-	}
-
-	bool operator == (const bid& other) const
-	{
-		// Make sure that compiler packed structure like we wanted
-		fb_assert(sizeof(*this) == 8);
-
-		return bid_quad.bid_quad_high == other.bid_quad.bid_quad_high &&
-			bid_quad.bid_quad_low == other.bid_quad.bid_quad_low;
-	}
-};
-
-/* Your basic blob block. */
+// Your basic blob block.
 
 class blb : public pool_alloc<type_blb>
 {
 public:
 	blb(MemoryPool& pool, USHORT page_size)
-		: blb_buffer(pool, page_size / sizeof(SLONG)),
+		: blb_interface(NULL),
+		  blb_buffer(pool, page_size / sizeof(SLONG)),
 		  blb_has_buffer(true)
 	{
 	}
 
-	Attachment*	blb_attachment;	/* database attachment */
-	jrd_rel*	blb_relation;	/* Relation, if known */
-	jrd_tra*	blb_transaction;	/* Parent transaction block */
-	//blb*		blb_next;		/* Next blob in transaction */
-	UCHAR*		blb_segment;	/* Next segment to be addressed */
-	BlobControl*	blb_filter;	/* Blob filter control block, if any */
-	bid			blb_blob_id;	/* Id of materialized blob */
-	vcl*		blb_pages;		/* Vector of pages */
-	USHORT blb_pointers;		/* Max pointer on a page */
-	USHORT blb_level;			/* Storage type */
-	USHORT blb_max_segment;		/* Longest segment */
-	USHORT blb_flags;			/* Interesting stuff (see below) */
-	USHORT blb_clump_size;		/* Size of data clump */
-	USHORT blb_space_remaining;	/* Data space left */
-	USHORT blb_max_pages;		/* Max pages in vector */
-	USHORT blb_fragment_size;	/* Residual fragment size */
-	//USHORT blb_source_interp;	/* source interp (for writing) */
-	//USHORT blb_target_interp;	/* destination interp (for reading) */
-	SSHORT blb_sub_type;		/* Blob's declared sub-type */
-	UCHAR blb_charset;			// Blob's charset
-	USHORT blb_pg_space_id;		// page space
-	ULONG blb_sequence;			/* Blob page sequence */
-	ULONG blb_max_sequence;		/* Number of data pages */
-	ULONG blb_count;			/* Number of segments */
-	ULONG blb_length;			/* Total length of data sans segments */
-	ULONG blb_lead_page;		/* First page number */
-	ULONG blb_seek;				/* Seek location */
-	ULONG blb_temp_id;          // ID of newly created blob in transaction
-	size_t blb_temp_size;		// size stored in transaction temp space
-	offset_t blb_temp_offset;	// offset in transaction temp space
+	jrd_rel* blb_relation;			// Relation, if known
+	JBlob* blb_interface;
+
+	ULONG blb_length;				// Total length of data sans segments
+	USHORT blb_flags;				// Interesting stuff (see below)
+
+	SSHORT blb_sub_type;			// Blob's declared sub-type
+	UCHAR blb_charset;				// Blob's charset
+
+	// inline functions
+	bool hasBuffer() const;
+	UCHAR* getBuffer();
+	void freeBuffer();
+	bool isSegmented() const;
+	Attachment* getAttachment();
+	jrd_tra* getTransaction();
+	USHORT getLevel() const;
+	ULONG getMaxSequence() const;
+	ULONG getTempId() const;
+	ULONG getSegmentCount() const;
+	USHORT getFragmentSize() const;
+	USHORT getMaxSegment() const;
+	// end inline
+
+	void	BLB_cancel(thread_db* tdbb);
+	void	BLB_cancel();
+	void	BLB_check_well_formed(thread_db*, const dsc* desc);
+	bool	BLB_close(thread_db*);
+	static blb*	create(thread_db*, jrd_tra*, bid*);
+	static blb*	create2(thread_db*, jrd_tra*, bid*, USHORT, const UCHAR*, bool = false);
+	static Jrd::blb* get_array(Jrd::thread_db*, Jrd::jrd_tra*, const Jrd::bid*, Ods::InternalArrayDesc*);
+	ULONG	BLB_get_data(thread_db*, UCHAR*, SLONG, bool = true);
+	USHORT	BLB_get_segment(thread_db*, void*, USHORT);
+	static SLONG get_slice(Jrd::thread_db*, Jrd::jrd_tra*, const Jrd::bid*, const UCHAR*, USHORT,
+					const UCHAR*, SLONG, UCHAR*);
+	SLONG	BLB_lseek(USHORT, SLONG);
+	static void	move(thread_db* tdbb, dsc* from_desc, dsc* to_desc, jrd_rel* relation = nullptr, Record* record = nullptr, USHORT fieldId = 0, bool bulk = false);
+	static blb* open(thread_db*, jrd_tra*, const bid*);
+	static blb* open2(thread_db*, jrd_tra*, const bid*, USHORT, const UCHAR*, bool = false);
+	void	BLB_put_data(thread_db*, const UCHAR*, SLONG);
+	void	BLB_put_segment(thread_db*, const void*, USHORT);
+	static void	put_slice(thread_db*, jrd_tra*, bid*, const UCHAR*, USHORT, const UCHAR*, SLONG, UCHAR*);
+	static void release_array(Jrd::ArrayField*);
+	static void scalar(Jrd::thread_db*, Jrd::jrd_tra*, const Jrd::bid*, USHORT, const SLONG*, Jrd::impure_value*);
+
+	static void delete_blob_id(thread_db*, const bid*, ULONG, jrd_rel*);
+	void fromPageHeader(const Ods::blh* header);
+	void toPageHeader(Ods::blh* header) const;
+	void getFromPage(USHORT length, const UCHAR* data);
+	void storeToPage(USHORT* length, Firebird::Array<UCHAR>& buffer, const UCHAR** data, void* stack);
+
+	static bid copy(thread_db* tdbb, const bid* source)
+	{
+		bid destination;
+		copy_blob(tdbb, source, &destination, 0, nullptr, 0);
+		return destination;
+	}
 
 private:
+	static blb* allocate_blob(thread_db*, jrd_tra*);
+	static blb* copy_blob(thread_db* tdbb, const bid* source, bid* destination,
+					USHORT bpb_length, const UCHAR* bpb, USHORT destPageSpaceID);
+	void delete_blob(thread_db*, ULONG);
+	Ods::blob_page* get_next_page(thread_db*, win*);
+	void insert_page(thread_db*);
+	void destroy(const bool purge_flag);
+
+	FB_SIZE_T blb_temp_size;		// size stored in transaction temp space
+	offset_t blb_temp_offset;		// offset in transaction temp space
+	Attachment*	blb_attachment;		// database attachment
+	jrd_tra*	blb_transaction;	// Parent transaction block
+	UCHAR*		blb_segment;		// Next segment to be addressed
+	BlobControl*	blb_filter;		// Blob filter control block, if any
+	bid			blb_blob_id;		// Id of materialized blob
+	vcl*		blb_pages;			// Vector of pages
+
 	Firebird::Array<SLONG> blb_buffer;	// buffer used in opened blobs - must be longword aligned
+
+	ULONG blb_temp_id;				// ID of newly created blob in transaction
+	ULONG blb_sequence;				// Blob page sequence
+	ULONG blb_lead_page;			// First page number
+	ULONG blb_seek;					// Seek location
+	ULONG blb_max_sequence;			// Number of data pages
+	ULONG blb_count;				// Number of segments
+
+	USHORT blb_pointers;			// Max pointer on a page
+	USHORT blb_clump_size;			// Size of data clump
+	USHORT blb_space_remaining;		// Data space left
+	USHORT blb_max_pages;			// Max pages in vector
+	USHORT blb_level;				// Storage type
+	USHORT blb_pg_space_id;			// page space
+	USHORT blb_fragment_size;		// Residual fragment size
+	USHORT blb_max_segment;			// Longest segment
+#ifdef CHECK_BLOB_FIELD_ACCESS_FOR_SELECT
+	USHORT blb_fld_id;				// Field ID
+#endif
 	bool blb_has_buffer;
-
-public:
-	bool hasBuffer() const
-	{
-		return blb_has_buffer;
-	}
-
-	UCHAR* getBuffer()
-	{
-		fb_assert(blb_has_buffer);
-		return (UCHAR*) blb_buffer.getBuffer(blb_buffer.getCapacity());
-	}
-
-	void freeBuffer()
-	{
-		fb_assert(blb_has_buffer);
-		blb_buffer.free();
-		blb_has_buffer = false;
-	}
 };
 
-const int BLB_temporary	= 1;			/* Newly created blob */
-const int BLB_eof		= 2;			/* This blob is exhausted */
-const int BLB_stream	= 4;			/* Stream style blob */
-const int BLB_closed	= 8;			/* Temporary blob has been closed */
-const int BLB_damaged	= 16;			/* Blob is busted */
-const int BLB_seek		= 32;			/* Seek is pending */
-const int BLB_user_def	= 64;			/* Blob is user created */
-const int BLB_large_scan	= 128;		/* Blob is larger than page buffer cache */
+const int BLB_temporary		= 1;		// Newly created blob
+const int BLB_eof			= 2;		// This blob is exhausted
+const int BLB_stream		= 4;		// Stream style blob
+const int BLB_closed		= 8;		// Temporary blob has been closed
+const int BLB_damaged		= 16;		// Blob is busted
+const int BLB_seek			= 32;		// Seek is pending
+const int BLB_large_scan	= 64;		// Blob is larger than page buffer cache
+const int BLB_close_on_read = 128;		// Temporary blob is not closed until read
+const int BLB_bulk			= 256;		// Blob created by bulk insert operation
+const int BLB_user			= 512;		// User-defined blob
 
 /* Blob levels are:
 
@@ -219,7 +190,84 @@ const int BLB_large_scan	= 128;		/* Blob is larger than page buffer cache */
 	2	large blob -- blob "record" is pointer to pages of pointers
 */
 
+
+inline bool blb::hasBuffer() const
+{
+	return blb_has_buffer;
+}
+
+inline UCHAR* blb::getBuffer()
+{
+	fb_assert(blb_has_buffer);
+	return (UCHAR*) blb_buffer.getBuffer(blb_buffer.getCapacity());
+}
+
+inline void blb::freeBuffer()
+{
+	fb_assert(blb_has_buffer);
+	blb_buffer.free();
+	blb_has_buffer = false;
+}
+
+inline bool blb::isSegmented() const
+{
+	return !(blb_flags & BLB_stream);
+}
+
+inline Attachment* blb::getAttachment()
+{
+	return blb_attachment;
+}
+
+inline jrd_tra* blb::getTransaction()
+{
+	return blb_transaction;
+}
+
+inline USHORT blb::getLevel() const
+{
+	return blb_level;
+}
+
+inline ULONG blb::getMaxSequence() const
+{
+	return blb_max_sequence;
+}
+
+inline ULONG blb::getTempId() const
+{
+	return blb_temp_id;
+}
+
+inline ULONG blb::getSegmentCount() const
+{
+	return blb_count;
+}
+
+inline USHORT blb::getFragmentSize() const
+{
+	return blb_fragment_size;
+}
+
+inline USHORT blb::getMaxSegment() const
+{
+	return blb_max_segment;
+}
+
+
 } //namespace Jrd
 
-#endif // JRD_BLB_H
 
+namespace Firebird {
+
+template <>
+inline void SimpleDelete<Jrd::blb>::clear(Jrd::blb* b)
+{
+	if (b)
+		b->BLB_cancel();
+}
+
+} //namespace Firebird
+
+
+#endif // JRD_BLB_H

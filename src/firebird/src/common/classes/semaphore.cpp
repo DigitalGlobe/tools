@@ -1,7 +1,7 @@
 /*
  *	PROGRAM:		Client/Server Common Code
- *	MODULE:			locks.cpp
- *	DESCRIPTION:	Darwin specific semaphore support
+ *	MODULE:			semaphore.cpp
+ *	DESCRIPTION:	Semaphore support
  *
  *  The contents of this file are subject to the Initial
  *  Developer's Public License Version 1.0 (the "License");
@@ -27,16 +27,14 @@
 #include "firebird.h"
 #include "../common/classes/semaphore.h"
 #include "../common/classes/alloc.h"
-#include "gen/iberror.h"
+#include "iberror.h"
 
 #ifdef HAVE_SYS_TIMES_H
 #include <sys/times.h>
 #endif
-
 #ifdef HAVE_SYS_TIMEB_H
 #include <sys/timeb.h>
 #endif
-
 #if defined(TIME_WITH_SYS_TIME) || defined(HAVE_SYS_TIME_H)
 #include <sys/time.h>
 #endif
@@ -68,7 +66,38 @@ static timespec getCurrentTime()
 
 namespace Firebird {
 
-#ifdef COMMON_CLASSES_SEMAPHORE_MACH
+#ifdef WIN_NT
+	void Semaphore::init()
+	{
+		hSemaphore = CreateSemaphore(NULL, 0 /*initial count*/, INT_MAX, NULL);
+		if (hSemaphore == NULL)
+			system_call_failed::raise("CreateSemaphore");
+	}
+
+	Semaphore::~Semaphore()
+	{
+		if (hSemaphore && !CloseHandle(hSemaphore))
+			system_call_failed::raise("CloseHandle");
+	}
+
+	bool Semaphore::tryEnter(const int seconds , int milliseconds)
+	{
+		milliseconds += seconds * 1000;
+		DWORD result = WaitForSingleObject(hSemaphore, milliseconds >= 0 ? milliseconds : INFINITE);
+		if (result == WAIT_FAILED)
+			system_call_failed::raise("WaitForSingleObject");
+		return result != WAIT_TIMEOUT;
+	}
+
+	void Semaphore::release(SLONG count)
+	{
+		if (!ReleaseSemaphore(hSemaphore, count, NULL))
+			system_call_failed::raise("ReleaseSemaphore");
+	}
+#endif
+
+
+#ifdef COMMON_CLASSES_SEMAPHORE_DISPATCH
 
 	void SignalSafeSemaphore::init()
 	{
@@ -84,8 +113,7 @@ namespace Firebird {
 		dispatch_release(semaphore);
 	}
 
-#endif  // COMMON_CLASSES_SEMAPHORE_MACH
-
+#endif  // COMMON_CLASSES_SEMAPHORE_DISPATCH
 
 
 #ifdef COMMON_CLASSES_SEMAPHORE_POSIX_RT
@@ -117,6 +145,9 @@ static const char* semName = "/firebird_temp_sem";
 	{
 #ifdef WORKING_SEM_INIT
 		if (sem_destroy(sem) == -1) {
+#ifdef ANDROID
+		  if (errno != EBUSY)
+#endif
 			system_call_failed::raise("sem_destroy");
 		}
 #else
@@ -224,7 +255,6 @@ static const char* semName = "/firebird_temp_sem";
 
 	Semaphore::~Semaphore()
 	{
-		fb_assert(value == 0);
 		int err = pthread_mutex_destroy(&mu);
 		if (err != 0) {
 			//gds__log("Error on semaphore.h: destructor");
@@ -346,7 +376,7 @@ static const char* semName = "/firebird_temp_sem";
 
 			if (err != 0)
 			{
-				system_call_failed::raise("pthread_cond_broadcast", err);
+				system_call_failed::raise("pthread_cond_signal", err);
 			}
 		}
 	}

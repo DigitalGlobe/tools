@@ -34,13 +34,12 @@
 #include <sys/param.h>
 #include <sys/stat.h>
 
-#include "../jrd/common.h"
-#include "../jrd/isc.h"
-#include "../jrd/isc_s_proto.h"
+#include "../common/isc_s_proto.h"
+#include "../common/isc_s_proto.h"
 #include "../lock/lock_proto.h"
 #include "../jrd/license.h"
-#include "../jrd/gds_proto.h"
-#include "../jrd/isc_proto.h"
+#include "../yvalve/gds_proto.h"
+#include "../common/isc_proto.h"
 #include "../common/config/config.h"
 
 #ifdef HAVE_SYS_TYPES_H
@@ -128,7 +127,7 @@ int CLIB_ROUTINE main( int argc, char *argv[])
 				}
 
 	if (sw_version)
-		printf("gds_drop version %s\n", GDS_VERSION);
+		printf("gds_drop version %s\n", FB_VERSION);
 
 	if (sw_events)
 		remove_resource(EVENT_FILE, Config::getEventMemSize(), "events");

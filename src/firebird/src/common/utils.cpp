@@ -27,7 +27,7 @@
 // Utility functions
 
 #include "firebird.h"
-#include "../jrd/common.h"
+#include "../common/os/guid.h"
 
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
@@ -38,28 +38,50 @@
 #endif
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
 
-#include "../jrd/gdsassert.h"
+#include "../common/gdsassert.h"
 #include "../common/utils_proto.h"
+#include "../common/classes/auto.h"
 #include "../common/classes/locks.h"
 #include "../common/classes/init.h"
+#include "../common/isc_proto.h"
 #include "../jrd/constants.h"
-#include "../jrd/os/path_utils.h"
-#include "../jrd/os/fbsyslog.h"
+#include "firebird/impl/inf_pub.h"
+#include "../jrd/align.h"
+#include "../common/os/path_utils.h"
+#include "../common/os/fbsyslog.h"
+#include "../common/StatusArg.h"
+#include "../common/os/os_utils.h"
+#include "firebird/impl/sqlda_pub.h"
+#include "../common/classes/ClumpletReader.h"
+#include "../common/StatusArg.h"
+#include "../common/TimeZoneUtil.h"
+#include "../common/config/config.h"
 
 #ifdef WIN_NT
 #include <direct.h>
 #include <io.h> // isatty()
+#include <sddl.h>
 #endif
+
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
+
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+
 #ifdef HAVE_TERMIOS_H
 #include <termios.h>
 #endif
+
+#ifdef HAVE_TIMES
+#include <sys/times.h>
+#endif
+
 
 namespace fb_utils
 {
@@ -89,7 +111,7 @@ char* copy_terminate(char* dest, const char* src, size_t bufsize)
 }
 
 
-char* exact_name(char* const str)
+char* exact_name(char* const name)
 {
 /**************************************
  *
@@ -107,19 +129,19 @@ char* exact_name(char* const str)
  *	Returns:     str
  *
  **************************************/
-	char* p = str;
+	char* p = name;
 	while (*p)
 	    ++p;
 	// Now, let's go back
 	--p;
-	while (p >= str && *p == '\x20') // blank character, ASCII(32)
+	while (p >= name && *p == '\x20') // blank character, ASCII(32)
 		--p;
 	*(p + 1) = '\0';
-	return str;
+	return name;
 }
 
 
-char* exact_name_limit(char* const str, size_t bufsize)
+char* exact_name_limit(char* const name, size_t bufsize)
 {
 /**************************************
  *
@@ -139,16 +161,16 @@ char* exact_name_limit(char* const str, size_t bufsize)
  *	Returns:     str
  *
  **************************************/
-	const char* const end = str + bufsize - 1;
-	char* p = str;
+	const char* const end = name + bufsize - 1;
+	char* p = name;
 	while (*p && p < end)
 	    ++p;
 	// Now, let's go back
 	--p;
-	while (p >= str && *p == '\x20') // blank character, ASCII(32)
+	while (p >= name && *p == '\x20') // blank character, ASCII(32)
 		--p;
 	*(p + 1) = '\0';
-	return str;
+	return name;
 }
 
 
@@ -233,6 +255,20 @@ int name_length(const TEXT* const name)
 }
 
 
+// *********************************
+// n a m e _ l e n g t h _ l i m i t
+// *********************************
+// Compute length without trailing blanks. The second parameter is maximum length.
+int name_length_limit(const TEXT* const name, size_t bufsize)
+{
+	const char* p = name + bufsize - 1;
+	// Now, let's go back
+	while (p >= name && *p == ' ') // blank character, ASCII(32)
+		--p;
+	return (p + 1) - name;
+}
+
+
 //***************
 // r e a d e n v
 //***************
@@ -273,6 +309,37 @@ bool readenv(const char* env_name, Firebird::PathName& env_value)
 }
 
 
+// Set environment variable.
+// If overwrite == false and variable already exist, return true.
+bool setenv(const char* name, const char* value, bool overwrite)
+{
+#ifdef WIN_NT
+	int errcode = 0;
+
+	if (!overwrite)
+	{
+		size_t envsize = 0;
+		errcode = getenv_s(&envsize, NULL, 0, name);
+		if (errcode || envsize)
+			return errcode ? false : true;
+	}
+
+	// In Windows, _putenv_s sets only the environment data in the CRT.
+	// Each DLL (for example ICU) may use a different CRT which different data
+	// or use Win32's GetEnvironmentVariable, so we also use SetEnvironmentVariable.
+	// This is a mess and is not guarenteed to work correctly in all situations.
+	if (SetEnvironmentVariable(name, value))
+	{
+		_putenv_s(name, value);
+		return true;
+	}
+	else
+		return false;
+#else
+	return ::setenv(name, value, (int) overwrite) == 0;
+#endif
+}
+
 // ***************
 // s n p r i n t f
 // ***************
@@ -312,7 +379,7 @@ char* cleanup_passwd(char* arg)
 		return arg;
 	}
 
-	const int lpass = strlen(arg);
+	const int lpass = static_cast<int>(strlen(arg));
 	char* savePass = (char*) gds__alloc(lpass + 1);
 	if (! savePass)
 	{
@@ -357,7 +424,7 @@ bool prefix_kernel_object_name(char* name, size_t bufsize)
 
 		// if name and prefix can't fit in name's buffer than we must
 		// not overwrite end of name because it contains object type
-		const int move_prefix = (len_name + len_prefix > bufsize) ?
+		const size_t move_prefix = (len_name + len_prefix > bufsize) ?
 			(bufsize - len_name) : len_prefix;
 
 		memmove(name + move_prefix, name, len_name);
@@ -489,6 +556,160 @@ bool isGlobalKernelPrefix()
 	}
 
 	return false;
+}
+
+
+// Incapsulates Windows private namespace
+class PrivateNamespace
+{
+public:
+	PrivateNamespace(MemoryPool& pool) :
+		m_hNamespace(NULL),
+		m_hTestEvent(NULL)
+	{
+		try
+		{
+			init();
+		}
+		catch (const Firebird::Exception& ex)
+		{
+			iscLogException("Error creating private namespace", ex);
+		}
+	}
+
+	~PrivateNamespace()
+	{
+		if (m_hNamespace != NULL)
+			ClosePrivateNamespace(m_hNamespace, 0);
+		if (m_hTestEvent != NULL)
+			CloseHandle(m_hTestEvent);
+	}
+
+	// Add namespace prefix to the name, returns true on success.
+	bool addPrefix(char* name, size_t bufsize)
+	{
+		if (!isReady())
+			return false;
+
+		if (strchr(name, '\\') != 0)
+			return false;
+
+		const size_t prefixLen = strlen(sPrivateNameSpace) + 1;
+		const size_t nameLen = strlen(name) + 1;
+		if (prefixLen + nameLen > bufsize)
+			return false;
+
+		memmove(name + prefixLen, name, nameLen + 1);
+		memcpy(name, sPrivateNameSpace, prefixLen - 1);
+		name[prefixLen - 1] = '\\';
+		return true;
+	}
+
+	bool isReady() const
+	{
+		return (m_hNamespace != NULL) || (m_hTestEvent != NULL);
+	}
+
+private:
+	const char* sPrivateNameSpace = "FirebirdCommon";
+	const char* sBoundaryName = "FirebirdCommonBoundary";
+
+	void raiseError(const char* apiRoutine)
+	{
+		(Firebird::Arg::Gds(isc_sys_request) << apiRoutine << Firebird::Arg::OsError()).raise();
+	}
+
+	void init()
+	{
+		alignas(SID) char sid[SECURITY_MAX_SID_SIZE];
+		DWORD cbSid = sizeof(sid);
+
+		// For now use EVERYONE, could be changed later
+		cbSid = sizeof(sid);
+		if (!CreateWellKnownSid(WinWorldSid, NULL, &sid, &cbSid))
+			raiseError("CreateWellKnownSid");
+
+		// Create security descriptor which allows generic access to the just created SID
+
+		SECURITY_ATTRIBUTES sa;
+		RtlSecureZeroMemory(&sa, sizeof(sa));
+		sa.nLength = sizeof(sa);
+		sa.bInheritHandle = FALSE;
+
+		char strSecDesc[255];
+		LPSTR strSid = NULL;
+		if (ConvertSidToStringSid(&sid, &strSid))
+		{
+			snprintf(strSecDesc, sizeof(strSecDesc), "D:(A;;GA;;;%s)", strSid);
+			LocalFree(strSid);
+		}
+		else
+			strncpy(strSecDesc, "D:(A;;GA;;;WD)", sizeof(strSecDesc));
+
+		if (!ConvertStringSecurityDescriptorToSecurityDescriptor(strSecDesc, SDDL_REVISION_1,
+			&sa.lpSecurityDescriptor, NULL))
+		{
+			raiseError("ConvertStringSecurityDescriptorToSecurityDescriptor");
+		}
+
+		Firebird::Cleanup cleanSecDesc( [&sa] {
+				LocalFree(sa.lpSecurityDescriptor);
+			});
+
+		HANDLE hBoundaryDesc = CreateBoundaryDescriptor(sBoundaryName, 0);
+		if (hBoundaryDesc == NULL)
+			raiseError("CreateBoundaryDescriptor");
+
+		Firebird::Cleanup cleanBndDesc( [&hBoundaryDesc] {
+				DeleteBoundaryDescriptor(hBoundaryDesc);
+			});
+
+		if (!AddSIDToBoundaryDescriptor(&hBoundaryDesc, &sid))
+			raiseError("AddSIDToBoundaryDescriptor");
+
+		m_hNamespace = CreatePrivateNamespace(&sa, hBoundaryDesc, sPrivateNameSpace);
+
+		if (m_hNamespace == NULL)
+		{
+			DWORD err = GetLastError();
+			if (err != ERROR_ALREADY_EXISTS)
+				raiseError("CreatePrivateNamespace");
+
+			m_hNamespace = OpenPrivateNamespace(hBoundaryDesc, sPrivateNameSpace);
+			if (m_hNamespace == NULL)
+			{
+				err = GetLastError();
+				if (err != ERROR_DUP_NAME)
+					raiseError("OpenPrivateNamespace");
+
+				Firebird::string name(sPrivateNameSpace);
+				name.append("\\test");
+
+				m_hTestEvent = CreateEvent(ISC_get_security_desc(), TRUE, TRUE, name.c_str());
+				if (m_hTestEvent == NULL)
+					raiseError("CreateEvent");
+			}
+		}
+	}
+
+	HANDLE m_hNamespace;
+	HANDLE m_hTestEvent;
+};
+
+static Firebird::InitInstance<PrivateNamespace> privateNamespace;
+
+
+bool private_kernel_object_name(char* name, size_t bufsize)
+{
+	if (!privateNamespace().addPrefix(name, bufsize))
+		return prefix_kernel_object_name(name, bufsize);
+
+	return true;
+}
+
+bool privateNameSpaceReady()
+{
+	return privateNamespace().isReady();
 }
 
 
@@ -690,9 +911,9 @@ void getCwd(Firebird::PathName& pn)
 #if defined(WIN_NT)
 	_getcwd(buffer, MAXPATHLEN);
 #elif defined(HAVE_GETCWD)
-	getcwd(buffer, MAXPATHLEN);
+	FB_UNUSED(getcwd(buffer, MAXPATHLEN));
 #else
-	getwd(buffer);
+	FB_UNUSED(getwd(buffer));
 #endif
 	pn.recalculate_length();
 }
@@ -708,7 +929,7 @@ namespace {
 				f = stdin;
 			}
 			else {
-				f = fopen(name.c_str(), "rt");
+				f = os_utils::fopen(name.c_str(), "rt");
 			}
 			if (f && isatty(fileno(f)))
 			{
@@ -783,7 +1004,7 @@ FetchPassResult fetchPassword(const Firebird::PathName& name, const char*& passw
 	}
 
 	// this is planned leak of a few bytes of memory in utilities
-	char* pass = FB_NEW(*getDefaultMemoryPool()) char[pwd.length() + 1];
+	char* pass = FB_NEW_POOL(*getDefaultMemoryPool()) char[pwd.length() + 1];
 	pwd.copyTo(pass, pwd.length() + 1);
 	password = pass;
 	return FETCH_PASS_OK;
@@ -791,8 +1012,11 @@ FetchPassResult fetchPassword(const Firebird::PathName& name, const char*& passw
 
 
 
-const SINT64 BILLION = 1000000000;
+#ifdef WIN_NT
 static SINT64 saved_frequency = 0;
+#elif defined(HAVE_CLOCK_GETTIME)
+constexpr SINT64 BILLION = 1'000'000'000;
+#endif
 
 // Returns current value of performance counter
 SINT64 query_performance_counter()
@@ -807,9 +1031,9 @@ SINT64 query_performance_counter()
 	return counter.QuadPart;
 #elif defined(HAVE_CLOCK_GETTIME)
 
-	// Use high-resultion clock
+	// Use high-resolution clock
 	struct timespec tp;
-	if (clock_gettime(CLOCK_REALTIME, &tp) != 0)
+	if (clock_gettime(CLOCK_MONOTONIC_RAW, &tp) != 0)
 		return 0;
 
 	return static_cast<SINT64>(tp.tv_sec) * BILLION + tp.tv_nsec;
@@ -843,6 +1067,43 @@ SINT64 query_performance_frequency()
 	return CLOCKS_PER_SEC;
 #endif
 }
+
+
+// returns system and user time in milliseconds that process runs
+void get_process_times(SINT64 &userTime, SINT64 &sysTime)
+{
+#if defined(WIN_NT)
+	FILETIME utime, stime, dummy;
+	if (GetProcessTimes(GetCurrentProcess(), &dummy, &dummy, &stime, &utime))
+	{
+		LARGE_INTEGER bigint;
+
+		bigint.HighPart = stime.dwHighDateTime;
+		bigint.LowPart = stime.dwLowDateTime;
+		sysTime = bigint.QuadPart / 10000;
+
+		bigint.HighPart = utime.dwHighDateTime;
+		bigint.LowPart = utime.dwLowDateTime;
+		userTime = bigint.QuadPart / 10000;
+	}
+	else
+	{
+		sysTime = userTime = 0;
+	}
+#else
+	::tms tus;
+	if (times(&tus) == (clock_t)(-1))
+	{
+		sysTime = userTime = 0;
+		return;
+	}
+
+	const int TICK = sysconf(_SC_CLK_TCK);
+	sysTime = SINT64(tus.tms_stime) * 1000 / TICK;
+	userTime = SINT64(tus.tms_utime) * 1000 / TICK;
+#endif
+}
+
 
 void exactNumericToStr(SINT64 value, int scale, Firebird::string& target, bool append)
 {
@@ -912,7 +1173,7 @@ void exactNumericToStr(SINT64 value, int scale, Firebird::string& target, bool a
 	if (neg)
 		buffer[--iter] = '-';
 
-	const size_t len = MAX_BUFFER - iter - 1;
+	const FB_SIZE_T len = MAX_BUFFER - iter - 1;
 
 	if (append)
 		target.append(buffer + iter, len);
@@ -921,85 +1182,139 @@ void exactNumericToStr(SINT64 value, int scale, Firebird::string& target, bool a
 }
 
 
+// returns true if environment variable FIREBIRD_BOOT_BUILD is set
+bool bootBuild()
+{
+	static enum {FB_BOOT_UNKNOWN, FB_BOOT_NORMAL, FB_BOOT_SET} state = FB_BOOT_UNKNOWN;
+
+	if (state == FB_BOOT_UNKNOWN)
+	{
+		// not care much about protecting state with mutex - each thread will assign it same value
+		Firebird::string dummy;
+		state = readenv("FIREBIRD_BOOT_BUILD", dummy) ? FB_BOOT_SET : FB_BOOT_NORMAL;
+	}
+
+	return state == FB_BOOT_SET;
+}
+
 // Build full file name in specified directory
-Firebird::PathName getPrefix(FB_DIR prefType, const char* name)
+Firebird::PathName getPrefix(unsigned int prefType, const char* name)
 {
 	Firebird::PathName s;
+
+#ifdef ANDROID
+	const bool useInstallDir =
+		prefType == Firebird::IConfigManager::DIR_BIN ||
+		prefType == Firebird::IConfigManager::DIR_SBIN ||
+		prefType == Firebird::IConfigManager::DIR_LIB ||
+		prefType == Firebird::IConfigManager::DIR_GUARD ||
+		prefType == Firebird::IConfigManager::DIR_PLUGINS;
+
+	if (useInstallDir)
+		s = name;
+	else
+		PathUtils::concatPath(s, Firebird::Config::getRootDirectory(), name);
+
+	return s;
+#else
 	char tmp[MAXPATHLEN];
 
-#ifndef BOOT_BUILD
 	const char* configDir[] = {
-		FB_BINDIR, FB_SBINDIR, FB_CONFDIR, FB_LIBDIR, FB_INCDIR, FB_DOCDIR, FB_UDFDIR, FB_SAMPLEDIR,
-		FB_SAMPLEDBDIR, FB_HELPDIR, FB_INTLDIR, FB_MISCDIR, FB_SECDBDIR, FB_MSGDIR, FB_LOGDIR,
-		FB_GUARDDIR, FB_PLUGDIR
+		FB_BINDIR, FB_SBINDIR, FB_CONFDIR, FB_LIBDIR, FB_INCDIR, FB_DOCDIR, "", FB_SAMPLEDIR,
+		FB_SAMPLEDBDIR, "", FB_INTLDIR, FB_MISCDIR, FB_SECDBDIR, FB_MSGDIR, FB_LOGDIR,
+		FB_GUARDDIR, FB_PLUGDIR, FB_TZDATADIR
 	};
 
-	fb_assert(FB_NELEM(configDir) == FB_DIR_LAST);
-	fb_assert(prefType < FB_DIR_LAST);
+	fb_assert(FB_NELEM(configDir) == Firebird::IConfigManager::DIR_COUNT);
+	fb_assert(prefType < Firebird::IConfigManager::DIR_COUNT);
 
-	if (prefType != FB_DIR_CONF && prefType != FB_DIR_MSG && configDir[prefType][0])
+	if (! bootBuild())
 	{
-		// Value is set explicitly and is not environment overridable
-		PathUtils::concatPath(s, configDir[prefType], name);
-		return s;
+		if (prefType != Firebird::IConfigManager::DIR_CONF &&
+			prefType != Firebird::IConfigManager::DIR_MSG &&
+			prefType != Firebird::IConfigManager::DIR_TZDATA &&
+			configDir[prefType][0])
+		{
+			// Value is set explicitly and is not environment overridable
+			PathUtils::concatPath(s, configDir[prefType], name);
+
+			if (PathUtils::isRelative(s))
+			{
+				gds__prefix(tmp, s.c_str());
+				return tmp;
+			}
+
+			return s;
+		}
 	}
-#endif
 
-	switch(prefType)
+	switch (prefType)
 	{
-		case FB_DIR_BIN:
-		case FB_DIR_SBIN:
+		case Firebird::IConfigManager::DIR_BIN:
+		case Firebird::IConfigManager::DIR_SBIN:
+#ifdef WIN_NT
+			s = "";
+#else
 			s = "bin";
+#endif
 			break;
 
-		case FB_DIR_CONF:
-		case FB_DIR_LOG:
-		case FB_DIR_GUARD:
-		case FB_DIR_SECDB:
+		case Firebird::IConfigManager::DIR_CONF:
+		case Firebird::IConfigManager::DIR_LOG:
+		case Firebird::IConfigManager::DIR_GUARD:
+		case Firebird::IConfigManager::DIR_SECDB:
 			s = "";
 			break;
 
-		case FB_DIR_LIB:
+		case Firebird::IConfigManager::DIR_LIB:
+#ifdef WIN_NT
+			s = "";
+#else
 			s = "lib";
+#endif
 			break;
 
-		case FB_DIR_PLUGINS:
+		case Firebird::IConfigManager::DIR_PLUGINS:
 			s = "plugins";
 			break;
 
-		case FB_DIR_INC:
+		case Firebird::IConfigManager::DIR_TZDATA:
+			PathUtils::concatPath(s, Firebird::TimeZoneUtil::getTzDataPath(), name);
+			return s;
+
+		case Firebird::IConfigManager::DIR_INC:
 			s = "include";
 			break;
 
-		case FB_DIR_DOC:
+		case Firebird::IConfigManager::DIR_DOC:
 			s = "doc";
 			break;
 
-		case FB_DIR_UDF:
+		case Firebird::IConfigManager::DIR_UDF:
 			s = "UDF";
 			break;
 
-		case FB_DIR_SAMPLE:
+		case Firebird::IConfigManager::DIR_SAMPLE:
 			s = "examples";
 			break;
 
-		case FB_DIR_SAMPLEDB:
+		case Firebird::IConfigManager::DIR_SAMPLEDB:
 			s = "examples/empbuild";
 			break;
 
-		case FB_DIR_HELP:
+		case Firebird::IConfigManager::DIR_HELP:
 			s = "help";
 			break;
 
-		case FB_DIR_INTL:
+		case Firebird::IConfigManager::DIR_INTL:
 			s = "intl";
 			break;
 
-		case FB_DIR_MISC:
+		case Firebird::IConfigManager::DIR_MISC:
 			s = "misc";
 			break;
 
-		case FB_DIR_MSG:
+		case Firebird::IConfigManager::DIR_MSG:
 			gds__prefix_msg(tmp, name);
 			return tmp;
 
@@ -1009,84 +1324,557 @@ Firebird::PathName getPrefix(FB_DIR prefType, const char* name)
 	}
 
 	if (s.hasData() && name[0])
-	{
-		s += '/';
-	}
+		s += PathUtils::dir_sep;
+
 	s += name;
 	gds__prefix(tmp, s.c_str());
+
 	return tmp;
+#endif
+}
+
+unsigned int copyStatus(ISC_STATUS* const to, const unsigned int space,
+						const ISC_STATUS* const from, const unsigned int count) throw()
+{
+	unsigned int copied = 0;
+
+	for (unsigned int i = 0; i < count; )
+	{
+		if (from[i] == isc_arg_end)
+		{
+			break;
+		}
+		i += nextArg(from[i]);
+		if (i > space - 1)
+		{
+			break;
+		}
+		copied = i;
+	}
+
+	memcpy(to, from, copied * sizeof(to[0]));
+	to[copied] = isc_arg_end;
+
+	return copied;
+}
+
+unsigned int mergeStatus(ISC_STATUS* const dest, unsigned int space,
+						 const Firebird::IStatus* from) throw()
+{
+	const ISC_STATUS* s;
+	unsigned int copied = 0;
+	const int state = from->getState();
+	ISC_STATUS* to = dest;
+
+	if (state & Firebird::IStatus::STATE_ERRORS)
+	{
+		s = from->getErrors();
+		copied = copyStatus(to, space, s, statusLength(s));
+
+		to += copied;
+		space -= copied;
+	}
+
+	if (state & Firebird::IStatus::STATE_WARNINGS)
+	{
+		if (!copied)
+		{
+			init_status(to);
+			to += 2;
+			space -= 2;
+			copied += 2;
+		}
+		s = from->getWarnings();
+		copied += copyStatus(to, space, s, statusLength(s));
+	}
+
+	if (!copied)
+		init_status(dest);
+
+	return copied;
+}
+
+void copyStatus(Firebird::CheckStatusWrapper* to, const Firebird::IStatus* from) throw()
+{
+	to->init();
+
+	unsigned flags = from->getState();
+	if (flags & Firebird::IStatus::STATE_ERRORS)
+		to->setErrors(from->getErrors());
+	if (flags & Firebird::IStatus::STATE_WARNINGS)
+		to->setWarnings(from->getWarnings());
+}
+
+void setIStatus(Firebird::CheckStatusWrapper* to, const ISC_STATUS* from) throw()
+{
+	try
+	{
+		const ISC_STATUS* w = from;
+		while (*w != isc_arg_end)
+		{
+			if (*w == isc_arg_warning)
+			{
+				to->setWarnings(w);
+				break;
+			}
+			w += nextArg(*w);
+		}
+		to->setErrors2(w - from, from);
+	}
+	catch (const Firebird::Exception& ex)
+	{
+		ex.stuffException(to);
+	}
+}
+
+unsigned int statusLength(const ISC_STATUS* const status) throw()
+{
+	unsigned int l = 0;
+	for(;;)
+	{
+		if (status[l] == isc_arg_end)
+		{
+			return l;
+		}
+		l += nextArg(status[l]);
+	}
+}
+
+bool cmpStatus(unsigned int len, const ISC_STATUS* a, const ISC_STATUS* b) throw()
+{
+	for (unsigned i = 0; i < len; )
+	{
+		const ISC_STATUS* op1 = &a[i];
+		const ISC_STATUS* op2 = &b[i];
+		if (*op1 != *op2)
+			return false;
+
+		if (i == len - 1 && *op1 == isc_arg_end)
+			break;
+
+		i += nextArg(*op1);
+		if (i > len)		// arg does not fit
+			return false;
+
+		unsigned l1, l2;
+		const char *s1, *s2;
+		if (isStr(*op1))
+		{
+			if (*op1 == isc_arg_cstring)
+			{
+				l1 = op1[1];
+				l2 = op2[1];
+				s1 = (const char*)(op1[2]);
+				s2 = (const char*)(op2[2]);
+			}
+			else
+			{
+				s1 = (const char*)(op1[1]);
+				s2 = (const char*)(op2[1]);
+				l1 = strlen(s1);
+				l2 = strlen(s2);
+			}
+
+			if (l1 != l2)
+				return false;
+			if (memcmp(s1, s2, l1) != 0)
+				return false;
+		}
+		else if (op1[1] != op2[1])
+			return false;
+	}
+
+	return true;
+}
+
+unsigned int subStatus(const ISC_STATUS* in, unsigned int cin,
+					   const ISC_STATUS* sub, unsigned int csub) throw()
+{
+	for (unsigned pos = 0; csub <= cin - pos; )
+	{
+		for (unsigned i = 0; i < csub; )
+		{
+			const ISC_STATUS* op1 = &in[pos + i];
+			const ISC_STATUS* op2 = &sub[i];
+			if (*op1 != *op2)
+				goto miss;
+
+			i += nextArg(*op1);
+			if (i > csub)		// arg does not fit
+				goto miss;
+
+
+			if (isStr(*op1))
+			{
+				unsigned l1, l2;
+				const char *s1, *s2;
+				if (*op1 == isc_arg_cstring)
+				{
+					l1 = op1[1];
+					l2 = op2[1];
+					s1 = (const char*) (op1[2]);
+					s2 = (const char*) (op2[2]);
+				}
+				else
+				{
+					s1 = (const char*) (op1[1]);
+					s2 = (const char*) (op2[1]);
+					l1 = strlen(s1);
+					l2 = strlen(s2);
+				}
+
+				if (l1 != l2)
+					goto miss;
+				if (memcmp(s1, s2, l1) != 0)
+					goto miss;
+			}
+			else if (op1[1] != op2[1])
+				goto miss;
+		}
+
+		return pos;
+
+miss:	pos += nextArg(in[pos]);
+	}
+
+	return ~0u;
+}
+
+// moves DB path information (from limbo transaction) to another buffer
+void getDbPathInfo(unsigned int& itemsLength, const unsigned char*& items,
+	unsigned int& bufferLength, unsigned char*& buffer,
+	Firebird::Array<unsigned char>& newItemsBuffer, const Firebird::PathName& dbpath)
+{
+	if (itemsLength && items)
+	{
+		const unsigned char* ptr = (const unsigned char*) memchr(items, fb_info_tra_dbpath, itemsLength);
+		if (ptr)
+		{
+			newItemsBuffer.add(items, itemsLength);
+			newItemsBuffer.remove(ptr - items);
+			items = newItemsBuffer.begin();
+			--itemsLength;
+
+			unsigned int len = dbpath.length();
+			if (len + 3 > bufferLength)
+			{
+				len = bufferLength - 3;
+			}
+			bufferLength -= (len + 3);
+			*buffer++ = fb_info_tra_dbpath;
+			*buffer++ = len;
+			*buffer++ = len >> 8;
+			memcpy(buffer, dbpath.c_str(), len);
+			buffer += len;
+		}
+	}
+}
+
+// returns true if passed info items work with running svc thread
+bool isRunningCheck(const UCHAR* items, unsigned int length)
+{
+	enum {S_NEU, S_RUN, S_INF} state = S_NEU;
+
+	while (length--)
+	{
+		if (!items)
+		{
+			Firebird::Arg::Gds(isc_null_block).raise();
+		}
+
+		switch (*items++)
+		{
+		case isc_info_end:
+		case isc_info_truncated:
+		case isc_info_error:
+		case isc_info_data_not_ready:
+		case isc_info_length:
+		case isc_info_flag_end:
+		case isc_info_svc_auth_block:
+		case isc_info_svc_running:
+			break;
+
+		case isc_info_svc_line:
+		case isc_info_svc_to_eof:
+		case isc_info_svc_timeout:
+		case isc_info_svc_limbo_trans:
+		case isc_info_svc_get_users:
+		case isc_info_svc_stdin:
+			if (state == S_INF)
+			{
+				Firebird::Arg::Gds(isc_mixed_info).raise();
+			}
+			state = S_RUN;
+			break;
+
+		case isc_info_svc_svr_db_info:
+		case isc_info_svc_get_license:
+		case isc_info_svc_get_license_mask:
+		case isc_info_svc_get_config:
+		case isc_info_svc_version:
+		case isc_info_svc_server_version:
+		case isc_info_svc_implementation:
+		case isc_info_svc_capabilities:
+		case isc_info_svc_user_dbpath:
+		case isc_info_svc_get_env:
+		case isc_info_svc_get_env_lock:
+		case isc_info_svc_get_env_msg:
+		case isc_info_svc_get_licensed_users:
+			if (state == S_RUN)
+			{
+				Firebird::Arg::Gds(isc_mixed_info).raise();
+			}
+			state = S_INF;
+			break;
+
+		default:
+			(Firebird::Arg::Gds(isc_unknown_info) << Firebird::Arg::Num(ULONG(items[-1]))).raise();
+			break;
+		}
+	}
+
+	return state == S_RUN;
+}
+
+static inline char conv_bin2ascii(ULONG l)
+{
+	return "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"[l & 0x3f];
+}
+
+// converts bytes to BASE64 representation
+void base64(Firebird::string& b64, const Firebird::UCharBuffer& bin)
+{
+	b64.erase();
+	const unsigned char* f = bin.begin();
+	for (int i = bin.getCount(); i > 0; i -= 3, f += 3)
+	{
+		if (i >= 3)
+		{
+			const ULONG l = (ULONG(f[0]) << 16) | (ULONG(f[1]) <<  8) | f[2];
+			b64 += conv_bin2ascii(l >> 18);
+			b64 += conv_bin2ascii(l >> 12);
+			b64 += conv_bin2ascii(l >> 6);
+			b64 += conv_bin2ascii(l);
+		}
+		else
+		{
+			ULONG l = ULONG(f[0]) << 16;
+			if (i == 2)
+				l |= (ULONG(f[1]) << 8);
+			b64 += conv_bin2ascii(l >> 18);
+			b64 += conv_bin2ascii(l >> 12);
+			b64 += (i == 1 ? '=' : conv_bin2ascii(l >> 6));
+			b64 += '=';
+		}
+	}
+}
+
+void random64(Firebird::string& randomValue, FB_SIZE_T length)
+{
+	Firebird::UCharBuffer binRand;
+	Firebird::GenerateRandomBytes(binRand.getBuffer(length), length);
+	base64(randomValue, binRand);
+	randomValue.resize(length, '$');
 }
 
 void logAndDie(const char* text)
 {
 	gds__log(text);
 	Firebird::Syslog::Record(Firebird::Syslog::Error, text);
-#ifdef WIN_NT
-	exit(3);
-#else
 	abort();
-#endif
 }
 
-
-const char switch_char = '-';
-
-bool switchMatch(const Firebird::string& sw, const char* target)
+UCHAR sqlTypeToDscType(SSHORT sqlType)
 {
-/**************************************
- *
- *	s w i t c h M a t c h
- *
- **************************************
- *
- * Functional description
- *	Returns true if switch matches target
- *
- **************************************/
-	size_t n = strlen(target);
-	if (n < sw.length())
+	switch (sqlType)
 	{
+	case SQL_VARYING:
+		return dtype_varying;
+	case SQL_TEXT:
+		return dtype_text;
+	case SQL_NULL:
+		return dtype_text;
+	case SQL_DOUBLE:
+		return dtype_double;
+	case SQL_FLOAT:
+		return dtype_real;
+	case SQL_D_FLOAT:
+		return dtype_d_float;
+	case SQL_TYPE_DATE:
+		return dtype_sql_date;
+	case SQL_TYPE_TIME:
+		return dtype_sql_time;
+	case SQL_TIMESTAMP:
+		return dtype_timestamp;
+	case SQL_BLOB:
+		return dtype_blob;
+	case SQL_ARRAY:
+		return dtype_array;
+	case SQL_LONG:
+		return dtype_long;
+	case SQL_SHORT:
+		return dtype_short;
+	case SQL_INT64:
+		return dtype_int64;
+	case SQL_QUAD:
+		return dtype_quad;
+	case SQL_BOOLEAN:
+		return dtype_boolean;
+	case SQL_DEC16:
+		return dtype_dec64;
+	case SQL_DEC34:
+		return dtype_dec128;
+	case SQL_INT128:
+		return dtype_int128;
+	case SQL_TIME_TZ:
+		return dtype_sql_time_tz;
+	case SQL_TIMESTAMP_TZ:
+		return dtype_timestamp_tz;
+	case SQL_TIME_TZ_EX:
+		return dtype_ex_time_tz;
+	case SQL_TIMESTAMP_TZ_EX:
+		return dtype_ex_timestamp_tz;
+	default:
+		return dtype_unknown;
+	}
+}
+
+unsigned sqlTypeToDsc(unsigned runOffset, unsigned sqlType, unsigned sqlLength,
+	unsigned* dtype, unsigned* len, unsigned* offset, unsigned* nullOffset)
+{
+	sqlType &= ~1;
+	unsigned dscType = sqlTypeToDscType(sqlType);
+
+	if (dscType == dtype_unknown)
+	{
+		fb_assert(false);
+		Firebird::Arg::Gds(isc_dsql_datatype_err).raise();
+	}
+
+	if (dtype)
+		*dtype = dscType;
+
+	if (sqlType == SQL_VARYING)
+		sqlLength += sizeof(USHORT);
+	if (len)
+		*len = sqlLength;
+
+	unsigned align = type_alignments[dscType % FB_NELEM(type_alignments)];
+	if (align)
+		runOffset = FB_ALIGN(runOffset, align);
+	if (offset)
+		*offset = runOffset;
+
+	runOffset += sqlLength;
+	align = type_alignments[dtype_short];
+	if (align)
+		runOffset = FB_ALIGN(runOffset, align);
+	if (nullOffset)
+		*nullOffset = runOffset;
+
+	return runOffset + sizeof(SSHORT);
+}
+
+const ISC_STATUS* nextCode(const ISC_STATUS* v) throw()
+{
+	do
+	{
+		v += nextArg(v[0]);
+	} while (v[0] != isc_arg_warning && v[0] != isc_arg_gds && v[0] != isc_arg_end);
+
+	return v;
+}
+
+bool containsErrorCode(const ISC_STATUS* v, ISC_STATUS code)
+{
+	for (; v[0] == isc_arg_gds; v = nextCode(v))
+	{
+		if (v[1] == code)
+			return true;
+	}
+
+	return false;
+}
+
+inline bool sqlSymbolChar(char c, bool first)
+{
+	if (c & 0x80)
 		return false;
-	}
-	n = sw.length();
-	return memcmp(sw.c_str(), target, n) == 0;
+	return (isdigit(c) && !first) || isalpha(c) || c == '_' || c == '$';
 }
 
-
-in_sw_tab_t* findSwitch(in_sw_tab_t* table, Firebird::string sw)
+const char* dpbItemUpper(const char* s, FB_SIZE_T l, Firebird::string& buf)
 {
-/**************************************
- *
- *	f i n d S w i t c h
- *
- **************************************
- *
- * Functional description
- *	Returns pointer to in_sw_tab entry for current switch
- *	If not a switch, returns NULL.
- *
- **************************************/
-	if (sw.isEmpty())
+	if (l && (s[0] == '"' || s[0] == '\''))
 	{
-		return 0;
-	}
-	if (sw[0] != switch_char)
-	{
-		return 0;
-	}
-	sw.erase(0, 1);
-	sw.upper();
+		const char end_quote = s[0];
+		bool ascii = true;
 
-	for (in_sw_tab_t* in_sw_tab = table; in_sw_tab->in_sw_name; in_sw_tab++)
-	{
-		if ((sw.length() >= in_sw_tab->in_sw_min_length) &&
-			switchMatch(sw, in_sw_tab->in_sw_name))
+		// quoted string - strip quotes
+		for (FB_SIZE_T i = 1; i < l; ++i)
 		{
-			return in_sw_tab;
+			if (s[i] == end_quote)
+			{
+				if (++i >= l)
+				{
+					if (ascii && s[0] == '\'')
+						buf.upper();
+
+					return buf.c_str();
+				}
+
+				if (s[i] != end_quote)
+				{
+					buf.assign(&s[i], l - i);
+					(Firebird::Arg::Gds(isc_quoted_str_bad) << buf).raise();
+				}
+
+				// skipped the escape quote, continue processing
+			}
+			else if (!sqlSymbolChar(s[i], i == 1))
+				ascii = false;
+
+			buf += s[i];
 		}
+
+		buf.assign(1, s[0]);
+		(Firebird::Arg::Gds(isc_quoted_str_miss) << buf).raise();
 	}
 
-	return 0;
+	// non-quoted string - try to uppercase
+	for (FB_SIZE_T i = 0; i < l; ++i)
+	{
+		if (!sqlSymbolChar(s[i], i == 0))
+			return NULL;				// contains non-ascii data
+		buf += toupper(s[i]);
+	}
+
+	return buf.c_str();
+}
+
+bool isBpbSegmented(unsigned parLength, const unsigned char* par)
+{
+	if (parLength && !par)
+		Firebird::Arg::Gds(isc_null_block).raise();
+
+	Firebird::ClumpletReader bpb(Firebird::ClumpletReader::Tagged, par, parLength);
+	if (bpb.getBufferTag() != isc_bpb_version1)
+	{
+		(Firebird::Arg::Gds(isc_bpb_version) << Firebird::Arg::Num(bpb.getBufferTag()) <<
+			Firebird::Arg::Num(isc_bpb_version1)).raise();
+	}
+
+	if (!bpb.find(isc_bpb_type))
+		return true;
+
+	int type = bpb.getInt();
+
+	return type & isc_bpb_type_stream ? false : true;
+}
+
+FbShutdown::~FbShutdown()
+{
+	fb_shutdown(0, reason);
 }
 
 } // namespace fb_utils

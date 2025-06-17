@@ -16,7 +16,7 @@
  * All Rights Reserved.
  * Contributor(s): ______________________________________.
  */
-set sql dialect 1;
+set sql dialect 3;
 create database "employe2.fdb";
 /*
  *	Currency cross rates:  convert one currency type into another.
@@ -34,17 +34,22 @@ CREATE TABLE cross_rate
     PRIMARY KEY (from_currency, to_currency)
 );
 
-INSERT INTO cross_rate VALUES ('Dollar', 'CdnDlr',  1.3273,  '11/22/93');
-INSERT INTO cross_rate VALUES ('Dollar', 'FFranc',  5.9193,  '11/22/93');
-INSERT INTO cross_rate VALUES ('Dollar', 'D-Mark',  1.7038,  '11/22/93');
-INSERT INTO cross_rate VALUES ('Dollar', 'Lira',    1680.0,  '11/22/93');
-INSERT INTO cross_rate VALUES ('Dollar', 'Yen',     108.43,  '11/22/93');
-INSERT INTO cross_rate VALUES ('Dollar', 'Guilder', 1.9115,  '11/22/93');
-INSERT INTO cross_rate VALUES ('Dollar', 'SFranc',  1.4945,  '11/22/93');
-INSERT INTO cross_rate VALUES ('Dollar', 'Pound',   0.67774, '11/22/93');
-INSERT INTO cross_rate VALUES ('Pound',  'FFranc',  8.734,   '11/22/93');
-INSERT INTO cross_rate VALUES ('Pound',  'Yen',     159.99,  '11/22/93');
-INSERT INTO cross_rate VALUES ('Yen',    'Pound',   0.00625, '11/22/93');
-INSERT INTO cross_rate VALUES ('CdnDlr', 'Dollar',  0.75341, '11/22/93');
-INSERT INTO cross_rate VALUES ('CdnDlr', 'FFranc',  4.4597,  '11/22/93');
+INSERT INTO cross_rate VALUES ('Dollar', 'CdnDlr',  1.0027,  '11/09/2012');
+INSERT INTO cross_rate VALUES ('Dollar', 'Yen',     79.2400, '11/09/2012');
+INSERT INTO cross_rate VALUES ('Dollar', 'SFranc',  0.9495,  '11/09/2012');
+INSERT INTO cross_rate VALUES ('Dollar', 'Pound',   0.6272,  '11/09/2012');
+INSERT INTO cross_rate VALUES ('Pound',  'Euro',    1.2542,  '11/09/2012');
+INSERT INTO cross_rate VALUES ('Pound',  'Yen',     126.3320,'11/09/2012');
+INSERT INTO cross_rate VALUES ('Yen',    'Pound',   0.0079,  '11/09/2012');
+INSERT INTO cross_rate VALUES ('CdnDlr', 'Dollar',  0.9973,  '11/09/2012');
+INSERT INTO cross_rate VALUES ('CdnDlr', 'Euro',    0.7857,  '11/09/2012');
+INSERT INTO cross_rate VALUES ('Euro', 'Dollar',    1.2716,  '11/09/2012');
+INSERT INTO cross_rate VALUES ('Dollar', 'Euro',    0.7878,  '11/09/2012');
+INSERT INTO cross_rate VALUES ('Ruble', 'Euro',     0.0249,  '11/09/2012');
+INSERT INTO cross_rate VALUES ('Euro', 'Ruble',     40.1378, '11/09/2012');
+INSERT INTO cross_rate VALUES ('Ruble', 'Dollar',   0.0316,  '11/09/2012');
+INSERT INTO cross_rate VALUES ('Dollar', 'Ruble',   31.5355, '11/09/2012');
+INSERT INTO cross_rate VALUES ('RLeu', 'Dollar',    0.2811,  '11/09/2012');
+INSERT INTO cross_rate VALUES ('Euro', 'RLeu',      4.5281,  '11/09/2012');
+
 

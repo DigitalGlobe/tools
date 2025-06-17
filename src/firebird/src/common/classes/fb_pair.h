@@ -144,11 +144,27 @@ template<typename BasePair>
 		}
 	};
 
+template<typename parLeft, typename parRight>
+using NonPooledPair = Pair<NonPooled<parLeft, parRight>>;
+
+template<typename parLeft, typename parRight>
+using LeftPooledPair = Pair<Left<parLeft, parRight>>;
+
+template<typename parLeft, typename parRight>
+using RightPooledPair = Pair<Right<parLeft, parRight>>;
+
+template<typename parLeft, typename parRight>
+using FullPooledPair = Pair<Full<parLeft, parRight>>;
+
 template <typename P>
 	class FirstKey
 	{
 	public:
 		typedef typename P::first_type Pair_first_type;
+		static const Pair_first_type& generate(const P& item)
+		{
+			return item.first;
+		}
 		static const Pair_first_type& generate(const void* /*sender*/, const P& item)
 		{
 			return item.first;
@@ -160,6 +176,10 @@ template <typename P>
 	{
 	public:
 		typedef typename P::first_type Pair_first_type;
+		static const Pair_first_type* generate(const P* item)
+		{
+			return &item->first;
+		}
 		static const Pair_first_type* generate(const void* /*sender*/, const P* item)
 		{
 			return &item->first;
@@ -171,6 +191,10 @@ template <typename P>
 	{
 	public:
 		typedef typename P::first_type Pair_first_type;
+		static const Pair_first_type& generate(const P* item)
+		{
+			return item->first;
+		}
 		static const Pair_first_type& generate(const void* /*sender*/, const P* item)
 		{
 			return item->first;

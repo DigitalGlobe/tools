@@ -25,7 +25,7 @@
  */
 
 #include "firebird.h"
-#include "../jrd/common.h"
+#include "../jrd/ini.h"
 #include "../jrd/tra.h"
 #include "../jrd/lck.h"
 #include "../jrd/err_proto.h"
@@ -35,10 +35,7 @@
 using namespace Jrd;
 using namespace Firebird;
 
-Lock* RLCK_reserve_relation(thread_db* tdbb,
-							jrd_tra* transaction,
-							jrd_rel* relation,
-							bool write_flag)
+Lock* RLCK_reserve_relation(thread_db* tdbb, jrd_tra* transaction, jrd_rel* relation, bool write_flag)
 {
 /**************************************
  *
@@ -52,24 +49,42 @@ Lock* RLCK_reserve_relation(thread_db* tdbb,
  *
  **************************************/
 	SET_TDBB(tdbb);
+	Database* const dbb = tdbb->getDatabase();
 
 	if (transaction->tra_flags & TRA_system)
 		return NULL;
 
-	// hvlad: virtual relations always writable, all kind of GTT's are writable
-	// at read-only transactions at read-write databases, GTT's with ON COMMIT 
-	// DELETE ROWS clause is writable at read-only databases.
+	// hvlad: virtual relations are always writable, see below for the other rules
 
-	if (write_flag && (tdbb->getDatabase()->dbb_flags & DBB_read_only) && 
-		!relation->isVirtual() && !(relation->rel_flags & REL_temp_tran))
+	if (write_flag && !relation->isVirtual())
 	{
-		ERR_post(Arg::Gds(isc_read_only_database));
-	}
+		// In read-only databases, only GTTs with ON COMMIT DELETE ROWS clause are writable
 
-	if (write_flag && (transaction->tra_flags & TRA_readonly) && 
-		!relation->isVirtual() && !relation->isTemporary())
-	{
-		ERR_post(Arg::Gds(isc_read_only_trans));
+		if (dbb->readOnly() && !(relation->rel_flags & REL_temp_tran))
+			ERR_post(Arg::Gds(isc_read_only_database));
+
+		// No other limitations for GTTs
+
+		if (!relation->isTemporary())
+		{
+			// Persistent tables are not writable in read-only transactions
+
+			if (transaction->tra_flags & TRA_readonly)
+				ERR_post(Arg::Gds(isc_read_only_trans));
+
+			// Inside a read-only replica, only replicator sessions are expected to be writable.
+			// However, we also allow not replicated DDL statements (e.g. ALTER DATABASE).
+			// And insertions into RDB$BACKUP_HISTORY are also allowed to support nbackup, sigh.
+
+			if (dbb->isReplica(REPLICA_READ_ONLY) &&
+				!(tdbb->tdbb_flags & TDBB_replicator) &&
+				!(tdbb->tdbb_flags & TDBB_repl_in_progress))
+			{
+				// This condition is a workaround for nbackup
+				if (relation->rel_id != rel_backup_history)
+					ERR_post(Arg::Gds(isc_read_only_trans));
+			}
+		}
 	}
 
 	Lock* lock = RLCK_transaction_relation_lock(tdbb, transaction, relation);
@@ -109,7 +124,7 @@ Lock* RLCK_reserve_relation(thread_db* tdbb,
 	{
 		string err;
 		err.printf("Acquire lock for relation (%s) failed", relation->rel_name.c_str());
-		
+
 		ERR_append_status(tdbb->tdbb_status_vector, Arg::Gds(isc_random) << Arg::Str(err));
 		ERR_punt();
 	}
@@ -118,9 +133,7 @@ Lock* RLCK_reserve_relation(thread_db* tdbb,
 }
 
 
-Lock* RLCK_transaction_relation_lock(thread_db* tdbb,
-									 jrd_tra* transaction,
-									 jrd_rel* relation)
+Lock* RLCK_transaction_relation_lock(thread_db* tdbb, jrd_tra* transaction, jrd_rel* relation)
 {
 /**************************************
  *
@@ -135,17 +148,17 @@ Lock* RLCK_transaction_relation_lock(thread_db* tdbb,
  **************************************/
 	SET_TDBB(tdbb);
 
+	const ULONG relId = relation->rel_id;
+
 	Lock* lock;
 	vec<Lock*>* vector = transaction->tra_relation_locks;
-	if (vector && (relation->rel_id < vector->count()) && (lock = (*vector)[relation->rel_id]))
+	if (vector && (relId < vector->count()) && (lock = (*vector)[relId]))
 	{
 		return lock;
 	}
 
 	vector = transaction->tra_relation_locks =
-		vec<Lock*>::newVector(*transaction->tra_pool, transaction->tra_relation_locks,
-					   relation->rel_id + 1);
-
+		vec<Lock*>::newVector(*transaction->tra_pool, transaction->tra_relation_locks, relId + 1);
 	lock = jrd_rel::createLock(tdbb, transaction->tra_pool, relation, LCK_relation, true);
 
 	// enter all relation locks into the intra-process lock manager and treat
@@ -157,7 +170,7 @@ Lock* RLCK_transaction_relation_lock(thread_db* tdbb,
 	// transactions, if a transaction is specified
 	lock->lck_compatible2 = transaction;
 
-	(*vector)[relation->rel_id] = lock;
+	(*vector)[relId] = lock;
 
 	return lock;
 }

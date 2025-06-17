@@ -62,7 +62,7 @@ echo "Install and start Classic"
 #inetd
 	if [ -f /var/run/inetd.pid -a -d /etc/inetd.d ]; then
        	if [ -f /etc/inetd.conf ]; then
-        	echo "gds_db stream  tcp     nowait  root $FB_FW/Resources/bin/fb_inet_server fb_inet_server" > /etc/.fb.inetd.conf.entry
+        	echo "gds_db stream  tcp     nowait  root $FB_FW/Resources/bin/fb_smp_server fb_smp_server" > /etc/.fb.inetd.conf.entry
         	cat /etc/inetd.conf /etc/.fb.inetd.conf.entry > /etc/.firebird.temp.install.inetd.conf
         	mv /etc/.firebird.temp.install.inetd.conf /etc/inetd.conf
         	rm -f /etc/.fb.inetd.conf.entry
@@ -80,7 +80,7 @@ service gds_db
         wait            = no
         user            = firebird
 EOF
-                echo "server          = $FB_FW/Resources/bin/fb_inet_server" >> /etc/xinetd.d/firebird
+                echo "server          = $FB_FW/Resources/bin/fb_smp_server" >> /etc/xinetd.d/firebird
                 cat >> /etc/xinetd.d/firebird << EOF
         groups          = yes
 }
@@ -111,7 +111,7 @@ echo "You are already in SuperClassic mode"
 else
 # Check if Classic is running
 echo "Check if Classic is running"
-if ps -axe | grep "fb_inet_server" | grep -v grep
+if ps -axe | grep "fb_smp_server" | grep -v grep
 	then
 	echo "An instance of the Firebird Classic Server seems to be running."
 	echo "Please exit all Firebird applications before continuing."

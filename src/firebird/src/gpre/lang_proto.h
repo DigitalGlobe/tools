@@ -28,7 +28,6 @@
 
 void	ADA_action(const act*, int);
 void	ADA_print_buffer(TEXT*, const int);
-//int		BAS_action(ACT, int);
 void	C_CXX_action(const act*, int);
 void	COB_action(const act*, int);
 void	COB_name_init(bool);
@@ -38,8 +37,8 @@ void	FTN_fini();
 void	FTN_print_buffer(TEXT*);
 void	INT_action(const act*, int);
 void	INT_CXX_action(const act*, int);
+void	OBJ_CXX_action(const act*, int);
 void	PAS_action(const act*, int);
-//int		PLI_action(ACT, int);
 void	RMC_action(const act*, int);
 void	RMC_print_buffer(TEXT*, bool);
 

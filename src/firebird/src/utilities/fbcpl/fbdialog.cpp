@@ -66,9 +66,9 @@ CFBDialog::CFBDialog(CWnd* pParent /*=NULL*/)
 	initialised = false;
 
 	m_Guardian_Name		= ISCGUARD_EXECUTABLE;
-	m_SS_Server_Name	= REMOTE_SS_EXECUTABLE;
+	m_SS_Server_Name	= REMOTE_EXECUTABLE;
 #ifdef MANAGE_CLASSIC
-	m_CS_Server_Name	= REMOTE_CS_EXECUTABLE;
+	m_CS_Server_Name	= REMOTE_EXECUTABLE;
 #endif
 
 	fb_status.AutoStart = false;
@@ -927,11 +927,11 @@ bool CFBDialog::ServiceInstall(CFBDialog::STATUS status )
 				return false;
 			}
 
-			/* Set AutoStart to manual in preparation for installing the fb_server service */
+			// Set AutoStart to manual in preparation for installing the fb_server service
 			status.AutoStart = false;
 
 		}
-		/* do the install of server */
+		// do the install of server
 		m_Error_Status = SERVICES_install (hScManager, remote_service, remote_display_name,
 			REMOTE_DISPLAY_DESCR, (LPCTSTR) status.ServiceExecutable, ServerPath, NULL, NULL,
 			status.AutoStart, NULL, NULL, false, !new_settings.UseGuardian, svc_error);
@@ -1290,10 +1290,9 @@ void CFBDialog::SetGuardianUseInConf( bool UseGuardian )
 	else
 		newvalue = "0";
 
-// One day the Config class will have set methods...
-/*
-	if (Config::setGuardianOption( UseGuardian ))
-*/
+	// One day the Config class will have set methods...
+	//if (Config::setGuardianOption( UseGuardian ))
+
 	if (UpdateFirebirdConf("GuardianOption", newvalue ) )
 	{
 		// Do we assign here? or wait for the
@@ -1317,10 +1316,9 @@ void CFBDialog::SetPreferredArchitectureInConf( bool UseClassic )
 		newvalue = "0";
 
 
-// One day the Config class will have set methods...
-/*
-	if (Config::setPreferClassicServer( UseClassic ))
-*/
+	// One day the Config class will have set methods...
+	// if (Config::setPreferClassicServer( UseClassic ))
+
 	if ( UpdateFirebirdConf("PreferClassicServer", newvalue ) )
 	{
 		// Do we assign here? or wait for the
@@ -1531,12 +1529,12 @@ bool CFBDialog::ServiceSupportAvailable() const
 	OSVERSIONINFO OsVersionInfo;
 	ZeroMemory(&OsVersionInfo, sizeof(OsVersionInfo));
 
-	/* need to set the sizeof this structure for NT to work */
+	// need to set the sizeof this structure for NT to work
 	OsVersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 
 	GetVersionEx(&OsVersionInfo);
 
-	/* true for NT family, false for 95 family */
+	// true for NT family, false for 95 family
 	return (OsVersionInfo.dwPlatformId == VER_PLATFORM_WIN32_NT);
 }
 

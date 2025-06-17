@@ -24,7 +24,7 @@
 #ifndef REMOTE_CNTL_PROTO_H
 #define REMOTE_CNTL_PROTO_H
 
-#include "../jrd/ThreadStart.h"
+#include "../common/ThreadStart.h"
 
 void	CNTL_init(ThreadEntryPoint*, const TEXT*);
 void*	CNTL_insert_thread();

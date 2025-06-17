@@ -23,14 +23,14 @@ static const struct
 {
 	const char* blr_string;
 	const UCHAR* blr_operators;
-} blr_table[] =
+} blr_print_table[] =
 {
 	{NULL, NULL},
 	{"assignment", two},
 	{"begin", begin},
 	{"declare", declare},
 	{"message", message},
-	{"erase", byte_line},
+	{"erase", erase},
 	{"fetch", two},
 	{"for", two},
 	{"if", three},
@@ -51,13 +51,13 @@ static const struct
 	{"field", field},
 	{"fid", parm},
 	{"parameter", parm},
-	{"variable", variable},
+	{"variable", one_word},
 	{"average", two},
 	{"count", one},
 	{"maximum", two},
 	{"minimum", two},	// 30
 	{"total", two},
-	{NULL, NULL}, // {"count2", two},
+	{"receive_batch", byte_verb},
 	{NULL, NULL},
 	{"add", two},
 	{"subtract", two},
@@ -89,7 +89,7 @@ static const struct
 	{"missing", one},
 	{"unique", one},
 	{"like", two},
-	{NULL, NULL},
+	{"in_list", in_list},
 	{NULL, NULL},
 	{NULL, NULL},
 	{"rse", rse},
@@ -127,9 +127,9 @@ static const struct
 	{NULL, NULL},
 	{"function", function},	// 100
 	{"gen_id", gen_id},
-	{"prot_mask", two},
+	{NULL, NULL},
 	{"upcase", one},
-	{"lock_state", one},
+	{NULL, NULL},
 	{"value_if", three},
 	{"matching2", three},
 	{"index", indx},
@@ -157,8 +157,8 @@ static const struct
 	{"block", begin},
 	{"error_handler", error_handler},	// 130
 	{"cast", cast},
-	{NULL, NULL},
-	{NULL, NULL},
+	{"pid2", pid2},
+	{"procedure2", procedure2},
 	{"start_savepoint", zero},
 	{"end_savepoint", zero},
 	{NULL, NULL},
@@ -198,35 +198,62 @@ static const struct
 	{"current_time2", byte_line},
 	{"agg_list", two}, // 170
 	{"agg_list_distinct", two},
-	/***
-	// These verbs were added in 6.0, primarily to support 64-bit integers, now obsolete
-	{"gen_id2", gen_id},
-	{"set_generator2", gen_id},
-	***/
 	{"modify2", modify2},
-	{NULL, NULL},
+	{"erase2", erase2},
 	// New BLR in FB1
 	{"current_role", zero},
 	{"skip", one},
 	// New BLR in FB2
 	{"exec_sql", one},
 	{"internal_info", one},
-	{"nullsfirst", zero},
+	{"nullsfirst", one},
 	{"writelock", zero},
-	{"nullslast", zero}, // 180
+	{"nullslast", one}, // 180
 	{"lowcase", one},
 	{"strlen", strlength},
 	{"trim", trim},
 	// New BLR in FB2.1
-	{"init_variable", variable},
+	{"init_variable", one_word},
 	{"recurse", union_ops},
 	{"sys_function", function},
 	// New BLR in FB2.5
 	{"auto_trans", byte_verb},
 	{"similar", similar},
 	{"exec_stmt", exec_stmt},
-	{"stmt_expr", two},
+	{"stmt_expr", two}, // 190
 	{"derived_expr", derived_expr},
+	{"procedure3", procedure3},
+	{"exec_proc2", exec_proc2},
+	{"function2", function2},
+	{"window", window},
+	{"partition_by", partition_by},
+	{"continue_loop", byte_line},
+	{"procedure4", procedure4},
+	{"agg_function", function},
+	{"substring_similar", three}, // 200
+	{"bool_as_value", one},
+	{"coalesce", byte_args},
+	{"decode", decode},
+	{"exec_subproc", exec_proc},
+	{"subproc_decl", subproc_decl},
+	{"subproc", procedure2},
+	{"subfunc_decl", subfunc_decl},
+	{"subfunc", function},
+	{"record_version2", byte_line},
+	{"gen_id2", gen_id2}, // 210
+	{"window_win", window_win},
+	{"default", relation_field},
+	{"store3", store3},
+	{"local_timestamp", byte_line},
+	{"local_time", byte_line},
+	{"at", verb_byte_verb},
+	{"marks", marks},
+	// New BLR in FB5.0
+	{"dcl_local_table", dcl_local_table},
+	{"local_table_truncate", one_word},
+	{"local_table_id", local_table},
+	{"outer_map", outer_map},
+	{NULL, NULL},	// blr_json_function
+	{"skip_locked", zero},
 	{0, 0}
 };
-

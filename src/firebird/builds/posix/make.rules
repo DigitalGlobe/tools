@@ -32,21 +32,43 @@
 
 
 # Please don't use compiler/platform specific flags here - nmcc 02-Nov-2002
-WFLAGS:=$(CPPFLAGS) -I$(SRC_ROOT)/include/gen -I$(SRC_ROOT)/include -I$(SRC_ROOT)/vulcan \
-	-DNAMESPACE=Vulcan
+WFLAGS =-I$(SRC_ROOT)/include/gen -I$(SRC_ROOT)/include $(CPPFLAGS) $(LTCSOURCE)
 
-ifeq ($(STD_ICU),false)
-  WFLAGS:= $(WFLAGS) -I$(ROOT)/extern/icu/source/common -I$(ROOT)/extern/icu/source/i18n
+ifneq ($(SYSTEM_BOOST_FLG),Y)
+  WFLAGS += -I$(ROOT)/extern/boost
 endif
 
-ifeq ($(IsProdTypeBuild),Y)
-  WFLAGS:= $(WFLAGS) $(PROD_FLAGS)
+WFLAGS += -I$(LIBCDS_INC) -D$(LIBCDS_DEF)
+
+ifeq ($(TOMMATH_BUILD_FLG),Y)
+  WFLAGS += -I$(TOMMATH_INC)
+endif
+
+ifeq ($(TOMCRYPT_BUILD_FLG),Y)
+  WFLAGS += -I$(TOMCRYPT_INC)
+endif
+
+ifeq ($(RE2_BUILD_FLG),Y)
+ WFLAGS += -I$(ROOT)/extern/re2
+endif
+
+ifeq ($(ABSEIL_BUILD_FLG),Y)
+ WFLAGS += -I$(ROOT)/extern/int128
+endif
+
+ifeq ($(LSB_FLG),Y)
+  WFLAGS += -DLSB_BUILD
+endif
+
+ifeq ($(TARGET),Release)
+  WFLAGS += $(PROD_FLAGS)
 else
-  WFLAGS:= $(WFLAGS) $(DEV_FLAGS) -DDEV_BUILD
+  WFLAGS += $(DEV_FLAGS) -DDEV_BUILD
 endif
 
-WCFLAGS:= $(WFLAGS) $(THR_FLAGS) $(CFLAGS) $(GLOB_OPTIONS)
-WCXXFLAGS:= $(WFLAGS) $(THR_FLAGS) $(CXXFLAGS) $(GLOB_OPTIONS)
+WCFLAGS = $(WFLAGS) $(CFLAGS) $(AC_CFLAGS) $(GLOB_OPTIONS)
+WCXXFLAGS = $(WFLAGS) $(PLUSPLUS_FLAGS) $(PLATFORM_PLUSPLUS_FLAGS) $(CXXFLAGS) $(AC_CXXFLAGS) $(GLOB_OPTIONS)
+WLDFLAGS = $(LDFLAGS) $(AC_LDFLAGS)
 
 # Here we have definitions for using the preprocessor.
 
@@ -65,9 +87,9 @@ WCXXFLAGS:= $(WFLAGS) $(THR_FLAGS) $(CXXFLAGS) $(GLOB_OPTIONS)
 #	$(ECHO) $(testgpre)
 
 
-GPRE_FLAGS=	-r -m -z -n
-JRD_GPRE_FLAGS = -n -z -gds_cxx -raw -ids
-DSQL_GPRE_FLAGS = -r -m -z -n
+GPRE_FLAGS= -m -z -n
+JRD_GPRE_FLAGS = -n -z -gds_cxx -ids
+OBJECT_GPRE_FLAGS = -m -z -n -ocxx
 
 
 .SUFFIXES: .c .e .epp .cpp
@@ -76,40 +98,46 @@ DSQL_GPRE_FLAGS = -r -m -z -n
 	$(GPRE_CURRENT) $(GPRE_FLAGS) $< $@
 
 
-$(OBJ)/jrd/%.cpp: $(SRC_ROOT)/jrd/%.epp 
+$(OBJ)/jrd/%.cpp: $(SRC_ROOT)/jrd/%.epp
 	$(GPRE_CURRENT) $(JRD_GPRE_FLAGS) $(firstword $<) $@
 
-$(OBJ)/dsql/%.cpp: $(SRC_ROOT)/dsql/%.epp
-	$(GPRE_CURRENT) $(DSQL_GPRE_FLAGS) $< $@
+$(OBJ)/isql/%.cpp: $(SRC_ROOT)/isql/%.epp
+	$(GPRE_CURRENT) $(OBJECT_GPRE_FLAGS) $< $@
 
-$(OBJ)/%.cpp: $(SRC_ROOT)/%.epp 
+$(OBJ)/burp/%.cpp: $(SRC_ROOT)/burp/%.epp
+	$(GPRE_CURRENT) $(OBJECT_GPRE_FLAGS) $< $@
+
+$(OBJ)/%.cpp: $(SRC_ROOT)/%.epp
 	$(GPRE_CURRENT) $(GPRE_FLAGS) $(firstword $<) $@
 
 
-.SUFFIXES: .lo .o .cpp .c
+.SUFFIXES: .lo .o .cpp .c .cc
 
-$(OBJ)/jrd/%.o: $(SRC_ROOT)/jrd/$(PLATFORM_PATH)/%.cpp
-	$(CXX) $(WCXXFLAGS) -c $(firstword $<) -o $@
-
-$(OBJ)/utilities/ntrace/%.o: $(SRC_ROOT)/utilities/ntrace/$(PLATFORM_PATH)/%.cpp
-	$(CXX) $(WCXXFLAGS) -c $(firstword $<) -o $@
-
-ifneq ($(strip $(PLATFORM_FALLBACK)),)
-$(OBJ)/jrd/%.o: $(SRC_ROOT)/jrd/$(PLATFORM_FALLBACK)/%.cpp
-	$(CXX) $(WCXXFLAGS) -c $(firstword $<) -o $@
-
-$(OBJ)/utilities/ntrace/%.o: $(SRC_ROOT)/utilities/ntrace/$(PLATFORM_FALLBACK)/%.cpp
-	$(CXX) $(WCXXFLAGS) -c $(firstword $<) -o $@
-endif
-
-$(OBJ)/%.o: $(SRC_ROOT)/%.c 
+%.o: %.c
 	$(CC) $(WCFLAGS) -c $(firstword $<) -o $@
 
-$(OBJ)/%.o: $(OBJ)/%.cpp 
-	$(CXX) $(WCXXFLAGS) -c $(firstword $<) -o $@
+%.o: %.cc
+	$(CXX) $(WCFLAGS) -c $(firstword $<) -o $@
 
-$(OBJ)/%.o: $(SRC_ROOT)/%.cpp 
+$(OBJ)/%.o: $(SRC_ROOT)/%.c
+	$(CC) $(WCFLAGS) -c $(firstword $<) -o $@
+	@sed $(INLINE_EDIT_SED) -e "1,2s/:/: \$$(wildcard/" -e "\$$s/\(.*\)/\\1)/" $(patsubst %.o,%.d,$@)
+
+$(OBJ)/%.o: $(SRC_ROOT)/%.m
+	$(CC) $(WCFLAGS) -c $(firstword $<) -o $@
+	@sed $(INLINE_EDIT_SED) -e "1,2s/:/: \$$(wildcard/" -e "\$$s/\(.*\)/\\1)/" $(patsubst %.o,%.d,$@)
+
+$(OBJ)/%.o: $(OBJ)/%.cpp
 	$(CXX) $(WCXXFLAGS) -c $(firstword $<) -o $@
+	@sed $(INLINE_EDIT_SED) -e "1,2s/:/: \$$(wildcard/" -e "\$$s/\(.*\)/\\1)/" $(patsubst %.o,%.d,$@)
+
+$(OBJ)/%.o: $(SRC_ROOT)/%.cpp
+	$(CXX) $(WCXXFLAGS) -c $(firstword $<) -o $@
+	@sed $(INLINE_EDIT_SED) -e "1,2s/:/: \$$(wildcard/" -e "\$$s/\(.*\)/\\1)/" $(patsubst %.o,%.d,$@)
+
+$(OBJ)/%.o: $(ROOT)/%.cpp
+	$(CXX) $(WCFLAGS) -c $(firstword $<) -o $@
+	@sed $(INLINE_EDIT_SED) -e "1,2s/:/: \$$(wildcard/" -e "\$$s/\(.*\)/\\1)/" $(patsubst %.o,%.d,$@)
 
 .SUFFIXES: .epp .e
 
@@ -117,3 +145,13 @@ $(OBJ)/%.o: $(SRC_ROOT)/%.cpp
 
 $(GEN_ROOT)/%.res: $(SRC_ROOT)/%.rc
 	windres --output-format=coff --include-dir=$(<D) $< $@
+
+# Rule for making gbak files when cross-compiling
+
+.SUFFIXES: .gbak .fdb
+
+$(GEN_ROOT)/$(TARGET)/%.gbak:	$(GEN_ROOT)/Native/%.fdb
+	$(RUN_GBAK) -b $(firstword $<) $(firstword $@)
+
+$(GEN_ROOT)/%.gbak:	$(GEN_ROOT)/%.fdb
+	$(RUN_GBAK) -b $(firstword $<) $(firstword $@)

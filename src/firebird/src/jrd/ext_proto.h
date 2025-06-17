@@ -29,34 +29,21 @@ namespace Jrd {
 	class jrd_tra;
 	class RecordSource;
 	class jrd_rel;
-	class OptimizerBlk;
-	class jrd_nod;
 	struct record_param;
 	struct bid;
 }
 
-void	EXT_close(Jrd::RecordSource*);
+double	EXT_cardinality(Jrd::thread_db*, Jrd::jrd_rel*);
 void	EXT_erase(Jrd::record_param*, Jrd::jrd_tra*);
 Jrd::ExternalFile*	EXT_file(Jrd::jrd_rel*, const TEXT*); //, Jrd::bid*);
 void	EXT_fini(Jrd::jrd_rel*, bool);
-bool	EXT_get(Jrd::thread_db*, Jrd::RecordSource*);
+bool	EXT_get(Jrd::thread_db*, Jrd::record_param*, FB_UINT64&);
 void	EXT_modify(Jrd::record_param*, Jrd::record_param*, Jrd::jrd_tra*);
 
-#ifdef VMS
-int	EXT_open(Jrd::RecordSource*);
-#else
-void	EXT_open(Jrd::thread_db*, Jrd::RecordSource*);
-#endif
-Jrd::RecordSource*	EXT_optimize(Jrd::OptimizerBlk*, SSHORT); //, Jrd::jrd_nod**);
-void	EXT_ready(Jrd::jrd_rel*);
+void	EXT_open(Jrd::Database*, Jrd::ExternalFile*);
 void	EXT_store(Jrd::thread_db*, Jrd::record_param*);
-void	EXT_trans_commit(Jrd::jrd_tra*);
-void	EXT_trans_prepare(Jrd::jrd_tra*);
-void	EXT_trans_rollback(Jrd::jrd_tra*);
-void	EXT_trans_start(Jrd::jrd_tra*);
 
 void EXT_tra_attach(Jrd::ExternalFile*, Jrd::jrd_tra*);
 void EXT_tra_detach(Jrd::ExternalFile*, Jrd::jrd_tra*);
 
 #endif // JRD_EXT_PROTO_H
-

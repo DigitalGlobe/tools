@@ -24,12 +24,18 @@
 #include "../jrd/ResultSet.h"
 #include "../jrd/align.h"
 #include "../jrd/jrd.h"
-#include "../jrd/dsc.h"
+#include "../jrd/req.h"
 #include "../dsql/dsql.h"
-#include "../dsql/sqlda_pub.h"
+#include "../common/classes/auto.h"
+#include "firebird/impl/sqlda_pub.h"
 #include "../dsql/dsql_proto.h"
+#include "../jrd/mov_proto.h"
+#include "../jrd/Attachment.h"
 
-namespace 
+using namespace Firebird;
+
+
+namespace
 {
 	class ParamCmp
 	{
@@ -39,38 +45,256 @@ namespace
 			return p1->par_index > p2->par_index;
 		}
 	};
+
+	void dscToMetaItem(const dsc* desc, MsgMetadata::Item& item)
+	{
+		item.finished = true;
+
+		switch (desc->dsc_dtype)
+		{
+			case dtype_text:
+				item.type = SQL_TEXT;
+				item.charSet = desc->dsc_ttype();
+				item.length = desc->dsc_length;
+				break;
+
+			case dtype_varying:
+				item.type = SQL_VARYING;
+				item.charSet = desc->dsc_ttype();
+				fb_assert(desc->dsc_length >= sizeof(USHORT));
+				item.length = desc->dsc_length - sizeof(USHORT);
+				break;
+
+			case dtype_short:
+				item.type = SQL_SHORT;
+				item.scale = desc->dsc_scale;
+				item.length = sizeof(SSHORT);
+				break;
+
+			case dtype_long:
+				item.type = SQL_LONG;
+				item.scale = desc->dsc_scale;
+				item.length = sizeof(SLONG);
+				break;
+
+			case dtype_quad:
+				item.type = SQL_QUAD;
+				item.scale = desc->dsc_scale;
+				item.length = sizeof(SLONG) * 2;
+				break;
+
+			case dtype_int64:
+				item.type = SQL_INT64;
+				item.scale = desc->dsc_scale;
+				item.length = sizeof(SINT64);
+				break;
+
+			case dtype_real:
+				item.type = SQL_FLOAT;
+				item.length = sizeof(float);
+				break;
+
+			case dtype_double:
+				item.type = SQL_DOUBLE;
+				item.length = sizeof(double);
+				break;
+
+			case dtype_dec64:
+				item.type = SQL_DEC16;
+				item.length = sizeof(Decimal64);
+				break;
+
+			case dtype_dec128:
+				item.type = SQL_DEC34;
+				item.length = sizeof(Decimal128);
+				break;
+
+			case dtype_int128:
+				item.type = SQL_INT128;
+				item.scale = desc->dsc_scale;
+				item.length = sizeof(Int128);
+				break;
+
+			case dtype_sql_date:
+				item.type = SQL_TYPE_DATE;
+				item.length = sizeof(SLONG);
+				break;
+
+			case dtype_sql_time:
+				item.type = SQL_TYPE_TIME;
+				item.length = sizeof(SLONG);
+				break;
+
+			case dtype_sql_time_tz:
+				item.type = SQL_TIME_TZ;
+				item.length = sizeof(ISC_TIME_TZ);
+				break;
+
+			case dtype_timestamp:
+				item.type = SQL_TIMESTAMP;
+				item.length = sizeof(SLONG) * 2;
+				break;
+
+			case dtype_timestamp_tz:
+				item.type = SQL_TIMESTAMP_TZ;
+				item.length = sizeof(ISC_TIMESTAMP_TZ);
+				break;
+
+			case dtype_array:
+				item.type = SQL_ARRAY;
+				item.length = sizeof(ISC_QUAD);
+				break;
+
+			case dtype_blob:
+				item.type = SQL_BLOB;
+				item.length = sizeof(ISC_QUAD);
+				item.subType = desc->dsc_sub_type;
+				item.charSet = desc->getTextType();
+				break;
+
+			case dtype_boolean:
+				item.type = SQL_BOOLEAN;
+				item.length = sizeof(UCHAR);
+				break;
+
+			default:
+				item.finished = false;
+				fb_assert(false);
+		}
+	}
 }
 
 
 namespace Jrd {
 
 
-PreparedStatement::PreparedStatement(thread_db* tdbb, Firebird::MemoryPool& pool,
-			Attachment* attachment, jrd_tra* transaction, const Firebird::string& text)
-	: Firebird::PermanentStorage(pool),
-	  values(pool),
-	  blr(pool),
-	  message(pool),
-	  resultSet(NULL)
+// Move data from result set message to user variables.
+void PreparedStatement::Builder::moveFromResultSet(thread_db* tdbb, ResultSet* rs) const
 {
-	request = DSQL_allocate_statement(tdbb, attachment);
-	try
+	for (Array<OutputSlot>::const_iterator i = outputSlots.begin(); i != outputSlots.end(); ++i)
 	{
-		const Database& dbb = *tdbb->getDatabase();
-		const int dialect = dbb.dbb_flags & DBB_DB_SQL_dialect_3 ? SQL_DIALECT_V6 : SQL_DIALECT_V5;
+		switch (i->type)
+		{
+			case TYPE_SSHORT:
+				*(SSHORT*) i->address = rs->getSmallInt(tdbb, i->number);
+				break;
 
-		DSQL_prepare(tdbb, transaction, &request, text.length(), text.c_str(), dialect,
-			0, NULL, 0, NULL);
+			case TYPE_SLONG:
+				*(SLONG*) i->address = rs->getInt(tdbb, i->number);
+				break;
 
-		if (request->req_receive) {
-			parseDsqlMessage(request->req_receive, values, blr, message);
+			case TYPE_SINT64:
+				*(SINT64*) i->address = rs->getBigInt(tdbb, i->number);
+				break;
+
+			case TYPE_DOUBLE:
+				*(double*) i->address = rs->getDouble(tdbb, i->number);
+				break;
+
+			case TYPE_STRING:
+			{
+				AbstractString* str = (AbstractString*) i->address;
+				str->replace(0, str->length(), rs->getString(tdbb, i->number));
+				break;
+			}
+
+			case TYPE_METANAME:
+				*(MetaName*) i->address = rs->getMetaName(tdbb, i->number);
+				break;
+
+			case TYPE_METASTRING:
+				*(MetaString*) i->address = rs->getMetaString(tdbb, i->number);
+				break;
+
+			default:
+				fb_assert(false);
+		}
+
+		if (i->specifiedAddress && rs->isNull(i->number))
+			*i->specifiedAddress = false;
+	}
+}
+
+
+// Move data from user variables to the request input message.
+void PreparedStatement::Builder::moveToStatement(thread_db* tdbb, PreparedStatement* stmt) const
+{
+	for (Array<InputSlot>::const_iterator i = inputSlots.begin(); i != inputSlots.end(); ++i)
+	{
+		if (i->specifiedAddress && !*i->specifiedAddress)
+		{
+			stmt->setNull(i->number);
+			continue;
+		}
+
+		switch (i->type)
+		{
+			case TYPE_SSHORT:
+				stmt->setSmallInt(tdbb, i->number, *(SSHORT*) i->address);
+				break;
+
+			case TYPE_SLONG:
+				stmt->setInt(tdbb, i->number, *(SLONG*) i->address);
+				break;
+
+			case TYPE_SINT64:
+				stmt->setBigInt(tdbb, i->number, *(SINT64*) i->address);
+				break;
+
+			case TYPE_DOUBLE:
+				stmt->setDouble(tdbb, i->number, *(double*) i->address);
+				break;
+
+			case TYPE_STRING:
+				stmt->setString(tdbb, i->number, *(AbstractString*) i->address);
+				break;
+
+			case TYPE_METANAME:
+				stmt->setMetaName(tdbb, i->number, *(MetaName*) i->address);
+				break;
+
+			case TYPE_METASTRING:
+				stmt->setMetaString(tdbb, i->number, *(MetaString*) i->address);
+				break;
+
+			default:
+				fb_assert(false);
 		}
 	}
-	catch (const Firebird::Exception&)
-	{
-		DSQL_free_statement(tdbb, request, DSQL_drop);
-		throw;
-	}
+}
+
+
+PreparedStatement::PreparedStatement(thread_db* tdbb, MemoryPool& pool,
+			Attachment* attachment, jrd_tra* transaction, const string& text,
+			bool isInternalRequest)
+	: PermanentStorage(pool),
+	  builder(NULL),
+	  inValues(pool),
+	  outValues(pool),
+	  inMetadata(FB_NEW Firebird::MsgMetadata),
+	  outMetadata(FB_NEW Firebird::MsgMetadata),
+	  inMessage(pool),
+	  outMessage(pool),
+	  resultSet(NULL)
+{
+	init(tdbb, attachment, transaction, text, isInternalRequest);
+}
+
+
+PreparedStatement::PreparedStatement(thread_db* tdbb, MemoryPool& pool,
+			Attachment* attachment, jrd_tra* transaction, const Builder& aBuilder,
+			bool isInternalRequest)
+	: PermanentStorage(pool),
+	  builder(&aBuilder),
+	  inValues(pool),
+	  outValues(pool),
+	  inMetadata(FB_NEW Firebird::MsgMetadata),
+	  outMetadata(FB_NEW Firebird::MsgMetadata),
+	  inMessage(pool),
+	  outMessage(pool),
+	  resultSet(NULL)
+{
+	init(tdbb, attachment, transaction, builder->getText(), isInternalRequest);
 }
 
 
@@ -78,202 +302,159 @@ PreparedStatement::~PreparedStatement()
 {
 	thread_db* tdbb = JRD_get_thread_data();
 
-	DSQL_free_statement(tdbb, request, DSQL_drop);
+	DSQL_free_statement(tdbb, dsqlRequest, DSQL_drop);
 
 	if (resultSet)
 		resultSet->stmt = NULL;
 }
 
 
+void PreparedStatement::init(thread_db* tdbb, Attachment* attachment, jrd_tra* transaction,
+	const Firebird::string& text, bool isInternalRequest)
+{
+	AutoSetRestore<SSHORT> autoAttCharset(&attachment->att_charset,
+		(isInternalRequest ? CS_METADATA : attachment->att_charset));
+
+	dsqlRequest = NULL;
+	try
+	{
+		const Database& dbb = *tdbb->getDatabase();
+		const int dialect = isInternalRequest || (dbb.dbb_flags & DBB_DB_SQL_dialect_3) ?
+			SQL_DIALECT_V6 : SQL_DIALECT_V5;
+
+		dsqlRequest = DSQL_prepare(tdbb, attachment, transaction, text.length(), text.c_str(), dialect, 0,
+			NULL, NULL, isInternalRequest);
+
+		const auto dsqlStatement = dsqlRequest->getDsqlStatement();
+
+		if (dsqlStatement->getSendMsg())
+			parseDsqlMessage(dsqlStatement->getSendMsg(), inValues, inMetadata, inMessage);
+
+		if (dsqlStatement->getReceiveMsg())
+			parseDsqlMessage(dsqlStatement->getReceiveMsg(), outValues, outMetadata, outMessage);
+	}
+	catch (const Exception&)
+	{
+		if (dsqlRequest)
+			DSQL_free_statement(tdbb, dsqlRequest, DSQL_drop);
+		throw;
+	}
+}
+
+
+void PreparedStatement::setDesc(thread_db* tdbb, unsigned param, const dsc& value)
+{
+	fb_assert(param > 0);
+
+	Request* request = getDsqlRequest()->getRequest();
+
+	// Setup tdbb info necessary for blobs.
+	AutoSetRestore2<Request*, thread_db> autoRequest(
+		tdbb, &thread_db::getRequest, &thread_db::setRequest, request);
+	AutoSetRestore<jrd_tra*> autoRequestTrans(&request->req_transaction,
+		tdbb->getTransaction());
+
+	MOV_move(tdbb, const_cast<dsc*>(&value), &inValues[(param - 1) * 2]);
+
+	const dsc* desc = &inValues[(param - 1) * 2 + 1];
+	fb_assert(desc->dsc_dtype == dtype_short);
+	*reinterpret_cast<SSHORT*>(desc->dsc_address) = 0;
+}
+
+
 void PreparedStatement::execute(thread_db* tdbb, jrd_tra* transaction)
 {
 	fb_assert(resultSet == NULL);
-	DSQL_execute(tdbb, &transaction, request, 0, NULL, 0, 0, NULL, 0, NULL, /*0,*/ 0, NULL);
+
+	if (builder)
+		builder->moveToStatement(tdbb, this);
+
+	DSQL_execute(tdbb, &transaction, dsqlRequest, inMetadata, inMessage.begin(), NULL, NULL);
+}
+
+
+void PreparedStatement::open(thread_db* tdbb, jrd_tra* transaction)
+{
+	fb_assert(resultSet == NULL);
+
+	if (builder)
+		builder->moveToStatement(tdbb, this);
+
+	dsqlRequest->openCursor(tdbb, &transaction, inMetadata, inMessage.begin(), outMetadata, 0);
 }
 
 
 ResultSet* PreparedStatement::executeQuery(thread_db* tdbb, jrd_tra* transaction)
 {
-	fb_assert(resultSet == NULL && request->req_receive);
-	return FB_NEW(getPool()) ResultSet(tdbb, this, transaction);
+	fb_assert(resultSet == NULL && dsqlRequest->getDsqlStatement()->getReceiveMsg());
+
+	if (builder)
+		builder->moveToStatement(tdbb, this);
+
+	return FB_NEW_POOL(getPool()) ResultSet(tdbb, this, transaction);
+}
+
+
+unsigned PreparedStatement::executeUpdate(thread_db* tdbb, jrd_tra* transaction)
+{
+	execute(tdbb, transaction);
+	return getDsqlRequest()->getRequest()->req_records_updated;
 }
 
 
 int PreparedStatement::getResultCount() const
 {
-	return values.getCount() / 2;
+	return outValues.getCount() / 2;
 }
 
 
-void PreparedStatement::parseDsqlMessage(dsql_msg* dsqlMsg, Firebird::Array<dsc>& values,
-	Firebird::UCharBuffer& blr, Firebird::UCharBuffer& msg)
+void PreparedStatement::parseDsqlMessage(const dsql_msg* dsqlMsg, Array<dsc>& values,
+	MsgMetadata* msgMetadata, UCharBuffer& msg)
 {
-	// Parameters in dsqlMsg->msg_parameters almost always linked in descending
+	// hvlad: Parameters in dsqlMsg->msg_parameters almost always linked in descending
 	// order by par_index. The only known exception is EXECUTE BLOCK statement.
-	// To generate correct BLR we must walk params in ascending par_index order.
+	// To generate correct metadata we must walk params in ascending par_index order.
 	// So store all params in array in an ascending par_index order despite of
 	// order in linked list.
 	// ASF: Input parameters don't come necessarily in ascending or descending order,
 	// so I changed the code to use a SortedArray.
+	// AP: removed assertions for correct parameters order - useless with SortedArray.
 
-	Firebird::SortedArray<const dsql_par*, 
-		Firebird::InlineStorage<const dsql_par*, 16>, 
-		const dsql_par*,
-		Firebird::DefaultKeyValue<const dsql_par*>, 
-		ParamCmp> params;
+	SortedArray<const dsql_par*, InlineStorage<const dsql_par*, 16>, const dsql_par*,
+		DefaultKeyValue<const dsql_par*>, ParamCmp> params;
 
-	for (const dsql_par* par = dsqlMsg->msg_parameters; par; par = par->par_next)
+	for (FB_SIZE_T i = 0; i < dsqlMsg->msg_parameters.getCount(); ++i)
 	{
+		dsql_par* par = dsqlMsg->msg_parameters[i];
 		if (par->par_index)
 			params.add(par);
 	}
 
-	size_t msgLength = 0;
-	int paramCount = params.getCount();
-	int i = 0;
+	FB_SIZE_T paramCount = params.getCount();
+	values.resize(paramCount * 2);
+	msgMetadata->setItemsCount(paramCount);
 
-	for (; i < paramCount; i++)
-	{
-		const dsql_par* par = params[i];
-#ifdef DEV_BUILD
-		// Verify that par_index is in ascending order
-		if (i < paramCount - 1)
-		{
-			fb_assert(par->par_index < params[i + 1]->par_index);
-		}
-#endif
-		if (type_alignments[par->par_desc.dsc_dtype])
-			msgLength = FB_ALIGN(msgLength, type_alignments[par->par_desc.dsc_dtype]);
-		msgLength += par->par_desc.dsc_length;
-		msgLength = FB_ALIGN(msgLength, type_alignments[dtype_short]);
-		msgLength += sizeof(SSHORT);
-	}
+	for (FB_SIZE_T i = 0; i < paramCount; ++i)
+		dscToMetaItem(&params[i]->par_desc, msgMetadata->getItem(i));
 
-	paramCount *= 2;
+	msgMetadata->makeOffsets();
+	msg.resize(msgMetadata->getMessageLength());
 
-	blr.add(blr_version5);
-	blr.add(blr_begin);
-	blr.add(blr_message);
-	blr.add(0);
-	blr.add(paramCount);
-	blr.add(paramCount >> 8);
-
-	values.resize(paramCount);
-	msg.resize(msgLength);
-
-	msgLength = 0;
 	dsc* value = values.begin();
 
-	for (i = 0; i < paramCount / 2; i++)
+	for (FB_SIZE_T i = 0; i < paramCount; ++i)
 	{
-		const dsql_par* par = params[i];
+		// value
+		*value = params[i]->par_desc;
+		value->dsc_address = msg.begin() + msgMetadata->getItem(i).offset;
+		++value;
 
-		if (type_alignments[par->par_desc.dsc_dtype])
-			msgLength = FB_ALIGN(msgLength, type_alignments[par->par_desc.dsc_dtype]);
-		*value = par->par_desc;
-		value->dsc_address = msg.begin() + msgLength;
-		msgLength += par->par_desc.dsc_length;
-
-		generateBlr(value, blr);
-		value++;
-
-		// Calculate the NULL indicator offset
-		if (type_alignments[dtype_short])
-			msgLength = FB_ALIGN(msgLength, type_alignments[dtype_short]);
+		// NULL indicator
 		value->makeShort(0);
-		value->dsc_address = msg.begin() + msgLength;
+		value->dsc_address = msg.begin() + msgMetadata->getItem(i).nullInd;
 		// set NULL indicator value
 		*((SSHORT*) value->dsc_address) = -1;
-		msgLength += sizeof(SSHORT);
-
-		// Generate BLR for the NULL indicator
-		generateBlr(value, blr);
-		value++;
-	}
-
-	blr.add(blr_end);
-}
-
-void PreparedStatement::generateBlr(const dsc* desc, Firebird::UCharBuffer& blr)
-{
-	USHORT length = 0;
-
-	switch (desc->dsc_dtype)
-	{
-	case dtype_text:
-		blr.add(blr_text2);
-		blr.add(desc->dsc_ttype());
-		blr.add(desc->dsc_ttype() >> 8);
-		length = desc->dsc_length;
-		blr.add(length);
-		blr.add(length >> 8);
-		break;
-
-	case dtype_varying:
-		blr.add(blr_varying2);
-		blr.add(desc->dsc_ttype());
-		blr.add(desc->dsc_ttype() >> 8);
-		fb_assert(desc->dsc_length >= sizeof(USHORT));
-		length = desc->dsc_length - sizeof(USHORT);
-		blr.add(length);
-		blr.add(length >> 8);
-		break;
-
-	case dtype_short:
-		blr.add(blr_short);
-		blr.add(desc->dsc_scale);
-		break;
-
-	case dtype_long:
-		blr.add(blr_long);
-		blr.add(desc->dsc_scale);
-		break;
-
-	case dtype_quad:
-		blr.add(blr_quad);
-		blr.add(desc->dsc_scale);
-		break;
-
-	case dtype_int64:
-		blr.add(blr_int64);
-		blr.add(desc->dsc_scale);
-		break;
-
-	case dtype_real:
-		blr.add(blr_float);
-		break;
-
-	case dtype_double:
-		blr.add(blr_double);
-		break;
-
-	case dtype_sql_date:
-		blr.add(blr_sql_date);
-		break;
-
-	case dtype_sql_time:
-		blr.add(blr_sql_time);
-		break;
-
-	case dtype_timestamp:
-		blr.add(blr_timestamp);
-		break;
-
-	case dtype_array:
-		blr.add(blr_quad);
-		blr.add(0);
-		break;
-
-	case dtype_blob:
-		blr.add(blr_blob2);
-		blr.add(desc->dsc_sub_type);
-		blr.add(desc->dsc_sub_type >> 8);
-		blr.add(desc->getTextType());
-		blr.add(desc->getTextType() >> 8);
-		break;
-
-	default:
-		fb_assert(false);
+		++value;
 	}
 }
 

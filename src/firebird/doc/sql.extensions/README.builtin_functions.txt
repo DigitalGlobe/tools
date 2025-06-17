@@ -12,6 +12,7 @@ Authors:
     Oleg Loa <loa@mail.ru>
     Alexey Karyakin <aleksey.karyakin@mail.ru>
     Claudio Valderrama C. <cvalde at usa.net>
+    Alexander Peshkov <peshkoff@mail.ru>
 
 
 ---
@@ -44,6 +45,20 @@ Notes:
 
 Example:
     select acos(x) from y;
+
+
+-----
+ACOSH
+-----
+
+Function:
+    Returns the hyperbolic arc cosine of a number (expressed in radians).
+
+Format:
+    ACOSH( <number> )
+
+Example:
+    select acosh(x) from y;
 
 
 ----------
@@ -100,6 +115,20 @@ Example:
     select asin(x) from y;
 
 
+-----
+ASINH
+-----
+
+Function:
+    Returns the hyperbolic arc sine of a number (expressed in radians).
+
+Format:
+    ASINH( <number> )
+
+Example:
+    select asinh(x) from y;
+
+
 ----
 ATAN
 ----
@@ -132,6 +161,35 @@ Notes:
 
 Example:
     select atan2(x, y) from z;
+
+
+-----
+ATANH
+-----
+
+Function:
+    Returns the hyperbolic arc tangent of a number (expressed in radians).
+
+Format:
+    ATANH( <number> )
+
+Example:
+    select atanh(x) from y;
+
+
+-----------------------------
+BASE64_ENCODE / BASE64_DECODE
+-----------------------------
+
+Function:
+	Encodes / decodes input data to / from BASE64 representation. Works with character strings and blobs.
+
+Format:
+	BASE64_ENCODE( <binary data> )
+	BASE64_DECODE( <base64 data> )
+
+Example:
+	select base64_encode(public_key) from clients;
 
 
 -------
@@ -223,7 +281,7 @@ CEIL | CEILING
 --------------
 
 Function:
-    Returns a value representing the smallest integer that is greater 
+    Returns a value representing the smallest integer that is greater
     than or equal to the input argument.
 
 Format:
@@ -303,6 +361,28 @@ Example:
     select cot(x) from y;
 
 
+----------
+CRYPT_HASH
+----------
+
+Function:
+    Returns a cryptograpic hash of an argument using a specified algorithm.
+
+Format:
+    CRYPT_HASH( <any value> USING <algorithm> )
+
+    algorithm ::= { MD5 | SHA1 | SHA256 | SHA512 | SHA3_224 | SHA3_256 | SHA3_384 | SHA3_512 }
+
+Important:
+    - This function returns VARCHAR strings with OCTETS charset with length depended on algorithm.
+
+    - MD5 and SHA1 algorithms are not recommended for use due to known severe issues, that algorithms
+      are provided ONLY for backward compatibility.
+
+Example:
+    select crypt_hash(x using sha256) from y;
+
+
 -------
 DATEADD
 -------
@@ -321,9 +401,11 @@ Notes:
     1) WEEKDAY and YEARDAY cannot be used. It doesn't make sense.
     2) YEAR, MONTH and DAY could not be used with time values.
     3) All timestamp_part values could be used with timestamp values.
-    4) When using hour, minute, second and millisecond for DATEADD and dates, the quantity added or
+    4) When using HOUR, MINUTE, SECOND and MILLISECOND for DATEADD and dates, the quantity added or
         subtracted should account at least for one day to produce effect (IE adding 23 hours to a date
         doesn't increment it).
+    5) When using YEAR or MONTH and the input day is greater than the maximum possible day in the
+       result year/month, the result day is returned in the last day of the result year/month.
 
 Example:
     select dateadd(-1 day to current_date) as yesterday
@@ -351,6 +433,8 @@ Notes:
     3) WEEKDAY and YEARDAY cannot be used. It doesn't make sense.
     4) YEAR, MONTH and DAY could not be used with time values.
     5) All timestamp_part values could be used with timestamp values.
+    6) In Firebird 3.0.8 and 4.0.1 the return type for unit MILLISECOND was changed
+       from BIGINT to NUMERIC(18, 1).
 
 Example:
     select datediff(week from cast('yesterday' as timestamp) - 7 to current_timestamp)
@@ -371,6 +455,42 @@ Example:
 	select decode(state, 0, 'deleted', 1, 'active', 'unknown') from things;
 
 
+-------------------
+ENCRYPT and DECRYPT
+-------------------
+
+Function:
+    Encrypts/decrypts data using symmetric cipher.
+
+Format:
+    {ENCRYPT | DECRYPT} ( <string | blob> USING <algorithm> [MODE <mode>] KEY <string>
+    	[IV <string>] [<endianness>] [CTR_LENGTH <smallint>] [COUNTER <bigint>])
+
+    algorithm ::= { block_cipher | stream_cipher }
+    block_cipher ::= { AES | ANUBIS | BLOWFISH | KHAZAD | RC5 | RC6 | SAFER+ | TWOFISH | XTEA }
+    stream_cipher ::= { CHACHA20 | RC4 | SOBER128 }
+    mode ::= { CBC | CFB | CTR | ECB | OFB }
+    endianness ::= { CTR_BIG_ENDIAN | CTR_LITTLE_ENDIAN }
+
+Important:
+    - Mode should be specified for block ciphers.
+    - Initialization vector (IV) should be specified for block ciphers in all modes except ECB and
+      all stream ciphers except RC4.
+    - Endianness may be specified only in CTR mode, default is little endian counter.
+    - Counter length (CTR_LENGTH, bytes) may be specified only in CTR mode, default is the size of IV.
+    - Initial counter value (COUNTER) may be specified only for CHACHA20 cipher, default is 0.
+	- Sizes of data strings passed to this functions are according to selected algorithm and mode
+	  requirements.
+	- Functions return BLOB when first argument is blob and varbinary for all other types.
+	- Other parameters (except algorithm, mode and endianness) may have any type provided that data size
+	  is appropriate for selected algorithm and mode.
+
+Example:
+    select encrypt('897897' using sober128 key 'AbcdAbcdAbcdAbcd' iv '01234567') from rdb$database;
+    select cast(decrypt(x'0154090759DF' using sober128 key 'AbcdAbcdAbcdAbcd' iv '01234567') as varchar(128)) from rdb$database;
+    select decrypt(secret_field using aes mode ofb key '0123456701234567' iv init_vector) from secure_table;
+
+
 ---
 EXP
 ---
@@ -385,12 +505,33 @@ Example:
     select exp(x) from y;
 
 
+---------
+FIRST_DAY
+---------
+
+Function:
+    Returns a date/timestamp with the first day of the year/month/week of a given
+    date/timestamp value.
+
+Format:
+    FIRST_DAY( OF { YEAR | QUARTER | MONTH | WEEK } FROM <date_or_timestamp> )
+
+Notes:
+    1) The first day of the week is considered as Sunday, per the same rules of EXTRACT with WEEKDAY.
+    2) When a timestamp is passed the return value preserves the time part.
+
+Example:
+    select first_day(of month from current_date) from rdb$database;
+    select first_day(of year from current_timestamp) from rdb$database;
+    select first_day(of week from date '2017-11-01') from rdb$database;
+
+
 -----
 FLOOR
 -----
 
 Function:
-    Returns a value representing the largest integer that is less 
+    Returns a value representing the largest integer that is less
     than or equal to the input argument.
 
 Format:
@@ -429,13 +570,61 @@ HASH
 ----
 
 Function:
-    Returns a HASH of a string.
+    Returns a hash of an argument using a specified algorithm.
 
 Format:
-    HASH( <string> )
+    HASH( <any value> [ USING <algorithm> ] )
+
+    algorithm ::= { CRC32 }
+
+Important:
+    - The syntax without USING is very discouraged and maintained for backward compatibility.
+    It returns a 64 bit integer and produces very bad hashes that easily result in collisions.
+
+    - The syntax with USING is introduced in FB 4.0 and returns an integer of appropriate size.
+
+    - Implemented in firebird CRC32 is using polynomial 0x04C11DB7.
 
 Example:
     select hash(x) from y;
+    select hash(x using crc32) from y;
+
+
+
+-----------------------------
+HEX_ENCODE / HEX_DECODE
+-----------------------------
+
+Function:
+	Encodes / decodes input data to / from hexadecimal representation. Works with character strings and blobs.
+
+Format:
+	HEX_ENCODE( <binary data> )
+	HEX_DECODE( <hex data> )
+
+Example:
+	select hex_encode(public_key) from clients;
+
+
+--------
+LAST_DAY
+--------
+
+Function:
+    Returns a date/timestamp with the last day of the year/month/week of a given
+    date/timestamp value.
+
+Format:
+    LAST_DAY( OF { YEAR | QUARTER | MONTH | WEEK } FROM <date_or_timestamp> )
+
+Notes:
+    1) The last day of the week is considered as Saturday, per the same rules of EXTRACT with WEEKDAY.
+    2) When a timestamp is passed the return value preserves the time part.
+
+Example:
+    select last_day(of month from current_date) from rdb$database;
+    select last_day(of year from current_timestamp) from rdb$database;
+    select last_day(of week from date '2017-11-01') from rdb$database;
 
 
 ----
@@ -511,10 +700,80 @@ Notes:
     1) If the second string is omitted the default value is one space.
     2) The second string is truncated when the result string will
 	   become larger than length.
+    3) The first string is truncated if its length is greater than the length
+	   parameter.
 
 Example:
     select lpad(x, 10) from y;
 
+
+----------
+MAKE_DBKEY
+----------
+
+Function:
+    MAKE_DBKEY( relation, recnum [, dpnum [, ppnum]] )
+    Creates DBKEY value using relation name or ID, record number, and, optionally,
+    logical number of data page and pointer page.
+
+Format:
+    MAKE_DBKEY( <value>, <number> [, <number> [, <number>]] )
+
+Notes:
+    1) If the first argument (relation) is a string expression or literal, then
+       it's treated as a relation name and the engine searches for the
+       corresponding relation ID. The search is case-sensitive.
+       In the case of string literal, relation ID is evaluated at prepare time.
+       In the case of expression, relation ID is evaluated at execution time.
+       If the relation couldn't be found, then isc_relnotdef error is raised.
+	   Relation ID's could be changed after database restore thus beware of using
+	   integer literals in the first argument (relation) in stored PSQL code 
+	   (procedures, functions, triggers).
+    2) If the first argument (relation) is a numeric expression or literal, then
+       it's treated as a relation ID and used "as is", without verification
+       against existing relations.
+       If the argument value is negative or greater than the maximum allowed
+       relation ID (65535 currently), then NULL is returned.
+    3) Second argument (recnum) represents an absolute record number in relation
+       (if the next arguments -- dpnum and ppnum -- are missing), or a record
+       number relative to the first record, specified by the next arguments.
+    4) Third argument (dpnum) is a logical number of data page in relation (if
+       the next argument -- ppnum -- is missing), or number of data page
+       relative to the first data page addressed by the given ppnum.
+    5) Forth argument (ppnum) is a logical number of pointer page in relation.
+    6) All numbers are zero-based.
+	   Maximum allowed value for dpnum and ppnum is 2^32 (4294967296).
+	   If dpnum is specified, then recnum could be negative.
+	   If dpnum is missing and recnum is negative then NULL is returned.
+	   If ppnum is specified, then dpnum could be negative.
+	   If ppnum is missing and dpnum is negative then NULL is returned.
+    7) If any of specified arguments has NULL value, the result is also NULL.
+	8) First argument (relation) is described as INTEGER but could be overriden
+	   by application as VARCHAR or CHAR.
+	   recnum, dpnum and ppnum are described as BIGINT (64-bit signed integer).
+
+Examples:
+
+	1) Select record using relation name (note, relation name is in uppercase)
+
+		select * from rdb$relations where rdb$db_key = make_dbkey('RDB$RELATIONS', 0)
+
+	2) Select record using relation ID
+
+		select * from rdb$relations where rdb$db_key = make_dbkey(6, 0)
+
+	3) Select all records that physically reside at first data page in relation
+
+		select * from rdb$relations
+		 where rdb$db_key >= make_dbkey(6, 0, 0)
+		   and rdb$db_key <  make_dbkey(6, 0, 1)
+
+	4) Select all records that physically reside at first data page of 6th pointer
+	   page at relation
+
+		select * from SOMETABLE
+		 where rdb$db_key >= make_dbkey('SOMETABLE', 0, 0, 5)
+		   and rdb$db_key <  make_dbkey('SOMETABLE', 0, 1, 5)
 
 --------
 MAXVALUE
@@ -597,7 +856,7 @@ POSITION
 
 Function:
     Returns the position of the first string inside the second string starting at
-    an offset (or from the beginning when omitted).
+    an offset (or from the beginning when omitted). When not found, returns 0.
 
 Format:
     POSITION( <string> IN <string> )
@@ -635,6 +894,54 @@ Format:
 
 Example:
     select * from x order by rand();
+
+
+----------------------
+RDB$GET_TRANSACTION_CN
+----------------------
+
+(FB4 extension)
+Function:
+    Returns commit number of given transaction. Result type is BIGINT.
+
+	Note, engine internally uses unsigned 8-byte integer for commit numbers,
+	and unsigned 6-byte integer for transaction numbers. Thus, despite of
+	SQL language have no unsigned integers and RDB$GET_TRANSACTION_CN returns
+	signed BIGINT, it is impossible to see negative commit numbers except of
+	few special values used for non-committed transactions.
+	Summary, numbers returned by RDB$GET_TRANSACTION_CN could have values below:
+
+	-2 - transaction is dead (rolled back)
+	-1 - transaction is in limbo
+	 0 - transaction is active,
+	 1 - transaction committed before database started or less than database
+		 Oldest Interesting Transaction
+	>1 - transaction committed after database started
+	NULL - given transaction number is NULL or greater than database Next Transaction
+
+	See also README.read_consistency.md
+
+Format:
+    RDB$GET_TRANSACTION_CN( <transaction number> )
+
+Examples:
+	select rdb$get_transaction_cn(current_transaction) from rdb$database;
+	select rdb$get_transaction_cn(123) from rdb$database;
+
+
+--------------------
+RDB$SYSTEM_PRIVILEGE
+--------------------
+
+(FB4 extension)
+Function:
+    Returns true if current attachment has given system privilege.
+
+Format:
+    RDB$SYSTEM_PRIVILEGE( <privilege> )
+
+Example:
+	select rdb$system_privilege(user_management) from rdb$database;
 
 
 -------
@@ -721,9 +1028,130 @@ Notes:
     1) If the second string is omitted the default value is one space.
     2) The second string is truncated when the result string will
 	   become larger than length.
+    3) The first string is truncated if its length is greater than the length
+	   parameter.
 
 Example:
     select rpad(x, 10) from y;
+
+
+-----------
+RSA_PRIVATE
+-----------
+
+Function:
+    Returns RSA private key of specified length (in bytes) in PKCS#1 format as VARBINARY string.
+
+Format:
+    RSA_PRIVATE ( <smallint> )
+
+Example:
+    select rdb$set_context('USER_SESSION', 'private_key', rsa_private(256)) from rdb$database;
+
+
+----------
+RSA_PUBLIC
+----------
+
+Function:
+    Returns RSA public key for specified RSA private key, all keys are in PKCS#1 format.
+
+Format:
+    RSA_PUBLIC ( <private key> )
+
+Example:
+    (tip - start running samples one by one from RSA_PRIVATE function)
+    select rdb$set_context('USER_SESSION', 'public_key',
+        rsa_public(rdb$get_context('USER_SESSION', 'private_key'))) from rdb$database;
+
+
+-----------
+RSA_ENCRYPT
+-----------
+
+Function:
+    Pads data using OAEP padding and encrypts using RSA public key. Normally used to encrypt
+    short symmetric keys which are then used in block ciphers to encrypt a message.
+
+Format:
+    RSA_ENCRYPT ( <string> KEY <public key> [LPARAM <string>] [HASH <hash>] [PKCS_1_5] )
+        KEY should be a value, returhed by RSA_PUBLIC function.
+        LPARAM is an additional system specific tag that can be applied to identify which
+            system encoded the message. Default value is NULL.
+        hash ::= { MD5 | SHA1 | SHA256 | SHA512 } Default is SHA256.
+        PKCS_1_5 makes engine use old padding, needed for backward compatibility.
+            Due to security reasons should NOT be used in new projects.
+
+Example:
+    (tip - start running samples one by one from RSA_PRIVATE function)
+    select rdb$set_context('USER_SESSION', 'msg', rsa_encrypt('Some message'
+        key rdb$get_context('USER_SESSION', 'public_key'))) from rdb$database;
+
+
+-----------
+RSA_DECRYPT
+-----------
+
+Function:
+    Decrypts using RSA private key and OAEP de-pads the resulting data.
+
+Format:
+    RSA_DECRYPT ( <string> KEY <private key> [LPARAM <string>] [HASH <hash>] [PKCS_1_5] )
+        KEY should be a value, returhed by RSA_PRIVATE function.
+        LPARAM is the same variable passed to RSA_ENCRYPT. If it does not match
+          what was used during encoding this function will not decrypt the packet.
+        hash ::= { MD5 | SHA1 | SHA256 | SHA512 } Default is SHA256.
+        PKCS_1_5 makes engine use old padding, needed for backward compatibility.
+            Due to security reasons should NOT be used in new projects.
+
+Example:
+    (tip - start running samples one by one from RSA_PRIVATE function)
+    select cast(rsa_decrypt(rdb$get_context('USER_SESSION', 'msg')
+        key rdb$get_context('USER_SESSION', 'private_key')) as varchar(128)) from rdb$database;
+
+
+-------------
+RSA_SIGN_HASH
+-------------
+
+Function:
+    Performs PSS encoding of message digest to be signed and signs using RSA private key.
+
+Format:
+    RSA_SIGN_HASH ( <string> KEY <private key> [HASH <hash>] [SALT_LENGTH <smallint>] [PKCS_1_5] )
+        KEY should be a value, returhed by RSA_PRIVATE function.
+        hash ::= { MD5 | SHA1 | SHA256 | SHA512 } Default is SHA256.
+        SALT_LENGTH indicates the length of the desired salt, and should typically be small.
+            A good value is between 8 and 16.
+        PKCS_1_5 makes engine use old padding, needed for backward compatibility.
+
+Example:
+    (tip - start running samples one by one from RSA_PRIVATE function)
+    select rdb$set_context('USER_SESSION', 'msg', rsa_sign_hash(crypt_hash('Test message' using sha256)
+        key rdb$get_context('USER_SESSION', 'private_key'))) from rdb$database;
+
+
+---------------
+RSA_VERIFY_HASH
+---------------
+
+Function:
+    Performs PSS encoding of message digest to be signed and verifies it's digital signature
+        using RSA public key.
+
+Format:
+    RSA_VERIFY_HASH ( <string> SIGNATURE <string> KEY <public key> [HASH <hash>] [SALT_LENGTH <smallint>] [PKCS_1_5] )
+        SIGNATURE should be a value, returhed by RSA_SIGN function.
+        KEY should be a value, returhed by RSA_PUBLIC function.
+        hash ::= { MD5 | SHA1 | SHA256 | SHA512 } Default is SHA256.
+        SALT_LENGTH indicates the length of the desired salt, and should typically be small.
+            A good value is between 8 and 16.
+        PKCS_1_5 makes engine use old padding, needed for backward compatibility.
+
+Example:
+    (tip - start running samples one by one from RSA_PRIVATE function)
+    select rsa_verify_hash(crypt_hash('Test message' using sha256) signature rdb$get_context('USER_SESSION', 'msg')
+        key rdb$get_context('USER_SESSION', 'public_key')) from rdb$database;
 
 
 ----
@@ -731,7 +1159,7 @@ SIGN
 ----
 
 Function:
-    Returns 1, 0, or -1 depending on whether the input value is positive, zero or 
+    Returns 1, 0, or -1 depending on whether the input value is positive, zero or
     negative, respectively.
 
 Format:
@@ -836,6 +1264,41 @@ Example:
     1) select trunc(x) from y;
     2) select trunc(-2.8), trunc(2.8) from rdb$database;  -- returns -2, 2
     3) select trunc(987.65, 1), trunc(987.65, -1) from rdb$database;  -- returns 987.60, 980.00
+
+
+------------
+UNICODE_CHAR
+------------
+
+Function:
+    Returns the UNICODE character with the specified code point.
+
+Format:
+    UNICODE_CHAR( <number> )
+
+Notes:
+    Argument to UNICODE_CHAR must be a valid UNICODE code point and not in the range of
+    high/low surrogates (0xD800 to 0xDFFF). Otherwise it throws an error.
+
+Example:
+    select unicode_char(x) from y;
+
+
+-----------
+UNICODE_VAL
+-----------
+
+Function:
+    Returns the UNICODE code point of the first character of the specified string.
+
+Format:
+    UNICODE_VAL( <string> )
+
+Notes:
+    Returns 0 if the string is empty.
+
+Example:
+    select unicode_val(x) from y;
 
 
 ------------

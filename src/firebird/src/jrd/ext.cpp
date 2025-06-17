@@ -34,29 +34,31 @@
  */
 
 #include "firebird.h"
-#include "../jrd/common.h"
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#include <sys/stat.h>
 #include "../jrd/jrd.h"
 #include "../jrd/req.h"
 #include "../jrd/val.h"
 #include "../jrd/exe.h"
-#include "../jrd/rse.h"
 #include "../jrd/ext.h"
 #include "../jrd/tra.h"
-#include "gen/iberror.h"
+#include "../dsql/ExprNodes.h"
+#include "iberror.h"
 #include "../jrd/cmp_proto.h"
 #include "../jrd/err_proto.h"
 #include "../jrd/ext_proto.h"
-#include "../jrd/gds_proto.h"
+#include "../yvalve/gds_proto.h"
 #include "../jrd/met_proto.h"
 #include "../jrd/mov_proto.h"
 #include "../jrd/vio_proto.h"
 #include "../common/config/config.h"
 #include "../common/config/dir_list.h"
-#include "../jrd/os/path_utils.h"
+#include "../common/os/path_utils.h"
 #include "../common/classes/init.h"
+#include "../common/isc_f_proto.h"
+#include "../common/os/os_utils.h"
 
 #if defined _MSC_VER && _MSC_VER < 1400
 // NS: in VS2003 these only work with static CRT
@@ -69,14 +71,48 @@ __int64 __cdecl _ftelli64(FILE*);
 #ifdef WIN_NT
 #define FTELL64 _ftelli64
 #define FSEEK64 _fseeki64
+#elif defined(LSB_BUILD)
+#define FTELL64 ftello64
+#define FSEEK64 fseeko64
 #else
 #define FTELL64 ftello
 #define FSEEK64 fseeko
 #endif
 
-using namespace Jrd;
 using namespace Firebird;
 
+namespace Jrd
+{
+	class ExternalFileDirectoryList : public DirectoryList
+	{
+	private:
+		const PathName getConfigString() const
+		{
+			return PathName(config->getExternalFileAccess());
+		}
+
+	public:
+		explicit ExternalFileDirectoryList(const Database* dbb)
+			: DirectoryList(*dbb->dbb_permanent), config(dbb->dbb_config)
+		{
+			initialize();
+		}
+
+		static void create(Database* dbb)
+		{
+			if (!dbb->dbb_external_file_directory_list)
+			{
+				dbb->dbb_external_file_directory_list =
+					FB_NEW_POOL(*dbb->dbb_permanent) ExternalFileDirectoryList(dbb);
+			}
+		}
+
+	private:
+		RefPtr<const Config> config;
+	};
+}
+
+using namespace Jrd;
 
 namespace {
 
@@ -87,29 +123,12 @@ namespace {
 #endif
 	static const char* const FOPEN_READ_ONLY	= "rb";
 
-	FILE *ext_fopen(Database* dbb, ExternalFile* ext_file);
-
-	class ExternalFileDirectoryList : public Firebird::DirectoryList
-	{
-	private:
-		const Firebird::PathName getConfigString() const
-		{
-			return Firebird::PathName(Config::getExternalFileAccess());
-		}
-	public:
-		explicit ExternalFileDirectoryList(MemoryPool& p)
-			: DirectoryList(p)
-		{
-			initialize();
-		}
-	};
-	Firebird::InitInstance<ExternalFileDirectoryList> iExternalFileDirectoryList;
-
-	FILE *ext_fopen(Database* dbb, ExternalFile* ext_file)
+	FILE* ext_fopen(Database* dbb, ExternalFile* ext_file)
 	{
 		const char* file_name = ext_file->ext_filename;
 
-		if (!iExternalFileDirectoryList().isPathInList(file_name))
+		ExternalFileDirectoryList::create(dbb);
+		if (!dbb->dbb_external_file_directory_list->isPathInList(file_name))
 		{
 			ERR_post(Arg::Gds(isc_conf_access_denied) << Arg::Str("external file") <<
 														 Arg::Str(file_name));
@@ -118,13 +137,13 @@ namespace {
 		// If the database is updateable, then try opening the external files in
 		// RW mode. If the DB is ReadOnly, then open the external files only in
 		// ReadOnly mode, thus being consistent.
-		if (!(dbb->dbb_flags & DBB_read_only))
-			ext_file->ext_ifi = fopen(file_name, FOPEN_TYPE);
+		if (!dbb->readOnly())
+			ext_file->ext_ifi = os_utils::fopen(file_name, FOPEN_TYPE);
 
 		if (!ext_file->ext_ifi)
 		{
 			// could not open the file as read write attempt as read only
-			if (!(ext_file->ext_ifi = fopen(file_name, FOPEN_READ_ONLY)))
+			if (!(ext_file->ext_ifi = os_utils::fopen(file_name, FOPEN_READ_ONLY)))
 			{
 				ERR_post(Arg::Gds(isc_io_error) << Arg::Str("fopen") << Arg::Str(file_name) <<
 						 Arg::Gds(isc_io_open_err) << SYS_ERR(errno));
@@ -139,18 +158,62 @@ namespace {
 } // namespace
 
 
-void EXT_close(RecordSource*)
+double EXT_cardinality(thread_db* tdbb, jrd_rel* relation)
 {
 /**************************************
  *
- *	E X T _ c l o s e
+ *	E X T _ c a r d i n a l i t y
  *
  **************************************
  *
  * Functional description
- *	Close a record stream for an external file.
+ *	Return cardinality for the external file.
  *
  **************************************/
+	ExternalFile* const file = relation->rel_file;
+	fb_assert(file);
+
+	try
+	{
+		bool must_close = false;
+		if (!file->ext_ifi)
+		{
+			ext_fopen(tdbb->getDatabase(), file);
+			must_close = true;
+		}
+
+		FB_UINT64 file_size = 0;
+
+#ifdef WIN_NT
+		struct __stat64 statistics;
+		if (!_fstat64(_fileno(file->ext_ifi), &statistics))
+#else
+		struct STAT statistics;
+		if (!os_utils::fstat(fileno(file->ext_ifi), &statistics))
+#endif
+		{
+			file_size = statistics.st_size;
+		}
+
+		if (must_close)
+		{
+			fclose(file->ext_ifi);
+			file->ext_ifi = NULL;
+		}
+
+		const Format* const format = MET_current(tdbb, relation);
+		fb_assert(format && format->fmt_length);
+		const USHORT offset = (USHORT)(IPTR) format->fmt_desc[0].dsc_address;
+		const ULONG record_length = format->fmt_length - offset;
+
+		return (double) file_size / record_length;
+	}
+	catch (const Exception&)
+	{
+		fb_utils::init_status(tdbb->tdbb_status_vector);
+	}
+
+	return 10000; // just a wild guess
 }
 
 
@@ -199,20 +262,49 @@ ExternalFile* EXT_file(jrd_rel* relation, const TEXT* file_name) //, bid* descri
 	_setmaxstdio(2048);
 #endif
 
-	// If file_name has no path part, expand it in ExternalFilesPath.
-	Firebird::PathName Path, Name;
-	PathUtils::splitLastComponent(Path, Name, file_name);
-	if (Path.length() == 0)
+	// If file_name is relative expand it in ExternalFilesPath.
+	PathName newName, name(file_name);
+	if (PathUtils::isRelative(name))
 	{
-		// path component not present in file_name
-		if (!(iExternalFileDirectoryList().expandFileName(Path, Name)))
+		ExternalFileDirectoryList::create(dbb);
+		if (!(dbb->dbb_external_file_directory_list->expandFileName(newName, name)))
 		{
-			iExternalFileDirectoryList().defaultName(Path, Name);
+			if (!dbb->dbb_external_file_directory_list->defaultName(newName, name))
+			{
+				ISC_expand_filename(newName, false);
+			}
 		}
-		file_name = Path.c_str();
+		file_name = newName.c_str();
+		name = newName;
 	}
 
-	ExternalFile* file = FB_NEW_RPT(*dbb->dbb_permanent, (strlen(file_name) + 1)) ExternalFile();
+	// Create missing path components
+	ObjectsArray<PathName> paths;
+
+	for (;;)
+	{
+		PathName path, file;
+		PathUtils::splitLastComponent(path, file, name);
+		if (path.isEmpty())
+			break;
+
+		int rc = PathUtils::makeDir(path.c_str());
+		if (rc == 0 || rc == EEXIST)
+			break;
+		paths.push(path);
+		name = path;
+	}
+
+	while (paths.hasData())
+	{
+		PathName path(paths.pop());
+		if (PathUtils::makeDir(path.c_str()) != 0)
+			break;
+	}
+
+	paths.clear();
+
+	ExternalFile* file = FB_NEW_RPT(*relation->rel_pool, (strlen(file_name) + 1)) ExternalFile();
 	relation->rel_file = file;
 	strcpy(file->ext_filename, file_name);
 	file->ext_flags = 0;
@@ -253,7 +345,7 @@ void EXT_fini(jrd_rel* relation, bool close_only)
 }
 
 
-bool EXT_get(thread_db* tdbb, RecordSource* rsb)
+bool EXT_get(thread_db* tdbb, record_param* rpb, FB_UINT64& position)
 {
 /**************************************
  *
@@ -265,41 +357,63 @@ bool EXT_get(thread_db* tdbb, RecordSource* rsb)
  *	Get a record from an external file.
  *
  **************************************/
-	jrd_rel* relation = rsb->rsb_relation;
-	ExternalFile* file = relation->rel_file;
-	jrd_req* request = tdbb->getRequest();
-
-	if (request->req_flags & req_abort)
-		return false;
-
+	jrd_rel* const relation = rpb->rpb_relation;
+	ExternalFile* const file = relation->rel_file;
 	fb_assert(file->ext_ifi);
 
-	record_param* rpb = &request->req_rpb[rsb->rsb_stream];
-	Record* record = rpb->rpb_record;
-	const Format* format = record->rec_format;
+	Record* const record = rpb->rpb_record;
+	const Format* const format = record->getFormat();
 
-	const SSHORT offset = (SSHORT) (IPTR) format->fmt_desc[0].dsc_address;
-	UCHAR* p = record->rec_data + offset;
-	const ULONG l = record->rec_length - offset;
+	const USHORT offset = (USHORT) (IPTR) format->fmt_desc[0].dsc_address;
+	UCHAR* p = record->getData() + offset;
+	const ULONG l = record->getLength() - offset;
+
+	if (file->ext_ifi == NULL)
+	{
+		ERR_post(Arg::Gds(isc_io_error) << "fseek" << Arg::Str(file->ext_filename) <<
+				 Arg::Gds(isc_io_open_err) << Arg::Unix(EBADF) <<
+				 Arg::Gds(isc_random) << "File not opened");
+	}
 
 	// hvlad: fseek will flush file buffer and degrade performance, so don't
 	// call it if it is not necessary. Note that we must flush file buffer if we
 	// do read after write
-	if (file->ext_ifi == NULL ||
-		((FTELL64(file->ext_ifi) != rpb->rpb_ext_pos || !(file->ext_flags & EXT_last_read)) &&
-			(FSEEK64(file->ext_ifi, rpb->rpb_ext_pos, SEEK_SET) != 0)) )
+
+	bool doSeek = false;
+	if (!(file->ext_flags & EXT_last_read))
 	{
-		ERR_post(Arg::Gds(isc_io_error) << Arg::Str("fseek") << Arg::Str(file->ext_filename) <<
-				 Arg::Gds(isc_io_open_err) << SYS_ERR(errno));
+		doSeek = true;
+	}
+	else
+	{
+		SINT64 offset = FTELL64(file->ext_ifi);
+		if (offset < 0)
+		{
+			ERR_post(Arg::Gds(isc_io_error) << STRINGIZE(FTELL64) << Arg::Str(file->ext_filename) <<
+					 Arg::Gds(isc_io_read_err) << SYS_ERR(errno));
+		}
+		doSeek = (static_cast<FB_UINT64>(offset) != position);
+	}
+
+	// reset both flags cause we are going to move the file pointer
+	file->ext_flags &= ~(EXT_last_write | EXT_last_read);
+
+	if (doSeek)
+	{
+		if (FSEEK64(file->ext_ifi, position, SEEK_SET) != 0)
+		{
+			ERR_post(Arg::Gds(isc_io_error) << STRINGIZE(FSEEK64) << Arg::Str(file->ext_filename) <<
+					 Arg::Gds(isc_io_open_err) << SYS_ERR(errno));
+		}
 	}
 
 	if (!fread(p, l, 1, file->ext_ifi))
+	{
 		return false;
+	}
 
-	rpb->rpb_ext_pos += l;
-
+	position += l;
 	file->ext_flags |= EXT_last_read;
-	file->ext_flags &= ~EXT_last_write;
 
 	// Loop thru fields setting missing fields to either blanks/zeros or the missing value
 
@@ -311,18 +425,24 @@ bool EXT_get(thread_db* tdbb, RecordSource* rsb)
 		i < format->fmt_count; ++i, ++itr, ++desc_ptr)
 	{
 	    const jrd_fld* field = *itr;
-		SET_NULL(record, i);
+
+		record->setNull(i);
+
 		if (!desc_ptr->dsc_length || !field)
 			continue;
-		const Literal* literal = (Literal*) field->fld_missing_value;
+
+		const LiteralNode* literal = nodeAs<LiteralNode>(field->fld_missing_value);
+
 		if (literal)
 		{
 			desc = *desc_ptr;
-			desc.dsc_address = record->rec_data + (IPTR) desc.dsc_address;
-			if (!MOV_compare(&literal->lit_desc, &desc))
+			desc.dsc_address = record->getData() + (IPTR) desc.dsc_address;
+
+			if (!MOV_compare(tdbb, &literal->litDesc, &desc))
 				continue;
 		}
-		CLEAR_NULL(record, i);
+
+		record->clearNull(i);
 	}
 
 	return true;
@@ -346,7 +466,7 @@ void EXT_modify(record_param* /*old_rpb*/, record_param* /*new_rpb*/, jrd_tra* /
 }
 
 
-void EXT_open(thread_db* tdbb, RecordSource* rsb)
+void EXT_open(Database* dbb, ExternalFile* file)
 {
 /**************************************
  *
@@ -358,100 +478,9 @@ void EXT_open(thread_db* tdbb, RecordSource* rsb)
  *	Open a record stream for an external file.
  *
  **************************************/
-	jrd_rel* relation = rsb->rsb_relation;
-	ExternalFile* file = relation->rel_file;
-	jrd_req* request = tdbb->getRequest();
-	record_param* rpb = &request->req_rpb[rsb->rsb_stream];
-
 	if (!file->ext_ifi) {
-		ext_fopen(tdbb->getDatabase(), file);
+		ext_fopen(dbb, file);
 	}
-
-	const Format* format;
-	Record* record = rpb->rpb_record;
-	if (!record || !(format = record->rec_format))
-	{
-		format = MET_current(tdbb, relation);
-		VIO_record(tdbb, rpb, format, request->req_pool);
-	}
-
-	rpb->rpb_ext_pos = 0;
-}
-
-
-// Only extvms.cpp needs the third param.
-RecordSource* EXT_optimize(OptimizerBlk* opt, SSHORT stream) //, jrd_nod** sort_ptr)
-{
-/**************************************
- *
- *	E X T _ o p t i m i z e
- *
- **************************************
- *
- * Functional description
- *	Compile and optimize a record selection expression into a
- *	set of record source blocks (rsb's).
- *
- **************************************/
-
-	thread_db* tdbb = JRD_get_thread_data();
-
-	CompilerScratch* csb = opt->opt_csb;
-	CompilerScratch::csb_repeat* csb_tail = &csb->csb_rpt[stream];
-	jrd_rel* relation = csb_tail->csb_relation;
-
-	/* Time to find inversions.  For each index on the relation
-	match all unused booleans against the index looking for upper
-	and lower bounds that can be computed by the index.  When
-	all unused conjunctions are exhausted, see if there is enough
-	information for an index retrieval.  If so, build up and
-	inversion component of the boolean.
-	*/
-
-	/*
-	jrd_nod* inversion = NULL;
-	OptimizerBlk::opt_repeat* const opt_end = opt->opt_rpt + opt->opt_count;
-
-	if (opt->opt_count)
-		//const index_desc* idx = csb_tail->csb_idx->items; ???
-	    for (USHORT i = 0; i < csb_tail->csb_indices; i++)
-		{
-			clear_bounds (opt, idx);
-			for (OptimizerBlk::opt_repeat* tail = opt->opt_rpt; tail < opt_end; tail++)
-			{
-			    jrd_nod* node = tail->opt_conjunct;
-			    if (!(tail->opt_flags & opt_used) && OPT_computable(csb, node, -1))
-					match (opt, stream, node, idx);
-			    if (node->nod_type == nod_starts)
-					compose (&inversion, make_starts (opt, node, stream, idx), nod_bit_and);
-			}
-			compose (&inversion, make_index (opt, relation, idx), nod_bit_and);
-			idx = idx->idx_rpt + idx->idx_count;
-		}
-	*/
-
-	RecordSource* rsb = FB_NEW_RPT(*tdbb->getDefaultPool(), 0) RecordSource;
-	rsb->rsb_type = rsb_ext_sequential;
-	rsb->rsb_stream = stream;
-	rsb->rsb_relation = relation;
-	rsb->rsb_impure = CMP_impure(csb, sizeof(irsb));
-
-	return rsb;
-}
-
-
-void EXT_ready(jrd_rel*)
-{
-/**************************************
- *
- *	E X T _ r e a d y
- *
- **************************************
- *
- * Functional description
- *	Open an external file.
- *
- **************************************/
 }
 
 
@@ -470,7 +499,7 @@ void EXT_store(thread_db* tdbb, record_param* rpb)
 	jrd_rel* relation = rpb->rpb_relation;
 	ExternalFile* file = relation->rel_file;
 	Record* record = rpb->rpb_record;
-	const Format* format = record->rec_format;
+	const Format* const format = record->getFormat();
 
 	if (!file->ext_ifi) {
 		ext_fopen(tdbb->getDatabase(), file);
@@ -484,7 +513,7 @@ void EXT_store(thread_db* tdbb, record_param* rpb)
 		Database* dbb = tdbb->getDatabase();
 		CHECK_DBB(dbb);
 		// Distinguish error message for a ReadOnly database
-		if (dbb->dbb_flags & DBB_read_only)
+		if (dbb->readOnly())
 			ERR_post(Arg::Gds(isc_read_only_database));
 		else
 		{
@@ -501,15 +530,16 @@ void EXT_store(thread_db* tdbb, record_param* rpb)
 	for (USHORT i = 0; i < format->fmt_count; ++i, ++field_ptr, ++desc_ptr)
 	{
 		const jrd_fld* field = *field_ptr;
-		if (field && !field->fld_computation && desc_ptr->dsc_length && TEST_NULL(record, i))
+		if (field && !field->fld_computation && desc_ptr->dsc_length && record->isNull(i))
 		{
-			UCHAR* p = record->rec_data + (IPTR) desc_ptr->dsc_address;
-			Literal* literal = (Literal*) field->fld_missing_value;
+			UCHAR* p = record->getData() + (IPTR) desc_ptr->dsc_address;
+			LiteralNode* literal = nodeAs<LiteralNode>(field->fld_missing_value);
+
 			if (literal)
 			{
 				desc = *desc_ptr;
 				desc.dsc_address = p;
-				MOV_move(tdbb, &literal->lit_desc, &desc);
+				MOV_move(tdbb, &literal->litDesc, &desc);
 			}
 			else
 			{
@@ -520,89 +550,32 @@ void EXT_store(thread_db* tdbb, record_param* rpb)
 	}
 
 	const USHORT offset = (USHORT) (IPTR) format->fmt_desc[0].dsc_address;
-	const UCHAR* p = record->rec_data + offset;
-	const ULONG l = record->rec_length - offset;
+	const UCHAR* p = record->getData() + offset;
+	const ULONG l = record->getLength() - offset;
 
 	// hvlad: fseek will flush file buffer and degrade performance, so don't
 	// call it if it is not necessary.	Note that we must flush file buffer if we
 	// do write after read
+	file->ext_flags &= ~EXT_last_read;
 	if (file->ext_ifi == NULL ||
 		(!(file->ext_flags & EXT_last_write) && FSEEK64(file->ext_ifi, (SINT64) 0, SEEK_END) != 0) )
 	{
+		file->ext_flags &= ~EXT_last_write;
 		ERR_post(Arg::Gds(isc_io_error) << Arg::Str("fseek") << Arg::Str(file->ext_filename) <<
 				 Arg::Gds(isc_io_open_err) << SYS_ERR(errno));
 	}
 
 	if (!fwrite(p, l, 1, file->ext_ifi))
 	{
+		file->ext_flags &= ~EXT_last_write;
 		ERR_post(Arg::Gds(isc_io_error) << Arg::Str("fwrite") << Arg::Str(file->ext_filename) <<
 				 Arg::Gds(isc_io_open_err) << SYS_ERR(errno));
 	}
 
 	// fflush(file->ext_ifi);
 	file->ext_flags |= EXT_last_write;
-	file->ext_flags &= ~EXT_last_read;
 }
 
-
-void EXT_trans_commit(jrd_tra*)
-{
-/**************************************
- *
- *	E X T _ t r a n s _ c o m m i t
- *
- **************************************
- *
- * Functional description
- *	Checkin at transaction commit time.
- *
- **************************************/
-}
-
-
-void EXT_trans_prepare(jrd_tra*)
-{
-/**************************************
- *
- *	E X T _ t r a n s _ p r e p a r e
- *
- **************************************
- *
- * Functional description
- *	Checkin at transaction prepare time.
- *
- **************************************/
-}
-
-
-void EXT_trans_rollback(jrd_tra*)
-{
-/**************************************
- *
- *	E X T _ t r a n s _ r o l l b a c k
- *
- **************************************
- *
- * Functional description
- *	Checkin at transaction rollback time.
- *
- **************************************/
-}
-
-
-void EXT_trans_start(jrd_tra*)
-{
-/**************************************
- *
- *	E X T _ t r a n s _ s t a r t
- *
- **************************************
- *
- * Functional description
- *	Checkin at start transaction time.
- *
- **************************************/
-}
 
 void EXT_tra_attach(ExternalFile* file, jrd_tra*)
 {

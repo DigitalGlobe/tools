@@ -1,0 +1,41 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "isql - launch",
+			"type": "cppdbg",
+			"request": "launch",
+			"program": "${workspaceRoot}/gen/Debug/firebird/bin/isql",
+			"args": [],
+			"stopAtEntry": false,
+			"cwd": "${workspaceRoot}",
+			"environment": [],
+			"externalConsole": true,
+			"linux": {
+				"MIMode": "gdb"
+			},
+			"osx": {
+				"MIMode": "lldb"
+			},
+			"windows": {
+				"MIMode": "gdb"
+			}
+		},
+		{
+			"name": "isql - attach",
+			"type": "cppdbg",
+			"request": "attach",
+			"program": "${workspaceRoot}/gen/Debug/firebird/bin/isql",
+			"processId": "${command.pickProcess}",
+			"linux": {
+				"MIMode": "gdb"
+			},
+			"osx": {
+				"MIMode": "lldb"
+			},
+			"windows": {
+				"MIMode": "gdb"
+			}
+		}
+	]
+}

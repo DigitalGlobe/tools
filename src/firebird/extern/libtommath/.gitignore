@@ -1,0 +1,6 @@
+lib/
+temp/
+*.o
+*.d
+*.l*
+.libs/

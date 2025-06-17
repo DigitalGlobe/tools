@@ -24,13 +24,38 @@
 #ifndef REMOTE_REMOT_PROTO_H
 #define REMOTE_REMOT_PROTO_H
 
+#include "../common/classes/fb_string.h"
+#include "../common/config/config.h"
+#include "../common/classes/RefCounted.h"
+#include "../common/classes/ParsedList.h"
+#include "../remote/protocol.h"
+#include "../common/xdr_proto.h"
+
+
 namespace Firebird
 {
 	class ClumpletReader;
 }
 
+struct rem_port;
+struct RemoteXdr : public xdr_t
+{
+	RemoteXdr()
+		: x_public(nullptr)
+	{ }
+
+	rem_port* x_public;
+};
+
+struct rem_fmt;
+struct Rdb;
+typedef bool PacketReceive(rem_port*, UCHAR*, SSHORT, SSHORT*);
+typedef bool PacketSend(rem_port*, const SCHAR*, SSHORT);
+typedef bool ProtoWrite(RemoteXdr*);
+enum LegacyPlugin {PLUGIN_NEW = 0, PLUGIN_LEGACY, PLUGIN_TRUSTED};
+
 void		REMOTE_cleanup_transaction (struct Rtr *);
-ULONG		REMOTE_compute_batch_size (rem_port*, USHORT, P_OP, const rem_fmt*);
+USHORT		REMOTE_compute_batch_size (rem_port*, USHORT, P_OP, const rem_fmt*);
 void		REMOTE_get_timeout_params(rem_port* port, Firebird::ClumpletReader* pb);
 struct Rrq*	REMOTE_find_request (struct Rrq *, USHORT);
 void		REMOTE_free_packet (rem_port*, struct packet *, bool = false);
@@ -39,8 +64,17 @@ void		REMOTE_release_messages (struct RMessage*);
 void		REMOTE_release_request (struct Rrq *);
 void		REMOTE_reset_request (struct Rrq *, struct RMessage*);
 void		REMOTE_reset_statement (struct Rsr *);
-void		REMOTE_save_status_strings (ISC_STATUS *);
-bool_t		REMOTE_getbytes (XDR*, SCHAR*, u_int);
+bool_t		REMOTE_getbytes (RemoteXdr*, SCHAR*, unsigned);
+LegacyPlugin REMOTE_legacy_auth(const char* nm, int protocol);
+Firebird::RefPtr<const Firebird::Config> REMOTE_get_config(const Firebird::PathName* dbName,
+	const Firebird::string* dpb_config = NULL);
+void		REMOTE_check_response(Firebird::IStatus* warning, Rdb* rdb, PACKET* packet, bool checkKeys = false);
+bool		REMOTE_inflate(rem_port*, PacketReceive*, UCHAR*, SSHORT, SSHORT*);
+bool		REMOTE_deflate(RemoteXdr*, ProtoWrite*, PacketSend*, bool flash);
+
+extern signed char wcCompatible[3][3];
+
+#define HANDSHAKE_DEBUG(A)
+#define WIRECRYPT_DEBUG(A)
 
 #endif // REMOTE_REMOT_PROTO_H
-

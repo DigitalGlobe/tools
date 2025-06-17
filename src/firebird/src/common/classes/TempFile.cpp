@@ -44,9 +44,11 @@
 #include <unistd.h>
 #endif
 
-#include "../jrd/gdsassert.h"
-#include "../jrd/os/path_utils.h"
+#include "../common/gdsassert.h"
+#include "../common/os/os_utils.h"
+#include "../common/os/path_utils.h"
 #include "../common/classes/init.h"
+#include "../common/os/mac_utils.h"
 
 #include "../common/classes/TempFile.h"
 
@@ -58,6 +60,8 @@ static const char* ENV_VAR = "FIREBIRD_TMP";
 static const char* DEFAULT_PATH =
 #if defined(UNIX)
 	"/tmp/";
+#elif defined(ANDROID)
+	"/data/local/tmp/";
 #elif defined(WIN_NT)
 	"c:\\temp\\";
 #else
@@ -65,12 +69,15 @@ static const char* DEFAULT_PATH =
 #endif
 
 static const char* const NAME_PATTERN = "XXXXXX";
+
+#ifdef WIN_NT
 static const char* const NAME_LETTERS = "abcdefghijklmnopqrstuvwxyz0123456789";
-static const size_t MAX_TRIES = 256;
+static const FB_SIZE_T MAX_TRIES = 256;
+#endif
 
 // we need a class here only to return memory on shutdown and avoid
 // false memory leak reports
-static Firebird::InitInstance<ZeroBuffer> zeros;
+static InitInstance<ZeroBuffer> zeros;
 
 //
 // TempFile::getTempPath
@@ -99,7 +106,11 @@ PathName TempFile::getTempPath()
 	}
 	if (path.empty())
 	{
-		path = DEFAULT_PATH;
+		const char* tmp = getTemporaryFolder();
+		if (tmp)
+			path = tmp;
+		else
+			path = DEFAULT_PATH;
 	}
 
 	fb_assert(path.length());
@@ -122,6 +133,36 @@ PathName TempFile::create(const PathName& prefix, const PathName& directory)
 	}
 	catch (const Exception&)
 	{} // do nothing
+
+	return filename;
+}
+
+//
+// TempFile::create
+//
+// Creates a temporary file and returns its name.
+// In error case store exception in status arg.
+//
+// Make sure exception will not be passed to the end-user as it
+// contains server-side directory and it could break security!
+//
+
+PathName TempFile::create(CheckStatusWrapper* status, const PathName& prefix, const PathName& directory)
+{
+	PathName filename;
+
+	try
+	{
+		TempFile file(*getDefaultMemoryPool(), prefix, directory, false);
+		filename = file.getName();
+	}
+	catch (const Exception& ex)
+	{
+		if (status)
+		{
+			ex.stuffException(status);
+		}
+	}
 
 	return filename;
 }
@@ -153,7 +194,7 @@ void TempFile::init(const PathName& directory, const PathName& prefix)
 	{
 		PathName name = filename + prefix;
 		__int64 temp = randomness;
-		for (size_t i = 0; i < suffix.length(); i++)
+		for (FB_SIZE_T i = 0; i < suffix.length(); i++)
 		{
 			suffix[i] = NAME_LETTERS[temp % (strlen(NAME_LETTERS))];
 			temp /= strlen(NAME_LETTERS);
@@ -171,32 +212,39 @@ void TempFile::init(const PathName& directory, const PathName& prefix)
 			filename = name;
 			break;
 		}
+		const DWORD err = GetLastError();
+		if (err != ERROR_FILE_EXISTS)
+		{
+			(Arg::Gds(isc_io_error) << Arg::Str("CreateFile (create)") << Arg::Str(name) <<
+				Arg::Gds(isc_io_create_err) << Arg::OsError(err)).raise();
+		}
 		randomness++;
 	}
 	if (handle == INVALID_HANDLE_VALUE)
 	{
-		system_error::raise("CreateFile");
+		(Arg::Gds(isc_io_error) << Arg::Str("CreateFile (create)") << Arg::Str(filename) <<
+			Arg::Gds(isc_io_create_err) << Arg::OsError()).raise();
 	}
 #else
 	filename += prefix;
 	filename += NAME_PATTERN;
 
 #ifdef HAVE_MKSTEMP
-	handle = (IPTR) mkstemp(filename.begin());
+	handle = (IPTR) os_utils::mkstemp(filename.begin());
 #else
 	if (!mktemp(filename.begin()))
 	{
-		system_error::raise("mktemp");
+		(Arg::Gds(isc_io_error) << Arg::Str("mktemp") << Arg::Str(filename) <<
+			Arg::Gds(isc_io_create_err) << Arg::OsError()).raise();
 	}
 
-	do {
-		handle = open(filename.c_str(), O_RDWR | O_EXCL | O_CREAT);
-	} while (handle == -1 && errno == EINTR);
+	handle = os_utils::open(filename.c_str(), O_RDWR | O_EXCL | O_CREAT);
 #endif
 
 	if (handle == -1)
 	{
-		system_error::raise("open");
+		(Arg::Gds(isc_io_error) << Arg::Str("open") << Arg::Str(filename) <<
+			Arg::Gds(isc_io_create_err) << Arg::OsError()).raise();
 	}
 
 	if (doUnlink)
@@ -248,7 +296,7 @@ void TempFile::seek(const offset_t offset)
 		system_error::raise("SetFilePointer");
 	}
 #else
-	const off_t seek_result = ::lseek(handle, (off_t) offset, SEEK_SET);
+	const off_t seek_result = os_utils::lseek(handle, (off_t) offset, SEEK_SET);
 	if (seek_result == (off_t) -1)
 	{
 		system_error::raise("lseek");
@@ -265,15 +313,15 @@ void TempFile::seek(const offset_t offset)
 // Increases the file size
 //
 
-void TempFile::extend(size_t delta)
+void TempFile::extend(offset_t delta)
 {
 	const char* const buffer = zeros().getBuffer();
-	const size_t bufferSize = zeros().getSize();
+	const FB_SIZE_T bufferSize = zeros().getSize();
 	const offset_t newSize = size + delta;
 
 	for (offset_t offset = size; offset < newSize; offset += bufferSize)
 	{
-		const size_t length = MIN(newSize - offset, bufferSize);
+		const FB_SIZE_T length = MIN(newSize - offset, bufferSize);
 		write(offset, buffer, length);
 	}
 }
@@ -284,7 +332,7 @@ void TempFile::extend(size_t delta)
 // Reads bytes from file
 //
 
-size_t TempFile::read(offset_t offset, void* buffer, size_t length)
+FB_SIZE_T TempFile::read(offset_t offset, void* buffer, FB_SIZE_T length)
 {
 	fb_assert(offset + length <= size);
 	seek(offset);
@@ -296,7 +344,7 @@ size_t TempFile::read(offset_t offset, void* buffer, size_t length)
 	}
 #else
 	const int bytes = ::read(handle, buffer, length);
-	if (bytes < 0 || size_t(bytes) != length)
+	if (bytes < 0 || FB_SIZE_T(bytes) != length)
 	{
 		system_error::raise("read");
 	}
@@ -311,7 +359,7 @@ size_t TempFile::read(offset_t offset, void* buffer, size_t length)
 // Writes bytes to file
 //
 
-size_t TempFile::write(offset_t offset, const void* buffer, size_t length)
+FB_SIZE_T TempFile::write(offset_t offset, const void* buffer, FB_SIZE_T length)
 {
 	fb_assert(offset <= size);
 	seek(offset);
@@ -323,7 +371,7 @@ size_t TempFile::write(offset_t offset, const void* buffer, size_t length)
 	}
 #else
 	const int bytes = ::write(handle, buffer, length);
-	if (bytes < 0 || size_t(bytes) != length)
+	if (bytes < 0 || FB_SIZE_T(bytes) != length)
 	{
 		system_error::raise("write");
 	}

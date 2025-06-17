@@ -36,11 +36,6 @@
 #include "../jrd/sbm.h"
 #include "../jrd/lck.h"
 
-// 64 turns out not to be enough indexes
-// #define MAX_IDX		 64		// that should be plenty of indexes
-
-#define MAX_KEY_LIMIT		(dbb->dbb_page_size / 4)
-
 struct dsc;
 
 namespace Jrd {
@@ -48,22 +43,19 @@ namespace Jrd {
 class jrd_rel;
 class jrd_tra;
 template <typename T> class vec;
-class jrd_req;
+class Statement;
 struct temporary_key;
-class jrd_tra;
+class thread_db;
 class BtrPageGCLock;
-
-enum idx_null_state {
-  idx_nulls_none,
-  idx_nulls_some,
-  idx_nulls_all
-};
+class Sort;
+class PartitionedSort;
+struct sort_key_def;
 
 // Index descriptor block -- used to hold info from index root page
 
 struct index_desc
 {
-	SLONG	idx_root;						// Index root
+	ULONG	idx_root;						// Index root
 	float	idx_selectivity;				// selectivity of index
 	USHORT	idx_id;
 	UCHAR	idx_flags;
@@ -74,9 +66,12 @@ struct index_desc
 	vec<int>*	idx_foreign_primaries;		// ids for primary/unique indexes with partners
 	vec<int>*	idx_foreign_relations;		// ids for foreign key partner relations
 	vec<int>*	idx_foreign_indexes;		// ids for foreign key partner indexes
-	jrd_nod* idx_expression;				// node tree for indexed expresssion
+	ValueExprNode* idx_expression;			// node tree for indexed expression
 	dsc		idx_expression_desc;			// descriptor for expression result
-	jrd_req* idx_expression_request;		// stored request for expression evaluation
+	Statement* idx_expression_statement;	// stored statement for expression evaluation
+	BoolExprNode* idx_condition;			// node tree for index condition
+	Statement* idx_condition_statement;		// stored statement for index condition
+	float idx_fraction;						// fraction of keys included in the index
 	// This structure should exactly match IRTD structure for current ODS
 	struct idx_repeat
 	{
@@ -86,11 +81,7 @@ struct index_desc
 	} idx_rpt[MAX_INDEX_SEGMENTS];
 };
 
-struct IndexDescAlloc : public pool_alloc_rpt<index_desc>
-{
-	index_desc items[1];
-};
-
+typedef Firebird::HalfStaticArray<index_desc, 16> IndexDescList;
 
 const USHORT idx_invalid = USHORT(~0);		// Applies to idx_id as special value
 
@@ -101,28 +92,33 @@ const USHORT idx_invalid = USHORT(~0);		// Applies to idx_id as special value
 
 const int idx_numeric		= 0;
 const int idx_string		= 1;
-const int idx_timestamp1	= 2;
+// value of 2 was used in ODS < 10
 const int idx_byte_array	= 3;
 const int idx_metadata		= 4;
 const int idx_sql_date		= 5;
 const int idx_sql_time		= 6;
-const int idx_timestamp2	= 7;
+const int idx_timestamp		= 7;
 const int idx_numeric2		= 8;	// Introduced for 64-bit Integer support
+const int idx_boolean		= 9;
+const int idx_decimal		= 10;
+const int idx_sql_time_tz	= 11;
+const int idx_timestamp_tz	= 12;
+const int idx_bcd			= 13;	// 128-bit Integer support
 
-				   // idx_itype space for future expansion
+// idx_itype space for future expansion
 const int idx_first_intl_string	= 64;	// .. MAX (short) Range of computed key strings
 
 const int idx_offset_intl_range	= (0x7FFF + idx_first_intl_string);
 
-// these flags must match the irt_flags
+// these flags must match the irt_flags (see ods.h)
 
 const int idx_unique		= 1;
 const int idx_descending	= 2;
 const int idx_in_progress	= 4;
 const int idx_foreign		= 8;
 const int idx_primary		= 16;
-const int idx_expressn		= 32;
-const int idx_complete_segs	= 64;
+const int idx_expression	= 32;
+const int idx_condition		= 64;
 
 // these flags are for idx_runtime_flags
 
@@ -130,30 +126,27 @@ const int idx_plan_dont_use	= 1;	// index is not mentioned in user-specified acc
 const int idx_plan_navigate	= 2;	// plan specifies index to be used for ordering
 const int idx_used 			= 4;	// index was in fact selected for retrieval
 const int idx_navigate		= 8;	// index was in fact selected for navigation
-const int idx_plan_missing	= 16;	// index mentioned in missing clause
-const int idx_plan_starts	= 32;	// index mentioned in starts clause
-const int idx_used_with_and	= 64;	// marker used in procedure sort_indices
-const int idx_marker		= 128;	// marker used in procedure sort_indices
+const int idx_marker		= 16;	// marker used in procedure sort_indices
 
 // Index insertion block -- parameter block for index insertions
 
 struct index_insertion
 {
 	RecordNumber iib_number;		// record number (or lower level page)
-	SLONG iib_sibling;				// right sibling page
+	ULONG iib_sibling;				// right sibling page
 	index_desc*	iib_descriptor;		// index descriptor
 	jrd_rel*	iib_relation;		// relation block
 	temporary_key*	iib_key;		// varying string for insertion
 	RecordBitmap* iib_duplicates;	// spare bit map of duplicates
 	jrd_tra*	iib_transaction;	// insertion transaction
 	BtrPageGCLock*	iib_dont_gc_lock;	// lock to prevent removal of splitted page
+	UCHAR	iib_btr_level;			// target level to propagate split page to
 };
 
 
 // these flags are for the key_flags
 
 const int key_empty		= 1;	// Key contains empty data / empty string
-const int key_all_nulls	= 2;	// All key fields are nulls
 
 // Temporary key block
 
@@ -162,16 +155,9 @@ struct temporary_key
 	USHORT key_length;
 	UCHAR key_data[MAX_KEY + 1];
 	UCHAR key_flags;
-	USHORT key_null_segment;	// index of first encountered null segment.
-		// Evaluated in BTR_key only and used in IDX_create_index for better
-		// error diagnostics
-
-	// AB: I don't see the use of multiplying with 2 anymore.
-	//UCHAR key_data[MAX_KEY * 2];
-		// This needs to be on a SHORT boundary.
-		// This is because key_data is complemented as
-		// (SSHORT *) if value is negative.
-		//  See compress() (JRD/btr.cpp) for more details
+	USHORT key_nulls;	// bitmap of encountered null segments,
+						// USHORT is enough to store MAX_INDEX_SEGMENTS bits
+	Firebird::AutoPtr<temporary_key> key_next;	// next key (INTL_KEY_MULTI_STARTING)
 };
 
 
@@ -198,17 +184,46 @@ const int ISR_null		= 2;	// Record consists of NULL values only
 
 // Index retrieval block -- hold stuff for index retrieval
 
-class IndexRetrieval : public pool_alloc_rpt<jrd_nod*, type_irb>
+class IndexRetrieval
 {
 public:
-	index_desc irb_desc;		// Index descriptor
-	USHORT irb_index;			// Index id
-	USHORT irb_generic;			// Flags for generic search
-	jrd_rel*	irb_relation;	// Relation for retrieval
-	USHORT irb_lower_count;		// Number of segments for retrieval
-	USHORT irb_upper_count;		// Number of segments for retrieval
-	temporary_key*	irb_key;	// key for equality retrieval
-	jrd_nod* irb_value[1];
+	IndexRetrieval(jrd_rel* relation, const index_desc* idx, USHORT count, temporary_key* key)
+		: irb_relation(relation), irb_index(idx->idx_id),
+		  irb_generic(0), irb_lower_count(count), irb_upper_count(count), irb_key(key),
+		  irb_name(nullptr), irb_value(nullptr), irb_list(nullptr), irb_scale(nullptr)
+	{
+		memcpy(&irb_desc, idx, sizeof(irb_desc));
+	}
+
+	IndexRetrieval(MemoryPool& pool, jrd_rel* relation, const index_desc* idx,
+				   const MetaName& name)
+		: irb_relation(relation), irb_index(idx->idx_id),
+		  irb_generic(0), irb_lower_count(0), irb_upper_count(0), irb_key(NULL),
+		  irb_name(FB_NEW_POOL(pool) MetaName(name)),
+		  irb_value(FB_NEW_POOL(pool) ValueExprNode*[idx->idx_count * 2]),
+		  irb_list(nullptr), irb_scale(nullptr)
+	{
+		memcpy(&irb_desc, idx, sizeof(irb_desc));
+	}
+
+	~IndexRetrieval()
+	{
+		delete irb_name;
+		delete[] irb_value;
+		delete[] irb_scale;
+	}
+
+	index_desc irb_desc;			// Index descriptor
+	jrd_rel* irb_relation;			// Relation for retrieval
+	USHORT irb_index;				// Index id
+	USHORT irb_generic;				// Flags for generic search
+	USHORT irb_lower_count;			// Number of segments for retrieval
+	USHORT irb_upper_count;			// Number of segments for retrieval
+	temporary_key* irb_key;			// Key for equality retrieval
+	MetaName* irb_name;				// Index name
+	ValueExprNode** irb_value;		// Matching value (for equality search)
+	LookupValueList* irb_list;		// Matching values list (for IN <list>)
+	SSHORT* irb_scale;				// Scale for int64/int128 key
 };
 
 // Flag values for irb_generic
@@ -220,27 +235,20 @@ const int irb_ignore_null_value_key  = 8;	// if lower bound is specified and upp
 const int irb_descending	= 16;			// Base index uses descending order
 const int irb_exclude_lower	= 32;			// exclude lower bound keys while scanning index
 const int irb_exclude_upper	= 64;			// exclude upper bound keys while scanning index
+const int irb_multi_starting	= 128;		// Use INTL_KEY_MULTI_STARTING
+const int irb_root_list_scan	= 256;		// Locate list items from the root
+const int irb_unique	= 512;				// Unique match (currently used only for plan output)
 
-// macros used to manipulate btree nodes
-#define BTR_SIZE	OFFSETA(Ods::btree_page*, btr_nodes)
-
-#define NEXT_NODE(node)	(btree_nod*)(node->btn_data + node->btn_length)
-#define NEXT_NODE_RECNR(node)	(btree_nod*)(node->btn_data + node->btn_length + sizeof(SLONG))
-
-//#define LAST_NODE(page)	(btree_nod*) ((UCHAR*) page + page->btr_length)
-
-//#define NEXT_EXPANDED(xxx,yyy)	(btree_exp*) ((UCHAR*) xxx->btx_data + (yyy)->btn_prefix + (yyy)->btn_length)
+// Force include flags - always include appropriate key while scanning index
+const int irb_force_lower	= irb_exclude_lower;
+const int irb_force_upper	= irb_exclude_upper;
 
 typedef Firebird::HalfStaticArray<float, 4> SelectivityList;
 
 class BtrPageGCLock : public Lock
 {
-	// We want to put 8 bytes (PageNumber) in lock key. One long is already
-	// reserved by Lock::lck_long, this is the second long. It is really unused
-	// as second long needed for 8-byte key already "allocated" by compiler
-	// because of alignment rules. Anyway, to be formally correct, let introduce
-	// 4-byte field for guarantee we have space for lock key.
-	SLONG unused;
+	// This class assumes that the static part of the lock key (Lock::lck_key)
+	// is at least 64 bits in size
 
 public:
 	explicit BtrPageGCLock(thread_db* tdbb);
@@ -249,9 +257,53 @@ public:
 	void disablePageGC(thread_db* tdbb, const PageNumber &page);
 	void enablePageGC(thread_db* tdbb);
 
+	// return true if lock is active
+	bool isActive() const
+	{
+		return lck_id != 0;
+	}
+
 	static bool isPageGCAllowed(thread_db* tdbb, const PageNumber& page);
+
+#ifdef DEBUG_LCK_LIST
+	BtrPageGCLock(thread_db* tdbb, Firebird::MemoryPool* pool)
+		: Lock(tdbb, PageNumber::getLockLen(), LCK_btr_dont_gc), m_pool(pool)
+	{
+	}
+
+	static bool checkPool(const Lock* lock, Firebird::MemoryPool* pool)
+	{
+		if (!pool || !lock)
+			return false;
+
+		const Firebird::MemoryPool* pool2 = NULL;
+
+		if (lock && (lock->lck_type == LCK_btr_dont_gc))
+			pool2 = reinterpret_cast<const BtrPageGCLock*>(lock)->m_pool;
+
+		return (pool == pool2);
+	}
+
+private:
+	const Firebird::MemoryPool* m_pool;
+#endif
 };
 
+// Struct used for index creation
+
+struct IndexCreation
+{
+	jrd_rel* relation;
+	index_desc* index;
+	const TEXT* index_name;
+	jrd_tra* transaction;
+	PartitionedSort* sort;
+	sort_key_def* key_desc;
+	USHORT key_length;
+	USHORT nullIndLen;
+	SINT64 dup_recno;
+	Firebird::AtomicCounter duplicates;
+};
 
 // Class used to report any index related errors
 
@@ -264,8 +316,8 @@ class IndexErrorContext
 	};
 
 public:
-	IndexErrorContext(jrd_rel* relation, index_desc* index, const char* indexName = NULL)
-		: m_relation(relation), m_index(index), m_indexName(indexName), isLocationDefined(false)
+	IndexErrorContext(jrd_rel* relation, index_desc* index, const char* indexName = nullptr)
+		: m_relation(relation), m_index(index), m_indexName(indexName)
 	{}
 
 	void setErrorLocation(jrd_rel* relation, USHORT indexId)
@@ -275,16 +327,207 @@ public:
 		m_location.indexId = indexId;
 	}
 
-	void raise(thread_db*, idx_e, Record*);
+	void raise(thread_db*, idx_e, Record* = nullptr);
 
 private:
 	jrd_rel* const m_relation;
 	index_desc* const m_index;
 	const char* const m_indexName;
 	Location m_location;
-	bool isLocationDefined;
+	bool isLocationDefined = false;
 };
 
+// Helper classes to allow efficient evaluation of index conditions/expressions
+
+class IndexCondition
+{
+public:
+	IndexCondition(thread_db* tdbb, index_desc* idx);
+
+	IndexCondition(const IndexCondition& other)
+		: m_tdbb(other.m_tdbb), m_condition(other.m_condition), m_request(other.m_request)
+	{}
+
+	~IndexCondition();
+
+	TriState check(Record* record, idx_e* errCode = nullptr);
+
+private:
+	thread_db* const m_tdbb;
+	BoolExprNode* m_condition = nullptr;
+	Request* m_request = nullptr;
+
+	bool evaluate(Record* record) const;
+};
+
+class IndexExpression
+{
+public:
+	IndexExpression(thread_db* tdbb, index_desc* idx);
+
+	IndexExpression(const IndexExpression& other)
+		: m_tdbb(other.m_tdbb), m_expression(other.m_expression), m_request(other.m_request)
+	{}
+
+	~IndexExpression();
+
+	dsc* evaluate(Record* record) const;
+
+private:
+	thread_db* const m_tdbb;
+	ValueExprNode* m_expression = nullptr;
+	Request* m_request = nullptr;
+};
+
+typedef Firebird::AutoPtr<IndexExpression> AutoIndexExpression;
+
+// Index key wrapper
+
+class IndexKey
+{
+public:
+	IndexKey(thread_db* tdbb, jrd_rel* relation, index_desc* idx)
+		: m_tdbb(tdbb), m_relation(relation), m_index(idx),
+		  m_keyType((idx->idx_flags & idx_unique) ? INTL_KEY_UNIQUE : INTL_KEY_SORT),
+		  m_segments(idx->idx_count), m_expression(m_localExpression)
+	{
+		fb_assert(m_index->idx_count);
+	}
+
+	IndexKey(thread_db* tdbb, jrd_rel* relation, index_desc* idx, AutoIndexExpression& expr)
+		: m_tdbb(tdbb), m_relation(relation), m_index(idx),
+		  m_keyType((idx->idx_flags & idx_unique) ? INTL_KEY_UNIQUE : INTL_KEY_SORT),
+		  m_segments(idx->idx_count), m_expression(expr)
+	{
+		fb_assert(m_index->idx_count);
+	}
+
+	IndexKey(thread_db* tdbb, jrd_rel* relation, index_desc* idx,
+			 USHORT keyType, USHORT segments)
+		: m_tdbb(tdbb), m_relation(relation), m_index(idx),
+		  m_keyType(keyType), m_segments(segments), m_expression(m_localExpression)
+	{
+		fb_assert(m_index->idx_count && m_segments && m_segments <= m_index->idx_count);
+	}
+
+	IndexKey(thread_db* tdbb, jrd_rel* relation, index_desc* idx,
+			 USHORT keyType, USHORT segments, AutoIndexExpression& expr)
+		: m_tdbb(tdbb), m_relation(relation), m_index(idx),
+		  m_keyType(keyType), m_segments(segments), m_expression(expr)
+	{
+		fb_assert(m_index->idx_count && m_segments && m_segments <= m_index->idx_count);
+	}
+
+	IndexKey(const IndexKey& other)
+		: m_tdbb(other.m_tdbb), m_relation(other.m_relation), m_index(other.m_index),
+		  m_keyType(other.m_keyType), m_segments(other.m_segments), m_expression(other.m_expression)
+	{
+	}
+
+	idx_e compose(Record* record);
+
+	operator temporary_key*()
+	{
+		return &m_key;
+	}
+
+	temporary_key* operator->()
+	{
+		return &m_key;
+	}
+
+	bool operator==(const IndexKey& other) const
+	{
+		if (m_key.key_length != other.m_key.key_length)
+			return false;
+
+		return !memcmp(m_key.key_data, other.m_key.key_data, m_key.key_length);
+	}
+
+	bool operator!=(const IndexKey& other) const
+	{
+		if (m_key.key_length != other.m_key.key_length)
+			return true;
+
+		return memcmp(m_key.key_data, other.m_key.key_data, m_key.key_length);
+	}
+
+	// Return ordinal number of the first NULL segment
+	USHORT getNullSegment() const
+	{
+		USHORT nulls = m_key.key_nulls;
+
+		for (USHORT i = 0; nulls; i++)
+		{
+			if (nulls & 1)
+				return i;
+
+			nulls >>= 1;
+		}
+
+		return MAX_USHORT;
+	}
+
+private:
+	thread_db* const m_tdbb;
+	jrd_rel* const m_relation;
+	index_desc* const m_index;
+	const USHORT m_keyType;
+	const USHORT m_segments;
+	temporary_key m_key;
+	AutoIndexExpression& m_expression;
+	AutoIndexExpression m_localExpression;
+};
+
+// List scan iterator
+
+class IndexScanListIterator
+{
+public:
+	IndexScanListIterator(thread_db* tdbb, const IndexRetrieval* retrieval);
+
+	bool isEmpty() const
+	{
+		return m_listValues.isEmpty();
+	}
+
+	bool getNext(thread_db* tdbb, temporary_key* lower, temporary_key* upper)
+	{
+		if (++m_iterator < m_listValues.end())
+		{
+			makeKeys(tdbb, lower, upper);
+			return true;
+		}
+
+		m_iterator = nullptr;
+		return false;
+	}
+
+	const ValueExprNode* const* getLowerValues() const
+	{
+		return m_lowerValues.begin();
+	}
+
+	const ValueExprNode* const* getUpperValues() const
+	{
+		return m_upperValues.begin();
+	}
+
+	SSHORT* getScale()
+	{
+		return m_retrieval->irb_scale;
+	}
+
+private:
+	void makeKeys(thread_db* tdbb, temporary_key* lower, temporary_key* upper);
+
+	const IndexRetrieval* const m_retrieval;
+	Firebird::HalfStaticArray<const ValueExprNode*, 16> m_listValues;
+	Firebird::HalfStaticArray<const ValueExprNode*, 4> m_lowerValues;
+	Firebird::HalfStaticArray<const ValueExprNode*, 4> m_upperValues;
+	const ValueExprNode* const* m_iterator;
+	USHORT m_segno = MAX_USHORT;
+};
 
 } //namespace Jrd
 

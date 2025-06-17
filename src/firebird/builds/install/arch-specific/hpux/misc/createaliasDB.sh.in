@@ -32,7 +32,7 @@
 #  
 # 
 
-
+fb_install_prefix=@prefix@
 
 #------------------------------------------------------------------------
 # Prompt for response, store result in Answer
@@ -51,7 +51,7 @@ AskQuestion() {
 
 #------------------------------------------------------------------------------
 # appendAliasEntry
-# check to see if an entry already exists in the aliases.conf file
+# check to see if an entry already exists in the databases.conf file
 # if it doesn't append it to the end of the file
 
 appendAliasEntry() {
@@ -138,7 +138,7 @@ checkAccessToFile() {
     aliasName=$1
     newDB=$2
 
-    AliasFile=@FB_CONFDIR@/aliases.conf
+    AliasFile=@FB_CONFDIR@/databases.conf
 
 
     checkNameStartsWithSlash $newDB

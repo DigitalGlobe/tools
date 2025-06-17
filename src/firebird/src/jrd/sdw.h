@@ -29,7 +29,7 @@
 namespace Jrd {
 	class jrd_file;
 
-/* Shadowing block */
+// Shadowing block
 
 class Shadow : public pool_alloc<type_sdw>
 {
@@ -42,13 +42,13 @@ public:
 
 // sdw_flags
 
-const USHORT SDW_dumped	= 1;		/* bit set when file has been copied */
-const USHORT SDW_shutdown	= 2;		/* stop shadowing on next cache flush */
-const USHORT SDW_manual	= 4;		/* shadow is a manual shadow--don't delete */
-const USHORT SDW_delete	= 8;		/* delete the shadow at the next shutdown */
-const USHORT SDW_found		= 16;		/* flag to mark shadow found in database */
-const USHORT SDW_rollover	= 32;		/* this shadow was rolled over to when the main db file went away */
-const USHORT SDW_conditional	= 64;	/* shadow to be used if another shadow becomes unavailable */
+const USHORT SDW_dumped	= 1;			// bit set when file has been copied
+const USHORT SDW_shutdown	= 2;		// stop shadowing on next cache flush
+const USHORT SDW_manual	= 4;			// shadow is a manual shadow--don't delete
+const USHORT SDW_delete	= 8;			// delete the shadow at the next shutdown
+const USHORT SDW_found		= 16;		// flag to mark shadow found in database
+const USHORT SDW_rollover	= 32;		// this shadow was rolled over to when the main db file went away
+const USHORT SDW_conditional	= 64;	// shadow to be used if another shadow becomes unavailable
 
 /* these macros are a convenient combination of switches:
    the first specifies the shadow is invalid for writing to;
@@ -61,4 +61,3 @@ const USHORT SDW_IGNORE	= (SDW_shutdown | SDW_delete);
 } //namespace Jrd
 
 #endif // JRD_SDW_H
-

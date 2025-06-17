@@ -28,39 +28,44 @@
 #include "../common/classes/semaphore.h"
 #include "../common/classes/GenericMap.h"
 #include "../common/classes/RefCounted.h"
-#include "../jrd/ThreadData.h"
+#include "../common/ThreadData.h"
 #include "../jrd/event.h"
+#include "../common/isc_s_proto.h"
+#include "../common/config/config.h"
+
 
 namespace Jrd {
 
 class Attachment;
 
-class EventManager : private Firebird::RefCounted, public Firebird::GlobalStorage
+class EventManager final : public Firebird::GlobalStorage, public Firebird::IpcObject
 {
-	typedef Firebird::GenericMap<Firebird::Pair<Firebird::Left<Firebird::string, EventManager*> > > DbEventMgrMap;
-
-	static Firebird::GlobalPtr<DbEventMgrMap> g_emMap;
-	static Firebird::GlobalPtr<Firebird::Mutex> g_mapMutex;
-
 	const int PID;
 
 public:
-	static void init(Attachment*);
-	static void destroy(EventManager*);
-
-	explicit EventManager(const Firebird::string&);
+	EventManager(const Firebird::string& id, const Firebird::Config* conf);
 	~EventManager();
+
+	static void init(Attachment*);
 
 	void deleteSession(SLONG);
 
-	SLONG queEvents(SLONG, USHORT, const TEXT*, USHORT, const UCHAR*,
-				    FPTR_EVENT_CALLBACK, void*);
+	SLONG queEvents(SLONG, USHORT, const UCHAR*, Firebird::IEventCallback*);
 	void cancelEvents(SLONG);
-	void postEvent(USHORT, const TEXT*, USHORT, const TEXT*, USHORT);
+	void postEvent(USHORT, const TEXT*, USHORT);
 	void deliverEvents();
 
+	bool initialize(Firebird::SharedMemoryBase*, bool) override;
+	void mutexBug(int osErrorCode, const char* text) override;
+
+	USHORT getType() const override { return Firebird::SharedMemoryBase::SRAM_EVENT_MANAGER; }
+	USHORT getVersion() const override { return EVENT_VERSION; }
+	const char* getName() const override { return "EventManager";}
+
+	void exceptionHandler(const Firebird::Exception& ex, ThreadFinishSync<EventManager*>::ThreadRoutine* routine);
+
 private:
-	evh* acquire_shmem();
+	void acquire_shmem();
 	frb* alloc_global(UCHAR type, ULONG length, bool recurse);
 	void create_process();
 	SLONG create_session();
@@ -71,53 +76,36 @@ private:
 	void deliver();
 	void deliver_request(evt_req*);
 	void exit_handler(void *);
-	evnt* find_event(USHORT, const TEXT*, evnt*);
+	evnt* find_event(USHORT, const TEXT*);
 	void free_global(frb*);
 	req_int* historical_interest(ses*, SLONG);
-	void init_shmem(sh_mem*, bool);
 	void insert_tail(srq*, srq*);
-	evnt* make_event(USHORT, const TEXT*, SLONG);
+	evnt* make_event(USHORT, const TEXT*);
 	bool post_process(prb*);
 	void probe_processes();
 	void release_shmem();
 	void remove_que(srq*);
 	bool request_completed(evt_req*);
 	void watcher_thread();
-	void attach_shared_file();
-	void detach_shared_file();
-	void get_shared_file_name(Firebird::PathName&) const;
+	void init_shared_file();
 
-	static THREAD_ENTRY_DECLARE watcher_thread(THREAD_ENTRY_PARAM arg)
+	static void watcher_thread(EventManager* eventMgr)
 	{
-		EventManager* const eventMgr = static_cast<EventManager*>(arg);
 		eventMgr->watcher_thread();
-		return 0;
-	}
-
-	static void init_shmem(void* arg, sh_mem* shmem, bool init)
-	{
-		EventManager* const eventMgr = static_cast<EventManager*>(arg);
-		eventMgr->init_shmem(shmem, init);
 	}
 
 	static void mutex_bugcheck(const TEXT*, int);
 	static void punt(const TEXT*);
 
-	evh* m_header;
 	prb* m_process;
 	SLONG m_processOffset;
-	sh_mem m_shmemData;
 
-	Firebird::string m_dbId;
+	const Firebird::string& m_dbId;
+	const Firebird::Config* const m_config;
+	Firebird::AutoPtr<Firebird::SharedMemory<evh> > m_sharedMemory;
 
 	Firebird::Semaphore m_startupSemaphore;
-	Firebird::Semaphore m_cleanupSemaphore;
-
-#ifdef WIN_NT
-	struct mtx m_mutex;
-#else
-	struct mtx* m_mutex;
-#endif
+	ThreadFinishSync<EventManager*> m_cleanupSync;
 
 	bool m_sharedFileCreated;
 	bool m_exiting;
@@ -126,4 +114,3 @@ private:
 } // namespace
 
 #endif // JRD_EVENT_PROTO_H
-

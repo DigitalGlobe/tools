@@ -1,4 +1,4 @@
-ba.MyAppName=Firebird Database Server %1
+Ôªøba.MyAppName=Firebird Database Server %1
 ba.ServerInstall=Puna instalacija Server-a i razvojnih alata.
 ba.SuperServerInstall=Puna instalacija Super Server-a i razvojnih alata.
 ba.ClassicServerInstall=Puna instalacija Classic Server-a i razvojnih alata.
@@ -14,53 +14,52 @@ ba.UseGuardianTask=Koristiti &Guardian za kontrolu server-a?
 ba.UseApplicationTaskMsg=Pokreni kao &Application?
 ba.TaskGroupDescription=Pokreni Firebird server kao:
 ba.UseServiceTask=Pokreni kao &Service?
-ba.AutoStartTask=Pokreni &Firebird automatski uvijek kad upalite raËunar?
+ba.AutoStartTask=Pokreni &Firebird automatski uvijek kad upalite raƒçunar?
 ba.SuperClassicTask="Use SuperClassic?"
-ba.CopyFbClientToSysTask=Kopiraj &Firebird client biblioteku (library) u folder <system>?
-ba.CopyFbClientAsGds32Task=Generiöi client biblioteku (library) kao GDS32.DLL za podröku starim-postojeÊim (&legacy) programima?
+ba.CopyFbClientToSysTask=Kopiraj Firebird &client biblioteku (library) u folder <system>?
+ba.CopyFbClientAsGds32Task=Generi≈°i client biblioteku (library) kao GDS32.DLL za podr≈°ku starom-postojeƒáem (&legacy) InterBase-u ?
 ba.InstallCPLAppletTask="Instaliraj Control &Panel Applet?"
 ba.instreg=Upisujem u registry
 ba.instclientCopyFbClient=Kopiram fbclient u folder <sys>
-ba.instclientGenGds32=Generiöem gds32.dll u folder <sys>
-ba.instclientDecLibCountGds32="Umanjujem brojaË upotrebe za biblioteku gds32 i uklanjam ako treba."
-ba.instclientDecLibCountFbClient="Umanjujem brojaË upotrebe za biblioteku fbclient i uklanjam ako treba."
-ba.instsvcSetup=Podeöavam service
+ba.instclientGenGds32=Generi≈°em gds32.dll u folder <sys>
+ba.instclientDecLibCountGds32="Umanjujem brojaƒç upotrebe za biblioteku gds32 i uklanjam ako treba."
+ba.instclientDecLibCountFbClient="Umanjujem brojaƒç upotrebe za biblioteku fbclient i uklanjam ako treba."
+ba.instsvcSetup=Pode≈°avam service
 ba.instsvcStartQuestion=Pokreni Firebird Service sada?
-ba.instsvcStartMsg=PokreÊem server
+ba.instsvcStartMsg=Pokreƒáem server
 ba.instsvcStopMsg="Zaustavljam service"
 ba.instsvcRemove="Uklanjam service"
 ba.instappStartQuestion=Pokreni Firebird sada?
-ba.instappStartMsg=PokreÊem server
+ba.instappStartMsg=Pokreƒáem server
 
-ba.InstallSummarySuffix1=Ova verzija Firebird-a Êe postati default install.
-ba.InstallSummarySuffix2=Osim toga, obratite paûnju da instalacija ove verzije Firebird-a
-ba.InstallSummarySuffix3= kada je sljedeÊa verzija veÊ instalirana moûe dovesti do
+ba.InstallSummarySuffix1=Ova verzija Firebird-a ƒáe postati default install.
+ba.InstallSummarySuffix2=Osim toga, obratite pa≈ænju da instalacija ove verzije Firebird-a
+ba.InstallSummarySuffix3= kada je sljedeƒáa verzija veƒá instalirana mo≈æe dovesti do
 ba.InstallSummarySuffix4=                 nepredvidivih rezultata.
 
-ba.InstallSummaryCancel1= Ako nastavite sa ovom instalacijom Firebird Êe biti instaliran ali ne i konfigurisan.
-ba.InstallSummaryCancel2= MoraÊete da kompletirate instalaciju ruËno.
-ba.InstallSummaryCancel3= éelite li da ODUSTANETE od ove instalacije?
+ba.InstallSummaryCancel1= Ako nastavite sa ovom instalacijom Firebird ƒáe biti instaliran ali ne i konfigurisan.
+ba.InstallSummaryCancel2= Moraƒáete da kompletirate instalaciju ruƒçno.
+ba.InstallSummaryCancel3= ≈Ωelite li da ODUSTANETE od ove instalacije?
 
-ba.InstalledProducts='Pre-instalaciona analiza pokazuje da %s postojeÊi Firebird ili Interbase %s je pronadjen.
+ba.InstalledProducts='Pre-instalaciona analiza pokazuje da %s postojeƒái Firebird ili Interbase %s je pronadjen.
 ba.InstalledProdCountSingular=verzija ima
 ba.InstalledProdCountPlural=verzije imaju
 
-ba.FbRunning1=PostojeÊi Firebird %s Server je pokrenut.
+ba.FbRunning1=Postojeƒái Firebird %s Server je pokrenut.
 ba.FbRunning2= Morate zatvoriti aplikaciju ili zaustaviti
 ba.FbRunning3=         service prije nastavka.
 
-ba.PreviousInstallBroken=   (Instalacija je neuspjeöna zbog razlike u verzijama.)
-ba.PreviousInstallGood=   (Instalacija je uspjeöna.)
+ba.PreviousInstallBroken=   (Instalacija je neuspje≈°na zbog razlike u verzijama.)
+ba.PreviousInstallGood=   (Instalacija je uspje≈°na.)
 
 ba.IconReadme=Firebird %1 Readme
 ba.IconUninstall=Deinstalacija Firebird-a %1
 ba.ReleaseNotes= release notes. (Potreban je Acrobat Reader.)
 ba.InstallationGuide= installation guide. (Potreban je Acrobat Reader.)
 ba.BugFixes= bug fixes. (Potreban je Acrobat Reader.)
-
 ba.Uninstall=Deinstalacija Firebird-a %1
 ba.Winsock2Web1=Winsock 2 nije instaliran.
-ba.Winsock2Web2=éelite li da posjetite Winsock 2 Update Home Page?
+ba.Winsock2Web2=≈Ωelite li da posjetite Winsock 2 Update Home Page?
 ba.NoWinsock2 = Molimo instalirajte Winsock 2 Update prije nastavka
 ba.MSWinsock2Update = http://www.microsoft.com/windows95/downloads/contents/WUAdminTools/S_WUNetworkingTools/W95Sockets2/Default.asp
 
@@ -72,8 +71,19 @@ ba.RunISQL=Pokreni command-line bazirani Interactive SQL alat
 
 ba.ReadmeFile=ProcitajMe.txt
 ba.InstallationReadmeFile=Instalacija_ProcitajMe.txt
-
-ba.RunCS=Pokreni Firebird Classic server
-ba.RunSC=Pokreni Firebird SuperClassic server
-ba.RunSS=Pokreni Firebird SuperServer
-
+ba.IncompleteTranslationNotice=Ovaj dokument nije najnoviji. Molimo pogledajte originalnu englesku verziju za najnovije informacije.
+ba.RunCS=Pokreni Firebird u Classic server modu
+ba.RunSC=Pokreni Firebird u SuperClassic server modu
+ba.RunSS=Pokreni Firebird u SuperServer modu
+ba.ServerTaskDescription=Izaberite arhitekturu Server-a:
+ba.initSecurityDb=Dodavanje SYSDBA u security database.
+ba.SYSDBAPasswordMismatch=Lozinke se ne sla≈æu. Molimo ponovo unesite lozinku za SYSDBA korisnika.
+ba.SYSDBAPasswordEmpty=Lozinka je prazna. Morate unijeti lozinku za SYSDBA korisnika.
+ba.EnableLegacyClientAuth=Omoguƒái a&utorizaciju za stare (legacy) Firebird klijente?
+ba.CreateSYSDBAPassword=Postavite lozinku za Database System Administrator-a
+ba.ClickThroughPWCreation=Ili samo kliknite da koristite default lozinku masterkey.
+ba.PasswordNote=*** Vazno - u Firebird-u 3 masterkey i masterke su razlicite lozinke. ***
+ba.SYSDBAPassword=SYSDBA lozinka:
+ba.RetypeSYSDBAPassword=Ponovite SYSDBA lozinku:
+ba.InstallingMSVC32runtimes=Instaliram MSVC 32-bit runtime biblioteke u system directory
+ba.InstallingMSVC64runtimes=Instaliram MSVC 64-bit runtime biblioteke u system directory

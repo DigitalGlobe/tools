@@ -25,26 +25,32 @@
 #ifndef COMMON_REF_COUNTED_H
 #define COMMON_REF_COUNTED_H
 
+#include "fb_exception.h"
 #include "../common/classes/fb_atomic.h"
-#include "../jrd/gdsassert.h"
+#include "../common/gdsassert.h"
 
 namespace Firebird
 {
 	class RefCounted
 	{
 	public:
-		virtual int addRef()
+		virtual int addRef() const
 		{
 			return ++m_refCnt;
 		}
 
-		virtual int release()
+		virtual int release() const
 		{
 			fb_assert(m_refCnt.value() > 0);
 			const int refCnt = --m_refCnt;
 			if (!refCnt)
 				delete this;
 			return refCnt;
+		}
+
+		void assertNonZero()
+		{
+			fb_assert(m_refCnt.value() > 0);
 		}
 
 	protected:
@@ -56,7 +62,7 @@ namespace Firebird
 		}
 
 	private:
-		AtomicCounter m_refCnt;
+		mutable AtomicCounter m_refCnt;
 	};
 
 	// reference counted object guard
@@ -66,13 +72,13 @@ namespace Firebird
 		explicit Reference(RefCounted& refCounted) :
 			r(refCounted)
 		{
-			r.RefCounted::addRef();
+			r.addRef();
 		}
 
 		~Reference()
 		{
 			try {
-				r.RefCounted::release();
+				r.release();
 			}
 			catch (const Exception&)
 			{
@@ -83,6 +89,8 @@ namespace Firebird
 	private:
 		RefCounted& r;
 	};
+
+	enum NoIncrement {REF_NO_INCR};
 
 	// controls reference counter of the object where points
 	template <typename T>
@@ -100,6 +108,11 @@ namespace Firebird
 			}
 		}
 
+		// This special form of ctor is used to create refcounted ptr from interface,
+		// returned by a function (which increments counter on return)
+		RefPtr(NoIncrement x, T* p) : ptr(p)
+		{ }
+
 		RefPtr(const RefPtr& r) : ptr(r.ptr)
 		{
 			if (ptr)
@@ -108,12 +121,48 @@ namespace Firebird
 			}
 		}
 
+		RefPtr(RefPtr&& r)
+			: ptr(r.ptr)
+		{
+			r.ptr = nullptr;
+		}
+
+		RefPtr(MemoryPool&, RefPtr&& r)
+			: ptr(r.ptr)
+		{
+			r.ptr = nullptr;
+		}
+
 		~RefPtr()
 		{
 			if (ptr)
 			{
 				ptr->release();
 			}
+		}
+
+		T* assignRefNoIncr(T* p)
+		{
+			assign(NULL);
+			ptr = p;
+			return ptr;
+		}
+
+		void moveFrom(RefPtr& r)
+		{
+			if (this != &r)
+			{
+				assign(nullptr);
+				ptr = r.ptr;
+				r.ptr = nullptr;
+			}
+		}
+
+		T* clear()		// nullify pointer w/o calling release
+		{
+			T* rc = ptr;
+			ptr = NULL;
+			return rc;
 		}
 
 		T* operator=(T* p)
@@ -126,33 +175,21 @@ namespace Firebird
 			return assign(r.ptr);
 		}
 
-		operator T*()
+		T* operator=(RefPtr&& r)
+		{
+			moveFrom(r);
+			return ptr;
+		}
+
+		operator T*() const
 		{
 			return ptr;
 		}
 
-		T* operator->()
+		T* operator->() const
 		{
 			return ptr;
 		}
-
-		operator const T*() const
-		{
-			return ptr;
-		}
-
-		const T* operator->() const
-		{
-			return ptr;
-		}
-
-		/* NS: you cannot have operator bool here. It creates ambiguity with
-		  operator T* with some of the compilers (at least VS2003)
-
-		operator bool() const
-		{
-			return ptr ? true : false;
-		}*/
 
 		bool hasData() const
 		{
@@ -174,29 +211,53 @@ namespace Firebird
 			return ptr != r.ptr;
 		}
 
-	private:
+		T* getPtr()
+		{
+			return ptr;
+		}
+
+		const T* getPtr() const
+		{
+			return ptr;
+		}
+
+	protected:
 		T* assign(T* const p)
 		{
 			if (ptr != p)
 			{
-				if (ptr)
+				if (p)
 				{
-					ptr->release();
+					p->addRef();
 				}
 
+				T* tmp = ptr;
 				ptr = p;
 
-				if (ptr)
+				if (tmp)
 				{
-					ptr->addRef();
+					tmp->release();
 				}
 			}
 
-			return ptr;
+			return p;
 		}
 
+	private:
 		T* ptr;
 	};
+
+	template <typename T>
+	RefPtr<T> makeRef(T* o)
+	{
+		return RefPtr<T>(o);
+	}
+
+	template <typename T>
+	RefPtr<T> makeNoIncRef(T* arg)
+	{
+		return RefPtr<T>(REF_NO_INCR, arg);
+	}
 
 	template <typename T>
 	class AnyRef : public T, public RefCounted

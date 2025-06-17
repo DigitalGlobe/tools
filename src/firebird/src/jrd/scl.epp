@@ -30,35 +30,35 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "../jrd/common.h"
-#include "../jrd/ibase.h"
 #include "../jrd/jrd.h"
 #include "../jrd/ods.h"
 #include "../jrd/scl.h"
-#include "../jrd/jrd_pwd.h"
 #include "../jrd/acl.h"
 #include "../jrd/blb.h"
 #include "../jrd/irq.h"
 #include "../jrd/obj.h"
 #include "../jrd/req.h"
 #include "../jrd/tra.h"
-#include "../jrd/gdsassert.h"
+#include "../common/gdsassert.h"
 #include "../jrd/blb_proto.h"
 #include "../jrd/cmp_proto.h"
-#include "../jrd/enc_proto.h"
 #include "../jrd/err_proto.h"
 #include "../jrd/exe_proto.h"
-#include "../jrd/gds_proto.h"
-#include "../jrd/isc_proto.h"
+#include "../jrd/ini_proto.h"
+#include "../yvalve/gds_proto.h"
+#include "../common/isc_proto.h"
 #include "../jrd/met_proto.h"
 #include "../jrd/grant_proto.h"
 #include "../jrd/scl_proto.h"
 #include "../jrd/constants.h"
-#include "../include/fb_exception.h"
+#include "fb_exception.h"
 #include "../common/utils_proto.h"
 #include "../common/classes/array.h"
 #include "../common/config/config.h"
-#include "../jrd/os/os_utils.h"
+#include "../common/os/os_utils.h"
+#include "../common/classes/ClumpletWriter.h"
+#include "../jrd/PreparedStatement.h"
+#include "../jrd/ResultSet.h"
 
 
 const int UIC_BASE	= 10;
@@ -68,52 +68,83 @@ using namespace Firebird;
 
 DATABASE DB = FILENAME "ODS.RDB";
 
-static bool check_hex(const UCHAR*, USHORT);
 static bool check_number(const UCHAR*, USHORT);
 static bool check_user_group(thread_db* tdbb, const UCHAR*, USHORT);
-static bool check_string(const UCHAR*, const Firebird::MetaName&);
-static SecurityClass::flags_t compute_access(thread_db* tdbb, const SecurityClass*,
-	const jrd_rel*,	const Firebird::MetaName&, const Firebird::MetaName&);
-static SecurityClass::flags_t walk_acl(thread_db* tdbb, const Acl&, const jrd_rel*,
-	const Firebird::MetaName&, const Firebird::MetaName&);
+static bool check_string(const UCHAR*, const MetaName&);
+static SecurityClass::flags_t compute_access(thread_db* tdbb, const SecurityClass*,	SLONG, const MetaName&);
+static SecurityClass::flags_t get_sys_privileges(thread_db* tdbb);
+static SecurityClass::flags_t walk_acl(thread_db* tdbb, const Acl&, const MetaName&,
+	SLONG, const MetaName&);
+static void raiseError(thread_db* tdbb, SecurityClass::flags_t mask, ObjectType type, const MetaName& name,
+	const MetaName& r_name, const MetaName &invoker);
+static bool check_object(thread_db* tdbb, bool found, const SecurityClass* s_class, SLONG obj_type,
+	const MetaName& obj_name, SecurityClass::flags_t mask, ObjectType type, const MetaName& name);
 
-static inline void check_and_move(UCHAR from, Acl& to)
+
+namespace
 {
-	to.push(from);
+	struct P_NAMES
+	{
+		SecurityClass::flags_t p_names_priv;
+		USHORT p_names_acl;
+		const TEXT* p_names_string;
+	};
+
+	const P_NAMES p_names[] =
+	{
+		{ SCL_alter, priv_alter, "ALTER" },
+		{ SCL_control, priv_control, "CONTROL" },
+		{ SCL_drop, priv_drop, "DROP" },
+		{ SCL_insert, priv_insert, "INSERT" },
+		{ SCL_update, priv_update, "UPDATE" },
+		{ SCL_delete, priv_delete, "DELETE" },
+		{ SCL_select, priv_select, "SELECT" },
+		{ SCL_references, priv_references, "REFERENCES" },
+		{ SCL_execute, priv_execute, "EXECUTE" },
+		{ SCL_usage, priv_usage, "USAGE" },
+		{ SCL_create, priv_create, "CREATE" },
+		{ 0, 0, "" }
+	};
+} // anonymous namespace
+
+
+static void raiseError(thread_db* tdbb, SecurityClass::flags_t mask, ObjectType type, const MetaName& name,
+	const MetaName& r_name, const MetaName& invoker)
+{
+	const P_NAMES* names;
+	for (names = p_names; names->p_names_priv; names++)
+	{
+		if (names->p_names_priv & mask)
+			break;
+	}
+
+	const char* const ddlObjectName = getDdlObjectName(type);
+	const Firebird::string fullName = r_name.hasData() ?
+		r_name.c_str() + Firebird::string(".") + name.c_str() : name.c_str();
+
+	Arg::StatusVector status;
+	status << Arg::Gds(isc_no_priv) << Arg::Str(names->p_names_string) <<
+			  Arg::Str(ddlObjectName) <<
+			  Arg::Str(fullName);
+	if (invoker.hasData())
+	{
+		status << Arg::Gds(isc_effective_user) << Arg::Str(invoker);
+	}
+	ERR_post(status);
+
 }
 
-struct P_NAMES {
-	SecurityClass::flags_t p_names_priv;
-	USHORT p_names_acl;
-	const TEXT* p_names_string;
-};
-
-static const P_NAMES p_names[] =
-{
-	{ SCL_protect, priv_protect, "protect" },
-	{ SCL_control, priv_control, "control" },
-	{ SCL_delete, priv_delete, "delete" },
-	{ SCL_sql_insert, priv_sql_insert, "insert/write" },
-	{ SCL_sql_update, priv_sql_update, "update/write" },
-	{ SCL_sql_delete, priv_sql_delete, "delete/write" },
-	{ SCL_write, priv_write, "write" },
-	{ SCL_read, priv_read, "read/select" },
-	{ SCL_grant, priv_grant, "grant" },
-	{ SCL_sql_references, priv_sql_references, "references" },
-	{ SCL_execute, priv_execute, "execute" },
-	{ 0, 0, "" }
-};
 
 
 void SCL_check_access(thread_db* tdbb,
 					  const SecurityClass* s_class,
-					  SLONG view_id,
-					  const Firebird::MetaName& trg_name,
-					  const Firebird::MetaName& prc_name,
+					  SLONG obj_id,
+					  const MetaName& obj_name,
 					  SecurityClass::flags_t mask,
-					  const TEXT* type,
-					  const Firebird::MetaName& name,
-					  const Firebird::MetaName& r_name)
+					  ObjectType type,
+					  bool recursive,
+					  const MetaName& name,
+					  const MetaName& r_name)
 {
 /**************************************
  *
@@ -122,88 +153,293 @@ void SCL_check_access(thread_db* tdbb,
  **************************************
  *
  * Functional description
- *	Check security class for desired permission.  Check first that
- *	the desired access has been granted to the database then to the
- *	object in question.
+ *	Check security class for desired permission.
+ *	userName a name of user in which context permissions will be checked.
  *
  **************************************/
 	SET_TDBB(tdbb);
 
+	// Allow the replicator any access to database, its permissions are already validated
+	if (tdbb->tdbb_flags & TDBB_replicator)
+		return;
+
+	const MetaName& userName = s_class->sclClassUser.second;
+
 	if (s_class && (s_class->scl_flags & SCL_corrupt))
 	{
-		ERR_post(Arg::Gds(isc_no_priv) << Arg::Str("(ACL unrecognized)") <<
+		Arg::StatusVector status;
+		status << Arg::Gds(isc_no_priv) << Arg::Str("(ACL unrecognized)") <<
 										  Arg::Str("security_class") <<
-										  Arg::Str(s_class->scl_name));
+										  Arg::Str(s_class->sclClassUser.first);
+		if (userName.hasData())
+		{
+			status << Arg::Gds(isc_effective_user) << Arg::Str(userName);
+		}
+		ERR_post(status);
 	}
 
-	const Attachment& attachment = *tdbb->getAttachment();
+	// Make fast check first
+	if (mask & get_sys_privileges(tdbb))
+		return;
 
-	// Allow the database owner to back up a database even if he does not have
-	// read access to all the tables in the database
+	// Check global DDL permissions with ANY option which allow user to make changes non owned objects
+	if (isDdlObject(type) && (mask & SCL_get_object_mask(type)))
+		return;
 
-	if ((attachment.att_flags & ATT_gbak_attachment) && (mask & SCL_read))
+	if (!s_class || (mask & s_class->scl_flags) )
+		return;
+
+	if (obj_name.hasData() && (compute_access(tdbb, s_class, obj_id, obj_name) & mask) )
 	{
 		return;
 	}
+
+	// Allow recursive procedure/function call
+
+	if (recursive &&
+		((type == obj_procedures && obj_id == id_procedure) ||
+		 (type == obj_functions && obj_id == id_function)) &&
+		obj_name == name)
+	{
+		return;
+	}
+
+	raiseError(tdbb, mask, type, name, r_name, userName);
+}
+
+
+void SCL_check_create_access(thread_db* tdbb, ObjectType type)
+{
+/**************************************
+ *
+ *	S C L _ c h e c k _ c r e a t e _ a c c e s s
+ *
+ **************************************
+ *
+ * Functional description
+ *	Check create access on a database object (DDL access)
+ *
+ **************************************/
+	SET_TDBB(tdbb);
+
+	// Allow the replicator any access to database, its permissions are already validated
+	if (tdbb->tdbb_flags & TDBB_replicator)
+		return;
+
+	Jrd::Attachment* const attachment = tdbb->getAttachment();
 
 	// Allow the locksmith any access to database
-
-	if (attachment.locksmith())
-	{
+	if (attachment->locksmith(tdbb, SystemPrivilege::MODIFY_ANY_OBJECT_IN_DATABASE))
 		return;
-	}
 
-	bool denied_db = false;
+	const SecurityClass::flags_t obj_mask = SCL_get_object_mask(type);
 
-	const SecurityClass* const att_class = attachment.att_security_class;
-	if (att_class && !(att_class->scl_flags & mask))
+	if (!(obj_mask & SCL_create))
 	{
-		denied_db = true;
+		const char* name = getDdlObjectName(type);
+		ERR_post(Arg::Gds(isc_dyn_no_create_priv) << name);
 	}
-	else
+}
+
+
+void SCL_check_charset(thread_db* tdbb, const MetaName& name, SecurityClass::flags_t mask)
+{
+/**************************************
+ *
+ *	S C L _ c h e c k _ c h a r s e t
+ *
+ **************************************
+ *
+ * Functional description
+ *	Given a character set name, check for a set of privileges.
+ *
+ **************************************/
+	SET_TDBB(tdbb);
+	Jrd::Attachment* const attachment = tdbb->getAttachment();
+
+	const SecurityClass* s_class = NULL;
+	AutoCacheRequest request(tdbb, irq_cs_security, IRQ_REQUESTS);
+
+	FOR (REQUEST_HANDLE request)
+		CS IN RDB$CHARACTER_SETS
+		WITH CS.RDB$CHARACTER_SET_NAME EQ name.c_str()
 	{
-		if (!s_class ||	(mask & s_class->scl_flags)) {
-			return;
-		}
-		const jrd_rel* view = NULL;
-		if (view_id) {
-			view = MET_lookup_relation_id(tdbb, view_id, false);
-		}
-		if ((view || trg_name.length() || prc_name.length()) &&
-			 (compute_access(tdbb, s_class, view, trg_name, prc_name) & mask))
-		{
-			return;
-		}
+		if (!CS.RDB$SECURITY_CLASS.NULL)
+			s_class = SCL_get_class(tdbb, CS.RDB$SECURITY_CLASS);
 	}
+	END_FOR
+
+	SCL_check_access(tdbb, s_class, 0, name, mask, obj_charsets, false, name);
+}
+
+
+void SCL_check_collation(thread_db* tdbb, const MetaName& name, SecurityClass::flags_t mask)
+{
+/**************************************
+ *
+ *	S C L _ c h e c k _ c o l l a t i o n
+ *
+ **************************************
+ *
+ * Functional description
+ *	Given a collation name, check for a set of privileges.
+ *
+ **************************************/
+	SET_TDBB(tdbb);
+	Jrd::Attachment* const attachment = tdbb->getAttachment();
+
+	const SecurityClass* s_class = NULL;
+	AutoCacheRequest request(tdbb, irq_coll_security, IRQ_REQUESTS);
+
+	FOR (REQUEST_HANDLE request)
+		COLL IN RDB$COLLATIONS
+		WITH COLL.RDB$COLLATION_NAME EQ name.c_str()
+	{
+		if (!COLL.RDB$SECURITY_CLASS.NULL)
+			s_class = SCL_get_class(tdbb, COLL.RDB$SECURITY_CLASS);
+	}
+	END_FOR
+
+	SCL_check_access(tdbb, s_class, 0, name, mask, obj_collations, false, name);
+}
+
+
+void SCL_check_database(thread_db* tdbb, SecurityClass::flags_t mask)
+{
+/**************************************
+ *
+ *	S C L _ c h e c k _ d a t a b a s e
+ *
+ **************************************
+ *
+ * Functional description
+ *	Check for a set of privileges of current database.
+ *
+ **************************************/
+	SET_TDBB(tdbb);
+
+	Jrd::Attachment* const attachment = tdbb->getAttachment();
+	const SecurityClass* const att_class = attachment->att_security_class;
+	if (att_class && (att_class->scl_flags & mask))
+		return;
+
+	if (mask == SCL_alter && attachment->locksmith(tdbb, USE_NBACKUP_UTILITY))
+		return;
+
+	if (mask == SCL_drop && attachment->locksmith(tdbb, DROP_DATABASE))
+		return;
 
 	const P_NAMES* names;
 	for (names = p_names; names->p_names_priv; names++)
 	{
 		if (names->p_names_priv & mask)
-		{
 			break;
-		}
 	}
 
-	if (denied_db)
-	{
-		ERR_post(Arg::Gds(isc_no_priv) << Arg::Str(names->p_names_string) <<
-										  Arg::Str(object_database) <<
-										  Arg::Str(""));
-	}
-	else
-	{
-		const Firebird::string full_name = r_name.hasData() ?
-			r_name.c_str() + Firebird::string(".") + name.c_str() : name.c_str();
-
-		ERR_post(Arg::Gds(isc_no_priv) << Arg::Str(names->p_names_string) <<
-										  Arg::Str(type) <<
-										  Arg::Str(full_name));
-	}
+	ERR_post(Arg::Gds(isc_no_priv) << Arg::Str(names->p_names_string) <<
+									  Arg::Str(getDdlObjectName(obj_database)) <<
+									  Arg::Str(""));
 }
 
 
-void SCL_check_index(thread_db* tdbb, const Firebird::MetaName& index_name, UCHAR index_id,
+void SCL_check_domain(thread_db* tdbb, const MetaName& name, SecurityClass::flags_t mask)
+{
+/**************************************
+ *
+ *	S C L _ c h e c k _ d o m a i n
+ *
+ **************************************
+ *
+ * Functional description
+ *	Given a domain name, check for a set of privileges.
+ *
+ **************************************/
+	SET_TDBB(tdbb);
+	Jrd::Attachment* const attachment = tdbb->getAttachment();
+
+	const SecurityClass* s_class = NULL;
+	AutoCacheRequest request(tdbb, irq_gfld_security, IRQ_REQUESTS);
+
+	FOR (REQUEST_HANDLE request)
+		FLD IN RDB$FIELDS
+		WITH FLD.RDB$FIELD_NAME EQ name.c_str()
+	{
+		if (!FLD.RDB$SECURITY_CLASS.NULL)
+			s_class = SCL_get_class(tdbb, FLD.RDB$SECURITY_CLASS);
+	}
+	END_FOR
+
+	SCL_check_access(tdbb, s_class, 0, name, mask, obj_domains, false, name);
+}
+
+
+bool SCL_check_exception(thread_db* tdbb, const MetaName& name, SecurityClass::flags_t mask)
+{
+/**************************************
+ *
+ *	S C L _ c h e c k _ e x c e p t i o n
+ *
+ **************************************
+ *
+ * Functional description
+ *	Given an exception name, check for a set of privileges.
+ *
+ **************************************/
+	SET_TDBB(tdbb);
+	Jrd::Attachment* const attachment = tdbb->getAttachment();
+
+	const SecurityClass* s_class = NULL;
+	bool found = false;
+	AutoCacheRequest request(tdbb, irq_exc_security, IRQ_REQUESTS);
+
+	FOR (REQUEST_HANDLE request)
+		XCP IN RDB$EXCEPTIONS
+		WITH XCP.RDB$EXCEPTION_NAME EQ name.c_str()
+	{
+		if (!XCP.RDB$SECURITY_CLASS.NULL)
+			s_class = SCL_get_class(tdbb, XCP.RDB$SECURITY_CLASS);
+		found = true;
+	}
+	END_FOR
+
+	return check_object(tdbb, found, s_class, 0, name, mask, obj_exceptions, name);
+}
+
+
+bool SCL_check_generator(thread_db* tdbb, const MetaName& name, SecurityClass::flags_t mask)
+{
+/**************************************
+ *
+ *	S C L _ c h e c k _ g e n e r a t o r
+ *
+ **************************************
+ *
+ * Functional description
+ *	Given a generator name, check for a set of privileges.
+ *
+ **************************************/
+	SET_TDBB(tdbb);
+	Jrd::Attachment* const attachment = tdbb->getAttachment();
+
+	const SecurityClass* s_class = NULL;
+	bool found = false;
+	AutoCacheRequest request(tdbb, irq_gen_security, IRQ_REQUESTS);
+
+	FOR (REQUEST_HANDLE request)
+		GEN IN RDB$GENERATORS
+		WITH GEN.RDB$GENERATOR_NAME EQ name.c_str()
+	{
+		if (!GEN.RDB$SECURITY_CLASS.NULL)
+			s_class = SCL_get_class(tdbb, GEN.RDB$SECURITY_CLASS);
+		found = true;
+	}
+	END_FOR
+
+	return check_object(tdbb, found, s_class, 0, name, mask, obj_generators, name);
+}
+
+
+void SCL_check_index(thread_db* tdbb, const MetaName& index_name, UCHAR index_id,
 	SecurityClass::flags_t mask)
 {
 /******************************************************
@@ -224,7 +460,8 @@ void SCL_check_index(thread_db* tdbb, const Firebird::MetaName& index_name, UCHA
  *
  *******************************************************/
 	SET_TDBB(tdbb);
-	Database* dbb = tdbb->getDatabase();
+	Jrd::Attachment* const attachment = tdbb->getAttachment();
+
 	const SecurityClass* s_class = NULL;
 	const SecurityClass* default_s_class = NULL;
 
@@ -234,64 +471,68 @@ void SCL_check_index(thread_db* tdbb, const Firebird::MetaName& index_name, UCHA
         return;
     }
 
-    Firebird::MetaName reln_name, aux_idx_name;
-    const Firebird::MetaName* idx_name_ptr = &index_name;
-	const Firebird::MetaName* relation_name_ptr = &index_name;
+    MetaName reln_name, aux_idx_name;
+    const MetaName* idx_name_ptr = &index_name;
+	const MetaName* relation_name_ptr = &index_name;
 
-	jrd_req* request = NULL;
+	AutoRequest request;
+	int systemFlag = 0;
 
 	// No need to cache this request handle, it's only used when
 	// new constraints are created
 
-    if (index_id < 1) {
+    if (index_id < 1)
+    {
         FOR(REQUEST_HANDLE request) IND IN RDB$INDICES
             CROSS REL IN RDB$RELATIONS
 			OVER RDB$RELATION_NAME
 			WITH IND.RDB$INDEX_NAME EQ index_name.c_str()
-
+		{
             reln_name = REL.RDB$RELATION_NAME;
 		    if (!REL.RDB$SECURITY_CLASS.NULL)
                 s_class = SCL_get_class(tdbb, REL.RDB$SECURITY_CLASS);
             if (!REL.RDB$DEFAULT_CLASS.NULL)
                 default_s_class = SCL_get_class(tdbb, REL.RDB$DEFAULT_CLASS);
-        END_FOR;
-
-        CMP_release(tdbb, request);
+			systemFlag = REL.RDB$SYSTEM_FLAG;
+		}
+        END_FOR
     }
-    else {
+    else
+    {
         idx_name_ptr = &aux_idx_name;
         FOR (REQUEST_HANDLE request) IND IN RDB$INDICES
             CROSS REL IN RDB$RELATIONS
             OVER RDB$RELATION_NAME
             WITH IND.RDB$RELATION_NAME EQ relation_name_ptr->c_str()
             AND IND.RDB$INDEX_ID EQ index_id
-
+		{
             reln_name = REL.RDB$RELATION_NAME;
             aux_idx_name = IND.RDB$INDEX_NAME;
             if (!REL.RDB$SECURITY_CLASS.NULL)
                 s_class = SCL_get_class(tdbb, REL.RDB$SECURITY_CLASS);
             if (!REL.RDB$DEFAULT_CLASS.NULL)
                 default_s_class = SCL_get_class(tdbb, REL.RDB$DEFAULT_CLASS);
-        END_FOR;
-
-        CMP_release (tdbb, request);
+			systemFlag = REL.RDB$SYSTEM_FLAG;
+        }
+        END_FOR
     }
+
+	if (systemFlag == 1 && !attachment->isRWGbak())
+	{
+		// Someone is going to reference system table in FK
+		// Usually it's not good idea
+		raiseError(tdbb, mask, obj_relations, reln_name, "", NULL);
+	}
 
 	// Check if the relation exists. It may not have been created yet.
 	// Just return in that case.
 
-	if (reln_name.length() == 0) {
+	if (reln_name.isEmpty())
 		return;
-	}
 
-	SCL_check_access(tdbb, s_class, 0, NULL, NULL, mask, object_table, reln_name);
+	SCL_check_access(tdbb, s_class, 0, NULL, mask, obj_relations, false, reln_name);
 
-	request = NULL;
-
-	// Set up the exception mechanism, so that we can release the request
-	// in case of error in SCL_check_access
-
-	try {
+	request.reset();
 
 	// Check if the field used in the index has the appropriate
 	// permission. If the field in question does not have a security class
@@ -306,26 +547,58 @@ void SCL_check_index(thread_db* tdbb, const Firebird::MetaName& index_name, UCHA
 			OVER RDB$FIELD_NAME
 			WITH RF.RDB$RELATION_NAME EQ reln_name.c_str()
 			AND ISEG.RDB$INDEX_NAME EQ idx_name_ptr->c_str()
-
+	{
 		s_class = (!RF.RDB$SECURITY_CLASS.NULL) ?
 			SCL_get_class(tdbb, RF.RDB$SECURITY_CLASS) : default_s_class;
-		SCL_check_access(tdbb, s_class, 0, NULL, NULL, mask,
-						 object_column, RF.RDB$FIELD_NAME, reln_name);
-
-	END_FOR;
-
-	CMP_release(tdbb, request);
+		SCL_check_access(tdbb, s_class, 0, NULL, mask,
+						 obj_column, false, RF.RDB$FIELD_NAME, reln_name);
 	}
-	catch (const Firebird::Exception&) {
-		if (request) {
-			CMP_release(tdbb, request);
-		}
-		throw;
-	}
+	END_FOR
 }
 
 
-void SCL_check_procedure(thread_db* tdbb, const dsc* dsc_name, SecurityClass::flags_t mask)
+bool SCL_check_package(thread_db* tdbb, const dsc* dsc_name, SecurityClass::flags_t mask)
+{
+/**************************************
+ *
+ *	S C L _ c h e c k _ p a c k a g e
+ *
+ **************************************
+ *
+ * Functional description
+ *	Given a package name, check for a set of privileges.  The
+ *	package in question may or may not have been created, let alone
+ *	scanned.  This is used exclusively for meta-data operations.
+ *
+ **************************************/
+	SET_TDBB(tdbb);
+
+	// Get the name in CSTRING format, ending on NULL or SPACE
+	fb_assert(dsc_name->dsc_dtype == dtype_text);
+	const MetaName name(reinterpret_cast<TEXT*>(dsc_name->dsc_address),
+		dsc_name->dsc_length);
+
+	Jrd::Attachment* const attachment = tdbb->getAttachment();
+
+	const SecurityClass* s_class = NULL;
+	bool found = false;
+	AutoCacheRequest request(tdbb, irq_pkg_security, IRQ_REQUESTS);
+
+	FOR (REQUEST_HANDLE request)
+		PKG IN RDB$PACKAGES
+		WITH PKG.RDB$PACKAGE_NAME EQ name.c_str()
+	{
+		if (!PKG.RDB$SECURITY_CLASS.NULL)
+			s_class = SCL_get_class(tdbb, PKG.RDB$SECURITY_CLASS);
+		found = true;
+	}
+	END_FOR
+
+	return check_object(tdbb, found, s_class, id_package, name, mask, obj_packages, name);
+}
+
+
+bool SCL_check_procedure(thread_db* tdbb, const dsc* dsc_name, SecurityClass::flags_t mask)
 {
 /**************************************
  *
@@ -343,32 +616,108 @@ void SCL_check_procedure(thread_db* tdbb, const dsc* dsc_name, SecurityClass::fl
 
 	// Get the name in CSTRING format, ending on NULL or SPACE
 	fb_assert(dsc_name->dsc_dtype == dtype_text);
-	const Firebird::MetaName name(reinterpret_cast<TEXT*>(dsc_name->dsc_address),
+	const MetaName name(reinterpret_cast<TEXT*>(dsc_name->dsc_address),
 							dsc_name->dsc_length);
 
-	Database* dbb = tdbb->getDatabase();
+	Jrd::Attachment* const attachment = tdbb->getAttachment();
+
 	const SecurityClass* s_class = NULL;
+	bool found = false;
+	AutoCacheRequest request(tdbb, irq_p_security, IRQ_REQUESTS);
 
-	jrd_req* request = CMP_find_request(tdbb, irq_p_security, IRQ_REQUESTS);
-
-	FOR(REQUEST_HANDLE request) SPROC IN RDB$PROCEDURES
-		WITH SPROC.RDB$PROCEDURE_NAME EQ name.c_str()
-
-        if (!REQUEST(irq_p_security))
-			REQUEST(irq_p_security) = request;
-
+	FOR (REQUEST_HANDLE request)
+		SPROC IN RDB$PROCEDURES
+		WITH SPROC.RDB$PROCEDURE_NAME EQ name.c_str() AND
+			 SPROC.RDB$PACKAGE_NAME MISSING
+	{
 		if (!SPROC.RDB$SECURITY_CLASS.NULL)
 			s_class = SCL_get_class(tdbb, SPROC.RDB$SECURITY_CLASS);
-	END_FOR;
+		found = true;
+	}
+	END_FOR
 
-	if (!REQUEST(irq_p_security))
-		REQUEST(irq_p_security) = request;
-
-	SCL_check_access(tdbb, s_class, 0, NULL, name, mask, object_procedure, name);
+	return check_object(tdbb, found, s_class, id_procedure, name, mask, obj_procedures, name);
 }
 
 
-void SCL_check_relation(thread_db* tdbb, const dsc* dsc_name, SecurityClass::flags_t mask)
+bool SCL_check_function(thread_db* tdbb, const dsc* dsc_name, SecurityClass::flags_t mask)
+{
+/**************************************
+ *
+ *	S C L _ c h e c k _ f u n c t i o n
+ *
+ **************************************
+ *
+ * Functional description
+ *	Given a function name, check for a set of privileges.  The
+ *	function in question may or may not have been created, let alone
+ *	scanned.  This is used exclusively for meta-data operations.
+ *
+ **************************************/
+	SET_TDBB(tdbb);
+
+	// Get the name in CSTRING format, ending on NULL or SPACE
+	fb_assert(dsc_name->dsc_dtype == dtype_text);
+	const MetaName name(reinterpret_cast<TEXT*>(dsc_name->dsc_address),
+							dsc_name->dsc_length);
+
+	Jrd::Attachment* const attachment = tdbb->getAttachment();
+
+	const SecurityClass* s_class = NULL;
+	bool found = false;
+	AutoCacheRequest request(tdbb, irq_f_security, IRQ_REQUESTS);
+
+	FOR (REQUEST_HANDLE request)
+		SFUN IN RDB$FUNCTIONS
+		WITH SFUN.RDB$FUNCTION_NAME EQ name.c_str() AND
+			 SFUN.RDB$PACKAGE_NAME MISSING
+	{
+		if (!SFUN.RDB$SECURITY_CLASS.NULL)
+			s_class = SCL_get_class(tdbb, SFUN.RDB$SECURITY_CLASS);
+		found = true;
+	}
+	END_FOR
+
+	return check_object(tdbb, found, s_class, id_function, name, mask, obj_functions, name);
+}
+
+
+void SCL_check_filter(thread_db* tdbb, const MetaName &name, SecurityClass::flags_t mask)
+{
+/**************************************
+ *
+ *	S C L _ c h e c k _ f i l t e r
+ *
+ **************************************
+ *
+ * Functional description
+ *	Given a filter name, check for a set of privileges.  The
+ *	filter in question may or may not have been created, let alone
+ *	scanned.  This is used exclusively for meta-data operations.
+ *
+ **************************************/
+	SET_TDBB(tdbb);
+
+	Jrd::Attachment* const attachment = tdbb->getAttachment();
+
+	const SecurityClass* s_class = NULL;
+	AutoCacheRequest request(tdbb, irq_f_security, IRQ_REQUESTS);
+
+	FOR (REQUEST_HANDLE request)
+		F IN RDB$FILTERS
+		WITH F.RDB$FUNCTION_NAME EQ name.c_str()
+	{
+		if (!F.RDB$SECURITY_CLASS.NULL)
+			s_class = SCL_get_class(tdbb, F.RDB$SECURITY_CLASS);
+	}
+	END_FOR
+
+	SCL_check_access(tdbb, s_class, id_filter, name, mask, obj_filters, false, name);
+}
+
+
+void SCL_check_relation(thread_db* tdbb, const dsc* dsc_name, SecurityClass::flags_t mask,
+	bool protectSys)
 {
 /**************************************
  *
@@ -386,31 +735,100 @@ void SCL_check_relation(thread_db* tdbb, const dsc* dsc_name, SecurityClass::fla
 
 	// Get the name in CSTRING format, ending on NULL or SPACE
 	fb_assert(dsc_name->dsc_dtype == dtype_text);
-	const Firebird::MetaName name(reinterpret_cast<TEXT*>(dsc_name->dsc_address),
-							dsc_name->dsc_length);
+	const MetaName name(reinterpret_cast<TEXT*>(dsc_name->dsc_address),
+								  dsc_name->dsc_length);
 
-	Database* dbb = tdbb->getDatabase();
+	Jrd::Attachment* const attachment = tdbb->getAttachment();
 
 	const SecurityClass* s_class = NULL;
-
-	jrd_req* request = CMP_find_request(tdbb, irq_v_security, IRQ_REQUESTS);
+	AutoCacheRequest request(tdbb, irq_v_security_r, IRQ_REQUESTS);
 
 	FOR(REQUEST_HANDLE request) REL IN RDB$RELATIONS
 		WITH REL.RDB$RELATION_NAME EQ name.c_str()
-
-        if (!REQUEST(irq_v_security))
-			REQUEST(irq_v_security) = request;
+	{
+		if (protectSys && REL.RDB$SYSTEM_FLAG == 1 && !attachment->isRWGbak())
+		{
+			// Someone is going to modify system table layout
+			// Usually it's not good idea
+			raiseError(tdbb, mask, obj_relations, name, "", NULL);
+		}
 
         if (!REL.RDB$SECURITY_CLASS.NULL)
 			s_class = SCL_get_class(tdbb, REL.RDB$SECURITY_CLASS);
-	END_FOR;
+	}
+	END_FOR
 
-	if (!REQUEST(irq_v_security))
-		REQUEST(irq_v_security) = request;
-
-	SCL_check_access(tdbb, s_class, 0, NULL, NULL, mask, object_table, name);
+	SCL_check_access(tdbb, s_class, 0, NULL, mask, obj_relations, false, name);
 }
 
+bool SCL_check_view(thread_db* tdbb, const dsc* dsc_name, SecurityClass::flags_t mask)
+{
+/**************************************
+ *
+ *	S C L _ c h e c k _ v i e w
+ *
+ **************************************
+ *
+ * Functional description
+ *	Given a view name, check for a set of privileges.  The
+ *	relation in question may or may not have been created, let alone
+ *	scanned.  This is used exclusively for meta-data operations.
+ *
+ **************************************/
+	SET_TDBB(tdbb);
+
+	// Get the name in CSTRING format, ending on NULL or SPACE
+	fb_assert(dsc_name->dsc_dtype == dtype_text);
+	const MetaName name(reinterpret_cast<TEXT*>(dsc_name->dsc_address),
+								  dsc_name->dsc_length);
+
+	Jrd::Attachment* const attachment = tdbb->getAttachment();
+
+	const SecurityClass* s_class = NULL;
+	bool found = false;
+	AutoCacheRequest request(tdbb, irq_v_security_v, IRQ_REQUESTS);
+
+	FOR(REQUEST_HANDLE request) REL IN RDB$RELATIONS
+		WITH REL.RDB$RELATION_NAME EQ name.c_str()
+	{
+		if (!REL.RDB$SECURITY_CLASS.NULL)
+			s_class = SCL_get_class(tdbb, REL.RDB$SECURITY_CLASS);
+		found = true;
+	}
+	END_FOR
+
+	return check_object(tdbb, found, s_class, 0, NULL, mask, obj_views, name);
+}
+
+void SCL_check_role(thread_db* tdbb, const MetaName& name, SecurityClass::flags_t mask)
+{
+/**************************************
+ *
+ *	S C L _ c h e c k _ r o l e
+ *
+ **************************************
+ *
+ * Functional description
+ *	Given a role name, check for a set of privileges.
+ *
+ **************************************/
+	SET_TDBB(tdbb);
+
+	Jrd::Attachment* const attachment = tdbb->getAttachment();
+
+	const SecurityClass* s_class = NULL;
+	AutoCacheRequest request(tdbb, irq_v_security_o, IRQ_REQUESTS);
+
+	FOR(REQUEST_HANDLE request) R IN RDB$ROLES
+		WITH R.RDB$ROLE_NAME EQ name.c_str()
+	{
+		if (!R.RDB$SECURITY_CLASS.NULL)
+			s_class = SCL_get_class(tdbb, R.RDB$SECURITY_CLASS);
+	}
+	END_FOR
+
+	SCL_check_access(tdbb, s_class, 0, NULL, mask, obj_roles, false, name);
+}
 
 SecurityClass* SCL_get_class(thread_db* tdbb, const TEXT* par_string)
 {
@@ -421,47 +839,42 @@ SecurityClass* SCL_get_class(thread_db* tdbb, const TEXT* par_string)
  **************************************
  *
  * Functional description
- *	Look up security class first in memory, then in database.  If
- *	we don't find it, just return NULL.  If we do, return a security
- *	class block.
+ *	Look up security class of the effective user first in memory, then in database.
+ *	If we don't find it, just return NULL. If we do, return a security class block.
  *
  **************************************/
 	SET_TDBB(tdbb);
-	//Database* dbb = tdbb->getDatabase();
 
 	// Name may be absent or terminated with NULL or blank.  Clean up name.
 
-	if (!par_string) {
+	if (!par_string)
 		return NULL;
-	}
 
-	Firebird::MetaName string(par_string);
-
-	//fb_utils::exact_name(string);
-
-	if (string.isEmpty()) {
+	MetaName string(par_string);
+	if (string.isEmpty())
 		return NULL;
-	}
 
-	Attachment* attachment = tdbb->getAttachment();
+	Jrd::Attachment* const attachment = tdbb->getAttachment();
+	const MetaString& userName = attachment->getEffectiveUserName();
 
+	MetaNamePair key(string, userName);
 	// Look for the class already known
 
 	SecurityClassList* list = attachment->att_security_classes;
-	if (list && list->locate(string))
+	if (list && list->locate(key))
 		return list->current();
 
 	// Class isn't known. So make up a new security class block.
 
 	MemoryPool& pool = *attachment->att_pool;
 
-	SecurityClass* const s_class = FB_NEW(pool) SecurityClass(pool, string);
-	s_class->scl_flags = compute_access(tdbb, s_class, NULL, NULL, NULL);
+	SecurityClass* const s_class = FB_NEW_POOL(pool) SecurityClass(pool, string, userName);
+	s_class->scl_flags = compute_access(tdbb, s_class, 0, NULL);
 
 	if (s_class->scl_flags & SCL_exists)
 	{
 		if (!list) {
-			attachment->att_security_classes = list = FB_NEW(pool) SecurityClassList(pool);
+			attachment->att_security_classes = list = FB_NEW_POOL(pool) SecurityClassList(pool);
 		}
 
 		list->add(s_class);
@@ -485,23 +898,19 @@ SecurityClass::flags_t SCL_get_mask(thread_db* tdbb, const TEXT* relation_name, 
  * Functional description
  *	Get a protection mask for a named object.  If field and
  *	relation names are present, get access to field.  If just
- *	relation name, get access to relation.  If neither, get
- *	access for database.
+ *	relation name, get access to relation.
  *
  **************************************/
 	SET_TDBB(tdbb);
-	Attachment* attachment = tdbb->getAttachment();
-
-	// Start with database security class
-
-	const SecurityClass* s_class = attachment->att_security_class;
-	SecurityClass::flags_t access = s_class ? s_class->scl_flags : -1;
+	Jrd::Attachment* const attachment = tdbb->getAttachment();
+	SecurityClass::flags_t access = ~0;
 
 	// If there's a relation, track it down
 	jrd_rel* relation;
 	if (relation_name && (relation = MET_lookup_relation(tdbb, relation_name)))
 	{
 		MET_scan_relation(tdbb, relation);
+		const SecurityClass* s_class;
 		if ( (s_class = SCL_get_class(tdbb, relation->rel_security_name.c_str())) )
 		{
 			access &= s_class->scl_flags;
@@ -518,14 +927,132 @@ SecurityClass::flags_t SCL_get_mask(thread_db* tdbb, const TEXT* relation_name, 
 		}
 	}
 
-	return access & (SCL_read | SCL_write | SCL_delete | SCL_control |
-					 SCL_grant | SCL_sql_insert | SCL_sql_update |
-					 SCL_sql_delete | SCL_protect | SCL_sql_references |
-					 SCL_execute);
+	return access & (SCL_select | SCL_drop | SCL_control |
+					 SCL_insert | SCL_update |
+					 SCL_delete | SCL_alter | SCL_references |
+					 SCL_execute | SCL_usage);
 }
 
 
-void SCL_init(thread_db* tdbb, bool create, const UserId& tempId)
+bool SCL_role_granted(thread_db* tdbb, const UserId& usr, const TEXT* sql_role)
+{
+/**************************************
+ *
+ *	S C L _ r o l e _ g r a n t e d
+ *
+ **************************************
+ *
+ * Functional description
+ *	Check is sql_role granted to the user.
+ *
+ **************************************/
+	SET_TDBB(tdbb);
+	Jrd::Attachment* const attachment = tdbb->getAttachment();
+
+	if (!strcmp(sql_role, NULL_ROLE))
+	{
+		return true;
+	}
+
+	bool found = false;
+
+	AutoCacheRequest request(tdbb, irq_verify_role_name, IRQ_REQUESTS);
+
+	// CVC: The caller has hopefully uppercased the role or stripped quotes. Of course,
+	// uppercase should only happen if the role wasn't enclosed in quotes.
+	// Shortsighted developers named the field rdb$relation_name instead of rdb$object_name.
+	// This request is not exactly the same than irq_get_role_mem, sorry, I can't reuse that.
+	// If you think that an unknown role cannot be granted, think again: someone made sure
+	// in DYN that SYSDBA can do almost anything, including invalid grants.
+
+	FOR (REQUEST_HANDLE request) FIRST 1 RR IN RDB$ROLES
+		CROSS UU IN RDB$USER_PRIVILEGES
+		WITH RR.RDB$ROLE_NAME        EQ sql_role
+		AND RR.RDB$ROLE_NAME         EQ UU.RDB$RELATION_NAME
+		AND UU.RDB$OBJECT_TYPE       EQ obj_sql_role
+		AND (UU.RDB$USER             EQ usr.getUserName().c_str()
+			 OR UU.RDB$USER          EQ "PUBLIC")
+		AND UU.RDB$USER_TYPE         EQ obj_user
+		AND UU.RDB$PRIVILEGE         EQ "M"
+	{
+		if (!UU.RDB$USER.NULL)
+			found = true;
+	}
+	END_FOR
+
+	return found;
+}
+
+
+void UserId::findGrantedRoles(thread_db* tdbb) const
+{
+	try
+	{
+		SET_TDBB(tdbb);
+		Jrd::Attachment* const attachment = tdbb->getAttachment();
+
+		PreparedStatement::Builder sql;
+		MetaName usr_get_role;
+		string usr_get_priv;
+		sql << "with recursive role_tree as ( "
+			<< "   select rdb$relation_name as nm, 0 as ur from rdb$user_privileges "
+			<< "       where rdb$privilege = 'M' and rdb$field_name = 'D'"
+			<< "			and (rdb$user = " << usr_user_name << "	or rdb$user = 'PUBLIC')"
+			<< "			and rdb$user_type = 8 "
+			<< "   union all "
+			<< "   select rdb$role_name as nm, 1 as ur from rdb$roles "
+			<< "       where rdb$role_name = " << usr_sql_role_name
+			<< "   union all "
+			<< "   select p.rdb$relation_name as nm, t.ur from rdb$user_privileges p "
+			<< "       join role_tree t on t.nm = p.rdb$user "
+			<< "       where p.rdb$privilege = 'M' and (p.rdb$field_name = 'D' or t.ur = 1)) "
+			<< "select " << sql("r.rdb$role_name, ",  usr_get_role)
+			<< 	   sql("r.rdb$system_privileges ", usr_get_priv)
+			<< "   from role_tree t join rdb$roles r on t.nm = r.rdb$role_name ";
+
+		AutoPreparedStatement stmt(attachment->prepareStatement(tdbb, attachment->getSysTransaction(), sql));
+		AutoResultSet rs(stmt->executeQuery(tdbb, attachment->getSysTransaction()));
+
+		usr_granted_roles.clear();
+		usr_privileges.clearAll();
+
+		while (rs->fetch(tdbb))
+		{
+			if (!usr_granted_roles.exist(usr_get_role))	// SQL request can return duplicates
+			{
+				usr_granted_roles.add(usr_get_role);
+				Privileges p;
+				p.load(usr_get_priv.c_str());
+				usr_privileges |= p;
+			}
+		}
+	}
+	catch (const Exception& e)
+	{
+		if (!(usr_flags & USR_sysdba))
+			throw;
+
+		e.stuffException(tdbb->tdbb_status_vector);
+		if (!fb_utils::containsErrorCode(tdbb->tdbb_status_vector->getErrors(), isc_collation_not_installed))
+			throw;
+
+		usr_privileges.setAll();
+		tdbb->tdbb_status_vector->init();
+	}
+
+	usr_flags &= ~(USR_newrole | USR_sysdba);
+}
+
+
+void UserId::setRoleTrusted()
+{
+	if (!usr_trusted_role.hasData())
+		Arg::Gds(isc_miss_trusted_role).raise();
+	setSqlRole(usr_trusted_role);
+}
+
+
+void UserId::sclInit(thread_db* tdbb, bool create)
 {
 /**************************************
  *
@@ -536,200 +1063,90 @@ void SCL_init(thread_db* tdbb, bool create, const UserId& tempId)
  * Functional description
  *	Check database access control list.
  *
- *	Checks the userinfo database to get the
- *	password and other stuff about the specified
- *	user.   Compares the password to that passed
- *	in, encrypting if necessary.
+ *	Finally fills UserId information
+ *	(role, flags, etc.).
  *
  **************************************/
 	SET_TDBB(tdbb);
-	Database* dbb = tdbb->getDatabase();
-	const USHORT major_version = dbb->dbb_ods_version;
-	const USHORT minor_original = dbb->dbb_minor_original;
+	Database* const dbb = tdbb->getDatabase();
+	Jrd::Attachment* const attachment = tdbb->getAttachment();
 
-	const TEXT* sql_role = tempId.usr_sql_role_name.nullStr();
-	Firebird::string loginName(tempId.usr_user_name);
-	loginName.upper();
-	const TEXT* login_name = loginName.c_str();
-	Firebird::MetaName role_name;
-    // CVC: Let's clean any role in pre-ODS9 attachments
-    bool preODS9 = true;
-
-/***************************************************************
-**
-** skip reading system relation RDB$ROLES when attaching pre ODS_9_0 database
-**
-****************************************************************/
+	const TEXT* sql_role = getSqlRole().nullStr();
 
     // CVC: We'll verify the role and wipe it out when it doesn't exist
 
-	if (ENCODE_ODS(major_version, minor_original) >= ODS_9_0) {
+	if (getUserName().hasData() && !create)
+	{
+		const TEXT* login_name = getUserName().c_str();
 
-        preODS9 = false;
+		AutoCacheRequest request(tdbb, irq_get_role_name, IRQ_REQUESTS);
 
-		if (strlen(login_name) != 0)
+		FOR(REQUEST_HANDLE request) X IN RDB$ROLES
+			WITH X.RDB$ROLE_NAME EQ login_name
 		{
-			if (!create)
-			{
-				jrd_req* request = CMP_find_request(tdbb, irq_get_role_name, IRQ_REQUESTS);
-
-				FOR(REQUEST_HANDLE request) X IN RDB$ROLES
-					WITH X.RDB$ROLE_NAME EQ login_name
-
-                    if (!REQUEST(irq_get_role_name))
-                        REQUEST(irq_get_role_name) = request;
-
-					EXE_unwind(tdbb, request);
-					ERR_post(Arg::Gds(isc_login_same_as_role_name) << Arg::Str(login_name));
-
-				END_FOR;
-
-				if (!REQUEST(irq_get_role_name))
-					REQUEST(irq_get_role_name) = request;
-			}
+			ERR_post(Arg::Gds(isc_login_same_as_role_name) << Arg::Str(login_name));
 		}
+		END_FOR
+	}
 
-        // CVC: If this is ODS>=ODS_9_0 and we aren't creating a db and sql_role was specified,
-        // then verify it against rdb$roles and rdb$user_privileges
+    // CVC: If we aren't creating a db and sql_role was specified,
+    // then verify it against rdb$roles and rdb$user_privileges
 
-        if (!create && sql_role && *sql_role && strcmp(sql_role, NULL_ROLE)) {
-            bool found = false;
-
-			if (!(tempId.usr_flags & USR_trole))
-			{
-	            jrd_req* request = CMP_find_request (tdbb, irq_verify_role_name, IRQ_REQUESTS);
-
-	            // CVC: The caller has hopefully uppercased the role or stripped quotes. Of course,
-    	        // uppercase-UPPER7 should only happen if the role wasn't enclosed in quotes.
-        	    // Shortsighted developers named the field rdb$relation_name instead of rdb$object_name.
-    	       	// This request is not exactly the same than irq_get_role_mem, sorry, I can't reuse that.
-	            // If you think that an unknown role cannot be granted, think again: someone made sure
-        	    // in DYN that SYSDBA can do almost anything, including invalid grants.
-
-            	FOR (REQUEST_HANDLE request) FIRST 1 RR IN RDB$ROLES
-                	CROSS UU IN RDB$USER_PRIVILEGES
-	                WITH RR.RDB$ROLE_NAME        EQ sql_role
-    	            AND RR.RDB$ROLE_NAME         EQ UU.RDB$RELATION_NAME
-        	        AND UU.RDB$OBJECT_TYPE       EQ obj_sql_role
-            	    AND (UU.RDB$USER             EQ login_name
-                	     OR UU.RDB$USER          EQ "PUBLIC")
-	                AND UU.RDB$USER_TYPE         EQ obj_user
-    	            AND UU.RDB$PRIVILEGE         EQ "M"
-
-        	        if (!REQUEST (irq_verify_role_name))
-            	        REQUEST (irq_verify_role_name) = request;
-
-                	if (!UU.RDB$USER.NULL)
-                    	found = true;
-
-	            END_FOR;
-
-    	        if (!REQUEST (irq_verify_role_name))
-        	        REQUEST (irq_verify_role_name) = request;
-			}
-
-			if (!found && (tempId.usr_flags & USR_trole))
-			{
-	            jrd_req* request = CMP_find_request (tdbb, irq_verify_trusted_role, IRQ_REQUESTS);
-
-	            FOR (REQUEST_HANDLE request) FIRST 1 RR IN RDB$ROLES
-        	        WITH RR.RDB$ROLE_NAME  EQ sql_role
-            	    AND RR.RDB$SYSTEM_FLAG NOT MISSING
-
-            	    if (!REQUEST (irq_verify_trusted_role))
-	                    REQUEST (irq_verify_trusted_role) = request;
-
-	                if (RR.RDB$SYSTEM_FLAG & ROLE_FLAG_MAY_TRUST)
-	                    found = true;
-
-	            END_FOR;
-
-	            if (!REQUEST (irq_verify_trusted_role))
-    	            REQUEST (irq_verify_trusted_role) = request;
-			}
-
-            if (!found)
-			{
-                role_name = NULL_ROLE;
-			}
-        }
+    if (!create && sql_role && *sql_role)
+    {
+        if (!SCL_role_granted(tdbb, *this, sql_role))
+            sql_role = NULL;
     }
 
-	if (sql_role) {
-        if ((!preODS9) && (role_name != NULL_ROLE)) {
-            role_name = sql_role;
-        }
-	}
-	else {
-		role_name = NULL_ROLE;
-	}
+	if (!sql_role)
+		sql_role = getTrustedRole().nullStr();
 
-	Attachment* const attachment = tdbb->getAttachment();
+	MetaString role_name(sql_role ? sql_role : NULL_ROLE);
+
 	MemoryPool& pool = *attachment->att_pool;
-	UserId* const user = FB_NEW(pool) UserId(pool, tempId);
-	user->usr_sql_role_name = role_name.c_str();
+	UserId* const user = FB_NEW_POOL(pool) UserId(pool, *this);
+	user->setSqlRole(role_name);
+	user->usr_init_role = role_name;
 	attachment->att_user = user;
 
-	if (!create) {
-		jrd_req* handle = NULL;
-		jrd_req* handle1 = NULL;
-		jrd_req* handle2 = NULL;
+	if (!create)
+	{
+		AutoCacheRequest request(tdbb, irq_get_att_class, IRQ_REQUESTS);
 
-		FOR(REQUEST_HANDLE handle) X IN RDB$DATABASE
-
+		FOR(REQUEST_HANDLE request) X IN RDB$DATABASE
+		{
 			if (!X.RDB$SECURITY_CLASS.NULL)
 				attachment->att_security_class = SCL_get_class(tdbb, X.RDB$SECURITY_CLASS);
-		END_FOR;
-		CMP_release(tdbb, handle);
+		}
+		END_FOR
 
-		FOR(REQUEST_HANDLE handle1)
-			FIRST 1 REL IN RDB$RELATIONS
-			WITH REL.RDB$RELATION_NAME EQ "RDB$DATABASE"
-
-            if (!REL.RDB$OWNER_NAME.NULL && user->usr_user_name.hasData())
-			{
-				char name[129];
-				*name = user->usr_user_name.length();
-				user->usr_user_name.copyTo(name + 1, sizeof(name) - 1);
-				if (!check_string(reinterpret_cast<const UCHAR*>(name), REL.RDB$OWNER_NAME))
-				{
-					user->usr_flags |= USR_owner;
-				}
-			}
-		END_FOR;
-		CMP_release(tdbb, handle1);
-
-		if (!preODS9)
+		if (dbb->dbb_owner.isEmpty())
 		{
-			FOR(REQUEST_HANDLE handle2) R IN RDB$ROLES
-				WITH R.RDB$ROLE_NAME EQ role_name.c_str()
+			AutoRequest request2;
 
-				if (!R.RDB$SYSTEM_FLAG.NULL)
-				{
-					if (R.RDB$SYSTEM_FLAG & ROLE_FLAG_DBO)
-						user->usr_flags |= USR_dba;
-				}
-			END_FOR;
-			CMP_release(tdbb, handle2);
+			FOR(REQUEST_HANDLE request2)
+				FIRST 1 REL IN RDB$RELATIONS
+				WITH REL.RDB$RELATION_NAME EQ "RDB$DATABASE"
+			{
+	            if (!REL.RDB$OWNER_NAME.NULL)
+					dbb->dbb_owner = REL.RDB$OWNER_NAME;
+			}
+			END_FOR
 		}
 	}
-	else {
-		user->usr_flags |= USR_owner;
-	}
-
-}
-
-
-UserId::~UserId()
-{
-	if (usr_fini_sec_db)
+	else
 	{
-		SecurityDatabase::shutdown();
+		dbb->dbb_owner = user->getUserName();
+		user->usr_privileges.load(INI_owner_privileges().c_str());
+		user->usr_granted_roles.clear();
+		user->usr_granted_roles.add("RDB$ADMIN");
+
+		user->usr_flags &= ~USR_newrole;
 	}
 }
 
 
-void SCL_move_priv(SecurityClass::flags_t mask, Acl& acl)
+bool SCL_move_priv(SecurityClass::flags_t mask, Acl& acl)
 {
 /**************************************
  *
@@ -743,58 +1160,56 @@ void SCL_move_priv(SecurityClass::flags_t mask, Acl& acl)
  **************************************/
 	// Terminate identification criteria, and move privileges
 
-	check_and_move(ACL_end, acl);
-	check_and_move(ACL_priv_list, acl);
+	acl.push(ACL_end);
+	acl.push(ACL_priv_list);
 
+	bool rc = false;
 	for (const P_NAMES* priv = p_names; priv->p_names_priv; priv++)
 	{
 		if (mask & priv->p_names_priv)
 		{
 			fb_assert(priv->p_names_acl <= MAX_UCHAR);
-			check_and_move(priv->p_names_acl, acl);
+			acl.push(priv->p_names_acl);
+			rc = true;
 		}
 	}
 
-	check_and_move(0, acl);
+	acl.push(0);
+	return rc;
 }
 
 
-SecurityClass* SCL_recompute_class(thread_db* tdbb, const TEXT* string)
+void SCL_clear_classes(thread_db* tdbb, const TEXT* string)
 {
 /**************************************
  *
- *	S C L _ r e c o m p u t e _ c l a s s
+ *	S C L _ c l e a r _ c l a s s e s
  *
  **************************************
  *
  * Functional description
- *	Something changed with a security class, recompute it.  If we
- *	can't find it, return NULL.
+ *	Something changed with a security class, remove them from cache.
+ *	We need to clear security classes for every user.
  *
  **************************************/
 	SET_TDBB(tdbb);
 
-	SecurityClass* s_class = SCL_get_class(tdbb, string);
-	if (!s_class) {
-		return NULL;
-	}
+	Attachment* attachment = tdbb->getAttachment();
 
-	s_class->scl_flags = compute_access(tdbb, s_class, NULL, NULL, NULL);
+	SecurityClassList* list = attachment->att_security_classes;
+	if (!list)
+		return;
 
-	if (s_class->scl_flags & SCL_exists) {
-		return s_class;
-	}
+	MetaNamePair key(string, NULL);
+	if (!list->locate(Firebird::locGreatEqual, key))
+		return;
 
-	// Class no long exists - get rid of it!
-
-	SecurityClassList* list = tdbb->getAttachment()->att_security_classes;
-	if (list && list->locate(string))
+	while (list->current()->sclClassUser.first == string)
 	{
-		list->fastRemove();
-		delete s_class;
+		delete list->current();
+		if (!list->fastRemove())	// removing moves current item to the next one
+			break;
 	}
-
-	return NULL;
 }
 
 
@@ -825,39 +1240,55 @@ void SCL_release_all(SecurityClassList*& list)
 }
 
 
-static bool check_hex(const UCHAR* acl, USHORT number)
+SecurityClass::flags_t SCL_get_object_mask(ObjectType object_type)
 {
 /**************************************
  *
- *	c h e c k _ h e x
+ *	S C L _ g e t _ o b j e c t _ m a s k
+ *
+ **************************************
+ *
+ *	Functional description
+ *	Get a protection mask for database object.
+ *
+ **************************************/
+	thread_db* tdbb = JRD_get_thread_data();
+	Database* dbb = tdbb->getDatabase();
+
+	const TEXT* object_name = getSecurityClassName(object_type);
+	if (!*object_name)
+		return 0;
+
+	const Jrd::SecurityClass* s_class = SCL_get_class(tdbb, object_name);
+	if (s_class)
+		return s_class->scl_flags;
+
+	return -1 & ~SCL_corrupt;
+}
+
+
+ULONG SCL_get_number(const UCHAR* acl)
+{
+/**************************************
+ *
+ *	g e t _ n u m b e r
  *
  **************************************
  *
  * Functional description
- *	Check a string against and acl numeric string.  If they don't match,
- *	return true.
+ *	Get value of acl numeric string.
  *
  **************************************/
-	int n = 0;
+	ULONG n = 0;
 	USHORT l = *acl++;
 	if (l)
 	{
 		do {
-			const TEXT c = *acl++;
-			n *= 10;
-			if (c >= '0' && c <= '9') {
-				n += c - '0';
-			}
-			else if (c >= 'a' && c <= 'f') {
-				n += c - 'a' + 10;
-			}
-			else if (c >= 'A' && c <= 'F') {
-				n += c - 'A' + 10;
-			}
+			n = n * UIC_BASE + *acl++ - '0';
 		} while (--l);
 	}
 
-	return (n != number);
+	return n;
 }
 
 
@@ -874,16 +1305,7 @@ static bool check_number(const UCHAR* acl, USHORT number)
  *	return true.
  *
  **************************************/
-	int n = 0;
-	USHORT l = *acl++;
-	if (l)
-	{
-		do {
-			n = n * UIC_BASE + *acl++ - '0';
-		} while (--l);
-	}
-
-	return (n != number);
+	return (SCL_get_number(acl) != number);
 }
 
 
@@ -912,9 +1334,8 @@ static bool check_user_group(thread_db* tdbb, const UCHAR* acl, USHORT number)
  *
  **************************************/
 	SET_TDBB(tdbb);
-	//Database* dbb = tdbb->getDatabase();
 
-	SLONG n = 0;
+	ULONG n = 0;
 
 	USHORT l = *acl++;
 	if (l)
@@ -942,7 +1363,7 @@ static bool check_user_group(thread_db* tdbb, const UCHAR* acl, USHORT number)
 }
 
 
-static bool check_string(const UCHAR* acl, const Firebird::MetaName& string)
+static bool check_string(const UCHAR* acl, const MetaName& string)
 {
 /**************************************
  *
@@ -957,18 +1378,64 @@ static bool check_string(const UCHAR* acl, const Firebird::MetaName& string)
  **************************************/
 	fb_assert(acl);
 
-	const size_t length = *acl++;
+	const FB_SIZE_T length = *acl++;
 	const TEXT* const ptr = (TEXT*) acl;
 
-    return (string.compare(ptr, length) != 0);
+	return (string.compare(ptr, length) != 0);
 }
 
+static void get_string(const UCHAR* acl, MetaName& string)
+{
+/**************************************
+ *
+ *	g e t _ s t r i n g
+ *
+ **************************************
+ *
+ * Functional description
+ *	Get a string from acl string.
+ *
+ **************************************/
+	fb_assert(acl);
+
+	const size_t length = *acl++;
+	const TEXT* const ptr = (TEXT*) acl;
+	string.assign(ptr, length);
+}
+
+static SecurityClass::flags_t get_sys_privileges(thread_db* tdbb)
+{
+/**************************************
+ *
+ *	g e t _ s y s _ p r i v i l e g e s
+ *
+ **************************************
+ *
+ * Functional description
+ *	Returns access flags for current user's system-wide privileges
+ *
+ **************************************/
+	const Jrd::Attachment* attachment = tdbb->getAttachment();
+	if (!attachment)
+		return 0;
+
+	SecurityClass::flags_t flags = 0;
+
+	if (attachment->locksmith(tdbb, ACCESS_ANY_OBJECT_IN_DATABASE))
+		flags |= SCL_ACCESS_ANY;
+	else if (attachment->locksmith(tdbb, SELECT_ANY_OBJECT_IN_DATABASE))
+		flags |= SCL_SELECT_ANY;
+
+	if (attachment->locksmith(tdbb, MODIFY_ANY_OBJECT_IN_DATABASE))
+		flags |= SCL_MODIFY_ANY;
+
+	return flags;
+}
 
 static SecurityClass::flags_t compute_access(thread_db* tdbb,
 											 const SecurityClass* s_class,
-											 const jrd_rel* view,
-											 const Firebird::MetaName& trg_name,
-											 const Firebird::MetaName& prc_name)
+											 SLONG obj_type,
+											 const MetaName& obj_name)
 {
 /**************************************
  *
@@ -985,49 +1452,44 @@ static SecurityClass::flags_t compute_access(thread_db* tdbb,
 	Acl acl;
 
 	SET_TDBB(tdbb);
-	Database* dbb = tdbb->getDatabase();
+	Jrd::Attachment* const attachment = tdbb->getAttachment();
+	jrd_tra* sysTransaction = attachment->getSysTransaction();
 
-	SecurityClass::flags_t privileges = SCL_scanned;
+	SecurityClass::flags_t privileges = 0;
+	SecurityClass::flags_t sysPriv = SCL_exists | get_sys_privileges(tdbb);
 
-	jrd_req* request = CMP_find_request(tdbb, irq_l_security, IRQ_REQUESTS);
+	AutoCacheRequest request(tdbb, irq_l_security, IRQ_REQUESTS);
 
 	FOR(REQUEST_HANDLE request) X IN RDB$SECURITY_CLASSES
-		WITH X.RDB$SECURITY_CLASS EQ s_class->scl_name.c_str()
-
-        if (!REQUEST(irq_l_security))
-			REQUEST(irq_l_security) = request;
-
-		privileges |= SCL_exists;
-		blb* blob = BLB_open(tdbb, dbb->dbb_sys_trans, &X.RDB$ACL);
+		WITH X.RDB$SECURITY_CLASS EQ s_class->sclClassUser.first.c_str()
+	{
+		privileges |= sysPriv;
+		blb* blob = blb::open(tdbb, sysTransaction, &X.RDB$ACL);
 		UCHAR* buffer = acl.getBuffer(ACL_BLOB_BUFFER_SIZE);
 		UCHAR* end = buffer;
 		while (true)
 		{
-			end += BLB_get_segment(tdbb, blob, end, (USHORT) (acl.getCount() - (end - buffer)) );
+			end += blob->BLB_get_segment(tdbb, end, (USHORT) (acl.getCount() - (end - buffer)) );
 			if (blob->blb_flags & BLB_eof)
 				break;
 
 			// There was not enough space, realloc point acl to the correct location
 
-			if (blob->blb_fragment_size)
+			if (blob->getFragmentSize())
 			{
 				const ptrdiff_t old_offset = end - buffer;
 				buffer = acl.getBuffer(acl.getCount() + ACL_BLOB_BUFFER_SIZE);
 				end = buffer + old_offset;
 			}
 		}
-		BLB_close(tdbb, blob);
+		blob->BLB_close(tdbb);
 		blob = NULL;
 		acl.shrink(end - buffer);
 
 		if (acl.getCount() > 0)
-		{
-			privileges |= walk_acl(tdbb, acl, view, trg_name, prc_name);
-		}
-	END_FOR;
-
-	if (!REQUEST(irq_l_security))
-		REQUEST(irq_l_security) = request;
+			privileges |= walk_acl(tdbb, acl, s_class->sclClassUser.second, obj_type, obj_name);
+	}
+	END_FOR
 
 	return privileges;
 }
@@ -1035,9 +1497,9 @@ static SecurityClass::flags_t compute_access(thread_db* tdbb,
 
 static SecurityClass::flags_t walk_acl(thread_db* tdbb,
 									   const Acl& acl,
-									   const jrd_rel* view,
-									   const Firebird::MetaName& trg_name,
-									   const Firebird::MetaName& prc_name)
+									   const MetaName& userName,
+									   SLONG obj_type,
+									   const MetaName& obj_name)
 {
 /**************************************
  *
@@ -1048,26 +1510,17 @@ static SecurityClass::flags_t walk_acl(thread_db* tdbb,
  * Functional description
  *	Walk an access control list looking for a hit.  If a hit
  *	is found, return privileges.
+ * userName a name of user which privileges must be computed. NULL is current user (INVOKER)
  *
  **************************************/
 	SET_TDBB(tdbb);
-	Database* dbb = tdbb->getDatabase();
+	Jrd::Attachment* const attachment = tdbb->getAttachment();
 
 	// Munch ACL. If we find a hit, eat up privileges.
 
-	UserId user = *tdbb->getAttachment()->att_user;
-	const TEXT* role_name = user.usr_sql_role_name.nullStr();
-
-	if (view && (view->rel_flags & REL_sql_relation))
-	{
-		// Use the owner of the view to perform the sql security
-		// checks with: (1) The view user must have sufficient privileges
-		// to the view, and (2a) the view owner must have sufficient
-		// privileges to the base table or (2b) the view must have
-		// sufficient privileges on the base table.
-
-		user.usr_user_name = view->rel_owner_name.c_str();
-	}
+	UserId user;
+	if (userName.hasData())
+		user = *attachment->getUserId(userName);
 
 	SecurityClass::flags_t privilege = 0;
 	const UCHAR* a = acl.begin();
@@ -1075,11 +1528,6 @@ static SecurityClass::flags_t walk_acl(thread_db* tdbb,
 	if (*a++ != ACL_version)
 	{
 		BUGCHECK(160);	// msg 160 wrong ACL version
-	}
-
-	if (user.locksmith())
-	{
-		return -1 & ~SCL_corrupt;
 	}
 
 	const TEXT* p;
@@ -1097,7 +1545,7 @@ static SecurityClass::flags_t walk_acl(thread_db* tdbb,
 				switch (c)
 				{
 				case id_person:
-					if (!(p = user.usr_user_name.nullStr()) || check_string(a, p))
+					if (!(p = user.getUserName().nullStr()) || check_string(a, p))
 						hit = false;
 					break;
 
@@ -1113,60 +1561,25 @@ static SecurityClass::flags_t walk_acl(thread_db* tdbb,
 
 				case id_group:
 					if (check_user_group(tdbb, a, user.usr_group_id))
-					{
 						hit = false;
-					}
 					break;
 
 				case id_sql_role:
-					if (!role_name || check_string(a, role_name))
+				{
+					MetaName role_name;
+					get_string(a, role_name);
+					if (!user.roleInUse(tdbb, role_name))
 						hit = false;
-					else
-					{
-						TEXT login_name[129];
-						TEXT* pln = login_name;
-						const TEXT* q = user.usr_user_name.c_str();
-						while (*pln++ = UPPER7(*q)) {
-							++q;
-						}
-						hit = false;
-						jrd_req* request = CMP_find_request(tdbb, irq_get_role_mem, IRQ_REQUESTS);
-
-						FOR(REQUEST_HANDLE request) U IN RDB$USER_PRIVILEGES WITH
-							(U.RDB$USER EQ login_name OR
-							 U.RDB$USER EQ "PUBLIC") AND
-								U.RDB$USER_TYPE EQ obj_user AND
-								U.RDB$RELATION_NAME EQ user.usr_sql_role_name.c_str() AND
-								U.RDB$OBJECT_TYPE EQ obj_sql_role AND
-								U.RDB$PRIVILEGE EQ "M"
-
-                            if (!REQUEST(irq_get_role_mem))
-                                REQUEST(irq_get_role_mem) = request;
-
-							if (!U.RDB$USER.NULL)
-								hit = true;
-						END_FOR;
-
-						if (!REQUEST(irq_get_role_mem))
-							REQUEST(irq_get_role_mem) = request;
-					}
 					break;
+				}
 
 				case id_view:
-					if (!view || check_string(a, view->rel_name))
-						hit = false;
-					break;
-
+				case id_package:
 				case id_procedure:
-					if (check_string(a, prc_name))
-						hit = false;
-					break;
-
 				case id_trigger:
-					if (check_string(a, trg_name))
-					{
+				case id_function:
+					if (c != obj_type || check_string(a, obj_name))
 						hit = false;
-					}
 					break;
 
 				case id_views:
@@ -1176,21 +1589,21 @@ static SecurityClass::flags_t walk_acl(thread_db* tdbb,
 					// generated for SQL.
 
 					hit = false;
-					if (!view) {
-						hit = false;
-					}
+					//if (!view)
+					//	hit = false;
 					break;
 
 				case id_user:
-					if (check_number(a, user.usr_user_id)) {
+					if (check_number(a, user.usr_user_id))
 						hit = false;
-					}
+					break;
+
+				case id_privilege:
+					if (!user.locksmith(tdbb, SCL_get_number(a)))
+						hit = false;
 					break;
 
 				case id_node:
-					if (check_hex(a, user.usr_node_id)) {
-						hit = false;
-					}
 					break;
 
 				default:
@@ -1211,49 +1624,56 @@ static SecurityClass::flags_t walk_acl(thread_db* tdbb,
 						privilege |= SCL_control;
 						break;
 
-					case priv_read:
-						// Note that READ access must imply REFERENCES
+					case priv_select:
+						// Note that SELECT access must imply REFERENCES
 						// access for upward compatibility of existing
 						// security classes
-						privilege |= SCL_read | SCL_sql_references;
+						privilege |= SCL_select | SCL_references;
 						break;
 
-					case priv_write:
-						privilege |=
-							SCL_write | SCL_sql_insert | SCL_sql_update |
-							SCL_sql_delete;
-						break;
-
-					case priv_sql_insert:
-						privilege |= SCL_sql_insert;
-						break;
-
-					case priv_sql_delete:
-						privilege |= SCL_sql_delete;
-						break;
-
-					case priv_sql_references:
-						privilege |= SCL_sql_references;
-						break;
-
-					case priv_sql_update:
-						privilege |= SCL_sql_update;
+					case priv_insert:
+						privilege |= SCL_insert;
 						break;
 
 					case priv_delete:
 						privilege |= SCL_delete;
 						break;
 
-					case priv_grant:
-						privilege |= SCL_grant;
+					case priv_references:
+						privilege |= SCL_references;
 						break;
 
-					case priv_protect:
-						privilege |= SCL_protect;
+					case priv_update:
+						privilege |= SCL_update;
+						break;
+
+					case priv_drop:
+						privilege |= SCL_drop;
+						break;
+
+					case priv_alter:
+						privilege |= SCL_alter;
 						break;
 
 					case priv_execute:
 						privilege |= SCL_execute;
+						break;
+
+					case priv_usage:
+						privilege |= SCL_usage;
+						break;
+
+					case priv_write:
+						// unused, but supported for backward compatibility
+						privilege |= SCL_insert | SCL_update | SCL_delete;
+						break;
+
+					case priv_grant:
+						// unused
+						break;
+
+					case priv_create:
+						privilege |= SCL_create;
 						break;
 
 					default:
@@ -1280,5 +1700,98 @@ static SecurityClass::flags_t walk_acl(thread_db* tdbb,
 	fb_assert(a == acl.end());
 
 	return privilege;
+}
+
+void UserId::populateDpb(Firebird::ClumpletWriter& dpb, bool embeddedSupport)
+{
+	if (usr_auth_block.hasData())
+		dpb.insertBytes(isc_dpb_auth_block, usr_auth_block.begin(), usr_auth_block.getCount());
+	else if (embeddedSupport)
+		dpb.insertString(isc_dpb_user_name, usr_user_name);
+
+	if (usr_sql_role_name.hasData() && usr_sql_role_name != NULL_ROLE && !dpb.find(isc_dpb_sql_role_name))
+		dpb.insertString(isc_dpb_sql_role_name, usr_sql_role_name);
+}
+
+void UserId::makeRoleName(Firebird::MetaString& role, const int dialect)
+{
+	if (role.isEmpty())
+		return;
+
+	switch (dialect)
+	{
+	case SQL_DIALECT_V5:
+		// Invoke utility twice: first to strip quotes, next to uppercase if needed
+		// For unquoted string nothing bad happens
+		fb_utils::dpbItemUpper(role);
+		{
+			Firebird::string tmp(role);
+			tmp.upper();
+			role = tmp;
+		}
+		break;
+
+	case SQL_DIALECT_V6_TRANSITION:
+	case SQL_DIALECT_V6:
+		fb_utils::dpbItemUpper(role);
+		break;
+
+	default:
+		break;
+	}
+}
+
+// get privilege bit by name
+USHORT SCL_convert_privilege(thread_db* tdbb, jrd_tra* transaction, const Firebird::string& priv)
+{
+	static GlobalPtr<Mutex> privCacheMutex;
+	static bool cacheFlag = false;
+	typedef NonPooled<MetaString, USHORT> CachedPriv;
+	static GlobalPtr<GenericMap<CachedPriv> > privCache;
+
+	if (!cacheFlag)
+	{
+		MutexLockGuard g(privCacheMutex, FB_FUNCTION);
+
+		if (!cacheFlag)
+		{
+			privCache->clear();
+
+			AutoCacheRequest request(tdbb, irq_get_priv_bit, IRQ_REQUESTS);
+			FOR(REQUEST_HANDLE request TRANSACTION_HANDLE transaction)
+				T IN RDB$TYPES
+				WITH T.RDB$FIELD_NAME EQ 'RDB$SYSTEM_PRIVILEGES'
+			{
+				privCache->put(T.RDB$TYPE_NAME, T.RDB$TYPE);
+			}
+			END_FOR
+
+			cacheFlag = true;
+		}
+	}
+
+	USHORT rc;
+	if (!privCache->get(priv, rc))
+		(Arg::Gds(isc_wrong_prvlg) << priv).raise();
+
+	return rc;
+}
+
+// check object existence and access rights
+static bool check_object(thread_db* tdbb,
+						 bool found,
+						 const SecurityClass* s_class,
+						 SLONG obj_type,
+						 const MetaName& obj_name,
+						 SecurityClass::flags_t mask,
+						 ObjectType type,
+						 const MetaName& name)
+{
+	if (s_class)
+	{
+		SCL_check_access(tdbb, s_class, obj_type, obj_name, mask, type, false, name);
+		return true;
+	}
+	return found;
 }
 

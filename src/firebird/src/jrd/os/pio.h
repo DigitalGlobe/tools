@@ -30,7 +30,6 @@
 #define JRD_PIO_H
 
 #include "../include/fb_blk.h"
-#include "../jrd/thread_proto.h"
 #include "../common/classes/rwlock.h"
 #include "../common/classes/array.h"
 #include "../common/classes/File.h"
@@ -48,7 +47,6 @@ public:
 	USHORT fil_sequence;		// Sequence number of file
 	USHORT fil_fudge;			// Fudge factor for page relocation
 	int fil_desc;
-	//int *fil_trace;			// Trace file, if any
 	Firebird::Mutex fil_mutex;
 	USHORT fil_flags;
 	SCHAR fil_string[1];		// Expanded file name
@@ -77,12 +75,7 @@ public:
 	USHORT fil_sequence;				// Sequence number of file
 	USHORT fil_fudge;					// Fudge factor for page relocation
 	HANDLE fil_desc;					// File descriptor
-	//int *fil_trace;					// Trace file, if any
-	Firebird::Mutex fil_mutex;
 	Firebird::RWLock* fil_ext_lock;		// file extend lock
-#ifdef SUPERSERVER_V2
-	void* fil_io_events[MAX_FILE_IO];	// Overlapped I/O events
-#endif
 	USHORT fil_flags;
 	SCHAR fil_string[1];				// Expanded file name
 };
@@ -93,7 +86,9 @@ public:
 const USHORT FIL_force_write		= 1;
 const USHORT FIL_no_fs_cache		= 2;	// not using file system cache
 const USHORT FIL_readonly			= 4;	// file opened in readonly mode
-const USHORT FIL_no_fast_extend		= 8;	// file doesn't support fast extending
+const USHORT FIL_sh_write			= 8;	// file opened in shared write mode
+const USHORT FIL_no_fast_extend		= 16;	// file not supports fast extending
+const USHORT FIL_raw_device			= 32;	// file is raw device
 
 // Physical IO trace events
 

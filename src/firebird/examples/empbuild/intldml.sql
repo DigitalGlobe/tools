@@ -47,18 +47,17 @@ INSERT INTO country (country, currency) VALUES ('England',     'Pound');
 INSERT INTO country (country, currency) VALUES ('Canada',      'CdnDlr');
 INSERT INTO country (country, currency) VALUES ('Switzerland', 'SFranc');
 INSERT INTO country (country, currency) VALUES ('Japan',       'Yen');
-INSERT INTO country (country, currency) VALUES ('Italy',       'Lira');
-INSERT INTO country (country, currency) VALUES ('France',      'FFranc');
-INSERT INTO country (country, currency) VALUES ('Germany',     'D-Mark');
-INSERT INTO country (country, currency) VALUES ('Deutschland', 'D-Mark');
+INSERT INTO country (country, currency) VALUES ('Italy',       'Euro');
+INSERT INTO country (country, currency) VALUES ('France',      'Euro');
+INSERT INTO country (country, currency) VALUES ('Germany',     'Euro');
 INSERT INTO country (country, currency) VALUES ('Australia',   'ADollar');
 INSERT INTO country (country, currency) VALUES ('Hong Kong',   'HKDollar');
-INSERT INTO country (country, currency) VALUES ('Netherlands', 'Guilder');
-INSERT INTO country (country, currency) VALUES ('Norge',       'Guilder');
-INSERT INTO country (country, currency) VALUES ('Norway',      'Guilder');
-INSERT INTO country (country, currency) VALUES ('Belgium',     'BFranc');
-INSERT INTO country (country, currency) VALUES ('Austria',     'Schilling');
+INSERT INTO country (country, currency) VALUES ('Netherlands', 'Euro');
+INSERT INTO country (country, currency) VALUES ('Belgium',     'Euro');
+INSERT INTO country (country, currency) VALUES ('Austria',     'Euro');
 INSERT INTO country (country, currency) VALUES ('Fiji',        'FDollar');
+INSERT INTO country (country, currency) VALUES ('Russia',      'Ruble');
+INSERT INTO country (country, currency) VALUES ('Romania',     'RLeu');
 
 COMMIT;
 
@@ -217,11 +216,11 @@ INSERT INTO job
 
 INSERT INTO job
 (job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
-('Dir',   2, 'France', 'Director',                  443000,  711000) /* FFranc */;
+('Dir',   2, 'France', 'Director',                  443000,  711000) /* Euro */;
 
 INSERT INTO job
 (job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
-('Dir',   2, 'Germany', 'Director',                  128000,  205000) /* D-Mark */;
+('Dir',   2, 'Germany', 'Director',                  128000,  205000) /* Euro */;
 
 INSERT INTO job
 (job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
@@ -245,7 +244,7 @@ INSERT INTO job
 
 INSERT INTO job
 (job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
-('Mngr',  4, 'France', 'Manager',                   355000,  591000) /* FFranc */;
+('Mngr',  4, 'France', 'Manager',                   355000,  591000) /* Euro */;
 
 INSERT INTO job
 (job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
@@ -253,7 +252,7 @@ INSERT INTO job
 
 INSERT INTO job
 (job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
-('Admin', 4, 'France', 'Administrative Assistant',   21000,  33000) /* FFranc */;
+('Admin', 4, 'France', 'Administrative Assistant',   21000,  33000) /* Euro */;
 
 INSERT INTO job
 (job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
@@ -297,7 +296,7 @@ INSERT INTO job
 
 INSERT INTO job
 (job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
-('Eng',   3, 'Japan', 'Engineer',                 5400000, 9720000) /* yen */;
+('Eng',   3, 'Japan', 'Engineer',                 5400000, 9720000) /* Yen */;
 
 INSERT INTO job
 (job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
@@ -337,7 +336,7 @@ INSERT INTO job
 
 INSERT INTO job
 (job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
-('SRep',  4, 'Germany', 'Sales Representative',       34000,  170000) /* D-Mark */;
+('SRep',  4, 'Germany', 'Sales Representative',       34000,  170000) /* Euro */;
 
 INSERT INTO job
 (job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
@@ -349,15 +348,15 @@ INSERT INTO job
 
 INSERT INTO job
 (job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
-('SRep',  4, 'Japan', 'Sales Representative',   2160000, 10800000) /* yen */;
+('SRep',  4, 'Japan', 'Sales Representative',   2160000, 10800000) /* Yen */;
 
 INSERT INTO job
 (job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
-('SRep',  4, 'Italy', 'Sales Representative',   33600000, 168000000) /* lira */;
+('SRep',  4, 'Italy', 'Sales Representative',   20000, 100000) /* Euro */;
 
 INSERT INTO job
 (job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
-('SRep',  4, 'France', 'Sales Representative',  118200, 591000) /* FFranc */;
+('SRep',  4, 'France', 'Sales Representative',  20000, 100000) /* Euro */;
 
 
 COMMIT;

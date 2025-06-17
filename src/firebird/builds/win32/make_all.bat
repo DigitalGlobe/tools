@@ -2,23 +2,25 @@
 set ERRLEV=0
 
 :: Set env vars
-@call setenvvar.bat
+@call setenvvar.bat %*
 
 @if errorlevel 1 (call :ERROR Executing setenvvar.bat failed & goto :EOF)
 
 :: verify that boot was run before
 
-@if not exist %FB_GEN_DIR%\gpre_boot.exe (goto :HELP_BOOT & goto :EOF)
+@if not exist %FB_BIN_DIR%\firebird.msg (goto :HELP_BOOT & goto :EOF)
 
-
-@call set_build_target.bat %*
 
 ::==========
 :: MAIN
 
 @echo Building %FB_OBJ_DIR%
 
-call compile.bat %FB_ROOT_PATH%\builds\win32\%VS_VER%\Firebird2 make_all_%FB_TARGET_PLATFORM%.log
+@if "%FB_CLIENT_ONLY%"=="" (
+	call compile.bat builds\win32\%VS_VER%\Firebird make_all_%FB_TARGET_PLATFORM%.log
+) else (
+	call compile.bat builds\win32\%VS_VER%\Firebird make_all_%FB_TARGET_PLATFORM%.log DLLs\yvalve DLLs\chacha
+)
 if errorlevel 1 call :ERROR build failed - see make_all_%FB_TARGET_PLATFORM%.log for details
 
 @if "%ERRLEV%"=="1" (
@@ -30,127 +32,92 @@ if errorlevel 1 call :ERROR build failed - see make_all_%FB_TARGET_PLATFORM%.log
 
 ::===========
 :MOVE
-@echo Copying files to output
-@set FB_OUTPUT_DIR=%FB_ROOT_PATH%\output_%FB_TARGET_PLATFORM%
-@del %FB_ROOT_PATH%\temp\%FB_OBJ_DIR%\firebird\bin\*.exp 2>nul
-@del %FB_ROOT_PATH%\temp\%FB_OBJ_DIR%\firebird\bin\*.lib 2>nul
-@rmdir /q /s %FB_OUTPUT_DIR% 2>nul
+@echo Cleaning output directory
+@rmdir /S /Q "%FB_OUTPUT_DIR%" 2>nul
+
+:: short delay to let OS complete actions by rmdir above
+@timeout 1 >nul
 
 @mkdir %FB_OUTPUT_DIR% 2>nul
-@mkdir %FB_OUTPUT_DIR%\bin 2>nul
-@mkdir %FB_OUTPUT_DIR%\intl 2>nul
-@mkdir %FB_OUTPUT_DIR%\udf 2>nul
-@mkdir %FB_OUTPUT_DIR%\help 2>nul
-@mkdir %FB_OUTPUT_DIR%\doc 2>nul
-@mkdir %FB_OUTPUT_DIR%\doc\sql.extensions 2>nul
+@mkdir %FB_OUTPUT_DIR%\tzdata 2>nul
 @mkdir %FB_OUTPUT_DIR%\include 2>nul
+@mkdir %FB_OUTPUT_DIR%\include\firebird 2>nul
+@mkdir %FB_OUTPUT_DIR%\include\firebird\impl 2>nul
 @mkdir %FB_OUTPUT_DIR%\lib 2>nul
 @mkdir %FB_OUTPUT_DIR%\system32 2>nul
 @mkdir %FB_OUTPUT_DIR%\plugins 2>nul
 
-for %%v in ( icuuc30 icudt30 icuin30 ) do (
-@copy %FB_ICU_SOURCE_BIN%\%%v.dll %FB_OUTPUT_DIR%\bin >nul
+@if "%FB_CLIENT_ONLY%"=="" (
+	mkdir %FB_OUTPUT_DIR%\intl 2>nul
+	mkdir %FB_OUTPUT_DIR%\doc 2>nul
+	mkdir %FB_OUTPUT_DIR%\doc\sql.extensions 2>nul
+	mkdir %FB_OUTPUT_DIR%\plugins\udr 2>nul
 )
 
-@copy %FB_ROOT_PATH%\temp\%FB_OBJ_DIR%\firebird\bin\* %FB_OUTPUT_DIR%\bin >nul
-@copy %FB_ROOT_PATH%\temp\%FB_OBJ_DIR%\firebird\intl\* %FB_OUTPUT_DIR%\intl >nul
-@copy %FB_ROOT_PATH%\temp\%FB_OBJ_DIR%\firebird\udf\* %FB_OUTPUT_DIR%\udf >nul
+@copy %FB_ROOT_PATH%\temp\%FB_OBJ_DIR%\firebird\* %FB_OUTPUT_DIR% >nul
+@copy %FB_ROOT_PATH%\temp\%FB_OBJ_DIR%\firebird\tzdata\* %FB_OUTPUT_DIR%\tzdata >nul
 @copy %FB_ROOT_PATH%\temp\%FB_OBJ_DIR%\firebird\system32\* %FB_OUTPUT_DIR%\system32 >nul
-@copy %FB_ROOT_PATH%\temp\%FB_OBJ_DIR%\firebird\plugins\fbtrace.dll %FB_OUTPUT_DIR%\plugins\fbtrace.dll >nul
-@copy %FB_ROOT_PATH%\temp\%FB_OBJ_DIR%\fbclient\fbclient.lib %FB_OUTPUT_DIR%\lib\fbclient_ms.lib >nul
-@copy %FB_ROOT_PATH%\temp\%FB_OBJ_DIR%\ib_util\ib_util.lib %FB_OUTPUT_DIR%\lib\ib_util_ms.lib >nul
+@copy %FB_ROOT_PATH%\temp\%FB_OBJ_DIR%\firebird\plugins\*.dll %FB_OUTPUT_DIR%\plugins >nul
+@copy %FB_ROOT_PATH%\temp\%FB_OBJ_DIR%\yvalve\fbclient.lib %FB_OUTPUT_DIR%\lib\fbclient_ms.lib >nul
 
-for %%v in ( btyacc gbak_embed gpre_boot gpre_embed isql_embed ) do (
-@del %FB_OUTPUT_DIR%\bin\%%v.exe >nul
+@if "%FB_CLIENT_ONLY%"=="" (
+	copy %FB_ROOT_PATH%\temp\%FB_OBJ_DIR%\firebird\intl\* %FB_OUTPUT_DIR%\intl >nul
+	copy %FB_ROOT_PATH%\temp\%FB_OBJ_DIR%\firebird\plugins\udr\*.dll %FB_OUTPUT_DIR%\plugins\udr >nul
+	copy %FB_ROOT_PATH%\temp\%FB_OBJ_DIR%\ib_util\ib_util.lib %FB_OUTPUT_DIR%\lib\ib_util_ms.lib >nul
+)
+
+for %%v in (gpre_boot build_msg common_test engine_test) do (
+	@del %FB_OUTPUT_DIR%\%%v.* 2>nul
 )
 
 :: Firebird.conf, etc
-@copy %FB_GEN_DIR%\firebird.msg %FB_OUTPUT_DIR% > nul
-:: The line @UDF_COMMENT@ should be deleted from the target file.
-findstr /V "@UDF_COMMENT@" %FB_ROOT_PATH%\builds\install\misc\firebird.conf.in > %FB_OUTPUT_DIR%\firebird.conf
-@copy %FB_ROOT_PATH%\builds\install\misc\fbintl.conf %FB_OUTPUT_DIR%\intl >nul
-@copy %FB_ROOT_PATH%\src\utilities\ntrace\fbtrace.conf %FB_OUTPUT_DIR% >nul
+@copy %FB_GEN_DIR%\firebird.msg %FB_OUTPUT_DIR%\ > nul
+@copy %FB_ROOT_PATH%\builds\install\misc\firebird.conf %FB_OUTPUT_DIR%\firebird.conf >nul
+@copy %FB_ROOT_PATH%\builds\install\misc\plugins.conf %FB_OUTPUT_DIR% >nul
 @copy %FB_ROOT_PATH%\builds\install\misc\IPLicense.txt %FB_OUTPUT_DIR% >nul
 @copy %FB_ROOT_PATH%\builds\install\misc\IDPLicense.txt %FB_OUTPUT_DIR% >nul
 
-:: DATABASES
-@copy %FB_GEN_DIR%\dbs\SECURITY2.FDB %FB_OUTPUT_DIR%\security2.fdb >nul
-@copy %FB_GEN_DIR%\dbs\HELP.fdb %FB_OUTPUT_DIR%\help\help.fdb >nul
+@if "%FB_CLIENT_ONLY%"=="" (
+	copy %FB_ROOT_PATH%\builds\install\misc\databases.conf %FB_OUTPUT_DIR%\databases.conf >nul
+	copy %FB_ROOT_PATH%\builds\install\misc\fbintl.conf %FB_OUTPUT_DIR%\intl\ >nul
+	copy %FB_ROOT_PATH%\builds\install\misc\replication.conf %FB_OUTPUT_DIR% >nul
+	copy %FB_ROOT_PATH%\src\utilities\ntrace\fbtrace.conf %FB_OUTPUT_DIR% >nul
+	copy %FB_ROOT_PATH%\src\plugins\udr_engine\udr_engine.conf %FB_OUTPUT_DIR%\plugins\udr_engine.conf >nul
 
-:: DOCS
-@copy %FB_ROOT_PATH%\ChangeLog %FB_OUTPUT_DIR%\doc\ChangeLog.txt >nul
-@copy %FB_ROOT_PATH%\doc\WhatsNew %FB_OUTPUT_DIR%\doc\WhatsNew.txt >nul
+	:: DATABASES
+	copy %FB_GEN_DIR%\dbs\security5.FDB %FB_OUTPUT_DIR%\security5.fdb >nul
 
-:: READMES
-@copy %FB_ROOT_PATH%\doc\README.* %FB_OUTPUT_DIR%\doc >nul
-@copy %FB_ROOT_PATH%\doc\sql.extensions\README.* %FB_OUTPUT_DIR%\doc\sql.extensions >nul
+	:: DOCS
+	copy %FB_ROOT_PATH%\*.md %FB_OUTPUT_DIR%\doc\ >nul
 
+	:: READMES
+	copy %FB_ROOT_PATH%\doc\README.* %FB_OUTPUT_DIR%\doc >nul
+	copy %FB_ROOT_PATH%\doc\sql.extensions\README.* %FB_OUTPUT_DIR%\doc\sql.extensions >nul
+)
 
-:: HEADERS
-:: Don't use this ibase.h unless you have to - we build it better in BuildExecutableInstall.bat
-:: This variation doesn't clean up the license templates, and processes the component files in
-:: a different order to that used in the production version. However, this version doesn't
-:: have a dependancy upon sed while the production one does.
-echo #pragma message("Non-production version of ibase.h.") > %FB_OUTPUT_DIR%\include\ibase.tmp
-echo #pragma message("Using raw, unprocessed concatenation of header files.") >> %FB_OUTPUT_DIR%\include\ibase.tmp
-type %FB_ROOT_PATH%\src\misc\ibase_header.txt >> %FB_OUTPUT_DIR%\include\ibase.tmp
-type %FB_ROOT_PATH%\src\include\types_pub.h >> %FB_OUTPUT_DIR%\include\ibase.tmp
-type %FB_ROOT_PATH%\src\jrd\dsc_pub.h >> %FB_OUTPUT_DIR%\include\ibase.tmp
-type %FB_ROOT_PATH%\src\dsql\sqlda_pub.h >> %FB_OUTPUT_DIR%\include\ibase.tmp
-type %FB_ROOT_PATH%\src\jrd\ibase.h >> %FB_OUTPUT_DIR%\include\ibase.tmp
-type %FB_ROOT_PATH%\src\jrd\inf_pub.h >> %FB_OUTPUT_DIR%\include\ibase.tmp
-type %FB_ROOT_PATH%\src\include\consts_pub.h >> %FB_OUTPUT_DIR%\include\ibase.tmp
-type %FB_ROOT_PATH%\src\jrd\blr.h >> %FB_OUTPUT_DIR%\include\ibase.tmp
-type %FB_ROOT_PATH%\src\include\gen\iberror.h >> %FB_OUTPUT_DIR%\include\ibase.tmp
-sed -f %FB_ROOT_PATH%\src\misc\headers.sed < %FB_OUTPUT_DIR%\include\ibase.tmp > %FB_OUTPUT_DIR%\include\ibase.h
-del %FB_OUTPUT_DIR%\include\ibase.tmp > nul
+:: Headers
+copy %FB_ROOT_PATH%\src\include\ibase.h %FB_OUTPUT_DIR%\include > nul
+copy %FB_ROOT_PATH%\src\include\iberror.h %FB_OUTPUT_DIR%\include > nul
+copy %FB_GEN_DIR%\iberror_c.h %FB_OUTPUT_DIR%\include\firebird\impl > nul
 
-:: Additional headers
-copy %FB_ROOT_PATH%\src\extlib\ib_util.h %FB_OUTPUT_DIR%\include > nul
-copy %FB_ROOT_PATH%\src\jrd\perf.h %FB_OUTPUT_DIR%\include >nul
-copy %FB_ROOT_PATH%\src\include\gen\iberror.h %FB_OUTPUT_DIR%\include > nul
+:: New API headers
+xcopy /y %FB_ROOT_PATH%\src\include\firebird %FB_OUTPUT_DIR%\include\firebird /e > nul
 
-:: UDF
-copy %FB_ROOT_PATH%\src\extlib\ib_udf.sql %FB_OUTPUT_DIR%\udf > nul
-copy %FB_ROOT_PATH%\src\extlib\ib_udf2.sql %FB_OUTPUT_DIR%\udf > nul
-copy %FB_ROOT_PATH%\src\extlib\fbudf\fbudf.sql %FB_OUTPUT_DIR%\udf > nul
+@if "%FB_CLIENT_ONLY%"=="" (
+	:: UDR
+	copy %FB_ROOT_PATH%\src\extlib\*.sql %FB_OUTPUT_DIR%\plugins\udr > nul
 
-:: Installers
-@copy %FB_INSTALL_SCRIPTS%\install_super.bat %FB_OUTPUT_DIR%\bin >nul
-@copy %FB_INSTALL_SCRIPTS%\install_classic.bat %FB_OUTPUT_DIR%\bin >nul
-@copy %FB_INSTALL_SCRIPTS%\install_superclassic.bat %FB_OUTPUT_DIR%\bin >nul
-@copy %FB_INSTALL_SCRIPTS%\uninstall.bat %FB_OUTPUT_DIR%\bin >nul
+	:: Installers
+	copy %FB_INSTALL_SCRIPTS%\install_service.bat %FB_OUTPUT_DIR% >nul
+	copy %FB_INSTALL_SCRIPTS%\uninstall_service.bat %FB_OUTPUT_DIR% >nul
+)
 
 :: MSVC runtime
-if %MSVC_VERSION% == 14 (
-@copy "%VS140COMNTOOLS%\..\..\VC\redist\%FB_VC_CRT_ARCH%\Microsoft.VC140.CRT\vcruntime140.dll" %FB_OUTPUT_DIR% >nul
-@copy "%VS140COMNTOOLS%\..\..\VC\redist\%FB_VC_CRT_ARCH%\Microsoft.VC140.CRT\msvcp140.dll" %FB_OUTPUT_DIR% >nul
-) else (
-if %MSVC_VERSION% == 12 (
-@copy "%VS120COMNTOOLS%\..\..\VC\redist\%FB_VC_CRT_ARCH%\Microsoft.VC120.CRT\msvcr120.dll" %FB_OUTPUT_DIR% >nul
-@copy "%VS120COMNTOOLS%\..\..\VC\redist\%FB_VC_CRT_ARCH%\Microsoft.VC120.CRT\msvcp120.dll" %FB_OUTPUT_DIR% >nul
-) else (
-if %MSVC_VERSION% == 10 (
-@copy "%VS100COMNTOOLS%\..\..\VC\redist\%FB_VC10CRT_DIR%\Microsoft.VC100.CRT\msvcr100.dll" %FB_OUTPUT_DIR%\bin >nul
-) else (
-if %MSVC_VERSION% == 9 (
-@copy "%VS90COMNTOOLS%\..\..\VC\redist\%FB_PROCESSOR_ARCHITECTURE%\Microsoft.VC90.CRT\msvcr90.dll" %FB_OUTPUT_DIR%\bin >nul
-@copy "%VS90COMNTOOLS%\..\..\VC\redist\%FB_PROCESSOR_ARCHITECTURE%\Microsoft.VC90.CRT\msvcp90.dll" %FB_OUTPUT_DIR%\bin >nul
-@copy "%VS90COMNTOOLS%\..\..\VC\redist\%FB_PROCESSOR_ARCHITECTURE%\Microsoft.VC90.CRT\Microsoft.VC90.CRT.manifest" %FB_OUTPUT_DIR%\bin >nul
-) else (
-if %MSVC_VERSION% == 8 (
-@copy "%VS80COMNTOOLS%\..\..\VC\redist\%FB_PROCESSOR_ARCHITECTURE%\Microsoft.VC80.CRT\msvcr80.dll" %FB_OUTPUT_DIR%\bin >nul
-@copy "%VS80COMNTOOLS%\..\..\VC\redist\%FB_PROCESSOR_ARCHITECTURE%\Microsoft.VC80.CRT\msvcp80.dll" %FB_OUTPUT_DIR%\bin >nul
-@copy "%VS80COMNTOOLS%\..\..\VC\redist\%FB_PROCESSOR_ARCHITECTURE%\Microsoft.VC80.CRT\Microsoft.VC80.CRT.manifest" %FB_OUTPUT_DIR%\bin >nul
+copy "%VCToolsRedistDir%\%VSCMD_ARG_TGT_ARCH%\Microsoft.VC%MSVC_RUNTIME_LIBRARY_VERSION%.CRT\vcruntime140.dll" %FB_OUTPUT_DIR% > nul
+if exist "%VCToolsRedistDir%\%VSCMD_ARG_TGT_ARCH%\Microsoft.VC%MSVC_RUNTIME_LIBRARY_VERSION%.CRT\vcruntime140_1.dll" (
+	copy "%VCToolsRedistDir%\%VSCMD_ARG_TGT_ARCH%\Microsoft.VC%MSVC_RUNTIME_LIBRARY_VERSION%.CRT\vcruntime140_1.dll" %FB_OUTPUT_DIR% > nul
 )
-)
-)
-)
-)
-
-@echo.
-@echo    Done copying all the files
-@echo.
+copy "%VCToolsRedistDir%\%VSCMD_ARG_TGT_ARCH%\Microsoft.VC%MSVC_RUNTIME_LIBRARY_VERSION%.CRT\msvcp140.dll" %FB_OUTPUT_DIR% > nul
 
 
 @goto :EOF

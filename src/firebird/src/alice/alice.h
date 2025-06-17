@@ -26,8 +26,8 @@
 
 #include <stdio.h>
 
-#include "../jrd/ibase.h"
-#include "../jrd/ThreadData.h"
+#include "ibase.h"
+#include "../common/ThreadData.h"
 #include "../include/fb_blk.h"
 #include "../common/classes/alloc.h"
 #include "../common/classes/array.h"
@@ -35,6 +35,7 @@
 
 enum val_errors {
 	VAL_INVALID_DB_VERSION	= 0,
+
 	VAL_RECORD_ERRORS		= 1,
 	VAL_BLOB_PAGE_ERRORS	= 2,
 	VAL_DATA_PAGE_ERRORS	= 3,
@@ -42,7 +43,18 @@ enum val_errors {
 	VAL_POINTER_PAGE_ERRORS	= 5,
 	VAL_TIP_PAGE_ERRORS		= 6,
 	VAL_PAGE_ERRORS			= 7,
-	MAX_VAL_ERRORS			= 8
+	VAL_PIP_PAGE_ERRORS		= 8,
+
+	VAL_RECORD_WARNS		= 9,
+	VAL_BLOB_PAGE_WARNS		= 10,
+	VAL_DATA_PAGE_WARNS		= 11,
+	VAL_INDEX_PAGE_WARNS	= 12,
+	VAL_POINTER_PAGE_WARNS	= 13,
+	VAL_TIP_PAGE_WARNS		= 14,
+	VAL_PAGE_WARNS			= 15,
+	VAL_PIP_PAGE_WARNS		= 16,
+
+	MAX_VAL_ERRORS			= 17
 };
 
 enum alice_shut_mode {
@@ -53,13 +65,17 @@ enum alice_shut_mode {
 	SHUT_FULL = 4
 };
 
+enum alice_repl_mode {
+	REPL_NONE = 0,
+	REPL_READ_ONLY = 1,
+	REPL_READ_WRITE = 2
+};
+
 struct user_action
 {
-	ULONG ua_switches;
 	const char* ua_user;
+	const char* ua_role;
 	const char* ua_password;
-	const char* ua_tr_user;
-	bool ua_tr_role;
 #ifdef TRUSTED_AUTH
 	bool ua_trusted;
 #endif
@@ -68,42 +84,39 @@ struct user_action
 	bool ua_read_only;
 	SLONG ua_shutdown_delay;
 	SLONG ua_sweep_interval;
-	SLONG ua_transaction;
+	TraNumber ua_transaction;
 	SLONG ua_page_buffers;
 	USHORT ua_debug;
-	SLONG ua_val_errors[MAX_VAL_ERRORS];
+	ULONG ua_val_errors[MAX_VAL_ERRORS];
 	//TEXT ua_log_file[MAXPATHLEN];
 	USHORT ua_db_SQL_dialect;
 	alice_shut_mode ua_shutdown_mode;
+	alice_repl_mode ua_replica_mode;
+	SSHORT ua_parallel_workers;
 };
 
 
 
 
-// String block: used to store a string of constant length.
-
-class alice_str : public pool_alloc_rpt<UCHAR, alice_type_str>
-{
-public:
-	USHORT str_length;
-	UCHAR str_data[2];
-};
-
-// Transaction block: used to store info about a multidatabase transaction.
+// Transaction block: used to store info about a multi-database transaction.
 // Transaction Description Record
 
 struct tdr : public pool_alloc<alice_type_tdr>
 {
-	tdr* tdr_next;					// next subtransaction
-	SLONG tdr_id;					// database-specific transaction id
-	alice_str* tdr_fullpath;		// full (possibly) remote pathname
-	const TEXT* tdr_filename;		// filename within full pathname
-	alice_str* tdr_host_site;		// host for transaction
-	alice_str* tdr_remote_site;		// site for remote transaction
-	FB_API_HANDLE tdr_handle;		// reconnected transaction handle
-	FB_API_HANDLE tdr_db_handle;	// reattached database handle
-	USHORT tdr_db_caps;				// capabilities of database
-	USHORT tdr_state;				// see flags below
+	tdr* tdr_next;						// next sub-transaction
+	TraNumber tdr_id;					// database-specific transaction id
+	Firebird::string tdr_fullpath;		// full (possibly) remote pathname
+	Firebird::string tdr_filename;		// filename
+	Firebird::string tdr_host_site;		// host for transaction
+	Firebird::string tdr_remote_site;	// site for remote transaction
+	FB_API_HANDLE tdr_handle;			// reconnected transaction handle
+	FB_API_HANDLE tdr_db_handle;		// re-attached database handle
+	USHORT tdr_db_caps;					// capabilities of database
+	USHORT tdr_state;					// see flags below
+
+	tdr(Firebird::MemoryPool& p)
+		: tdr_fullpath(p), tdr_filename(p), tdr_host_site(p), tdr_remote_site(p)
+	{ }
 };
 
 // CVC: This information should match Transaction Description Record constants in acl.h
@@ -136,7 +149,7 @@ enum tdr_state_vals {
 
 // Global data
 
-class AliceGlobals : public ThreadData
+class AliceGlobals : public Firebird::ThreadData
 {
 private:
 	MemoryPool* ALICE_default_pool;

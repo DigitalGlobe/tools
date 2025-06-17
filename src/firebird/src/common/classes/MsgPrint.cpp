@@ -25,13 +25,12 @@
 // Localized messages type-safe printing facility.
 
 #include "firebird.h"
-#include "../jrd/common.h"
 #include "BaseStream.h"
 #include "MsgPrint.h"
 #include <string.h>
-#include "../jrd/gds_proto.h"
+#include "../yvalve/gds_proto.h"
 #include "../common/utils_proto.h"
-#include "../jrd/file_params.h"
+#include "../common/file_params.h"
 
 
 namespace MsgFormat
@@ -48,7 +47,7 @@ const int MAX_RADIX = 36;
 // We don't mess with octal and the like, otherwise DECODE_BUF_* constants have to be enlarged.
 const int MIN_RADIX = 10;
 // We won't output strings of more than 64K.
-const size_t MAX_STRING = 1 << 16;
+const FB_SIZE_T MAX_STRING = 1 << 16;
 
 // Generic functions.
 int decode(uint64_t value, char* const rc, int radix = 10);
@@ -217,7 +216,7 @@ int MsgPrintHelper(BaseStream& out_stream, const safe_cell& item)
 			if (n > MAX_STRING)
 				n = MAX_STRING;
 
-			return out_stream.write(s, n);
+			return out_stream.write(s, static_cast<unsigned>(n));
 		}
 	case safe_cell::at_ptr:
 		{
@@ -233,7 +232,7 @@ int MsgPrintHelper(BaseStream& out_stream, const safe_cell& item)
 
 
 // Prints the whole chain of arguments, according to format and in the specified stream.
-int MsgPrint(BaseStream& out_stream, const char* format, const SafeArg& arg)
+int MsgPrint(BaseStream& out_stream, const char* format, const SafeArg& arg, bool userFormatting)
 {
 	int out_bytes = 0;
 	for (const char* iter = format; true; ++iter)
@@ -247,7 +246,10 @@ int MsgPrint(BaseStream& out_stream, const char* format, const SafeArg& arg)
 			switch (iter[1])
 			{
 			case 0:
-				out_bytes += out_stream.write("@(EOF)", 6);
+				if (userFormatting)
+					out_bytes += out_stream.write("@", 1);
+				else
+					out_bytes += out_stream.write("@(EOF)", 6);
 				return out_bytes;
 			case '@':
 				out_bytes += out_stream.write(iter, 1);
@@ -255,17 +257,25 @@ int MsgPrint(BaseStream& out_stream, const char* format, const SafeArg& arg)
 			default:
 				{
 					const int pos = iter[1] - '0';
-					if (pos > 0 && static_cast<size_t>(pos) <= arg.m_count)
+					if (pos > 0 && static_cast<FB_SIZE_T>(pos) <= arg.m_count)
 						out_bytes += MsgPrintHelper(out_stream, arg.m_arguments[pos - 1]);
-					else if (pos >= 0 && pos <= 9)
+					else
 					{
-						// Show the missing or out of range param number.
-						out_bytes += MsgPrint(out_stream,
-							"<Missing arg #@1 - possibly status vector overflow>",
-							SafeArg() << pos);
+						if (userFormatting)
+						{
+							out_bytes += out_stream.write("@", 1);
+							out_bytes += out_stream.write(iter + 1, 1);
+						}
+						else if (pos >= 0 && pos <= 9)
+						{
+							// Show the missing or out of range param number.
+							out_bytes += MsgPrint(out_stream,
+								"<Missing arg #@1 - possibly status vector overflow>",
+								SafeArg() << pos);
+						}
+						else // Something not a number following @, invalid.
+							out_bytes += out_stream.write("(error)", 7);
 					}
-					else // Something not a number following @, invalid.
-						out_bytes += out_stream.write("(error)", 7);
 				}
 			}
 			++iter;
@@ -308,10 +318,10 @@ int MsgPrint(BaseStream& out_stream, const char* format, const SafeArg& arg)
 
 
 // Shortcut version to format a string with arguments on standard output.
-int MsgPrint(const char* format, const SafeArg& arg)
+int MsgPrint(const char* format, const SafeArg& arg, bool userFormatting)
 {
 	StdioStream st(stdout);
-	return MsgPrint(st, format, arg);
+	return MsgPrint(st, format, arg, userFormatting);
 }
 
 
@@ -327,47 +337,30 @@ int MsgPrint(const char* format)
 
 // Shortcut version to format a string with arguments on a string output
 // of a given size.
-int MsgPrint(char* plainstring, unsigned int s_size, const char* format, const SafeArg& arg)
+int MsgPrint(char* plainstring, unsigned int s_size, const char* format, const SafeArg& arg,
+	bool userFormatting)
 {
 	StringStream st(plainstring, s_size);
-	return MsgPrint(st, format, arg);
+	return MsgPrint(st, format, arg, userFormatting);
 }
 
 
 // Shortcut version to format a string with arguments on standard error.
-int MsgPrintErr(const char* format, const SafeArg& arg)
+int MsgPrintErr(const char* format, const SafeArg& arg, bool userFormatting)
 {
 	StdioStream st(stderr, true); // flush
-	return MsgPrint(st, format, arg);
+	return MsgPrint(st, format, arg, userFormatting);
 }
 
 } // namespace
 
 
-int fb_msg_format(void*        handle,
-				  USHORT       facility,
-				  USHORT       number,
-				  unsigned int bsize,
-				  TEXT*        buffer,
-				  const        MsgFormat::SafeArg& arg)
+// Lookup and format message.  Return as much of formatted string as fits in caller's buffer.
+int fb_msg_format(void* handle, USHORT facility, USHORT number, unsigned int bsize, TEXT* buffer,
+	const MsgFormat::SafeArg& arg)
 {
-/**************************************
- *
- *	f b _ m s g _ f o r m a t
- *
- **************************************
- *
- * Functional description
- *	Lookup and format message.  Return as much of formatted string
- *	as fits in caller's buffer.
- *
- **************************************/
-
-	using MsgFormat::MsgPrint;
-
-	// The field MESSAGES.TEXT is 118 bytes long.
 	int total_msg = 0;
-	char msg[120] = "";
+	char msg[BUFFER_SMALL] = "";
 	const int n = gds__msg_lookup(handle, facility, number, sizeof(msg), msg, NULL);
 
 	if (n > 0 && unsigned(n) < sizeof(msg))
@@ -391,7 +384,7 @@ int fb_msg_format(void*        handle,
 		else if (n == -2)
 		{
 			s += "message file ";
-			s += fb_utils::getPrefix(fb_utils::FB_DIR_MSG, MSG_FILE).ToString();
+			s += fb_utils::getPrefix(Firebird::IConfigManager::DIR_MSG, MSG_FILE).ToString();
 			s += " not found";
 		}
 		else

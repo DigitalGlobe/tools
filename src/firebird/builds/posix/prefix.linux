@@ -20,15 +20,13 @@
 
 COMMON_FLAGS=-ggdb -DFB_SEND_FLAGS=MSG_NOSIGNAL -DLINUX -pipe -MMD -fPIC -fmessage-length=0
 OPTIMIZE_FLAGS=-O3 -march=i586 -mtune=i686 -fno-omit-frame-pointer
-WARN_FLAGS=-Wall -Wno-switch -Wno-parentheses -Wno-unknown-pragmas -Wno-unused-variable
+WARN_FLAGS=-Werror=delete-incomplete -Wall -Wno-switch -Wno-parentheses -Wno-unknown-pragmas -Wno-unused-variable -Wno-narrowing -Wno-unused-local-typedefs
+PLATFORM_PLUSPLUS_FLAGS=-Wno-invalid-offsetof -Wno-class-memaccess
 
-PROD_FLAGS=-DNDEBUG $(COMMON_FLAGS) $(OPTIMIZE_FLAGS)
-#DEV_FLAGS=-DUSE_VALGRIND -p $(COMMON_FLAGS) $(WARN_FLAGS)
-DEV_FLAGS=-p $(COMMON_FLAGS) $(WARN_FLAGS)
+PROD_FLAGS=$(COMMON_FLAGS) $(OPTIMIZE_FLAGS)
+#DEV_FLAGS=-DUSE_VALGRIND -p $(WARN_FLAGS) $(COMMON_FLAGS) -fmax-errors=8
+DEV_FLAGS=$(WARN_FLAGS) $(COMMON_FLAGS) -fmax-errors=8
 
-OS_ServerFiles=inet_server.cpp
 
-EMBED_UTIL_TARGETS=gstat gsec fbguard nbackup fb_lock_print fbsvcmgr fbtracemgr
-CLIENT_UTIL_TARGETS=gstat gsec fbguard fbmgr_bin nbackup fb_lock_print fbsvcmgr fbtracemgr
-
-Physical_IO_Module=os/posix/unix.cpp
+# This file must be compiled with SSE4.2 support
+%/CRC32C.o: COMMON_FLAGS += -msse4

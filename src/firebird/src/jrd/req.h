@@ -28,13 +28,14 @@
 #ifndef JRD_REQ_H
 #define JRD_REQ_H
 
-#include "../include/fb_blk.h"
-
 #include "../jrd/exe.h"
 #include "../jrd/sort.h"
+#include "../jrd/Attachment.h"
+#include "../jrd/Statement.h"
+#include "../jrd/Record.h"
 #include "../jrd/RecordNumber.h"
-#include "../common/classes/stack.h"
 #include "../common/classes/timestamp.h"
+#include "../common/TimeZoneUtil.h"
 
 namespace EDS {
 class Statement;
@@ -43,58 +44,53 @@ class Statement;
 namespace Jrd {
 
 class Lock;
-class Format;
 class jrd_rel;
 class jrd_prc;
-class Record;
-class jrd_nod;
-class SaveRecordParam;
-template <typename T> class vec;
+class ValueListNode;
 class jrd_tra;
 class Savepoint;
-class RecordSource;
+class Cursor;
 class thread_db;
 
 // record parameter block
 
 struct record_param
 {
-	record_param() :
-		rpb_transaction_nr(0), rpb_relation(0), rpb_record(NULL), rpb_prior(NULL),
-		rpb_copy(NULL), rpb_undo(NULL), rpb_format_number(0),
-		rpb_page(0), rpb_line(0),
-		rpb_f_page(0), rpb_f_line(0),
-		rpb_b_page(0), rpb_b_line(0),
-		rpb_address(NULL), rpb_length(0), rpb_flags(0), rpb_stream_flags(0),
-		rpb_org_scans(0),
-		rpb_ext_pos(0),
-		rpb_window(DB_PAGE_SPACE, -1)
-		{}
+	record_param()
+		: rpb_transaction_nr(0), rpb_relation(0), rpb_record(NULL), rpb_prior(NULL),
+		  rpb_undo(NULL), rpb_format_number(0),
+		  rpb_page(0), rpb_line(0),
+		  rpb_f_page(0), rpb_f_line(0),
+		  rpb_b_page(0), rpb_b_line(0),
+		  rpb_address(NULL), rpb_length(0),
+		  rpb_flags(0), rpb_stream_flags(0), rpb_runtime_flags(0),
+		  rpb_org_scans(0), rpb_window(DB_PAGE_SPACE, -1)
+	{
+	}
+
 	RecordNumber rpb_number;		// record number in relation
-	SLONG rpb_transaction_nr;		// transaction number
+	TraNumber	rpb_transaction_nr;	// transaction number
 	jrd_rel*	rpb_relation;		// relation of record
 	Record*		rpb_record;			// final record block
 	Record*		rpb_prior;			// prior record block if this is a delta record
-	SaveRecordParam*	rpb_copy;	// record_param copy for singleton verification
 	Record*		rpb_undo;			// our first version of data if this is a second modification
 	USHORT rpb_format_number;		// format number in relation
 
-	SLONG rpb_page;					// page number
+	ULONG rpb_page;					// page number
 	USHORT rpb_line;				// line number on page
 
-	SLONG rpb_f_page;				// fragment page number
+	ULONG rpb_f_page;				// fragment page number
 	USHORT rpb_f_line;				// fragment line number on page
 
-	SLONG rpb_b_page;				// back page
+	ULONG rpb_b_page;				// back page
 	USHORT rpb_b_line;				// back line
 
 	UCHAR* rpb_address;				// address of record sans header
-	USHORT rpb_length;				// length of record
+	ULONG rpb_length;				// length of record
 	USHORT rpb_flags;				// record ODS flags replica
 	USHORT rpb_stream_flags;		// stream flags
+	USHORT rpb_runtime_flags;		// runtime flags
 	SSHORT rpb_org_scans;			// relation scan count at stream open
-
-	FB_UINT64 rpb_ext_pos;			// position in external file
 
 	inline WIN& getWindow(thread_db* tdbb)
 	{
@@ -111,68 +107,38 @@ private:
 
 // Record flags must be an exact replica of ODS record header flags
 
-const USHORT rpb_deleted	= 1;
-const USHORT rpb_chained	= 2;
-const USHORT rpb_fragment	= 4;
-const USHORT rpb_incomplete	= 8;
-const USHORT rpb_blob		= 16;
-const USHORT rpb_delta		= 32;		// prior version is a differences record
-const USHORT rpb_damaged	= 128;		// record is busted
-const USHORT rpb_gc_active	= 256;		// garbage collecting dead record version
-const USHORT rpb_uk_modified= 512;		// record key field values are changed
+const USHORT rpb_deleted		= 1;
+const USHORT rpb_chained		= 2;
+const USHORT rpb_fragment		= 4;
+const USHORT rpb_incomplete		= 8;
+const USHORT rpb_blob			= 16;
+const USHORT rpb_delta			= 32;		// prior version is a differences record
+const USHORT rpb_large			= 64;		// object is large
+const USHORT rpb_damaged		= 128;		// record is busted
+const USHORT rpb_gc_active		= 256;		// garbage collecting dead record version
+const USHORT rpb_uk_modified	= 512;		// record key field values are changed
+const USHORT rpb_long_tranum	= 1024;		// transaction number is 64-bit
+const USHORT rpb_not_packed		= 2048;		// record (or delta) is stored "as is"
 
 // Stream flags
 
-const USHORT RPB_s_refetch	= 0x1;		// re-fetch required due to sort
-const USHORT RPB_s_update	= 0x2;		// input stream fetched for update
-const USHORT RPB_s_no_data	= 0x4;		// nobody is going to access the data
+const USHORT RPB_s_update	= 0x01;	// input stream fetched for update
+const USHORT RPB_s_no_data	= 0x02;	// nobody is going to access the data
+const USHORT RPB_s_sweeper	= 0x04;	// garbage collector - skip swept pages
+const USHORT RPB_s_unstable = 0x08;	// don't use undo log, used with unstable explicit cursors
+const USHORT RPB_s_bulk		= 0x10;	// bulk operation (currently insert only)
+const USHORT RPB_s_skipLocked = 0x20;	// skip locked record
 
-#define SET_NULL(record, id)	record->rec_data [id >> 3] |=  (1 << (id & 7))
-#define CLEAR_NULL(record, id)	record->rec_data [id >> 3] &= ~(1 << (id & 7))
-#define TEST_NULL(record, id)	record->rec_data [id >> 3] &   (1 << (id & 7))
+// Runtime flags
 
-const int MAX_DIFFERENCES	= 1024;	// Max length of generated Differences string
-									// between two records
+const USHORT RPB_refetch		= 0x01;	// re-fetch is required
+const USHORT RPB_undo_data		= 0x02;	// data got from undo log
+const USHORT RPB_undo_read		= 0x04;	// read was performed using the undo log
+const USHORT RPB_undo_deleted	= 0x08;	// read was performed using the undo log, primary version is deleted
+const USHORT RPB_just_deleted	= 0x10;	// record was just deleted by us
 
-// Store allocation policy types.  Parameter to DPM_store()
-
-const USHORT DPM_primary	= 1;	// New primary record
-const USHORT DPM_secondary	= 2;	// Chained version of primary record
-const USHORT DPM_other		= 3;	// Independent (or don't care) record
-
-// Record block (holds data, remember data?)
-
-class Record : public pool_alloc_rpt<SCHAR, type_rec>
-{
-public:
-	explicit Record(MemoryPool& p) : rec_pool(p), rec_precedence(p) { }
-	// ASF: Record is memcopied in realloc_record (vio.cpp), starting at rec_format.
-	// rec_precedence has destructor, so don't move it to after rec_format.
-	MemoryPool& rec_pool;		// pool where record to be expanded
-	PageStack rec_precedence;	// stack of higher precedence pages
-	const Format* rec_format;	// what the data looks like
-	USHORT rec_length;			// how much there is
-	const Format* rec_fmt_bk;   // backup format to cope with Borland's ill null signaling
-	UCHAR rec_flags;			// misc record flags
-	RecordNumber rec_number;	// original record_param number - used for undoing multiple updates
-	double rec_dummy;			// this is to force next field to a double boundary
-	UCHAR rec_data[1];			// THIS VARIABLE MUST BE ALIGNED ON A DOUBLE BOUNDARY
-};
-
-// rec_flags
-
-const UCHAR REC_same_tx		= 1;	// record inserted/updated and deleted by same tx
-const UCHAR REC_gc_active	= 2;	// relation garbage collect record block in use
-const UCHAR REC_new_version	= 4;	// savepoint created new record version and deleted it
-const UCHAR REC_undo_active	= 8;	// record block in use for undo purposes
-
-// save record_param block
-
-class SaveRecordParam : public pool_alloc<type_srpb>
-{
-public:
-	record_param srpb_rpb[1];		// record parameter blocks
-};
+const USHORT RPB_UNDO_FLAGS		= (RPB_undo_data | RPB_undo_read | RPB_undo_deleted);
+const USHORT RPB_CLEAR_FLAGS	= (RPB_UNDO_FLAGS | RPB_just_deleted);
 
 // List of active blobs controlled by request
 
@@ -199,53 +165,251 @@ private:
 
 // request block
 
-class jrd_req : public pool_alloc_rpt<record_param, type_req>
+class Request : public pool_alloc<type_req>
 {
-public:
-	jrd_req(MemoryPool* pool, Firebird::MemoryStats* parent_stats)
-	:	req_pool(pool), req_memory_stats(parent_stats),
-		req_blobs(pool), req_external(*pool), req_access(*pool), req_resources(*pool),
-		req_trg_name(*pool), req_stats(*pool), req_base_stats(*pool), req_fors(*pool),
-		req_exec_sta(*pool), req_ext_stmt(NULL), req_invariants(*pool),
-		req_blr(*pool), req_domain_validation(NULL),
-		req_map_field_info(*pool), req_map_item_info(*pool), req_auto_trans(*pool),
-		req_sorts(*pool)
-	{}
+private:
+	class TimeStampCache
+	{
+	public:
+		void invalidate()
+		{
+			gmtTimeStamp.invalidate();
+			localTimeStampValid = localTimeValid = false;
+		}
 
-	Attachment*	req_attachment;			// database attachment
-	SLONG		req_id;					// request identifier
-	USHORT		req_count;				// number of streams
-	USHORT		req_incarnation;		// incarnation number
-	ULONG		req_impure_size;		// size of impure area
+		ISC_TIMESTAMP getLocalTimeStamp(USHORT currentTimeZone) const
+		{
+			fb_assert(!gmtTimeStamp.isEmpty());
+
+			if (!localTimeStampValid || timeZone != currentTimeZone)
+				update(currentTimeZone, true);
+
+			return localTimeStamp;
+		}
+
+		ISC_TIMESTAMP getGmtTimeStamp() const
+		{
+			fb_assert(!gmtTimeStamp.isEmpty());
+			return gmtTimeStamp.value();
+		}
+
+		void setGmtTimeStamp(USHORT currentTimeZone, ISC_TIMESTAMP ts)
+		{
+			gmtTimeStamp = ts;
+			update(currentTimeZone, false);
+		}
+
+		ISC_TIMESTAMP_TZ getTimeStampTz(USHORT currentTimeZone) const
+		{
+			fb_assert(!gmtTimeStamp.isEmpty());
+
+			ISC_TIMESTAMP_TZ timeStampTz;
+			timeStampTz.utc_timestamp = gmtTimeStamp.value();
+			timeStampTz.time_zone = currentTimeZone;
+			return timeStampTz;
+		}
+
+		ISC_TIME_TZ getTimeTz(USHORT currentTimeZone) const
+		{
+			fb_assert(!gmtTimeStamp.isEmpty());
+
+			ISC_TIME_TZ timeTz;
+
+			if (timeZone != currentTimeZone)
+				update(currentTimeZone, false);
+
+			if (localTimeValid)
+			{
+				timeTz.utc_time = localTime;
+				timeTz.time_zone = timeZone;
+			}
+			else
+			{
+				ISC_TIMESTAMP_TZ timeStamp;
+				timeStamp.utc_timestamp = gmtTimeStamp.value();
+				timeStamp.time_zone = timeZone;
+
+				timeTz = Firebird::TimeZoneUtil::timeStampTzToTimeTz(timeStamp);
+
+				localTime = timeTz.utc_time;
+				localTimeValid = true;
+			}
+
+			return timeTz;
+		}
+
+		void validate(USHORT currentTimeZone)
+		{
+			if (gmtTimeStamp.isEmpty())
+			{
+				Firebird::TimeZoneUtil::validateGmtTimeStamp(gmtTimeStamp);
+				update(currentTimeZone, false);
+			}
+		}
+
+	private:
+		void update(USHORT currentTimeZone, bool updateLocalTimeStamp) const
+		{
+			if (updateLocalTimeStamp)
+			{
+				localTimeStamp = Firebird::TimeZoneUtil::timeStampTzToTimeStamp(
+					getTimeStampTz(currentTimeZone), currentTimeZone);
+			}
+
+			localTimeStampValid = updateLocalTimeStamp;
+			timeZone = currentTimeZone;
+			localTimeValid = false;
+		}
+
+	private:
+		Firebird::TimeStamp gmtTimeStamp;		// Start time of request in GMT time zone
+
+		mutable bool localTimeStampValid;		// localTimeStamp calculation is expensive. So is it valid (calculated)?
+		mutable bool localTimeValid;			// localTime calculation is expensive. So is it valid (calculated)?
+		// These are valid only when !gmtTimeStamp.isEmpty(), so no initialization is necessary.
+		mutable ISC_TIMESTAMP localTimeStamp;	// Timestamp in timeZone's zone
+		mutable ISC_USHORT timeZone;			// Timezone borrowed from the attachment when updated
+		mutable ISC_TIME localTime;				// gmtTimeStamp converted to local time (WITH TZ)
+	};
+
+	// Fields to support read consistency in READ COMMITTED transactions
+
+	struct SnapshotData
+	{
+		Request*		m_owner;
+		SnapshotHandle	m_handle;
+		CommitNumber	m_number;
+
+		void init()
+		{
+			m_owner = nullptr;
+			m_handle = 0;
+			m_number = 0;
+		}
+	};
+
+	// Context data saved/restored with every new autonomous transaction
+
+	struct AutoTranCtx
+	{
+		AutoTranCtx()
+		{
+			m_snapshot.init();
+		};
+
+		AutoTranCtx(const Request* request) :
+			m_transaction(request->req_transaction),
+			m_savepoints(request->req_savepoints),
+			m_proc_savepoints(request->req_proc_sav_point),
+			m_snapshot(request->req_snapshot)
+		{}
+
+		jrd_tra*		m_transaction = nullptr;
+		Savepoint*		m_savepoints = nullptr;
+		Savepoint*		m_proc_savepoints = nullptr;
+		SnapshotData	m_snapshot;
+	};
+
+public:
+	Request(Firebird::AutoMemoryPool& pool, Attachment* attachment, /*const*/ Statement* aStatement)
+		: statement(aStatement),
+		  req_pool(pool),
+		  req_memory_stats(&aStatement->pool->getStatsGroup()),
+		  req_blobs(req_pool),
+		  req_stats(*req_pool),
+		  req_base_stats(*req_pool),
+		  req_ext_stmt(NULL),
+		  req_cursors(*req_pool),
+		  req_ext_resultset(NULL),
+		  req_timeout(0),
+		  req_domain_validation(NULL),
+		  req_auto_trans(*req_pool),
+		  req_sorts(*req_pool, attachment->att_database),
+		  req_rpb(*req_pool),
+		  impureArea(*req_pool)
+	{
+		fb_assert(statement);
+		setAttachment(attachment);
+		req_rpb = statement->rpbsSetup;
+		impureArea.grow(statement->impureSize);
+
+		pool->setStatsGroup(req_memory_stats);
+		pool.release();
+	}
+
+	Statement* getStatement()
+	{
+		return statement;
+	}
+
+	const Statement* getStatement() const
+	{
+		return statement;
+	}
+
+	bool hasInternalStatement() const
+	{
+		return statement->flags & Statement::FLAG_INTERNAL;
+	}
+
+	bool hasPowerfulStatement() const
+	{
+		return statement->flags & Statement::FLAG_POWERFUL;
+	}
+
+	void setAttachment(Attachment* newAttachment)
+	{
+		req_attachment = newAttachment;
+	}
+
+	bool isRoot() const
+	{
+		return statement->requests.hasData() && this == statement->requests[0];
+	}
+
+	bool isRequestIdUnassigned() const
+	{
+		return req_id == 0;
+	}
+
+	StmtNumber getRequestId() const
+	{
+		if (!req_id)
+		{
+			req_id = isRoot() ?
+				statement->getStatementId() :
+				JRD_get_thread_data()->getDatabase()->generateStatementId();
+		}
+
+		return req_id;
+	}
+
+	void setRequestId(StmtNumber id)
+	{
+		req_id = id;
+	}
+
+private:
+	Statement* const statement;
+	mutable StmtNumber	req_id;			// request identifier
+	TimeStampCache req_timeStampCache;	// time stamp cache
+
+public:
 	MemoryPool* req_pool;
 	Firebird::MemoryStats req_memory_stats;
-	vec<jrd_req*>*	req_sub_requests;	// vector of sub-requests
+	Attachment*	req_attachment;			// database attachment
+	USHORT		req_incarnation;		// incarnation number
 
 	// Transaction pointer and doubly linked list pointers for requests in this
 	// transaction. Maintained by TRA_attach_request/TRA_detach_request.
 	jrd_tra*	req_transaction;
-	jrd_req*	req_tra_next;
-	jrd_req*	req_tra_prev;
+	Request*	req_tra_next;
+	Request*	req_tra_prev;
 
-	jrd_req*	req_request;			// next request in Database
-	jrd_req*	req_caller;				// Caller of this request
+	Request*	req_caller;				// Caller of this request
 										// This field may be used to reconstruct the whole call stack
 	TempBlobIdTree req_blobs;			// Temporary BLOBs owned by this request
-	ExternalAccessList req_external;	// Access to procedures/triggers to be checked
-	AccessItemList req_access;			// Access items to be checked
-	//vec<jrd_nod*>*	req_variables;	// Vector of variables, if any CVC: UNUSED
-	ResourceList req_resources;			// Resources (relations and indices)
-	jrd_nod*	req_message;			// Current message for send/receive
-#ifdef SCROLLABLE_CURSORS
-	jrd_nod*	req_async_message;		// Asynchronous message (used in scrolling)
-#endif
-	jrd_prc*	req_procedure;			// procedure, if any
-	Firebird::MetaName	req_trg_name;	// name of request (trigger), if any
-	//USHORT		req_length;			// message length for send/receive
-	//USHORT		req_nmsgs;			// number of message types
-	//USHORT		req_mmsg;			// highest message type
-	//USHORT		req_msend;			// longest send message
-	//USHORT		req_mreceive;		// longest receive message
+	const StmtNode*	req_message;		// Current message for send/receive
 
 	ULONG		req_records_selected;	// count of records selected by request (meeting selection criteria)
 	ULONG		req_records_inserted;	// count of records inserted by request
@@ -254,47 +418,38 @@ public:
 	RuntimeStatistics	req_stats;
 	RuntimeStatistics	req_base_stats;
 	AffectedRows req_records_affected;	// records affected by the last statement
+	FB_UINT64 req_profiler_ticks;		// profiler ticks
 
-	jrd_nod*	req_top_node;			// top of execution tree
-	jrd_nod*	req_next;				// next node for execution
-	Firebird::Array<RecordSource*> req_fors;	// Vector of for loops, if any
-	Firebird::Array<jrd_nod*>	req_exec_sta;	// Array of exec_into nodes
+	const StmtNode*	req_next;			// next node for execution
 	EDS::Statement*	req_ext_stmt;		// head of list of active dynamic statements
-	vec<RecordSource*>* 		req_cursors;	// Vector of named cursors, if any
-	Firebird::Array<jrd_nod*>	req_invariants;	// Vector of invariant nodes, if any
+	Firebird::Array<const Cursor*>	req_cursors;	// named cursors
+	ExtEngineManager::ResultSet*	req_ext_resultset;	// external result set
 	USHORT		req_label;				// label for leave
 	ULONG		req_flags;				// misc request flags
+	Savepoint*	req_savepoints;			// Looper savepoint list
 	Savepoint*	req_proc_sav_point;		// procedure savepoint list
-	Firebird::TimeStamp	req_timestamp;	// Start time of request
-	Firebird::RefStrPtr req_sql_text;	// SQL text
-	Firebird::Array<UCHAR> req_blr;		// BLR for non-SQL query
+	unsigned int req_timeout;					// query timeout in milliseconds, set by the DsqlRequest::setupTimer
+	Firebird::RefPtr<TimeoutTimer> req_timer;	// timeout timer, shared with DsqlRequest
 
 	Firebird::AutoPtr<Jrd::RuntimeStatistics> req_fetch_baseline; // State of request performance counters when we reported it last time
 	SINT64 req_fetch_elapsed;	// Number of clock ticks spent while fetching rows for this request since we reported it last time
 	SINT64 req_fetch_rowcount;	// Total number of rows returned by this request
-	jrd_req* req_proc_caller;	// Procedure's caller request
-	jrd_nod* req_proc_inputs;	// and its node with input parameters
+	Request* req_proc_caller;	// Procedure's caller request
+	const ValueListNode* req_proc_inputs;	// and its node with input parameters
+	TraNumber req_conflict_txn;	// Transaction number for update conflict in read consistency mode
 
-	USHORT	req_src_line;
-	USHORT	req_src_column;
+	ULONG req_src_line;
+	ULONG req_src_column;
 
 	dsc*			req_domain_validation;	// Current VALUE for constraint validation
-	MapFieldInfo	req_map_field_info;		// Map field name to field info
-	MapItemInfo		req_map_item_info;		// Map item to item info
-	Firebird::Stack<jrd_tra*> req_auto_trans;	// Autonomous transactions
-	SortOwner		req_sorts;
-
-	enum req_ta {
-		// order should be maintained because the numbers are stored in BLR
-		req_trigger_insert			= 1,
-		req_trigger_update			= 2,
-		req_trigger_delete			= 3,
-		req_trigger_connect			= 4,
-		req_trigger_disconnect		= 5,
-		req_trigger_trans_start		= 6,
-		req_trigger_trans_commit	= 7,
-		req_trigger_trans_rollback	= 8
-	} req_trigger_action;			// action that caused trigger to fire
+	Firebird::Stack<AutoTranCtx> req_auto_trans;	// Autonomous transactions
+	SortOwner req_sorts;
+	Firebird::Array<record_param> req_rpb;	// record parameter blocks
+	Firebird::Array<UCHAR> impureArea;		// impure area
+	TriggerAction req_trigger_action;		// action that caused trigger to fire
+	SnapshotData req_snapshot;
+	StatusXcp req_last_xcp;			// last known exception
+	bool req_batch_mode;
 
 	enum req_s {
 		req_evaluate,
@@ -306,9 +461,10 @@ public:
 		req_unwind
 	} req_operation;				// operation for next node
 
-	StatusXcp req_last_xcp;			// last known exception
-
-	record_param req_rpb[1];		// record parameter blocks
+	template <typename T> T* getImpure(unsigned offset)
+	{
+		return reinterpret_cast<T*>(&impureArea[offset]);
+	}
 
 	void adjustCallerStats()
 	{
@@ -317,55 +473,83 @@ public:
 		}
 		req_base_stats.assign(req_stats);
 	}
-};
 
-// Size of request without rpb items at the tail. Used to calculate impure area size
-//
-// 24-Mar-2004, Nickolay Samofatov.
-// Note it may be not accurate on 64-bit RISC targets with 32-bit pointers due to
-// alignment quirks, but from quick glance on code it looks like it should not be
-// causing problems. Good fix for this kludgy behavior is to use some C++ means
-// to manage impure area and array of record parameter blocks
-const size_t REQ_SIZE = sizeof(jrd_req) - sizeof(jrd_req::blk_repeat_type);
+	// Save context when switching to the autonomous transaction
+	void pushTransaction()
+	{
+		fb_assert(req_transaction); // must be attached
+
+		req_auto_trans.push(this);
+		req_savepoints = nullptr;
+		req_proc_sav_point = nullptr;
+		req_snapshot.init();
+	}
+
+	// Restore context
+	jrd_tra* popTransaction()
+	{
+		fb_assert(!req_transaction); // must be detached
+
+		const auto tmp = req_auto_trans.pop();
+		req_savepoints = tmp.m_savepoints;
+		req_proc_sav_point = tmp.m_proc_savepoints;
+		req_snapshot = tmp.m_snapshot;
+
+		return tmp.m_transaction;
+	}
+
+	void invalidateTimeStamp()
+	{
+		req_timeStampCache.invalidate();
+	}
+
+	ISC_TIMESTAMP getLocalTimeStamp() const
+	{
+		return req_timeStampCache.getLocalTimeStamp(req_attachment->att_current_timezone);
+	}
+
+	ISC_TIMESTAMP getGmtTimeStamp() const
+	{
+		return req_timeStampCache.getGmtTimeStamp();
+	}
+
+	void setGmtTimeStamp(ISC_TIMESTAMP ts)
+	{
+		req_timeStampCache.setGmtTimeStamp(req_attachment->att_current_timezone, ts);
+	}
+
+	ISC_TIMESTAMP_TZ getTimeStampTz() const
+	{
+		return req_timeStampCache.getTimeStampTz(req_attachment->att_current_timezone);
+	}
+
+	ISC_TIME_TZ getTimeTz() const
+	{
+		return req_timeStampCache.getTimeTz(req_attachment->att_current_timezone);
+	}
+
+	void validateTimeStamp()
+	{
+		req_timeStampCache.validate(req_attachment->att_current_timezone);
+	}
+};
 
 // Flags for req_flags
 const ULONG req_active			= 0x1L;
 const ULONG req_stall			= 0x2L;
 const ULONG req_leave			= 0x4L;
-#ifdef SCROLLABLE_CURSORS
-const ULONG req_async_processing= 0x8L;
-#endif
-const ULONG req_null			= 0x10L;
-//const ULONG req_broken			= 0x20L;
-const ULONG req_abort			= 0x40L;
-const ULONG req_internal		= 0x80L;
-const ULONG req_warning			= 0x100L;
-const ULONG req_in_use			= 0x200L;
-const ULONG req_sys_trigger		= 0x400L;		// request is a system trigger
-//const ULONG req_count_records	= 0x800L;		// count records accessed
-const ULONG req_proc_fetch		= 0x1000L;		// Fetch from procedure in progress
-const ULONG req_ansi_any		= 0x2000L;		// Request is processing ANSI ANY
-const ULONG req_same_tx_upd		= 0x4000L;		// record was updated by same transaction
-const ULONG req_ansi_all		= 0x8000L;		// Request is processing ANSI ANY
-const ULONG req_ansi_not		= 0x10000L;		// Request is processing ANSI ANY
-const ULONG req_reserved		= 0x20000L;		// Request reserved for client
-const ULONG req_ignore_perm		= 0x40000L;		// ignore permissions checks
-const ULONG req_fetch_required	= 0x80000L;		// need to fetch next record
-const ULONG req_error_handler	= 0x100000L;	// looper is called to handle error
-const ULONG req_blr_version4	= 0x200000L;	// Request is of blr_version4
-
-// Mask for flags preserved in a clone of a request
-const ULONG REQ_FLAGS_CLONE_MASK = (req_sys_trigger | req_internal | req_ignore_perm | req_blr_version4);
-
-// Mask for flags preserved on initialization of a request
-const ULONG REQ_FLAGS_INIT_MASK = (req_in_use | req_internal | req_sys_trigger | req_ignore_perm | req_blr_version4);
-
-// Flags for req_view_flags
-enum {
-	req_first_store_return = 0x1,
-	req_first_modify_return = 0x2,
-	req_first_erase_return = 0x4
-};
+const ULONG req_null			= 0x8L;
+const ULONG req_abort			= 0x10L;
+const ULONG req_error_handler	= 0x20L;		// looper is called to handle error
+const ULONG req_warning			= 0x40L;
+const ULONG req_in_use			= 0x80L;
+const ULONG req_continue_loop	= 0x100L;		// PSQL continue statement
+const ULONG req_proc_fetch		= 0x200L;		// Fetch from procedure in progress
+const ULONG req_proc_select		= 0x400L;		// Select from procedure in progress
+const ULONG req_same_tx_upd		= 0x800L;		// record was updated by same transaction
+const ULONG req_reserved		= 0x1000L;		// Request reserved for client
+const ULONG req_update_conflict	= 0x2000L;		// We need to restart request due to update conflict
+const ULONG req_restart_ready	= 0x4000L;		// Request is ready to restart in case of update conflict
 
 
 // Index lock block
@@ -379,7 +563,6 @@ public:
 	USHORT		idl_id;			// Index id
 	USHORT		idl_count;		// Use count
 };
-
 
 } //namespace Jrd
 

@@ -24,8 +24,7 @@
 
 #include "firebird.h"
 #include "OptionsBase.h"
-//#include "../common/utils_proto.h"  // strnicmp
-#include "../jrd/gdsassert.h"
+#include "../common/gdsassert.h"
 
 
 int OptionsBase::getCommand(const char* cmd) const

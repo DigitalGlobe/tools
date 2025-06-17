@@ -29,7 +29,7 @@
 #include "firebird.h"
 #include <stdlib.h>
 #include <string.h>
-#include "../jrd/ibase.h"
+#include "ibase.h"
 #include "../gpre/gpre.h"
 #include "../jrd/intl.h"
 #include "../intl/charsets.h"
@@ -39,11 +39,9 @@
 #include "../gpre/gpre_meta.h"
 #include "../gpre/movg_proto.h"
 #include "../gpre/par_proto.h"
-#include "../gpre/prett_proto.h"
-#include "../jrd/dsc_proto.h"
+#include "../common/prett_proto.h"
+#include "../common/dsc_proto.h"
 #include "../gpre/msc_proto.h"
-#include "../jrd/misc_func_ids.h"
-#include "../jrd/misc_func_ids.h"
 #include "../jrd/align.h"
 
 static void cmp_array(gpre_nod*, gpre_req*);
@@ -231,7 +229,7 @@ void CME_expr(gpre_nod* node, gpre_req* request)
 				sprintf(s, "generator %s not found", p);
 				CPR_error(s);
 			}
-			request->add_byte(strlen(p));
+			request->add_byte(static_cast<int>(strlen(p)));
 			while (*p)
 				request->add_byte(*p++);
 			CME_expr(node->nod_arg[0], request);
@@ -349,7 +347,7 @@ void CME_expr(gpre_nod* node, gpre_req* request)
 		request->add_byte(blr_literal);
 		request->add_byte(blr_long);
 		request->add_byte(0);
-		request->add_long(internal_connection_id);
+		request->add_long(INFO_TYPE_CONNECTION_ID);
 		return;
 
 	case nod_current_transaction:
@@ -357,7 +355,7 @@ void CME_expr(gpre_nod* node, gpre_req* request)
 		request->add_byte(blr_literal);
 		request->add_byte(blr_long);
 		request->add_byte(0);
-		request->add_long(internal_transaction_id);
+		request->add_long(INFO_TYPE_TRANSACTION_ID);
 		return;
 
 	case nod_coalesce:
@@ -442,6 +440,9 @@ void CME_expr(gpre_nod* node, gpre_req* request)
 		request->add_long(1);
 		CME_expr(node->nod_arg[2], request);
 		return;
+
+	default:
+		break;
 	}
 
 	const op_table* nod2blr_operator;
@@ -487,6 +488,9 @@ void CME_expr(gpre_nod* node, gpre_req* request)
 		CME_rse(node->nod_arg[0], request);
 		CME_expr(node->nod_arg[1], request);
 		CME_expr(node->nod_arg[2], request);
+
+	default:
+		break;
 	}
 }
 
@@ -702,13 +706,6 @@ void CME_get_dtype(const gpre_nod* node, gpre_fld* f)
 			f->fld_scale = field1.fld_scale + field2.fld_scale;
 			f->fld_length = sizeof(SLONG);
 			break;
-#ifdef NATIVE_QUAD
-		case dtype_quad:
-			f->fld_dtype = dtype_quad;
-			f->fld_scale = field1.fld_scale + field2.fld_scale;
-			f->fld_length = sizeof(ISC_QUAD);
-			break;
-#endif
 		case dtype_int64:
 			f->fld_dtype = dtype_int64;
 			f->fld_scale = field1.fld_scale + field2.fld_scale;
@@ -806,13 +803,6 @@ void CME_get_dtype(const gpre_nod* node, gpre_fld* f)
 			f->fld_scale = MIN(field1.fld_scale, field2.fld_scale);
 			f->fld_length = sizeof(SLONG);
 			break;
-#ifdef NATIVE_QUAD
-		case dtype_quad:
-			f->fld_dtype = dtype_quad;
-			f->fld_scale = MIN(field1.fld_scale, field2.fld_scale);
-			f->fld_length = sizeof(ISC_QUAD);
-			break;
-#endif
 		// Begin date/time/timestamp support
 		case dtype_sql_date:
 			f->fld_dtype = dtype_sql_date;
@@ -985,7 +975,7 @@ void CME_get_dtype(const gpre_nod* node, gpre_fld* f)
 				const char* ptr = strpbrk(string, ".");
 				if (ptr)
 				{
-					scale = (string + (strlen(string) - 1)) - ptr;
+					scale = static_cast<int>((string + (strlen(string) - 1)) - ptr);
 					scale = -scale;
 				}
 
@@ -1038,7 +1028,7 @@ void CME_get_dtype(const gpre_nod* node, gpre_fld* f)
 			{
 				// subtract 2 for starting & terminating quote
 
-				f->fld_length = strlen(string) - 2;
+				f->fld_length = static_cast<FLD_LENGTH>(strlen(string) - 2);
 				if (gpreGlob.sw_cstring)
 				{
 					// add 1 back for the NULL byte
@@ -1170,7 +1160,7 @@ void CME_relation(gpre_ctx* context, gpre_req* request)
 		}
 		request->add_byte(context->ctx_internal);
 	}
-	else if (procedure = context->ctx_procedure)
+	else if ((procedure = context->ctx_procedure))
 	{
 		if (gpreGlob.sw_ids)
 		{
@@ -1233,7 +1223,7 @@ void CME_rse(gpre_rse* selection, gpre_req* request)
 			cmp_map(sub_rse->rse_map, request);
 		}
 	}
-	else if (sub_rse = selection->rse_aggregate)
+	else if ((sub_rse = selection->rse_aggregate))
 	{
 		request->add_byte(1);
 		request->add_byte(blr_aggregate);
@@ -1302,7 +1292,7 @@ void CME_rse(gpre_rse* selection, gpre_req* request)
 		}
 	}
 
-	if (temp = selection->rse_reduced)
+	if ((temp = selection->rse_reduced))
 	{
 		request->add_byte(blr_project);
 		request->add_byte(temp->nod_count);
@@ -1311,7 +1301,7 @@ void CME_rse(gpre_rse* selection, gpre_req* request)
 			CME_expr(*ptr++, request);
 	}
 
-	if (temp = selection->rse_plan)
+	if ((temp = selection->rse_plan))
 	{
 		request->add_byte(blr_plan);
 		cmp_plan(temp, request);
@@ -1332,27 +1322,6 @@ void CME_rse(gpre_rse* selection, gpre_req* request)
 			request->add_byte(blr_full);
 		}
 	}
-
-#ifdef SCROLLABLE_CURSORS
-	// generate a statement to be executed if the user scrolls
-	// in a direction other than forward; a message is sent outside
-	// the normal send/receive protocol to specify the direction
-	// and offset to scroll; note that we do this only on a SELECT
-	// type statement and only when talking to a 4.1 engine or greater
-
-	if (request->req_flags & REQ_sql_cursor && request->req_database->dbb_base_level >= 5)
-	{
-		request->add_byte(blr_receive);
-		request->add_byte(request->req_aport->por_msg_number);
-		request->add_byte(blr_seek);
-		request->add_byte(blr_parameter);
-		request->add_byte(request->req_aport->por_msg_number);
-		request->add_word(1);
-		request->add_byte(blr_parameter);
-		request->add_byte(request->req_aport->por_msg_number);
-		request->add_word(0);
-	}
-#endif
 
 	// Finish up by making a BLR_END
 
@@ -1410,11 +1379,11 @@ static void cmp_array( gpre_nod* node, gpre_req* request)
 	else
 	{
 		reference->add_byte(isc_sdl_relation);
-		reference->add_byte(strlen(field->fld_relation->rel_symbol->sym_string));
+		reference->add_byte(static_cast<int>(strlen(field->fld_relation->rel_symbol->sym_string)));
 		for (const TEXT* p = field->fld_relation->rel_symbol->sym_string; *p; p++)
 			reference->add_byte(*p);
 		reference->add_byte(isc_sdl_field);
-		reference->add_byte(strlen(field->fld_symbol->sym_string));
+		reference->add_byte(static_cast<int>(strlen(field->fld_symbol->sym_string)));
 		for (const TEXT* p = field->fld_symbol->sym_string; *p; p++)
 			reference->add_byte(*p);
 	}
@@ -1569,7 +1538,7 @@ static void cmp_literal( const gpre_nod* node, gpre_req* request)
 			string = reference->ref_value;
 
 			request->add_byte(blr_double);
-			request->add_word(strlen(string));
+			request->add_word(static_cast<int>(strlen(string)));
 			while (*string)
 				request->add_byte(*string++);
 		}
@@ -1587,7 +1556,7 @@ static void cmp_literal( const gpre_nod* node, gpre_req* request)
 			if (ptr)
 			{
 				// Aha!, there is a '.'. find the scale
-				scale = (string + (strlen(string) - 1)) - ptr;
+				scale = static_cast<int>((string + (strlen(string) - 1)) - ptr);
 				scale = -scale;
 			}
 
@@ -1799,6 +1768,9 @@ static void cmp_plan(const gpre_nod* plan_expression, gpre_req* request)
 				}
 				break;
 			}
+
+		default:
+			break;
 		}
 	}
 }
@@ -1904,6 +1876,9 @@ static void cmp_sdl_dtype( const gpre_fld* field, ref* reference)
 		else
 			reference->add_byte(blr_double);
 		break;
+	case dtype_boolean:
+		reference->add_byte(blr_bool);
+		break;
 
 	default:
 		{
@@ -1925,7 +1900,7 @@ static void cmp_udf( gpre_nod* node, gpre_req* request)
 	const udf* an_udf = (udf*) node->nod_arg[1];
 	request->add_byte(blr_function);
 	const TEXT* p = an_udf->udf_function;
-	request->add_byte(strlen(p));
+	request->add_byte(static_cast<int>(strlen(p)));
 
 	while (*p)
 		request->add_byte(*p++);
@@ -2181,6 +2156,9 @@ static void get_dtype_of_case(const gpre_nod* node, gpre_fld* f)
 		get_dtype_of_list(args, f);
 		MSC_free(args);
 		break;
+
+	default:
+		break;
 	}
 }
 
@@ -2226,7 +2204,7 @@ static void get_dtype_of_list(const gpre_nod* node, gpre_fld* f)
 	bool all_numeric = true, any_numeric = false, any_approx = false, any_float = false;
 	bool all_text = true, any_text = false, any_varying = false;
 	bool all_date = true, all_time = true, all_timestamp = true, any_datetime = false;
-	bool all_blob = true, any_blob = false, any_text_blob = false;
+	bool all_blob = true, any_text_blob = false;
 	//bool nullable = false;
 	//bool err = false;
 	gpre_fld field_aux;
@@ -2370,7 +2348,6 @@ static void get_dtype_of_list(const gpre_nod* node, gpre_fld* f)
 				return;
 			}
 
-			any_blob = true;
 			if (field.fld_sub_type == 1)
 			{
 				// Text sub type

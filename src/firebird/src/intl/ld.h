@@ -55,14 +55,6 @@
 
 #define UINT16	USHORT
 
-#if defined(WIN_NT)
-#define FB_DLL_EXPORT __declspec(dllexport)
-#elif defined(DARWIN)
-#define FB_DLL_EXPORT API_ROUTINE
-#else
-#define FB_DLL_EXPORT
-#endif
-
 
 /* Following this line is LD.H from Borland Language Driver Kit */
 
@@ -215,14 +207,15 @@
 //-----------------------------------------------------------------
 */
 
-struct SortOrderTblEntry {
+static const unsigned SortOrderTblEntrySecondaryBits = 5;
 
+struct SortOrderTblEntry {
+	// It's important that Secondary + Tertiary fits in a byte.
 	UINT16 Primary:8;
-	UINT16 Secondary:4;
-	UINT16 Tertiary:2;
+	UINT16 Secondary:5;	// SortOrderTblEntrySecondaryBits
+	UINT16 Tertiary:3;
 	UINT16 IsExpand:1;
 	UINT16 IsCompress:1;
-
 };
 
 /*

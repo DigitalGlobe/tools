@@ -47,9 +47,11 @@
 #pragma warning(disable:4310)  // cast truncates constant value
 #pragma warning(disable:4355)  // '....' used in base member initializer list
 //#pragma warning(disable:4505)  // unreferenced local function has been removed
+#pragma warning(disable:4510)  // '<cls>': default constructor could not be generated
 #pragma warning(disable:4511)  // copy constructor could not be generated
 #pragma warning(disable:4512)  // assignment operator could not be generated
 #pragma warning(disable:4514)  // unreferenced inline function has been removed
+#pragma warning(disable:4610)  // class '<cls>' can never be instantiated - user defined constructor required
 #pragma warning(disable:4663)  // to explicitly specialize class template '.....' use the following syntax
 #pragma warning(disable:4701)  // local variable '......' may be used without having been initialized
 //#pragma warning(disable:4702)  // unreachable code
@@ -154,7 +156,7 @@
 #undef HAVE_SYS_SOCKIO_H
 #undef HAVE_WINSOCK2_H
 #define HAVE_FLOAT_H
-
+#define HAVE_ZLIB_H
 
 /* Functions */
 #undef HAVE_GETTIMEOFDAY
@@ -194,6 +196,9 @@
 #undef HAVE_MKSTEMP
 #undef HAVE_LLRINT
 #undef HAVE_LOCALTIME_R
+#define HAVE_LOCALTIME_S
+#undef HAVE_CTIME_R
+#define HAVE_CTIME_S
 #undef HAVE_GMTIME_R
 #undef HAVE_SYS_SELECT_H
 
@@ -202,9 +207,13 @@
 #if _MSC_VER < 1500
 #define vsnprintf _vsnprintf
 #endif
-#define isnan _isnan
 #endif
 
+#if !defined(HAS_NOEXCEPT)
+#if defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 190023026
+#define HAS_NOEXCEPT
+#endif
+#endif
 
 /* Types */
 #undef HAVE_SOCKLEN_T
@@ -276,9 +285,6 @@
 #define FB_SERVICE_NAME "gds_db"
 #define FB_SERVICE_PORT 3050
 
-/* Wnet pipe name */
-#define FB_PIPE_NAME "interbas"
-
 /* Xnet objects name */
 #define FB_IPC_NAME "FIREBIRD"
 
@@ -316,7 +322,6 @@
 #define FB_CONFDIR ""
 #define FB_DOCDIR ""
 #define FB_GUARDDIR ""
-#define FB_HELPDIR ""
 #define FB_INCDIR ""
 #define FB_INTLDIR ""
 #define FB_LIBDIR ""
@@ -328,10 +333,14 @@
 #define FB_SAMPLEDIR ""
 #define FB_SBINDIR ""
 #define FB_SECDBDIR ""
-#define FB_UDFDIR ""
+#define FB_TZDATADIR ""
+
+#define FB_LOGFILENAME "firebird.log"
 
 #ifndef HAVE_SOCKLEN_T
 typedef int socklen_t;
 #endif
+
+#define FB_INT64_COMPARE_FAILED 0
 
 #endif

@@ -23,7 +23,7 @@
 #define	MAXCHAR		255
 #define	MAXSHORT	((int)0x7FFFFFFF)
 #define MINSHORT	((int)0x80000000)
-#define MAXTABLE	120000
+#define MAXTABLE	200000
 
 #ifdef __MSDOS__
 #define BITS_PER_WORD   16
@@ -297,7 +297,9 @@ extern Yshort nunused;
 extern Yshort final_state;
 
 /* system variable */
+#ifndef _MSC_VER
 extern int errno;
+#endif
 
 /* global functions */
 

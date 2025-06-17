@@ -51,7 +51,7 @@ inline void QUE_DELETE(que& node)
 	node.que_forward->que_backward = node.que_backward;
 }
 
-/* QUE_INSERT adds node to queue head. */
+// QUE_INSERT adds node to queue head.
 
 inline void QUE_INSERT(que& aque, que& node)
 {
@@ -61,7 +61,7 @@ inline void QUE_INSERT(que& aque, que& node)
 	aque.que_forward = &node;
 }
 
-/* QUE_APPEND adds node to queue tail. */
+// QUE_APPEND adds node to queue tail.
 
 inline void QUE_APPEND(que& aque, que& node)
 {
@@ -84,7 +84,7 @@ inline bool QUE_EMPTY(const que& aque)
 } // namespace Jrd
 
 
-/* QUE_LOOP to visit every node. */
+// QUE_LOOP to visit every node.
 
 #define QUE_LOOP(que, node) {\
 	for (node = (que).que_forward; node != &(que); node = (node)->que_forward)
@@ -127,15 +127,15 @@ inline bool QUE_EMPTY(const que& aque)
 #define SRQ_LOOP_BACK(header, que)	for (que = SRQ_PREV (header);\
 	que != &header; que = SRQ_PREV ((*que)))
 
-/* Self-relative que block.  Offsets are from the block itself. */
+// Self-relative que block.  Offsets are from the block itself.
 
 struct srq
 {
-	SRQ_PTR srq_forward;			/* Forward offset */
-	SRQ_PTR srq_backward;			/* Backward offset */
+	SRQ_PTR srq_forward;			// Forward offset
+	SRQ_PTR srq_backward;			// Backward offset
 };
 
 typedef srq *SRQ;
 
 
-#endif /* JRD_QUE_H */
+#endif // JRD_QUE_H

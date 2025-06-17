@@ -27,8 +27,6 @@
 #ifndef JRD_IRQ_H
 #define JRD_IRQ_H
 
-#define REQUEST(irt) dbb->dbb_internal[irt]
-
 enum irq_type_t
 {
 	irq_s_pages,			// store PAGES
@@ -40,16 +38,20 @@ enum irq_type_t
 	irq_format2,			// make a new format for a record
 	irq_format3,			// make a new format for a record
 	irq_r_format,			// read a format
-	//irq_r_relation,		// pick up view definition
 	irq_c_index,			// create index
+	irq_c_index_rc,			// create index - read constraints
+	irq_c_index_seg,		// create index - read segments
 	irq_c_index_m,			// create index - modify ID.NULL
 	irq_m_fields,			// process a modification of RDB$FIELDS
 	irq_m_index,			// modify index id
 	irq_r_fields,			// pick up field expressions
 	irq_l_security,			// lookup security_classes
-	irq_v_security,			// verify security for relation
+	irq_v_security_r,		// verify security for relation
+	irq_v_security_v,		// verify security for view
+	irq_v_security_o,		// verify security for role
 	irq_l_index,			// lookup index id
 	irq_l_functions,		// lookup function
+	irq_l_funct_blr,		// lookup function BLR and debug info
 	irq_l_args,				// lookup function arguments
 	irq_s_triggers,			// scan triggers
 	irq_s_triggers2,		// scan triggers
@@ -61,7 +63,6 @@ enum irq_type_t
 	irq_format4,			// make a new format for a record
 	irq_s_trans,			// store RDB$TRANSACTIONS
 	irq_m_trans,			// erase RDB$TRANSACTIONS
-	//irq_e_trans,			// store RDB$TRANSACTIONS
 	irq_revoke1,			// check revokee for residual privileges
 	irq_revoke2,			// recursive revoke
 	irq_grant5,				// check for "PUBLIC" in processing grant options
@@ -70,20 +71,21 @@ enum irq_type_t
 	irq_s_deps,				// store RDB$DEPENDENCIES
 	irq_d_deps,				// delete RDB$DEPENDENCIES
 	irq_r_fld_dim,			// read RDB$FIELD_DIMENSIONS
-	irq_r_gen_id,			// read RDB$GENERATORS, lookup by name.
-	//irq_s_gen_id,			// store RDB$GENERATORS
+	irq_l_gen_id,			// lookup generator
+	irq_r_gen_id,			// read generator
 	irq_ch_f_dpd,			// check object field dependencies
 	irq_ch_dpd,				// check object dependencies
 	irq_ch_cmp_dpd,			// check computed field dependencies
 	irq_grant6,				// get field-level security class
 	irq_grant7,				// update field-level security classes
-	irq_grant8,				// purge out field-level security classes
 	irq_foreign1,			// purge out field-level security classes
 	irq_foreign2,			// purge out field-level security classes
 	irq_format5,			// make a new format for a record
 
 	irq_c_exp_index,		// create expression index
 	irq_l_exp_index,		// lookup expression index
+	irq_l_exp_index_blr,	// lookup expression index BLR
+	irq_l_cond_index,		// lookup condition index
 
 	irq_l_rel_id,			// lookup relation id
 	irq_l_procedure,		// lookup procedure name
@@ -91,6 +93,8 @@ enum irq_type_t
 	irq_r_params,			// scan procedure parameters
 
 	irq_r_procedure,		// scan procedure
+	irq_r_proc_blr,			// look for procedure's BLR and debug info
+	irq_pkg_security,		// verify security for package
 	irq_p_security,			// verify security for procedure
 	irq_c_prc_dpd,			// create procedure dependencies for delete
 
@@ -105,17 +109,18 @@ enum irq_type_t
 	irq_l_check,			// lookup check constraint for trigger
 	irq_l_check2,			// lookup constraint for index
 	irq_c_trg_perm,			// check if trig can ignore perm. checks
-	irq_get_role_mem,		// get SQL role membership
 	irq_get_role_name,		// get SQL role name
+	irq_get_priv_bit,		// get privilege bit by name
+	irq_is_admin_role, 		// check is current role admin or not
+	irq_get_att_class,		// get security class for current attachment
 	irq_format6,			// make a new format for a record
 	irq_r_gen_id_num,		// lookup generator by ID.
+	irq_upd_gen_id_increm,	// update the INCREMENT of a generator (only for legacy code).
 	irq_verify_role_name,	// ensure role exists in roles & user_privileges.
 	irq_m_index_seg,		// modify per-segment index selectivity
 
 	irq_l_subtype,			// lookup subtype (charset/collation)
 	irq_c_relation2,		// create new relation
-	irq_r_type,				// lookup relation type
-	irq_p_type,				// lookup procedure type
 	irq_prc_validate,		// procedure blr validate
 	irq_trg_validate,		// trigger blr validate
 	irq_l_domain,			// lookup a domain
@@ -123,40 +128,62 @@ enum irq_type_t
 	irq_m_fields3,			// process a modification of RDB$FIELDS for triggers (ODS 11.1)
 	irq_m_fields4,			// process a modification of RDB$FIELDS for procedures (TYPE OF COLUMN)
 	irq_m_fields5,			// process a modification of RDB$FIELDS for triggers (TYPE OF COLUMN)
-	irq_r_params2,			// scan procedure parameters (ODS 11.1)
-	irq_l_trg_dbg,			// lookup trigger debug_info (ODS 11.1)
-	irq_l_colls,			// lookup collations
+	irq_m_fields6,			// process a modification of RDB$FIELDS for packaged procedures (TYPE OF COLUMN)
+	irq_m_fields7,			// process a modification of RDB$FIELDS for functions
+	irq_m_fields8,			// process a modification of RDB$FIELDS for functions (TYPE OF COLUMN)
+	irq_m_fields9,			// process a modification of RDB$FIELDS for packaged functions (TYPE OF COLUMN)
 	irq_l_relfield,			// lookup a relation field
 	irq_verify_trusted_role, // ensure trusted role exists
 
-	irq_system_relation,	// DSQL/METD: check is relation system or not
-	irq_system_domain,		// DSQL/METD: check is field system or not
-    irq_relation,			// DSQL/METD: lookup a relation
-    irq_fields,				// DSQL/METD: lookup a relation's fields
-    //irq_dimensions,		// lookup a field's dimensions
-    irq_primary_key,		// DSQL/METD: lookup a primary key
-    irq_view,				// DSQL/METD: lookup a view's base relations
-    irq_view_base,			// DSQL/METD: lookup a view's base relations
-    irq_view_base_flds,		// DSQL/METD: lookup a view's base fields
-    irq_function,			// DSQL/METD: lookup a user defined function
-    irq_func_return,		// DSQL/METD: lookup a function's return argument
-    irq_procedure,			// DSQL/METD: lookup a stored procedure
-    irq_parameters,			// DSQL/METD: lookup a procedure's parameters
-    irq_parameters2,		// DSQL/METD: lookup a procedure's parameters (ODS 11.1)
-    irq_parameters_description,	// DSQL/METD: lookup a procedure's parameters description
-    irq_collation,			// DSQL/METD: lookup a collation name
-    irq_charset,			// DSQL/METD: lookup a character set
-    irq_trigger,			// DSQL/METD: lookup a trigger
-    irq_domain,				// DSQL/METD: lookup a domain
-    irq_type,				// DSQL/METD: lookup a symbolic name in RDB$TYPES
-    irq_col_default,		// DSQL/METD: lookup default for a column
-    irq_domain_2,			// DSQL/METD: lookup a domain
-    irq_exception,			// DSQL/METD: lookup an exception
+	irq_relation,			// DSQL/METD: lookup a relation
+	irq_fields,				// DSQL/METD: lookup a relation's fields
+	irq_primary_key,		// DSQL/METD: lookup a primary key
+	irq_view,				// DSQL/METD: lookup a view's base relations
+	irq_view_base,			// DSQL/METD: lookup a view's base relations
+	irq_view_base_flds,		// DSQL/METD: lookup a view's base fields
+	irq_function,			// DSQL/METD: lookup a user defined function
+	irq_func_return,		// DSQL/METD: lookup a function's return argument
+	irq_procedure,			// DSQL/METD: lookup a stored procedure
+	irq_parameters,			// DSQL/METD: lookup a procedure's parameters
+	irq_collation,			// DSQL/METD: lookup a collation name
+	irq_charset,			// DSQL/METD: lookup a character set
+	irq_domain,				// DSQL/METD: lookup a domain
+	irq_type,				// DSQL/METD: lookup a symbolic name in RDB$TYPES
 	irq_cs_name,			// DSQL/METD: lookup a charset name
 	irq_default_cs,			// DSQL/METD: lookup the default charset
 	irq_rel_ids,			// DSQL/METD: check relation/field ids
 	irq_comp_circ_dpd,		// check computed circular dependencies
+	irq_grant10,			// process grant option (packages)
+	irq_l_procedure_pkg_class,	// lookup security class of a packaged procedure
+	irq_l_fun_id,			// lookup function by its ID
+	irq_l_fun_name,			// lookup function by its name
+	irq_f_security,			// verify security for function
+	irq_l_arg_fld,			// lookup argument's domain
+	irq_func_ret_fld,		// lookup argument's domain
+	irq_fun_validate,		// function blr validate
+	irq_c_fun_dpd,			// get function dependencies
+	irq_system_relation,	// check is relation system or not
+	irq_system_domain,		// check is field system or not
+	irq_grant11,			// process grant option (functions)
+	irq_cs_security,		// verify security for character set
+	irq_coll_security,		// verify security for collation
+	irq_exc_security,		// verify security for exception
+	irq_gen_security,		// verify security for generator
+	irq_gfld_security,		// verify security for domain
+	irq_grant12,			// process grant option (charsets)
+	irq_grant13,			// process grant option (collations)
+	irq_grant14,			// process grant option (exceptions)
+	irq_grant15,			// process grant option (generators)
+	irq_grant16,			// process grant option (domains)
+	irq_grant17,			// process grant option (database)
+	irq_grant18,			// process grant option (filters)
+	irq_grant19,			// process grant option (roles)
 	irq_l_curr_format,		// lookup table's current format
+	irq_c_relation3,		// lookup relation in phase 0 to cleanup
+	irq_linger,				// get database linger value
+	irq_dbb_ss_definer,		// get database sql security value
+	irq_out_proc_param_dep,	// check output procedure parameter dependency
+	irq_l_pub_tab_state,	// lookup publication state for a table
 
 	irq_MAX
 };

@@ -18,25 +18,25 @@
 # 2 Oct 2002, Nickolay Samofatov - Major Cleanup
 #
 # Default build from 10.7 using Clang
+# The following exports assume you are using MacPorts ICU, libtommath
+# export CFLAGS='-I/opt/local/include -I/opt/local/include/libtommath'
+# export CXXFLAGS='-I/opt/local/include -I/opt/local/include/libtommath -L/opt/local/lib'
+# export LDFLAGS='-L/opt/local/lib'
 
 DYLD_LIBRARY_PATH=$(FIREBIRD)/lib
 export DYLD_LIBRARY_PATH
+DYLD_FALLBACK_LIBRARY_PATH=/opt/local/lib
+export DYLD_FALLBACK_LIBRARY_PATH
 
-MACOSX_DEPLOYMENT_TARGET=10.7
+MACOSX_DEPLOYMENT_TARGET=10.9
 export MACOSX_DEPLOYMENT_TARGET
 
-OS_ServerFiles=inet_server.cpp
-
 PROD_FLAGS=-O1 -DDARWIN -pipe -MMD -fPIC -fno-common -mmacosx-version-min=10.7
-DEV_FLAGS=-ggdb -DDARWIN -pipe -MMD -fPIC -fno-common -Wall -mmacosx-version-min=10.7
-CXXFLAGS:=$(CXXFLAGS) -fvisibility-inlines-hidden -fvisibility=hidden
-EMBED_UTIL_TARGETS=gstat gsec fbguard nbackup fb_lock_print fbsvcmgr fbtracemgr
-CLIENT_UTIL_TARGETS=gstat gsec fbguard fbmgr_bin nbackup fb_lock_print fbsvcmgr fbtracemgr 
+DEV_FLAGS=-ggdb -DDARWIN -pipe -MMD -fPIC -fno-omit-frame-pointer -fno-common -Werror=delete-incomplete -Wall -fno-optimize-sibling-calls -mmacosx-version-min=10.7 -Wno-non-virtual-dtor
+CXXFLAGS:=$(CXXFLAGS) -fvisibility-inlines-hidden -fvisibility=hidden -msse4
 
-Physical_IO_Module=os/posix/unix.cpp
-PLATFORM_PATH=os/darwin
-
-LINK_OPTS:= 
-LD_FLAGS+=
+LD_FLAGS+=-liconv
+FIREBIRD_LIBRARY_LINK+=-liconv
+UNDEF_PLATFORM=
 
 include $(ROOT)/gen/darwin.defaults

@@ -47,6 +47,10 @@ typedef unsigned _int16 uint16_t;
 */
 #endif
 
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
+#endif
+
 // Just an emulation of 128-bit numbers for now.
 struct DoubleQuad
 {
@@ -60,8 +64,8 @@ typedef DoubleQuad SINT128;
 namespace MsgFormat
 {
 
-// For now we allow 7 parameters; @1..@7 in MsgPrint.
-const size_t SAFEARG_MAX_ARG = 7;
+// For now we allow 9 parameters; @1..@9 in MsgPrint.
+const FB_SIZE_T SAFEARG_MAX_ARG = 9;
 
 // This is the unit that represents one parameter in the format routines.
 // The user of the routines rarely needs to be concerned with it.
@@ -139,7 +143,7 @@ class SafeArg
 {
 public:
 	SafeArg();
-	SafeArg(const int val[], size_t v_size);
+	SafeArg(const int val[], FB_SIZE_T v_size);
 	SafeArg& clear();
 	SafeArg& operator<<(char c);
 	SafeArg& operator<<(unsigned char c);
@@ -159,14 +163,17 @@ public:
 	SafeArg& operator<<(const char* c);
 	SafeArg& operator<<(const unsigned char* c);
 	SafeArg& operator<<(void* c);
-	void dump(const TEXT* target[], size_t v_size) const;
-	const safe_cell& getCell(size_t index) const;
-	size_t getCount() const;
+	void dump(const TEXT* target[], FB_SIZE_T v_size) const;
+	const safe_cell& getCell(FB_SIZE_T index) const;
+	FB_SIZE_T getCount() const throw();
+
 private:
-	size_t m_count;
+	FB_SIZE_T m_count;
 	safe_cell m_arguments[SAFEARG_MAX_ARG];
 	const void* m_extras; // Formatting, etc.
-	friend int MsgPrint(BaseStream& out_stream, const char* format, const SafeArg& arg);
+
+	friend int MsgPrint(BaseStream& out_stream, const char* format, const SafeArg& arg,
+		bool userFormatting);
 };
 
 inline SafeArg::SafeArg()
@@ -181,7 +188,7 @@ inline SafeArg& SafeArg::clear()
 	return *this;
 }
 
-inline size_t SafeArg::getCount() const
+inline FB_SIZE_T SafeArg::getCount() const throw()
 {
 	return m_count;
 }
@@ -189,4 +196,3 @@ inline size_t SafeArg::getCount() const
 } // namespace
 
 #endif // FB_SAFEARG_H
-

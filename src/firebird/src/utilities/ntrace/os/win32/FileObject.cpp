@@ -27,14 +27,13 @@
 
 #include "firebird.h"
 #include "../FileObject.h"
-//#include "../common/classes/locks.h"
 
 using namespace Firebird;
 Firebird::Mutex open_mutex;
 
 void FileObject::open(int flags, int pflags)
 {
-	MutexLockGuard guard(open_mutex);
+	MutexLockGuard guard(open_mutex, FB_FUNCTION);
 	DWORD flagsAndAttributes = FILE_ATTRIBUTE_NORMAL;
 	DWORD filecreate = 0;
 	DWORD desiredAccess = 0;

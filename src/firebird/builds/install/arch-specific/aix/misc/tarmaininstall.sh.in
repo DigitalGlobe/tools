@@ -52,7 +52,7 @@ Version="$BuildVersion-$PackageVersion.$CpuType"
 
 cat <<EOF
 
-Firebird @FIREBIRD_ARCH_TYPE@ $Version Installation
+Firebird $Version Installation
 
 EOF
 

@@ -174,7 +174,7 @@ typedef unsigned char	UCHAR;
 codepage_map *get_w1250()
 {
 #include "cs_w1250.h"
-	return new codepage_map(to_unicode_map,
+	return FB_NEW codepage_map(to_unicode_map,
 							from_unicode_mapping_array,
 							from_unicode_map,
 							sizeof(to_unicode_map),

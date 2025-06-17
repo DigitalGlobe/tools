@@ -38,19 +38,19 @@ public:
 	struct item
 	{
 		TEXT col_name[MAX_SQL_IDENTIFIER_SIZE];
-		int col_len;
+		unsigned col_len;
 		item* next;
-		item(const char* name, int len);
+		item(const char* name, unsigned len);
 	};
 
 	ColList();
 	~ColList();
 	void clear();
 	item* getHead();
-	bool put(const char* name, int len);
+	bool put(const char* name, unsigned len);
 	bool remove(const char* name);
 	const item* find(const char* name) const;
-	bool find(const char* name, int* out_len) const;
+	bool find(const char* name, unsigned* out_len) const;
 	size_t count() const;
 
 private:

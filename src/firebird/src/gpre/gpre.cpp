@@ -35,12 +35,12 @@
 //
 //  TMN (Mike Nordell) 11.APR.2001 - Reduce compiler warnings
 //
-//  FSG (Frank Schlottmann-Gödde) 8.Mar.2002 - tiny cobol support
+//  FSG (Frank Schlottmann-GÃ¶dde) 8.Mar.2002 - tiny cobol support
 //       fixed Bug No. 526204
 //
-//  Stephen W. Boyd                - Added support for new features.
-//
 // 2002.10.30 Sean Leyne - Removed support for obsolete "PC_PLATFORM" define
+//
+//  Stephen W. Boyd                - Added support for new features.
 //
 //____________________________________________________________
 //
@@ -59,12 +59,18 @@
 #include "../gpre/gpre_meta.h"
 #include "../gpre/msc_proto.h"
 #include "../gpre/par_proto.h"
-#include "../gpre/gpreswi.h"
+#include "../common/os/os_utils.h"
 #include "../common/utils_proto.h"
 #include "../common/classes/TempFile.h"
+#include "../common/classes/Switches.h"
+#include "../gpre/gpreswi.h"
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+
+#ifdef HAVE_LOCALE_H
+#include <locale.h>
 #endif
 
 // Globals
@@ -84,7 +90,7 @@ static bool			file_rename(TEXT*, const TEXT*, const TEXT*);
 static void			finish_based(act*);
 #endif
 static int			get_char(FILE*);
-static bool			get_switches(int, TEXT**, const in_sw_tab_t*, sw_tab_t*, TEXT**);
+static bool			get_switches(int, TEXT**, const Switches::in_sw_tab_t*, sw_tab_t*, TEXT**);
 static tok*			get_token();
 static int			nextchar();
 static SLONG		pass1(const TEXT*);
@@ -242,6 +248,7 @@ static void atexit_fb_shutdown()
 	fb_shutdown(0, fb_shutrsn_app_stopped);
 }
 
+
 //____________________________________________________________
 //
 //	Main line routine for C preprocessor.  Initializes
@@ -251,11 +258,15 @@ static void atexit_fb_shutdown()
 
 int main(int argc, char* argv[])
 {
+#ifdef HAVE_LOCALE_H
+	// Pick up the system locale to allow SYSTEM<->UTF8 conversions
+	setlocale(LC_CTYPE, "");
+#endif
 	atexit(&atexit_fb_shutdown);
 
 	gpre_sym* symbol;
-	const ext_table_t* ext_tab;
-	sw_tab_t sw_table[IN_SW_GPRE_COUNT];
+	// CVC: COUNT + 1 because IN_SW_GPRE_INTERP is repeated in gpre_in_sw_table.
+	sw_tab_t sw_table[IN_SW_GPRE_COUNT + 1];
 
 	gpreGlob.module_lc_ctype	= NULL;
 	gpreGlob.errors_global	= 0;
@@ -376,7 +387,9 @@ int main(int argc, char* argv[])
 
 	TEXT spare_file_name[MAXPATHLEN];
 	if (gpreGlob.sw_language == lang_undef)
-		for (ext_tab = dml_ext_table; gpreGlob.sw_language = ext_tab->ext_language; ext_tab++)
+		for (const ext_table_t* ext_tab = dml_ext_table;
+			 (gpreGlob.sw_language = ext_tab->ext_language);
+			 ext_tab++)
 		{
 			strcpy(spare_file_name, file_name);
 			if (!file_rename(spare_file_name, ext_tab->in, NULL))
@@ -387,11 +400,13 @@ int main(int argc, char* argv[])
 	// extension and we can use that.
 
 	if (gpreGlob.sw_language == lang_undef)
-		for (ext_tab = dml_ext_table; gpreGlob.sw_language = ext_tab->ext_language; ext_tab++)
+		for (const ext_table_t* ext_tab = dml_ext_table;
+			 (gpreGlob.sw_language = ext_tab->ext_language);
+			 ext_tab++)
 		{
 			strcpy(spare_file_name, file_name);
 			if (file_rename(spare_file_name, ext_tab->in, NULL) &&
-				(input_file = fopen(spare_file_name, FOPEN_READ_TYPE)))
+				(input_file = os_utils::fopen(spare_file_name, FOPEN_READ_TYPE)))
 			{
 				file_name = spare_file_name;
 				break;
@@ -416,16 +431,15 @@ int main(int argc, char* argv[])
 	if (!input_file)
 	{
 		strcpy(spare_file_name, file_name);
-		for (ext_tab = dml_ext_table; ext_tab->ext_language != gpreGlob.sw_language; ext_tab++)
-		{
-				 ;	// empty loop body
-		}
+		const ext_table_t* ext_tab = dml_ext_table;
+		while (ext_tab->ext_language != gpreGlob.sw_language)
+			ext_tab++;
 		const bool renamed = file_rename(spare_file_name, ext_tab->in, NULL);
-		if (renamed && (input_file = fopen(spare_file_name, FOPEN_READ_TYPE)))
+		if (renamed && (input_file = os_utils::fopen(spare_file_name, FOPEN_READ_TYPE)))
 		{
 			file_name = spare_file_name;
 		}
-		else if (!(input_file = fopen(file_name, FOPEN_READ_TYPE)))
+		else if (!(input_file = os_utils::fopen(file_name, FOPEN_READ_TYPE)))
 		{
 			if (renamed) {
 				fprintf(stderr, "gpre: can't open %s or %s\n", file_name, spare_file_name);
@@ -473,6 +487,18 @@ int main(int argc, char* argv[])
 			gpreGlob.database_name	= "gds_database";
 			break;
 
+		case IN_SW_GPRE_OCXX:
+			gen_routine = OBJ_CXX_action;
+			gpreGlob.sw_language	= lang_cxx;
+			gpreGlob.ident_pattern	= "fb_%d";
+			gpreGlob.long_ident_pattern	= "fb_%ld";
+			gpreGlob.utility_name	= "fbUtility";
+			gpreGlob.count_name		= "fbCount";
+			gpreGlob.slack_name		= "fbSlack";
+			gpreGlob.transaction_name = "fbTrans";
+			gpreGlob.database_name	= "fbDatabase";
+			break;
+
 		case IN_SW_GPRE_D:
 			// allocate database block and link to db chain
 
@@ -509,8 +535,7 @@ int main(int argc, char* argv[])
 			{
 				gpreGlob.global_db_count = 1;
 				char* dbn = gpreGlob.global_db_list[0].dbd_name;
-				strncpy(dbn, db->dbd_name->sym_string, dbd::dbd_size);
-				dbn[dbd::dbd_size - 1] = 0;
+				fb_utils::copy_terminate(dbn, db->dbd_name->sym_string, dbd::dbd_size);
 			}
 #endif
 			break;
@@ -523,7 +548,6 @@ int main(int argc, char* argv[])
 			gpreGlob.sw_no_qli = true;
 			break;
 
-#ifndef BOOT_BUILD
 #ifdef GPRE_ADA
 		case IN_SW_GPRE_ADA:
 			gpreGlob.ada_null_address = "0";
@@ -603,7 +627,6 @@ int main(int argc, char* argv[])
 			comment_stop	= "*)";
 			break;
 #endif // GPRE_PASCAL
-#endif // !BOOT_BUILD
 
 		case IN_SW_GPRE_D_FLOAT:
 			gpreGlob.sw_d_float = true;
@@ -613,7 +636,7 @@ int main(int argc, char* argv[])
 			gpreGlob.sw_language			= lang_internal;
 			gen_routine			= INT_CXX_action;
 			gpreGlob.sw_cstring			= false;
-			gpreGlob.transaction_name	= "dbb->dbb_sys_trans";
+			gpreGlob.transaction_name	= "attachment->getSysTransaction()";
 			gpreGlob.sw_know_interp		= true;
 			gpreGlob.sw_interp			= ttype_metadata;
 			break;
@@ -696,7 +719,7 @@ int main(int argc, char* argv[])
 	if (gpreGlob.sw_language == lang_cpp || gpreGlob.sw_language == lang_cplusplus)
 		gpreGlob.sw_language = lang_cxx;
 
-#if defined(GPRE_COBOL) && !defined(BOOT_BUILD)
+#if defined(GPRE_COBOL)
 	// if cobol is defined we need both sw_cobol and sw_cob_dialect to
 	// determine how the string substitution table is set up
 
@@ -778,7 +801,7 @@ int main(int argc, char* argv[])
 		{
 			out_file_name = spare_out_file_name;
 			strcpy(spare_out_file_name, file_name);
-			if (renamed = file_rename(spare_out_file_name, out_src_ext_tab->in, out_src_ext_tab->out))
+			if ((renamed = file_rename(spare_out_file_name, out_src_ext_tab->in, out_src_ext_tab->out)))
 			{
 				explicitt = false;
 			}
@@ -808,7 +831,7 @@ int main(int argc, char* argv[])
 			fprintf(stderr, "gpre: output file %s would duplicate input\n", out_file_name);
 			CPR_exit(FINI_ERROR);
 		}
-		if ((gpreGlob.out_file = fopen(out_file_name, FOPEN_WRITE_TYPE)) == NULL)
+		if ((gpreGlob.out_file = os_utils::fopen(out_file_name, FOPEN_WRITE_TYPE)) == NULL)
 		{
 			fprintf(stderr, "gpre: can't open output file %s\n", out_file_name);
 			CPR_exit(FINI_ERROR);
@@ -821,7 +844,7 @@ int main(int argc, char* argv[])
 
 	try {
 		SLONG end_position = 0;
-		while (end_position = compile_module(end_position, filename_array[3]))
+		while ((end_position = compile_module(end_position, filename_array[3])))
 			; // empty loop body
 	}	// try
 	catch (const Firebird::Exception&) {}  // fall through to the cleanup code
@@ -1111,55 +1134,6 @@ void CPR_get_text( TEXT* buffer, const gpre_txt* text)
 
 //____________________________________________________________
 //
-//       A BASIC-specific function which resides here since it reads from
-//       the input file.  Look for a '\n' with no continuation character (&).
-//       Eat tokens until previous condition is satisfied.
-//       This function is used to "eat" a BASIC external function definition.
-//
-
-#ifdef NOT_USED_OR_REPLACED
-void CPR_raw_read()
-{
-	SCHAR token_string[MAX_SYM_SIZE];
-	bool continue_char = false;
-
-	SCHAR* p = token_string;
-
-	SSHORT c;
-	while (c = get_char(input_file))
-	{
-		position++;
-		if ((get_classes(c) == CHR_WHITE) && sw_trace && token_string)
-		{
-			*p = 0;
-			puts(token_string);
-			token_string[0] = 0;
-			p = token_string;
-		}
-		else
-			*p++ = (SCHAR) c;
-
-		if (c == '\n') // Changed assignment to comparison. Probable archaic bug
-		{
-			line_global++;
-			line_position = 0;
-			if (!continue_char)
-				return;
-			continue_char = false;
-		}
-		else
-		{
-			line_position++;
-			if (get_classes(c) != CHR_WHITE)
-				continue_char = (gpreGlob.token_global.tok_keyword == KW_AMPERSAND);
-		}
-	}
-}
-#endif
-
-
-//____________________________________________________________
-//
 //		Generate a syntax error.
 //
 
@@ -1341,7 +1315,7 @@ static SLONG compile_module( SLONG start_position, const TEXT* base_directory)
 
 	const Firebird::PathName filename = Firebird::TempFile::create(SCRATCH);
 	strcpy(trace_file_name, filename.c_str());
-	trace_file = fopen(trace_file_name, "w+b");
+	trace_file = os_utils::fopen(trace_file_name, "w+b");
 #ifdef UNIX
 	unlink(trace_file_name);
 #endif
@@ -1624,7 +1598,7 @@ static int get_char( FILE* file)
 
 static bool get_switches(int			argc,
 						 TEXT**		argv,
-						 const in_sw_tab_t*	in_sw_table,
+						 const Switches::in_sw_tab_t*	in_sw_table,
 						 sw_tab_t*		sw_table,
 						 TEXT**		file_array)
 {
@@ -1634,12 +1608,18 @@ static bool get_switches(int			argc,
 	// that apply immediately, since we may find out more when
 	// we try to open the file.
 
+	bool version = false;
 	sw_tab_t* sw_table_iterator = sw_table;
 
 	for (--argc; argc; argc--)
 	{
 		TEXT* string = *++argv;
-		if (*string != '?')
+		if (*string == '?' || strcmp(string, "-?") == 0)
+		{
+			in_sw = IN_SW_GPRE_0;
+			version = true;
+		}
+		else
 		{
 			if (*string != '-')
 			{
@@ -1665,7 +1645,7 @@ static bool get_switches(int			argc,
 				sw_table_iterator++;
 				sw_table_iterator->sw_in_sw = IN_SW_GPRE_0;
 				const TEXT* q;
-				for (const in_sw_tab_t* in_sw_table_iterator = in_sw_table;
+				for (const Switches::in_sw_tab_t* in_sw_table_iterator = in_sw_table;
 					 q = in_sw_table_iterator->in_sw_name;
 					 in_sw_table_iterator++)
 				{
@@ -1699,10 +1679,6 @@ static bool get_switches(int			argc,
 		// Check here for switches that affect file look ups
 		// and -D so we don't lose their arguments.
 		// Give up here if we find a bad switch.
-
-		if (*string == '?') {
-			in_sw = IN_SW_GPRE_0;
-		}
 
 		switch (in_sw)
 		{
@@ -1852,13 +1828,13 @@ static bool get_switches(int			argc,
 
 		case IN_SW_GPRE_Z:
 			if (!gpreGlob.sw_version) {
-				printf("gpre version %s\n", GDS_VERSION);
+				printf("gpre version %s\n", FB_VERSION);
 			}
 			gpreGlob.sw_version = true;
 			break;
 
 		case IN_SW_GPRE_0:
-			if (*string != '?') {
+			if (!version) {
 				fprintf(stderr, "gpre: unknown switch %s\n", string);
 			}
 			print_switches();
@@ -2477,7 +2453,7 @@ static void pass2( SLONG start_position)
 		}
 		fprintf(gpreGlob.out_file,
 				   "%s**************** gpre version %s *********************%s\n",
-				   comment_start, GDS_VERSION, comment_stop);
+				   comment_start, FB_VERSION, comment_stop);
 	}
 
 #ifdef GPRE_ADA
@@ -2508,8 +2484,10 @@ static void pass2( SLONG start_position)
 	SLONG current = 1 + start_position;
 	SLONG column = 0;
 
-	SSHORT comment_start_len = strlen(comment_start);
+	SSHORT comment_start_len = static_cast<SSHORT>(strlen(comment_start));
+#if defined(GPRE_COBOL)
 	SSHORT to_skip = 0;
+#endif
 
 	// Dump text until the start of the next action, then process the action.
 
@@ -2532,9 +2510,9 @@ static void pass2( SLONG start_position)
 				if (line_pending)
 				{
 					if (line == 1)
-						fprintf(gpreGlob.out_file, "#line %" SLONGFORMAT " \"%s\"\n", line, backlash_fixed_file_name);
+						fprintf(gpreGlob.out_file, "#line %" SLONGFORMAT" \"%s\"\n", line, backlash_fixed_file_name);
 					else
-						fprintf(gpreGlob.out_file, "\n#line %" SLONGFORMAT " \"%s\"", line, backlash_fixed_file_name);
+						fprintf(gpreGlob.out_file, "\n#line %" SLONGFORMAT" \"%s\"", line, backlash_fixed_file_name);
 
 					line_pending = false;
 				}
@@ -2576,7 +2554,9 @@ static void pass2( SLONG start_position)
 				{
 					fputc('\n', gpreGlob.out_file);
 					fputs(comment_start, gpreGlob.out_file);
+#if defined(GPRE_COBOL)
 					to_skip = (column < 7) ? comment_start_len - column : 0;
+#endif
 					column = 0;
 				}
 				break;
@@ -2621,7 +2601,9 @@ static void pass2( SLONG start_position)
 						(gpreGlob.sw_language == lang_cobol))
 					{
 						fputs(comment_start, gpreGlob.out_file);
+#if defined(GPRE_COBOL)
 						to_skip = (column < 7) ? comment_start_len - column : 0;
+#endif
 						column = 0;
 					}
 				}
@@ -2659,7 +2641,9 @@ static void pass2( SLONG start_position)
 		if (sw_lines)
 			line_pending = true;
 		column = 0;
+#if defined(GPRE_COBOL)
 		to_skip = 0;
+#endif
 	}
 
 	// We're out of actions -- dump the remaining text to the output stream.
@@ -2675,7 +2659,7 @@ static void pass2( SLONG start_position)
 	{
 		if (c == '\n' && line_pending)
 		{
-			fprintf(gpreGlob.out_file, "\n#line %" SLONGFORMAT " \"%s\"", line + 1, backlash_fixed_file_name);
+			fprintf(gpreGlob.out_file, "\n#line %" SLONGFORMAT" \"%s\"", line + 1, backlash_fixed_file_name);
 			line_pending = false;
 		}
 		if (c == EOF)
@@ -2701,7 +2685,7 @@ static void pass2( SLONG start_position)
 
 static void print_switches()
 {
-	const in_sw_tab_t* in_sw_table_iterator;
+	const Switches::in_sw_tab_t* in_sw_table_iterator;
 
 	fprintf(stderr, "\tlegal switches are:\n");
 	for (in_sw_table_iterator = gpre_in_sw_table; in_sw_table_iterator->in_sw; in_sw_table_iterator++)
@@ -2888,7 +2872,7 @@ static SSHORT skip_white()
 
 		if (c == '-' && (gpreGlob.sw_sql || gpreGlob.sw_language == lang_ada))
 		{
-			SSHORT next = nextchar();
+			const SSHORT next = nextchar();
 			if (next != '-')
 			{
 				return_char(next);

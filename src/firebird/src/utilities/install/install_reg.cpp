@@ -25,7 +25,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <windows.h>
-#include "../jrd/common.h"
 #include "../jrd/license.h"
 #include "../utilities/install/install_nt.h"
 #include "../utilities/install/regis_proto.h"
@@ -75,9 +74,6 @@ int CLIB_ROUTINE main( int argc, char** argv)
 	TEXT* p = directory + len;
 	do {--p;} while (*p != '\\');
 
-	// Get to the previous '\' (this one should precede the supposed 'bin\\' part).
-	// There is always an additional '\' OR a ':'.
-	do {--p;} while (*p != '\\' && *p != ':');
 	*p = '\0';
 
 	const TEXT* const* const end = argv + argc;
@@ -219,7 +215,7 @@ static void usage_exit()
 	printf("\nUsage:\n");
 	printf("  instreg i[nstall]\n");
 	printf("          r[emove]\n\n");
-	printf("  This utility should be located and run from the 'bin' directory\n");
+	printf("  This utility should be located and run from the root directory\n");
 	printf("  of your Firebird installation.\n\n");
 	printf("  '-z' can be used with any other option, prints version\n");
 

@@ -1,6 +1,6 @@
 /*
  *	PROGRAM:	SQL Trace plugin
- *	MODULE:		TracePluginImpl.h
+ *	MODULE:		platform.cpp
  *	DESCRIPTION:	Platform specifics (Win32)
  *
  *  The contents of this file are subject to the Initial

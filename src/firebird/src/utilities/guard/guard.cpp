@@ -48,11 +48,11 @@ int errno = -1;
 
 #include <time.h>
 
-#include "../jrd/common.h"
-#include "../jrd/divorce.h"
-#include "../jrd/isc_proto.h"
-#include "../jrd/gds_proto.h"
-#include "../jrd/file_params.h"
+#include "../common/os/divorce.h"
+#include "../common/os/os_utils.h"
+#include "../common/isc_proto.h"
+#include "../yvalve/gds_proto.h"
+#include "../common/file_params.h"
 #include "../utilities/guard/util_proto.h"
 #include "../common/classes/fb_string.h"
 
@@ -61,12 +61,7 @@ const USHORT ONETIME	= 2;
 const USHORT IGNORE		= 3;
 const USHORT NORMAL_EXIT= 0;
 
-const char* const SUPER_SERVER_BINARY	= "fbserver";
-const char* const SUPER_CLASSIC_BINARY	= "fb_smp_server";
-
-const char* const INTERBASE_USER		= "interbase";
-const char* const FIREBIRD_USER			= "firebird";
-const char* const INTERBASE_USER_SHORT	= "interbas";
+const char* const SERVER_BINARY			= "firebird";
 
 const char* const GUARD_FILE	= "fb_guard";
 
@@ -98,6 +93,7 @@ int CLIB_ROUTINE main( int argc, char **argv)
 	const TEXT* prog_name = argv[0];
 	const TEXT* pidfilename = 0;
 	int guard_exit_code = 0;
+	int timeout_term = 30;
 
 	const TEXT* const* const end = argc + argv;
 	argv++;
@@ -122,28 +118,19 @@ int CLIB_ROUTINE main( int argc, char **argv)
 			case 'P':
 				pidfilename = *argv++;
 				break;
+			case 'T':
+				timeout_term = atoi(*argv++);
+				break;
 			default:
 				fprintf(stderr,
-						"Usage: %s [-signore | -onetime | -forever (default)] [-daemon] [-pidfile filename]\n",
+						"Usage: %s [-signore | -onetime | -forever (default)] [-daemon] [-pidfile filename] "
+							"[-timeout seconds (default 30)]\n",
 						prog_name);
 				exit(-1);
 				break;
 			}
 
 	} // while
-
-	// check user id
-	Firebird::string user_name;		// holds the user name
-	ISC_get_user(&user_name, NULL, NULL, NULL);
-
-	if (user_name != INTERBASE_USER && user_name != "root" && user_name != FIREBIRD_USER &&
-		user_name != INTERBASE_USER_SHORT)
-	{
-		// invalid user bail out
-		fprintf(stderr, "%s: Invalid user (must be %s, %s, %s or root).\n",
-				   prog_name, FIREBIRD_USER, INTERBASE_USER, INTERBASE_USER_SHORT);
-		exit(-2);
-	}
 
 	// get and set the umask for the current process
 	const ULONG new_mask = 0007;
@@ -185,7 +172,13 @@ int CLIB_ROUTINE main( int argc, char **argv)
 	if (daemon && fork()) {
 		exit(0);
 	}
-	divorce_terminal(0);
+
+	// Keep stdout and stderr opened and let server emit output
+	// or redirect stdout/stderr to /dev/null or file by user choice
+	// If we want to daemonize - close all fds and let child to reopen it.
+	int mask = 0; // FD_ZERO(&mask);
+	mask |= daemon ? 0 : (1 << 1 | 1 << 2); // FD_SET(1, &mask); FD_SET(2, &mask);
+	divorce_terminal(mask);
 
 	time_t timer = 0;
 
@@ -207,7 +200,7 @@ int CLIB_ROUTINE main( int argc, char **argv)
 		timer = time(0);
 
 		pid_t child_pid =
-			UTIL_start_process(SUPER_SERVER_BINARY, SUPER_CLASSIC_BINARY, server_args, prog_name);
+			UTIL_start_process(SERVER_BINARY, server_args, prog_name);
 		if (child_pid == -1)
 		{
 			// could not fork the server
@@ -219,7 +212,7 @@ int CLIB_ROUTINE main( int argc, char **argv)
 
 		if (pidfilename)
 		{
-			FILE *pf = fopen(pidfilename, "w");
+			FILE *pf = os_utils::fopen(pidfilename, "w");
 			if (pf)
 			{
 				fprintf(pf, "%d", child_pid);
@@ -243,7 +236,7 @@ int CLIB_ROUTINE main( int argc, char **argv)
 		{
 			if (shutdown_child)
 			{
-				ret_code = UTIL_shutdown_child(child_pid, 3, 1);
+				ret_code = UTIL_shutdown_child(child_pid, timeout_term, 1);
 				if (ret_code < 0)
 				{
 					gds__log("%s: error while shutting down %s (%d)\n",

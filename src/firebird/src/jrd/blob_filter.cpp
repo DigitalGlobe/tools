@@ -23,26 +23,25 @@
  */
 
 #include "firebird.h"
+#include <algorithm>
+#include <iterator>
 #include <string.h>
 #include <stdio.h>
 
 #include "../common/config/config.h"
-#include "../jrd/common.h"
 #include "../jrd/jrd.h"
-#include "../jrd/ibase.h"
 #include "../jrd/blob_filter.h"
 #include "../jrd/tra.h"
-#include "../jrd/gdsassert.h"
+#include "../common/gdsassert.h"
 #include "../jrd/blf_proto.h"
 #include "../jrd/filte_proto.h"
-#include "../jrd/gds_proto.h"
+#include "../yvalve/gds_proto.h"
 #include "../jrd/inf_proto.h"
 #include "../jrd/intl_proto.h"
 #include "../jrd/err_proto.h"
-#include "../jrd/common.h"
 #include "../jrd/ibsetjmp.h"
-#include "../jrd/isc_s_proto.h"
-#include "gen/iberror.h"
+#include "../common/isc_s_proto.h"
+#include "iberror.h"
 
 using namespace Jrd;
 using namespace Firebird;
@@ -61,7 +60,9 @@ static const FPTR_BFILTER_CALLBACK filters[] =
 	filter_runtime,
 	filter_format,
 	filter_trans,
-	filter_trans				// should be filter_external_file
+	filter_trans,				// should be filter_external_file
+	filter_debug_info
+	// Add new entries to isInternalFilter
 };
 
 
@@ -69,6 +70,26 @@ static void open_blob(thread_db*, jrd_tra*, BlobControl**, bid*,
 					  USHORT, const UCHAR*,
 					  FPTR_BFILTER_CALLBACK,
 					  USHORT, BlobFilter*);
+
+
+// Check if this is an internal filter.
+static bool isInternalFilter(BlobControl* control)
+{
+	const auto routine = control->ctl_source;
+	const bool isInternal =
+		routine == filter_text ||
+		routine == filter_transliterate_text ||
+		routine == filter_blr ||
+		routine == filter_acl ||
+		routine == filter_runtime ||
+		routine == filter_format ||
+		routine == filter_trans ||
+		routine == filter_debug_info;
+
+	fb_assert(isInternal == (std::find(std::begin(filters), std::end(filters), routine) != std::end(filters)));
+
+	return isInternal;
+}
 
 
 void BLF_close_blob(thread_db* tdbb, BlobControl** filter_handle)
@@ -93,7 +114,7 @@ void BLF_close_blob(thread_db* tdbb, BlobControl** filter_handle)
 
 	START_CHECK_FOR_EXCEPTIONS(next->ctl_exception_message.c_str())
 
-	ISC_STATUS_ARRAY localStatus = {0};
+	ISC_STATUS_ARRAY localStatus;
 
 	// Sign off from filter
 	// Walk the chain again, telling each filter stage to close
@@ -151,7 +172,7 @@ ISC_STATUS BLF_get_segment(thread_db* tdbb,
 						   BlobControl** filter_handle,
 						   USHORT* length,
 						   USHORT buffer_length,
-						   UCHAR* buffer)
+						   void* buffer)
 {
 /**************************************
  *
@@ -164,18 +185,22 @@ ISC_STATUS BLF_get_segment(thread_db* tdbb,
  *
  **************************************/
 	ISC_STATUS_ARRAY localStatus;
-	fb_utils::init_status(localStatus);
 
 	BlobControl* control = *filter_handle;
 	control->ctl_status = localStatus;
-	control->ctl_buffer = buffer;
+	control->ctl_buffer = static_cast<UCHAR*>(buffer);
 	control->ctl_buffer_length = buffer_length;
 
 	ISC_STATUS status;
 
-	START_CHECK_FOR_EXCEPTIONS(control->ctl_exception_message.c_str())
-	status = (*control->ctl_source) (isc_blob_filter_get_segment, control);
-	END_CHECK_FOR_EXCEPTIONS(control->ctl_exception_message.c_str())
+	if (isInternalFilter(control))
+		status = (*control->ctl_source)(isc_blob_filter_get_segment, control);
+	else
+	{
+		START_CHECK_FOR_EXCEPTIONS(control->ctl_exception_message.c_str())
+		status = (*control->ctl_source)(isc_blob_filter_get_segment, control);
+		END_CHECK_FOR_EXCEPTIONS(control->ctl_exception_message.c_str())
+	}
 
 	if (!status || status == isc_segment)
 		*length = control->ctl_segment_length;
@@ -186,6 +211,7 @@ ISC_STATUS BLF_get_segment(thread_db* tdbb,
 	{
 		if (status != localStatus[1])
 		{
+			localStatus[0] = isc_arg_gds;
 			localStatus[1] = status;
 			localStatus[2] = isc_arg_end;
 		}
@@ -215,13 +241,14 @@ BlobFilter* BLF_lookup_internal_filter(thread_db* tdbb, SSHORT from, SSHORT to)
 
 	if (to == isc_blob_text && from >= 0 && from < FB_NELEM(filters))
 	{
-		BlobFilter* result = FB_NEW(*dbb->dbb_permanent) BlobFilter(*dbb->dbb_permanent);
+		BlobFilter* result = FB_NEW_POOL(*dbb->dbb_permanent) BlobFilter(*dbb->dbb_permanent);
 		result->blf_next = NULL;
 		result->blf_from = from;
 		result->blf_to = to;
 		result->blf_filter = filters[from];
-		result->blf_exception_message.printf("Exception occurred in system provided internal filters for filtering internal subtype %d to text.",
-				from);
+		result->blf_exception_message.printf("Exception occurred in system provided internal "
+				"filters for filtering internal subtype %d to text.",
+			from);
 		return result;
 	}
 
@@ -260,7 +287,7 @@ void BLF_open_blob(thread_db* tdbb,
 void BLF_put_segment(thread_db* tdbb,
 					 BlobControl** filter_handle,
 					 USHORT length,
-					 const UCHAR* buffer)
+					 const void* buffer)
 {
 /**************************************
  *
@@ -274,26 +301,31 @@ void BLF_put_segment(thread_db* tdbb,
  **************************************/
 
 	ISC_STATUS_ARRAY localStatus;
-	fb_utils::init_status(localStatus);
 
 	BlobControl* control = *filter_handle;
 	control->ctl_status = localStatus;
 	// If the filter is ill behaved, it won't respect the constness
 	// even though it's job is to process the buffer and write the
 	// result.
-	control->ctl_buffer = const_cast<UCHAR*>(buffer);
+	control->ctl_buffer = static_cast<UCHAR*>(const_cast<void*>(buffer));
 	control->ctl_buffer_length = length;
 
 	ISC_STATUS status;
 
-	START_CHECK_FOR_EXCEPTIONS(control->ctl_exception_message.c_str())
-	status = (*control->ctl_source) (isc_blob_filter_put_segment, control);
-	END_CHECK_FOR_EXCEPTIONS(control->ctl_exception_message.c_str())
+	if (isInternalFilter(control))
+		status = (*control->ctl_source)(isc_blob_filter_put_segment, control);
+	else
+	{
+		START_CHECK_FOR_EXCEPTIONS(control->ctl_exception_message.c_str())
+		status = (*control->ctl_source)(isc_blob_filter_put_segment, control);
+		END_CHECK_FOR_EXCEPTIONS(control->ctl_exception_message.c_str())
+	}
 
 	if (status)
 	{
 		if (status != localStatus[1])
 		{
+			localStatus[0] = isc_arg_gds;
 			localStatus[1] = status;
 			localStatus[2] = isc_arg_end;
 		}
@@ -304,7 +336,7 @@ void BLF_put_segment(thread_db* tdbb,
 
 // SEH moved to separate function to avoid conflicts
 // with destructor of BlobControl
-inline void initializeFilter(thread_db *tdbb,
+inline void initializeFilter(thread_db* tdbb,
 							 ISC_STATUS &status,
 							 BlobControl* control,
 							 BlobFilter* filter,
@@ -355,14 +387,13 @@ static void open_blob(thread_db* tdbb,
 	temp.ctl_internal[0] = dbb;
 	temp.ctl_internal[1] = tra_handle;
 	temp.ctl_internal[2] = NULL;
-	// CVC: Using ISC_STATUS (SLONG) to return a pointer!!!
+	// CVC: Using FbStatusVector (SLONG) to return a pointer!!!
 	// If we change the function signature, we'll change the public API.
-	// ISC_STATUS to pointer!
+	// FbStatusVector to pointer!
 	BlobControl* prior = (BlobControl*) (*callback) (isc_blob_filter_alloc, &temp);
 	prior->ctl_source = callback;
 
 	ISC_STATUS_ARRAY localStatus;
-	fb_utils::init_status(localStatus);
 	prior->ctl_status = localStatus;
 
 	prior->ctl_internal[0] = dbb;
@@ -375,7 +406,7 @@ static void open_blob(thread_db* tdbb,
 		status_exception::raise(localStatus);
 	}
 
-	// ISC_STATUS to pointer!
+	// FbStatusVector to pointer!
 	BlobControl* control = (BlobControl*) (*callback) (isc_blob_filter_alloc, &temp);
 	control->ctl_source = filter->blf_filter;
 	control->ctl_handle = prior;

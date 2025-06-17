@@ -24,25 +24,169 @@
 #ifndef JRD_EXE_PROTO_H
 #define JRD_EXE_PROTO_H
 
+#include "../jrd/cmp_proto.h"
+
 namespace Jrd {
-	class jrd_req;
-	class jrd_nod;
+	class Request;
 	class jrd_tra;
+	class AssignmentNode;
 }
 
-void EXE_assignment(Jrd::thread_db*, Jrd::jrd_nod*);
-void EXE_assignment(Jrd::thread_db* tdbb, Jrd::jrd_nod* to, dsc* from_desc, bool from_null,
-	Jrd::jrd_nod* missing_node, Jrd::jrd_nod* missing2_node);
-void EXE_execute_db_triggers(Jrd::thread_db*, Jrd::jrd_tra*, enum Jrd::jrd_req::req_ta);
-Jrd::jrd_nod* EXE_looper(Jrd::thread_db* tdbb, Jrd::jrd_req* request, Jrd::jrd_nod* in_node);
-Jrd::jrd_req* EXE_find_request(Jrd::thread_db*, Jrd::jrd_req*, bool);
-void EXE_receive(Jrd::thread_db*, Jrd::jrd_req*, USHORT, USHORT, UCHAR*, bool = false);
-void EXE_send(Jrd::thread_db*, Jrd::jrd_req*, USHORT, USHORT, const UCHAR*);
-void EXE_start(Jrd::thread_db*, Jrd::jrd_req*, Jrd::jrd_tra*);
-void EXE_unwind(Jrd::thread_db*, Jrd::jrd_req*);
-#ifdef SCROLLABLE_CURSORS
-void EXE_seek(Jrd::thread_db*, Jrd::jrd_req*, USHORT, ULONG);
-#endif
+void EXE_assignment(Jrd::thread_db*, const Jrd::AssignmentNode*);
+void EXE_assignment(Jrd::thread_db*, const Jrd::ValueExprNode*, const Jrd::ValueExprNode*);
+void EXE_assignment(Jrd::thread_db* tdbb, const Jrd::ValueExprNode* to, dsc* from_desc, bool from_null,
+	const Jrd::ValueExprNode* missing_node, const Jrd::ValueExprNode* missing2_node);
+
+void EXE_execute_db_triggers(Jrd::thread_db*, Jrd::jrd_tra*, enum TriggerAction);
+void EXE_execute_ddl_triggers(Jrd::thread_db* tdbb, Jrd::jrd_tra* transaction,
+	bool preTriggers, int action);
+bool EXE_get_stack_trace(const Jrd::Request* request, Firebird::string& sTrace);
+
+const Jrd::StmtNode* EXE_looper(Jrd::thread_db* tdbb, Jrd::Request* request,
+	const Jrd::StmtNode* in_node);
+
+void EXE_execute_triggers(Jrd::thread_db*, Jrd::TrigVector**, Jrd::record_param*, Jrd::record_param*,
+	enum TriggerAction, Jrd::StmtNode::WhichTrigger, int = 0);
+
+void EXE_receive(Jrd::thread_db*, Jrd::Request*, USHORT, ULONG, void*, bool = false);
+void EXE_release(Jrd::thread_db*, Jrd::Request*);
+void EXE_send(Jrd::thread_db*, Jrd::Request*, USHORT, ULONG, const void*);
+void EXE_start(Jrd::thread_db*, Jrd::Request*, Jrd::jrd_tra*);
+void EXE_unwind(Jrd::thread_db*, Jrd::Request*);
+
+namespace Jrd
+{
+	// ASF: To make this class MT-safe in SS for v3, it should be AutoCacheRequest::release job to
+	// inform CMP that the request is available for subsequent usage.
+	class AutoCacheRequest
+	{
+	public:
+		AutoCacheRequest(thread_db* tdbb, USHORT aId, USHORT aWhich)
+			: id(aId),
+			  which(aWhich),
+			  request(tdbb->getAttachment()->findSystemRequest(tdbb, id, which))
+		{
+		}
+
+		AutoCacheRequest()
+			: id(0),
+			  which(0),
+			  request(NULL)
+		{
+		}
+
+		~AutoCacheRequest()
+		{
+			release();
+		}
+
+	public:
+		void reset(thread_db* tdbb, USHORT aId, USHORT aWhich)
+		{
+			release();
+
+			id = aId;
+			which = aWhich;
+			request = tdbb->getAttachment()->findSystemRequest(tdbb, id, which);
+		}
+
+		void compile(thread_db* tdbb, const UCHAR* blr, ULONG blrLength)
+		{
+			if (request)
+				return;
+
+			request = CMP_compile_request(tdbb, blr, blrLength, true);
+			cacheRequest();
+		}
+
+		Request* operator ->()
+		{
+			return request;
+		}
+
+		operator Request*()
+		{
+			return request;
+		}
+
+		bool operator !() const
+		{
+			return !request;
+		}
+
+	private:
+		inline void release()
+		{
+			if (request)
+			{
+				EXE_unwind(JRD_get_thread_data(), request);
+				request = NULL;
+			}
+		}
+
+		void cacheRequest();
+
+	private:
+		USHORT id;
+		USHORT which;
+		Request* request;
+	};
+
+	class AutoRequest
+	{
+	public:
+		AutoRequest()
+			: request(NULL)
+		{
+		}
+
+		~AutoRequest()
+		{
+			release();
+		}
+
+	public:
+		void reset()
+		{
+			release();
+		}
+
+		void compile(thread_db* tdbb, const UCHAR* blr, ULONG blrLength)
+		{
+			if (request)
+				return;
+
+			request = CMP_compile_request(tdbb, blr, blrLength, true);
+		}
+
+		Request* operator ->()
+		{
+			return request;
+		}
+
+		operator Request*()
+		{
+			return request;
+		}
+
+		bool operator !() const
+		{
+			return !request;
+		}
+
+	private:
+		inline void release()
+		{
+			if (request)
+			{
+				CMP_release(JRD_get_thread_data(), request);
+				request = NULL;
+			}
+		}
+
+	private:
+		Request* request;
+	};
+}
 
 #endif // JRD_EXE_PROTO_H
-

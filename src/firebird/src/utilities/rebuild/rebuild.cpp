@@ -21,14 +21,13 @@
  * Contributor(s): ______________________________________.
  */
 
-#include "../jrd/common.h"
 
 #include "firebird.h"
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
 
-#include "../jrd/ibase.h"
+#include "ibase.h"
 #include "../jrd/jrd.h"
 #include "../jrd/jrd_time.h"
 #include "../jrd/pag.h"
@@ -38,7 +37,7 @@
 #include "../utilities/rebuild/rmet_proto.h"
 #include "../utilities/rebuild/rstor_proto.h"
 #include "../jrd/dmp_proto.h"
-#include "../jrd/gds_proto.h"
+#include "../yvalve/gds_proto.h"
 #include "../common/utils_proto.h
 
 #ifndef O_RDWR
@@ -59,7 +58,7 @@ static USHORT compute_checksum(const rbdb*, PAG);
 static void db_error(int);
 static void dump(FILE*, rbdb*, ULONG, ULONG, UCHAR);
 static void dump_tips(FILE*, rbdb*);
-static void format_header(const rbdb*, header_page*, int, ULONG, ULONG, ULONG, ULONG);
+static void format_header(const rbdb*, header_page*, int, TraNumber, TraNumber, TraNumber, ULONG);
 static void format_index_root(index_root_page*, int, SSHORT, SSHORT);
 static void format_pointer(pointer_page*, int, SSHORT, SSHORT, bool, SSHORT, const SLONG*);
 static void format_pip(page_inv_page*, int, int);
@@ -217,19 +216,19 @@ int main( int argc, char *argv[])
 	gdbb->tdbb_transaction = &dull;
 	dull.tra_number = header->hdr_next_transaction;
 	gdbb->tdbb_database->dbb_max_records = (rbdb->rbdb_page_size - sizeof(struct data_page)) /
-		(sizeof(data_page::dpg_repeat) + OFFSETA(RHD, rhd_data));
+		(sizeof(data_page::dpg_repeat) + offsetof(rhd, rhd_data));
 	gdbb->tdbb_database->dbb_pcontrol = &dim;
 	gdbb->tdbb_database->dbb_dp_per_pp =
-		(rbdb->rbdb_page_size - OFFSETA(pointer_page*, ppg_page)) * 8 / 34;
+		(rbdb->rbdb_page_size - offsetof(pointer_page, ppg_page[0])) * 8 / 34;
 	gdbb->tdbb_database->dbb_pcontrol->pgc_bytes =
-		rbdb->rbdb_page_size - OFFSETA(page_inv_page*, pip_bits);
+		rbdb->rbdb_page_size - offsetof(page_inv_page, pip_bits[0]);
 	gdbb->tdbb_database->dbb_pcontrol->pgc_ppp = gdbb->tdbb_database->dbb_pcontrol->pgc_bytes * 8;
 	gdbb->tdbb_database->dbb_pcontrol->pgc_tpt =
-		(rbdb->rbdb_page_size - OFFSETA(tx_inv_page*, tip_transactions)) * 4;
+		(rbdb->rbdb_page_size - offsetof(tx_inv_page, tip_transactions[0])) * 4;
 	gdbb->tdbb_database->dbb_pcontrol->pgc_pip = 1;
 
 	if (ascii_out)
-		dbg_file = fopen(ascii_out, "w");
+		dbg_file = os_utils::fopen(ascii_out, "w");
 
 	if (sw_print && rbdb && header)
 		write_headers(dbg_file, rbdb, p_lower_bound, p_upper_bound);
@@ -350,7 +349,7 @@ void RBDB_open( rbdb* rbdb)
  *	Open a database file.
  *
  **************************************/
-	if ((rbdb->rbdb_file.fil_file = open(rbdb->rbdb_file.fil_name, O_RDWR, 0)) == -1)
+	if ((rbdb->rbdb_file.fil_file = os_utils::open(rbdb->rbdb_file.fil_name, O_RDWR, 0)) == -1)
 	{
 		db_error(errno);
 	}
@@ -372,7 +371,7 @@ PAG RBDB_read(rbdb* rbdb, SLONG page_number)
 	int file = rbdb->rbdb_file.fil_file;
 
 	const FB_UINT64 offset = ((FB_UINT64) page_number) * ((FB_UINT64) rbdb->rbdb_page_size);
-	if (lseek (file, offset, 0) == -1)
+	if (os_utils::lseek (file, offset, 0) == -1)
 		db_error(errno);
 
 	SSHORT length = rbdb->rbdb_page_size;
@@ -408,7 +407,7 @@ void RBDB_write( rbdb* rbdb, PAG page, SLONG page_number)
 	int fd = rbdb->rbdb_file.fil_file;
 
 	const FB_UINT64 offset = ((FB_UINT64) page_number) * ((FB_UINT64) page_size);
-	if (lseek (fd, offset, 0) == -1)
+	if (os_utils::lseek (fd, offset, 0) == -1)
 		db_error(errno);
 	if (write(fd, page, page_size) == -1)
 		db_error(errno);
@@ -594,10 +593,8 @@ static void dump_tips( FILE* file, rbdb* rbdb)
 }
 
 
-static void format_header(const rbdb* rbdb,
-						  header_page* page,
-						  int page_size,
-						  ULONG oldest, ULONG active, ULONG next, ULONG imp)
+static void format_header(const rbdb* rbdb, header_page* page, int page_size,
+	TraNumber oldest, TraNumber active, TraNumber next, ULONG imp)
 {
 /**************************************
  *
@@ -694,7 +691,7 @@ static void format_pip( page_inv_page* page, int page_size, int last_flag)
 
 	// Set all page bits to zero, indicating RBDB_allocated
 
-	const SSHORT bytes = page_size - OFFSETA(page_inv_page*, pip_bits);
+	const SSHORT bytes = page_size - offsetof(page_inv_page, pip_bits[0]);
 	memset(page->pip_bits, 0, bytes);
 
 	// If this is the last pip, make sure the last page (which
@@ -730,7 +727,7 @@ static void format_tip( tx_inv_page* page, int page_size, SLONG next_page)
 
 	// Code for committed transaction is 3, so just fill all bytes with -1
 
-	const SSHORT bytes = page_size - OFFSETA(tx_inv_page*, tip_transactions);
+	const SSHORT bytes = page_size - offsetof(tx_inv_page, tip_transactions[0]);
 	memset(page->tip_transactions, -1, bytes);
 }
 
@@ -956,10 +953,10 @@ static void print_db_header( FILE* file, const header_page* header)
 		header->hdr_ods_version & ODS_TYPE_MASK);
 	fprintf(file, "    PAGES\t\t\t%d\n", header->hdr_PAGES);
 	fprintf(file, "    next page\t\t\t%d\n", header->hdr_next_page);
-	fprintf(file, "    Oldest transaction\t\t%ld\n", header->hdr_oldest_transaction);
-	fprintf(file, "    Oldest active\t\t%ld\n", header->hdr_oldest_active);
-	fprintf(file, "    Oldest snapshot\t\t%ld\n", header->hdr_oldest_snapshot);
-	fprintf(file, "    Next transaction\t\t%ld\n", header->hdr_next_transaction);
+	fprintf(file, "    Oldest transaction\t\t%lu\n", header->hdr_oldest_transaction);
+	fprintf(file, "    Oldest active\t\t%lu\n", header->hdr_oldest_active);
+	fprintf(file, "    Oldest snapshot\t\t%lu\n", header->hdr_oldest_snapshot);
+	fprintf(file, "    Next transaction\t\t%lu\n", header->hdr_next_transaction);
 
 	fprintf(file, "    Data pages per pointer page\t%ld\n", gdbb->tdbb_database->dbb_dp_per_pp);
 	fprintf(file, "    Max records per page\t%ld\n", gdbb->tdbb_database->dbb_max_records);
@@ -978,14 +975,15 @@ static void print_db_header( FILE* file, const header_page* header)
 			   FB_SHORT_MONTHS[time.tm_mon], time.tm_mday, time.tm_year + 1900,
 			   time.tm_hour, time.tm_min, time.tm_sec);
 	fprintf(file, "    Cache buffers\t\t%ld\n", header->hdr_cache_buffers);
-	fprintf(file, "    Bumped transaction\t\t%ld\n", header->hdr_bumped_transaction);
 
 	fprintf(file, "\n    Variable header data:\n");
 
 	SLONG number;
 
 	const UCHAR* p = header->hdr_data;
-	for (const UCHAR* const end = p + header->hdr_page_size; p < end && *p != HDR_end; p += 2 + p[1])
+	for (const UCHAR* const end = p + header->hdr_page_size;
+		 p < end && *p != HDR_end;
+		 p += 2 + p[1])
 	{
 		switch (*p)
 		{
@@ -1015,11 +1013,11 @@ static void print_db_header( FILE* file, const header_page* header)
 			memcpy(&number, p + 2, sizeof(number));
 			fprintf(file, "\tSweep interval: %ld\n", number);
 			break;
-
+/*
 		case HDR_log_name:
 			fprintf(file, "\tReplay logging file: %*s\n", p[1], p + 2);
 			break;
-/*
+
 		case HDR_journal_file:
 			fprintf(file, "\tJournal file: %*s\n", p[1], p + 2);
 			break;
@@ -1128,8 +1126,7 @@ static void write_headers(FILE* file, rbdb* rbdb, ULONG lower, ULONG upper)
 				fprintf(file, "data page, checksum %d\n", page->pag_checksum);
 				const data_page* data = (data_page*) page;
 				fprintf(file, "\trelation %d, sequence %ld, records on page %d\n",
-						   data->dpg_relation, data->dpg_sequence,
-						   data->dpg_count);
+						   data->dpg_relation, data->dpg_sequence, data->dpg_count);
 				fprintf(file, "\t%s%s%s%s\n",
 						   (data->pag_flags & dpg_orphan) ? "orphan " : "",
 						   (data->pag_flags & dpg_full) ? "full " : "",
@@ -1167,8 +1164,7 @@ static void write_headers(FILE* file, rbdb* rbdb, ULONG lower, ULONG upper)
 				fprintf(file, "blob page, checksum %d\n", page->pag_checksum);
 				const blob_page* blob = (blob_page*) page;
 				fprintf(file, "\tlead page: %ld, sequence: %ld, length: %d\n",
-						   blob->blp_lead_page, blob->blp_sequence,
-						   blob->blp_length);
+						   blob->blp_lead_page, blob->blp_sequence, blob->blp_length);
 				fprintf(file, "\tcontains %s\n",
 						   (blob->pag_flags & blp_pointers) ? "pointers" : "data");
 			}

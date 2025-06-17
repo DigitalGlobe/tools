@@ -28,88 +28,34 @@
 
 #include "firebird.h"
 #include "StatusHolder.h"
-#include "gen/iberror.h"
+#include "iberror.h"
 #include "classes/alloc.h"
 
 namespace Firebird {
 
-ISC_STATUS StatusHolder::save(const ISC_STATUS* status)
+ISC_STATUS DynamicStatusVector::load(const IStatus* status)
 {
-	fb_assert(m_status_vector[1] == 0 || m_raised);
-	if (m_raised) {
+	StaticStatusVector tmp;
+	tmp.mergeStatus(status);
+	return save(tmp.begin(), false);
+}
+
+ISC_STATUS StatusHolder::save(IStatus* status)
+{
+	fb_assert(isSuccess() || m_raised);
+	if (m_raised)
+	{
 		clear();
 	}
 
-	const ISC_STATUS *from = status;
-	ISC_STATUS *to = m_status_vector;
-	while (true)
-	{
-		const ISC_STATUS type = *to++ = *from++;
-		if (type == isc_arg_end)
-			break;
-
-		switch (type)
-		{
-		case isc_arg_cstring:
-			{
-				const size_t len = *to++ = *from++;
-				char *string = FB_NEW(*getDefaultMemoryPool()) char[len];
-				const char *temp = reinterpret_cast<const char*>(*from++);
-				memcpy(string, temp, len);
-				*to++ = (ISC_STATUS)(IPTR) string;
-			}
-			break;
-
-		case isc_arg_string:
-		case isc_arg_interpreted:
-		case isc_arg_sql_state:
-			{
-				const char* temp = reinterpret_cast<const char*>(*from++);
-
-				const size_t len = strlen(temp);
-				char* string = FB_NEW(*getDefaultMemoryPool()) char[len + 1];
-				memcpy(string, temp, len + 1);
-
-				*to++ = (ISC_STATUS)(IPTR) string;
-			}
-			break;
-
-		default:
-			*to++ = *from++;
-			break;
-		}
-	}
-	return m_status_vector[1];
+	setErrors(status->getErrors());
+	setWarnings(status->getWarnings());
+	return getErrors()[1];
 }
 
 void StatusHolder::clear()
 {
-	ISC_STATUS *ptr = m_status_vector;
-	while (true)
-	{
-		const ISC_STATUS type = *ptr++;
-		if (type == isc_arg_end)
-			break;
-
-		switch (type)
-		{
-		case isc_arg_cstring:
-			ptr++;
-			delete[] reinterpret_cast<char*>(*ptr++);
-			break;
-
-		case isc_arg_string:
-		case isc_arg_interpreted:
-		case isc_arg_sql_state:
-			delete[] reinterpret_cast<char*>(*ptr++);
-			break;
-
-		default:
-			ptr++;
-			break;
-		}
-	}
-	memset(m_status_vector, 0, sizeof(m_status_vector));
+	BaseStatus<StatusHolder>::clear();
 	m_raised = false;
 }
 
@@ -117,10 +63,11 @@ void StatusHolder::raise()
 {
 	if (getError())
 	{
+		Arg::StatusVector tmp(getErrors());
+		tmp << Arg::StatusVector(getWarnings());
 		m_raised = true;
-		status_exception::raise(m_status_vector);
+		tmp.raise();
 	}
 }
-
 
 } // namespace Firebird

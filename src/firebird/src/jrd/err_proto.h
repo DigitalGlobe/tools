@@ -26,13 +26,13 @@
 
 #include "fb_exception.h"
 #include "../common/classes/fb_string.h"
-#include "../common/classes/MetaName.h"
+#include "../jrd/MetaName.h"
 #include "../common/StatusArg.h"
 #include "../jrd/status.h"
 
 namespace Jrd {
 
-/* Index error types */
+// Index error types
 
 enum idx_e {
 	idx_e_ok = 0,
@@ -44,25 +44,22 @@ enum idx_e {
 	idx_e_foreign_references_present
 };
 
-class jrd_rel;
-
 } //namespace Jrd
 
-bool	ERR_post_warning(const Firebird::Arg::StatusVector& v);
+void	ERR_post_warning(const Firebird::Arg::StatusVector& v);
 void	ERR_assert(const TEXT*, int);
 void	ERR_bugcheck(int, const TEXT* = NULL, int = 0);
 void	ERR_bugcheck_msg(const TEXT*);
+void	ERR_soft_bugcheck(int, const TEXT*, int);
 void	ERR_corrupt(int);
 void	ERR_error(int);
-void	ERR_error_msg(const TEXT*);
 void	ERR_post(const Firebird::Arg::StatusVector& v);
-void	ERR_post_nothrow(const Firebird::Arg::StatusVector& v);
+void	ERR_post_nothrow(const Firebird::Arg::StatusVector& v, Jrd::FbStatusVector* statusVector = NULL);
+void	ERR_post_nothrow(const Firebird::IStatus* v, Jrd::FbStatusVector* statusVector = NULL);
 void	ERR_punt();
 void	ERR_warning(const Firebird::Arg::StatusVector& v);
 void	ERR_log(int, int, const TEXT*);
-void	ERR_make_permanent(ISC_STATUS* s);
-void	ERR_make_permanent(Firebird::Arg::StatusVector& v);
-void	ERR_append_status(ISC_STATUS*, const Firebird::Arg::StatusVector& v);
-void	ERR_build_status(ISC_STATUS*, const Firebird::Arg::StatusVector& v);
+void	ERR_append_status(Jrd::FbStatusVector*, const Firebird::Arg::StatusVector& v);
+void	ERR_build_status(Jrd::FbStatusVector*, const Firebird::Arg::StatusVector& v);
 
-#endif /* JRD_ERR_PROTO_H */
+#endif // JRD_ERR_PROTO_H

@@ -1,0 +1,16 @@
+Makefile
+src/*.o
+src/*.d
+src/*.a
+config.h
+libedit.pc
+stamp-h1
+src/common.h
+src/emacs.h
+src/fcns.c
+src/fcns.h
+src/help.c
+src/help.h
+src/historyn.c
+src/tokenizern.c
+src/vi.h

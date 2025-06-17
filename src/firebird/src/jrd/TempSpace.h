@@ -29,6 +29,7 @@
 #include "../common/classes/TempFile.h"
 #include "../common/config/dir_list.h"
 #include "../common/classes/init.h"
+#include "../common/classes/tree.h"
 
 class TempSpace : public Firebird::File
 {
@@ -36,8 +37,8 @@ public:
 	TempSpace(MemoryPool& pool, const Firebird::PathName& prefix, bool dynamic = true);
 	virtual ~TempSpace();
 
-	size_t read(offset_t offset, void* buffer, size_t length);
-	size_t write(offset_t offset, const void* buffer, size_t length);
+	FB_SIZE_T read(offset_t offset, void* buffer, FB_SIZE_T length);
+	FB_SIZE_T write(offset_t offset, const void* buffer, FB_SIZE_T length);
 
 	void unlink() {}
 
@@ -46,10 +47,10 @@ public:
 		return logicalSize;
 	}
 
-	void extend(size_t size);
+	void extend(FB_SIZE_T size);
 
-	offset_t allocateSpace(size_t size);
-	void releaseSpace(offset_t offset, size_t size);
+	offset_t allocateSpace(FB_SIZE_T size);
+	void releaseSpace(offset_t offset, FB_SIZE_T size);
 
 	UCHAR* inMemory(offset_t offset, size_t size) const;
 
@@ -62,7 +63,7 @@ public:
 
 	typedef Firebird::Array<SegmentInMemory> Segments;
 
-	size_t allocateBatch(size_t count, size_t minSize, size_t maxSize, Segments& segments);
+	ULONG allocateBatch(ULONG count, FB_SIZE_T minSize, FB_SIZE_T maxSize, Segments& segments);
 
 	bool validate(offset_t& freeSize) const;
 private:
@@ -83,8 +84,8 @@ private:
 
 		virtual ~Block() {}
 
-		virtual size_t read(offset_t offset, void* buffer, size_t length) = 0;
-		virtual size_t write(offset_t offset, const void* buffer, size_t length) = 0;
+		virtual FB_SIZE_T read(offset_t offset, void* buffer, FB_SIZE_T length) = 0;
+		virtual FB_SIZE_T write(offset_t offset, const void* buffer, FB_SIZE_T length) = 0;
 
 		virtual UCHAR* inMemory(offset_t offset, size_t size) const = 0;
 		virtual bool sameFile(const Firebird::TempFile* file) const = 0;
@@ -106,8 +107,8 @@ private:
 			delete[] ptr;
 		}
 
-		size_t read(offset_t offset, void* buffer, size_t length);
-		size_t write(offset_t offset, const void* buffer, size_t length);
+		FB_SIZE_T read(offset_t offset, void* buffer, FB_SIZE_T length);
+		FB_SIZE_T write(offset_t offset, const void* buffer, FB_SIZE_T length);
 
 		UCHAR* inMemory(offset_t offset, size_t _size) const
 		{
@@ -154,8 +155,8 @@ private:
 
 		~FileBlock() {}
 
-		size_t read(offset_t offset, void* buffer, size_t length);
-		size_t write(offset_t offset, const void* buffer, size_t length);
+		FB_SIZE_T read(offset_t offset, void* buffer, FB_SIZE_T length);
+		FB_SIZE_T write(offset_t offset, const void* buffer, FB_SIZE_T length);
 
 		UCHAR* inMemory(offset_t /*offset*/, size_t /*a_size*/) const
 		{
@@ -173,7 +174,7 @@ private:
 	};
 
 	Block* findBlock(offset_t& offset) const;
-	Firebird::TempFile* setupFile(size_t size);
+	Firebird::TempFile* setupFile(FB_SIZE_T size);
 
 	UCHAR* findMemory(offset_t& begin, offset_t end, size_t size) const;
 
@@ -184,8 +185,8 @@ private:
 		Segment() : position(0), size(0)
 		{}
 
-		Segment(offset_t _position, offset_t _size) :
-			position(_position), size(_size)
+		Segment(offset_t aPosition, offset_t aSize) :
+			position(aPosition), size(aSize)
 		{}
 
 		offset_t position;
@@ -213,8 +214,7 @@ private:
 
 	static Firebird::GlobalPtr<Firebird::Mutex> initMutex;
 	static Firebird::TempDirectoryList* tempDirs;
-	static size_t minBlockSize;
-	static offset_t globalCacheUsage;
+	static FB_SIZE_T minBlockSize;
 };
 
 #endif // JRD_TEMP_SPACE_H

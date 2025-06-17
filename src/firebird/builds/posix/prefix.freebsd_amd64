@@ -18,15 +18,12 @@
 #
 # 2 Oct 2002, Nickolay Samofatov - Major Cleanup
 
-OS_ServerFiles=inet_server.cpp
-
-LINK_OPTS+=-Wl,-rpath,../gen/firebird/lib
+EXE_LINK_OPTIONS := $(LDFLAGS) $(THR_FLAGS) $(UNDEF_FLAGS) $(LIB_PATH_OPTS) -Wl,-rpath,../gen/firebird/lib
 
 PROD_FLAGS=-O -fno-builtin -DFREEBSD -DAMD64 -pipe -MMD -fPIC
-DEV_FLAGS=-ggdb -DFREEBSD -DAMD64 -pipe -MMD -p -fPIC -Wall -Wno-non-virtual-dtor
-EMBED_UTIL_TARGETS=gstat gsec fbguard nbackup fb_lock_print fbsvcmgr fbtracemgr
-CLIENT_UTIL_TARGETS=gstat gsec fbguard nbackup fb_lock_print fbsvcmgr fbtracemgr
+DEV_FLAGS=-ggdb -DFREEBSD -DAMD64 -pipe -MMD -p -fPIC -Werror=delete-incomplete -Wall -Wno-non-virtual-dtor
 
-Physical_IO_Module=os/posix/unix.cpp
-# This is needed due to broken port of gcc
-STATIC_CXXSUPPORT_LIB = -lstdc++ -lgcc_s
+# This file must be compiled with SSE4.2 support
+%/CRC32C.o: CXXFLAGS += -msse4
+
+CXXFLAGS := $(CXXFLAGS) -std=c++17

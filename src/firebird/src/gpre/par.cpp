@@ -45,7 +45,7 @@
 #include <setjmp.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../jrd/ibase.h"
+#include "ibase.h"
 #include "../gpre/gpre.h"
 #include "../gpre/cmp_proto.h"
 #include "../gpre/exp_proto.h"
@@ -519,8 +519,8 @@ act* PAR_database(bool sql, const TEXT* base_directory)
 			if (base_directory)
 			{
 				db->dbb_filename = string =
-					(TEXT*) MSC_alloc(token.tok_length + strlen(base_directory) + 1);
-				MSC_copy_cat(base_directory, strlen(base_directory),
+					(TEXT*) MSC_alloc(token.tok_length + static_cast<int>(strlen(base_directory)) + 1);
+				MSC_copy_cat(base_directory, static_cast<int>(strlen(base_directory)),
 						 token.tok_string, token.tok_length, string);
 			}
 			else
@@ -617,8 +617,7 @@ act* PAR_database(bool sql, const TEXT* base_directory)
 		strcat(s, ".");
 		if (!gpreGlob.ada_package[0] || !strcmp(gpreGlob.ada_package, s))
 		{
-			strncpy(gpreGlob.ada_package, s, MAXPATHLEN);
-			gpreGlob.ada_package[MAXPATHLEN - 1] = 0;
+			fb_utils::copy_terminate(gpreGlob.ada_package, s, MAXPATHLEN);
 		}
 		else
 		{
@@ -1033,7 +1032,7 @@ TEXT* PAR_native_value(bool array_ref, bool handle_ref)
 			break;
 	}
 
-	const int length = string - buffer;
+	const unsigned int length = string - buffer;
 	fb_assert(length < sizeof(buffer));
 	string = (SCHAR*) MSC_alloc(length + 1);
 
@@ -1488,7 +1487,6 @@ static act* par_based()
 	{
 	case lang_internal:
 	case lang_fortran:
-	//case lang_epascal:
 	case lang_c:
 	case lang_cxx:
 		do {
@@ -1983,7 +1981,6 @@ static act* par_end_store(bool special)
 		gpre_nod* const assignments = MSC_node(nod_list, (SSHORT) count);
 		request->req_node =
 			MSC_ternary(nod_store, (gpre_nod*) request->req_contexts, assignments, NULL);
-
 		count = 0;
 
 		for (ref* reference = request->req_references; reference; reference = reference->ref_next)
@@ -2278,7 +2275,7 @@ static act* par_modify()
 	if (!symbol || symbol->sym_type != SYM_context)
 	{
 		SCHAR s[ERROR_LENGTH];
-		sprintf(s, "%s is not a valid context variable", gpreGlob.token_global.tok_string);
+		fb_utils::snprintf(s, sizeof(s), "%s is not a valid context variable", gpreGlob.token_global.tok_string);
 		PAR_error(s);
 	}
 
@@ -2401,7 +2398,6 @@ static act* par_open_blob( act_t act_op, gpre_sym* symbol)
 
 	// See if we need a blob filter (do we have a subtype to subtype clause?)
 
-	bool filter_is_defined = false;
 	for (;;)
 	{
 		if (MSC_match(KW_FILTER))
@@ -2411,7 +2407,6 @@ static act* par_open_blob( act_t act_op, gpre_sym* symbol)
 			if (!MSC_match(KW_TO))
 				CPR_s_error("TO");
 			blob->blb_const_to_type = PAR_blob_subtype(request->req_database);
-			filter_is_defined = true;
 		}
 		else if (MSC_match(KW_STREAM))
 			blob->blb_type = isc_bpb_type_stream;
@@ -2729,7 +2724,6 @@ static act* par_returning_values()
 	gpre_nod* assignments = MSC_node(nod_list, (SSHORT) count);
 	request->req_node =
 		MSC_ternary(nod_store, (gpre_nod*) request->req_contexts, assignments, NULL);
-
 	count = 0;
 
 	for (ref* reference = request->req_references; reference; reference = reference->ref_next)

@@ -18,7 +18,6 @@
  */
 
 #include "firebird.h"
-#include "../jrd/common.h"
 
 
 /*

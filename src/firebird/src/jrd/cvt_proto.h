@@ -30,10 +30,12 @@
 
 double		CVT_date_to_double(const dsc*);
 void		CVT_double_to_date(double, SLONG[2]);
-UCHAR		CVT_get_numeric(const UCHAR*, const USHORT, SSHORT*, double*);
+UCHAR		CVT_get_numeric(const UCHAR*, const USHORT, SSHORT*, void*);
 GDS_DATE	CVT_get_sql_date(const dsc*);
 GDS_TIME	CVT_get_sql_time(const dsc*);
+ISC_TIME_TZ	CVT_get_sql_time_tz(const dsc*);
 GDS_TIMESTAMP CVT_get_timestamp(const dsc*);
+ISC_TIMESTAMP_TZ CVT_get_timestamp_tz(const dsc*);
 
 namespace Jrd
 {
@@ -55,25 +57,42 @@ namespace Jrd
 		virtual CHARSET_ID getChid(const dsc* d);
 		virtual CharSet* getToCharset(CHARSET_ID charset2);
 		virtual void validateData(CharSet* toCharset, SLONG length, const UCHAR* q);
-		virtual void validateLength(CharSet* toCharset, SLONG toLength, const UCHAR* start,
-			const USHORT to_size);
-		virtual SLONG getCurDate();
+		virtual ULONG validateLength(CharSet* charSet, CHARSET_ID charSetId, ULONG length, const UCHAR* start,
+			const USHORT size);
+		virtual SLONG getLocalDate();
+		virtual ISC_TIMESTAMP getCurrentGmtTimeStamp();
+		virtual USHORT getSessionTimeZone();
 		virtual void isVersion4(bool& v4);
 
 	public:
 		static Firebird::GlobalPtr<EngineCallbacks> instance;
 	};
+
+	class TruncateCallbacks : public EngineCallbacks
+	{
+	public:
+		explicit TruncateCallbacks(ISC_STATUS tr)
+			: EngineCallbacks(ERR_post), truncateReason(tr)
+		{
+		}
+
+		virtual ULONG validateLength(CharSet* charSet, CHARSET_ID charSetId, ULONG length, const UCHAR* start,
+			const USHORT size);
+
+	private:
+		const ISC_STATUS truncateReason;
+	};
 }
 
-inline void CVT_move(const dsc* from, dsc* to)
+inline void CVT_move(const dsc* from, dsc* to, Firebird::DecimalStatus decSt)
 {
-	CVT_move_common(from, to, &Jrd::EngineCallbacks::instance);
+	CVT_move_common(from, to, decSt, &Jrd::EngineCallbacks::instance);
 }
 
 inline USHORT CVT_get_string_ptr(const dsc* desc, USHORT* ttype, UCHAR** address,
-                                 vary* temp, USHORT length)
+                                 vary* temp, USHORT length, Firebird::DecimalStatus decSt)
 {
-	return CVT_get_string_ptr_common(desc, ttype, address, temp, length, 
+	return CVT_get_string_ptr_common(desc, ttype, address, temp, length, decSt,
 									 &Jrd::EngineCallbacks::instance);
 }
 

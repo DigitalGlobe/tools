@@ -28,13 +28,15 @@
 #include "../jrd/exe.h"
 #include "../jrd/req.h"
 
-namespace Jrd {
+namespace Jrd
+{
 	class jrd_rel;
 	class jrd_tra;
 	struct record_param;
 	class IndexBlock;
 	struct index_desc;
 	class CompilerScratch;
+	class thread_db;
 }
 
 void IDX_check_access(Jrd::thread_db*, Jrd::CompilerScratch*, Jrd::jrd_rel*, Jrd::jrd_rel*);

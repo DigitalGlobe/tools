@@ -1,0 +1,74 @@
+ifeq ($(NDK_TOOLCHAIN),)
+ifeq ($(NDK),)
+$(error Must export either NDK or NDK_TOOLCHAIN before building for Android)
+endif
+endif
+
+NDK_TOOLCHAIN ?= $(NDK)/toolchains/llvm/prebuilt/linux-x86_64
+
+CROSS_PREFIX24:=$(NDK_TOOLCHAIN)/bin/x86_64-linux-android24-
+CROSS_PREFIX:=$(NDK_TOOLCHAIN)/bin/llvm-
+
+CROSS_FLAGS:=-I$(ROOT)/gen/cross
+
+CXX:=$(CROSS_PREFIX24)clang++
+CC:=$(CROSS_PREFIX24)clang
+AR:=$(CROSS_PREFIX)ar
+AS:=$(CROSS_PREFIX)as
+LD:=$(CROSS_PREFIX)ld
+NM:=$(CROSS_PREFIX)nm
+OBJCOPY:=$(CROSS_PREFIX)objcopy
+OBJDUMP:=$(CROSS_PREFIX)objdump
+RANLIB:=$(CROSS_PREFIX)ranlib
+STRIP:=$(CROSS_PREFIX)strip
+
+export CXX
+export CC
+export AR
+export CROSS_FLAGS
+
+# Android uses flat tree.
+buildSubDirectory=$(FB_BUILD)
+LIB_PLATFORM_RPATH=-Wl,-rpath,\$$ORIGIN
+LibraryFullName=$(LibraryBaseName)
+LibrarySoName=$(LibraryBaseName)
+
+COMMON_FLAGS=-ggdb -DFB_SEND_FLAGS=MSG_NOSIGNAL -DLINUX -DANDROID -DAMD64 -pipe -MMD -fPIC -fmessage-length=0 \
+			 -I$(ROOT)/extern/libtommath -I$(ROOT)/extern/libtomcrypt/src/headers \
+			 $(CROSS_FLAGS) \
+			 -Wno-inline-new-delete
+
+OPTIMIZE_FLAGS=-fno-omit-frame-pointer
+WARN_FLAGS=-Werror=delete-incomplete -Wall -Wno-switch -Wno-parentheses -Wno-unknown-pragmas -Wno-unused-variable
+
+PROD_FLAGS=$(COMMON_FLAGS) $(OPTIMIZE_FLAGS)
+DEV_FLAGS=$(COMMON_FLAGS) $(WARN_FLAGS)
+
+CROSS_CONFIG=android.x86_64
+
+LDFLAGS += -static-libstdc++
+DroidLibs := -lm -ldl -llog $(DECLIB) $(I128LIB)
+UDR_SUPPORT_LIBS :=
+
+LINK_LIBS = $(DroidLibs)
+STATICLINK_LIBS = $(DroidLibs)
+SO_LINK_LIBS = $(DroidLibs)
+
+EXE_LINK_OPTIONS= $(LDFLAGS) $(UNDEF_FLAGS) $(LIB_PATH_OPTS) $(LINK_EMPTY_SYMBOLS) -pie
+LIB_LINK_OPTIONS= $(LDFLAGS) -shared
+
+UNICODE_DIR := $(shell dirname `find /usr/include -name ucnv.h`)
+UNICODE_DIR := $(filter %unicode, $(UNICODE_DIR))
+UNICODE_DIR := $(firstword $(UNICODE_DIR))
+ifndef UNICODE_DIR
+	$(error ERROR while locating ICU include directory, probably missing ucnv.h)
+endif
+
+.PHONY:	prerequisites
+prerequisites: $(ROOT)/gen/cross/unicode
+
+$(ROOT)/gen/cross/unicode:
+	echo $(UNICODE_DIR)
+	rm -rf $(ROOT)/gen/cross
+	mkdir $(ROOT)/gen/cross
+	ln -s $(UNICODE_DIR) cross/unicode

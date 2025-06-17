@@ -23,3 +23,43 @@ universal language translator.
 Expand marketing and sales in the Pacific Rim.
 Set up a field office in Australia and Singapore.
 
+	FCORE
+Everything that makes core Firebird distributions:
+- Firebird server
+- Utilities
+- Plugins, UDF, UDR
+- Ports, packaging and installers
+
+	FBDOC
+Firebird documentation:
+- Release Notes
+- Guides and books
+- Articles
+
+	PYTHN
+Python drivers and extension libraries.
+
+	DTNET
+.NET drivers and extension libraries.
+
+	ODBCD
+ODBC/OLE DB drivers.
+
+	PHPDR
+PHP drivers and extension libraries.
+
+	JAVAD
+Java drivers and extension libraries.
+
+	FB-QA
+Firebird QA:
+- tools
+- tests
+
+	INFRA
+Firebird Project infrastructure.
+
+	BTLER
+Firebird Butler:
+- Specifications
+- Saturnin

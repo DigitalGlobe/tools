@@ -32,19 +32,10 @@
 #ifndef INCLUDE_Firebird_H
 #define INCLUDE_Firebird_H
 
-#include "gen/autoconfig.h"
-
-// Vulcan definitions
-#ifdef NAMESPACE
-namespace NAMESPACE{}		// declare namespace before use
-using namespace NAMESPACE;
-#define START_NAMESPACE		namespace NAMESPACE {
-#define CLASS(cls)			namespace NAMESPACE { class cls; }
-#define END_NAMESPACE		}
+#ifdef _MSC_VER
+#include "gen/autoconfig_msvc.h"
 #else
-#define START_NAMESPACE
-#define CLASS(cls)			class cls;
-#define END_NAMESPACE
+#include "gen/autoconfig.h"
 #endif
 
 // Using our debugging code is pointless when we may use Valgrind features
@@ -52,13 +43,6 @@ using namespace NAMESPACE;
 #define DEBUG_GDS_ALLOC
 #endif
 
-#if defined(WIN_NT)
-#define FB_DLL_EXPORT __declspec(dllexport)
-#elif defined(DARWIN)
-#define FB_DLL_EXPORT API_ROUTINE
-#else
-#define FB_DLL_EXPORT
-#endif
 //#if defined(SOLX86)
 // this pragmas is used only with gcc 2.95!
 //#define __PRAGMA_REDEFINE_EXTNAME
@@ -76,22 +60,20 @@ using namespace NAMESPACE;
 #endif
 
 #ifdef __cplusplus
-#include "fb_exception.h"
+#include "../common/common.h"
 #endif
 
-#ifndef NULL
-#define NULL            0L
+#ifdef NULL
+#undef NULL
 #endif
 
-#if defined(WIN_NT) && defined(SUPERSERVER)
-// Comment this definition to build without priority scheduler
-//	OR:
-// Uncomment this definition to build with priority scheduler
-#define THREAD_PSCHED
-#endif
+#define NULL nullptr
 
 #if defined(WIN_NT)
 #define TRUSTED_AUTH
 #endif
 
-#endif /* INCLUDE_Firebird_H */
+// We do not use std::string
+#define U_HAVE_STD_STRING 0
+
+#endif // INCLUDE_Firebird_H

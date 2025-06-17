@@ -1,6 +1,6 @@
 ; FBControl.def : Declares the module parameters for the DLL.
 
-LIBRARY      "Firebird2Control"
+LIBRARY      "Firebird2Control.cpl"
 ;DESCRIPTION  'Firebird 2 Control Panel Windows Dynamic Link Library'
 
 EXPORTS

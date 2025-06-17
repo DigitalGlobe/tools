@@ -36,7 +36,33 @@
 namespace Firebird {
 
 extern HINSTANCE hDllInst;
-extern bool bEmbedded;
+extern bool bDllProcessExiting;
+extern DWORD dDllUnloadTID;
+
+class ThreadModuleRef
+{
+public:
+	ThreadModuleRef(void* thdFunc, bool* pShutFlag)
+	{
+		hModule = NULL;
+		m_shutFlag = pShutFlag;
+
+		const BOOL ret = GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+			(LPCSTR) thdFunc, &hModule);
+	}
+
+	~ThreadModuleRef()
+	{
+		if (!m_shutFlag || !*m_shutFlag)
+			FreeLibrary(hModule);
+		else
+			FreeLibraryAndExitThread(hModule, 0);
+	}
+
+private:
+	HMODULE hModule;
+	bool* m_shutFlag;
+};
 
 } // namespace
 

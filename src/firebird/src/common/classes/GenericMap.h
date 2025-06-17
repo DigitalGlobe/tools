@@ -31,7 +31,9 @@
 
 #include "../common/classes/fb_string.h"
 #include "../common/classes/fb_pair.h"
+#include "../common/classes/rwlock.h"
 #include "../common/classes/tree.h"
+#include <functional>
 
 namespace Firebird {
 
@@ -53,6 +55,44 @@ namespace Firebird {
 template <typename KeyValuePair, typename KeyComparator = DefaultComparator<typename KeyValuePair::first_type> >
 class GenericMap : public AutoStorage
 {
+private:
+	template <typename TGenericMap, typename TAccessor, typename TKeyValuePair>
+	class BaseIterator
+	{
+	public:
+		BaseIterator(TGenericMap* map, bool initFinished = false)
+			: accessor(map),
+			  finished(initFinished)
+		{
+			if (!initFinished)
+				finished = !accessor.getFirst();
+		}
+
+	public:
+		bool operator !=(const BaseIterator& o)
+		{
+			return !(
+				(finished && o.finished) ||
+				((!finished && !o.finished && accessor.current() == o.accessor.current())));
+		}
+
+		void operator ++()
+		{
+			fb_assert(!finished);
+			finished = !accessor.getNext();
+		}
+
+		TKeyValuePair& operator *()
+		{
+			fb_assert(!finished);
+			return *accessor.current();
+		}
+
+	private:
+		TAccessor accessor;
+		bool finished;
+	};
+
 public:
 	typedef typename KeyValuePair::first_type KeyType;
 	typedef typename KeyValuePair::second_type ValueType;
@@ -71,10 +111,9 @@ public:
 		bool getFirst() { return m_Accessor.getFirst(); }
 		bool getNext() { return m_Accessor.getNext(); }
 
-	private:
-		Accessor(const Accessor&);
-		Accessor& operator=(const Accessor&);
+		bool locate(const KeyType& key) { return m_Accessor.locate(key); }
 
+	private:
 		TreeAccessor m_Accessor;
 	};
 
@@ -88,12 +127,14 @@ public:
 		bool getFirst() { return m_Accessor.getFirst(); }
 		bool getNext() { return m_Accessor.getNext(); }
 
-	private:
-		ConstAccessor(const ConstAccessor&);
-		ConstAccessor& operator=(const ConstAccessor&);
+		bool locate(const KeyType& key) { return m_Accessor.locate(key); }
 
+	private:
 		ConstTreeAccessor m_Accessor;
 	};
+
+	using Iterator = BaseIterator<GenericMap, Accessor, KeyValuePair>;
+	using ConstIterator = BaseIterator<const GenericMap, ConstAccessor, const KeyValuePair>;
 
 	friend class Accessor;
 	friend class ConstAccessor;
@@ -133,8 +174,10 @@ public:
 
 		TreeAccessor treeAccessor(&from.tree);
 
-		if (treeAccessor.getFirst()) {
-			while (true) {
+		if (treeAccessor.getFirst())
+		{
+			while (true)
+			{
 				bool haveMore = treeAccessor.fastRemove();
 				if (!haveMore)
 					break;
@@ -149,8 +192,10 @@ public:
 	{
 		TreeAccessor treeAccessor(&tree);
 
-		if (treeAccessor.getFirst()) {
-			while (true) {
+		if (treeAccessor.getFirst())
+		{
+			while (true)
+			{
 				KeyValuePair* temp = treeAccessor.current();
 				bool haveMore = treeAccessor.fastRemove();
 				delete temp;
@@ -167,7 +212,8 @@ public:
 	{
 		TreeAccessor treeAccessor(&tree);
 
-		if (treeAccessor.locate(key)) {
+		if (treeAccessor.locate(key))
+		{
 			KeyValuePair* var = treeAccessor.current();
 			treeAccessor.fastRemove();
 			delete var;
@@ -183,12 +229,13 @@ public:
 	{
 		TreeAccessor treeAccessor(&tree);
 
-		if (treeAccessor.locate(key)) {
+		if (treeAccessor.locate(key))
+		{
 			treeAccessor.current()->second = value;
 			return true;
 		}
 
-		KeyValuePair* var = FB_NEW(getPool()) KeyValuePair(getPool(), key, value);
+		KeyValuePair* var = FB_NEW_POOL(getPool()) KeyValuePair(getPool(), key, value);
 		tree.add(var);
 		mCount++;
 		return false;
@@ -203,7 +250,7 @@ public:
 			return NULL;
 		}
 
-		KeyValuePair* var = FB_NEW(getPool()) KeyValuePair(getPool());
+		KeyValuePair* var = FB_NEW_POOL(getPool()) KeyValuePair(getPool());
 		var->first = key;
 		tree.add(var);
 		mCount++;
@@ -211,11 +258,12 @@ public:
 	}
 
 	// Returns true if value is found
-	bool get(const KeyType& key, ValueType& value)
+	bool get(const KeyType& key, ValueType& value) const
 	{
-		TreeAccessor treeAccessor(&tree);
+		ConstTreeAccessor treeAccessor(&tree);
 
-		if (treeAccessor.locate(key)) {
+		if (treeAccessor.locate(key))
+		{
 			value = treeAccessor.current()->second;
 			return true;
 		}
@@ -224,9 +272,9 @@ public:
 	}
 
 	// Returns pointer to the found value or null otherwise
-	ValueType* get(const KeyType& key)
+	ValueType* get(const KeyType& key) const
 	{
-		TreeAccessor treeAccessor(&tree);
+		ConstTreeAccessor treeAccessor(&tree);
 
 		if (treeAccessor.locate(key)) {
 			return &treeAccessor.current()->second;
@@ -235,12 +283,93 @@ public:
 		return NULL;
 	}
 
-	bool exist(const KeyType& key)
+	// If the key is not present, add it. Not synchronized.
+	ValueType* getOrPut(const KeyType& key)
 	{
-		return TreeAccessor(&tree).locate(key);
+		if (auto value = get(key))
+			return value;
+
+		return put(key);
+	}
+
+	bool exist(const KeyType& key) const
+	{
+		return ConstTreeAccessor(&tree).locate(key);
 	}
 
 	size_t count() const { return mCount; }
+
+	Accessor accessor()
+	{
+		return Accessor(this);
+	}
+
+	ConstAccessor constAccessor() const
+	{
+		return ConstAccessor(this);
+	}
+
+	Iterator begin()
+	{
+		return Iterator(this);
+	}
+
+	ConstIterator begin() const
+	{
+		return ConstIterator(this);
+	}
+
+	Iterator end()
+	{
+		return Iterator(this, true);
+	}
+
+	ConstIterator end() const
+	{
+		return ConstIterator(this, true);
+	}
+
+	ValueType& compute(RWLock& lock, const KeyType& key, std::function<void (const KeyType&, ValueType&, bool)> func)
+	{
+		{	// scope
+			ReadLockGuard sync(lock, FB_FUNCTION);
+
+			const auto value = get(key);
+
+			if (value)
+			{
+				func(key, *value, true);
+				return *value;
+			}
+		}
+
+		{	// scope
+			WriteLockGuard sync(lock, FB_FUNCTION);
+
+			auto value = get(key);
+
+			if (value)
+			{
+				func(key, *value, true);
+				return *value;
+			}
+
+			value = put(key);
+			fb_assert(value);
+
+			try
+			{
+				func(key, *value, false);
+			}
+			catch (...)
+			{
+				remove(key);
+				throw;
+			}
+
+			return *value;
+		}
+	}
 
 private:
 	ValuesTree tree;
@@ -248,6 +377,18 @@ private:
 };
 
 typedef GenericMap<Pair<Full<string, string> > > StringMap;
+
+template <typename T, typename V, typename KeyComparator = DefaultComparator<T>>
+using NonPooledMap = GenericMap<NonPooledPair<T, V>, KeyComparator>;
+
+template <typename T, typename V, typename KeyComparator = DefaultComparator<T>>
+using LeftPooledMap = GenericMap<LeftPooledPair<T, V>, KeyComparator>;
+
+template <typename T, typename V, typename KeyComparator = DefaultComparator<T>>
+using RightPooledMap = GenericMap<RightPooledPair<T, V>, KeyComparator>;
+
+template <typename T, typename V, typename KeyComparator = DefaultComparator<T>>
+using FullPooledMap = GenericMap<FullPooledPair<T, V>, KeyComparator>;
 
 }
 

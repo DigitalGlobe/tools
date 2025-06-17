@@ -16,7 +16,7 @@
  * All Rights Reserved.
  * Contributor(s): ______________________________________.
  */
-set sql dialect 1;
+set sql dialect 3;
 /*create database 'intlemp.fdb' default character set iso8859_1; */
 create database 'intlbuild.fdb' default character set iso8859_1;
 show version;

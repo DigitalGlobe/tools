@@ -23,6 +23,7 @@ Format:
     <table primary> ::=
         <table> [[AS] <correlation name>]
       | <derived table>
+      | <lateral derived table>
 
     <derived table> ::=
         <query expression> [[AS] <correlation name>] 
@@ -30,14 +31,18 @@ Format:
 
     <derived column list> ::= <column name> [{<comma> <column name>}...]
 
+    <lateral derived table> ::= LATERAL <derived table> 
+
 Notes:
-    Every column in the derived table must have a name. Unnamed expressions like 
-    constants should be added with an alias or the column list should be used.
-    The number of columns in the column list should be the same as the number of 
-    columns from the query expression.
-    The optimizer can handle a derived table very efficiently, but if the 
-    derived table contains a sub-select then no join order can be made (if the 
-    derived table is included in an inner join).
+    - Every column in the derived table must have a name. Unnamed expressions like 
+      constants should be added with an alias or the column list should be used.
+    - The number of columns in the column list should be the same as the number of 
+      columns from the query expression.
+    - The optimizer can handle a derived table very efficiently, but if the 
+      derived table contains a sub-select then no join order can be made (if the 
+      derived table is included in an inner join).
+    - Keyword LATERAL allows the derived table to reference fields from the priorly
+      listed tables in the current <table reference list>.
 
 Examples:
 
@@ -52,7 +57,7 @@ a) Simple derived table:
        RDB$RELATIONS) AS R (RELATION_NAME, RELATION_ID)
 
 
-b) Aggregate on a derived table which also contains an aggregate
+b) Aggregate on a derived table which also contains an aggregate:
 
   SELECT
     DT.FIELDS,
@@ -91,3 +96,13 @@ c) UNION and ORDER BY example:
   WHERE
     DT.RDB$RELATION_ID <= 4
 
+d) LATERAL derived table:
+
+  SELECT
+    *
+  FROM
+    (SELECT RDB$RELATION_NAME, RDB$RELATION_ID FROM RDB$RELATIONS)
+      AS R (RELATION_NAME, RELATION_ID)
+    CROSS JOIN LATERAL
+    (SELECT COUNT(*) FROM RDB$RELATION_FIELDS WHERE RDB$RELATION_NAME = R.RELATION_NAME)
+      AS RF (FIELD_COUNT)

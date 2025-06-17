@@ -10,19 +10,21 @@
  *  See the License for the specific language governing rights
  *  and limitations under the License.
  *
- *  The Original Code was created by Vlad Horsun
+ *  The Original Code was created by Vlad Khorsun
  *  for the Firebird Open Source RDBMS project.
  *
- *  Copyright (c) 2005 Vlad Horsun <hvlad@users.sourceforge.net>
+ *  Copyright (c) 2005 Vlad Khorsun <hvlad@users.sourceforge.net>
  *  and all contributors signed below.
  *
  *  All Rights Reserved.
  *  Contributor(s): ______________________________________.
  */
 
+#include "firebird.h"
 #include "../jrd/Relation.h"
-#include "../jrd/tra.h"
 
+#include "../jrd/met.h"
+#include "../jrd/tra.h"
 #include "../jrd/btr_proto.h"
 #include "../jrd/dpm_proto.h"
 #include "../jrd/idx_proto.h"
@@ -33,98 +35,36 @@
 
 using namespace Jrd;
 
-#ifdef GARBAGE_THREAD
+/// jrd_rel
 
-void RelationGarbage::clear()
+bool jrd_rel::isReplicating(thread_db* tdbb)
 {
-	TranGarbage *item = array.begin(), *const last = array.end();
+	Database* const dbb = tdbb->getDatabase();
+	if (!dbb->isReplicating(tdbb))
+		return false;
 
-	for (; item < last; item++)
-	{
-		delete item->bm;
-		item->bm = NULL;
-	}
+	Attachment* const attachment = tdbb->getAttachment();
+	attachment->checkReplSetLock(tdbb);
 
-	array.clear();
+	if (rel_repl_state.isUnknown())
+		rel_repl_state = MET_get_repl_state(tdbb, rel_name);
+
+	return rel_repl_state.value;
 }
 
-void RelationGarbage::addPage(MemoryPool* pool, const SLONG pageno, const SLONG tranid)
-{
-	bool found = false;
-	TranGarbage const *item = array.begin(), *const last = array.end();
-
-	for (; item < last; item++)
-	{
-		if (item->tran <= tranid)
-		{
-			if (PageBitmap::test(item->bm, pageno))
-			{
-				found = true;
-				break;
-			}
-		}
-		else
-		{
-			if (item->bm->clear(pageno))
-				break;
-		}
-	}
-
-	if (!found)
-	{
-		PageBitmap *bm = NULL;
-		size_t pos = 0;
-
-		if (array.find(tranid, pos) )
-		{
-			bm = array[pos].bm;
-			PBM_SET(pool, &bm, pageno);
-		}
-		else
-		{
-			bm = NULL;
-			PBM_SET(pool, &bm, pageno);
-			array.add(TranGarbage(bm, tranid));
-		}
-	}
-}
-
-void RelationGarbage::getGarbage(const SLONG oldest_snapshot, PageBitmap **sbm)
-{
-	while (array.getCount() > 0)
-	{
-		TranGarbage& garbage = array[0];
-
-		if (garbage.tran >= oldest_snapshot)
-			break;
-
-		PageBitmap* bm_tran = garbage.bm;
-		PageBitmap** bm_or = PageBitmap::bit_or(sbm, &bm_tran);
-		if (*bm_or == garbage.bm)
-		{
-			bm_tran = *sbm;
-			*sbm = garbage.bm;
-			garbage.bm = bm_tran;
-		}
-		delete garbage.bm;
-
-		// Need to cast zero to exact type because literal zero means null pointer
-		array.remove(static_cast<size_t>(0));
-	}
-}
-
-#endif //GARBAGE_THREAD
-
-RelationPages* jrd_rel::getPagesInternal(thread_db* tdbb, SLONG tran, bool allocPages)
+RelationPages* jrd_rel::getPagesInternal(thread_db* tdbb, TraNumber tran, bool allocPages)
 {
 	if (tdbb->tdbb_flags & TDBB_use_db_page_space)
 		return &rel_pages_base;
 
+	Jrd::Attachment* attachment = tdbb->getAttachment();
 	Database* dbb = tdbb->getDatabase();
-	SLONG inst_id;
+
+	RelationPages::InstanceId inst_id;
+
 	if (rel_flags & REL_temp_tran)
 	{
-		if (tran > 0)
+		if (tran != 0 && tran != MAX_TRA_NUMBER)
 			inst_id = tran;
 		else if (tdbb->tdbb_temp_traid)
 			inst_id = tdbb->tdbb_temp_traid;
@@ -137,28 +77,17 @@ RelationPages* jrd_rel::getPagesInternal(thread_db* tdbb, SLONG tran, bool alloc
 		inst_id = PAG_attachment_id(tdbb);
 
 	if (!rel_pages_inst)
-	{
-		MemoryPool& pool = *dbb->dbb_permanent;
-		rel_pages_inst = FB_NEW(pool) RelationPagesInstances(pool);
-	}
+		rel_pages_inst = FB_NEW_POOL(*rel_pool) RelationPagesInstances(*rel_pool);
 
-	size_t pos;
+	FB_SIZE_T pos;
 	if (!rel_pages_inst->find(inst_id, pos))
 	{
 		if (!allocPages)
 			return 0;
 
 		RelationPages* newPages = rel_pages_free;
-		if (!newPages)
-		{
-			const size_t BULK_ALLOC = 8;
-
-			RelationPages* allocatedPages = newPages =
-				FB_NEW(*dbb->dbb_permanent) RelationPages[BULK_ALLOC];
-
-			rel_pages_free = ++allocatedPages;
-			for (size_t i = 1; i < BULK_ALLOC - 1; i++, allocatedPages++)
-				allocatedPages->rel_next_free = allocatedPages + 1;
+		if (!newPages) {
+			newPages = FB_NEW_POOL(*rel_pool) RelationPages(*rel_pool);
 		}
 		else
 		{
@@ -177,59 +106,54 @@ RelationPages* jrd_rel::getPagesInternal(thread_db* tdbb, SLONG tran, bool alloc
 		DPM_create_relation_pages(tdbb, this, newPages);
 
 #ifdef VIO_DEBUG
-		if (debug_flag > DEBUG_WRITES)
-		{
-			printf("jrd_rel::getPages inst %" SLONGFORMAT", ppp %" SLONGFORMAT", irp %" SLONGFORMAT", addr 0x%x\n",
-				newPages->rel_instance_id,
-				newPages->rel_pages ? (*newPages->rel_pages)[0] : 0,
-				newPages->rel_index_root,
-				newPages);
-		}
+		VIO_trace(DEBUG_WRITES,
+			"jrd_rel::getPages rel_id %u, inst %" UQUADFORMAT", ppp %" ULONGFORMAT", irp %" ULONGFORMAT", addr 0x%x\n",
+			rel_id,
+			newPages->rel_instance_id,
+			newPages->rel_pages ? (*newPages->rel_pages)[0] : 0,
+			newPages->rel_index_root,
+			newPages);
 #endif
 
 		// create indexes
-		MemoryPool *pool = tdbb->getDefaultPool();
+		MemoryPool* pool = tdbb->getDefaultPool();
 		const bool poolCreated = !pool;
 
 		if (poolCreated)
 			pool = dbb->createPool();
 		Jrd::ContextPoolHolder context(tdbb, pool);
 
-		jrd_tra *idx_tran = tdbb->getTransaction();
-		if (!idx_tran) {
-			idx_tran = dbb->dbb_sys_trans;
-		}
+		jrd_tra* idxTran = tdbb->getTransaction();
+		if (!idxTran)
+			idxTran = attachment->getSysTransaction();
 
-		IndexDescAlloc* indices = NULL;
+		IndexDescList indices;
 		// read indices from "base" index root page
-		const USHORT idx_count = BTR_all(tdbb, this, &indices, &rel_pages_base);
+		BTR_all(tdbb, this, indices, &rel_pages_base);
 
-		const index_desc* const end = indices->items + idx_count;
-		for (index_desc* idx = indices->items; idx < end; idx++)
+		for (auto& idx : indices)
 		{
-			Firebird::MetaName idx_name;
-			MET_lookup_index(tdbb, idx_name, this->rel_name, idx->idx_id + 1);
+			MetaName idx_name;
+			MET_lookup_index(tdbb, idx_name, this->rel_name, idx.idx_id + 1);
 
-			idx->idx_root = 0;
+			idx.idx_root = 0;
 			SelectivityList selectivity(*pool);
-			IDX_create_index(tdbb, this, idx, idx_name.c_str(), NULL, idx_tran, selectivity);
+			IDX_create_index(tdbb, this, &idx, idx_name.c_str(), NULL, idxTran, selectivity);
 
 #ifdef VIO_DEBUG
-			if (debug_flag > DEBUG_WRITES)
-			{
-				printf("jrd_rel::getPages inst %" SLONGFORMAT", irp %" SLONGFORMAT", idx %u, idx_root %" SLONGFORMAT", addr 0x%x\n",
-					newPages->rel_instance_id,
-					newPages->rel_index_root,
-					idx->idx_id,
-					idx->idx_root,
-					newPages);
-			}
+			VIO_trace(DEBUG_WRITES,
+				"jrd_rel::getPages rel_id %u, inst %" UQUADFORMAT", irp %" ULONGFORMAT", idx %u, idx_root %" ULONGFORMAT", addr 0x%x\n",
+				rel_id,
+				newPages->rel_instance_id,
+				newPages->rel_index_root,
+				idx.idx_id,
+				idx.idx_root,
+				newPages);
 #endif
 		}
 
 		if (poolCreated)
 			dbb->deletePool(pool);
-		delete indices;
 
 		return newPages;
 	}
@@ -239,13 +163,13 @@ RelationPages* jrd_rel::getPagesInternal(thread_db* tdbb, SLONG tran, bool alloc
 	return pages;
 }
 
-bool jrd_rel::delPages(thread_db* tdbb, SLONG tran, RelationPages* aPages)
+bool jrd_rel::delPages(thread_db* tdbb, TraNumber tran, RelationPages* aPages)
 {
 	RelationPages* pages = aPages ? aPages : getPages(tdbb, tran, false);
 	if (!pages || !pages->rel_instance_id)
 		return false;
 
-	fb_assert((tran <= 0) || ((tran > 0) && (pages->rel_instance_id == tran)));
+	fb_assert(tran == 0 || tran == MAX_TRA_NUMBER || pages->rel_instance_id == tran);
 
 	fb_assert(pages->useCount > 0);
 
@@ -253,17 +177,16 @@ bool jrd_rel::delPages(thread_db* tdbb, SLONG tran, RelationPages* aPages)
 		return false;
 
 #ifdef VIO_DEBUG
-	if (debug_flag > DEBUG_WRITES)
-	{
-		printf("jrd_rel::delPages inst %" SLONGFORMAT", ppp %" SLONGFORMAT", irp %" SLONGFORMAT", addr 0x%x\n",
-			pages->rel_instance_id,
-			pages->rel_pages ? (*pages->rel_pages)[0] : 0,
-			pages->rel_index_root,
-			pages);
-	}
+	VIO_trace(DEBUG_WRITES,
+		"jrd_rel::delPages rel_id %u, inst %" UQUADFORMAT", ppp %" ULONGFORMAT", irp %" ULONGFORMAT", addr 0x%x\n",
+		rel_id,
+		pages->rel_instance_id,
+		pages->rel_pages ? (*pages->rel_pages)[0] : 0,
+		pages->rel_index_root,
+		pages);
 #endif
 
-	size_t pos;
+	FB_SIZE_T pos;
 #ifdef DEV_BUILD
 	const bool found =
 #endif
@@ -272,16 +195,37 @@ bool jrd_rel::delPages(thread_db* tdbb, SLONG tran, RelationPages* aPages)
 
 	rel_pages_inst->remove(pos);
 
-	if (pages->rel_index_root) {
+	if (pages->rel_index_root)
 		IDX_delete_indices(tdbb, this, pages);
-	}
 
-	if (pages->rel_pages) {
+	if (pages->rel_pages)
 		DPM_delete_relation_pages(tdbb, this, pages);
-	}
 
 	pages->free(rel_pages_free);
 	return true;
+}
+
+void jrd_rel::retainPages(thread_db* tdbb, TraNumber oldNumber, TraNumber newNumber)
+{
+	fb_assert(rel_flags & REL_temp_tran);
+	fb_assert(oldNumber != 0);
+	fb_assert(newNumber != 0);
+
+	if (!rel_pages_inst)
+		return;
+
+	SINT64 inst_id = oldNumber;
+	FB_SIZE_T pos;
+	if (!rel_pages_inst->find(oldNumber, pos))
+		return;
+
+	RelationPages* pages = (*rel_pages_inst)[pos];
+	fb_assert(pages->rel_instance_id == oldNumber);
+
+	rel_pages_inst->remove(pos);
+
+	pages->rel_instance_id = newNumber;
+	rel_pages_inst->add(pages);
 }
 
 void jrd_rel::getRelLockKey(thread_db* tdbb, UCHAR* key)
@@ -290,13 +234,13 @@ void jrd_rel::getRelLockKey(thread_db* tdbb, UCHAR* key)
 	memcpy(key, &val, sizeof(ULONG));
 	key += sizeof(ULONG);
 
-	const SLONG inst_id = getPages(tdbb)->rel_instance_id;
-	memcpy(key, &inst_id, sizeof(SLONG));
+	const RelationPages::InstanceId inst_id = getPages(tdbb)->rel_instance_id;
+	memcpy(key, &inst_id, sizeof(inst_id));
 }
 
-SSHORT jrd_rel::getRelLockKeyLength() const
+USHORT jrd_rel::getRelLockKeyLength() const
 {
-	return sizeof(ULONG) + sizeof(SLONG);
+	return sizeof(ULONG) + sizeof(SINT64);
 }
 
 void jrd_rel::cleanUp()
@@ -310,7 +254,7 @@ void jrd_rel::fillPagesSnapshot(RelPagesSnapshot& snapshot, const bool attachmen
 {
 	if (rel_pages_inst)
 	{
-		for (size_t i = 0; i < rel_pages_inst->getCount(); i++)
+		for (FB_SIZE_T i = 0; i < rel_pages_inst->getCount(); i++)
 		{
 			RelationPages* relPages = (*rel_pages_inst)[i];
 
@@ -320,7 +264,7 @@ void jrd_rel::fillPagesSnapshot(RelPagesSnapshot& snapshot, const bool attachmen
 				relPages->addRef();
 			}
 			else if ((rel_flags & REL_temp_conn) &&
-				(PAG_attachment_id(snapshot.spt_tdbb) == relPages->rel_instance_id))
+				PAG_attachment_id(snapshot.spt_tdbb) == relPages->rel_instance_id)
 			{
 				snapshot.add(relPages);
 				relPages->addRef();
@@ -351,12 +295,12 @@ void jrd_rel::RelPagesSnapshot::clear()
 	fb_assert(tdbb == spt_tdbb);
 #endif
 
-	for (size_t i = 0; i < getCount(); i++)
+	for (FB_SIZE_T i = 0; i < getCount(); i++)
 	{
 		RelationPages* relPages = (*this)[i];
 		(*this)[i] = NULL;
 
-		spt_relation->delPages(spt_tdbb, -1, relPages);
+		spt_relation->delPages(spt_tdbb, MAX_TRA_NUMBER, relPages);
 	}
 
 	inherited::clear();
@@ -383,36 +327,68 @@ bool jrd_rel::hasTriggers() const
 	return false;
 }
 
+void jrd_rel::releaseTriggers(thread_db* tdbb, bool destroy)
+{
+	MET_release_triggers(tdbb, &rel_pre_store, destroy);
+	MET_release_triggers(tdbb, &rel_post_store, destroy);
+	MET_release_triggers(tdbb, &rel_pre_erase, destroy);
+	MET_release_triggers(tdbb, &rel_post_erase, destroy);
+	MET_release_triggers(tdbb, &rel_pre_modify, destroy);
+	MET_release_triggers(tdbb, &rel_post_modify, destroy);
+}
+
+void jrd_rel::replaceTriggers(thread_db* tdbb, TrigVector** triggers)
+{
+	TrigVector* tmp_vector;
+
+	tmp_vector = rel_pre_store;
+	rel_pre_store = triggers[TRIGGER_PRE_STORE];
+	MET_release_triggers(tdbb, &tmp_vector, true);
+
+	tmp_vector = rel_post_store;
+	rel_post_store = triggers[TRIGGER_POST_STORE];
+	MET_release_triggers(tdbb, &tmp_vector, true);
+
+	tmp_vector = rel_pre_erase;
+	rel_pre_erase = triggers[TRIGGER_PRE_ERASE];
+	MET_release_triggers(tdbb, &tmp_vector, true);
+
+	tmp_vector = rel_post_erase;
+	rel_post_erase = triggers[TRIGGER_POST_ERASE];
+	MET_release_triggers(tdbb, &tmp_vector, true);
+
+	tmp_vector = rel_pre_modify;
+	rel_pre_modify = triggers[TRIGGER_PRE_MODIFY];
+	MET_release_triggers(tdbb, &tmp_vector, true);
+
+	tmp_vector = rel_post_modify;
+	rel_post_modify = triggers[TRIGGER_POST_MODIFY];
+	MET_release_triggers(tdbb, &tmp_vector, true);
+}
+
 Lock* jrd_rel::createLock(thread_db* tdbb, MemoryPool* pool, jrd_rel* relation, lck_t lckType, bool noAst)
 {
-	Database *dbb = tdbb->getDatabase();
 	if (!pool)
-		pool = dbb->dbb_permanent;
+		pool = relation->rel_pool;
 
-	const SSHORT relLockLen = relation->getRelLockKeyLength();
+	const USHORT relLockLen = relation->getRelLockKeyLength();
 
-	Lock* lock = FB_NEW_RPT(*pool, relLockLen) Lock();
-	lock->lck_dbb = dbb;
-
-	lock->lck_length = relLockLen;
-	relation->getRelLockKey(tdbb, &lock->lck_key.lck_string[0]);
+	Lock* lock = FB_NEW_RPT(*pool, relLockLen) Lock(tdbb, relLockLen, lckType, relation);
+	relation->getRelLockKey(tdbb, lock->getKeyPtr());
 
 	lock->lck_type = lckType;
 	switch (lckType)
 	{
-	case LCK_relation: 
+	case LCK_relation:
 		break;
 
-	case LCK_rel_gc: 
+	case LCK_rel_gc:
 		lock->lck_ast = noAst ? NULL : blocking_ast_gcLock;
 		break;
 
 	default:
 		fb_assert(false);
 	}
-	lock->lck_owner_handle = LCK_get_owner_handle(tdbb, lock->lck_type);
-	lock->lck_parent = dbb->dbb_lock;
-	lock->lck_object = relation;
 
 	return lock;
 }
@@ -427,7 +403,7 @@ bool jrd_rel::acquireGCLock(thread_db* tdbb, int wait)
 		return true;
 	}
 
-	if (!rel_gc_lock) 
+	if (!rel_gc_lock)
 		rel_gc_lock = createLock(tdbb, NULL, this, LCK_rel_gc, false);
 
 	fb_assert(!rel_gc_lock->lck_id);
@@ -475,11 +451,12 @@ void jrd_rel::downgradeGCLock(thread_db* tdbb)
 
 int jrd_rel::blocking_ast_gcLock(void* ast_object)
 {
-/****
+	/****
 	SR - gc forbidden, awaiting moment to re-establish SW lock
 	SW - gc allowed, usual state
 	PW - gc allowed to the one connection only
-****/
+	****/
+
 	jrd_rel* relation = static_cast<jrd_rel*>(ast_object);
 
 	try
@@ -487,10 +464,10 @@ int jrd_rel::blocking_ast_gcLock(void* ast_object)
 		Lock* lock = relation->rel_gc_lock;
 		Database* dbb = lock->lck_dbb;
 
-		AstContextHolder tdbb(dbb, lock->lck_attachment);
+		AsyncContextHolder tdbb(dbb, FB_FUNCTION, lock);
 
 		fb_assert(!(relation->rel_flags & REL_gc_lockneed));
-		if (relation->rel_flags & REL_gc_lockneed) // work already done syncronously ?
+		if (relation->rel_flags & REL_gc_lockneed) // work already done synchronously ?
 			return 0;
 
 		relation->rel_flags |= REL_gc_blocking;
@@ -508,7 +485,7 @@ int jrd_rel::blocking_ast_gcLock(void* ast_object)
 			relation->rel_flags &= ~(REL_gc_disabled | REL_gc_blocking);
 			relation->rel_flags |= REL_gc_lockneed;
 		}
-		else 
+		else
 		{
 			// someone acquired PW lock
 
@@ -529,7 +506,7 @@ int jrd_rel::blocking_ast_gcLock(void* ast_object)
 /// jrd_rel::GCExclusive
 
 jrd_rel::GCExclusive::GCExclusive(thread_db* tdbb, jrd_rel* relation) :
-	m_tdbb(tdbb), 
+	m_tdbb(tdbb),
 	m_relation(relation),
 	m_lock(NULL)
 {
@@ -554,8 +531,8 @@ bool jrd_rel::GCExclusive::acquire(int wait)
 	int sleeps = -wait * 10;
 	while (m_relation->rel_sweep_count)
 	{
-		Database::Checkout cout(m_tdbb->getDatabase());
-		THD_sleep(100);
+		EngineCheckout cout(m_tdbb, FB_FUNCTION);
+		Thread::sleep(100);
 
 		if (wait < 0 && --sleeps == 0)
 			break;
@@ -615,5 +592,10 @@ void RelationPages::free(RelationPages*& nextFree)
 		rel_pages->clear();
 
 	rel_index_root = rel_data_pages = 0;
-	rel_slot_space = rel_data_space = rel_instance_id = 0;
+	rel_slot_space = rel_pri_data_space = rel_sec_data_space = 0;
+	rel_last_free_pri_dp = rel_last_free_blb_dp = 0;
+	rel_instance_id = 0;
+
+	dpMap.clear();
+	dpMapMark = 0;
 }

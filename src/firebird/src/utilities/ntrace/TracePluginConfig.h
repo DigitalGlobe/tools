@@ -28,7 +28,8 @@
 #ifndef TRACEPLUGINCONFIG_H
 #define TRACEPLUGINCONFIG_H
 
-#include "../../common/classes/fb_string.h"
+#include "../common/classes/fb_string.h"
+#include "../common/config/config_file.h"
 
 //enum LogFormat { lfText = 0, lfBinary = 1 };
 
@@ -38,7 +39,7 @@ struct TracePluginConfig
 #define SERVICE_PARAMS
 
 #define PATH_PARAMETER(NAME, VALUE) Firebird::PathName NAME;
-#define STR_PARAMETER(NAME, VALUE) Firebird::string NAME;
+#define STR_PARAMETER(NAME, VALUE) ConfigFile::String NAME;
 #define BOOL_PARAMETER(NAME, VALUE) bool NAME;
 #define UINT_PARAMETER(NAME, VALUE) ULONG NAME;
 #include "paramtable.h"
@@ -50,8 +51,8 @@ struct TracePluginConfig
 
 	// Default constructor. Pass pool to all string parameters, initialize everything to defaults
 	TracePluginConfig() :
-#define PATH_PARAMETER(NAME, VALUE) NAME(*getDefaultMemoryPool(), VALUE, strlen(VALUE)),
-#define STR_PARAMETER(NAME, VALUE) NAME(*getDefaultMemoryPool(), VALUE, strlen(VALUE)),
+#define PATH_PARAMETER(NAME, VALUE) NAME(*getDefaultMemoryPool(), VALUE, fb_strlen(VALUE)),
+#define STR_PARAMETER(NAME, VALUE) NAME(*getDefaultMemoryPool(), VALUE, fb_strlen(VALUE)),
 #define BOOL_PARAMETER(NAME, VALUE) NAME(VALUE),
 #define UINT_PARAMETER(NAME, VALUE) NAME(VALUE),
 #include "paramtable.h"

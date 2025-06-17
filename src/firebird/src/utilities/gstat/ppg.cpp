@@ -27,20 +27,21 @@
 #include "firebird.h"
 #include <stdio.h>
 #include <string.h>
-#include "../jrd/common.h"
 #include "../common/classes/timestamp.h"
-#include "../jrd/ibase.h"
+#include "ibase.h"
 #include "../jrd/ods.h"
-#include "../jrd/os/guid.h"
-#include "../jrd/nbak.h"
-#include "../jrd/gds_proto.h"
+#include "../jrd/ods_proto.h"
+#include "../common/os/guid.h"
+#include "../yvalve/gds_proto.h"
+#include "../common/classes/DbImplementation.h"
 
 #include "../utilities/gstat/ppg_proto.h"
 
 // gstat directly reads database files, therefore
 using namespace Ods;
+using Firebird::Guid;
 
-void PPG_print_header(const header_page* header, SLONG page,
+void PPG_print_header(const header_page* header, ULONG page,
 					  bool nocreation, Firebird::UtilSvc* uSvc)
 {
 /**************************************
@@ -58,24 +59,25 @@ void PPG_print_header(const header_page* header, SLONG page,
 	else
 		uSvc->printf(false, "Database overflow header page information:\n");
 
-
 	if (page == HEADER_PAGE)
 	{
 		uSvc->printf(false, "\tFlags\t\t\t%d\n", header->hdr_header.pag_flags);
-		uSvc->printf(false, "\tChecksum\t\t%d\n", header->hdr_header.pag_checksum);
+		//uSvc->printf("\tChecksum\t\t%d\n", header->hdr_header.pag_checksum);
 		uSvc->printf(false, "\tGeneration\t\t%" ULONGFORMAT"\n", header->hdr_header.pag_generation);
+		uSvc->printf(false, "\tSystem Change Number\t%" ULONGFORMAT"\n", header->hdr_header.pag_scn);
 		uSvc->printf(false, "\tPage size\t\t%d\n", header->hdr_page_size);
 		uSvc->printf(false, "\tODS version\t\t%d.%d\n",
 				header->hdr_ods_version & ~ODS_FIREBIRD_FLAG, header->hdr_ods_minor);
-		uSvc->printf(false, "\tOldest transaction\t%" SLONGFORMAT"\n", header->hdr_oldest_transaction);
-		uSvc->printf(false, "\tOldest active\t\t%" SLONGFORMAT"\n", header->hdr_oldest_active);
-		uSvc->printf(false, "\tOldest snapshot\t\t%" SLONGFORMAT"\n", header->hdr_oldest_snapshot);
-		uSvc->printf(false, "\tNext transaction\t%" SLONGFORMAT"\n", header->hdr_next_transaction);
-		uSvc->printf(false, "\tBumped transaction\t%" SLONGFORMAT"\n", header->hdr_bumped_transaction);
+		uSvc->printf(false, "\tOldest transaction\t%" SQUADFORMAT"\n", Ods::getOIT(header));
+		uSvc->printf(false, "\tOldest active\t\t%" SQUADFORMAT"\n", Ods::getOAT(header));
+		uSvc->printf(false, "\tOldest snapshot\t\t%" SQUADFORMAT"\n", Ods::getOST(header));
+		uSvc->printf(false, "\tNext transaction\t%" SQUADFORMAT"\n", Ods::getNT(header));
 		uSvc->printf(false, "\tSequence number\t\t%d\n", header->hdr_sequence);
+		uSvc->printf(false, "\tNext attachment ID\t%" SQUADFORMAT"\n", Ods::getAttID(header));
 
-		uSvc->printf(false, "\tNext attachment ID\t%" SLONGFORMAT"\n", header->hdr_attachment_id);
-		uSvc->printf(false, "\tImplementation ID\t%d\n", header->hdr_implementation);
+		Firebird::DbImplementation imp(header);
+		uSvc->printf(false, "\tImplementation\t\tHW=%s %s-endian OS=%s CC=%s\n",
+							 imp.cpu(), imp.endianess(), imp.os(), imp.cc());
 		uSvc->printf(false, "\tShadow count\t\t%" SLONGFORMAT"\n", header->hdr_shadow_count);
 		uSvc->printf(false, "\tPage buffers\t\t%" ULONGFORMAT"\n", header->hdr_page_buffers);
 	}
@@ -139,26 +141,45 @@ void PPG_print_header(const header_page* header, SLONG page,
 			uSvc->printf(false, "active shadow");
 		}
 
-		const USHORT sd_flags = flags & hdr_shutdown_mask;
-		if (sd_flags == hdr_shutdown_multi)
+		if (flags & hdr_encrypted)
 		{
 			if (flag_count++)
 				uSvc->printf(false, ", ");
-			uSvc->printf(false, "multi-user maintenance");
+			uSvc->printf(false, "encrypted");
 		}
 
-		if (sd_flags == hdr_shutdown_single)
+		if (flags & hdr_crypt_process)
 		{
 			if (flag_count++)
 				uSvc->printf(false, ", ");
-			uSvc->printf(false, "single-user maintenance");
+			uSvc->printf(false, "crypt process");
 		}
 
-		if (sd_flags == hdr_shutdown_full)
+		if (flags & (hdr_encrypted | hdr_crypt_process))
 		{
 			if (flag_count++)
 				uSvc->printf(false, ", ");
-			uSvc->printf(false, "full shutdown");
+			uSvc->printf(false, "plugin %s", header->hdr_crypt_plugin);
+		}
+
+		if (flags & hdr_shutdown_mask)
+		{
+			if (flag_count++)
+				uSvc->printf(false, ", ");
+			switch (flags & hdr_shutdown_mask)
+			{
+			case hdr_shutdown_multi:
+				uSvc->printf(false, "multi-user maintenance");
+				break;
+			case hdr_shutdown_single:
+				uSvc->printf(false, "single-user maintenance");
+				break;
+			case hdr_shutdown_full:
+				uSvc->printf(false, "full shutdown");
+				break;
+			default:
+				uSvc->printf(false, "wrong shutdown state %d", flags & hdr_shutdown_mask);
+			}
 		}
 
 		if (flags & hdr_read_only)
@@ -167,22 +188,41 @@ void PPG_print_header(const header_page* header, SLONG page,
 				uSvc->printf(false, ", ");
 			uSvc->printf(false, "read only");
 		}
+
 		if (flags & hdr_backup_mask)
 		{
 			if (flag_count++)
 				uSvc->printf(false, ", ");
 			switch (flags & hdr_backup_mask)
 			{
-			case Jrd::nbak_state_stalled:
+			case Ods::hdr_nbak_stalled:
 				uSvc->printf(false, "backup lock");
 				break;
-			case Jrd::nbak_state_merge:
+			case Ods::hdr_nbak_merge:
 				uSvc->printf(false, "backup merge");
 				break;
 			default:
 				uSvc->printf(false, "wrong backup state %d", flags & hdr_backup_mask);
 			}
 		}
+
+		if (flags & hdr_replica_mask)
+		{
+			if (flag_count++)
+				uSvc->printf(false, ", ");
+			switch (flags & hdr_replica_mask)
+			{
+			case Ods::hdr_replica_read_only:
+				uSvc->printf(false, "read-only replica");
+				break;
+			case Ods::hdr_replica_read_write:
+				uSvc->printf(false, "read-write replica");
+				break;
+			default:
+				uSvc->printf(false, "wrong replica state %d", flags & hdr_replica_mask);
+			}
+		}
+
 		uSvc->printf(false, "\n");
 	}
 
@@ -191,7 +231,7 @@ void PPG_print_header(const header_page* header, SLONG page,
 	TEXT temp[257];
 
 	const UCHAR* p = header->hdr_data;
-	for (const UCHAR* const end = p + header->hdr_page_size; p < end && *p != HDR_end; p += 2 + p[1])
+	for (const UCHAR* const end = reinterpret_cast<const UCHAR*>(header) + header->hdr_page_size; p < end && *p != HDR_end; p += 2 + p[1])
 	{
 		SLONG number;
 
@@ -202,13 +242,7 @@ void PPG_print_header(const header_page* header, SLONG page,
 			temp[p[1]] = '\0';
 			uSvc->printf(false, "\tRoot file name:\t\t%s\n", temp);
 			break;
-/*
-		case HDR_journal_server:
-			memcpy(temp, p + 2, p[1]);
-			temp[p[1]] = '\0';
-			uSvc->printf(false, "\tJournal server:\t\t%s\n", temp);
-			break;
-*/
+
 		case HDR_file:
 			memcpy(temp, p + 2, p[1]);
 			temp[p[1]] = '\0';
@@ -219,29 +253,12 @@ void PPG_print_header(const header_page* header, SLONG page,
 			memcpy(&number, p + 2, sizeof(number));
 			uSvc->printf(false, "\tLast logical page:\t\t%ld\n", number);
 			break;
-/*
-		case HDR_unlicensed:
-			memcpy(&number, p + 2, sizeof(number));
-			uSvc->printf(false, "\tUnlicensed accesses:\t\t%ld\n", number);
-			break;
-*/
+
 		case HDR_sweep_interval:
 			memcpy(&number, p + 2, sizeof(number));
 			uSvc->printf(false, "\tSweep interval:\t\t%ld\n", number);
 			break;
 
-		case HDR_log_name:
-			memcpy(temp, p + 2, p[1]);
-			temp[p[1]] = '\0';
-			uSvc->printf(false, "\tReplay logging file:\t\t%s\n", temp);
-			break;
-/*
-		case HDR_cache_file:
-			memcpy(temp, p + 2, p[1]);
-			temp[p[1]] = '\0';
-			uSvc->printf(false, "\tShared Cache file:\t\t%s\n", temp);
-			break;
-*/
 		case HDR_difference_file:
 			memcpy(temp, p + 2, p[1]);
 			temp[p[1]] = '\0';
@@ -250,9 +267,37 @@ void PPG_print_header(const header_page* header, SLONG page,
 
 		case HDR_backup_guid:
 		{
-			char buff[GUID_BUFF_SIZE];
-			GuidToString(buff, reinterpret_cast<const FB_GUID*>(p + 2));
+			char buff[Firebird::GUID_BUFF_SIZE];
+			Firebird::GuidToString(buff, reinterpret_cast<const Guid*>(p + 2));
 			uSvc->printf(false, "\tDatabase backup GUID:\t%s\n", buff);
+			break;
+		}
+
+		case HDR_crypt_key:
+			uSvc->printf(false, "\tEncryption key name:\t%*.*s\n", p[1], p[1], p + 2);
+			break;
+
+		case HDR_crypt_hash:
+			uSvc->printf(false, "\tKey hash:\t%*.*s\n", p[1], p[1], p + 2);
+			break;
+
+		case HDR_crypt_checksum:
+			uSvc->printf(false, "\tCrypt checksum:\t%*.*s\n", p[1], p[1], p + 2);
+			break;
+
+		case HDR_db_guid:
+		{
+			char buff[Firebird::GUID_BUFF_SIZE];
+			Firebird::GuidToString(buff, reinterpret_cast<const Guid*>(p + 2));
+			uSvc->printf(false, "\tDatabase GUID:\t%s\n", buff);
+			break;
+		}
+
+		case HDR_repl_seq:
+		{
+			FB_UINT64 sequence;
+			memcpy(&sequence, p + 2, sizeof(sequence));
+			uSvc->printf(false, "\tReplication sequence:\t%" UQUADFORMAT"\n", sequence);
 			break;
 		}
 

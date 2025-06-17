@@ -1,0 +1,12 @@
+ipch/
+*.log
+*.opensdf
+*.sdf
+*.suo
+*.user
+*.y
+*.VC.db
+*.VC.opendb
+*.vsp
+*.psess
+.vs/

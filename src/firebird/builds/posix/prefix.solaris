@@ -54,7 +54,7 @@
 #   libC and libCrun need libthread for a multithreaded application
 COMMON_FLAGS= -DSOLARIS -DBSD_COMP -D__EXTENSIONS__ \
 	-D_POSIX_THREAD_SEMANTICS -D_POSIX_THREAD_PRIO_INHERIT -D_POSIX_C_SOURCE=199506L \
-	-KPIC \
+	-KPIC $(CAS_OPTIONS) \
 	-erroff=wvarhidemem $(ATOMIC_OPTIONS)
 
 # if we keep sfio this needs to be set by configure (or move in to extern directory)
@@ -74,7 +74,7 @@ SFIO_LDFLAGS=@SFIO_LDFLAGS@
 # -xO2, optimize level 2, safer than -xO3
 # -xlibmil, inline select libm library routines for optimization
 # -xlibmopt -fround=nearest, use optimized math routines
-PROD_FLAGS= -xbuiltin=%all -xO2 -xlibmil -DNDEBUG \
+PROD_FLAGS= -xbuiltin=%all -xO2 -xlibmil \
 	$(COMMON_FLAGS) $(SFIO_FLAGS)
 
 # Debug flags
@@ -85,24 +85,12 @@ PROD_FLAGS= -xbuiltin=%all -xO2 -xlibmil -DNDEBUG \
 DEV_FLAGS= -g -xs \
 	$(COMMON_FLAGS) $(SFIO_FLAGS)
 
-OS_ServerFiles=inet_server.cpp
-Server_main_dummy= os/sun/server_main_dummy.cpp
-
 LIB_PLATFORM_RPATH= -R $(1)
 LIB_LINK_SONAME= -h $(1)
-LIB_LINK_MAPFILE= -M
+LIB_LINK_MAPFILE= -M $(1)
 
 # link options for Solaris linker, /usr/ccs/bin/ld
-LINK_OPTS+= -library=no%Cstd,Crun
+EXE_LINK_OPTIONS+= -library=no%Cstd,Crun
 LIB_LINK_OPTIONS= $(LDFLAGS) $(THR_FLAGS) -G -library=no%Cstd,Crun 
-
-# static link of client library uses c++ compiler and -staticlib=Crun
-CLIENTLIB_LINK= $(CXX) $(GLOB_OPTIONS)
-STATIC_CXXSUPPORT_LIB=-staticlib=Crun
-
-EMBED_UTIL_TARGETS=gstat gsec fbguard nbackup fb_lock_print
-CLIENT_UTIL_TARGETS=gstat gsec fbguard fbmgr_bin nbackup fb_lock_print
-
-Physical_IO_Module=os/posix/unix.cpp
 
 UNDEF_PLATFORM=

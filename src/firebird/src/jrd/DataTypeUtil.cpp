@@ -25,16 +25,15 @@
  */
 
 #include "firebird.h"
-#include "../jrd/common.h"
 #include "../jrd/DataTypeUtil.h"
 #include "../jrd/SysFunction.h"
 #include "../jrd/align.h"
-#include "../jrd/dsc.h"
-#include "../jrd/ibase.h"
+#include "../common/cvt.h"
+#include "../common/dsc.h"
 #include "../jrd/intl.h"
-#include "../jrd/dsc_proto.h"
+#include "../common/dsc_proto.h"
 #include "../jrd/intl_proto.h"
-#include "../jrd/gdsassert.h"
+#include "../common/gdsassert.h"
 
 using namespace Firebird;
 
@@ -150,6 +149,29 @@ void DataTypeUtilBase::makeFromList(dsc* result, const char* expressionName, int
 			if (result->isUnknown())
 				*result = *arg;
 			else if (result->dsc_dtype != arg->dsc_dtype)
+			{
+				UCHAR low = MIN(result->dsc_dtype, arg->dsc_dtype);
+				UCHAR high = MAX(result->dsc_dtype, arg->dsc_dtype);
+
+				if (low == dtype_sql_time && high == dtype_sql_time_tz)
+				{
+					result->dsc_dtype = dtype_sql_time_tz;
+					result->dsc_length = sizeof(ISC_TIME_TZ);
+				}
+				else if (low == dtype_timestamp && high == dtype_timestamp_tz)
+				{
+					result->dsc_dtype = dtype_timestamp_tz;
+					result->dsc_length = sizeof(ISC_TIMESTAMP_TZ);
+				}
+				else
+					makeBlobOrText(result, arg, true);
+			}
+		}
+		else if (arg->dsc_dtype == dtype_boolean)
+		{
+			if (result->isUnknown())
+				*result = *arg;
+			else if (result->dsc_dtype != arg->dsc_dtype)
 				makeBlobOrText(result, arg, true);
 		}
 		else	// we don't support this datatype here
@@ -180,16 +202,14 @@ void DataTypeUtilBase::makeFromList(dsc* result, const char* expressionName, int
 	{
 		// So convert its character length to max. byte length of the destination charset.
 		const ULONG len = convertLength(result->dsc_length, CS_ASCII, result->getCharSet());
-		fb_assert(len <= MAX_COLUMN_SIZE); // Maybe status_exception::raise?
-		result->dsc_length = len;
 
 		if (anyVarying)
-		{
-			// Adjust for varying, if it's the case.
-			fb_assert(len <= MAX_COLUMN_SIZE - sizeof(USHORT));
 			result->dsc_dtype = dtype_varying;
+
+		result->dsc_length = fixLength(result, len);
+
+		if (anyVarying)
 			result->dsc_length += sizeof(USHORT);
-		}
 	}
 }
 
@@ -224,7 +244,7 @@ ULONG DataTypeUtilBase::fixLength(const dsc* desc, ULONG length)
 	else if (desc->dsc_dtype == dtype_cstring)
 		overhead = sizeof(UCHAR);
 
-	return MIN(((MAX_COLUMN_SIZE - overhead) / bpc) * bpc, length);
+	return MIN(((MAX_STR_SIZE - overhead) / bpc) * bpc, length);
 }
 
 
@@ -257,10 +277,10 @@ void DataTypeUtilBase::makeConcatenate(dsc* result, const dsc* value1, const dsc
 
 		ULONG length = fixLength(result,
 			convertLength(value1, result) + convertLength(value2, result));
-		result->dsc_length = length + sizeof(USHORT);
+		result->dsc_length = length + static_cast<USHORT>(sizeof(USHORT));
 	}
 
-	result->dsc_flags = (value1->dsc_flags | value2->dsc_flags) & DSC_nullable;
+	result->setNullable(value1->isNullable() || value2->isNullable());
 }
 
 
@@ -287,22 +307,23 @@ void DataTypeUtilBase::makeSubstr(dsc* result, const dsc* value, const dsc* offs
 		result->dsc_dtype = dtype_varying;
 	}
 
-	result->setTextType(value->getTextType());
-	result->setNullable(value->isNullable() || offset->isNullable() || length->isNullable());
+	result->setTextType(value->isText() || value->isBlob() ? value->getTextType() : CS_ASCII);
+	result->setNullable(value->isNullable() ||
+		(offset && offset->isNullable()) ||
+		(length && length->isNullable()));
 
 	if (result->isText())
-		result->dsc_length = fixLength(result, convertLength(value, result)) + sizeof(USHORT);
-}
-
-
-void DataTypeUtilBase::makeSysFunction(dsc* result, const char* name, int argsCount, const dsc** args)
-{
-	const SysFunction* function = SysFunction::lookup(name);
-
-	if (function)
 	{
-		function->checkArgsMismatch(argsCount);
-		function->makeFunc(this, function, result, argsCount, args);
+		ULONG len = convertLength(value, result);
+
+		if (length && length->dsc_address)	// constant
+		{
+			SLONG constant = CVT_get_long(length, 0, JRD_get_thread_data()->getAttachment()->att_dec_status, ERR_post);
+			fb_assert(constant >= 0);
+			len = MIN(len, MIN(MAX_STR_SIZE, ULONG(constant)) * maxBytesPerChar(result->getCharSet()));
+		}
+
+		result->dsc_length = fixLength(result, len) + static_cast<USHORT>(sizeof(USHORT));
 	}
 }
 
@@ -339,6 +360,46 @@ UCHAR DataTypeUtil::maxBytesPerChar(UCHAR charSet)
 USHORT DataTypeUtil::getDialect() const
 {
 	return (tdbb->getDatabase()->dbb_flags & DBB_DB_SQL_dialect_3) ? 3 : 1;
+}
+
+// Returns false if conversion is not needed.
+bool DataTypeUtil::convertToUTF8(const string& src, string& dst, CHARSET_ID charset, ErrorFunction err)
+{
+	thread_db* tdbb = JRD_get_thread_data();
+
+	if (charset == CS_dynamic)
+	{
+		fb_assert(tdbb->getAttachment());
+		charset = tdbb->getAttachment()->att_charset;
+	}
+
+	if (charset == CS_UTF8 || charset == CS_UNICODE_FSS)
+		return false;
+
+	if (charset == CS_NONE)
+	{
+		const FB_SIZE_T length = src.length();
+
+		const char* s = src.c_str();
+		char* p = dst.getBuffer(length);
+
+		for (const char* end = src.end(); s < end; ++p, ++s)
+			*p = (*s < 0 ? '?' : *s);
+	}
+	else // charset != CS_UTF8
+	{
+		DataTypeUtil dtUtil(tdbb);
+		ULONG length = dtUtil.convertLength(src.length(), charset, CS_UTF8);
+
+		length = INTL_convert_bytes(tdbb,
+			CS_UTF8, (UCHAR*) dst.getBuffer(length), length,
+			charset, (const BYTE*) src.begin(), src.length(),
+			err);
+
+		dst.resize(length);
+	}
+
+	return true;
 }
 
 }	// namespace Jrd

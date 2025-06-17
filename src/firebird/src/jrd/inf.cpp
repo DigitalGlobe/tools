@@ -37,9 +37,7 @@
 
 #include "firebird.h"
 #include <string.h>
-#include "../jrd/common.h"
 #include "../jrd/jrd.h"
-#include "../jrd/ibase.h"
 #include "../jrd/tra.h"
 #include "../jrd/blb.h"
 #include "../jrd/req.h"
@@ -50,55 +48,121 @@
 #include "../jrd/scl.h"
 #include "../jrd/lck.h"
 #include "../jrd/cch.h"
+#include "../dsql/StmtNodes.h"
 #include "../jrd/license.h"
 #include "../jrd/cch_proto.h"
+#include "../jrd/cvt_proto.h"
 #include "../jrd/inf_proto.h"
-#include "../jrd/isc_proto.h"
-#include "../jrd/opt_proto.h"
+#include "../common/isc_proto.h"
 #include "../jrd/pag_proto.h"
 #include "../jrd/os/pio_proto.h"
 #include "../jrd/tra_proto.h"
-#include "../jrd/gds_proto.h"
+#include "../yvalve/gds_proto.h"
 #include "../jrd/err_proto.h"
 #include "../jrd/intl_proto.h"
 #include "../jrd/nbak.h"
 #include "../common/StatusArg.h"
+#include "../common/classes/DbImplementation.h"
+#include "../jrd/validation.h"
+#include "../jrd/CryptoManager.h"
 
+using namespace Firebird;
 using namespace Jrd;
 
-
-/*
- * The variable DBSERVER_BASE_LEVEL was originally IB_MAJOR_VER but with
- * the change to Firebird this number could no longer be used.
- * The DBSERVER_BASE_LEVEL for Firebird starts at 6 which is the base level
- * of InterBase(r) from which Firebird was derived.
- * It is expected that this value will increase as changes are added to
- * Firebird
- */
+// The variable DBSERVER_BASE_LEVEL was originally IB_MAJOR_VER but with
+// the change to Firebird this number could no longer be used.
+// The DBSERVER_BASE_LEVEL for Firebird starts at 6 which is the base level
+// of InterBase(r) from which Firebird was derived.
+// It was expected that this value will increase as changes are added to
+// Firebird, bit it never happened.
 
 #define DBSERVER_BASE_LEVEL 6
-
 
 #define STUFF_WORD(p, value)	{*p++ = value; *p++ = value >> 8;}
 #define STUFF(p, value)		*p++ = value
 
-typedef Firebird::HalfStaticArray<UCHAR, BUFFER_SMALL> CountsBuffer;
-
-static USHORT get_counts(USHORT, CountsBuffer&);
-
 #define CHECK_INPUT(fcn) \
 	{ \
-		if (!items || item_length <= 0 || !info || output_length <= 0) \
-			ERR_post(Firebird::Arg::Gds(isc_internal_rejected_params) << Firebird::Arg::Str(fcn)); \
+		if (!items || !item_length || !info || !output_length) \
+			ERR_post(Arg::Gds(isc_internal_rejected_params) << Arg::Str(fcn)); \
 	}
 
+namespace
+{
+	class AutoTransaction
+	{
+	public:
+		explicit AutoTransaction(thread_db* tdbb)
+			: m_tdbb(tdbb), m_transaction(NULL)
+		{}
+
+		~AutoTransaction()
+		{
+			if (m_transaction)
+				TRA_commit(m_tdbb, m_transaction, false);
+		}
+
+		void start()
+		{
+			if (!m_transaction)
+				m_transaction = TRA_start(m_tdbb, 0, NULL);
+		}
+
+		jrd_tra* operator->()
+		{
+			return m_transaction;
+		}
+
+		operator jrd_tra*()
+		{
+			return m_transaction;
+		}
+
+	private:
+		thread_db* m_tdbb;
+		jrd_tra* m_transaction;
+	};
+
+	typedef HalfStaticArray<UCHAR, BUFFER_SMALL> CountsBuffer;
+
+	ULONG getCounts(thread_db* tdbb, RuntimeStatistics::StatType type, CountsBuffer& buffer)
+	{
+		const Attachment* const attachment = tdbb->getAttachment();
+		const RuntimeStatistics& stats = attachment->att_stats;
+
+		UCHAR num_buffer[BUFFER_TINY];
+
+		buffer.clear();
+		FB_SIZE_T buffer_length = 0;
+
+		for (RuntimeStatistics::Iterator iter = stats.begin(); iter != stats.end(); ++iter)
+		{
+			const USHORT relation_id = (*iter).getRelationId();
+			const SINT64 n = (*iter).getCounter(type);
+
+			if (n)
+			{
+				const USHORT length = INF_convert(n, num_buffer);
+				const FB_SIZE_T new_buffer_length = buffer_length + length + sizeof(USHORT);
+				buffer.grow(new_buffer_length);
+				UCHAR* p = buffer.begin() + buffer_length;
+				STUFF_WORD(p, relation_id);
+				memcpy(p, num_buffer, length);
+				p += length;
+				buffer_length = new_buffer_length;
+			}
+		}
+
+		return buffer.getCount();
+	}
+}
 
 
 void INF_blob_info(const blb* blob,
+				   const ULONG item_length,
 				   const UCHAR* items,
-				   const SSHORT item_length,
-				   UCHAR* info,
-				   const SSHORT output_length)
+				   const ULONG output_length,
+				   UCHAR* info)
 {
 /**************************************
  *
@@ -124,11 +188,10 @@ void INF_blob_info(const blb* blob,
 		start_info = info;
 		items++;
 	}
-	else {
+	else
 		start_info = 0;
-	}
 
-	while (items < end_items && *items != isc_info_end)
+	while (items < end_items && *items != isc_info_end && info < end)
 	{
 		UCHAR item = *items++;
 
@@ -138,11 +201,11 @@ void INF_blob_info(const blb* blob,
 			break;
 
 		case isc_info_blob_num_segments:
-			length = INF_convert(blob->blb_count, buffer);
+			length = INF_convert(blob->getSegmentCount(), buffer);
 			break;
 
 		case isc_info_blob_max_segment:
-			length = INF_convert(static_cast<ULONG>(blob->blb_max_segment), buffer);
+			length = INF_convert(static_cast<ULONG>(blob->getMaxSegment()), buffer);
 			break;
 
 		case isc_info_blob_total_length:
@@ -165,7 +228,8 @@ void INF_blob_info(const blb* blob,
 			return;
 	}
 
-	*info++ = isc_info_end;
+	if (info < end)
+		*info++ = isc_info_end;
 
 	if (start_info && (end - info >= 7))
 	{
@@ -205,10 +269,11 @@ USHORT INF_convert(SINT64 number, UCHAR* buffer)
 }
 
 
-void INF_database_info(const UCHAR* items,
-					   const SSHORT item_length,
-					   UCHAR* info,
-					   const SSHORT output_length)
+void INF_database_info(thread_db* tdbb,
+					   const ULONG item_length,
+					   const UCHAR* items,
+					   const ULONG output_length,
+					   UCHAR* info)
 {
 /**************************************
  *
@@ -223,22 +288,21 @@ void INF_database_info(const UCHAR* items,
  	CHECK_INPUT("INF_database_info");
 
 	CountsBuffer counts_buffer;
-	UCHAR* buffer = counts_buffer.getBuffer(BUFFER_SMALL);
-	SSHORT length;
-	SLONG err_val;
+	UCHAR* buffer = counts_buffer.getBuffer(BUFFER_SMALL, false);
+	ULONG length, err_val;
 	bool header_refreshed = false;
 
-	thread_db* tdbb = JRD_get_thread_data();
-	Database* dbb = tdbb->getDatabase();
+	Database* const dbb = tdbb->getDatabase();
 	CHECK_DBB(dbb);
 
-	jrd_tra* transaction = NULL;
+	AutoTransaction transaction(tdbb);
+
 	const UCHAR* const end_items = items + item_length;
 	const UCHAR* const end = info + output_length;
 
-	const Attachment* err_att = tdbb->getAttachment();
+	const Jrd::Attachment* const att = tdbb->getAttachment();
 
-	while (items < end_items && *items != isc_info_end)
+	while (items < end_items && *items != isc_info_end && info < end)
 	{
 		UCHAR* p = buffer;
 		UCHAR item = *items++;
@@ -334,7 +398,7 @@ void INF_database_info(const UCHAR* items,
 			break;
 
 		case isc_info_allocation:
-			CCH_flush(tdbb, FLUSH_ALL, 0L);
+			CCH_flush(tdbb, FLUSH_ALL, 0);	// hvlad: do we really need it ?
 			length = INF_convert(PageSpace::maxAlloc(dbb), buffer);
 			break;
 
@@ -343,67 +407,96 @@ void INF_database_info(const UCHAR* items,
 			break;
 
 		case isc_info_read_seq_count:
-			length = get_counts(DBB_read_seq_count, counts_buffer);
+			length = getCounts(tdbb, RuntimeStatistics::RECORD_SEQ_READS, counts_buffer);
 			buffer = counts_buffer.begin();
 			break;
 
 		case isc_info_read_idx_count:
-			length = get_counts(DBB_read_idx_count, counts_buffer);
+			length = getCounts(tdbb, RuntimeStatistics::RECORD_IDX_READS, counts_buffer);
 			buffer = counts_buffer.begin();
 			break;
 
 		case isc_info_update_count:
-			length = get_counts(DBB_update_count, counts_buffer);
+			length = getCounts(tdbb, RuntimeStatistics::RECORD_UPDATES, counts_buffer);
 			buffer = counts_buffer.begin();
 			break;
 
 		case isc_info_insert_count:
-			length = get_counts(DBB_insert_count, counts_buffer);
+			length = getCounts(tdbb, RuntimeStatistics::RECORD_INSERTS, counts_buffer);
 			buffer = counts_buffer.begin();
 			break;
 
 		case isc_info_delete_count:
-			length = get_counts(DBB_delete_count, counts_buffer);
+			length = getCounts(tdbb, RuntimeStatistics::RECORD_DELETES, counts_buffer);
 			buffer = counts_buffer.begin();
 			break;
 
 		case isc_info_backout_count:
-			length = get_counts(DBB_backout_count, counts_buffer);
+			length = getCounts(tdbb, RuntimeStatistics::RECORD_BACKOUTS, counts_buffer);
 			buffer = counts_buffer.begin();
 			break;
 
 		case isc_info_purge_count:
-			length = get_counts(DBB_purge_count, counts_buffer);
+			length = getCounts(tdbb, RuntimeStatistics::RECORD_PURGES, counts_buffer);
 			buffer = counts_buffer.begin();
 			break;
 
 		case isc_info_expunge_count:
-			length = get_counts(DBB_expunge_count, counts_buffer);
+			length = getCounts(tdbb, RuntimeStatistics::RECORD_EXPUNGES, counts_buffer);
 			buffer = counts_buffer.begin();
 			break;
 
 		case isc_info_implementation:
-			STUFF(p, 1);		/* Count */
-			STUFF(p, IMPLEMENTATION);
-			STUFF(p, 1);		/* Class */
+			// isc_info_implementation value has first byte, defining the number of
+			// 2-byte sequences, where first byte is implementation code (deprecated
+			// since firebird 3.0) and second byte is implementation class (see table of classes
+			// in utl.cpp, array impl_class)
+			STUFF(p, 1);		// Count
+			STUFF(p, DbImplementation::current.backwardCompatibleImplementation()); //Code
+			STUFF(p, 1);		// Class
+			length = p - buffer;
+			break;
+
+		case fb_info_implementation:
+			// isc_info_implementation value has first byte, defining the number of
+			// 6-byte sequences, where first bytes 0-3 are implementation codes, defined
+			// in class DbImplementation, byte 4 is implementation class (see table of classes
+			// in utl.cpp, array impl_class) and byte 5 is current count of
+			// isc_info_implementation pairs (used to correctly display implementation when
+			// old and new servers are mixed, see isc_version() in utl.cpp)
+			STUFF(p, 1);		// Count
+			DbImplementation::current.stuff(&p);
+			STUFF(p, 1);		// Class
+			STUFF(p, 0);		// Current depth of isc_info_implementation stack
 			length = p - buffer;
 			break;
 
 		case isc_info_base_level:
-			/* info_base_level is used by the client to represent
-			 * what the server is capable of.  It is equivalent to the
-			 * ods version of a database.  For example,
-			 * ods_version represents what the database 'knows'
-			 * base_level represents what the server 'knows'
-			 */
-			STUFF(p, 1);		/* Count */
-#ifdef SCROLLABLE_CURSORS
-			UPDATE WITH VERSION OF SERVER SUPPORTING
-				SCROLLABLE CURSORS STUFF(p, 5);	/* base level of scrollable cursors */
-#else
-			/* IB_MAJOR_VER is defined as a character string */
-			STUFF(p, DBSERVER_BASE_LEVEL);	/* base level of current version */
-#endif
+			// info_base_level is used by the client to represent
+			// what the server is capable of.  It is equivalent to the
+			// ods version of a database.  For example,
+			// ods_version represents what the database 'knows'
+			// base_level represents what the server 'knows'
+			//
+			// Comment moved from DSQL where the item is no longer used, to not lose the history:
+			// This flag indicates the version level of the engine
+			// itself, so we can tell what capabilities the engine
+			// code itself (as opposed to the on-disk structure).
+			// Apparently the base level up to now indicated the major
+			// version number, but for 4.1 the base level is being
+			// incremented, so the base level indicates an engine version
+			// as follows:
+			// 1 == InterBase v1.x
+			// 2 == InterBase v2.x
+			// 3 == InterBase v3.x
+			// 4 == InterBase v4.0 only
+			// 5 == InterBase v4.1. (v5, too?)
+			// 6 == InterBase v6 and all Firebird versions (for compatibility)
+			// Note: this info item is so old it apparently uses an
+			// archaic format, not a standard vax integer format.
+
+			STUFF(p, 1);		// Count
+			STUFF(p, DBSERVER_BASE_LEVEL);	// base level of current version
 			length = p - buffer;
 			break;
 
@@ -425,41 +518,40 @@ void INF_database_info(const UCHAR* items,
 
 		case isc_info_db_id:
 			{
-				counts_buffer.resize(BUFFER_SMALL);
-				const UCHAR* const end_buf = counts_buffer.end();
-				// May be simpler to code using a server-side version of isql's Extender class.
-				const Firebird::PathName& str_fn = dbb->dbb_database_name;
-				STUFF(p, 2);
-				USHORT len = str_fn.length();
-				if (p + len + 1 >= end_buf)
-					len = end_buf - p - 1;
-				if (len > 255)
-					len = 255; // Cannot put more in one byte, will truncate instead.
-				*p++ = len;
-				memcpy(p, str_fn.c_str(), len);
-				p += len;
-				if (p + 2 < end_buf)
-				{
-					SCHAR site[256];
-					ISC_get_host(site, sizeof(site));
-					len = strlen(site);
-					if (p + len + 1 >= end_buf)
-						len = end_buf - p - 1;
-					*p++ = len;
-					memcpy(p, site, len);
-					p += len;
-				}
-				length = p - buffer;
+				counts_buffer.clear();
+
+				const auto& dbName = dbb->dbb_database_name;
+				counts_buffer.push(2);
+				const ULONG len = MIN(dbName.length(), MAX_UCHAR);
+				counts_buffer.push(static_cast<UCHAR>(len));
+				counts_buffer.push(reinterpret_cast<const UCHAR*>(dbName.c_str()), len);
+
+				TEXT site[256];
+				ISC_get_host(site, sizeof(site));
+				const ULONG siteLen = MIN(strlen(site), MAX_UCHAR);
+				counts_buffer.push(static_cast<UCHAR>(siteLen));
+				counts_buffer.push(reinterpret_cast<UCHAR*>(site), siteLen);
+
+				buffer = counts_buffer.begin();
+				length = counts_buffer.getCount();
 			}
 			break;
 
 		case isc_info_creation_date:
 			{
-				const ISC_TIMESTAMP ts = dbb->dbb_creation_date.value();
+				const ISC_TIMESTAMP ts = TimeZoneUtil::timeStampTzToTimeStamp(
+					dbb->dbb_creation_date, &EngineCallbacks::instance);
+
 				length = INF_convert(ts.timestamp_date, p);
 				p += length;
 				length += INF_convert(ts.timestamp_time, p);
 			}
+			break;
+
+		case fb_info_creation_timestamp_tz:
+			length = INF_convert(dbb->dbb_creation_date.utc_timestamp.timestamp_date, p);
+			length += INF_convert(dbb->dbb_creation_date.utc_timestamp.timestamp_time, p + length);
+			length += INF_convert(dbb->dbb_creation_date.time_zone, p + length);
 			break;
 
 		case isc_info_no_reserve:
@@ -478,52 +570,40 @@ void INF_database_info(const UCHAR* items,
 			break;
 
 		case isc_info_limbo:
-			if (!transaction)
-				transaction = TRA_start(tdbb, 0, NULL);
-			for (SLONG id = transaction->tra_oldest; id < transaction->tra_number; id++)
+			transaction.start();
+			for (TraNumber id = transaction->tra_oldest; id < transaction->tra_number; id++)
 			{
 				if (TRA_snapshot_state(tdbb, transaction, id) == tra_limbo &&
 					TRA_wait(tdbb, transaction, id, jrd_tra::tra_wait) == tra_limbo)
 				{
 					length = INF_convert(id, buffer);
 					if (!(info = INF_put_item(item, length, buffer, info, end)))
-					{
-						if (transaction)
-							TRA_commit(tdbb, transaction, false);
 						return;
-					}
 				}
 			}
 			continue;
 
 		case isc_info_active_transactions:
-			if (!transaction)
-				transaction = TRA_start(tdbb, 0, NULL);
-			for (SLONG id = transaction->tra_oldest_active; id < transaction->tra_number; id++)
+			transaction.start();
+			for (TraNumber id = transaction->tra_oldest_active; id < transaction->tra_number; id++)
 			{
 				if (TRA_snapshot_state(tdbb, transaction, id) == tra_active)
 				{
 					length = INF_convert(id, buffer);
 					if (!(info = INF_put_item(item, length, buffer, info, end)))
-					{
-						if (transaction)
-							TRA_commit(tdbb, transaction, false);
 						return;
-					}
 				}
 			}
 			continue;
 
 		case isc_info_active_tran_count:
-			if (!transaction)
-				transaction = TRA_start(tdbb, 0, NULL);
+			transaction.start();
 			{ // scope
 				SLONG cnt = 0;
-				for (SLONG id = transaction->tra_oldest_active; id < transaction->tra_number; id++)
+				for (TraNumber id = transaction->tra_oldest_active; id < transaction->tra_number; id++)
 				{
-					if (TRA_snapshot_state(tdbb, transaction, id) == tra_active) {
+					if (TRA_snapshot_state(tdbb, transaction, id) == tra_active)
 						cnt++;
-					}
 				}
 				length = INF_convert(cnt, buffer);
 			}
@@ -532,146 +612,75 @@ void INF_database_info(const UCHAR* items,
 		case isc_info_db_file_size:
 			{
 				BackupManager *bm = dbb->dbb_backup_manager;
-				length = INF_convert(bm ? bm->getPageCount() : 0, buffer);
+				length = INF_convert(bm ? bm->getPageCount(tdbb) : 0, buffer);
 			}
 			break;
 
 		case isc_info_user_names:
 			// Assumes user names will be smaller than sizeof(buffer) - 1.
-			if (!(tdbb->getAttachment()->locksmith()))
+			if (!tdbb->getAttachment()->locksmith(tdbb, USER_MANAGEMENT))
 			{
-				const UserId* user = tdbb->getAttachment()->att_user;
-				const char* uname = (user && user->usr_user_name.hasData()) ?
-					user->usr_user_name.c_str() : "<Unknown>";
-				const SSHORT len = strlen(uname);
-				*p++ = len;
-				memcpy(p, uname, len);
+				const auto attachment = tdbb->getAttachment();
+				const char* userName = attachment->getUserName("<Unknown>").c_str();
+				const ULONG len = MIN(strlen(userName), MAX_UCHAR);
+				*p++ = static_cast<UCHAR>(len);
+				memcpy(p, userName, len);
+
 				if (!(info = INF_put_item(item, len + 1, buffer, info, end)))
-				{
-					if (transaction)
-						TRA_commit(tdbb, transaction, false);
 					return;
-				}
+
 				continue;
 			}
 
-			for (const Attachment* att = dbb->dbb_attachments; att; att = att->att_next)
 			{
-                const UserId* user = att->att_user;
-				if (user)
+				StrArray names;
+
+				SyncLockGuard sync(&dbb->dbb_sync, SYNC_SHARED, "INF_database_info");
+
+				for (const Jrd::Attachment* att = dbb->dbb_attachments; att; att = att->att_next)
 				{
-					const char* user_name = user->usr_user_name.hasData() ?
-						user->usr_user_name.c_str() : "(Firebird Worker Thread)";
-					p = buffer;
-					const SSHORT len = strlen(user_name);
-					*p++ = len;
-					memcpy(p, user_name, len);
-					if (!(info = INF_put_item(item, len + 1, buffer, info, end)))
+					const UserId* const user = att->att_user;
+
+					if (user)
 					{
-						if (transaction)
-							TRA_commit(tdbb, transaction, false);
-						return;
+						const char* userName = user->getUserName().hasData() ?
+							user->getUserName().c_str() : "(Firebird Worker Thread)";
+
+						FB_SIZE_T pos;
+						if (names.find(userName, pos))
+							continue;
+
+						names.insert(pos, userName);
+
+						p = buffer;
+						const ULONG len = MIN(strlen(userName), MAX_UCHAR);
+						*p++ = static_cast<UCHAR>(len);
+						memcpy(p, userName, len);
+
+						if (!(info = INF_put_item(item, len + 1, buffer, info, end)))
+							return;
 					}
 				}
 			}
 			continue;
 
 		case isc_info_page_errors:
-			if (err_att->att_val_errors)
-			{
-				err_val = (*err_att->att_val_errors)[VAL_PAG_WRONG_TYPE] +
-						  (*err_att->att_val_errors)[VAL_PAG_CHECKSUM_ERR] +
-						  (*err_att->att_val_errors)[VAL_PAG_DOUBLE_ALLOC] +
-						  (*err_att->att_val_errors)[VAL_PAG_IN_USE] +
-						  (*err_att->att_val_errors)[VAL_PAG_ORPHAN];
-			}
-			else
-				err_val = 0;
-
-			length = INF_convert(err_val, buffer);
-			break;
-
 		case isc_info_bpage_errors:
-			if (err_att->att_val_errors)
-			{
-				err_val = (*err_att->att_val_errors)[VAL_BLOB_INCONSISTENT] +
-						  (*err_att->att_val_errors)[VAL_BLOB_CORRUPT] +
-						  (*err_att->att_val_errors)[VAL_BLOB_TRUNCATED];
-			}
-			else
-				err_val = 0;
-
-			length = INF_convert(err_val, buffer);
-			break;
-
 		case isc_info_record_errors:
-			if (err_att->att_val_errors)
-			{
-				err_val = (*err_att->att_val_errors)[VAL_REC_CHAIN_BROKEN] +
-						  (*err_att->att_val_errors)[VAL_REC_DAMAGED] +
-						  (*err_att->att_val_errors)[VAL_REC_BAD_TID] +
-						  (*err_att->att_val_errors)[VAL_REC_FRAGMENT_CORRUPT] +
-						  (*err_att->att_val_errors)[VAL_REC_WRONG_LENGTH] +
-						  (*err_att->att_val_errors)[VAL_REL_CHAIN_ORPHANS];
-			}
-			else
-				err_val = 0;
-
-			length = INF_convert(err_val, buffer);
-			break;
-
 		case isc_info_dpage_errors:
-			if (err_att->att_val_errors)
-			{
-				err_val = (*err_att->att_val_errors)[VAL_DATA_PAGE_CONFUSED] +
-						  (*err_att->att_val_errors)[VAL_DATA_PAGE_ISNT_IN_PIP] +
-						  (*err_att->att_val_errors)[VAL_DATA_PAGE_SLOT_NOT_FOUND] +
-						  (*err_att->att_val_errors)[VAL_DATA_PAGE_SLOT_BAD_VAL] +
-						  (*err_att->att_val_errors)[VAL_DATA_PAGE_HASNO_PP] +
-						  (*err_att->att_val_errors)[VAL_DATA_PAGE_LINE_ERR];
-			}
-			else
-				err_val = 0;
-
-			length = INF_convert(err_val, buffer);
-			break;
-
 		case isc_info_ipage_errors:
-			if (err_att->att_val_errors)
-			{
-				err_val = (*err_att->att_val_errors)[VAL_INDEX_PAGE_CORRUPT] +
-						  (*err_att->att_val_errors)[VAL_INDEX_ROOT_MISSING] +
-						  (*err_att->att_val_errors)[VAL_INDEX_MISSING_ROWS] +
-						  (*err_att->att_val_errors)[VAL_INDEX_ORPHAN_CHILD] +
-						  (*err_att->att_val_errors)[VAL_INDEX_CYCLE];
-			}
-			else
-				err_val = 0;
-
-			length = INF_convert(err_val, buffer);
-			break;
-
 		case isc_info_ppage_errors:
-			if (err_att->att_val_errors)
-			{
-				err_val = (*err_att->att_val_errors)[VAL_P_PAGE_LOST] +
-						  (*err_att->att_val_errors)[VAL_P_PAGE_INCONSISTENT];
-			}
-			else
-				err_val = 0;
-
-			length = INF_convert(err_val, buffer);
-			break;
-
 		case isc_info_tpage_errors:
-			if (err_att->att_val_errors)
-			{
-				err_val = (*err_att->att_val_errors)[VAL_TIP_LOST] +
-						  (*err_att->att_val_errors)[VAL_TIP_LOST_SEQUENCE] +
-						  (*err_att->att_val_errors)[VAL_TIP_CONFUSED];
-			}
-			else
-				err_val = 0;
+		case fb_info_page_warns:
+		case fb_info_record_warns:
+		case fb_info_bpage_warns:
+		case fb_info_dpage_warns:
+		case fb_info_ipage_warns:
+		case fb_info_ppage_warns:
+		case fb_info_tpage_warns:
+		case fb_info_pip_errors:
+		case fb_info_pip_warns:
+			err_val = (att->att_validation) ? att->att_validation->getInfo(item) : 0;
 
 			length = INF_convert(err_val, buffer);
 			break;
@@ -679,51 +688,39 @@ void INF_database_info(const UCHAR* items,
 		case isc_info_db_sql_dialect:
 			/*
 			   **
-			   ** there are 3 types of databases:
+			   ** there are 2 types of databases:
 			   **
-			   **   1. a DB that is created before V6.0. This DB only speak SQL
-			   **        dialect 1 and 2.
-			   **
-			   **   2. a non ODS 10 DB is backed up/restored in IB V6.0. Since
+			   **   1. a non ODS 10 DB is backed up/restored in IB V6.0. Since
 			   **        this DB contained some old SQL dialect, therefore it
 			   **        speaks SQL dialect 1, 2, and 3
 			   **
-			   **   3. a DB that is created in V6.0. This DB speak SQL
+			   **   2. a DB that is created in V6.0. This DB speak SQL
 			   **        dialect 1, 2 or 3 depending the DB was created
 			   **        under which SQL dialect.
 			   **
 			 */
-			if (ENCODE_ODS(dbb->dbb_ods_version, dbb->dbb_minor_original) >= ODS_10_0)
+			if (dbb->dbb_flags & DBB_DB_SQL_dialect_3)
 			{
-				if (dbb->dbb_flags & DBB_DB_SQL_dialect_3)
-				{
-					/*
-					   ** DB created in IB V6.0 by client SQL dialect 3
-					 */
-					*p++ = SQL_DIALECT_V6;
-				}
-				else
-				{
-					/*
-					   ** old DB was gbaked in IB V6.0
-					 */
-					*p++ = SQL_DIALECT_V5;
-				}
+				 // DB created in IB V6.0 by client SQL dialect 3
+				*p++ = SQL_DIALECT_V6;
 			}
 			else
-				*p++ = SQL_DIALECT_V5;	/* pre ODS 10 DB */
+			{
+				// old DB was gbaked in IB V6.0
+				*p++ = SQL_DIALECT_V5;
+			}
 
 			length = p - buffer;
 			break;
 
 		case isc_info_db_read_only:
-			*p++ = (dbb->dbb_flags & DBB_read_only) ? 1 : 0;
+			*p++ = dbb->readOnly() ? 1 : 0;
 			length = p - buffer;
 
 			break;
 
 		case isc_info_db_size_in_pages:
-			CCH_flush(tdbb, FLUSH_ALL, 0L);
+			CCH_flush(tdbb, FLUSH_ALL, 0);  // hvlad: do we really need it ?
 			length = INF_convert(PageSpace::actAlloc(dbb), buffer);
 			break;
 
@@ -768,7 +765,10 @@ void INF_database_info(const UCHAR* items,
 			break;
 
 		case isc_info_db_class:
-		    length = INF_convert(FB_ARCHITECTURE, buffer);
+		    length = INF_convert(
+				(dbb->dbb_config->getServerMode() != MODE_SUPER ?
+					isc_info_db_class_classic_access : isc_info_db_class_server_access),
+				buffer);
 			break;
 
 		case frb_info_att_charset:
@@ -776,31 +776,188 @@ void INF_database_info(const UCHAR* items,
 			break;
 
 		case fb_info_page_contents:
-			if (tdbb->getAttachment()->locksmith())
 			{
-				length = gds__vax_integer(items, 2);
-				items += 2;
-				const SLONG page_num = gds__vax_integer(items, length);
-				items += length;
+				bool validArgs = false;
+				ULONG pageNum;
 
-				win window(PageNumber(DB_PAGE_SPACE, page_num));
-
-				Ods::pag* page = CCH_FETCH_NO_CHECKSUM(tdbb, &window, LCK_WAIT, pag_undefined);
-				info = INF_put_item(item, dbb->dbb_page_size, reinterpret_cast<UCHAR*>(page), info, end);
-				CCH_RELEASE_TAIL(tdbb, &window);
-
-				if (!info)
+				if (end_items - items >= 2)
 				{
-					if (transaction)
-						TRA_commit(tdbb, transaction, false);
-					return;
+					length = gds__vax_integer(items, 2);
+					items += 2;
+
+					if (end_items - items >= length)
+					{
+						pageNum = gds__vax_integer(items, length);
+						items += length;
+						validArgs = true;
+					}
 				}
+
+				if (!validArgs)
+				{
+					buffer[0] = item;
+					item = isc_info_error;
+					length = 1 + INF_convert(isc_inf_invalid_args, buffer + 1);
+					break;
+				}
+
+				if (tdbb->getAttachment()->locksmith(tdbb, READ_RAW_PAGES))
+				{
+					win window(PageNumber(DB_PAGE_SPACE, pageNum));
+
+					Ods::pag* page = CCH_FETCH(tdbb, &window, LCK_read, pag_undefined);
+					info = INF_put_item(item, dbb->dbb_page_size, page, info, end);
+					CCH_RELEASE_TAIL(tdbb, &window);
+
+					if (!info)
+						return;
+
+					continue;
+				}
+
+				buffer[0] = item;
+				item = isc_info_error;
+				length = 1 + INF_convert(isc_adm_task_denied, buffer + 1);
+			}
+			break;
+
+		case fb_info_pages_used:
+			length = INF_convert(PageSpace::usedPages(dbb), buffer);
+			break;
+
+		case fb_info_pages_free:
+			length = INF_convert(PageSpace::maxAlloc(dbb) - PageSpace::usedPages(dbb), buffer);
+			break;
+
+		case fb_info_crypt_state:
+			length = INF_convert(dbb->dbb_crypto_manager ?
+				dbb->dbb_crypto_manager->getCurrentState(tdbb) : 0, buffer);
+			break;
+
+		case fb_info_crypt_key:
+			if (tdbb->getAttachment()->locksmith(tdbb, GET_DBCRYPT_INFO))
+			{
+				const char* key = dbb->dbb_crypto_manager->getKeyName();
+				if (!(info = INF_put_item(item, strlen(key), key, info, end)))
+					return;
+
 				continue;
 			}
 
 			buffer[0] = item;
 			item = isc_info_error;
 			length = 1 + INF_convert(isc_adm_task_denied, buffer + 1);
+			break;
+
+		case fb_info_crypt_plugin:
+			if (tdbb->getAttachment()->locksmith(tdbb, GET_DBCRYPT_INFO))
+			{
+				const char* key = dbb->dbb_crypto_manager->getPluginName();
+				if (!(info = INF_put_item(item, strlen(key), key, info, end)))
+					return;
+
+				continue;
+			}
+
+			buffer[0] = item;
+			item = isc_info_error;
+			length = 1 + INF_convert(isc_adm_task_denied, buffer + 1);
+			break;
+
+		case fb_info_conn_flags:
+			length = INF_convert(tdbb->getAttachment()->att_remote_flags, buffer);
+			break;
+
+		case fb_info_wire_crypt:
+			{
+				const PathName& nm = tdbb->getAttachment()->att_remote_crypt;
+				if (!(info = INF_put_item(item, nm.length(), nm.c_str(), info, end)))
+					return;
+			}
+			continue;
+
+		case fb_info_statement_timeout_db:
+			length = INF_convert(dbb->dbb_config->getStatementTimeout(), buffer);
+			break;
+
+		case fb_info_statement_timeout_att:
+			length = INF_convert(att->getStatementTimeout(), buffer);
+			break;
+
+		case fb_info_ses_idle_timeout_db:
+			length = INF_convert(dbb->dbb_config->getConnIdleTimeout() * 60, buffer);
+			break;
+
+		case fb_info_ses_idle_timeout_att:
+			length = INF_convert(att->getIdleTimeout(), buffer);
+			break;
+
+		case fb_info_ses_idle_timeout_run:
+			length = INF_convert(att->getActualIdleTimeout(), buffer);
+			break;
+
+		case fb_info_protocol_version:
+			length = INF_convert(0, buffer);
+			break;
+
+		case fb_info_features:
+			{
+				static const unsigned char features[] = ENGINE_FEATURES;
+				length = sizeof(features);
+				counts_buffer.assign(features, length);
+				buffer = counts_buffer.begin();
+				break;
+			}
+
+		case fb_info_next_attachment:
+			length = INF_convert(dbb->getLatestAttachmentId(), buffer);
+			break;
+
+		case fb_info_next_statement:
+			length = INF_convert(dbb->getLatestStatementId(), buffer);
+			break;
+
+		case fb_info_db_guid:
+			{
+				char guidBuffer[GUID_BUFF_SIZE];
+				GuidToString(guidBuffer, &dbb->dbb_guid);
+				if (!(info = INF_put_item(item, strlen(guidBuffer), guidBuffer, info, end)))
+					return;
+			}
+			continue;
+
+		case fb_info_db_file_id:
+			{
+				const auto& fileId = dbb->getUniqueFileId();
+				if (!(info = INF_put_item(item, fileId.length(), fileId.c_str(), info, end)))
+					return;
+			}
+			continue;
+
+		case fb_info_replica_mode:
+			// fb_info_replica_* reply items are equal to the ReplicaMode enumeration
+			*p++ = (UCHAR) dbb->dbb_replica_mode;
+			length = p - buffer;
+			break;
+
+		case fb_info_username:
+			{
+				const MetaString& user = att->getUserName();
+				if (!(info = INF_put_item(item, user.length(), user.c_str(), info, end)))
+					return;
+			}
+			continue;
+
+		case fb_info_sqlrole:
+			{
+				const MetaString& role = att->getSqlRole();
+				if (!(info = INF_put_item(item, role.length(), role.c_str(), info, end)))
+					return;
+			}
+			continue;
+
+		case fb_info_parallel_workers:
+			length = INF_convert(att->att_parallel_workers, buffer);
 			break;
 
 		default:
@@ -811,25 +968,20 @@ void INF_database_info(const UCHAR* items,
 		}
 
 		if (!(info = INF_put_item(item, length, buffer, info, end)))
-		{
-			if (transaction)
-				TRA_commit(tdbb, transaction, false);
 			return;
-		}
 	}
 
-	if (transaction)
-		TRA_commit(tdbb, transaction, false);
-
-	*info++ = isc_info_end;
+	if (info < end)
+		*info++ = isc_info_end;
 }
 
 
 UCHAR* INF_put_item(UCHAR item,
-					USHORT length,
-					const UCHAR* string,
+					ULONG length,
+					const void* data,
 					UCHAR* ptr,
-					const UCHAR* end, const bool inserting)
+					const UCHAR* end,
+					const bool inserting)
 {
 /**************************************
  *
@@ -845,9 +997,14 @@ UCHAR* INF_put_item(UCHAR item,
  *
  **************************************/
 
-	if (ptr + length + (inserting ? 3 : 4) >= end)
+	if ((ptr + length + (inserting ? 3 : 4) >= end) || (length > MAX_USHORT))
 	{
-		*ptr = isc_info_truncated;
+		if (ptr < end)
+		{
+			*ptr++ = isc_info_truncated;
+			if (ptr < end && !inserting)
+				*ptr++ = isc_info_end;
+		}
 		return NULL;
 	}
 
@@ -856,7 +1013,7 @@ UCHAR* INF_put_item(UCHAR item,
 
 	if (length)
 	{
-		memmove(ptr, string, length);
+		memmove(ptr, data, length);
 		ptr += length;
 	}
 
@@ -864,11 +1021,11 @@ UCHAR* INF_put_item(UCHAR item,
 }
 
 
-void INF_request_info(const jrd_req* request,
-					  const UCHAR* items,
-					  const SSHORT item_length,
-					  UCHAR* info,
-					  const SLONG output_length)
+ULONG INF_request_info(const Request* request,
+					   const ULONG item_length,
+					   const UCHAR* items,
+					   const ULONG output_length,
+					   UCHAR* info)
 {
 /**************************************
  *
@@ -886,21 +1043,16 @@ void INF_request_info(const jrd_req* request,
 
 	const UCHAR* const end_items = items + item_length;
 	const UCHAR* const end = info + output_length;
-	UCHAR* start_info;
+	UCHAR* start_info = info;
+	const bool infoLengthPresent = items[0] == isc_info_length;
 
-	if (items[0] == isc_info_length)
-	{
-		start_info = info;
-		items++;
-	}
-	else {
-		start_info = 0;
-	}
+	if (infoLengthPresent)
+		++items;
 
-	Firebird::HalfStaticArray<UCHAR, BUFFER_LARGE> buffer;
+	HalfStaticArray<UCHAR, BUFFER_LARGE> buffer;
 	UCHAR* buffer_ptr = buffer.getBuffer(BUFFER_TINY);
 
-	while (items < end_items && *items != isc_info_end)
+	while (items < end_items && *items != isc_info_end && info < end)
 	{
 		UCHAR item = *items++;
 
@@ -945,37 +1097,24 @@ void INF_request_info(const jrd_req* request,
 			length = INF_convert(request->req_records_deleted, buffer_ptr);
 			break;
 
-		case isc_info_access_path:
-			buffer_ptr = buffer.getBuffer(output_length);
-			if (!OPT_access_path(request, buffer_ptr, buffer.getCount(), &length))
-			{
-				*info = isc_info_truncated;
-				return;
-			}
-			if (length > MAX_USHORT) // damn INF_put_item, it only handles USHORT lengths
-			{
-				*info = isc_info_truncated;
-				return;
-			}
-			break;
-
 		case isc_info_state:
 			if (!(request->req_flags & req_active))
 				length = INF_convert(isc_info_req_inactive, buffer_ptr);
 			else
 			{
-				SSHORT state = isc_info_req_active;
-				if (request->req_operation == jrd_req::req_send)
+				auto state = isc_info_req_active;
+				if (request->req_operation == Request::req_send)
 					state = isc_info_req_send;
-				else if (request->req_operation == jrd_req::req_receive)
+				else if (request->req_operation == Request::req_receive)
 				{
-					const jrd_nod* node = request->req_next;
-					if (node->nod_type == nod_select)
+					const StmtNode* node = request->req_next;
+
+					if (nodeIs<SelectNode>(node))
 						state = isc_info_req_select;
 					else
 						state = isc_info_req_receive;
 				}
-				else if ((request->req_operation == jrd_req::req_return) &&
+				else if ((request->req_operation == Request::req_return) &&
 					(request->req_flags & req_stall))
 				{
 					state = isc_info_req_sql_stall;
@@ -987,8 +1126,8 @@ void INF_request_info(const jrd_req* request,
 		case isc_info_message_number:
 		case isc_info_message_size:
 			if (!(request->req_flags & req_active) ||
-				(request->req_operation != jrd_req::req_receive &&
-					request->req_operation != jrd_req::req_send))
+				(request->req_operation != Request::req_receive &&
+					request->req_operation != Request::req_send))
 			{
 				buffer_ptr[0] = item;
 				item = isc_info_error;
@@ -996,18 +1135,20 @@ void INF_request_info(const jrd_req* request,
 			}
 			else
 			{
-				const jrd_nod* node = request->req_message;
-				if (item == isc_info_message_number)
-					length = INF_convert((IPTR) node->nod_arg[e_msg_number], buffer_ptr);
-				else
+				const auto node = nodeAs<MessageNode>(request->req_message);
+
+				if (node)
 				{
-					const Format* format = (Format*) node->nod_arg[e_msg_format];
-					length = INF_convert(format->fmt_length, buffer_ptr);
+					if (item == isc_info_message_number)
+						length = INF_convert(node->messageNumber, buffer_ptr);
+					else
+						length = INF_convert(node->format->fmt_length, buffer_ptr);
 				}
+				else
+					length = 0;
 			}
 			break;
 
-		case isc_info_request_cost:
 		default:
 			buffer_ptr[0] = item;
 			item = isc_info_error;
@@ -1015,31 +1156,33 @@ void INF_request_info(const jrd_req* request,
 			break;
 		}
 
-		info = INF_put_item(item, length, buffer_ptr, info, end);
-
-		if (!info)
-			return;
+		if (!(info = INF_put_item(item, length, buffer_ptr, info, end)))
+			return 0;
 	}
 
-	*info++ = isc_info_end;
+	if (info < end)
+		*info++ = isc_info_end;
 
-	if (start_info && (end - info >= 7))
+	if (infoLengthPresent && (end - info >= 7))
 	{
 		const SLONG number = info - start_info;
 		fb_assert(number > 0);
 		memmove(start_info + 7, start_info, number);
+		info += 7;
 		length = INF_convert(number, buffer.begin());
 		fb_assert(length == 4); // We only accept SLONG
 		INF_put_item(isc_info_length, length, buffer.begin(), start_info, end, true);
 	}
+
+	return info - start_info;
 }
 
 
 void INF_transaction_info(const jrd_tra* transaction,
+						  const ULONG item_length,
 						  const UCHAR* items,
-						  const SSHORT item_length,
-						  UCHAR* info,
-						  const SSHORT output_length)
+						  const ULONG output_length,
+						  UCHAR* info)
 {
 /**************************************
  *
@@ -1053,8 +1196,8 @@ void INF_transaction_info(const jrd_tra* transaction,
  **************************************/
 	CHECK_INPUT("INF_transaction_info");
 
-	UCHAR buffer[BUFFER_TINY];
-	USHORT length;
+	UCHAR buffer[MAXPATHLEN];
+	ULONG length;
 
 	const UCHAR* const end_items = items + item_length;
 	const UCHAR* const end = info + output_length;
@@ -1065,11 +1208,10 @@ void INF_transaction_info(const jrd_tra* transaction,
 		start_info = info;
 		items++;
 	}
-	else {
+	else
 		start_info = 0;
-	}
 
-	while (items < end_items && *items != isc_info_end)
+	while (items < end_items && *items != isc_info_end && info < end)
 	{
 		UCHAR item = *items++;
 
@@ -1102,7 +1244,9 @@ void INF_transaction_info(const jrd_tra* transaction,
 			if (transaction->tra_flags & TRA_read_committed)
 			{
 				*p++ = isc_info_tra_read_committed;
-				if (transaction->tra_flags & TRA_rec_version)
+				if (transaction->tra_flags & TRA_read_consistency)
+					*p++ = isc_info_tra_read_consistency;
+				else if (transaction->tra_flags & TRA_rec_version)
 					*p++ = isc_info_tra_rec_version;
 				else
 					*p++ = isc_info_tra_no_rec_version;
@@ -1132,6 +1276,18 @@ void INF_transaction_info(const jrd_tra* transaction,
 			length = INF_convert(transaction->tra_lock_timeout, buffer);
 			break;
 
+		case fb_info_tra_dbpath:
+		{
+			const auto& dbName = transaction->tra_attachment->att_database->dbb_database_name;
+			if (!(info = INF_put_item(item, dbName.length(), dbName.c_str(), info, end)))
+				return;
+			break;
+		}
+
+		case fb_info_tra_snapshot_number:
+			length = INF_convert(static_cast<SINT64>(transaction->tra_snapshot_number), buffer);
+			break;
+
 		default:
 			buffer[0] = item;
 			item = isc_info_error;
@@ -1143,7 +1299,8 @@ void INF_transaction_info(const jrd_tra* transaction,
 			return;
 	}
 
-	*info++ = isc_info_end;
+	if (info < end)
+		*info++ = isc_info_end;
 
 	if (start_info && (end - info >= 7))
 	{
@@ -1154,48 +1311,4 @@ void INF_transaction_info(const jrd_tra* transaction,
 		fb_assert(length == 4); // We only accept SLONG
 		INF_put_item(isc_info_length, length, buffer, start_info, end, true);
 	}
-}
-
-
-static USHORT get_counts(USHORT count_id, CountsBuffer& buffer)
-{
-/**************************************
- *
- *	g e t _ c o u n t s
- *
- **************************************
- *
- * Functional description
- *	Return operation counts for relation.
- *
- **************************************/
-	thread_db* tdbb = JRD_get_thread_data();
-
-	const vcl* vector = tdbb->getAttachment()->att_counts[count_id];
-	if (!vector)
-		return 0;
-
-	UCHAR num_buffer[BUFFER_TINY];
-
-	buffer.clear();
-	size_t buffer_length = 0;
-
-	vcl::const_iterator ptr = vector->begin();
-	for (USHORT relation_id = 0; relation_id < vector->count(); ++relation_id)
-	{
-		const SLONG n = *ptr++;
-		if (n)
-		{
-			const USHORT length = INF_convert(n, num_buffer);
-			const size_t new_buffer_length = buffer_length + length + sizeof(USHORT);
-			buffer.grow(new_buffer_length);
-			UCHAR* p = buffer.begin() + buffer_length;
-			STUFF_WORD(p, relation_id);
-			memcpy(p, num_buffer, length);
-			p += length;
-			buffer_length = new_buffer_length;
-		}
-	}
-
-	return buffer.getCount();
 }

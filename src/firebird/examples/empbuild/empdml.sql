@@ -19,26 +19,38 @@
 /****************************************************************************
  *
  *  Create data.
- * 
+ *
 *****************************************************************************/
 
 /*
  *  Add countries.
  */
 INSERT INTO country (country, currency) VALUES ('USA',         'Dollar');
-INSERT INTO country (country, currency) VALUES ('England',     'Pound'); 
+INSERT INTO country (country, currency) VALUES ('England',     'Pound');
 INSERT INTO country (country, currency) VALUES ('Canada',      'CdnDlr');
 INSERT INTO country (country, currency) VALUES ('Switzerland', 'SFranc');
 INSERT INTO country (country, currency) VALUES ('Japan',       'Yen');
-INSERT INTO country (country, currency) VALUES ('Italy',       'Lira');
-INSERT INTO country (country, currency) VALUES ('France',      'FFranc');
-INSERT INTO country (country, currency) VALUES ('Germany',     'D-Mark');
+INSERT INTO country (country, currency) VALUES ('Italy',       'Euro');
+INSERT INTO country (country, currency) VALUES ('France',      'Euro');
+INSERT INTO country (country, currency) VALUES ('Germany',     'Euro');
 INSERT INTO country (country, currency) VALUES ('Australia',   'ADollar');
 INSERT INTO country (country, currency) VALUES ('Hong Kong',   'HKDollar');
-INSERT INTO country (country, currency) VALUES ('Netherlands', 'Guilder');
-INSERT INTO country (country, currency) VALUES ('Belgium',     'BFranc');
-INSERT INTO country (country, currency) VALUES ('Austria',     'Schilling');
+INSERT INTO country (country, currency) VALUES ('Netherlands', 'Euro');
+INSERT INTO country (country, currency) VALUES ('Belgium',     'Euro');
+INSERT INTO country (country, currency) VALUES ('Austria',     'Euro');
 INSERT INTO country (country, currency) VALUES ('Fiji',        'FDollar');
+INSERT INTO country (country, currency) VALUES ('Russia',      'Ruble');
+INSERT INTO country (country, currency) VALUES ('Romania',     'RLeu');
+INSERT INTO country (country, currency) VALUES ('Ukraine',     'Hryvnia');
+INSERT INTO country (country, currency) VALUES ('Czechia',     'CzKoruna');
+INSERT INTO country (country, currency) VALUES ('Brazil',      'Real');
+INSERT INTO country (country, currency) VALUES ('Chile',       'ChPeso');
+INSERT INTO country (country, currency) VALUES ('Spain',       'Euro');
+INSERT INTO country (country, currency) VALUES ('Hungary',     'Forint');
+INSERT INTO country (country, currency) VALUES ('Sweden',      'SKrona');
+INSERT INTO country (country, currency) VALUES ('Greece',      'Euro');
+INSERT INTO country (country, currency) VALUES ('Slovakia',    'Euro');
+INSERT INTO country (country, currency) VALUES ('Portugal',    'Euro');
 
 COMMIT;
 
@@ -162,6 +174,10 @@ INSERT INTO department
 (dept_no, department, head_dept, budget, location, phone_no) VALUES
 ('125', 'Field Office: Italy',      '120', 400000, 'Milan', '2 430 39 39');
 
+INSERT INTO department
+(dept_no, department, head_dept, budget, location, phone_no) VALUES
+('700', 'Firebird Project',          null, 10001, 'Global', null);
+
 
 COMMIT;
 
@@ -244,7 +260,7 @@ INSERT INTO job
 
 INSERT INTO job
 (job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
-('Eng',   4, 'England', 'Engineer',               20100,  43550) /* pounds */;
+('Eng',   4, 'England', 'Engineer',               20100,  43550) /* Pounds */;
 
 INSERT INTO job
 (job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
@@ -288,12 +304,95 @@ INSERT INTO job
 
 INSERT INTO job
 (job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
-('SRep',  4, 'Italy', 'Sales Representative',   33600000, 168000000) /* lira */;
+('SRep',  4, 'Italy', 'Sales Representative',   20000, 100000) /* Euro */;
 
 INSERT INTO job
 (job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
-('SRep',  4, 'France', 'Sales Representative',  118200, 591000) /* FFranc */;
+('SRep',  4, 'France', 'Sales Representative',  20000, 100000) /* Euro */;
 
+INSERT INTO job
+(job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
+('Dev',  6, 'Netherlands', 'Software Developer',  1, 2) ;
+
+INSERT INTO job
+(job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
+('Dev',  6, 'Russia', 'Software Developer',  1, 2) ;
+
+INSERT INTO job
+(job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
+('Dev',  6, 'Czechia', 'Software Developer',  1, 2) ;
+
+INSERT INTO job
+(job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
+('Dev',  6, 'Ukraine', 'Software Developer',  1, 2) ;
+
+INSERT INTO job
+(job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
+('Dev',  6, 'Brazil', 'Software Developer',  1, 2) ;
+
+INSERT INTO job
+(job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
+('Dev',  6, 'France', 'Software Developer',  1, 2) ;
+
+INSERT INTO job
+(job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
+('Dev',  6, 'Spain', 'Software Developer',  1, 2) ;
+
+INSERT INTO job
+(job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
+('Dev',  6, 'Chile', 'Software Developer',  1, 2) ;
+
+INSERT INTO job
+(job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
+('Dev',  6, 'Hungary', 'Software Developer',  1, 2) ;
+
+INSERT INTO job
+(job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
+('Dev',  6, 'Sweden', 'Software Developer',  1, 2) ;
+
+INSERT INTO job
+(job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
+('Dev',  6, 'Greece', 'Software Developer',  1, 2) ;
+
+INSERT INTO job
+(job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
+('Dev',  6, 'Slovakia', 'Software Developer',  1, 2) ;
+
+INSERT INTO job
+(job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
+('Dev',  6, 'Portugal', 'Software Developer',  1, 2) ;
+
+INSERT INTO job
+(job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
+('Dev',  6, 'USA', 'Software Developer',  1, 2) ;
+
+INSERT INTO job
+(job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
+('Dev',  6, 'Germany', 'Software Developer',  1, 2) ;
+
+INSERT INTO job
+(job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
+('Dev',  6, 'Australia', 'Software Developer',  1, 2) ;
+
+INSERT INTO job
+(job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
+('Dev',  6, 'England', 'Software Developer',  1, 2) ;
+
+INSERT INTO job
+(job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
+('Dev',  6, 'Canada', 'Software Developer',  1, 2) ;
+
+INSERT INTO job
+(job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
+('Dev',  6, 'Japan', 'Software Developer',  1, 2) ;
+
+INSERT INTO job
+(job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
+('Dev',  6, 'Italy', 'Software Developer',  1, 2) ;
+
+INSERT INTO job
+(job_code, job_grade, job_country, job_title, min_salary, max_salary) VALUES
+('Dev',  6, 'Belgium', 'Software Developer',  1, 2) ;
 
 COMMIT;
 
@@ -449,7 +548,7 @@ job_grade, job_country, hire_date, salary, phone_ext) VALUES
 INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
 job_grade, job_country, hire_date, salary, phone_ext) VALUES
 (121, 'Roberto', 'Ferrari', '125', 'SRep',  4, 'Italy', '07/12/93',
-90000000, '1');
+30000, '1');
 
 INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
 job_grade, job_country, hire_date, salary, phone_ext) VALUES
@@ -457,7 +556,7 @@ job_grade, job_country, hire_date, salary, phone_ext) VALUES
 
 INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
 job_grade, job_country, hire_date, salary, phone_ext) VALUES
-(134, 'Jacques', 'Glon', '123', 'SRep',  4, 'France', '08/23/93', 355000, null);
+(134, 'Jacques', 'Glon', '123', 'SRep',  4, 'France', '08/23/93', 35000, null);
 
 INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
 job_grade, job_country, hire_date, salary, phone_ext) VALUES
@@ -480,6 +579,253 @@ INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
 job_grade, job_country, hire_date, salary, phone_ext) VALUES
 (145, 'Mark', 'Guckenheimer', '622', 'Eng', 5, 'USA', '05/02/94', 32000, '221');
 
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(146, 'Dmitry', 'Yemanov', '700', 'Dev', 6, 'Russia', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(147, 'Vladyslav', 'Khorsun', '700', 'Dev', 6, 'Ukraine', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(148, 'Alexander', 'Peshkov', '700', 'Dev', 6, 'Russia', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(149, 'Adriano', 'Fernandes', '700', 'Dev', 6, 'Brazil', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(150, 'Pavel', 'Zotov', '700', 'Dev', 6, 'Russia', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(151, 'Pavel', 'Cisar', '700', 'Dev', 6, 'Czechia', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(152, 'Jiri', 'Cincura', '700', 'Dev', 6, 'Czechia', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(153, 'Mark', 'Rotteveel', '700', 'Dev', 6, 'Netherlands', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(154, 'Paul', 'Reeves', '700', 'Dev', 6, 'France', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(155, 'Nickolay', 'Samofatov', '700', 'Dev', 6, 'Russia', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(156, 'Arno', 'Brinkman', '700', 'Dev', 6, 'Netherlands', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(157, 'Claudio', 'Valderrama', '700', 'Dev', 6, 'Chile', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(158, 'Mike', 'Nordell', '700', 'Dev', 6, 'Sweden', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(159, 'Blas', 'Somoza', '700', 'Dev', 6, 'Spain', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(160, 'Roman', 'Rokytskyy', '700', 'Dev', 6, 'Germany', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(161, 'David', 'Jencks', '700', 'Dev', 6, 'USA', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(162, 'Carlos', 'Alvarez', '700', 'Dev', 6, 'Spain', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(163, 'John', 'Bellardo', '700', 'Dev', 6, 'USA', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(164, 'Erik', 'Kunze', '700', 'Dev', 6, 'Germany', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(165, 'Dmitry', 'Sibiryakov', '700', 'Dev', 6, 'Russia', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(166, 'Ann', 'Harrison', '700', 'Dev', 6, 'USA', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(167, 'Mark', 'O''Donohue', '700', 'Dev', 6, 'Australia', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(168, 'Ignacio', 'Ortega', '700', 'Dev', 6, 'Spain', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(169, 'Konstantin', 'Kuznetsov', '700', 'Dev', 6, 'Russia', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(170, 'Olivier', 'Mascia', '700', 'Dev', 6, 'Belgium', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(171, 'Peter', 'Jacob', '700', 'Dev', 6, 'Germany', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(172, 'Tilo', 'Muetze', '700', 'Dev', 6, 'Germany', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(173, 'Paul', 'Vinkenoog', '700', 'Dev', 6, 'Netherlands', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(174, 'Artur', 'Anjos', '700', 'Dev', 6, 'Portugal', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(175, 'Achim', 'Kalwa', '700', 'Dev', 6, 'Germany', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(176, 'Sean', 'Leyne', '700', 'Dev', 6, 'Canada', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(177, 'Ryan', 'Baldwin', '700', 'Dev', 6, 'England', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(178, 'Sandor', 'Szollosi', '700', 'Dev', 6, 'Hungary', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(179, 'Dmitry', 'Kuzmenko', '700', 'Dev', 6, 'Russia', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(180, 'Artem', 'Petkevych', '700', 'Dev', 6, 'Ukraine', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(181, 'Tomas', 'Skoda', '700', 'Dev', 6, 'Slovakia', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(182, 'Evgeny', 'Kilin', '700', 'Dev', 6, 'Russia', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(183, 'Oleg', 'Loa', '700', 'Dev', 6, 'Russia', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(184, 'Erik', 'La Bianca', '700', 'Dev', 6, 'USA', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(185, 'Tony', 'Caduto', '700', 'Dev', 6, 'USA', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(186, 'Juan', 'Guerrero', '700', 'Dev', 6, 'Spain', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(187, 'Chris', 'Knight', '700', 'Dev', 6, 'Australia', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(188, 'Neil', 'McCalden', '700', 'Dev', 6, 'England', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(189, 'Grzegorz', 'Prokopsi', '700', 'Dev', 6, 'Hungary', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(190, 'Paul', 'Beach', '700', 'Dev', 6, 'France', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(191, 'Geoffrey', 'Speicher', '700', 'Dev', 6, 'USA', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(192, 'Helen', 'Borrie', '700', 'Dev', 6, 'Australia', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(193, 'Philippe', 'Makowski', '700', 'Dev', 6, 'France', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(194, 'Dimitrios', 'Ioannides', '700', 'Dev', 6, 'Greece', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(195, 'Jim', 'Starkey', '700', 'Dev', 6, 'USA', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(196, 'Evgeny', 'Putilin', '700', 'Dev', 6, 'Russia', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(197, 'Alexander', 'Potapchenko', '700', 'Dev', 6, 'Russia', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(198, 'David', 'Rushby', '700', 'Dev', 6, 'USA', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(199, 'Norman', 'Dunbar', '700', 'Dev', 6, 'England', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(200, 'Pavel', 'Menshchikov', '700', 'Dev', 6, 'Russia', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(201, 'Tomneko', 'Hayashi', '700', 'Dev', 6, 'Japan', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(202, 'Umberto', 'Masotti', '700', 'Dev', 6, 'Italy', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(203, 'Roman', 'Simakov', '700', 'Dev', 6, 'Russia', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(204, 'Stephen', 'Boyd', '700', 'Dev', 6, 'Canada', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(205, 'Alexey', 'Kovyazin', '700', 'Dev', 6, 'Russia', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(206, 'Martin', 'Koeditz', '700', 'Dev', 6, 'Germany', '07/31/2000', 1, '007');
+
+INSERT INTO employee (emp_no, first_name, last_name, dept_no, job_code,
+job_grade, job_country, hire_date, salary, phone_ext) VALUES
+(207, 'Ilya', 'Eremin', '700', 'Dev', 6, 'Russia', '07/31/2000', 1, '007');
 
 COMMIT;
 
@@ -516,7 +862,7 @@ COMMIT;
  *  Generate some salary history records.
  */
 
-UPDATE employee SET salary = salary + salary * 0.10 
+UPDATE employee SET salary = salary + salary * 0.10
     WHERE hire_date <= '08/01/91' AND job_grade = 5;
 UPDATE employee SET salary = salary + salary * 0.05 + 3000
     WHERE hire_date <= '08/01/91' AND job_grade in (1, 2);
@@ -600,6 +946,87 @@ INSERT INTO project (proj_id, proj_name, team_leader, product) VALUES
                   Set up a field office in Australia and Singapore.
         */
 
+INSERT INTO project (proj_id, proj_name, team_leader, product) VALUES
+('FCORE', 'Firebird engine', 146, 'software');
+
+        /* proj_desc blob:
+                  Everything that makes core Firebird distributions:
+                  - Firebird server
+                  - Utilities
+                  - Plugins, UDF, UDR
+                  - Ports, packaging and installers
+        */
+
+INSERT INTO project (proj_id, proj_name, team_leader, product) VALUES
+('FBDOC', 'Documentation', null, 'other');
+
+        /* proj_desc blob:
+                  Firebird documentation:
+                  - Release Notes
+                  - Guides and books
+                  - Articles
+        */
+
+INSERT INTO project (proj_id, proj_name, team_leader, product) VALUES
+('PYTHN', 'Python drivers', 151, 'software');
+
+        /* proj_desc blob:
+                  Python drivers and extension libraries.
+        */
+
+INSERT INTO project (proj_id, proj_name, team_leader, product) VALUES
+('DTNET', '.NET drivers', 152, 'software');
+
+        /* proj_desc blob:
+                  .NET drivers and extension libraries.
+        */
+
+INSERT INTO project (proj_id, proj_name, team_leader, product) VALUES
+('ODBCD', 'ODBC drivers', null, 'software');
+
+        /* proj_desc blob:
+                  ODBC/OLE DB drivers.
+        */
+
+INSERT INTO project (proj_id, proj_name, team_leader, product) VALUES
+('PHPDR', 'PHP drivers', null, 'software');
+
+        /* proj_desc blob:
+                  PHP drivers and extension libraries.
+        */
+
+INSERT INTO project (proj_id, proj_name, team_leader, product) VALUES
+('JAVAD', 'Java drivers', 153, 'software');
+
+        /* proj_desc blob:
+                  Java drivers and extension libraries.
+        */
+
+INSERT INTO project (proj_id, proj_name, team_leader, product) VALUES
+('FB-QA', 'Firebrid QA', 150, 'software');
+
+        /* proj_desc blob:
+                  Firebird QA:
+                  - tools
+                  - tests
+        */
+
+INSERT INTO project (proj_id, proj_name, team_leader, product) VALUES
+('INFRA', 'Infrastructure', null, 'other');
+
+        /* proj_desc blob:
+                  Firebird Project infrastructure.
+        */
+
+INSERT INTO project (proj_id, proj_name, team_leader, product) VALUES
+('BTLER', 'Firebrid Butler', 151, 'software');
+
+        /* proj_desc blob:
+                  Firebird Butler:
+                  - Specifications
+                  - Saturnin
+        */
+
 COMMIT;
 
 /*
@@ -639,6 +1066,79 @@ INSERT INTO employee_project (proj_id, emp_no) VALUES ('MKTPR', 34);
 INSERT INTO employee_project (proj_id, emp_no) VALUES ('MKTPR', 8);
 INSERT INTO employee_project (proj_id, emp_no) VALUES ('MKTPR', 14);
 INSERT INTO employee_project (proj_id, emp_no) VALUES ('MKTPR', 52);
+
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 146);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 147);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 148);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 149);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 154);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 155);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 156);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 157);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 158);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 159);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 163);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 164);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 165);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 166);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 167);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 168);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 169);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 170);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 171);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 174);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 175);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 176);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 178);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 179);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 180);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 181);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 182);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 183);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 184);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 185);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 186);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 187);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 188);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 189);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 190);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 191);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 195);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 196);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 203);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 204);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FCORE', 207);
+
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FBDOC', 172);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FBDOC', 173);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FBDOC', 192);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FBDOC', 199);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FBDOC', 200);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FBDOC', 201);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FBDOC', 202);
+
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('PYTHN', 151);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('PYTHN', 198);
+
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('DTNET', 152);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('DTNET', 162);
+
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('ODBCD', 197);
+
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('JAVAD', 153);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('JAVAD', 160);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('JAVAD', 161);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('JAVAD', 177);
+
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FB-QA', 150);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FB-QA', 151);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('FB-QA', 193);
+
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('INFRA', 194);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('INFRA', 176);
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('INFRA', 205);
+
+INSERT INTO employee_project (proj_id, emp_no) VALUES ('BTLER', 151);
 
 COMMIT;
 

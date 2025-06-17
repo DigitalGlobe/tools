@@ -30,6 +30,8 @@
 #ifndef FB_UTILFACE
 #define FB_UTILFACE
 
+#include "firebird/Interface.h"
+
 #include "../common/classes/alloc.h"
 #include "../common/classes/array.h"
 #include "../common/classes/fb_string.h"
@@ -49,29 +51,107 @@ class UtilSvc : public Firebird::GlobalStorage
 public:
 	typedef Firebird::HalfStaticArray<const char*, 20> ArgvType;
 
+	// Services is rare for our code case where status vector is accessed from 2 different threads
+	// in async way. To ensure it's stability appropriate protection is needed.
+	class StatusAccessor
+	{
+	public:
+		StatusAccessor(Mutex& mtx, Firebird::CheckStatusWrapper* st, UtilSvc* u)
+			: mutex(&mtx), status(st), uSvc(u)
+		{
+			mutex->enter(FB_FUNCTION);
+		}
+
+		StatusAccessor()
+			: mutex(nullptr), status(nullptr), uSvc(nullptr)
+		{ }
+
+		StatusAccessor(StatusAccessor&& sa)
+			: mutex(sa.mutex), status(sa.status), uSvc(sa.uSvc)
+		{
+			sa.mutex = nullptr;
+			sa.uSvc = nullptr;
+			sa.status = nullptr;
+		}
+
+		operator const Firebird::CheckStatusWrapper*() const
+		{
+			return status;
+		}
+
+		const Firebird::CheckStatusWrapper* operator->() const
+		{
+			return status;
+		}
+
+		void init()
+		{
+			if (status)
+				status->init();
+		}
+
+		void setServiceStatus(const ISC_STATUS* status)
+		{
+			if (uSvc)
+				uSvc->setServiceStatus(status);
+		}
+
+		void setServiceStatus(const USHORT fac, const USHORT code, const MsgFormat::SafeArg& args)
+		{
+			if (uSvc)
+				uSvc->setServiceStatus(fac, code, args);
+		}
+
+		~StatusAccessor()
+		{
+			if (mutex)
+				mutex->leave();
+		}
+
+		StatusAccessor(const StatusAccessor&) = delete;
+		StatusAccessor& operator=(const StatusAccessor&) = delete;
+
+	private:
+		Mutex* mutex;
+		Firebird::CheckStatusWrapper* status;
+		UtilSvc* uSvc;
+	};
+
 public:
 	UtilSvc() : argv(getPool()), usvcDataMode(false) { }
 
 	virtual bool isService() = 0;
 	virtual void started() = 0;
-	virtual void finish() = 0;
 	virtual void outputVerbose(const char* text) = 0;
 	virtual void outputError(const char* text) = 0;
-	virtual void outputData(const char* text) = 0;
-    virtual void printf(bool err, const SCHAR* format, ...) = 0;
-    virtual void putLine(char, const char*) = 0;
-    virtual void putSLong(char, SLONG) = 0;
+	virtual void outputData(const void* text, FB_SIZE_T size) = 0;
+	virtual void printf(bool err, const SCHAR* format, ...) = 0;
+	virtual void putLine(char, const char*) = 0;
+	virtual void putSLong(char, SLONG) = 0;
+	virtual void putSInt64(char, SINT64) = 0;
 	virtual void putChar(char, char) = 0;
-	virtual void putBytes(const UCHAR*, size_t) = 0;
+	virtual void putBytes(const UCHAR*, FB_SIZE_T) = 0;
 	virtual ULONG getBytes(UCHAR*, ULONG) = 0;
+
+private:
 	virtual void setServiceStatus(const ISC_STATUS*) = 0;
 	virtual void setServiceStatus(const USHORT, const USHORT, const MsgFormat::SafeArg&) = 0;
-	virtual const ISC_STATUS* getStatus() = 0;
-	virtual void initStatus() = 0;
+
+public:
+	virtual StatusAccessor getStatusAccessor() = 0;
 	virtual void checkService() = 0;
 	virtual void hidePasswd(ArgvType&, int) = 0;
-	virtual void getAddressPath(Firebird::ClumpletWriter& dpb) = 0;
+	virtual void fillDpb(Firebird::ClumpletWriter& dpb) = 0;
 	virtual bool finished() = 0;
+	virtual unsigned int getAuthBlock(const unsigned char** bytes) = 0;
+	virtual bool utf8FileNames() = 0;
+	virtual Firebird::ICryptKeyCallback* getCryptCallback() = 0;
+	virtual int getParallelWorkers() = 0;
+
+	void setDataMode(bool value)
+	{
+		usvcDataMode = value;
+	}
 
 	virtual ~UtilSvc() { }
 
@@ -85,7 +165,7 @@ public:
 		// SVC_TRMNTRs inside the string are duplicated.
 
 		switches += SVC_TRMNTR;
-		for (size_t i = 0; i < str.length(); ++i)
+		for (FB_SIZE_T i = 0; i < str.length(); ++i)
 		{
 			if (str[i] == SVC_TRMNTR)
 			{
@@ -97,18 +177,13 @@ public:
 		switches += ' ';
 	}
 
-	void setDataMode(bool value)
-	{
-		usvcDataMode = value;
-	}
-
 public:
 	ArgvType argv;
+
+protected:
 	bool usvcDataMode;
 };
 
-
 } // namespace Firebird
-
 
 #endif // FB_UTILFACE

@@ -25,7 +25,7 @@
 #include "firebird.h"
 #include "../intl/ldcommon.h"
 #include "../intl/ld_proto.h"
-#include "../jrd/CharSet.h"
+#include "../common/CharSet.h"
 #include "lc_narrow.h"
 #include "lc_dos.h"
 
@@ -94,7 +94,7 @@ TEXTTYPE_ENTRY(ISO88591_42_init)
 {
 	static const ASCII POSIX[] = "fr_FR.ISO8859_1";
 
-#include "../intl/collations/bl88591fr0.h"
+#include "../intl/collations/bl88591ca0.h"
 
 	return LC_NARROW_family3(cache, cs, CC_FRANCE, LDRV_TIEBREAK,
 			NoCaseOrderTbl, ToUpperConversionTbl, ToLowerConversionTbl,

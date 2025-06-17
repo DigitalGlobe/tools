@@ -1,4 +1,3 @@
-#include "../jrd/common.h"
 #include "intl_classes.h"
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -6,9 +5,9 @@
 #include "../common/classes/alloc.h"
 #include "../common/classes/auto.h"
 #include "../jrd/intl.h"
-#include "../jrd/IntlUtil.h"
+#include "../common/IntlUtil.h"
 #include "../intl/country_codes.h"
-#include "../jrd/gdsassert.h"
+#include "../common/gdsassert.h"
 #include "../jrd/jrd.h"
 #include "../jrd/intl_proto.h"
 #include "../jrd/err_proto.h"
@@ -58,7 +57,7 @@ static inline bool FAMILY_INTERNAL(texttype* tt,
 	tt->texttype_fn_str_to_upper	= internal_str_to_upper;
 	tt->texttype_fn_str_to_lower	= internal_str_to_lower;
 	tt->texttype_fn_destroy			= internal_destroy;
-	tt->texttype_impl				= new TextTypeImpl;
+	tt->texttype_impl				= FB_NEW TextTypeImpl;
 	static_cast<TextTypeImpl*>(tt->texttype_impl)->texttype_pad_char = ' ';
 
 	return true;
@@ -100,13 +99,13 @@ struct Byte_Mask_Table
 
 static const Byte_Mask_Table tab[] =
 {
-	{ 0x80, 0x00, 0 * 6, 0x7F, 0 },	/* 1 byte sequence */
-	{ 0xE0, 0xC0, 1 * 6, 0x7FF, 0x80 },	/* 2 byte sequence */
-	{ 0xF0, 0xE0, 2 * 6, 0xFFFF, 0x800 },	/* 3 byte sequence */
-	{ 0xF8, 0xF0, 3 * 6, 0x1FFFFF, 0x10000 },	/* 4 byte sequence */
-	{ 0xFC, 0xF8, 4 * 6, 0x3FFFFFF, 0x200000 },	/* 5 byte sequence */
-	{ 0xFE, 0xFC, 5 * 6, 0x7FFFFFFF, 0x4000000 },	/* 6 byte sequence */
-	{ 0, 0, 0, 0, 0 } 				/* end of table    */
+	{ 0x80, 0x00, 0 * 6, 0x7F, 0 },	// 1 byte sequence
+	{ 0xE0, 0xC0, 1 * 6, 0x7FF, 0x80 },	// 2 byte sequence
+	{ 0xF0, 0xE0, 2 * 6, 0xFFFF, 0x800 },	// 3 byte sequence
+	{ 0xF8, 0xF0, 3 * 6, 0x1FFFFF, 0x10000 },	// 4 byte sequence
+	{ 0xFC, 0xF8, 4 * 6, 0x3FFFFFF, 0x200000 },	// 5 byte sequence
+	{ 0xFE, 0xFC, 5 * 6, 0x7FFFFFFF, 0x4000000 },	// 6 byte sequence
+	{ 0, 0, 0, 0, 0 } 				// end of table
 };
 
 static fss_size_t fss_mbtowc(fss_wchar_t* p, const UCHAR* s, fss_size_t n)
@@ -141,7 +140,7 @@ static fss_size_t fss_mbtowc(fss_wchar_t* p, const UCHAR* s, fss_size_t n)
 	return -1;
 }
 
-static fss_size_t fss_wctomb(UCHAR * s, fss_wchar_t wc)
+static fss_size_t fss_wctomb(UCHAR* s, fss_wchar_t wc)
 {
 	if (s == 0)
 		return 0;
@@ -168,8 +167,7 @@ static fss_size_t fss_wctomb(UCHAR * s, fss_wchar_t wc)
 }
 
 #ifdef NOT_USED_OR_REPLACED
-static SSHORT internal_fss_mbtowc(texttype* obj,
-						   USHORT* wc, const UCHAR* p, USHORT n)
+static SSHORT internal_fss_mbtowc(texttype* obj, USHORT* wc, const UCHAR* p, USHORT n)
 {
 /**************************************
  *
@@ -214,7 +212,7 @@ static ULONG internal_fss_to_unicode(csconvert* obj,
 
 	// See if we're only after a length estimate
 	if (p_dest_ptr == NULL)
-		return (src_len * 2);	/* All single byte narrow characters */
+		return (src_len * 2);	// All single byte narrow characters
 
 	Firebird::OutAligner<UNICODE> d(p_dest_ptr, dest_len);
 	UNICODE* dest_ptr = d;
@@ -239,11 +237,11 @@ static ULONG internal_fss_to_unicode(csconvert* obj,
 		*err_code = CS_TRUNCATION_ERROR;
 	}
 	*err_position = src_start - src_len;
-	return ((dest_ptr - start) * sizeof(*dest_ptr));
+	return static_cast<ULONG>((dest_ptr - start) * sizeof(*dest_ptr));
 }
 
 ULONG internal_unicode_to_fss(csconvert* obj,
-							  ULONG unicode_len,	/* BYTE count */
+							  ULONG unicode_len,	// BYTE count
 							  const UCHAR* p_unicode_str,
 							  ULONG fss_len,
 							  UCHAR* fss_str,
@@ -261,9 +259,9 @@ ULONG internal_unicode_to_fss(csconvert* obj,
 
 	*err_code = 0;
 
-/* See if we're only after a length estimate */
+	// See if we're only after a length estimate
 	if (fss_str == NULL)
-		return ((unicode_len + 1) / 2 * 3);	/* worst case - all han character input */
+		return ((unicode_len + 1) / 2 * 3);	// worst case - all han character input
 
 	Firebird::Aligner<UNICODE> s(p_unicode_str, unicode_len);
 	const UNICODE* unicode_str = s;
@@ -271,20 +269,20 @@ ULONG internal_unicode_to_fss(csconvert* obj,
 	const UCHAR* const start = fss_str;
 	while (fss_len && unicode_len >= sizeof(*unicode_str))
 	{
-		/* Convert the wide character into temp buffer */
+		// Convert the wide character into temp buffer
 		fss_size_t res = fss_wctomb(tmp_buffer, *unicode_str);
 		if (res == -1)
 		{
 			*err_code = CS_BAD_INPUT;
 			break;
 		}
-		/* will the mb sequence fit into space left? */
+		// will the mb sequence fit into space left?
 		if (ULONG(res) > fss_len)
 		{
 			*err_code = CS_TRUNCATION_ERROR;
 			break;
 		}
-		/* copy the converted bytes into the destination */
+		// copy the converted bytes into the destination
 		const UCHAR* p = tmp_buffer;
 		for (; res; res--, fss_len--)
 			*fss_str++ = *p++;
@@ -295,7 +293,7 @@ ULONG internal_unicode_to_fss(csconvert* obj,
 		*err_code = CS_TRUNCATION_ERROR;
 	}
 	*err_position = src_start - unicode_len;
-	return ((fss_str - start) * sizeof(*fss_str));
+	return static_cast<ULONG>((fss_str - start) * sizeof(*fss_str));
 }
 
 static ULONG internal_fss_length(charset* /*obj*/, ULONG srcLen, const UCHAR* src)
@@ -425,8 +423,7 @@ static ULONG internal_fss_substring(charset* /*obj*/, ULONG srcLen, const UCHAR*
 }
 
 static ULONG internal_str_copy(texttype* /*obj*/,
-							   ULONG inLen,
-							   const UCHAR* src, ULONG outLen, UCHAR* dest)
+							   ULONG inLen, const UCHAR* src, ULONG outLen, UCHAR* dest)
 {
 /**************************************
  *
@@ -484,7 +481,7 @@ static USHORT internal_string_to_key(texttype* obj,
 
 	if (obj->texttype_pad_option)
 	{
-		/* strip off ending pad characters */
+		// strip off ending pad characters
 		while (dest > pStart)
 		{
 			if (*(dest - 1) == pad_char)
@@ -498,8 +495,8 @@ static USHORT internal_string_to_key(texttype* obj,
 }
 
 static SSHORT internal_compare(texttype* obj,
-							   ULONG length1,
-							   const UCHAR* p1, ULONG length2, const UCHAR* p2, INTL_BOOL* /*error_flag*/)
+							   ULONG length1, const UCHAR* p1, ULONG length2, const UCHAR* p2,
+							   INTL_BOOL* /*error_flag*/)
 {
 /**************************************
  *
@@ -565,8 +562,7 @@ static SSHORT internal_compare(texttype* obj,
 
 
 static ULONG internal_str_to_upper(texttype* /*obj*/,
-								   ULONG inLen,
-								   const UCHAR* src, ULONG outLen, UCHAR* dest)
+								   ULONG inLen, const UCHAR* src, ULONG outLen, UCHAR* dest)
 {
 /**************************************
  *
@@ -590,8 +586,7 @@ static ULONG internal_str_to_upper(texttype* /*obj*/,
 
 
 static ULONG internal_str_to_lower(texttype* /*obj*/,
-								   ULONG inLen,
-								   const UCHAR* src, ULONG outLen, UCHAR* dest)
+								   ULONG inLen, const UCHAR* src, ULONG outLen, UCHAR* dest)
 {
 /**************************************
  *
@@ -717,11 +712,7 @@ static SSHORT utf16_compare(texttype* obj,
 	return UnicodeUtil::utf16Compare(len1, al1, len2, al2, error_flag);
 }
 
-static ULONG utf16_upper(texttype* obj,
-						 ULONG srcLen,
-						 const UCHAR* src,
-						 ULONG dstLen,
-						 UCHAR* dst)
+static ULONG utf16_upper(texttype* obj, ULONG srcLen, const UCHAR* src, ULONG dstLen, UCHAR* dst)
 {
 /**************************************
  *
@@ -740,11 +731,7 @@ static ULONG utf16_upper(texttype* obj,
 		dstLen, Firebird::OutAligner<USHORT>(dst, dstLen), NULL);
 }
 
-static ULONG utf16_lower(texttype* obj,
-						 ULONG srcLen,
-						 const UCHAR* src,
-						 ULONG dstLen,
-						 UCHAR* dst)
+static ULONG utf16_lower(texttype* obj, ULONG srcLen, const UCHAR* src, ULONG dstLen, UCHAR* dst)
 {
 /**************************************
  *
@@ -833,7 +820,7 @@ static ULONG wc_to_nc(csconvert* obj, ULONG nSrc, const UCHAR* ppSrc,
 	fb_assert(err_position != NULL);
 
 	*err_code = 0;
-	if (pDest == NULL)			/* length estimate needed? */
+	if (pDest == NULL)			// length estimate needed?
 		return ((nSrc + 1) / 2);
 
 	Firebird::Aligner<USHORT> s(ppSrc, nSrc);
@@ -856,9 +843,9 @@ static ULONG wc_to_nc(csconvert* obj, ULONG nSrc, const UCHAR* ppSrc,
 	if (!*err_code && nSrc) {
 		*err_code = CS_TRUNCATION_ERROR;
 	}
-	*err_position = (pSrc - pStart_src) * sizeof(*pSrc);
+	*err_position = static_cast<ULONG>((pSrc - pStart_src) * sizeof(*pSrc));
 
-	return ((pDest - pStart) * sizeof(*pDest));
+	return static_cast<ULONG>((pDest - pStart) * sizeof(*pDest));
 }
 
 
@@ -883,7 +870,7 @@ static ULONG mb_to_wc(csconvert* obj, ULONG nSrc, const UCHAR* pSrc,
 	fb_assert(err_position != NULL);
 
 	*err_code = 0;
-	if (ppDest == NULL)			/* length estimate needed? */
+	if (ppDest == NULL)			// length estimate needed?
 		return (nSrc);
 
 	Firebird::OutAligner<USHORT> d(ppDest, nDest);
@@ -901,9 +888,9 @@ static ULONG mb_to_wc(csconvert* obj, ULONG nSrc, const UCHAR* pSrc,
 	if (!*err_code && nSrc) {
 		*err_code = CS_TRUNCATION_ERROR;
 	}
-	*err_position = (pSrc - pStart_src) * sizeof(*pSrc);
+	*err_position = static_cast<ULONG>((pSrc - pStart_src) * sizeof(*pSrc));
 
-	return ((pDest - pStart) * sizeof(*pDest));
+	return static_cast<ULONG>((pDest - pStart) * sizeof(*pDest));
 }
 
 
@@ -928,7 +915,7 @@ static ULONG wc_to_mb(csconvert* obj, ULONG nSrc, const UCHAR* ppSrc,
 	fb_assert(err_position != NULL);
 
 	*err_code = 0;
-	if (pDest == NULL)			/* length estimate needed? */
+	if (pDest == NULL)			// length estimate needed?
 		return (nSrc);
 
 	Firebird::Aligner<USHORT> s(ppSrc, nSrc);
@@ -946,12 +933,13 @@ static ULONG wc_to_mb(csconvert* obj, ULONG nSrc, const UCHAR* ppSrc,
 	if (!*err_code && nSrc) {
 		*err_code = CS_TRUNCATION_ERROR;
 	}
-	*err_position = (pSrc - pStart_src) * sizeof(*pSrc);
+	*err_position = static_cast<ULONG>((pSrc - pStart_src) * sizeof(*pSrc));
 
-	return ((pDest - pStart) * sizeof(*pDest));
+	return static_cast<ULONG>((pDest - pStart) * sizeof(*pDest));
 }
 
-static INTL_BOOL ttype_ascii_init(texttype* tt, const ASCII* /*texttype_name*/, const ASCII* /*charset_name*/,
+static INTL_BOOL ttype_ascii_init(texttype* tt,
+	const ASCII* /*texttype_name*/, const ASCII* /*charset_name*/,
 	USHORT attributes, const UCHAR* specific_attributes, ULONG specific_attributes_length,
 	INTL_BOOL /*ignore_attributes*/, const ASCII* /*config_info*/)
 {
@@ -970,7 +958,8 @@ static INTL_BOOL ttype_ascii_init(texttype* tt, const ASCII* /*texttype_name*/, 
 }
 
 
-static INTL_BOOL ttype_none_init(texttype* tt, const ASCII* /*texttype_name*/, const ASCII* /*charset_name*/,
+static INTL_BOOL ttype_none_init(texttype* tt,
+	const ASCII* /*texttype_name*/, const ASCII* /*charset_name*/,
 	USHORT attributes, const UCHAR* specific_attributes, ULONG specific_attributes_length,
 	INTL_BOOL /*ignore_attributes*/, const ASCII* /*config_info*/)
 {
@@ -989,7 +978,8 @@ static INTL_BOOL ttype_none_init(texttype* tt, const ASCII* /*texttype_name*/, c
 }
 
 
-static INTL_BOOL ttype_unicode_fss_init(texttype* tt, const ASCII* /*texttype_name*/, const ASCII* /*charset_name*/,
+static INTL_BOOL ttype_unicode_fss_init(texttype* tt,
+	const ASCII* /*texttype_name*/, const ASCII* /*charset_name*/,
 	USHORT attributes, const UCHAR* specific_attributes, ULONG specific_attributes_length,
 	INTL_BOOL /*ignore_attributes*/, const ASCII* /*config_info*/)
 {
@@ -1016,7 +1006,8 @@ static INTL_BOOL ttype_unicode_fss_init(texttype* tt, const ASCII* /*texttype_na
 }
 
 
-static INTL_BOOL ttype_binary_init(texttype* tt, const ASCII* /*texttype_name*/, const ASCII* /*charset_name*/,
+static INTL_BOOL ttype_binary_init(texttype* tt,
+	const ASCII* /*texttype_name*/, const ASCII* /*charset_name*/,
 	USHORT attributes, const UCHAR* specific_attributes, ULONG specific_attributes_length,
 	INTL_BOOL /*ignore_attributes*/, const ASCII* /*config_info*/)
 {
@@ -1043,7 +1034,8 @@ static INTL_BOOL ttype_binary_init(texttype* tt, const ASCII* /*texttype_name*/,
 }
 
 
-static INTL_BOOL ttype_utf8_init(texttype* tt, const ASCII* /*texttype_name*/, const ASCII* /*charset_name*/,
+static INTL_BOOL ttype_utf8_init(texttype* tt,
+	const ASCII* /*texttype_name*/, const ASCII* /*charset_name*/,
 	USHORT attributes, const UCHAR* specific_attributes, ULONG specific_attributes_length,
 	INTL_BOOL /*ignore_attributes*/, const ASCII* /*config_info*/)
 {
@@ -1062,7 +1054,8 @@ static INTL_BOOL ttype_utf8_init(texttype* tt, const ASCII* /*texttype_name*/, c
 }
 
 
-static INTL_BOOL ttype_unicode8_init(texttype* tt, const ASCII* /*texttype_name*/, const ASCII* /*charset_name*/,
+static INTL_BOOL ttype_unicode8_init(texttype* tt,
+	const ASCII* /*texttype_name*/, const ASCII* /*charset_name*/,
 	USHORT attributes, const UCHAR* specific_attributes, ULONG specific_attributes_length,
 	INTL_BOOL /*ignore_attributes*/, const ASCII* config_info)
 {
@@ -1077,7 +1070,7 @@ static INTL_BOOL ttype_unicode8_init(texttype* tt, const ASCII* /*texttype_name*
  *************************************/
 	static const ASCII POSIX[] = "C.UTF8.UNICODE";
 
-	charset* cs = new charset;
+	charset* cs = FB_NEW charset;
 	memset(cs, 0, sizeof(*cs));
 	cs_utf8_init(cs, "UTF8", config_info);
 
@@ -1089,7 +1082,8 @@ static INTL_BOOL ttype_unicode8_init(texttype* tt, const ASCII* /*texttype_name*
 }
 
 
-static INTL_BOOL ttype_utf16_init(texttype* tt, const ASCII* /*texttype_name*/, const ASCII* /*charset_name*/,
+static INTL_BOOL ttype_utf16_init(texttype* tt,
+	const ASCII* /*texttype_name*/, const ASCII* /*charset_name*/,
 	USHORT attributes, const UCHAR* specific_attributes, ULONG specific_attributes_length,
 	INTL_BOOL /*ignore_attributes*/, const ASCII* /*config_info*/)
 {
@@ -1118,7 +1112,8 @@ static INTL_BOOL ttype_utf16_init(texttype* tt, const ASCII* /*texttype_name*/, 
 }
 
 
-static INTL_BOOL ttype_utf32_init(texttype* tt, const ASCII* /*texttype_name*/, const ASCII* /*charset_name*/,
+static INTL_BOOL ttype_utf32_init(texttype* tt,
+	const ASCII* /*texttype_name*/, const ASCII* /*charset_name*/,
 	USHORT attributes, const UCHAR* specific_attributes, ULONG specific_attributes_length,
 	INTL_BOOL /*ignore_attributes*/, const ASCII* /*config_info*/)
 {
@@ -1169,9 +1164,7 @@ static INTL_BOOL cs_utf16_well_formed(charset* cs,
 }
 
 
-static ULONG cs_utf16_length(charset* cs,
-							 ULONG srcLen,
-							 const UCHAR* src)
+static ULONG cs_utf16_length(charset* cs, ULONG srcLen, const UCHAR* src)
 {
 /**************************************
  *
@@ -1258,7 +1251,7 @@ static ULONG cvt_none_to_unicode(csconvert* obj, ULONG nSrc, const UCHAR* pSrc,
 	USHORT* pDest = d;
 
 	*err_code = 0;
-	if (pDest == NULL)			/* length estimate needed? */
+	if (pDest == NULL)			// length estimate needed?
 		return (2 * nSrc);
 
 	const USHORT* const pStart = pDest;
@@ -1277,9 +1270,9 @@ static ULONG cvt_none_to_unicode(csconvert* obj, ULONG nSrc, const UCHAR* pSrc,
 	if (!*err_code && nSrc) {
 		*err_code = CS_TRUNCATION_ERROR;
 	}
-	*err_position = (pSrc - pStart_src) * sizeof(*pSrc);
+	*err_position = static_cast<ULONG>((pSrc - pStart_src) * sizeof(*pSrc));
 
-	return ((pDest - pStart) * sizeof(*pDest));
+	return static_cast<ULONG>((pDest - pStart) * sizeof(*pDest));
 }
 
 
@@ -1301,7 +1294,7 @@ static ULONG cvt_unicode_to_unicode(csconvert* obj, ULONG nSrc, const UCHAR* ppS
 	fb_assert(err_code != NULL);
 
 	*err_code = 0;
-	if (ppDest == NULL)			/* length estimate needed? */
+	if (ppDest == NULL)			// length estimate needed?
 		return nSrc;
 
 	Firebird::Aligner<USHORT> s(ppSrc, nSrc);
@@ -1320,9 +1313,9 @@ static ULONG cvt_unicode_to_unicode(csconvert* obj, ULONG nSrc, const UCHAR* ppS
 	if (!*err_code && nSrc) {
 		*err_code = CS_TRUNCATION_ERROR;
 	}
-	*err_position = (pSrc - pStart_src) * sizeof(*pSrc);
+	*err_position = static_cast<ULONG>((pSrc - pStart_src) * sizeof(*pSrc));
 
-	return ((pDest - pStart) * sizeof(*pDest));
+	return static_cast<ULONG>((pDest - pStart) * sizeof(*pDest));
 }
 
 
@@ -1353,7 +1346,7 @@ static ULONG cvt_utffss_to_ascii(csconvert* obj, ULONG nSrc, const UCHAR* pSrc,
 	fb_assert(err_code != NULL);
 
 	*err_code = 0;
-	if (pDest == NULL)			/* length estimate needed? */
+	if (pDest == NULL)			// length estimate needed?
 		return (nSrc);
 
 	const UCHAR* const pStart = pDest;
@@ -1362,8 +1355,8 @@ static ULONG cvt_utffss_to_ascii(csconvert* obj, ULONG nSrc, const UCHAR* pSrc,
 	{
 		if (*pSrc > 127)
 		{
-			/* In the cvt_ascii_to_utffss case this should be CS_BAD_INPUT */
-			/* but not in cvt_none_to_utffss or cvt_utffss_to_ascii */
+			// In the cvt_ascii_to_utffss case this should be CS_BAD_INPUT
+			// but not in cvt_none_to_utffss or cvt_utffss_to_ascii
 			*err_code = CS_CONVERT_ERROR;
 			break;
 		}
@@ -1412,7 +1405,8 @@ static ULONG cvt_utf32_to_unicode(csconvert* obj,
 }
 
 
-static INTL_BOOL cs_ascii_init(charset* csptr, const ASCII* /*charset_name*/, const ASCII* /*config_info*/)
+static INTL_BOOL cs_ascii_init(charset* csptr,
+	const ASCII* /*charset_name*/, const ASCII* /*config_info*/)
 {
 /**************************************
  *
@@ -1429,7 +1423,8 @@ static INTL_BOOL cs_ascii_init(charset* csptr, const ASCII* /*charset_name*/, co
 }
 
 
-static INTL_BOOL cs_none_init(charset* csptr, const ASCII* /*charset_name*/, const ASCII* /*config_info*/)
+static INTL_BOOL cs_none_init(charset* csptr,
+	const ASCII* /*charset_name*/, const ASCII* /*config_info*/)
 {
 /**************************************
  *
@@ -1449,7 +1444,8 @@ static INTL_BOOL cs_none_init(charset* csptr, const ASCII* /*charset_name*/, con
 }
 
 
-static INTL_BOOL cs_unicode_fss_init(charset* csptr, const ASCII* /*charset_name*/, const ASCII* /*config_info*/)
+static INTL_BOOL cs_unicode_fss_init(charset* csptr,
+	const ASCII* /*charset_name*/, const ASCII* /*config_info*/)
 {
 /**************************************
  *
@@ -1463,7 +1459,6 @@ static INTL_BOOL cs_unicode_fss_init(charset* csptr, const ASCII* /*charset_name
 
 	IntlUtil::initNarrowCharset(csptr, "UNICODE_FSS");
 	csptr->charset_max_bytes_per_char = 3;
-	csptr->charset_flags |= CHARSET_LEGACY_SEMANTICS;
 
 	IntlUtil::initConvert(&csptr->charset_to_unicode, internal_fss_to_unicode);
 	IntlUtil::initConvert(&csptr->charset_from_unicode, internal_unicode_to_fss);
@@ -1475,7 +1470,8 @@ static INTL_BOOL cs_unicode_fss_init(charset* csptr, const ASCII* /*charset_name
 }
 
 
-static INTL_BOOL cs_unicode_ucs2_init(charset* csptr, const ASCII* /*charset_name*/, const ASCII* /*config_info*/)
+static INTL_BOOL cs_unicode_ucs2_init(charset* csptr,
+	const ASCII* /*charset_name*/, const ASCII* /*config_info*/)
 {
 /**************************************
  *
@@ -1494,7 +1490,7 @@ static INTL_BOOL cs_unicode_ucs2_init(charset* csptr, const ASCII* /*charset_nam
 	csptr->charset_min_bytes_per_char = 2;
 	csptr->charset_max_bytes_per_char = 2;
 	csptr->charset_space_length = 2;
-	csptr->charset_space_character = (const BYTE*) &space;	/* 0x0020 */
+	csptr->charset_space_character = (const BYTE*) &space;	// 0x0020
 	csptr->charset_fn_well_formed = NULL;
 
 	IntlUtil::initConvert(&csptr->charset_to_unicode, cvt_unicode_to_unicode);
@@ -1504,7 +1500,8 @@ static INTL_BOOL cs_unicode_ucs2_init(charset* csptr, const ASCII* /*charset_nam
 }
 
 
-static INTL_BOOL cs_binary_init(charset* csptr, const ASCII* /*charset_name*/, const ASCII* /*config_info*/)
+static INTL_BOOL cs_binary_init(charset* csptr,
+	const ASCII* /*charset_name*/, const ASCII* /*config_info*/)
 {
 /**************************************
  *
@@ -1524,7 +1521,8 @@ static INTL_BOOL cs_binary_init(charset* csptr, const ASCII* /*charset_name*/, c
 }
 
 
-static INTL_BOOL cs_utf8_init(charset* csptr, const ASCII* /*charset_name*/, const ASCII* /*config_info*/)
+static INTL_BOOL cs_utf8_init(charset* csptr,
+	const ASCII* /*charset_name*/, const ASCII* /*config_info*/)
 {
 /**************************************
  *
@@ -1541,7 +1539,8 @@ static INTL_BOOL cs_utf8_init(charset* csptr, const ASCII* /*charset_name*/, con
 }
 
 
-static INTL_BOOL cs_utf16_init(charset* csptr, const ASCII* /*charset_name*/, const ASCII* /*config_info*/)
+static INTL_BOOL cs_utf16_init(charset* csptr,
+	const ASCII* /*charset_name*/, const ASCII* /*config_info*/)
 {
 /**************************************
  *
@@ -1572,7 +1571,8 @@ static INTL_BOOL cs_utf16_init(charset* csptr, const ASCII* /*charset_name*/, co
 }
 
 
-static INTL_BOOL cs_utf32_init(charset* csptr, const ASCII* /*charset_name*/, const ASCII* /*config_info*/)
+static INTL_BOOL cs_utf32_init(charset* csptr,
+	const ASCII* /*charset_name*/, const ASCII* /*config_info*/)
 {
 /**************************************
  *
@@ -1658,10 +1658,12 @@ INTL_BOOL INTL_builtin_lookup_charset(charset* cs, const ASCII* charset_name, co
 }
 
 
-INTL_BOOL INTL_builtin_lookup_texttype(texttype* tt, const ASCII* texttype_name, const ASCII* charset_name,
-									   USHORT attributes, const UCHAR* specific_attributes,
-									   ULONG specific_attributes_length, INTL_BOOL ignore_attributes,
-									   const ASCII* config_info)
+INTL_BOOL INTL_builtin_lookup_texttype_status(
+	char* status_buffer, ULONG status_buffer_length,
+	texttype* tt, const ASCII* texttype_name, const ASCII* charset_name,
+	USHORT attributes, const UCHAR* specific_attributes,
+	ULONG specific_attributes_length, INTL_BOOL ignore_attributes,
+	const ASCII* config_info)
 {
 	if (ignore_attributes)
 	{
@@ -1700,8 +1702,29 @@ INTL_BOOL INTL_builtin_lookup_texttype(texttype* tt, const ASCII* texttype_name,
 
 	if (func)
 	{
-		return func(tt, texttype_name, charset_name, attributes,
-			specific_attributes, specific_attributes_length, ignore_attributes, config_info);
+		Firebird::string errorMsg;
+
+		try
+		{
+			return func(tt, texttype_name, charset_name, attributes,
+				specific_attributes, specific_attributes_length, ignore_attributes, config_info);
+		}
+		catch (const Firebird::status_exception& ex)
+		{
+			auto status = ex.value();
+			TEXT temp[BUFFER_LARGE];
+
+			while (fb_interpret(temp, sizeof(temp), &status))
+			{
+				if (errorMsg.hasData())
+					errorMsg += "\n-";
+
+				errorMsg += temp;
+			}
+
+			if (status_buffer_length)
+				fb_utils::copy_terminate(status_buffer, errorMsg.c_str(), status_buffer_length);
+		}
 	}
 
 	return false;
@@ -1717,7 +1740,7 @@ ULONG INTL_builtin_setup_attributes(const ASCII* textTypeName, const ASCII* char
 	// the preprocessor, but this is a task for another day.
 	if (strstr(textTypeName, "UNICODE") && strcmp(textTypeName, "UNICODE_FSS") != 0)
 	{
-		Firebird::AutoPtr<charset, Jrd::CharSet::Delete> cs(new charset);
+		Firebird::AutoPtr<charset> cs(FB_NEW charset);
 		memset(cs, 0, sizeof(*cs));
 
 		// test if that charset exists

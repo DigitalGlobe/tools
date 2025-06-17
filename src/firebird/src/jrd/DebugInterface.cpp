@@ -10,10 +10,10 @@
  *  See the License for the specific language governing rights
  *  and limitations under the License.
  *
- *  The Original Code was created by Vlad Horsun
+ *  The Original Code was created by Vlad Khorsun
  *  for the Firebird Open Source RDBMS project.
  *
- *  Copyright (c) 2006 Vlad Horsun <hvlad@users.sourceforge.net>
+ *  Copyright (c) 2006 Vlad Khorsun <hvlad@users.sourceforge.net>
  *  and all contributors signed below.
  *
  *  All Rights Reserved.
@@ -21,93 +21,162 @@
  */
 
 #include "firebird.h"
+#include "../jrd/Attachment.h"
 #include "../jrd/DebugInterface.h"
 #include "../jrd/blb_proto.h"
 
 using namespace Jrd;
 using namespace Firebird;
 
-const UCHAR CURRENT_DBG_INFO_VERSION = UCHAR(1);
-
-void DBG_parse_debug_info(thread_db* tdbb, bid *blob_id, Firebird::DbgInfo& dbgInfo)
+void DBG_parse_debug_info(thread_db* tdbb, bid* blob_id, DbgInfo& dbgInfo)
 {
-	Database* dbb = tdbb->getDatabase();
-	blb* blob = BLB_open(tdbb, dbb->dbb_sys_trans, blob_id);
+	Jrd::Attachment* attachment = tdbb->getAttachment();
+
+	blb* blob = blb::open(tdbb, attachment->getSysTransaction(), blob_id);
 	const ULONG length = blob->blb_length;
-	fb_assert(length < MAX_USHORT); // CVC: Otherwise, we'll overflow the function below.
-	Firebird::HalfStaticArray<UCHAR, 128> tmp;
+	HalfStaticArray<UCHAR, 128> tmp;
 
 	UCHAR* temp = tmp.getBuffer(length);
-	BLB_get_data(tdbb, blob, temp, length);
+	blob->BLB_get_data(tdbb, temp, length);
 
 	DBG_parse_debug_info(length, temp, dbgInfo);
 }
 
-void DBG_parse_debug_info(USHORT length, const UCHAR* data, Firebird::DbgInfo& dbgInfo)
+void DBG_parse_debug_info(ULONG length, const UCHAR* data, DbgInfo& dbgInfo)
 {
 	const UCHAR* const end = data + length;
 	bool bad_format = false;
 
-	if ((*data++ != fb_dbg_version) || (end[-1] != fb_dbg_end) ||
-		(*data++ != CURRENT_DBG_INFO_VERSION))
-	{
+	if ((*data++ != fb_dbg_version) || (end[-1] != fb_dbg_end))
 		bad_format = true;
+
+	UCHAR version = UCHAR(0);
+
+	if (!bad_format)
+	{
+		version = *data++;
+
+		if (!version || version > CURRENT_DBG_INFO_VERSION)
+			bad_format = true;
 	}
 
 	while (!bad_format && (data < end))
 	{
-		switch (*data++)
+		UCHAR code = *data++;
+
+		switch (code)
 		{
 		case fb_dbg_map_src2blr:
 			{
-				if (data + 6 > end) {
+				const unsigned length =
+					(version == DBG_INFO_VERSION_1) ? 6 : 12;
+
+				if (data + length > end)
+				{
 					bad_format = true;
 					break;
 				}
 
 				MapBlrToSrcItem i;
+
 				i.mbs_src_line = *data++;
 				i.mbs_src_line |= *data++ << 8;
+
+				if (version > DBG_INFO_VERSION_1)
+				{
+					i.mbs_src_line |= *data++ << 16;
+					i.mbs_src_line |= *data++ << 24;
+				}
 
 				i.mbs_src_col = *data++;
 				i.mbs_src_col |= *data++ << 8;
 
+				if (version > DBG_INFO_VERSION_1)
+				{
+					i.mbs_src_col |= *data++ << 16;
+					i.mbs_src_col |= *data++ << 24;
+				}
+
 				i.mbs_offset = *data++;
 				i.mbs_offset |= *data++ << 8;
+
+				if (version > DBG_INFO_VERSION_1)
+				{
+					i.mbs_offset |= *data++ << 16;
+					i.mbs_offset |= *data++ << 24;
+				}
 
 				dbgInfo.blrToSrc.add(i);
 			}
 			break;
 
 		case fb_dbg_map_varname:
+		case fb_dbg_map_curname:
 			{
-				if (data + 3 > end) {
+				if (data + 3 > end)
+				{
 					bad_format = true;
 					break;
 				}
 
-				// variable number
+				// variable/cursor number
 				USHORT index = *data++;
-				index |= *data++;
+				index |= *data++ << 8;
 
-				// variable name string length
+				// variable/cursor name string length
 				USHORT length = *data++;
 
-				if (data + length > end) {
+				if (data + length > end)
+				{
 					bad_format = true;
 					break;
 				}
 
-				dbgInfo.varIndexToName.put(index, MetaName((const TEXT*) data, length));
+				if (code == fb_dbg_map_varname)
+					dbgInfo.varIndexToName.put(index, MetaName((const TEXT*) data, length));
+				else
+					dbgInfo.declaredCursorIndexToName.put(index, MetaName((const TEXT*) data, length));
 
-				// variable name string
+				// variable/cursor name string
+				data += length;
+			}
+			break;
+
+		case fb_dbg_map_for_curname:
+			{
+				if (data + 5 > end)
+				{
+					bad_format = true;
+					break;
+				}
+
+				// fb_dbg_map_for_curname do not exist in DBG_INFO_VERSION_1,
+				// so always use DBG_INFO_VERSION_2 format.
+				ULONG offset = *data++;
+				offset |= *data++ << 8;
+				offset |= *data++ << 16;
+				offset |= *data++ << 24;
+
+				// variable/cursor name string length
+				USHORT length = *data++;
+
+				if (data + length > end)
+				{
+					bad_format = true;
+					break;
+				}
+
+				dbgInfo.forCursorOffsetToName.put(offset, MetaName((const TEXT*) data, length));
+
+				// cursor name string
 				data += length;
 			}
 			break;
 
 		case fb_dbg_map_argument:
 			{
-				if (data + 4 > end) {
+				if (data + 4 > end)
+				{
 					bad_format = true;
 					break;
 				}
@@ -119,12 +188,13 @@ void DBG_parse_debug_info(USHORT length, const UCHAR* data, Firebird::DbgInfo& d
 
 				// argument number
 				info.index = *data++;
-				info.index |= *data++;
+				info.index |= *data++ << 8;
 
 				// argument name string length
 				USHORT length = *data++;
 
-				if (data + length > end) {
+				if (data + length > end)
+				{
 					bad_format = true;
 					break;
 				}
@@ -135,6 +205,56 @@ void DBG_parse_debug_info(USHORT length, const UCHAR* data, Firebird::DbgInfo& d
 				data += length;
 			}
 			break;
+
+		case fb_dbg_subproc:
+		case fb_dbg_subfunc:
+			{
+				if (version == DBG_INFO_VERSION_1 || data >= end)
+				{
+					bad_format = true;
+					break;
+				}
+
+				// argument name string length
+				ULONG length = *data++;
+
+				if (data + length >= end)
+				{
+					bad_format = true;
+					break;
+				}
+
+				MetaName name((const TEXT*) data, length);
+				data += length;
+
+				if (data + 4 >= end)
+				{
+					bad_format = true;
+					break;
+				}
+
+				length = *data++;
+				length |= *data++ << 8;
+				length |= *data++ << 16;
+				length |= *data++ << 24;
+
+				if (data + length >= end)
+				{
+					bad_format = true;
+					break;
+				}
+
+				AutoPtr<DbgInfo> sub(FB_NEW_POOL(dbgInfo.getPool()) DbgInfo(dbgInfo.getPool()));
+				DBG_parse_debug_info(length, data, *sub);
+				data += length;
+
+				if (code == fb_dbg_subproc)
+					dbgInfo.subProcs.put(name, sub.release());
+				else
+					dbgInfo.subFuncs.put(name, sub.release());
+
+				break;
+			}
 
 		case fb_dbg_end:
 			if (data != end)

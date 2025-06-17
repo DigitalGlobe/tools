@@ -31,14 +31,14 @@
 #ifndef JRD_SYSFUNCTION_H
 #define JRD_SYSFUNCTION_H
 
-#include "../common/classes/MetaName.h"
+#include "../jrd/MetaName.h"
 #include "../jrd/DataTypeUtil.h"
-#include "../jrd/dsc.h"
+#include "../dsql/Nodes.h"
+#include "../common/dsc.h"
 
 namespace Jrd
 {
 	class thread_db;
-	class jrd_nod;
 	struct impure_value;
 }
 
@@ -48,19 +48,19 @@ class SysFunction
 public:
 	typedef void (*SetParamsFunc)(DataTypeUtilBase* dataTypeUtil, const SysFunction* function, int, dsc**);
 	typedef void (*MakeFunc)(DataTypeUtilBase* dataTypeUtil, const SysFunction* function, dsc*, int, const dsc**);
-	typedef dsc* (*EvlFunc)(Jrd::thread_db*, const SysFunction* function, Jrd::jrd_nod*, Jrd::impure_value*);
+	typedef dsc* (*EvlFunc)(Jrd::thread_db*, const SysFunction* function,
+		const Jrd::NestValueArray&, Jrd::impure_value*);
 
-	const Firebird::MetaName name;
+	const char* name;
 	int minArgCount;
 	int maxArgCount;	// -1 for no limit
+	bool deterministic;
 	SetParamsFunc setParamsFunc;
 	MakeFunc makeFunc;
 	EvlFunc evlFunc;
 	void* misc;
 
-	static const SysFunction* lookup(const Firebird::MetaName& name);
-	static dsc* substring(Jrd::thread_db* tdbb, Jrd::impure_value* impure,
-		dsc* value, const dsc* offset_value, const dsc* length_value);
+	static const SysFunction* lookup(const Jrd::MetaName& name);
 
 	void checkArgsMismatch(int count) const;
 

@@ -37,11 +37,6 @@ void	CPR_exit(int);
 void	CPR_warn(const TEXT*);
 tok*	CPR_eol_token();
 void	CPR_get_text(TEXT*, const gpre_txt*);
-
-#ifdef NOT_USED_OR_REPLACED
-void	CPR_raw_read();
-#endif
-
 void	CPR_s_error(const TEXT*);
 gpre_txt*	CPR_start_text();
 tok*	CPR_token();

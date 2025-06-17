@@ -39,17 +39,17 @@ public:
 	bool create(FB_API_HANDLE& db, FB_API_HANDLE& trans, ISC_QUAD& blobid,
 				USHORT bpb_len, const UCHAR* bpb);
 	bool close(bool force_internal_SV = false);
-	bool getSegment(size_t len, void* buffer, size_t& real_len);
-	bool getData(size_t len, void* buffer, size_t& real_len);
-	bool getData(size_t len, void* buffer, size_t& real_len, bool use_sep, const UCHAR separator);
-	bool putSegment(size_t len, const void* buffer);
-	bool putSegment(size_t len, const void* buffer, size_t& real_len);
-	bool putData(size_t len, const void* buffer);
-	bool putData(size_t len, const void* buffer, size_t& real_len);
+	bool getSegment(FB_SIZE_T len, void* buffer, FB_SIZE_T& real_len);
+	bool getData(FB_SIZE_T len, void* buffer, FB_SIZE_T& real_len);
+	bool getData(FB_SIZE_T len, void* buffer, FB_SIZE_T& real_len, bool use_sep, const UCHAR separator);
+	bool putSegment(FB_SIZE_T len, const void* buffer);
+	bool putSegment(FB_SIZE_T len, const void* buffer, FB_SIZE_T& real_len);
+	bool putData(FB_SIZE_T len, const void* buffer);
+	bool putData(FB_SIZE_T len, const void* buffer, FB_SIZE_T& real_len);
 	bool isOpen() const;
 	ISC_STATUS getCode() const;
 //	FB_API_HANDLE& getHandle();
-	bool getInfo(size_t items_size, const UCHAR* items, size_t info_size, UCHAR* blob_info) const;
+	bool getInfo(FB_SIZE_T items_size, const UCHAR* items, FB_SIZE_T info_size, UCHAR* blob_info) const;
 	static bool blobIsNull(const ISC_QUAD& blobid);
 private:
 	enum b_direction
@@ -97,13 +97,13 @@ inline bool UserBlob::blobIsNull(const ISC_QUAD& blobid)
 	return blobid.gds_quad_high == 0 && blobid.gds_quad_low == 0;
 }
 
-inline bool UserBlob::putData(size_t len, const void* buffer)
+inline bool UserBlob::putData(FB_SIZE_T len, const void* buffer)
 {
-	size_t dummy;
+	FB_SIZE_T dummy;
 	return putData(len, buffer, dummy);
 }
 
-inline bool UserBlob::getData(size_t len, void* buffer, size_t& real_len)
+inline bool UserBlob::getData(FB_SIZE_T len, void* buffer, FB_SIZE_T& real_len)
 {
 	return getData(len, buffer, real_len, false, '\0');
 }

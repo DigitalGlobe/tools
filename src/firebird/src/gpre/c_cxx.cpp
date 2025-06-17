@@ -32,9 +32,8 @@
 #include "firebird.h"
 #include <stdio.h>
 #include <string.h>
-#include "../jrd/common.h"
 #include <stdarg.h>
-#include "../jrd/ibase.h"
+#include "ibase.h"
 #include "../gpre/gpre.h"
 #include "../gpre/pat.h"
 #include "../gpre/msc_proto.h"
@@ -42,8 +41,8 @@
 #include "../gpre/gpre_proto.h"
 #include "../gpre/lang_proto.h"
 #include "../gpre/pat_proto.h"
-#include "../gpre/prett_proto.h"
-#include "../jrd/gds_proto.h"
+#include "../common/prett_proto.h"
+#include "../yvalve/gds_proto.h"
 #include "../common/utils_proto.h"
 
 
@@ -139,11 +138,7 @@ static const char* const NULL_STRING	= "(char*) 0";
 static const char* const NULL_STATUS	= "NULL";
 static const char* const NULL_SQLDA		= "NULL";
 
-#ifdef DARWIN
-static const char* const GDS_INCLUDE	= "<Firebird/ibase.h>";
-#else
 static const char* const GDS_INCLUDE	= "<ibase.h>";
-#endif
 
 static const char* const DCL_LONG	= "ISC_LONG";
 static const char* const DCL_QUAD	= "ISC_QUAD";
@@ -244,6 +239,9 @@ void C_CXX_action(const act* action, int column)
 	case ACT_update:
 	case ACT_statistics:
 		begin(column);
+
+	default:
+		break;
 	}
 
 	switch (action->act_type)
@@ -659,7 +657,7 @@ static void asgn_to( const act* action, ref* reference, int column)
 
 			// Pick up NULL value if one is there
 
-			if (reference = reference->ref_null)
+			if ((reference = reference->ref_null))
 			{
 				align(column);
 				fprintf(gpreGlob.out_file, "%s = %s;", reference->ref_value,
@@ -688,7 +686,7 @@ static void asgn_to( const act* action, ref* reference, int column)
 
 	// Pick up NULL value if one is there
 
-	if (reference = reference->ref_null)
+	if ((reference = reference->ref_null))
 	{
 		align(column);
 		fprintf(gpreGlob.out_file, "%s = %s;", reference->ref_value, gen_name(s, reference, true));
@@ -876,7 +874,7 @@ static void gen_based( const act* action, int column)
 		if (based_on->bas_flags & BAS_segment)
 		{
 			if (*variable != '*')
-				fprintf(gpreGlob.out_file, "[%" SLONGFORMAT "]", length);
+				fprintf(gpreGlob.out_file, "[%" SLONGFORMAT"]", length);
 		}
 		else if (field->fld_array_info)
 		{
@@ -885,7 +883,7 @@ static void gen_based( const act* action, int column)
 			for (const dim* dimension = field->fld_array_info->ary_dimension;
 				dimension; dimension = dimension->dim_next)
 			{
-				fprintf(gpreGlob.out_file, " [%" SLONGFORMAT "]", dimension->dim_upper - dimension->dim_lower + 1);
+				fprintf(gpreGlob.out_file, " [%" SLONGFORMAT"]", dimension->dim_upper - dimension->dim_lower + 1);
 			}
 
 			if (field->fld_array_info->ary_dtype <= dtype_varying && field->fld_length > 1)
@@ -1050,7 +1048,7 @@ static void gen_blob_open( const act* action, USHORT column)
 		fprintf(gpreGlob.out_file, "%s = %s;", s, reference->ref_value);
 	}
 
-	if (args.pat_value1 = blob->blb_bpb_length)
+	if ((args.pat_value1 = blob->blb_bpb_length))
 		PATTERN_expand(column, pattern1, &args);
 	else
 		PATTERN_expand(column, pattern2, &args);
@@ -1099,7 +1097,7 @@ static void gen_blr(void* /*user_arg*/, SSHORT /*offset*/, const char* string)
 	indent = MIN(indent, 192);
 
 	bool first_line = true;
-	int length = strlen(p);
+	int length = static_cast<int>(strlen(p));
 	do {
 		const char* q;
 		if (length + indent > 255)
@@ -1136,7 +1134,7 @@ static void gen_blr(void* /*user_arg*/, SSHORT /*offset*/, const char* string)
 						{
 							char d = 0;
 							if (p1 < q && ((d = *p1++) == '_' || d == '$'))
-								strncpy(q1 - 4, "isc", 3);
+								memcpy(q1 - 4, "isc", 3);
 							else if (d)
 								*q1++ = d;
 						}
@@ -1213,9 +1211,16 @@ static void gen_compile( const act* action, int column)
 
 	PATTERN_expand((USHORT) column, pattern2, &args);
 
+	column += INDENT;
+	begin(column);
+
 	args.pat_condition = !(request->req_flags & REQ_exp_hand);
 	args.pat_value1 = request->req_length;
-	PATTERN_expand((USHORT) (column + INDENT), pattern1, &args);
+	PATTERN_expand((USHORT) column, pattern1, &args);
+
+	set_sqlcode(action, column);
+	endp(column);
+	column -= INDENT;
 
 	// If blobs are present, zero out all of the blob handles.  After this
 	// point, the handles are the user's responsibility
@@ -1273,7 +1278,7 @@ static void gen_create_database( const act* action, int column)
 	args.pat_vector1 = status_vector(action);
 	args.pat_request = request;
 	args.pat_database = db;
-	args.pat_value1 = strlen(db->dbb_filename);
+	args.pat_value1 = static_cast<int>(strlen(db->dbb_filename));
 	args.pat_condition = (request->req_length || (request->req_flags & REQ_extend_dpb));
 	args.pat_string1 = s1;
 	args.pat_string2 = s2;
@@ -1577,7 +1582,7 @@ static void gen_drop_database( const act* action, int column)
 	const gpre_dbb* db = (gpre_dbb*) action->act_object;
 	align(column);
 
-	fprintf(gpreGlob.out_file, "isc_drop_database (%s, %" SIZEFORMAT ", \"%s\", rdb$k_db_type_gds);",
+	fprintf(gpreGlob.out_file, "isc_drop_database (%s, %" SIZEFORMAT", \"%s\", rdb$k_db_type_gds);",
 			   status_vector(action),
 			   strlen(db->dbb_filename), db->dbb_filename);
 	set_sqlcode(action, column);
@@ -1746,11 +1751,11 @@ static void gen_dyn_immediate( const act* action, int column)
 	printa(column,
 		   statement->dyn_sqlda2 ?
 				"isc_embed_dsql_execute_immed2 (%s, &%s, &%s, 0, %s, %d, %s, %s);" :
-				"isc_embed_dsql_execute_immed (%s, &%s, &%s, 0, %s, %d, %s);",
+				"isc_embed_dsql_execute_immed (%s, &%s, &%s, 0, %s, %d, %s%s);",
 		   global_status_name, database->dbb_name->sym_string, transaction,
 		   statement->dyn_string, gpreGlob.sw_sql_dialect,
 		   statement->dyn_sqlda ? statement->dyn_sqlda : NULL_SQLDA,
-		   statement->dyn_sqlda2 ? statement->dyn_sqlda2 : NULL_SQLDA);
+		   statement->dyn_sqlda2 ? statement->dyn_sqlda2 : "");
 
 	if (gpreGlob.sw_auto)
 		column -= INDENT;
@@ -1816,13 +1821,13 @@ static void gen_dyn_open( const act* action, int column)
 	printa(column,
 		   statement->dyn_sqlda2 ?
 				"isc_embed_dsql_open2 (%s, &%s, %s, %d, %s, %s);" :
-				"isc_embed_dsql_open (%s, &%s, %s, %d, %s);",
+				"isc_embed_dsql_open (%s, &%s, %s, %d, %s%s);",
 		   global_status_name,
 		   transaction,
 		   s,
 		   gpreGlob.sw_sql_dialect,
 		   statement->dyn_sqlda ? statement->dyn_sqlda : NULL_SQLDA,
-		   statement->dyn_sqlda2 ? statement->dyn_sqlda2 : NULL_SQLDA);
+		   statement->dyn_sqlda2 ? statement->dyn_sqlda2 : "");
 
 	if (gpreGlob.sw_auto)
 		column -= INDENT;
@@ -1902,7 +1907,13 @@ static void gen_emodify( const act* action, int column)
 		align(column);
 		gen_name(s1, source, true);
 		gen_name(s2, reference, true);
-		if (field->fld_dtype > dtype_cstring || (field->fld_sub_type == 1 && field->fld_length == 1))
+		if (field->fld_dtype == dtype_varying && field->fld_sub_type == dsc_text_type_fixed)
+		{
+			const int length = field->fld_length + sizeof(USHORT);
+			fprintf(gpreGlob.out_file, "memcpy (&%s, &%s, %d);", s2, s1, length);
+		}
+		else if (field->fld_dtype > dtype_cstring ||
+			(field->fld_sub_type == dsc_text_type_fixed && field->fld_length == 1))
 		{
 			fprintf(gpreGlob.out_file, "%s = %s;", s2, s1);
 		}
@@ -2005,7 +2016,7 @@ static SSHORT gen_event_block(act* action)
 	int ident = CMP_next_ident();
 	init->nod_arg[2] = (gpre_nod*)(IPTR)ident;
 
-	printa(0, "static %schar\n   *isc_%da, *isc_%db;", CONST_STR, ident, ident);
+	printa(0, "static unsigned char\n   *isc_%da, *isc_%db;", ident, ident);
 	printa(0, "static short\n   isc_%dl;", ident);
 
 	const gpre_nod* list = init->nod_arg[1];
@@ -2140,54 +2151,6 @@ static void gen_fetch( const act* action, int column)
 {
 	gpre_req* request = action->act_request;
 
-#ifdef SCROLLABLE_CURSORS
-	gpre_port* port = request->req_aport;
-	if (port)
-	{
-		// set up the reference to point to the correct value
-		// in the linked list of values, and prepare for the
-		// next FETCH statement if applicable
-
-		ref* reference;
-		for (reference = port->por_references; reference; reference = reference->ref_next)
-		{
-			gpre_value* value = reference->ref_values;
-			reference->ref_value = value->val_value;
-			reference->ref_values = value->val_next;
-		}
-
-		// find the direction and offset parameters
-
-		reference = port->por_references;
-		const SCHAR* offset = reference->ref_value;
-		reference = reference->ref_next;
-		const SCHAR* direction = reference->ref_value;
-
-		// the direction in which the engine will scroll is sticky, so check to see
-		// the last direction passed to the engine; if the direction is the same and
-		// the offset is 1, then there is no need to pass the message; this prevents
-		// extra packets and allows for batch fetches in either direction
-
-		printa(column, "if (isc_%ddirection %% 2 != %s || %s != 1)",
-			   request->req_ident, direction, offset);
-		column += INDENT;
-		begin(column);
-
-		// assign the direction and offset parameters to the appropriate message,
-		// then send the message to the engine
-
-		asgn_from(action, port->por_references, column);
-		gen_send(action, port, column);
-		printa(column, "isc_%ddirection = %s;", request->req_ident, direction);
-		column -= INDENT;
-		endp(column);
-
-		printa(column, "if (!SQLCODE)");
-		column += INDENT;
-		begin(column);
-	}
-#endif
-
 	if (request->req_sync)
 	{
 		gen_send(action, request->req_sync, column);
@@ -2221,14 +2184,6 @@ static void gen_fetch( const act* action, int column)
 		column -= INDENT;
 		endp(column);
 	}
-
-#ifdef SCROLLABLE_CURSORS
-	if (port)
-	{
-		column -= INDENT;
-		endp(column);
-	}
-#endif
 }
 
 
@@ -2645,10 +2600,10 @@ static void gen_procedure( const act* action, int column)
 	const TEXT* pattern;
 	if (in_port && in_port->por_length)
 		pattern =
-			"isc_transact_request (%V1, %RF%DH%RE, %RF%RT%RE, sizeof(%RI), %RI, (short) %PL, (char*) %RF%PI%RE, (short) %QL, (char*) %RF%QI%RE);";
+			"isc_transact_request (%V1, %RF%DH%RE, %RF%RT%RE, (unsigned short) sizeof(%RI), (char*) %RI, (unsigned short) %PL, (char*) %RF%PI%RE, (unsigned short) %QL, (char*) %RF%QI%RE);";
 	else
 		pattern =
-			"isc_transact_request (%V1, %RF%DH%RE, %RF%RT%RE, sizeof(%RI), %RI, 0, 0, (short) %QL, (char*) %RF%QI%RE);";
+			"isc_transact_request (%V1, %RF%DH%RE, %RF%RT%RE, (unsigned short) sizeof(%RI), (char*) %RI, 0, 0, (unsigned short) %QL, (char*) %RF%QI%RE);";
 
 	// Get database attach and transaction started
 
@@ -2874,71 +2829,65 @@ static void gen_request(const gpre_req* request)
 		if (request->req_flags & REQ_sql_cursor)
 			printa(0, "static isc_stmt_handle\n   isc_%ds;\t\t/* sql statement handle */",
 				   request->req_ident);
-#ifdef SCROLLABLE_CURSORS
-		if (request->req_flags & REQ_scroll)
-			printa(0, "static short\n   isc_%ddirection;\t\t/* last direction sent to engine */",
-				   request->req_ident);
-#endif
 		printa(0, "static %sshort\n   isc_%dl = %d;",
 			   (request->req_flags & REQ_extend_dpb) ? "" : CONST_STR,
 			   request->req_ident, request->req_length);
-		printa(0, "static %schar\n   isc_%d [] = {", CONST_STR, request->req_ident);
 
 		const TEXT* string_type = "blr";
-		if (gpreGlob.sw_raw)
-		{
-			gen_raw(request->req_blr, request->req_length);
+		bool is_blr = true;
 
-			switch (request->req_type)
-			{
+		switch (request->req_type)
+		{
 			case REQ_create_database:
 			case REQ_ready:
 				string_type = "dpb";
+				is_blr = false;
 				break;
 
 			case REQ_ddl:
 				string_type = "dyn";
-				break;
-			case REQ_slice:
-				string_type = "sdl";
+				is_blr = false;
 				break;
 
-			default:
-				string_type = "blr";
-			}
+			case REQ_slice:
+				string_type = "sdl";
+				is_blr = false;
+				break;
+		}
+
+		if (is_blr)
+			printa(0, "static %sunsigned char\n   isc_%d [] = {", CONST_STR, request->req_ident);
+		else
+			printa(0, "static %schar\n   isc_%d [] = {", CONST_STR, request->req_ident);
+
+		if (gpreGlob.sw_raw)
+		{
+			gen_raw(request->req_blr, request->req_length);
 		}
 		else
 			switch (request->req_type)
 			{
 			case REQ_create_database:
 			case REQ_ready:
-				string_type = "dpb";
 				if (PRETTY_print_cdb(request->req_blr, gen_blr, 0, 0))
-				{
 					CPR_error("internal error during parameter generation");
-				}
 				break;
 
 			case REQ_ddl:
-				string_type = "dyn";
 				if (PRETTY_print_dyn(request->req_blr, gen_blr, 0, 0))
-				{
 					CPR_error("internal error during dynamic DDL generation");
-				}
 				break;
+
 			case REQ_slice:
-				string_type = "sdl";
 				if (PRETTY_print_sdl(request->req_blr, gen_blr, 0, 0))
-				{
 					CPR_error("internal error during SDL generation");
-				}
 				break;
 
 			default:
-				string_type = "blr";
 				if (fb_print_blr(request->req_blr, request->req_length, gen_blr, 0, 0))
 					CPR_error("internal error during BLR generation");
 			}
+
 		printa(INDENT, "};\t/* end of %s string for request isc_%d */\n",
 			   string_type, request->req_ident);
 	}
@@ -2953,7 +2902,7 @@ static void gen_request(const gpre_req* request)
 			{
 				printa(0, "static %sshort\n   isc_%dl = %d;", CONST_STR,
 					   reference->ref_sdl_ident, reference->ref_sdl_length);
-				printa(0, "static %schar\n   isc_%d [] = {", CONST_STR, reference->ref_sdl_ident);
+				printa(0, "static %sunsigned char\n   isc_%d [] = {", CONST_STR, reference->ref_sdl_ident);
 				if (gpreGlob.sw_raw)
 					gen_raw(reference->ref_sdl, reference->ref_sdl_length);
 				else if (PRETTY_print_sdl(reference->ref_sdl, gen_blr, 0, 0))
@@ -3410,12 +3359,12 @@ static void gen_t_start( const act* action, int column)
 
 	// Some systems don't like infinitely long lines.  Limit them to 256.
 
-	int remaining = 256 - column - strlen(vector) -
-		strlen(trans->tra_handle ? trans->tra_handle : gpreGlob.transaction_name) - 31;
+	int remaining = static_cast<int>(256 - column - strlen(vector) -
+		strlen(trans->tra_handle ? trans->tra_handle : gpreGlob.transaction_name) - 31);
 
 	for (tpb_iterator = trans->tra_tpb; tpb_iterator; tpb_iterator = tpb_iterator->tpb_tra_next)
 	{
-		int length = strlen(tpb_iterator->tpb_database->dbb_name->sym_string) + 22;
+		int length = static_cast<int>(strlen(tpb_iterator->tpb_database->dbb_name->sym_string) + 22);
 		if (length > remaining)
 		{
 			align(column + INDENT);
@@ -3656,6 +3605,10 @@ static void make_array_declaration(ref* reference)
 		dtype = "double";
 		break;
 
+	case dtype_boolean:
+		dtype = "FB_BOOLEAN";
+		break;
+
 	default:
 		{
 			TEXT s[ERROR_LENGTH];
@@ -3673,7 +3626,7 @@ static void make_array_declaration(ref* reference)
 	for (const dim* dimension = field->fld_array_info->ary_dimension; dimension;
 		 dimension = dimension->dim_next)
 	{
-		fprintf(gpreGlob.out_file, " [%" SLONGFORMAT "]", dimension->dim_upper - dimension->dim_lower + 1);
+		fprintf(gpreGlob.out_file, " [%" SLONGFORMAT"]", dimension->dim_upper - dimension->dim_lower + 1);
 	}
 
 	if (field->fld_array_info->ary_dtype <= dtype_varying)
@@ -3702,7 +3655,7 @@ static TEXT* make_name( TEXT* const string, const gpre_sym* symbol)
 		int i = 0;
 		strcpy(string, "\"\\\"");
 		const char* source = symbol->sym_string;
-		for (i = strlen(string); *source && i + 4 < MAX_CURSOR_SIZE; i++)
+		for (i = static_cast<int>(strlen(string)); *source && i + 4 < MAX_CURSOR_SIZE; i++)
 		{
 			if (*source == '\"' || *source == '\'')
 			{
@@ -3775,6 +3728,10 @@ static void make_port(const gpre_port* port, int column)
 			dtype = DCL_LONG;
 			break;
 
+		case dtype_varying:
+			fprintf(gpreGlob.out_file, "    struct { ISC_USHORT length; ISC_UCHAR data[%d]; } isc_%d;\t/* %s */", field->fld_length, reference->ref_ident, name);
+			continue;
+
 		case dtype_cstring:
 		case dtype_text:
 			dtype = "char ";
@@ -3814,6 +3771,10 @@ static void make_port(const gpre_port* port, int column)
 
 		case dtype_double:
 			dtype = "double";
+			break;
+
+		case dtype_boolean:
+			dtype = "FB_BOOLEAN";
 			break;
 
 		default:
@@ -3881,7 +3842,7 @@ static void make_ready(const gpre_dbb* db,
 
 	// generate the attach database itself
 
-	const TEXT* dpb_size_ptr = "0";
+	const TEXT* dpb_size_ptr = "(short) 0";
 	const TEXT* dpb_ptr = "(char*) 0";
 
 	align(column);
@@ -4042,11 +4003,11 @@ static void t_start_auto(const act* action,
 
 	// Some systems don't like infinitely long lines.  Limit them to 256.
 
-	int remaining = 256 - column - strlen(vector) - strlen(trname) - 31;
+	int remaining = static_cast<int>(256 - column - strlen(vector) - strlen(trname) - 31);
 
 	for (db = gpreGlob.isc_databases; db; db = db->dbb_next)
 	{
-		const int length = strlen(db->dbb_name->sym_string) + 17;
+		const int length = static_cast<int>(strlen(db->dbb_name->sym_string) + 17);
 		if (length > remaining)
 		{
 			align(column + INDENT);

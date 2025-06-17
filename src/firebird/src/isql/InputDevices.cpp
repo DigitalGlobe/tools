@@ -22,9 +22,11 @@
  */
 
 #include "firebird.h"
-#ifdef DARWIN
+#if defined(DARWIN) && !defined(IOS)
 #if defined(i386) || defined(__x86_64__)
 #include <architecture/i386/io.h>
+#elif defined(__aarch64__)
+#include <sys/uio.h>
 #else
 #include <io.h>
 #endif
@@ -34,33 +36,42 @@
 #include <unistd.h>
 #endif
 
-#include "../jrd/common.h"
 #include "../common/utils_proto.h"
+#include "../common/os/os_utils.h"
 #include "InputDevices.h"
+
+using Firebird::PathName;
 
 
 InputDevices::indev::indev()
-	: indev_fpointer(0), indev_line(0), indev_aux(0), indev_next(0)
+	: indev_fpointer(0), indev_line(0), indev_aux(0), indev_next(0),
+	  indev_fn(*getDefaultMemoryPool()), indev_fn_display(*getDefaultMemoryPool())
 {
-	indev_fn[0] = 0;
+	makeFullFileName();
 }
 
-InputDevices::indev::indev(FILE* fp, const char* fn)
-	: indev_fpointer(fp), indev_line(0), indev_aux(0), indev_next(0)
+InputDevices::indev::indev(FILE* fp, const char* fn, const char* fn_display)
+	: indev_fpointer(fp), indev_line(0), indev_aux(0), indev_next(0),
+	  indev_fn(*getDefaultMemoryPool()), indev_fn_display(*getDefaultMemoryPool())
 {
-	fb_utils::copy_terminate(indev_fn, fn, sizeof(indev_fn));
+	indev_fn = fn;
+	indev_fn_display = fn_display;
+	makeFullFileName();
 }
 
 // Performs the same task that one of the constructors, but called manually.
 // File handle and file name are assumed to be valid and the rest of the data
 // members aren't copied but reset.
-void InputDevices::indev::init(FILE* fp, const char* fn)
+void InputDevices::indev::init(FILE* fp, const char* fn, const char* fn_display)
 {
 	indev_fpointer = fp;
 	indev_line = 0;
 	indev_aux = 0;
-	fb_utils::copy_terminate(indev_fn, fn, sizeof(indev_fn));
+	indev_fn = fn;
+	indev_fn_display = fn_display;
 	indev_next = 0;
+
+	makeFullFileName();
 }
 
 // Copies only the file handle and file name from one indev to another.
@@ -70,7 +81,8 @@ void InputDevices::indev::init(const indev& src)
 	indev_fpointer = src.indev_fpointer;
 	indev_line = 0;
 	indev_aux = 0;
-	strcpy(indev_fn, src.indev_fn);
+	indev_fn = src.indev_fn;
+	indev_fn_display = src.indev_fn_display;
 	indev_next = 0;
 }
 
@@ -87,7 +99,8 @@ void InputDevices::indev::copy_from(const indev* src)
 	indev_fpointer = src->indev_fpointer;
 	indev_line = src->indev_line;
 	indev_aux = src->indev_aux;
-	strcpy(indev_fn, src->indev_fn);
+	indev_fn = src->indev_fn;
+	indev_fn_display = src->indev_fn_display;
 	// indev_next not copied.
 }
 
@@ -95,9 +108,9 @@ void InputDevices::indev::copy_from(const indev* src)
 void InputDevices::indev::drop()
 {
 	fb_assert(indev_fpointer != stdin);
-	fb_assert(indev_fn[0]); // Some name should exist.
+	fb_assert(!indev_fn.isEmpty()); // Some name should exist.
 	fclose(indev_fpointer);
-	unlink(indev_fn);
+	unlink(indev_fn.c_str());
 }
 
 // Save the reading position in the parameter.
@@ -105,7 +118,7 @@ void InputDevices::indev::getPos(fpos_t* out) const
 {
 	fb_assert(out);
 	fb_assert(indev_fpointer);
-	fgetpos(indev_fpointer, out);
+	os_utils::fgetpos(indev_fpointer, out);
 }
 
 // Restore a previously stored reading position held in the parameter.
@@ -115,10 +128,21 @@ void InputDevices::indev::setPos(const fpos_t* in)
 	fb_assert(indev_fpointer);
 #ifdef SFIO
 // hack to fix bad sfio header
-	fsetpos(indev_fpointer, const_cast<fpos_t*>(in));
+	os_utils::fsetpos(indev_fpointer, const_cast<fpos_t*>(in));
 #else
-	fsetpos(indev_fpointer, in);
+	os_utils::fsetpos(indev_fpointer, in);
 #endif
+}
+
+void InputDevices::indev::makeFullFileName()
+{
+	if (!indev_fn.isEmpty() && PathUtils::isRelative(indev_fn))
+	{
+		PathName name = indev_fn;
+		PathName path;
+		fb_utils::getCwd(path);
+		PathUtils::concatPath(indev_fn, path, name);
+	}
 }
 
 
@@ -154,18 +178,18 @@ void InputDevices::clear(FILE* fpointer)
 }
 
 // Insert an indev in the chain, always in LIFO way.
-bool InputDevices::insert(FILE* fp, const char* name)
+bool InputDevices::insert(FILE* fp, const char* name, const char* display)
 {
 	if (!m_head)
 	{
 		fb_assert(m_count == 0);
-		m_head = new indev(fp, name);
+		m_head = FB_NEW indev(fp, name, display);
 	}
 	else
 	{
 		fb_assert(m_count > 0);
 		indev* p = m_head;
-		m_head = new indev(fp, name);
+		m_head = FB_NEW indev(fp, name, display);
 		m_head->indev_next = p;
 	}
 	++m_count;
@@ -175,7 +199,7 @@ bool InputDevices::insert(FILE* fp, const char* name)
 // Shortcut for inserting the currently input file in the indev chain.
 bool InputDevices::insertIfp()
 {
-	if (insert(0, ""))
+	if (insert(NULL, "", ""))
 	{
 		m_head->copy_from(&m_ifp);
 		return true;
@@ -233,7 +257,7 @@ void InputDevices::saveCommand(const char* statement, const char* term)
 		}
 		else
 		{
-			Command* command = new Command(statement, term);
+			Command* command = FB_NEW Command(statement, term);
 			commands.add(command);
 		}
 	}

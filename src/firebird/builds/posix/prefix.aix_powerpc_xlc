@@ -57,10 +57,6 @@
 # Additional -blibpath options are not additive! All paths must be provided as a colon separated list.
 LIB_PATH_OPTS= -blibpath:@FB_LIBDIR@:@FB_INTLDIR@:/usr/local/lib:/usr/lib:/lib
 
-ifeq ($(STD_ICU),true)
-   ICU_LIBS= -L/usr/local/lib -licuuc -licudata -licui18n
-endif
-
 # non-firebird libraries have .a extension
 SHRLIB_FOREIGN_EXT=a
 
@@ -90,7 +86,7 @@ PROD_FLAGS=$(COMMON_FLAGS) -O -qstaticinline -qmaxmem=-1 \
 DEV_FLAGS=$(COMMON_FLAGS) -g \
 	-qcheck -qformat=noall:exarg:zln
 
-LINK_OPTS= $(LDFLAGS) $(THR_FLAGS) $(UNDEF_FLAGS) $(LIB_PATH_OPTS) -brtl
+EXE_LINK_OPTIONS= $(LDFLAGS) $(THR_FLAGS) $(UNDEF_FLAGS) $(LIB_PATH_OPTS) -brtl
 
 # -G is shorthand to create shared objects with run-time linking. -G includes
 #   -berok, -brtl, -bnosymbolic, -bnortllib, -bnoautoexp, -bM:SRE
@@ -100,32 +96,10 @@ LIB_LINK_OPTIONS= $(LDFLAGS) $(THR_FLAGS) $(LIB_PATH_OPTS) -G -bnoentry -qmkshro
 # AIX ld uses "export files" to manage symbol visibility. Export files are
 # functionally similar to "version files" on ELF systems and are specified
 # with the "-bE:exportfile.exp" option.
-LINK_FIREBIRD_SYMBOLS=$(LIB_LINK_MAPFILE)$(ROOT)/builds/posix/firebird.exp
-LINK_FIREBIRD_EMBED_SYMBOLS=$(LINK_FIREBIRD_SYMBOLS)
-LINK_FIREBIRD_CLIENT_SYMBOLS=$(LINK_FIREBIRD_SYMBOLS)
-LINK_TRACE_SYMBOLS=$(LIB_LINK_MAPFILE)$(ROOT)/builds/posix/fbtrace.exp
-LINK_FBINTL_SYMBOLS=$(LIB_LINK_MAPFILE)$(ROOT)/builds/posix/fbintl.exp
-LINK_IBUTIL_SYMBOLS=$(LIB_LINK_MAPFILE)$(ROOT)/builds/posix/ib_util.exp
-LINK_EMPTY_SYMBOLS=$(LIB_LINK_MAPFILE)$(ROOT)/builds/posix/empty.exp
-LIB_LINK_MAPFILE=-bE:
+LIB_LINK_MAPFILE=-bE:$(1)
 
 # These options aren't used by AIX (XCOFF) object files...
 LIB_LINK_RPATH=
 LIB_LINK_SONAME=
-
-OS_ServerFiles=inet_server.cpp
-INTL_Files2=common/utils.cpp \
-	common/config/config.cpp common/config/config_file.cpp \
-	common/classes/MsgPrint.cpp common/classes/SafeArg.cpp \
-	common/classes/BaseStream.cpp common/classes/fb_string.cpp \
-	common/classes/TempFile.cpp \
-	jrd/gds.cpp jrd/isc.cpp $(OS_SPECIFIC_Sources)\
-	jrd/os/posix/path_utils.cpp jrd/os/posix/os_utils.cpp \
-	jrd/os/posix/config_root.cpp jrd/os/posix/fbsyslog.cpp
-
-EMBED_UTIL_TARGETS=gstat gsec fbguard nbackup fb_lock_print fbsvcmgr fbtracemgr
-CLIENT_UTIL_TARGETS=gstat gsec fbguard fbmgr_bin nbackup fb_lock_print fbsvcmgr fbtracemgr
-
-Physical_IO_Module=os/posix/unix.cpp
 
 UNDEF_PLATFORM=

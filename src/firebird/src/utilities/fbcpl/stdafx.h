@@ -18,7 +18,6 @@
 #undef TRACE				// TRACE is used by Firebird too.
 
 #include "firebird.h"
-#include "../../jrd/common.h"
 
 #ifdef HAVE_MATH_H
 #include <math.h>
@@ -48,10 +47,10 @@
 #endif
 
 #ifdef HAVE_PTHREAD_H
-#include <pthread.h>
+#include "fb_pthread.h"
 #endif
 
-#include "../../jrd/ibase.h"
+#include "../ibase.h"
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

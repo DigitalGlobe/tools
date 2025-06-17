@@ -20,7 +20,7 @@
 	<exec_method
 		type='method'
 		name='inetd_start'
-		exec='/opt/firebird/bin/fb_inet_server'
+		exec='/opt/firebird/bin/fb_smp_server'
 		timeout_seconds='0'>
 		<method_context>
 			<method_credential user='firebird' group='firebird' />
@@ -46,7 +46,7 @@
 		<propval name='converted' type='boolean' value='true' />
 		<propval name='version' type='integer' value='1' />
 		<propval name='source_line' type='astring' value=
-'gds_db stream tcp nowait firebird /opt/firebird/bin/fb_inet_server fb_inet_server'
+'gds_db stream tcp nowait firebird /opt/firebird/bin/fb_smp_server fb_smp_server'
 		/>
 	</property_group>
 

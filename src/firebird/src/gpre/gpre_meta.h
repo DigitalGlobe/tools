@@ -33,7 +33,7 @@ void		MET_fini(gpre_dbb*);
 const SCHAR*		MET_generator(const TEXT*, const gpre_dbb*);
 bool		MET_get_column_default(const gpre_rel*, const TEXT*, TEXT*, USHORT);
 bool		MET_get_domain_default(gpre_dbb*, const TEXT*, TEXT*, USHORT);
-USHORT		MET_get_dtype(USHORT, USHORT, USHORT*);
+USHORT		MET_get_dtype(USHORT, USHORT, USHORT, USHORT*);
 gpre_lls*	MET_get_primary_key(gpre_dbb*, const TEXT*);
 gpre_prc*	MET_get_procedure(gpre_dbb*, const TEXT*, const TEXT*);
 gpre_rel*	MET_get_relation(gpre_dbb*, const TEXT*, const TEXT*);

@@ -30,21 +30,29 @@
 #include "firebird.h"
 
 #include "../common/classes/ClumpletWriter.h"
+#include "../common/classes/MetaString.h"
 #include "fb_exception.h"
-
-#include "../jrd/ibase.h"
+#include "ibase.h"
 
 namespace Firebird {
 
-ClumpletWriter::ClumpletWriter(Kind k, size_t limit, UCHAR tag) :
-	ClumpletReader(k, NULL, 0), sizeLimit(limit), dynamic_buffer(getPool())
+ClumpletWriter::ClumpletWriter(Kind k, FB_SIZE_T limit, UCHAR tag)
+	: ClumpletReader(k, NULL, 0),
+	  sizeLimit(limit),
+	  kindList(NULL),
+	  dynamic_buffer(getPool()),
+	  flag_overflow(false)
 {
 	initNewBuffer(tag);
 	rewind();
 }
 
-ClumpletWriter::ClumpletWriter(MemoryPool& given_pool, Kind k, size_t limit, UCHAR tag) :
-	ClumpletReader(given_pool, k, NULL, 0), sizeLimit(limit), dynamic_buffer(getPool())
+ClumpletWriter::ClumpletWriter(MemoryPool& given_pool, Kind k, FB_SIZE_T limit, UCHAR tag)
+	: ClumpletReader(given_pool, k, NULL, 0),
+	  sizeLimit(limit),
+	  kindList(NULL),
+	  dynamic_buffer(getPool()),
+	  flag_overflow(false)
 {
 	initNewBuffer(tag);
 	rewind();
@@ -69,20 +77,90 @@ void ClumpletWriter::initNewBuffer(UCHAR tag)
 			{
 				dynamic_buffer.push(isc_spb_version);
 			}
-			dynamic_buffer.push(tag);
-			break;
+			// fall down ....
 		case Tagged:
 		case Tpb:
 		case WideTagged:
 			dynamic_buffer.push(tag);
 			break;
 		default:
+			fb_assert(tag == 0);
 			break;
 	}
 }
 
-ClumpletWriter::ClumpletWriter(Kind k, size_t limit, const UCHAR* buffer, size_t buffLen, UCHAR tag) :
-	ClumpletReader(k, NULL, 0), sizeLimit(limit), dynamic_buffer(getPool())
+ClumpletWriter::ClumpletWriter(Kind k, FB_SIZE_T limit, const UCHAR* buffer, FB_SIZE_T buffLen, UCHAR tag)
+	: ClumpletReader(k, NULL, 0),
+	  sizeLimit(limit),
+	  kindList(NULL),
+	  dynamic_buffer(getPool()),
+	  flag_overflow(false)
+{
+	create(buffer, buffLen, tag);
+}
+
+ClumpletWriter::ClumpletWriter(MemoryPool& pool, const KindList* kl, FB_SIZE_T limit,
+							   const UCHAR* buffer, FB_SIZE_T buffLen)
+	: ClumpletReader(pool, kl, buffer, buffLen),
+	  sizeLimit(limit),
+	  kindList(kl),
+	  dynamic_buffer(getPool()),
+	  flag_overflow(false)
+{
+	create(buffer, buffLen, kl->tag);
+}
+
+ClumpletWriter::ClumpletWriter(const KindList* kl, FB_SIZE_T limit, const UCHAR* buffer, FB_SIZE_T buffLen)
+	: ClumpletReader(kl, buffer, buffLen),
+	  sizeLimit(limit),
+	  kindList(kl),
+	  dynamic_buffer(getPool()),
+	  flag_overflow(false)
+{
+	create(buffer, buffLen, kl->tag);
+}
+
+ClumpletWriter::ClumpletWriter(MemoryPool& pool, const KindList* kl, FB_SIZE_T limit)
+	: ClumpletReader(pool, kl, NULL, 0),
+	  sizeLimit(limit),
+	  kindList(kl),
+	  dynamic_buffer(getPool()),
+	  flag_overflow(false)
+{
+	create(NULL, 0, kl->tag);
+}
+
+ClumpletWriter::ClumpletWriter(const KindList* kl, FB_SIZE_T limit)
+	: ClumpletReader(kl, NULL, 0),
+	  sizeLimit(limit),
+	  kindList(kl),
+	  dynamic_buffer(getPool()),
+	  flag_overflow(false)
+{
+	create(NULL, 0, kl->tag);
+}
+
+ClumpletWriter::ClumpletWriter(MemoryPool& pool, const ClumpletWriter& from)
+	: ClumpletReader(pool, from),
+	  sizeLimit(from.sizeLimit),
+	  kindList(NULL),
+	  dynamic_buffer(getPool()),
+	  flag_overflow(false)
+{
+	create(from.getBuffer(), from.getBufferEnd() - from.getBuffer(), from.isTagged() ? from.getBufferTag() : 0);
+}
+
+ClumpletWriter::ClumpletWriter(const ClumpletWriter& from)
+	: ClumpletReader(from),
+	  sizeLimit(from.sizeLimit),
+	  kindList(NULL),
+	  dynamic_buffer(getPool()),
+	  flag_overflow(false)
+{
+	create(from.getBuffer(), from.getBufferEnd() - from.getBuffer(), from.isTagged() ? from.getBufferTag() : 0);
+}
+
+void ClumpletWriter::create(const UCHAR* buffer, FB_SIZE_T buffLen, UCHAR tag)
 {
 	if (buffer && buffLen) {
 		dynamic_buffer.push(buffer, buffLen);
@@ -93,9 +171,12 @@ ClumpletWriter::ClumpletWriter(Kind k, size_t limit, const UCHAR* buffer, size_t
 	rewind();
 }
 
-ClumpletWriter::ClumpletWriter(MemoryPool& given_pool, Kind k, size_t limit,
-							   const UCHAR* buffer, size_t buffLen, UCHAR tag) :
-	ClumpletReader(given_pool, k, NULL, 0), sizeLimit(limit), dynamic_buffer(getPool())
+ClumpletWriter::ClumpletWriter(MemoryPool& given_pool, Kind k, FB_SIZE_T limit,
+							   const UCHAR* buffer, FB_SIZE_T buffLen, UCHAR tag)
+	: ClumpletReader(given_pool, k, NULL, 0),
+	  sizeLimit(limit),
+	  dynamic_buffer(getPool()),
+	  flag_overflow(false)
 {
 	if (buffer && buffLen) {
 		dynamic_buffer.push(buffer, buffLen);
@@ -108,12 +189,30 @@ ClumpletWriter::ClumpletWriter(MemoryPool& given_pool, Kind k, size_t limit,
 
 void ClumpletWriter::reset(UCHAR tag)
 {
+	if (kindList)
+	{
+		for (const KindList* kl = kindList; kl->kind != EndOfList; ++kl)
+		{
+			if (tag == kl->tag)
+			{
+				kind = kl->kind;
+				dynamic_buffer.shrink(0);
+				initNewBuffer(tag);
+				rewind();
+
+				return;
+			}
+		}
+
+		invalid_structure("Unknown tag value - missing in the list of possible", tag);
+	}
+
 	dynamic_buffer.shrink(0);
 	initNewBuffer(tag);
 	rewind();
 }
 
-void ClumpletWriter::reset(const UCHAR* buffer, const size_t buffLen)
+void ClumpletWriter::reset(const UCHAR* buffer, const FB_SIZE_T buffLen)
 {
 	dynamic_buffer.clear();
 	if (buffer && buffLen) {
@@ -127,12 +226,24 @@ void ClumpletWriter::reset(const UCHAR* buffer, const size_t buffLen)
 	rewind();
 }
 
+void ClumpletWriter::reset(const ClumpletWriter& from)
+{
+	reset(from.getBuffer(), from.getBufferEnd() - from.getBuffer());
+}
+
 void ClumpletWriter::size_overflow()
 {
 	fatal_exception::raise("Clumplet buffer size limit reached");
 }
 
-void ClumpletWriter::toVaxInteger(UCHAR* ptr, size_t length, const SINT64 value)
+void ClumpletWriter::size_overflow(bool condition)
+{
+	flag_overflow = condition;
+	if (condition)
+		size_overflow();
+}
+
+void ClumpletWriter::toVaxInteger(UCHAR* ptr, FB_SIZE_T length, const SINT64 value)
 {
 	fb_assert(ptr && length > 0 && length < 9); // We can't handle numbers bigger than int64.
 	int shift = 0;
@@ -183,22 +294,27 @@ void ClumpletWriter::insertTimeStamp(UCHAR tag, const ISC_TIMESTAMP value)
 	insertBytesLengthCheck(tag, bytes, sizeof(bytes));
 }
 
-void ClumpletWriter::insertString(UCHAR tag, const string& str)
+void ClumpletWriter::insertString(UCHAR tag, const char* str)
 {
-	insertString(tag, str.c_str(), str.length());
+	insertString(tag, str, strlen(str));
 }
 
-void ClumpletWriter::insertPath(UCHAR tag, const PathName& str)
+void ClumpletWriter::insertString(UCHAR tag, char* str)
 {
-	insertString(tag, str.c_str(), str.length());
+	insertString(tag, str, strlen(str));
 }
 
-void ClumpletWriter::insertString(UCHAR tag, const char* str, size_t length)
+void ClumpletWriter::insertString(UCHAR tag, const char* str, FB_SIZE_T length)
 {
-	insertBytesLengthCheck(tag, reinterpret_cast<const UCHAR*>(str), length);
+	insertBytesLengthCheck(tag, str, length);
 }
 
-void ClumpletWriter::insertBytes(UCHAR tag, const UCHAR* bytes, size_t length)
+void ClumpletWriter::insertData(UCHAR tag, const UCharBuffer& data)
+{
+	insertBytesLengthCheck(tag, data.begin(), data.getCount());
+}
+
+void ClumpletWriter::insertBytes(UCHAR tag, const void* bytes, FB_SIZE_T length)
 {
 	insertBytesLengthCheck(tag, bytes, length);
 }
@@ -208,7 +324,7 @@ void ClumpletWriter::insertByte(UCHAR tag, const UCHAR byte)
 	insertBytesLengthCheck(tag, &byte, 1);
 }
 
-void ClumpletWriter::insertBytesLengthCheck(UCHAR tag, const UCHAR* bytes, const size_t length)
+void ClumpletWriter::insertBytesLengthCheck(UCHAR tag, const void* bytes, const FB_SIZE_T length)
 {
 	// Check that we're not beyond the end of buffer.
 	// We get there when we set end marker.
@@ -218,75 +334,87 @@ void ClumpletWriter::insertBytesLengthCheck(UCHAR tag, const UCHAR* bytes, const
 		return;
 	}
 
-	// Check length according to clumplet type
-	const ClumpletType t = getClumpletType(tag);
 	UCHAR lenSize = 0;
-	switch (t)
+	// Check length according to clumplet type
+	// Perform structure upgrade when needed and possible
+	for(;;)
 	{
-	case Wide:
-		if (length > MAX_ULONG)
+		const ClumpletType t = getClumpletType(tag);
+		string m;
+
+		switch (t)
 		{
-			string m;
-			m.printf("attempt to store %d bytes in a clumplet", length);
+		case Wide:
+			if (length > MAX_ULONG)
+			{
+				m.printf("attempt to store %d bytes in a clumplet", length);
+				break;
+			}
+			lenSize = 4;
+			break;
+		case TraditionalDpb:
+			if (length > MAX_UCHAR)
+			{
+				m.printf("attempt to store %d bytes in a clumplet with maximum size 255 bytes", length);
+				break;
+			}
+			lenSize = 1;
+			break;
+		case SingleTpb:
+			if (length > 0)
+			{
+				m.printf("attempt to store data in dataless clumplet");
+			}
+			break;
+		case StringSpb:
+			if (length > MAX_USHORT)
+			{
+				m.printf("attempt to store %d bytes in a clumplet", length);
+				break;
+			}
+			lenSize = 2;
+			break;
+		case IntSpb:
+			if (length != 4)
+			{
+				m.printf("attempt to store %d bytes in a clumplet, need 4", length);
+			}
+			break;
+		case BigIntSpb:
+			if (length != 8)
+			{
+				m.printf("attempt to store %d bytes in a clumplet, need 8", length);
+			}
+			break;
+		case ByteSpb:
+			if (length != 1)
+			{
+				m.printf("attempt to store %d bytes in a clumplet, need 1", length);
+			}
+			break;
+		default:
+			invalid_structure("unknown clumplet type", t);
+		}
+
+		if (m.isEmpty())
+		{
+			// OK, no errors
+			break;
+		}
+
+		if (!upgradeVersion())
+		{
+			// can't upgrade - report failure
 			usage_mistake(m.c_str());
 			return;
 		}
-		lenSize = 4;
-		break;
-	case TraditionalDpb:
-		if (length > MAX_UCHAR)
-		{
-			string m;
-			m.printf("attempt to store %d bytes in a clumplet with maximum size 255 bytes", length);
-			usage_mistake(m.c_str());
-			return;
-		}
-		lenSize = 1;
-		break;
-	case SingleTpb:
-		if (length > 0)
-		{
-        	usage_mistake("attempt to store data in dataless clumplet");
-			return;
-		}
-		break;
-	case StringSpb:
-		if (length > MAX_USHORT)
-		{
-			string m;
-			m.printf("attempt to store %d bytes in a clumplet", length);
-			usage_mistake(m.c_str());
-			return;
-		}
-		lenSize = 2;
-		break;
-	case IntSpb:
-		if (length != 4)
-		{
-			string m;
-			m.printf("attempt to store %d bytes in a clumplet, need 4", length);
-			usage_mistake(m.c_str());
-			return;
-		}
-		break;
-	case ByteSpb:
-		if (length != 1)
-		{
-			string m;
-			m.printf("attempt to store %d bytes in a clumplet, need 1", length);
-			usage_mistake(m.c_str());
-			return;
-		}
-		break;
 	}
 
 	// Check that resulting data doesn't overflow size limit
-	if (dynamic_buffer.getCount() + length + lenSize + 1 > sizeLimit) {
-		size_overflow();
-	}
+	size_overflow(dynamic_buffer.getCount() + length + lenSize + 1 > sizeLimit);
 
 	// Insert the data
-	const size_t saved_offset = cur_offset;
+	const FB_SIZE_T saved_offset = cur_offset;
 	dynamic_buffer.insert(cur_offset++, tag);
 	switch (lenSize)
 	{
@@ -310,8 +438,8 @@ void ClumpletWriter::insertBytesLengthCheck(UCHAR tag, const UCHAR* bytes, const
 		}
 		break;
 	}
-	dynamic_buffer.insert(cur_offset, bytes, length);
-	const size_t new_offset = cur_offset + length;
+	dynamic_buffer.insert(cur_offset, static_cast<const UCHAR*>(bytes), length);
+	const FB_SIZE_T new_offset = cur_offset + length;
 	cur_offset = saved_offset;
     adjustSpbState();
 	cur_offset = new_offset;
@@ -334,9 +462,7 @@ void ClumpletWriter::insertEndMarker(UCHAR tag)
 	}
 
 	// Check that resulting data doesn't overflow size limit
-	if (cur_offset + 1 > sizeLimit) {
-		size_overflow();
-	}
+	size_overflow(cur_offset + 1 > sizeLimit);
 
 	dynamic_buffer.shrink(cur_offset);
 	dynamic_buffer.push(tag);
@@ -376,6 +502,71 @@ bool ClumpletWriter::deleteWithTag(UCHAR tag)
    }
 
    return rc;
+}
+
+bool ClumpletWriter::upgradeVersion()
+{
+	// Sanity check
+	if (!kindList)
+	{
+		return false;
+	}
+
+	// Check for required version - use highmost one
+	const KindList* newest = kindList;
+	for (const KindList* itr = kindList; itr->tag != EndOfList; ++itr)
+	{
+		if (itr->tag > newest->tag)
+		{
+			newest = itr;
+		}
+	}
+
+	if (getBufferLength() && newest->tag <= getBufferTag())
+	{
+		return false;
+	}
+
+	// Copy data to new clumplet writer
+	FB_SIZE_T newPos = 0;
+	ClumpletWriter newPb(newest->kind, sizeLimit, newest->tag);
+	const FB_SIZE_T currentPosition = cur_offset;
+	for(rewind(); !isEof(); moveNext())
+	{
+		if (currentPosition == cur_offset)
+		{
+			newPos = newPb.cur_offset;
+		}
+		newPb.insertClumplet(getClumplet());
+		newPb.moveNext();
+	}
+
+	// Return it to current clumplet writer in new format
+	dynamic_buffer.clear();
+	kind = newest->kind;
+	dynamic_buffer.push(newPb.dynamic_buffer.begin(), newPb.dynamic_buffer.getCount());
+
+	// Set pointer to correct position
+	if (newPos)
+	{
+		cur_offset = newPos;
+	}
+	else
+	{
+		rewind();
+	}
+
+	return true;
+}
+
+void ClumpletWriter::insertClumplet(const SingleClumplet& clumplet)
+{
+	insertBytes(clumplet.tag, clumplet.data, clumplet.size);
+}
+
+void ClumpletWriter::clear()
+{
+	reset(isTagged() ? getBufferTag() : 0);
 }
 
 } // namespace

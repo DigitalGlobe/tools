@@ -18,6 +18,9 @@
 ;  INTERNATIONAL DLL MODULE DEFINITION FILE
 ;------------------------------------------------------------
 
+; NS 2014-07-10: This file is actually not used during build process
+; All INTL exports are specified in source code using FB_DLL_EXPORT
+
 LIBRARY     INTL
 
 DESCRIPTION 'INTERBASE INTERNATIONAL DLL'

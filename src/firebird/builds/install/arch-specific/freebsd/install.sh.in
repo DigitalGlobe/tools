@@ -23,6 +23,8 @@
 #		Alex Peshkoff
 #
 
+fb_install_prefix=@prefix@
+
 # Script to copy install files from the build/transport area
 
 
@@ -55,8 +57,8 @@ addLibs() {
 	libTarget=$libTdir/$libScript
 
 	rm -f $libTarget
-	echo '#!/bin/sh' >$libTarget
-	for i in posixLibrary.sh @FIREBIRD_ARCH_TYPE@Library.sh freebsdLibrary.sh
+	touch $libTarget
+	for i in posixLibrary.sh freebsdLibrary.sh
 	do
 		echo "# $i" >>$libTarget
 		cat $libSdir/$i >>$libTarget
@@ -134,10 +136,11 @@ copyFiles() {
 # The guts of the tranfer of files and other directories
 
 	#directories
-    makeDirs "@FB_BINDIR@ @FB_SBINDIR@ @FB_CONFDIR@ @FB_LIBDIR@ @FB_INCDIR@ @FB_DOCDIR@/sql.extensions @FB_UDFDIR@ @FB_SAMPLEDIR@ \
-			  @FB_SAMPLEDBDIR@ @FB_HELPDIR@ @FB_INTLDIR@ @FB_MISCDIR@ @FB_SECDBDIR@ @FB_MSGDIR@ @FB_LOGDIR@ @FB_GUARDDIR@ @FB_PLUGDIR@"
+    makeDirs "@FB_BINDIR@ @FB_SBINDIR@ @FB_CONFDIR@ @FB_LIBDIR@ @FB_INCDIR@ @FB_DOCDIR@/sql.extensions @FB_SAMPLEDIR@ \
+			  @FB_SAMPLEDBDIR@ @FB_INTLDIR@ @FB_MISCDIR@ @FB_SECDBDIR@ @FB_MSGDIR@ @FB_LOGDIR@ \
+			  @FB_GUARDDIR@ @FB_PLUGDIR@ @FB_TZDATADIR@"
 
-	for i in ib_udf metadata security; do
+	for i in metadata security; do
 		makeDirs @FB_MISCDIR@/upgrade/$i
 	done
 
@@ -146,6 +149,7 @@ copyFiles() {
 
 	#bin
     cp $BuiltFBDir/bin/gbak ${TargetDir}@FB_BINDIR@/gbak
+    cp $BuiltFBDir/bin/gdef ${TargetDir}@FB_BINDIR@/gdef
     cp $BuiltFBDir/bin/gfix ${TargetDir}@FB_BINDIR@/gfix
     cp $BuiltFBDir/bin/gpre ${TargetDir}@FB_BINDIR@/gpre
     cp $BuiltFBDir/bin/gsec ${TargetDir}@FB_BINDIR@/gsec
@@ -155,32 +159,28 @@ copyFiles() {
     copyIfExists $BuiltFBDir/bin/fbsvcmgr ${TargetDir}@FB_BINDIR@
     copyIfExists $BuiltFBDir/bin/fbtracemgr ${TargetDir}@FB_BINDIR@
     cp $BuiltFBDir/bin/isql ${TargetDir}@FB_BINDIR@/isql
-    cp $BuiltFBDir/bin/qli ${TargetDir}@FB_BINDIR@/qli
 
 	chown root:wheel ${TargetDir}@FB_BINDIR@/*
 	chmod 0755 ${TargetDir}@FB_BINDIR@/*
 
 	#sbin
-    copyIfExists $BuiltFBDir/bin/fb_inet_server ${TargetDir}@FB_SBINDIR@
     copyIfExists $BuiltFBDir/bin/fb_smp_server ${TargetDir}@FB_SBINDIR@
     copyIfExists $BuiltFBDir/bin/fbserver ${TargetDir}@FB_SBINDIR@
 	cp -f $BuiltFBDir/bin/fbguard ${TargetDir}@FB_SBINDIR@
     copyIfExists $BuiltFBDir/bin/fb_lock_print ${TargetDir}@FB_SBINDIR@
 	copyIfExists $BuiltFBDir/bin/fbmgr.bin ${TargetDir}@FB_SBINDIR@
-#    cp $BuiltFBDir/bin/fb_config ${TargetDir}@FB_SBINDIR@
+
+    addLibs $BuildRootDir/gen/firebird/bin changeRunUser.sh ${TargetDir}@FB_SBINDIR@
+    addLibs $BuildRootDir/gen/firebird/bin restoreRootRunUser.sh ${TargetDir}@FB_SBINDIR@
+    addLibs $BuildRootDir/gen/firebird/bin changeDBAPassword.sh ${TargetDir}@FB_SBINDIR@
+    addLibs $BuildRootDir/gen/firebird/bin changeServerMode.sh ${TargetDir}@FB_SBINDIR@
+    addLibs $BuiltFBDir/bin changeGdsLibraryCompatibleLink.sh ${TargetDir}@FB_SBINDIR@
+    cp $BuiltFBDir/bin/createAliasDB.sh ${TargetDir}@FB_SBINDIR@
+    cp $BuiltFBDir/bin/fb_config ${TargetDir}@FB_SBINDIR@
 
 	chown root:wheel ${TargetDir}@FB_SBINDIR@/*
 	chmod 0755 ${TargetDir}@FB_SBINDIR@/*
-
-#    addLibs $BuildRootDir/gen/firebird/bin changeRunUser.sh ${TargetDir}@FB_SBINDIR@
-#    addLibs $BuildRootDir/gen/firebird/bin restoreRootRunUser.sh ${TargetDir}@FB_SBINDIR@
-#    addLibs $BuildRootDir/gen/firebird/bin changeDBAPassword.sh ${TargetDir}@FB_SBINDIR@
-#    addLibs $BuiltFBDir/bin changeGdsLibraryCompatibleLink.sh ${TargetDir}@FB_SBINDIR@
-#    cp $BuiltFBDir/bin/createAliasDB.sh ${TargetDir}@FB_SBINDIR@
-	if [ "@FIREBIRD_ARCH_TYPE@" = "classic" ]; then
-    	addLibs $BuildRootDir/gen/firebird/bin changeMultiConnectMode.sh ${TargetDir}@FB_SBINDIR@
-		chmod 0700 ${TargetDir}@FB_SBINDIR@/*.sh
-	fi
+	chmod 0700 ${TargetDir}@FB_SBINDIR@/*.sh
 
 	#install scripts
     addLibs $BuildRootDir/gen/firebird/bin tarMainInstall.sh $BuildRootDir/gen/install/scripts
@@ -218,13 +218,6 @@ copyFiles() {
 		chmod 0444 ${TargetDir}@FB_SAMPLEDBDIR@/*.fdb
     fi
 
-	#QLI help
-    copyIfExists $BuiltFBDir/help/help.gbak ${TargetDir}@FB_HELPDIR@
-    cp $BuiltFBDir/help/help.fdb ${TargetDir}@FB_HELPDIR@
-
-	chown root:wheel ${TargetDir}@FB_HELPDIR@/*.fdb
-	chmod 0444 ${TargetDir}@FB_HELPDIR@/*.fdb
-
 	#message file
     cp $BuiltFBDir/*.msg ${TargetDir}@FB_MSGDIR@
 
@@ -255,32 +248,24 @@ copyFiles() {
 	chown root:wheel ${TargetDir}@FB_PLUGDIR@/*.so*
 	chmod 0755 ${TargetDir}@FB_PLUGDIR@/*.so*
 
+	makeDirs @FB_TZDATADIR@
+	cp $BuiltFBDir/tzdata/*.res ${TargetDir}@FB_TZDATADIR@
+	chmod 0444 ${TargetDir}@FB_TZDATADIR@/*.res
+
 	#intl
     cp $BuiltFBDir/intl/libfbintl.so ${TargetDir}@FB_INTLDIR@/fbintl
-    cp  $BuildRootDir/gen/install/misc/fbintl.conf ${TargetDir}@FB_INTLDIR@
+    cp $BuiltFBDir/intl/fbintl.conf ${TargetDir}@FB_INTLDIR@
 
 	chown root:wheel ${TargetDir}@FB_INTLDIR@/fbintl*
 	chmod 0755 ${TargetDir}@FB_INTLDIR@/fbintl
 	chmod 0644 ${TargetDir}@FB_INTLDIR@/fbintl.conf
 
-	#UDF
-    cp $BuiltFBDir/UDF/ib_udf.so ${TargetDir}@FB_UDFDIR@
-    cp $BuiltFBDir/UDF/fbudf.so ${TargetDir}@FB_UDFDIR@
 #	Note that the following items copy files from outside the build tree.
-#   Copy the sql-declarations into the UDF-directory
-    cp $BuildRootDir/src/extlib/ib_udf.sql ${TargetDir}@FB_UDFDIR@
-    cp $BuildRootDir/src/extlib/ib_udf2.sql ${TargetDir}@FB_UDFDIR@
-    cp $BuildRootDir/src/extlib/fbudf/fbudf.sql ${TargetDir}@FB_UDFDIR@
-
-	chown root:wheel ${TargetDir}@FB_UDFDIR@/*.so ${TargetDir}@FB_UDFDIR@/*.sql
-	chmod 0755 ${TargetDir}@FB_UDFDIR@/*.so
-	chmod 0644 ${TargetDir}@FB_UDFDIR@/*.sql
 
 	#doc
     cp $BuildRootDir/doc/README.* ${TargetDir}@FB_DOCDIR@
     cp $BuildRootDir/doc/sql.extensions/README* ${TargetDir}@FB_DOCDIR@/sql.extensions
-    cp $BuildRootDir/doc/WhatsNew ${TargetDir}@FB_CONFDIR@/WhatsNew
-    cp $BuildRootDir/doc/README.user ${TargetDir}@FB_CONFDIR@/README
+    cp $BuildRootDir/*.md ${TargetDir}@FB_CONFDIR@
 
 	chown -R root:wheel ${TargetDir}@FB_MISCDIR@
 	for i in `find ${TargetDir}@FB_MISCDIR@ -print`; do
@@ -294,19 +279,17 @@ copyFiles() {
 
 	#misc
     cp $BuildRootDir/src/misc/intl.sql							${TargetDir}@FB_MISCDIR@
-    cp $BuildRootDir/src/misc/upgrade/v2/ib_udf*				${TargetDir}@FB_MISCDIR@/upgrade/ib_udf
-    cp $BuildRootDir/src/misc/upgrade/v2/security_database*		${TargetDir}@FB_MISCDIR@/upgrade/security
-    cp $BuildRootDir/src/misc/upgrade/v2.1/metadata_charset*	${TargetDir}@FB_MISCDIR@/upgrade/metadata
-
-	cp $BuildRootDir/gen/install/misc/firebird_daemon_startup_script	${TargetDir}@FB_MISCDIR@
+    cp $BuildRootDir/src/misc/upgrade/v3.0/security_database*		${TargetDir}@FB_MISCDIR@/upgrade/security
 
     chown -R root:wheel ${TargetDir}@FB_MISCDIR@
     chmod -R go-rwx ${TargetDir}@FB_MISCDIR@
 
 	#conf
-    cp $BuildRootDir/gen/install/misc/firebird.conf				${TargetDir}@FB_CONFDIR@
-    cp $BuildRootDir/gen/install/misc/aliases.conf				${TargetDir}@FB_CONFDIR@
-    cp $BuildRootDir/gen/install/misc/fbtrace.conf				${TargetDir}@FB_CONFDIR@
+    cp $BuiltFBDir/firebird.conf ${TargetDir}@FB_CONFDIR@
+    cp $BuiltFBDir/databases.conf ${TargetDir}@FB_CONFDIR@
+    cp $BuiltFBDir/fbtrace.conf ${TargetDir}@FB_CONFDIR@
+    cp $BuiltFBDir/plugins.conf ${TargetDir}@FB_CONFDIR@
+    cp $BuiltFBDir/replication.conf ${TargetDir}@FB_CONFDIR@
 
 	chown root:wheel ${TargetDir}@FB_CONFDIR@/*.conf
 	chmod 0644 ${TargetDir}@FB_CONFDIR@/*.conf
@@ -349,9 +332,9 @@ MakeFileFirebirdWritable() {
 
 #------------------------------------------------------------------------
 #  fixFilePermissions
-#  Change the permissions to restrict access to server programs to 
-#  firebird group only.  This is MUCH better from a safety point of 
-#  view than installing as root user, even if it requires a little 
+#  Change the permissions to restrict access to server programs to
+#  firebird group only.  This is MUCH better from a safety point of
+#  view than installing as root user, even if it requires a little
 #  more work.
 
 fixFilePermissions() {
@@ -367,7 +350,7 @@ fixFilePermissions() {
 	cd @FB_LOGDIR@
     touch firebird.log
     MakeFileFirebirdWritable firebird.log
-    
+
     # Security database
 	cd @FB_SECDBDIR@
     MakeFileFirebirdWritable $SecurityDatabase
@@ -377,9 +360,6 @@ fixFilePermissions() {
     do
 		MakeFileFirebirdWritable $i
     done
-
-    cd @FB_HELPDIR@
-    chmod a=r help.fdb
 }
 
 
@@ -427,40 +407,13 @@ fi
 
 fixFilePermissions
 
-# remove any existing gds services
+# remove any existing gds service
 cp /etc/services /etc/services.old
 cp /etc/inetd.conf /etc/inetd.conf.old
 cat /etc/services |grep -v @FB_SERVICE_NAME@ >/etc/services.new
 cat /etc/inetd.conf |grep -v @FB_SERVICE_NAME@ >/etc/inetd.conf.new
 mv /etc/services.new /etc/services
 mv /etc/inetd.conf.new /etc/inetd.conf
-rm -f /etc/rc.d/*firebird*
-
-# shared lib and lock dir startup script
-if [ -d /etc/rc.d ]; then
-	cat > /etc/rc.d/000.firebird.sh <<EOC
-#!/bin/sh
-[ -d @FB_LIBDIR@ ] && /sbin/ldconfig -m @FB_LIBDIR@
-[ -d /tmp/firebird ] || (rm -f /tmp/firebird; mkdir /tmp/firebird)
-chown -R firebird:firebird /tmp/firebird
-chmod -R 0660 /tmp/firebird
-chmod 0770 /tmp/firebird
-EOC
-	chmod a=rx /etc/rc.d/000.firebird.sh
-	. /etc/rc.d/000.firebird.sh
-fi
-
-# add the gds service
-if [ "@FIREBIRD_ARCH_TYPE@" = "classic" ]; then
-	cat >>/etc/services <<EOF
-@FB_SERVICE_NAME@		@FB_SERVICE_PORT@/tcp  #Firebird Database Remote Protocol
-EOF
-
-	cat >>/etc/inetd.conf <<EOF
-@FB_SERVICE_NAME@	stream	tcp	nowait	firebird	${TargetDir}@FB_SBINDIR@/fb_inet_server  fb_inet_server
-EOF
-
-fi
 
 # reset make env
 FIREBIRD_LOCK=
@@ -468,17 +421,21 @@ export FIREBIRD_LOCK
 FIREBIRD=
 export FIREBIRD
 
-# restart inetd
+# add the gds service and restart inetd
+cat >>/etc/services <<EOF
+@FB_SERVICE_NAME@		@FB_SERVICE_PORT@/tcp  #Firebird Database Remote Protocol
+EOF
+cat >>/etc/inetd.conf <<EOF
+@FB_SERVICE_NAME@	stream	tcp	nowait	firebird	${TargetDir}@FB_SBINDIR@/fb_smp_server  fb_smp_server
+EOF
 if [ -f /var/run/inetd.pid ]; then
-	kill -HUP `cat /var/run/inetd.pid`
-	sleep 1			# Give it time to reload
+        kill -HUP `cat /var/run/inetd.pid`
 fi
 
-# add firebird startup script
-if [ "@FIREBIRD_ARCH_TYPE@" = "super" ]; then
-	initScript=/etc/rc.d/firebird
-	rm -f $initScript
-	cp @FB_MISCDIR@/firebird_daemon_startup_script $initScript
-	chmod a=rx $initScript
-	$initScript start
+# shared lib startup script
+if [ -d /etc/rc.d ]; then
+	(
+	echo "#!/bin/sh"; echo "[ -d @FB_LIBDIR@ ] && /sbin/ldconfig -m @FB_LIBDIR@"
+	) > /etc/rc.d/000.firebird.sh
+	chmod a=rx /etc/rc.d/000.firebird.sh
 fi

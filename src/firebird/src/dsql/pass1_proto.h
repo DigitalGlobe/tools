@@ -24,10 +24,42 @@
 #ifndef DSQL_PASS1_PROTO_H
 #define DSQL_PASS1_PROTO_H
 
-Jrd::dsql_ctx* PASS1_make_context(Jrd::CompiledStatement* statement, const Jrd::dsql_nod* relation_node);
-Jrd::dsql_nod* PASS1_node(Jrd::CompiledStatement*, Jrd::dsql_nod*);
-Jrd::dsql_nod* PASS1_rse(Jrd::CompiledStatement*, Jrd::dsql_nod*, Jrd::dsql_nod*);
-Jrd::dsql_nod* PASS1_statement(Jrd::CompiledStatement*, Jrd::dsql_nod*);
+namespace Jrd
+{
+	class CompoundStmtNode;
+	class DeclareCursorNode;
+	class DsqlMapNode;
+	class ExprNode;
+	class RecordSourceNode;
+	class RseNode;
+	class SelectExprNode;
+	class SelectNode;
+	class ValueExprNode;
+	class ValueListNode;
+}
+
+void PASS1_ambiguity_check(Jrd::DsqlCompilerScratch*, const Jrd::MetaName&, const Jrd::DsqlContextStack&);
+void PASS1_check_unique_fields_names(Jrd::StrArray& names, const Jrd::CompoundStmtNode* fields);
+Jrd::BoolExprNode* PASS1_compose(Jrd::BoolExprNode*, Jrd::BoolExprNode*, UCHAR);
+Jrd::DeclareCursorNode* PASS1_cursor_name(Jrd::DsqlCompilerScratch*, const Jrd::MetaName&, USHORT, bool);
+Jrd::RseNode* PASS1_derived_table(Jrd::DsqlCompilerScratch*, Jrd::SelectExprNode*, const char*,
+	const Jrd::SelectNode* = nullptr);
+void PASS1_expand_contexts(Jrd::DsqlContextStack& contexts, Jrd::dsql_ctx* context);
+Jrd::ValueListNode* PASS1_expand_select_list(Jrd::DsqlCompilerScratch*, Jrd::ValueListNode*, Jrd::RecSourceListNode*);
+void PASS1_expand_select_node(Jrd::DsqlCompilerScratch*, Jrd::ExprNode*, Jrd::ValueListNode*, bool);
+void PASS1_field_unknown(const TEXT*, const TEXT*, const Jrd::ExprNode*);
+void PASS1_limit(Jrd::DsqlCompilerScratch*, NestConst<Jrd::ValueExprNode>,
+	NestConst<Jrd::ValueExprNode>, Jrd::RseNode*);
+Jrd::ValueExprNode* PASS1_lookup_alias(Jrd::DsqlCompilerScratch*, const Jrd::MetaName&,
+	Jrd::ValueListNode*, bool);
+Jrd::dsql_ctx* PASS1_make_context(Jrd::DsqlCompilerScratch* statement, Jrd::RecordSourceNode* relationNode);
+bool PASS1_node_match(Jrd::DsqlCompilerScratch*, const Jrd::ExprNode*, const Jrd::ExprNode*, bool);
+Jrd::DsqlMapNode* PASS1_post_map(Jrd::DsqlCompilerScratch*, Jrd::ValueExprNode*, Jrd::dsql_ctx*,
+	Jrd::WindowClause*);
+Jrd::RecordSourceNode* PASS1_relation(Jrd::DsqlCompilerScratch*, Jrd::RecordSourceNode*);
+Jrd::RseNode* PASS1_rse(Jrd::DsqlCompilerScratch*, Jrd::SelectExprNode*, const Jrd::SelectNode* = nullptr);
+bool PASS1_set_parameter_type(Jrd::DsqlCompilerScratch*, Jrd::ValueExprNode*, std::function<void (dsc*)>, bool);
+bool PASS1_set_parameter_type(Jrd::DsqlCompilerScratch*, Jrd::ValueExprNode*, NestConst<Jrd::ValueExprNode>, bool);
+Jrd::ValueListNode* PASS1_sort(Jrd::DsqlCompilerScratch*, Jrd::ValueListNode*, Jrd::ValueListNode*);
 
 #endif // DSQL_PASS1_PROTO_H
-

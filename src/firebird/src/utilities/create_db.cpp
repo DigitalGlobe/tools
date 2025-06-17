@@ -1,8 +1,7 @@
 
 #include "firebird.h"
 
-#include "../jrd/ibase.h"
-#include "../jrd/common.h"
+#include "ibase.h"
 #include "../common/classes/ClumpletWriter.h"
 #include <stdio.h>
 
@@ -44,7 +43,7 @@ int main(int argc, char** argv)
 		return -3;
 	}
 
-	Firebird::ClumpletWriter dpb(Firebird::ClumpletReader::Tagged, MAX_DPB_SIZE, isc_dpb_version1);
+	Firebird::ClumpletWriter dpb(Firebird::ClumpletReader::dpbList, MAX_DPB_SIZE);
 	dpb.insertByte(isc_dpb_set_db_readonly, TRUE);
 	isc_attach_database(sv, 0, argv[1], &db, dpb.getBufferLength(),
 		reinterpret_cast<const char*>(dpb.getBuffer()));

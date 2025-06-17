@@ -31,6 +31,7 @@
 #include <io.h>
 #endif
 
+#include "../common/classes/fb_string.h"
 #include <stdio.h>
 
 namespace MsgFormat
@@ -108,6 +109,26 @@ private:
 	char* const m_max_pos;
 	char* const m_ellipsis;
 	char* m_current_pos;
+};
+
+
+// Wraps a reference to a Firebird::string.
+class StringRefStream : public BaseStream
+{
+public:
+	StringRefStream(Firebird::string& aRef)
+		: ref(aRef)
+	{
+	}
+
+	virtual int write(const void* str, unsigned int n)
+	{
+		ref.append((const char*) str, n);
+		return n;
+	}
+
+private:
+	Firebird::string& ref;
 };
 
 } // namespace

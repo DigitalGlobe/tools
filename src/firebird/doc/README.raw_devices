@@ -74,6 +74,6 @@ Database header page information:
 
  In all other aspects raw devices do not have known specific
  in use.
- Tip: it's good idea to have raw devices in aliases.conf - in
+ Tip: it's good idea to have raw devices in databases.conf - in
  case of HW reconfiguration of your server you will not need to
  change connection strings.

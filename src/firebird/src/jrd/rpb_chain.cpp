@@ -21,16 +21,15 @@
  */
 
 #include "firebird.h"
-#include "../jrd/common.h"
 #include "../jrd/rpb_chain.h"
 
 using namespace Jrd;
 
-#ifdef DEBUG_GDS_ALLOC
+#ifdef DEV_BUILD
 #define ExecAssert(x) fb_assert(x)
-#else  //DEBUG_GDS_ALLOC
+#else  // DEV_BUILD
 #define ExecAssert(x) x
-#endif //DEBUG_GDS_ALLOC
+#endif // DEV_BUILD
 
 // rpb_chain.h includes req.h => struct record_param.
 
@@ -55,7 +54,7 @@ int traRpbList::PushRpb(record_param* value)
 			level = prev.level;
 			fb_assert(pos >= level);
 			fb_assert((*this)[pos - level].level == 0);
-			prev.lr_rpb->rpb_stream_flags |= RPB_s_refetch;
+			prev.lr_rpb->rpb_runtime_flags |= RPB_refetch;
 		}
 	}
 	(*this)[++pos].level = ++level;
@@ -67,9 +66,9 @@ bool traRpbList::PopRpb(record_param* value, int Level)
 	if (Level < 0) {
 		return false;
 	}
-	size_t pos;
+	FB_SIZE_T pos;
 	ExecAssert(find(traRpbListElement(value, Level), pos));
-	const bool rc = (*this)[pos].lr_rpb->rpb_stream_flags & RPB_s_refetch;
+	const bool rc = (*this)[pos].lr_rpb->rpb_runtime_flags & RPB_refetch;
 	remove(pos);
 	return rc;
 }

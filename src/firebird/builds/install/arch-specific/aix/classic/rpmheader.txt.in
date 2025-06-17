@@ -1,5 +1,5 @@
 Summary: Firebird Relational Database Server and Client tools.
-Name: Firebird@ARCH_TYPE_SUFFIX@
+Name: Firebird
 Version: @FIREBIRD_VERSION@.@FB_BUILD_NUM@
 Release: @FIREBIRD_PACKAGE_VERSION@
 License: Distributable 

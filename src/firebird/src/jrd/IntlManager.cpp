@@ -26,21 +26,24 @@
 
 #include "firebird.h"
 #include "../jrd/IntlManager.h"
-#include "../jrd/os/mod_loader.h"
-#include "../jrd/intlobj_new.h"
+#include "../common/os/mod_loader.h"
+#include "../common/intlobj_new.h"
 #include "../jrd/intl_proto.h"
+#include "../jrd/intl.h"
+#include "../common/isc_proto.h"
+#include "../common/utils_proto.h"
 #include "../common/config/config.h"
 #include "../common/classes/GenericMap.h"
 #include "../common/classes/objects_array.h"
 #include "../common/classes/fb_string.h"
 #include "../common/classes/init.h"
 
-#include "../config/ConfigFile.h"
-#include "../config/ConfObj.h"
-#include "../config/ConfObject.h"
-#include "../config/Element.h"
-#include "../config/ScanDir.h"
-#include "../config/AdminException.h"
+#include "../common/ScanDir.h"
+#include "../common/config/config_file.h"
+
+#ifdef ANDROID
+#include "../common/os/path_utils.h"
+#endif
 
 using namespace Firebird;
 
@@ -176,39 +179,29 @@ const IntlManager::CharSetAliasDefinition IntlManager::defaultCharSetAliases[] =
 	{"DOS_437", CS_DOS_437},
 	{"DOS_850", CS_DOS_850},
 	{"DOS_865", CS_DOS_865},
-	{"ISO8859_1", CS_ISO8859_1},
 	{"ISO88591", CS_ISO8859_1},
 	{"LATIN1", CS_ISO8859_1},
 	{"ANSI", CS_ISO8859_1},
-	{"ISO8859_2", CS_ISO8859_2},
 	{"ISO88592", CS_ISO8859_2},
 	{"LATIN2", CS_ISO8859_2},
 	{"ISO-8859-2", CS_ISO8859_2},	// Prefered MIME name
-	{"ISO8859_3", CS_ISO8859_3},
 	{"ISO88593", CS_ISO8859_3},
 	{"LATIN3", CS_ISO8859_3},
 	{"ISO-8859-3", CS_ISO8859_3},	// Prefered MIME name
-	{"ISO8859_4", CS_ISO8859_4},
 	{"ISO88594", CS_ISO8859_4},
 	{"LATIN4", CS_ISO8859_4},
 	{"ISO-8859-4", CS_ISO8859_4},	// Prefered MIME name
-	{"ISO8859_5", CS_ISO8859_5},
 	{"ISO88595", CS_ISO8859_5},
 	{"ISO-8859-5", CS_ISO8859_5},	// Prefered MIME name
-	{"ISO8859_6", CS_ISO8859_6},
 	{"ISO88596", CS_ISO8859_6},
 	{"ISO-8859-6", CS_ISO8859_6},	// Prefered MIME name
-	{"ISO8859_7", CS_ISO8859_7},
 	{"ISO88597", CS_ISO8859_7},
 	{"ISO-8859-7", CS_ISO8859_7},	// Prefered MIME name
-	{"ISO8859_8", CS_ISO8859_8},
 	{"ISO88598", CS_ISO8859_8},
 	{"ISO-8859-8", CS_ISO8859_8},	// Prefered MIME name
-	{"ISO8859_9", CS_ISO8859_9},
 	{"ISO88599", CS_ISO8859_9},
 	{"LATIN5", CS_ISO8859_9},
 	{"ISO-8859-9", CS_ISO8859_9},	// Prefered MIME name
-	{"ISO8859_13", CS_ISO8859_13},
 	{"ISO885913", CS_ISO8859_13},
 	{"LATIN7", CS_ISO8859_13},
 	{"ISO-8859-13", CS_ISO8859_13},	// Prefered MIME name
@@ -319,6 +312,9 @@ const IntlManager::CollationDefinition IntlManager::defaultCollations[] =
 	{CS_ISO8859_1, 18, "FR_FR_CI_AI", "FR_FR",
 		TEXTTYPE_ATTR_PAD_SPACE | TEXTTYPE_ATTR_CASE_INSENSITIVE | TEXTTYPE_ATTR_ACCENT_INSENSITIVE,
 		"SPECIALS-FIRST=1"},
+	{CS_ISO8859_1, 19, "FR_CA_CI_AI", "FR_CA",
+		TEXTTYPE_ATTR_PAD_SPACE | TEXTTYPE_ATTR_CASE_INSENSITIVE | TEXTTYPE_ATTR_ACCENT_INSENSITIVE,
+		"SPECIALS-FIRST=1"},
 	{CS_ISO8859_2, 0, "ISO8859_2", NULL, TEXTTYPE_ATTR_PAD_SPACE, NULL},
 	{CS_ISO8859_2, 1, "CS_CZ", NULL, TEXTTYPE_ATTR_PAD_SPACE, NULL},
 	{CS_ISO8859_2, 2, "ISO_HUN", NULL, TEXTTYPE_ATTR_PAD_SPACE, NULL},
@@ -421,10 +417,10 @@ const IntlManager::CollationDefinition IntlManager::defaultCollations[] =
 bool IntlManager::initialize()
 {
 	bool ok = true;
-	ObjectsArray<string> conflicts;
+	ObjectsArray<ConfigFile::String> conflicts;
 	string builtinConfig;
 
-	Firebird::PathName intlPath = fb_utils::getPrefix(fb_utils::FB_DIR_INTL, "");
+	PathName intlPath = fb_utils::getPrefix(Firebird::IConfigManager::DIR_INTL, "");
 
 	ScanDir dir(intlPath.c_str(), "*.conf");
 
@@ -432,94 +428,151 @@ bool IntlManager::initialize()
 	{
 		while (dir.next())
 		{
-			ConfigFile configFile(dir.getFilePath(), ConfigFile::LEX_none);
+			ConfigFile configFile(dir.getFilePath(), ConfigFile::HAS_SUB_CONF);
 
-			ConfObj builtinModule(configFile.findObject("intl_module", "builtin"));
+			const ConfigFile::Parameter* builtinModule = configFile.findParameter(
+				"intl_module", "builtin");
 			string s = getConfigInfo(builtinModule);
 			if (s.hasData())
 				builtinConfig = s;
 
-			for (const Element* el = configFile.getObjects()->children; el; el = el->sibling)
+			const ConfigFile::Parameters& params = configFile.getParameters();
+			for (FB_SIZE_T n = 0; n < params.getCount(); ++n)
 			{
-				if (el->name == "charset")
+				const ConfigFile::Parameter* ch = &params[n];
+				if (ch->name != "charset")
 				{
-					const string charSetName = el->getAttributeName(0);
-					PathName filename;
-					string configInfo;
+					continue;
+				}
+				if (!ch->sub)
+				{
+					continue;
+				}
 
-					const Element* module = el->findChild("intl_module");
-					if (module)
+				const ConfigFile::String charSetName = ch->value;
+				PathName filename;
+				string configInfo;
+
+				const ConfigFile::Parameter* module = ch->sub->findParameter("intl_module");
+				const ConfigFile::Parameter* objModule;
+				if (module &&
+					(objModule = configFile.findParameter("intl_module", module->value.c_str())))
+				{
+					if (!objModule->sub)
 					{
-						const Firebird::string moduleName(module->getAttributeName(0));
-						ConfObj objModule(configFile.findObject("intl_module", moduleName.c_str()));
-						filename = objModule->getValue("filename", "");
-						configInfo = getConfigInfo(objModule);
+						fatal_exception::raiseFmt("Missing parameters for intl_module %s\n", module->value.c_str());
+					}
 
-						if (!modules->exist(filename))
+					const ConfigFile::Parameter* fname = objModule->sub->findParameter("filename");
+					if (!fname)
+					{
+						fatal_exception::raiseFmt("Missing parameter 'filename' for intl_module %s\n", module->value.c_str());
+					}
+
+					filename = fname->value.ToPathName();
+					configInfo = getConfigInfo(objModule);
+
+					ModuleLoader::Module* mod = NULL;
+					bool exists = modules->exist(filename);
+
+					ISC_STATUS_ARRAY status;
+					if (!exists)
+					{
+						mod = ModuleLoader::fixAndLoadModule(status, filename);
+
+#ifdef ANDROID
+						if (!mod)
 						{
-							ModuleLoader::Module* mod = ModuleLoader::loadModule(filename);
-							if (!mod)
-							{
-								ModuleLoader::doctorModuleExtention(filename);
-								mod = ModuleLoader::loadModule(filename);
-							}
-							if (mod)
-							{
-								// Negotiate version
-								pfn_INTL_version versionFunction;
-								USHORT version;
+							PathName path, file;
+							PathUtils::splitLastComponent(path, file, filename);
+							mod = ModuleLoader::fixAndLoadModule(status, file);
+						}
+#endif
 
-								if (mod->findSymbol(STRINGIZE(INTL_VERSION_ENTRYPOINT), versionFunction))
-								{
-									version = INTL_VERSION_2;
-									versionFunction(&version);
-								}
-								else
-									version = INTL_VERSION_1;
-
-								if (version != INTL_VERSION_1 && version != INTL_VERSION_2)
-								{
-									string err_msg;
-									err_msg.printf("INTL module '%s' is of incompatible version number %d",
-										filename.c_str(), version);
-									gds__log(err_msg.c_str());
-									ok = false;
-								}
-								else
-									modules->put(filename, mod);
-							}
-							else
+						if (mod)
+						{
+							exists = modules->exist(filename);
+							if (exists)
 							{
-								gds__log((string("Can't load INTL module '") +
-									filename.c_str() + "'").c_str());
-								ok = false;
+								// Module was already loaded, forget it
+								delete mod;
+								mod = nullptr;
 							}
 						}
 					}
 
-					for (const Element* el2 = el->children; el2; el2 = el2->sibling)
+					if (!exists)
 					{
-						if (el2->name == "collation")
+						if (mod)
 						{
-							const string collationName = el2->getAttributeName(0);
-							const string charSetCollation = charSetName + ":" + collationName;
-							const char* externalName = el2->getAttributeName(1);
+							// Negotiate version
+							pfn_INTL_version versionFunction;
+							USHORT version;
 
-							if (!registerCharSetCollation(charSetCollation, filename,
-								(externalName ? externalName : collationName), configInfo))
+							if (mod->findSymbol(status, STRINGIZE(INTL_VERSION_ENTRYPOINT), versionFunction))
 							{
-								conflicts.add(charSetCollation);
-								ok = false;
+								version = INTL_VERSION_2;
+								versionFunction(&version);
 							}
+							else
+								version = INTL_VERSION_1;
+
+							if (version != INTL_VERSION_1 && version != INTL_VERSION_2)
+							{
+								string err_msg;
+								err_msg.printf("INTL module '%s' is of incompatible version number %d",
+									filename.c_str(), version);
+								gds__log(err_msg.c_str());
+								ok = false;
+								// Shouldn't mod be deleted here? It looks like a leak.
+							}
+							else
+								modules->put(filename, mod);
 						}
+						else
+						{
+							iscLogStatus((string("Can't load INTL module '") +
+								filename.c_str() + "'").c_str(), status);
+							ok = false;
+						}
+					}
+				}
+
+				const ConfigFile::Parameters& sub = ch->sub->getParameters();
+				for (FB_SIZE_T coll = 0; coll < sub.getCount(); ++coll)
+				{
+					if (sub[coll].name != "collation")
+					{
+						continue;
+					}
+
+					ConfigFile::String collationName = sub[coll].value;
+					ConfigFile::String externalName;
+					FB_SIZE_T pos = collationName.find(' ');
+					if (pos != ConfigFile::String::npos)
+					{
+						externalName = collationName.substr(pos);
+						externalName.ltrim(" \t");
+						collationName = collationName.substr(0, pos);
+					}
+					const ConfigFile::String charSetCollation = charSetName + ":" + collationName;
+
+					if (!registerCharSetCollation(charSetCollation.ToString(), filename,
+							(externalName.hasData() ? externalName : collationName).ToString(),
+							configInfo))
+					{
+						conflicts.add(charSetCollation);
+						ok = false;
 					}
 				}
 			}
 		}
 	}
-	catch (AdminException& ex)
+	catch (const Exception& ex)
 	{
-		gds__log((string("Error in INTL plugin config file '") + dir.getFilePath() + "': " + ex.getText()).c_str());
+		string message = "Error in INTL plugin config file ";
+		message += dir.getFilePath();
+		iscLogException(message.c_str(), ex);
 		ok = false;
 	}
 
@@ -538,21 +591,26 @@ bool IntlManager::initialize()
 	registerCharSetCollation("UTF32:UCS_BASIC", "", "UCS_BASIC", builtinConfig);
 #endif
 
-	for (ObjectsArray<string>::const_iterator name(conflicts.begin()); name != conflicts.end(); ++name)
-		charSetCollations->remove(*name);
+	for (ObjectsArray<ConfigFile::String>::const_iterator name(conflicts.begin()); name != conflicts.end(); ++name)
+		charSetCollations->remove(name->ToString());
 
 	return ok;
 }
 
 
-bool IntlManager::collationInstalled(const Firebird::string& collationName,
-	const Firebird::string& charSetName)
+bool IntlManager::charSetInstalled(const string& charSetName)
+{
+	return charSetCollations->exist(charSetName + ":" + charSetName);
+}
+
+
+bool IntlManager::collationInstalled(const string& collationName, const string& charSetName)
 {
 	return charSetCollations->exist(charSetName + ":" + collationName);
 }
 
 
-bool IntlManager::lookupCharSet(const Firebird::string& charSetName, charset* cs)
+bool IntlManager::lookupCharSet(const string& charSetName, charset* cs)
 {
 	ExternalInfo externalInfo;
 
@@ -567,7 +625,7 @@ bool IntlManager::lookupCharSet(const Firebird::string& charSetName, charset* cs
 			ModuleLoader::Module* module;
 
 			if (modules->get(externalInfo.moduleName, module) && module)
-				module->findSymbol(STRINGIZE(CHARSET_ENTRYPOINT), lookupFunction);
+				module->findSymbol(NULL, STRINGIZE(CHARSET_ENTRYPOINT), lookupFunction);
 		}
 
 		if (lookupFunction && (*lookupFunction)(cs, externalInfo.name.c_str(),
@@ -581,46 +639,70 @@ bool IntlManager::lookupCharSet(const Firebird::string& charSetName, charset* cs
 }
 
 
-bool IntlManager::lookupCollation(const Firebird::string& collationName,
-								  const Firebird::string& charSetName,
+void IntlManager::lookupCollation(const string& collationName,
+								  const string& charSetName,
 								  USHORT attributes, const UCHAR* specificAttributes,
 								  ULONG specificAttributesLen, bool ignoreAttributes,
 								  texttype* tt)
 {
 	ExternalInfo charSetExternalInfo;
 	ExternalInfo collationExternalInfo;
+	char statusBuffer[BUFFER_LARGE] = "";
 
 	if (charSetCollations->get(charSetName + ":" + charSetName, charSetExternalInfo) &&
 		charSetCollations->get(charSetName + ":" + collationName, collationExternalInfo))
 	{
-		pfn_INTL_lookup_texttype lookupFunction = NULL;
+		ModuleLoader::Module* module = nullptr;
+
+		if (collationExternalInfo.moduleName.hasData())
+			modules->get(collationExternalInfo.moduleName, module);
+
+		pfn_INTL_lookup_texttype_with_status lookupStatusFunction = nullptr;
 
 		if (collationExternalInfo.moduleName.isEmpty())
-			lookupFunction = INTL_builtin_lookup_texttype;
-		else
-		{
-			ModuleLoader::Module* module;
+			lookupStatusFunction = INTL_builtin_lookup_texttype_status;
+		else if (module)
+			module->findSymbol(nullptr, STRINGIZE(TEXTTYPE_WITH_STATUS_ENTRYPOINT), lookupStatusFunction);
 
-			if (modules->get(collationExternalInfo.moduleName, module) && module)
-				module->findSymbol(STRINGIZE(TEXTTYPE_ENTRYPOINT), lookupFunction);
+		if (lookupStatusFunction)
+		{
+			if ((*lookupStatusFunction)(statusBuffer, sizeof(statusBuffer),
+					tt, collationExternalInfo.name.c_str(), charSetExternalInfo.name.c_str(),
+					attributes, specificAttributes, specificAttributesLen, ignoreAttributes,
+					collationExternalInfo.configInfo.c_str()))
+			{
+				return;
+			}
 		}
-
-		if (lookupFunction &&
-			(*lookupFunction)(tt, collationExternalInfo.name.c_str(), charSetExternalInfo.name.c_str(),
-							  attributes, specificAttributes, specificAttributesLen, ignoreAttributes,
-							  collationExternalInfo.configInfo.c_str()))
+		else if (module)
 		{
-			return true;
+			pfn_INTL_lookup_texttype lookupFunction = nullptr;
+			module->findSymbol(nullptr, STRINGIZE(TEXTTYPE_ENTRYPOINT), lookupFunction);
+
+			if (lookupFunction &&
+				(*lookupFunction)(tt, collationExternalInfo.name.c_str(), charSetExternalInfo.name.c_str(),
+								attributes, specificAttributes, specificAttributesLen, ignoreAttributes,
+								collationExternalInfo.configInfo.c_str()))
+			{
+				return;
+			}
 		}
 	}
 
-	return false;
+	if (statusBuffer[0])
+	{
+		(Arg::Gds(isc_collation_not_installed) << collationName << charSetName <<
+			Arg::Gds(isc_random) << statusBuffer
+		).raise();
+	}
+	else
+		(Arg::Gds(isc_collation_not_installed) << collationName << charSetName).raise();
 }
 
 
 bool IntlManager::setupCollationAttributes(
-	const Firebird::string& collationName, const Firebird::string& charSetName,
-	const Firebird::string& specificAttributes, Firebird::string& newSpecificAttributes)
+	const string& collationName, const string& charSetName,
+	const string& specificAttributes, string& newSpecificAttributes)
 {
 	ExternalInfo charSetExternalInfo;
 	ExternalInfo collationExternalInfo;
@@ -639,7 +721,7 @@ bool IntlManager::setupCollationAttributes(
 			ModuleLoader::Module* module;
 
 			if (modules->get(collationExternalInfo.moduleName, module) && module)
-				module->findSymbol(STRINGIZE(INTL_SETUP_ATTRIBUTES_ENTRYPOINT), attributesFunction);
+				module->findSymbol(NULL, STRINGIZE(INTL_SETUP_ATTRIBUTES_ENTRYPOINT), attributesFunction);
 		}
 
 		if (attributesFunction)
@@ -671,7 +753,7 @@ bool IntlManager::setupCollationAttributes(
 			}
 
 			if (len != INTL_BAD_STR_LENGTH)
-				newSpecificAttributes = string((const char*) buffer.begin(), len);
+				newSpecificAttributes.assign((const char*) buffer.begin(), len);
 			else
 				return false;
 		}
@@ -683,36 +765,36 @@ bool IntlManager::setupCollationAttributes(
 }
 
 
-Firebird::string IntlManager::getConfigInfo(const ConfObj& confObj)
+string IntlManager::getConfigInfo(const ConfigFile::Parameter* confObj)
 {
-	if (!confObj.hasObject())
-		return "";
-
-	string configInfo;
-
-	for (const Element* el = confObj->object->children; el; el = el->sibling)
+	if (!confObj || !confObj->sub)
 	{
-		string values;
+		return "";
+	}
 
-		for (int i = 0; el->getAttributeName(i); ++i)
-		{
-			if (i > 0)
-				values.append(" ");
+	ConfigFile::String configInfo;
+	const ConfigFile::Parameters& all = confObj->sub->getParameters();
 
-			values.append(el->getAttributeName(i));
-		}
+	for (FB_SIZE_T n = 0; n < all.getCount(); ++n)
+	{
+		const ConfigFile::Parameter& par = all[n];
+		const string parName = par.name.ToString();
+
+		if (parName == "filename")
+			continue;
 
 		if (configInfo.hasData())
 			configInfo.append(";");
-		configInfo.append(string(el->name.c_str()) + "=" + values);
+
+		configInfo.append(parName + "=" + par.value);
 	}
 
-	return configInfo;
+	return configInfo.ToString();
 }
 
 
-bool IntlManager::registerCharSetCollation(const Firebird::string& name, const Firebird::PathName& filename,
-	const Firebird::string& externalName, const Firebird::string& configInfo
+bool IntlManager::registerCharSetCollation(const string& name, const PathName& filename,
+	const string& externalName, const string& configInfo
 )
 {
 	ExternalInfo conflict;
@@ -730,7 +812,7 @@ bool IntlManager::registerCharSetCollation(const Firebird::string& name, const F
 }
 
 
-bool IntlManager::validateCharSet(const Firebird::string& charSetName, charset* cs)
+bool IntlManager::validateCharSet(const string& charSetName, charset* cs)
 {
 	bool valid = true;
 	string s;

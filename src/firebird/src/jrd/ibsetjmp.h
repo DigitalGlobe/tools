@@ -34,22 +34,38 @@
 #include <signal.h>
 #endif
 
+#include "../common/os/SyncSignals.h"
+
 #define START_CHECK_FOR_EXCEPTIONS(err)	{ \
 					sigjmp_buf sigenv; \
 					int sig; \
-					if (!Config::getBugcheckAbort()) { \
-						if (sig = sigsetjmp(sigenv, 1)) \
-					    	ISC_exception_post(sig, err); \
-						Firebird::sync_signals_set(&sigenv); \
+					ISC_STATUS __isc_error_code; \
+					if (!Config::getBugcheckAbort()) \
+					{ \
+						if ((sig = sigsetjmp(sigenv, 1))) \
+							ISC_exception_post(sig, err, __isc_error_code); \
+						Firebird::syncSignalsSet(&sigenv); \
 					}
-#define END_CHECK_FOR_EXCEPTIONS(err)   if (!Config::getBugcheckAbort()) Firebird::sync_signals_reset(); }
+#define END_CHECK_FOR_EXCEPTIONS(err)   if (!Config::getBugcheckAbort()) Firebird::syncSignalsReset(); }
 
 #endif // UNIX
 
 #if defined(WIN_NT) && !defined(MINGW)
 #include <excpt.h>
-#define START_CHECK_FOR_EXCEPTIONS(err)	__try {
-#define  END_CHECK_FOR_EXCEPTIONS(err) 	} __except ( ISC_exception_post(GetExceptionCode(), err)) { }
+
+#define START_CHECK_FOR_EXCEPTIONS(err)	{					\
+	ISC_STATUS __seh_isc_status[3] = {isc_arg_gds, 0, 0};	\
+	__try {
+
+#define  END_CHECK_FOR_EXCEPTIONS(err) 	}					\
+	__except ( ISC_exception_post(GetExceptionCode(), err, __seh_isc_status[1]))	\
+	{																\
+		if (__seh_isc_status[1] == isc_exception_stack_overflow) {	\
+			tdbb->tdbb_flags |= TDBB_reset_stack;					\
+		}															\
+		status_exception::raise(__seh_isc_status);					\
+	}}
+
 #endif // WIN_NT
 
 /* generic macros */

@@ -27,112 +27,87 @@
 #ifndef JRD_FLU_H
 #define JRD_FLU_H
 
-/* External modules for UDFs/BLOB filters/y-valve loader */
+// External modules for UDFs/BLOB filters/y-valve loader
 
 #include "../common/classes/objects_array.h"
-#include "../jrd/os/mod_loader.h"
-#include "../common/classes/fb_atomic.h"
+#include "../common/os/mod_loader.h"
+#include "../common/classes/RefCounted.h"
 
 namespace Jrd
 {
+	class Database;
+
 	class Module
 	{
 	private:
-		class InternalModule
+		class InternalModule : public Firebird::RefCounted
 		{
 		private:
 			InternalModule(const InternalModule &im);
 			void operator=(const InternalModule &im);
-			Firebird::AtomicCounter useCount;
 
 		public:
 			ModuleLoader::Module* handle;
 			Firebird::PathName originalName, loadName;
 
-			void *findSymbol(const Firebird::string& name)
+			void* findSymbol(const Firebird::string& name)
 			{
 				if (! handle)
 				{
 					return 0;
 				}
-				return handle->findSymbol(name);
+				return handle->findSymbol(NULL, name);
 			}
 
 			InternalModule(MemoryPool& p,
 						   ModuleLoader::Module* h,
 						   const Firebird::PathName& on,
 						   const Firebird::PathName& ln)
-				: handle(h), originalName(p, on), loadName(p, ln)
+				: handle(h),
+				  originalName(p, on),
+				  loadName(p, ln)
 			{ }
 
-			~InternalModule()
-			{
-				fb_assert(useCount.value() == 0);
-				delete handle;
-			}
+			~InternalModule();
 
 			bool operator==(const Firebird::PathName &pn) const
 			{
 				return originalName == pn || loadName == pn;
 			}
 
-			void acquire()
-			{
-				fb_assert(handle);
-				++useCount;
-			}
-
-			int release()
-			{
-				fb_assert(useCount.value() > 0);
-				return --useCount;
-			}
 		};
 
-		InternalModule* interMod;
+		Firebird::RefPtr<InternalModule> interMod;
 
-		Module(InternalModule* h) : interMod(h)
-		{
-			if (interMod)
-			{
-				interMod->acquire();
-			}
-		}
+		explicit Module(InternalModule* h)
+			: interMod(h)
+		{ }
 
-		static Module lookupModule(const char*, bool);
+		static Module lookupModule(const char*);
 
 		static InternalModule* scanModule(const Firebird::PathName& name);
 
 	public:
 		typedef Firebird::Array<InternalModule*> LoadedModules;
 
-		Module() : interMod(0) { }
+		Module()
+		{ }
 
-		Module(MemoryPool&) : interMod(0) { }
+		explicit Module(MemoryPool&)
+		{ }
 
-		Module(MemoryPool&, const Module& m) : interMod(m.interMod)
-		{
-			if (interMod)
-			{
-				interMod->acquire();
-			}
-		}
+		Module(MemoryPool&, const Module& m)
+			: interMod(m.interMod)
+		{ }
 
-		Module(const Module& m) : interMod(m.interMod)
-		{
-			if (interMod)
-			{
-				interMod->acquire();
-			}
-		}
+		Module(const Module& m)
+			: interMod(m.interMod)
+		{ }
 
-		virtual ~Module();
+		~Module();
 
 		// used for UDF/BLOB Filter
-		static FPTR_INT lookup(const char*, const char*, Firebird::SortedObjectsArray<Module>&);
-
-		// used in y-valve
-		static FPTR_INT lookup(const char*, const char*);
+		static FPTR_INT lookup(const char*, const char*, Database*);
 
 		bool operator>(const Module &im) const;
 
@@ -155,4 +130,4 @@ namespace Jrd
 
 } // namespace Jrd
 
-#endif /* JRD_FLU_H */
+#endif // JRD_FLU_H

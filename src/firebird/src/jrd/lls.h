@@ -27,16 +27,17 @@
 
 namespace Jrd {
 	class Record;
-	class jrd_nod;
-	class RecordSource;
-	class River;
+	class BoolExprNode;
+	class ValueExprNode;
+	class RecordSourceNode;
+	class StmtNode;
+
 	typedef Firebird::Stack<Record*> RecordStack;
-	typedef Firebird::Stack<jrd_nod*> NodeStack;
-	typedef Firebird::Stack<SLONG> PageStack;
+	typedef Firebird::Stack<BoolExprNode*> BoolExprNodeStack;
+	typedef Firebird::Stack<ValueExprNode*> ValueExprNodeStack;
+	typedef Firebird::Stack<RecordSourceNode*> RecordSourceNodeStack;
+	typedef Firebird::Stack<StmtNode*> StmtNodeStack;
 	typedef Firebird::Stack<UCHAR*> UCharStack;
-	typedef Firebird::Stack<RecordSource*> RsbStack;
-	typedef Firebird::Stack<River*> RiverStack;
-	typedef Firebird::Stack<UCHAR> StreamStack;
 }
 
 #endif // JRD_LLS_H

@@ -45,9 +45,6 @@
  */
 
 
-#include "../jrd/common.h"
-
-
 // Switch handling constants.  Note that IN_SW_COUNT must always be
 // one larger than the largest switch value
 
@@ -77,6 +74,7 @@ enum gpre_cmd_switch
 	IN_SW_GPRE_D_FLOAT, // use blr_d_float for doubles
 	IN_SW_GPRE_CXX, 	// source is C++
 	IN_SW_GPRE_SCXX, 	// source is C++ with Saber extension
+	IN_SW_GPRE_OCXX,	// C++ with object API
 	IN_SW_GPRE_SQLDA, 	// use old or new SQLDA
 	IN_SW_GPRE_USER, 	// default username to use when attaching database
 	IN_SW_GPRE_PASSWORD, // default password to use in attaching database
@@ -143,59 +141,60 @@ struct sw_tab_t
 };
 
 
-static const in_sw_tab_t gpre_in_sw_table[] =
+const static Switches::in_sw_tab_t gpre_in_sw_table[] =
 {
 #ifdef GPRE_ADA
-	{IN_SW_GPRE_ADA		, 0, "ADA"			, 0, 0, 0, false, 0, 0, "\t\textended ADA program"},
-	{IN_SW_GPRE_HANDLES	, 0, "HANDLES"		, 0, 0, 0, false, 0, 0, "\t\tADA handle package requires handle package name"},
+	{IN_SW_GPRE_ADA		, 0, "ADA"			, 0, 0, 0, false, false, 0, 0, "\t\textended ADA program"},
+	{IN_SW_GPRE_HANDLES	, 0, "HANDLES"		, 0, 0, 0, false, false, 0, 0, "\t\tADA handle package requires handle package name"},
 #endif
-	{IN_SW_GPRE_C		, 0, "C"			, 0, 0, 0, false, 0, 0, "\t\textended C program"},
-	{IN_SW_GPRE_CXX		, 0, "CXX"			, 0, 0, 0, false, 0, 0, "\t\textended C++ program"},
-	{IN_SW_GPRE_CPLUSPLUS, 0, "CPLUSPLUS"	, 0, 0, 0, false, 0, 0, "\textended C++ program"},
-	{IN_SW_GPRE_D		, 0, "DATABASE"		, 0, 0, 0, false, 0, 0, "\tdatabase declaration requires database name"},
+	{IN_SW_GPRE_C		, 0, "C"			, 0, 0, 0, false, false, 0, 0, "\t\textended C program"},
+	{IN_SW_GPRE_CXX		, 0, "CXX"			, 0, 0, 0, false, false, 0, 0, "\t\textended C++ program"},
+	{IN_SW_GPRE_CPLUSPLUS, 0, "CPLUSPLUS"	, 0, 0, 0, false, false, 0, 0, "\textended C++ program"},
+	{IN_SW_GPRE_D		, 0, "DATABASE"		, 0, 0, 0, false, false, 0, 0, "\tdatabase declaration requires database name"},
 
-	{IN_SW_GPRE_D_FLOAT	, 0, "D_FLOAT"		, 0, 0, 0, false, 0, 0, "\t\tgenerate blr_d_float for doubles"},
-	{IN_SW_GPRE_E		, 0, "EITHER_CASE"	, 0, 0, 0, false, 0, 0, "\taccept upper or lower case DML in C"},
+	{IN_SW_GPRE_D_FLOAT	, 0, "D_FLOAT"		, 0, 0, 0, false, false, 0, 0, "\t\tgenerate blr_d_float for doubles"},
+	{IN_SW_GPRE_E		, 0, "EITHER_CASE"	, 0, 0, 0, false, false, 0, 0, "\taccept upper or lower case DML in C"},
 #ifdef GPRE_FORTRAN
-	{IN_SW_GPRE_F		, 0, "FORTRAN"		, 0, 0, 0, false, 0, 0, "\t\textended FORTRAN program"},
+	{IN_SW_GPRE_F		, 0, "FORTRAN"		, 0, 0, 0, false, false, 0, 0, "\t\textended FORTRAN program"},
 #endif
-	{IN_SW_GPRE_FETCH_PASS, 0, "FETCH_PASSWORD", 0, 0, 0, false, 0, 0, "\tfetch password from file"},
-	{IN_SW_GPRE_G		, 0, "GDS"			, 0, 0, 0, false, 0, 0, NULL},
-	{IN_SW_GPRE_GXX		, 0, "GDS_CXX"		, 0, 0, 0, false, 0, 0, NULL},
-	{IN_SW_GPRE_I		, 0, "IDENTIFIERS"	, 0, 0, 0, false, 0, 0, NULL},
-	{IN_SW_GPRE_I		, 0, "IDS"			, 0, 0, 0, false, 0, 0, NULL},
-	{IN_SW_GPRE_INTERP	, 0, "CHARSET"		, 0, 0, 0, false, 0, 0, "\t\tDefault character set & format"},
-	{IN_SW_GPRE_INTERP	, 0, "INTERPRETATION", 0, 0, 0, false, 0, 0, NULL},
-	{IN_SW_GPRE_LANG_INTERNAL , 0, "LANG_INTERNAL"	, 0, 0, 0, false, 0, 0, "\tinternal language only"},
-	{IN_SW_GPRE_M		, 0, "MANUAL"		, 0, 0, 0, false, 0, 0, "\t\tdo not automatically ATTACH to a database"},
-	{IN_SW_GPRE_N		, 0, "NO_LINES"		, 0, 0, 0, false, 0, 0, "\tdo not generate C debug lines"},
-	{IN_SW_GPRE_O		, 0, "OUTPUT"		, 0, 0, 0, false, 0, 0, "\t\tsend output to standard out"},
+	{IN_SW_GPRE_FETCH_PASS, 0, "FETCH_PASSWORD", 0, 0, 0, false, false, 0, 0, "\tfetch password from file"},
+	{IN_SW_GPRE_G		, 0, "GDS"			, 0, 0, 0, false, false, 0, 0, NULL},
+	{IN_SW_GPRE_GXX		, 0, "GDS_CXX"		, 0, 0, 0, false, false, 0, 0, NULL},
+	{IN_SW_GPRE_I		, 0, "IDENTIFIERS"	, 0, 0, 0, false, false, 0, 0, NULL},
+	{IN_SW_GPRE_I		, 0, "IDS"			, 0, 0, 0, false, false, 0, 0, NULL},
+	{IN_SW_GPRE_INTERP	, 0, "CHARSET"		, 0, 0, 0, false, false, 0, 0, "\t\tDefault character set & format"},
+	{IN_SW_GPRE_INTERP	, 0, "INTERPRETATION", 0, 0, 0, false, false, 0, 0, NULL},
+	{IN_SW_GPRE_LANG_INTERNAL , 0, "LANG_INTERNAL"	, 0, 0, 0, false, false, 0, 0, "\tinternal language only"},
+	{IN_SW_GPRE_M		, 0, "MANUAL"		, 0, 0, 0, false, false, 0, 0, "\t\tdo not automatically ATTACH to a database"},
+	{IN_SW_GPRE_N		, 0, "NO_LINES"		, 0, 0, 0, false, false, 0, 0, "\tdo not generate C debug lines"},
+	{IN_SW_GPRE_O		, 0, "OUTPUT"		, 0, 0, 0, false, false, 0, 0, "\t\tsend output to standard out"},
+	{IN_SW_GPRE_OCXX	, 0, "OCXX"			, 0, 0, 0, false, false, 0, 0, "\t\textended C++ program with objects API"},
 #ifdef GPRE_PASCAL
-	{IN_SW_GPRE_P		, 0, "PASCAL"		, 0, 0, 0, false, 0, 0, "\t\textended PASCAL program"},
+	{IN_SW_GPRE_P		, 0, "PASCAL"		, 0, 0, 0, false, false, 0, 0, "\t\textended PASCAL program"},
 #endif
-	{IN_SW_GPRE_PASSWORD, 0, "PASSWORD"		, 0, 0, 0, false, 0, 0, "\tdefault password"},
-	{IN_SW_GPRE_R		, 0, "RAW"			, 0, 0, 0, false, 0, 0, "\t\tgenerate unformatted binary BLR"},
-	{IN_SW_GPRE_SQLDIALECT, 0, "SQL_DIALECT", 0, 0, 0, false, 0, 0, "\tSQL dialect to use"},
-	{IN_SW_GPRE_S		, 0, "STRINGS"		, 0, 0, 0, false, 0, 0, NULL},
-	{IN_SW_GPRE_SQLDA	, 0, "SQLDA"		, 0, 0, 0, false, 0, 0, "\t\t***** Deprecated feature. ********"},
-	{IN_SW_GPRE_T		, 0, "TRACE"		, 0, 0, 0, false, 0, 0, NULL},
+	{IN_SW_GPRE_PASSWORD, 0, "PASSWORD"		, 0, 0, 0, false, false, 0, 0, "\tdefault password"},
+	{IN_SW_GPRE_R		, 0, "RAW"			, 0, 0, 0, false, false, 0, 0, "\t\tgenerate unformatted binary BLR"},
+	{IN_SW_GPRE_SQLDIALECT, 0, "SQL_DIALECT", 0, 0, 0, false, false, 0, 0, "\tSQL dialect to use"},
+	{IN_SW_GPRE_S		, 0, "STRINGS"		, 0, 0, 0, false, false, 0, 0, NULL},
+	{IN_SW_GPRE_SQLDA	, 0, "SQLDA"		, 0, 0, 0, false, false, 0, 0, "\t\t***** Deprecated feature. ********"},
+	{IN_SW_GPRE_T		, 0, "TRACE"		, 0, 0, 0, false, false, 0, 0, NULL},
 #ifdef TRUSTED_AUTH
-	{IN_SW_GPRE_TRUSTED	, 0, "TRUSTED"		, 0, 0, 0, false, 0, 0, "\t\tuse trusted authentication"},
+	{IN_SW_GPRE_TRUSTED	, 0, "TRUSTED"		, 0, 0, 0, false, false, 0, 0, "\t\tuse trusted authentication"},
 #endif
-	{IN_SW_GPRE_USER	, 0, "USER"			, 0, 0, 0, false, 0, 0, "\t\tdefault user name"},
+	{IN_SW_GPRE_USER	, 0, "USER"			, 0, 0, 0, false, false, 0, 0, "\t\tdefault user name"},
 	// FSG 14.Nov.2000
-	{IN_SW_GPRE_VERBOSE	, 0, "VERBOSE"		, 0, 0, 0, false, 0, 0, "\t\tVerbose Output to stderr"},
-	{IN_SW_GPRE_X		, 0, "X"			, 0, 0, 0, false, 0, 0, "\t\tEXTERNAL database (used with -DATABASE)"},
+	{IN_SW_GPRE_VERBOSE	, 0, "VERBOSE"		, 0, 0, 0, false, false, 0, 0, "\t\tVerbose Output to stderr"},
+	{IN_SW_GPRE_X		, 0, "X"			, 0, 0, 0, false, false, 0, 0, "\t\tEXTERNAL database (used with -DATABASE)"},
 #ifdef GPRE_COBOL
-	{IN_SW_GPRE_COB		, 0, "COB"			, 0, 0, 0, false, 0, 0, "\t\textended COBOL program"},
-	{IN_SW_GPRE_ANSI	, 0, "ANSI"			, 0, 0, 0, false, 0, 0, "\t\tgenerate ANSI85 compatible COBOL"},
-	{IN_SW_GPRE_RMCOBOL	, 0, "RMC"			, 0, 0, 0, false, 0, 0, "\t\tRM/Cobol"},
+	{IN_SW_GPRE_COB		, 0, "COB"			, 0, 0, 0, false, false, 0, 0, "\t\textended COBOL program"},
+	{IN_SW_GPRE_ANSI	, 0, "ANSI"			, 0, 0, 0, false, false, 0, 0, "\t\tgenerate ANSI85 compatible COBOL"},
+	{IN_SW_GPRE_RMCOBOL	, 0, "RMC"			, 0, 0, 0, false, false, 0, 0, "\t\tRM/Cobol"},
 #endif
-	{IN_SW_GPRE_Z		, 0, "Z"			, 0, 0, 0, false, 0, 0, "\t\tprint software version"},
-	{IN_SW_GPRE_BASE	, 0, "BASE"			, 0, 0, 0, false, 0, 0, "\t\tbase directory for compiletime DB"},
+	{IN_SW_GPRE_Z		, 0, "Z"			, 0, 0, 0, false, false, 0, 0, "\t\tprint software version"},
+	{IN_SW_GPRE_BASE	, 0, "BASE"			, 0, 0, 0, false, false, 0, 0, "\t\tbase directory for compiletime DB"},
 #ifdef GPRE_COBOL
-	{IN_SW_GPRE_DATE_FMT, 0, "DFM"			, 0, 0, 0, false, 0, 0, "\t\tCobol date format"},
+	{IN_SW_GPRE_DATE_FMT, 0, "DFM"			, 0, 0, 0, false, false, 0, 0, "\t\tCobol date format"},
 #endif
-	{IN_SW_NO_QLI		, 0, "NOQLI"		, 0, 0, 0, false, 0, 0, "\t\tsupress QLI syntax"},
-	{IN_SW_GPRE_0		, 0, NULL			, 0, 0, 0, false, 0, 0, NULL}
+	{IN_SW_NO_QLI		, 0, "NOQLI"		, 0, 0, 0, false, false, 0, 0, "\t\tsuppress QLI syntax"},
+	{IN_SW_GPRE_0		, 0, NULL			, 0, 0, 0, false, false, 0, 0, NULL}
 };

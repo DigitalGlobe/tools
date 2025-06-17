@@ -435,7 +435,7 @@ CREATE TABLE sales
                         CHECK (order_status in
                             ('new', 'open', 'shipped', 'waiting')),
     order_date      TIMESTAMP
-                        DEFAULT 'NOW' 
+                        DEFAULT 'NOW'
                         NOT NULL,
     ship_date       TIMESTAMP
                         CHECK (ship_date >= order_date OR ship_date IS NULL),
@@ -494,7 +494,7 @@ COMMIT;
 /****************************************************************************
  *
  *	Create stored procedures.
- * 
+ *
 *****************************************************************************/
 
 
@@ -541,7 +541,6 @@ BEGIN
 	WHEN SQLCODE -530 DO
 		EXCEPTION unknown_emp_id;
 	END
-	SUSPEND;
 END !!
 
 
@@ -605,7 +604,6 @@ BEGIN
 	IF (any_sales > 0) THEN
 	BEGIN
 		EXCEPTION reassign_sales;
-		SUSPEND;
 	END
 
 	/*
@@ -639,8 +637,6 @@ BEGIN
 	 */
 	DELETE FROM employee
 	WHERE emp_no = :emp_num;
-
-	SUSPEND;
 END !!
 
 
@@ -841,14 +837,12 @@ BEGIN
 	IF (ord_stat = 'shipped') THEN
 	BEGIN
 		EXCEPTION order_already_shipped;
-		SUSPEND;
 	END
 
 	/*	Customer is on hold. */
 	ELSE IF (hold_stat = '*') THEN
 	BEGIN
 		EXCEPTION customer_on_hold;
-		SUSPEND;
 	END
 
 	/*
@@ -865,12 +859,6 @@ BEGIN
 	DO
 	BEGIN
 		EXCEPTION customer_check;
-
-		UPDATE customer
-		SET on_hold = '*'
-		WHERE cust_no = :cust_no;
-
-		SUSPEND;
 	END
 
 	/*
@@ -879,8 +867,6 @@ BEGIN
 	UPDATE sales
 	SET order_status = 'shipped', ship_date = 'NOW'
 	WHERE po_number = :po_num;
-
-	SUSPEND;
 END !!
 
 
@@ -897,7 +883,7 @@ BEGIN
            AND (language_req IS NOT NULL))
     INTO :languages;
     IF (languages = ' ') THEN  /* Prints 'NULL' instead of blanks */
-       languages = 'NULL';         
+       languages = 'NULL';
     i = i +1;
     SUSPEND;
   END
@@ -905,16 +891,16 @@ END!!
 
 
 
-CREATE PROCEDURE all_langs RETURNS 
-    (code VARCHAR(5), grade VARCHAR(5), 
+CREATE PROCEDURE all_langs RETURNS
+    (code VARCHAR(5), grade VARCHAR(5),
      country VARCHAR(15), LANG VARCHAR(15)) AS
     BEGIN
-	FOR SELECT job_code, job_grade, job_country FROM job 
+	FOR SELECT job_code, job_grade, job_country FROM job
 		INTO :code, :grade, :country
 
 	DO
 	BEGIN
-	    FOR SELECT languages FROM show_langs 
+	    FOR SELECT languages FROM show_langs
  		    (:code, :grade, :country) INTO :lang DO
 	        SUSPEND;
 	    /* Put nice separators between rows */

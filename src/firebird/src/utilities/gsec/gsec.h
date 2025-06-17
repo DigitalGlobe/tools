@@ -24,112 +24,55 @@
 #ifndef UTILITIES_GSEC_H
 #define UTILITIES_GSEC_H
 
-#include "../jrd/ThreadData.h"
-#include "../jrd/jrd_pwd.h"
+#include "firebird/Interface.h"
+#include "../common/ThreadData.h"
 #include "../jrd/constants.h"
 
 const USHORT GSEC_MSG_FAC	= 18;
 const int MSG_LENGTH		= 128;
 //#define QUERY_LENGTH	256
 
+namespace Auth
+{
+
+class UserData;
+
 /* structure to hold information from the command line, including the
    operation to perform and any parameters entered (sizes are determined
    by the size of the fields in the USERS relation in USERINFO.GDB) */
 
-const int ADD_OPER		= 1;
-const int DEL_OPER		= 2;
-const int DIS_OPER		= 3;
-const int MOD_OPER		= 4;
-const int QUIT_OPER		= 5;
-const int HELP_OPER		= 6;
-//const int VERSION_OPER	= 7;
-const int MAP_SET_OPER	= 8;
-const int MAP_DROP_OPER	= 9;
-const int OLD_DIS_OPER	= 10;
+const unsigned int ADD_OPER		= Firebird::IUser::OP_USER_ADD;
+const unsigned int MOD_OPER		= Firebird::IUser::OP_USER_MODIFY;
+const unsigned int DEL_OPER		= Firebird::IUser::OP_USER_DELETE;
+const unsigned int DIS_OPER		= Firebird::IUser::OP_USER_DISPLAY;
+const unsigned int MAP_SET_OPER	= Firebird::IUser::OP_USER_SET_MAP;
+const unsigned int MAP_DROP_OPER	= Firebird::IUser::OP_USER_DROP_MAP;
+// Following operations never go to plugins
+const unsigned int QUIT_OPER	= 101;
+const unsigned int HELP_OPER	= 102;
+const unsigned int ADDMOD_OPER	= 103;
+const unsigned int OLD_DIS_OPER	= 104;
 
-const int USER_NAME_LEN	= 133;
-const int ALT_NAME_LEN	= 129;
-const int NAME_LEN		= 33;
-//const int PASS_LEN		= MAX_PASSWORD_LENGTH + 1;
-const int _SERVER_LEN	= 128;
-const int DATABASE_LEN  = _SERVER_LEN + MAXPATHLEN;
-
-struct internal_user_data
-{
-	int		operation;						// what's to be done
-	TEXT	user_name [USER_NAME_LEN];		// the user's name
-	bool	user_name_entered;				// user name entered flag
-	int		uid;							// the user's id
-	bool	uid_entered;					// UID entered flag
-	bool	uid_specified;					// UID specified flag
-	int		gid;							// the user's group id
-	bool	gid_entered;					// GID entered flag
-	bool	gid_specified;					// GID specified flag
-	TEXT	sys_user_name [ALT_NAME_LEN];	// the sys_user's name
-	bool	sys_user_entered;				// sys_user entered flag
-	bool	sys_user_specified;				// sys_user specified flag
-	TEXT	group_name [ALT_NAME_LEN];		// the group name
-	bool	group_name_entered;				// group_name entered flag
-	bool	group_name_specified;			// group_name specified flag
-	TEXT	password [NAME_LEN];			// the user's password
-	bool	password_entered;				// password entered flag
-	bool	password_specified;				// password specified flag
-	TEXT	first_name [NAME_LEN];			// the user's first name
-	bool	first_name_entered;				// first name entered flag
-	bool	first_name_specified;			// first name specified flag
-	TEXT	middle_name [NAME_LEN];			// the user's middle name
-	bool	middle_name_entered;			// middle name entered flag
-	bool	middle_name_specified;			// middle name specified flag
-	TEXT	last_name [NAME_LEN];			// the user's last name
-	bool	last_name_entered;				// last name entered flag
-	bool	last_name_specified;			// last name specified flag
-	TEXT	dba_user_name [USER_NAME_LEN];	// the user's name
-	bool	dba_user_name_entered;			// user name entered flag
-	bool	dba_user_name_specified;		// database specified flag
-	TEXT	dba_trust_user_name [USER_NAME_LEN];	// the trusted dba user's name
-	bool	dba_trust_user_name_entered;	// trusted dba user name entered flag
-	bool	dba_trust_user_name_specified;	// trusted dba user name specified flag
-	bool	trusted_role;					// use trusted role to authenticate
-	TEXT	dba_password [NAME_LEN];		// the user's name
-	bool	dba_password_entered;			// user name entered flag
-	bool	dba_password_specified;			// database specified flag
-	TEXT	sql_role_name [NAME_LEN];		// the user's role
-	bool	sql_role_name_entered;			// role entered flag
-	bool	sql_role_name_specified;		// role specified flag
-	TEXT	database_name [DATABASE_LEN];	// database to manage name
-	bool	database_name_entered;			// database entered flag
-	bool	database_name_specified;		// database specified flag
-#ifdef TRUSTED_AUTH
-	bool	trusted_auth;					// use trusted authentication
-#endif
-	int		admin;							// the user is admin of security DB
-	bool	admin_entered;					// admin entered flag
-	bool	admin_specified;				// admin specified flag
-
-	// force NULLs in this ugly structure to avoid foolish bugs
-	internal_user_data()
-	{
-		memset(this, 0, sizeof *this);
-	}
-};
+} // namespace Auth
 
 namespace Firebird
 {
 	class UtilSvc;
 }
 
-class tsec : public ThreadData
+class tsec : public Firebird::ThreadData
 {
 public:
 	explicit tsec(Firebird::UtilSvc* uf)
 		: ThreadData(ThreadData::tddSEC), utilSvc(uf),
-		tsec_user_data(0), tsec_exit_code(0), tsec_throw(false),
+		tsec_user_data(NULL),
+		tsec_exit_code(0), tsec_throw(false),
 		tsec_interactive(false), tsec_sw_version(false)
 	{
 	}
 
 	Firebird::UtilSvc*	utilSvc;
-	internal_user_data*	tsec_user_data;
+	Auth::UserData*		tsec_user_data;
 	int					tsec_exit_code;
 	bool				tsec_throw;
 	bool				tsec_interactive;
@@ -255,6 +198,7 @@ const USHORT GsecMsg100	= 100;	// -ma(pping) {set|drop}
 const USHORT GsecMsg101 = 101;	// use gsec -? to get help
 const USHORT GsecMsg102 = 102;	// -adm(in) {yes|no}
 const USHORT GsecMsg103	= 103;	// invalid parameter for -ADMIN, only YES or NO is accepted
+const USHORT GsecMsg104	= 104;	// not enough privileges to complete operation
 
 #endif // UTILITIES_GSEC_H
 

@@ -31,7 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../gpre/gpre.h"
-#include "../jrd/ibase.h"
+#include "ibase.h"
 #include "../jrd/intl.h"
 #include "../jrd/constants.h"
 #include "../gpre/cme_proto.h"
@@ -47,10 +47,6 @@
 #include "../common/utils_proto.h"
 
 
-#ifdef FLINT_CACHE
-const int MIN_CACHE_BUFFERS	= 250;
-const int DEF_CACHE_BUFFERS	= 1000;
-#endif
 const int DEFAULT_BLOB_SEGMENT_LENGTH	= 80;	// bytes
 
 const char* const OLD_CONTEXT = "OLD";
@@ -107,9 +103,6 @@ static act* act_whenever();
 
 static bool			check_filename(const TEXT *);
 static void			connect_opts(const TEXT**, const TEXT**, const TEXT**, const TEXT**, USHORT*);
-#ifdef FLINT_CACHE
-static gpre_file*	define_cache();
-#endif
 static gpre_file*	define_file();
 static gpre_file*	define_log_file();
 static gpre_dbb*	dup_dbb(const gpre_dbb*);
@@ -1138,15 +1131,8 @@ static act* act_alter_database()
 				; // ignore DROP LOG database->dbb_flags |= DBB_drop_log;
 			else if (MSC_match(KW_CASCADE))
 				; // ignore DROP CASCADE database->dbb_flags |= DBB_cascade;
-#ifdef FLINT_CACHE
-			else if (MSC_match(KW_CACHE))
-				; // ignore DROP CACHE database->dbb_flags |= DBB_drop_cache;
-			else
-				PAR_error("only log or cache can be dropped");
-#else
 			else
 				PAR_error("only log file can be dropped");
-#endif // FLINT_CACHE
 		}
 		else if (MSC_match(KW_ADD))
 		{
@@ -1189,10 +1175,6 @@ static act* act_alter_database()
 					database->dbb_logfiles = define_log_file();
 				}
 			}
-#ifdef FLINT_CACHE
-			else if (MSC_match(KW_CACHE))
-				database->dbb_cache_file = define_cache();
-#endif // FLINT_CACHE
 		}
 		else if (MSC_match(KW_SET))
 		{
@@ -1976,7 +1958,7 @@ static act* act_create_shadow()
 
 	act* action = MSC_action(request, ACT_create_shadow);
 	action->act_whenever = gen_whenever();
-	SLONG shadow_number = EXP_USHORT_ordinal(true);
+	const SLONG shadow_number = EXP_USHORT_ordinal(true);
 
 	USHORT file_flags = 0;
 
@@ -2167,8 +2149,8 @@ static act* act_create_view()
 //____________________________________________________________
 //
 //		Recognize BEGIN/END DECLARE SECTION,
-//     and mark it as a good place to put miscellaneous
-//     global routine stuff.
+//		and mark it as a good place to put miscellaneous
+//		global routine stuff.
 //
 
 static act* act_d_section(act_t type)
@@ -2302,9 +2284,6 @@ static act* act_declare()
 		}
 	} // end scope
 
-#ifdef SCROLLABLE_CURSORS
-	bool scroll = false;
-#endif
 	act* action = NULL;
 	gpre_sym* symbol = PAR_symbol(SYM_cursor);
 
@@ -2313,13 +2292,6 @@ static act* act_declare()
 	case KW_TABLE:
 		return (act_declare_table(symbol, 0));
 
-#ifdef SCROLLABLE_CURSORS
-	case KW_SCROLL:
-		PAR_get_token();
-		scroll = true;
-		if (gpreGlob.token_global.tok_keyword != KW_CURSOR)
-			CPR_s_error("CURSOR");
-#endif
 	case KW_CURSOR:
 		PAR_get_token();
 		if (!MSC_match(KW_FOR))
@@ -2328,10 +2300,6 @@ static act* act_declare()
 		{
 			gpre_req* request = MSC_request(REQ_cursor);
 			request->req_flags |= REQ_sql_cursor | REQ_sql_declare_cursor;
-#ifdef SCROLLABLE_CURSORS
-			if (scroll)
-				request->req_flags |= REQ_scroll;
-#endif
 			symbol->sym_object = (gpre_ctx*) request;
 			action = MSC_action(request, ACT_cursor);
 			action->act_object = (ref*) symbol;
@@ -2669,7 +2637,7 @@ static act* act_delete()
 			{
 				// does not specify transaction clause in
 				// "delete ... where current of cursor" stmt
-				const size_t trans_nm_len = strlen(request->req_trans);
+				const int trans_nm_len = static_cast<int>(strlen(request->req_trans));
 				char* str_2 = (char*) MSC_alloc(trans_nm_len + 1);
 				memcpy(str_2, request->req_trans, trans_nm_len);
 				transaction = str_2;
@@ -3138,113 +3106,7 @@ static act* act_fetch()
 
 	// Statement is static SQL
 
-#ifdef SCROLLABLE_CURSORS
-	// parse the fetch orientation
-
-	USHORT direction = blr_forward;
-	const TEXT* direction_string = NULL;
-	gpre_nod* offset_node = NULL;
-
-	if (!MSC_match(KW_NEXT))
-	{
-		if (MSC_match(KW_PRIOR))
-		{
-			direction = blr_backward;
-			direction_string = "1";
-		}
-		else if (MSC_match(KW_FIRST))
-		{
-			direction = blr_bof_forward;
-			direction_string = "2";
-		}
-		else if (MSC_match(KW_LAST))
-		{
-			direction = blr_eof_backward;
-			direction_string = "3";
-		}
-		else if (MSC_match(KW_RELATIVE))
-		{
-			direction = blr_forward;
-			direction_string = "0";
-			offset_node = SQE_value(0, false, NULL, NULL);
-			PAR_get_token();
-		}
-		else if (MSC_match(KW_ABSOLUTE))
-		{
-			direction = blr_bof_forward;
-			direction_string = "2";
-			offset_node = SQE_value(0, false, NULL, NULL);
-			PAR_get_token();
-		}
-	}
-
-	MSC_match(KW_FROM);
-#endif
-
 	gpre_req* request = par_cursor(NULL);
-
-#ifdef SCROLLABLE_CURSORS
-	// if scrolling is required, set up the offset and direction parameters
-	// to be passed to the running request via the asynchronous message--
-	// there could be multiple FETCH statements, so we need to store multiple
-	// value blocks, one for each FETCH statement
-
-	if (direction != blr_forward)
-	{
-		if (!(request->req_flags & REQ_scroll))
-			PAR_error("Must use SCROLL modifier for DECLARE CURSOR to enable scrolling.");
-
-		// create a literal for the direction parameter
-
-		ref* reference = request->req_avalues;
-		if (!reference)
-			reference = request->req_avalues = (ref*) MSC_alloc(REF_LEN);
-
-		gpre_value* value = reference->ref_values;
-		if (!value)
-			reference->ref_values = value = (gpre_value*) MSC_alloc(VAL_LEN);
-		else
-		{
-			while (value->val_next) {
-				value = value->val_next;
-			}
-			value->val_next = (gpre_value*) MSC_alloc(VAL_LEN);
-			value = value->val_next;
-		}
-
-		TEXT* string = (TEXT*) MSC_alloc(2);
-		value->val_value = string;
-		MSC_copy(direction_string, 1, string);
-
-		// create a reference to the offset variable or literal
-
-		if (!reference->ref_next)
-			reference->ref_next = (ref*) MSC_alloc(REF_LEN);
-		reference = reference->ref_next;
-
-		value = reference->ref_values;
-		if (!value)
-			reference->ref_values = value = (gpre_value*) MSC_alloc(VAL_LEN);
-		else
-		{
-			while (value->val_next) {
-				value = value->val_next;
-			}
-			value->val_next = (gpre_value*) MSC_alloc(VAL_LEN);
-			value = value->val_next;
-		}
-
-		if (offset_node)
-			value->val_value = ((ref*) offset_node->nod_arg[0])->ref_value;
-		else
-		{
-			const TEXT* offset_string = "1";
-			string = (TEXT*) MSC_alloc(2);
-			value->val_value = string;
-			MSC_copy(offset_string, 1, string);
-		}
-	}
-#endif
 
 	if (request->req_flags & REQ_sql_blob_create)
 		PAR_error("Fetching from a blob being created is not allowed.");
@@ -3973,6 +3835,7 @@ static act* act_open_blob( act_t act_op, gpre_sym* symbol)
 		{
 			blob->blb_const_from_type = PAR_blob_subtype(request->req_database);
 			if (gpreGlob.token_global.tok_keyword == KW_CHAR)
+			{
 				if (blob->blb_const_from_type == isc_blob_text)
 				{
 					blob->blb_from_charset = par_char_set();
@@ -3983,25 +3846,34 @@ static act* act_open_blob( act_t act_op, gpre_sym* symbol)
 				}
 				else
 					PAR_error("Only text BLOBS can specify CHARACTER SET");
+			}
 			else if (blob->blb_const_from_type == isc_blob_text)
+			{
 				if (act_op == ACT_blob_create)
 					blob->blb_from_charset = CS_dynamic;
 				else
 					blob->blb_from_charset = field->fld_charset_id;
+			}
 		}
 		else
 		{
 			blob->blb_const_from_type = field->fld_sub_type;
 			if (blob->blb_const_from_type == isc_blob_text)
+			{
 				if (act_op == ACT_blob_create)
 					blob->blb_from_charset = CS_dynamic;
 				else
 					blob->blb_from_charset = field->fld_charset_id;
+			}
 		}
+
 		if (!MSC_match(KW_TO))
 			CPR_s_error("TO");
+
 		blob->blb_const_to_type = PAR_blob_subtype(request->req_database);
+
 		if (gpreGlob.token_global.tok_keyword == KW_CHAR)
+		{
 			if (blob->blb_const_to_type == isc_blob_text)
 			{
 				blob->blb_to_charset = par_char_set();
@@ -4012,11 +3884,14 @@ static act* act_open_blob( act_t act_op, gpre_sym* symbol)
 			}
 			else
 				PAR_error("Only text BLOBS can specify CHARACTER SET");
+		}
 		else if (blob->blb_const_to_type == isc_blob_text)
+		{
 			if (act_op == ACT_blob_create)
 				blob->blb_to_charset = field->fld_charset_id;
 			else
 				blob->blb_to_charset = CS_dynamic;
+		}
 	}
 	else
 	{
@@ -4175,7 +4050,7 @@ static act* act_procedure()
 		do {
 			ref* reference = (ref*) SQE_variable(request, false, NULL, NULL);
 			*ref_ptr = reference;
-			if (reference->ref_field = field)
+			if ((reference->ref_field = field))
 				field = field->fld_next;
 			ref_ptr = &reference->ref_next;
 			outputs++;
@@ -4549,6 +4424,12 @@ static act* act_set_transaction()
 			continue;
 		}
 
+		if (MSC_match(KW_AUTO_RELEASE_TEMP_BLOBID))
+		{
+			trans->tra_flags |= TRA_auto_release_temp_blobid;
+			continue;
+		}
+
 		break;
 	}
 
@@ -4709,9 +4590,10 @@ static act* act_update()
 			if (transaction)
 				PAR_error("different transaction for select and update");
 			else
-			{				// does not specify transaction clause in
+			{
+				// does not specify transaction clause in
 				// "update ... where cuurent of cursor" stmt
-				const USHORT trans_nm_len = strlen(request->req_trans);
+				const USHORT trans_nm_len = static_cast<USHORT>(strlen(request->req_trans));
 				char* newtrans = (SCHAR *) MSC_alloc(trans_nm_len + 1);
 				transaction = newtrans;
 				memcpy(newtrans, request->req_trans, trans_nm_len);
@@ -4954,7 +4836,7 @@ static act* act_upsert(void)
 
 	gpre_req* request = MSC_request(REQ_mass_update);
 	request->req_trans = transaction;
-	gpre_ctx* context = SQE_context(request);
+	gpre_ctx* const context = SQE_context(request);
 	gpre_rel* relation = context->ctx_relation;
 
 	int count = 0;
@@ -5214,7 +5096,7 @@ static act* act_upsert(void)
 	act* action = MSC_action(request, ACT_loop);
 	action->act_object = ref_list;
 	action->act_whenever = gen_whenever();
-	return action;
+ 	return action;
 }
 
 
@@ -5281,7 +5163,7 @@ static act* act_whenever()
 
 static bool check_filename(const TEXT* name)
 {
-	const USHORT l = strlen(name);
+	const USHORT l = static_cast<USHORT>(strlen(name));
 	if (!l)
 		return true;
 
@@ -5290,13 +5172,6 @@ static bool check_filename(const TEXT* name)
 		if (p[0] == ':' && p[1] == ':')
 			return false;
 	}
-
-	// CVC: what's this crap? It's totally useless! Maybe a copy/paste?
-	//TEXT file_name[256];
-	//l = MIN(l, sizeof(file_name) - 1);
-	//strncpy(file_name, name, l);
-	//file_name[l] = '\0';
-
 	return true;
 }
 
@@ -5347,46 +5222,6 @@ static void connect_opts(const TEXT** user,
 	}
 
 }
-
-#ifdef FLINT_CACHE
-//____________________________________________________________
-//
-//		Add a shared cache to an existing database.
-//
-
-static gpre_file* define_cache()
-{
-	gpre_file* file = (gpre_file*) MSC_alloc(FIL_LEN);
-	if (isQuoted(gpreGlob.token_global.tok_type))
-	{
-		TEXT* string = (TEXT*) MSC_alloc(gpreGlob.token_global.tok_length + 1);
-		file->fil_name = string;
-		MSC_copy(gpreGlob.token_global.tok_string, gpreGlob.token_global.tok_length, string);
-		PAR_get_token();
-	}
-	else
-		CPR_s_error("<quoted filename>");
-	if (!check_filename(file->fil_name))
-		PAR_error("node name not permitted");	// a node name is not permitted in a shared cache file name
-
-	if (MSC_match(KW_LENGTH))
-	{
-		file->fil_length = EXP_ULONG_ordinal(true);
-		if (file->fil_length < MIN_CACHE_BUFFERS)
-		{
-			TEXT err_string[ERROR_LENGTH];
-			sprintf(err_string, "Minimum of %d cache pages required", MIN_CACHE_BUFFERS);
-			PAR_error(err_string);
-		}
-		MSC_match(KW_PAGES);
-	}
-	else
-		file->fil_length = DEF_CACHE_BUFFERS;	// default cache buffers
-
-	return file;
-}
-#endif
-
 //____________________________________________________________
 //
 //		Add a new file to an existing database.
@@ -5494,7 +5329,7 @@ static gpre_dbb* dup_dbb(const gpre_dbb* db)
 
 //____________________________________________________________
 //
-//       Report an error with parameter
+//		Report an error with parameter
 //
 
 static void error(const TEXT* format, const TEXT* string2)
@@ -5508,7 +5343,7 @@ static void error(const TEXT* format, const TEXT* string2)
 
 //____________________________________________________________
 //
-//       Extract string from "string" in
+//		Extract string from "string" in
 //		token.
 //
 
@@ -5661,8 +5496,7 @@ static gpre_index* make_index( gpre_req* request, const TEXT* string)
 		// CVC: I've kept this silly code. What's the idea of the copy here?
 		// If we are trying to limit the index name, the correct length is NAME_SIZE.
 		TEXT s[ERROR_LENGTH];
-		strncpy(s, string, sizeof(s));
-		s[sizeof(s) - 1] = 0;
+		fb_utils::copy_terminate(s, string, sizeof(s));
 		gpre_index* index = MET_make_index(s);
 		if (request)
 			request->req_database = gpreGlob.isc_databases;
@@ -5685,8 +5519,7 @@ static gpre_rel* make_relation( gpre_req* request, const TEXT* relation_name)
 	if (gpreGlob.isc_databases && !gpreGlob.isc_databases->dbb_next)
 	{
 		TEXT r[ERROR_LENGTH];
-		strncpy(r, relation_name, sizeof(r));
-		r[sizeof(r) - 1] = 0;
+		fb_utils::copy_terminate(r, relation_name, sizeof(r));
 
 		gpre_rel* relation = MET_make_relation(r);
 		relation->rel_database = gpreGlob.isc_databases;
@@ -6188,7 +6021,7 @@ static cnstrt* par_field_constraint( gpre_req* request, gpre_fld* for_field)
 //____________________________________________________________
 //
 //		Parse the INTO clause for a dynamic SQL statement.
-//      Nobody uses its returned value currently.
+//		Nobody uses its returned value currently.
 
 static bool par_into( dyn* statement)
 {
@@ -6825,15 +6658,8 @@ static bool tail_database(act_t action_type, gpre_dbb* database)
 				; // Ignore DROP LOG database->dbb_flags |= DBB_drop_log;
 			else if (MSC_match(KW_CASCADE))
 				; // ignore DROP CASCADE database->dbb_flags |= DBB_cascade;
-#ifdef FLINT_CACHE
-			else if (MSC_match(KW_CACHE))
-				; // ignore DROP CACHE database->dbb_flags |= DBB_drop_cache;
-			else
-				PAR_error("only log files or shared cache can be dropped");	// msg 121 only SECURITY_CLASS, DESCRIPTION and CACHE can be dropped
-#else
 			else
 				PAR_error("only log files can be dropped");	// msg 121 only SECURITY_CLASS, DESCRIPTION and CACHE can be dropped
-#endif // FLINT_CACHE
 
 			//else if (MSC_match (KW_DESCRIP))
 			//	database->dbb_flags	|= DBB_null_description;
@@ -6908,10 +6734,6 @@ static bool tail_database(act_t action_type, gpre_dbb* database)
 				database->dbb_logfiles = define_log_file();
 			}
 		}
-#ifdef FLINT_CACHE
-		else if (MSC_match(KW_CACHE))
-			database->dbb_cache_file = define_cache();
-#endif // FLINT_CACHE
 		else
 			break;
 	}
@@ -6988,8 +6810,7 @@ void SQL_resolve_identifier( const TEXT* err_mesg, TEXT* str_in, int in_size)
 			// or SQL escape sequences in quoted identifiers.
 			if (tk_string[0] == '\"')
 				strip_quotes(gpreGlob.token_global);
-			strncpy(str, tk_string, len);
-			str[len] = 0;
+			fb_utils::copy_terminate(str, tk_string, len + 1);
 			break;
 		case tok_ident:
 			to_upcase(tk_string, str, len + 1);

@@ -68,7 +68,8 @@ ULONG CVJIS_eucj_to_unicode(csconvert* obj,
 
 		// Step 1: Convert from EUC to JIS
 		if (!(ch1 & 0x80))
-		{	// 1 byte SCHAR
+		{
+			// 1 byte SCHAR
 			// Plane 0 of EUC-J is defined as ASCII
 			wide = ch1;
 			this_len = 1;
@@ -106,7 +107,7 @@ ULONG CVJIS_eucj_to_unicode(csconvert* obj,
 		*err_code = CS_TRUNCATION_ERROR;
 	}
 	*err_position = src_start - src_len;
-	return ((dest_ptr - start) * sizeof(*dest_ptr));
+	return static_cast<ULONG>((dest_ptr - start) * sizeof(*dest_ptr));
 }
 
 
@@ -171,17 +172,21 @@ ULONG CVJIS_sjis_to_unicode(csconvert* obj,
 	{
 		// Step 1: Convert from SJIS to JIS code
 		if (*sjis_str & 0x80)
-		{	// Non-Ascii - High bit set
+		{
+			// Non-Ascii - High bit set
 			const UCHAR c1 = *sjis_str++;
 
 			if (SJIS1(c1))
-			{	// First byte is a KANJI
-				if (sjis_len == 1) {	// truncated KANJI
+			{
+				// First byte is a KANJI
+				if (sjis_len == 1) {
+					// truncated KANJI
 					*err_code = CS_BAD_INPUT;
 					break;
 				}
 				const UCHAR c2 = *sjis_str++;
-				if (!(SJIS2(c2))) {	// Bad second byte
+				if (!(SJIS2(c2))) {
+					// Bad second byte
 					*err_code = CS_BAD_INPUT;
 					break;
 				}
@@ -201,14 +206,16 @@ ULONG CVJIS_sjis_to_unicode(csconvert* obj,
 				table = 2;
 			}
 			else
-			{				// It is some bad character
+			{
+				// It is some bad character
 
 				*err_code = CS_BAD_INPUT;
 				break;
 			}
 		}
 		else
-		{					// it is a ASCII
+		{
+			// it is a ASCII
 
 			wide = *sjis_str++;
 			this_len = 1;
@@ -244,7 +251,7 @@ ULONG CVJIS_sjis_to_unicode(csconvert* obj,
 		*err_code = CS_TRUNCATION_ERROR;
 	}
 	*err_position = src_start - sjis_len;
-	return ((dest_ptr - start) * sizeof(*dest_ptr));
+	return static_cast<ULONG>((dest_ptr - start) * sizeof(*dest_ptr));
 }
 
 
@@ -461,7 +468,8 @@ ULONG CVJIS_unicode_to_sjis(csconvert* obj,
 		USHORT tmp1 = jis_ch / 256;
 		USHORT tmp2 = jis_ch % 256;
 		if (tmp1 == 0)
-		{		// ASCII character
+		{
+			// ASCII character
 			*sjis_str++ = tmp2;
 			sjis_len--;
 			unicode_len -= sizeof(*unicode_str);
@@ -469,7 +477,8 @@ ULONG CVJIS_unicode_to_sjis(csconvert* obj,
 		}
 		seven2eight(&tmp1, &tmp2);
 		if (tmp1 == 0)
-		{		// half-width kana ?
+		{
+			// half-width kana ?
 			fb_assert(SJIS_SINGLE(tmp2));
 			*sjis_str++ = tmp2;
 			unicode_len -= sizeof(*unicode_str);
@@ -494,7 +503,7 @@ ULONG CVJIS_unicode_to_sjis(csconvert* obj,
 		*err_code = CS_TRUNCATION_ERROR;
 	}
 	*err_position = src_start - unicode_len;
-	return ((sjis_str - start) * sizeof(*sjis_str));
+	return static_cast<ULONG>((sjis_str - start) * sizeof(*sjis_str));
 }
 
 
@@ -546,7 +555,8 @@ ULONG CVJIS_unicode_to_eucj(csconvert* obj, ULONG unicode_len, const UCHAR* p_un
 		const USHORT tmp1 = jis_ch / 256;
 		const USHORT tmp2 = jis_ch % 256;
 		if (tmp1 == 0)
-		{		// ASCII character
+		{
+			// ASCII character
 			fb_assert(!(tmp2 & 0x80));
 			*eucj_str++ = tmp2;
 			eucj_len--;
@@ -572,7 +582,7 @@ ULONG CVJIS_unicode_to_eucj(csconvert* obj, ULONG unicode_len, const UCHAR* p_un
 		*err_code = CS_TRUNCATION_ERROR;
 	}
 	*err_position = src_start - unicode_len;
-	return ((eucj_str - start) * sizeof(*eucj_str));
+	return static_cast<ULONG>((eucj_str - start) * sizeof(*eucj_str));
 }
 
 
@@ -690,12 +700,14 @@ static USHORT CVJIS_euc2sjis(csconvert* obj, UCHAR *sjis_str, USHORT sjis_len,
 	while (euc_len && sjis_len)
 	{
 		if (*euc_str & 0x80)
-		{	// Non-Ascii - High bit set
+		{
+			// Non-Ascii - High bit set
 
 			UCHAR c1 = *euc_str++;
 
 			if (EUC1(c1))
-			{		// It is a EUC
+			{
+				// It is a EUC
 				if (euc_len == 1) {
 					*err_code = CS_BAD_INPUT;	// truncated EUC
 					break;
@@ -706,15 +718,18 @@ static USHORT CVJIS_euc2sjis(csconvert* obj, UCHAR *sjis_str, USHORT sjis_len,
 					break;
 				}
 				if (c1 == 0x8e)
-				{	// Kana
+				{
+					// Kana
 					sjis_len--;
 					*sjis_str++ = c2;
 					euc_len -= 2;
 				}
 				else
-				{			// Kanji
+				{
+					// Kanji
 
-					if (sjis_len < 2) {	// buffer full
+					if (sjis_len < 2) {
+						// buffer full
 						*err_code = CS_TRUNCATION_ERROR;
 						break;
 					}
@@ -730,14 +745,16 @@ static USHORT CVJIS_euc2sjis(csconvert* obj, UCHAR *sjis_str, USHORT sjis_len,
 				}
 			}
 			else
-			{				// It is some bad character
+			{
+				// It is some bad character
 
 				*err_code = CS_BAD_INPUT;
 				break;
 			}
 		}
 		else
-		{					// ASCII
+		{
+			// ASCII
 			euc_len--;
 			sjis_len--;
 			*sjis_str++ = *euc_str++;
@@ -779,20 +796,25 @@ static USHORT CVJIS_sjis2euc(csconvert* obj, UCHAR *euc_str, USHORT euc_len,
 	{
 
 		if (*sjis_str & 0x80)
-		{	// Non-Ascii - High bit set
+		{
+			// Non-Ascii - High bit set
 			const UCHAR c1 = *sjis_str++;
 			if (SJIS1(c1))
-			{	// First byte is a KANJI
-				if (sjis_len == 1) {	// truncated KANJI
+			{
+				// First byte is a KANJI
+				if (sjis_len == 1) {
+					// truncated KANJI
 					*err_code = CS_BAD_INPUT;
 					break;
 				}
 				const UCHAR c2 = *sjis_str++;
-				if (!(SJIS2(c2))) {	// Bad second byte
+				if (!(SJIS2(c2))) {
+					// Bad second byte
 					*err_code = CS_BAD_INPUT;
 					break;
 				}
-				if (euc_len < 2) {	// buffer full
+				if (euc_len < 2) {
+					// buffer full
 					*err_code = CS_TRUNCATION_ERROR;
 					break;
 				}
@@ -803,7 +825,8 @@ static USHORT CVJIS_sjis2euc(csconvert* obj, UCHAR *euc_str, USHORT euc_len,
 			}
 			else if (SJIS_SINGLE(c1))
 			{
-				if (euc_len < 2) {	// buffer full
+				if (euc_len < 2) {
+					// buffer full
 					*err_code = CS_TRUNCATION_ERROR;
 					break;
 				}
@@ -813,13 +836,15 @@ static USHORT CVJIS_sjis2euc(csconvert* obj, UCHAR *euc_str, USHORT euc_len,
 				*euc_str++ = c1;
 			}
 			else
-			{				// It is some bad character
+			{
+				// It is some bad character
 				*err_code = CS_BAD_INPUT;
 				break;
 			}
 		}
 		else
-		{					// it is a ASCII
+		{
+			// it is a ASCII
 			euc_len--;
 			sjis_len--;
 			*euc_str++ = *sjis_str++;

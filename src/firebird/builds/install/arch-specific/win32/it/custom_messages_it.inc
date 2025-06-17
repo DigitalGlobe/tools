@@ -1,4 +1,4 @@
-it.MyAppName=Firebird Database Server %1
+Ôªøit.MyAppName=Firebird Database Server %1
 it.ServerInstall=Installazione completa di Server e strumenti di sviluppo.
 it.SuperServerInstall=Installazione completa di Super Server e strumenti di sviluppo.
 it.ClassicServerInstall=Installazione completa di Classic Server e strumenti di sviluppo.
@@ -17,7 +17,7 @@ it.UseServiceTask=Esegui come &servizio?
 it.AutoStartTask=Esegui &Firebird automaticamente all'avvio del sistema?
 it.SuperClassicTask="Use SuperClassic?"
 it.CopyFbClientToSysTask=Copia la libreria client di &Firebird nella cartella di sistema?
-it.CopyFbClientAsGds32Task=Usa il nome &GDS32.DLL per la libreria client, per compatibilit‡ con precedenti versioni?
+it.CopyFbClientAsGds32Task=Usa il nome &GDS32.DLL per la libreria client, per compatibilit√† con precedenti versioni?
 it.InstallCPLAppletTask="Installa il &Pannello di controllo di Firebird?"
 it.instreg=Aggiornamento del registro di configurazione in corso
 it.instclientCopyFbClient=Copia del file fbclient.dll nella cartella di sistema in corso
@@ -32,13 +32,13 @@ it.instsvcRemove="Disinstallazione del servizio in corso"
 it.instappStartQuestion=Esegui Firebird ora?
 it.instappStartMsg=Avvio del server Firebird in corso
 
-it.InstallSummarySuffix1=Questa versione di Firebird diverr‡ l'istanza predefinita nel sistema.
+it.InstallSummarySuffix1=Questa versione di Firebird diverr√† l'istanza predefinita nel sistema.
 it.InstallSummarySuffix2=    Attenzione: se si installa questa versione di Firebird su
-it.InstallSummarySuffix3=    un sistema che ne contiene gi‡ una precedente, potrebbero
+it.InstallSummarySuffix3=    un sistema che ne contiene gi√† una precedente, potrebbero
 it.InstallSummarySuffix4=             verificarsi effetti imprevedibili.
 
-it.InstallSummaryCancel1= Se si procede con l'installazione, Firebird verr‡ installato ma non configurato.
-it.InstallSummaryCancel2= La configurazione dovr‡ essere effettuata manualmente.
+it.InstallSummaryCancel1= Se si procede con l'installazione, Firebird verr√† installato ma non configurato.
+it.InstallSummaryCancel2= La configurazione dovr√† essere effettuata manualmente.
 it.InstallSummaryCancel3= Si desidera ANNULLARE l'installazione?
 
 it.InstalledProducts=L'analisi preliminare ha evidenziato la presenza di %s %s di Firebird o InterBase.
@@ -46,7 +46,7 @@ it.InstalledProdCountSingular=versione
 it.InstalledProdCountPlural=versioni
 
 it.FbRunning1=Risulta al momento in esecuzione un'istanza di Firebird %s Server.
-it.FbRunning2=     » necessario arrestare l'applicazione o il servizio
+it.FbRunning2=     √à necessario arrestare l'applicazione o il servizio
 it.FbRunning3=                    prima di continuare.
 
 it.PreviousInstallBroken=   (Installazione apparentemente danneggiata - mancata corrispondenza dei numeri di versione.)
@@ -60,7 +60,7 @@ it.BugFixes= bug fixes. (Richiede Acrobat Reader.)
 it.Uninstall=Disinstallazione di Firebird %1
 it.Winsock2Web1=Winsock 2 non risulta installato.
 it.Winsock2Web2=Si prega di visitare il sito di aggiornamento relativo a Winsock 2
-it.NoWinsock2 = » necessario installare Winsock 2 prima di proseguire
+it.NoWinsock2 = √à necessario installare Winsock 2 prima di proseguire
 it.MSWinsock2Update = http://www.microsoft.com/windows95/downloads/contents/WUAdminTools/S_WUNetworkingTools/W95Sockets2/Default.asp
 
 it.RunCSNoGuardian=Esegui Firebird Classic Server (senza Guardian)

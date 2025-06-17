@@ -29,6 +29,7 @@
 
 #include "fb_types.h"
 #include "../common/classes/alloc.h"
+#include <atomic>
 
 namespace Firebird {
 
@@ -47,7 +48,8 @@ class InstanceControl
 public:
 	enum DtorPriority
 	{
-		STARTING_PRIORITY,
+		STARTING_PRIORITY,			// Not to be used out of class InstanceControl
+		PRIORITY_DETECT_UNLOAD,
 		PRIORITY_DELETE_FIRST,
 		PRIORITY_REGULAR,
 		PRIORITY_TLS_KEY
@@ -70,10 +72,16 @@ public:
 		virtual ~InstanceList();
 		static void destructors();
 
+		// remove self from common list under StaticMutex protection
+		void remove();
+
 	private:
-		InstanceList* next;
-		DtorPriority priority;
 		virtual void dtor() = 0;
+		void unlist();
+
+		InstanceList* next;
+		InstanceList* prev;
+		DtorPriority priority;
 	};
 
 	template <typename T, InstanceControl::DtorPriority P = InstanceControl::PRIORITY_REGULAR>
@@ -87,6 +95,11 @@ public:
 			: InstanceControl::InstanceList(P), link(l)
 		{
 			fb_assert(link);
+		}
+
+		void remove()
+		{
+			InstanceList::remove();
 		}
 
 		void dtor()
@@ -104,6 +117,8 @@ public:
 	static void destructors();
 	static void registerGdsCleanup(FPTR_VOID cleanup);
 	static void registerShutdown(FPTR_VOID shutdown);
+
+	static void cancelCleanup();
 };
 
 
@@ -126,10 +141,10 @@ public:
 	{
 		// This means - for objects with ctors/dtors that want to be global,
 		// provide ctor with MemoryPool& parameter. Even if it is ignored!
-		instance = FB_NEW(*getDefaultMemoryPool()) T(*getDefaultMemoryPool());
-		// Put ourself into linked list for cleanup.
+		instance = FB_NEW_POOL(*getDefaultMemoryPool()) T(*getDefaultMemoryPool());
+		// Put ourselves into linked list for cleanup.
 		// Allocated pointer is saved by InstanceList::constructor.
-		new InstanceControl::InstanceLink<GlobalPtr, P>(this);
+		FB_NEW InstanceControl::InstanceLink<GlobalPtr, P>(this);
 	}
 
 	T* operator->() throw()
@@ -152,15 +167,27 @@ template <typename C>
 class InitMutex
 {
 private:
-	volatile bool flag;
+	std::atomic<bool> flag;
+#ifdef DEV_BUILD
+	const char* from;
+#endif
 public:
-	InitMutex()
-		: flag(false) { }
+	explicit InitMutex(const char* f)
+		: flag(false)
+#ifdef DEV_BUILD
+			  , from(f)
+#define FB_LOCKED_FROM from
+#else
+#define FB_LOCKED_FROM NULL
+#endif
+	{ }
 	void init()
 	{
-		if (!flag) {
-			MutexLockGuard guard(*StaticMutex::mutex);
-			if (!flag) {
+		if (!flag)
+		{
+			MutexLockGuard guard(*StaticMutex::mutex, FB_LOCKED_FROM);
+			if (!flag)
+			{
 				C::init();
 				flag = true;
 			}
@@ -168,49 +195,142 @@ public:
 	}
 	void cleanup()
 	{
-		if (flag) {
-			MutexLockGuard guard(*StaticMutex::mutex);
-			if (flag) {
+		if (flag)
+		{
+			MutexLockGuard guard(*StaticMutex::mutex, FB_LOCKED_FROM);
+			if (flag)
+			{
 				C::cleanup();
 				flag = false;
 			}
 		}
 	}
 };
+#undef FB_LOCKED_FROM
 
-// InitInstance - initialize pointer to class once and only once,
-// DefaultInit uses default memory pool for it.
+// InitInstance - allocate instance of class T on first request.
 
 template <typename T>
-class DefaultInit
+class DefaultInstanceAllocator
 {
 public:
-	static T* init()
+	static T* create()
 	{
-		return FB_NEW(*getDefaultMemoryPool()) T(*getDefaultMemoryPool());
+		return FB_NEW_POOL(*getDefaultMemoryPool()) T(*getDefaultMemoryPool());
+	}
+
+	static void destroy(T* inst)
+	{
+		delete inst;
 	}
 };
 
-template <typename T,
-	typename I = DefaultInit<T> >
-class InitInstance
+template <class I>
+class DeleteInstance : private InstanceControl
+{
+public:
+	void registerInstance(I* instance)
+	{
+		// Put ourselves into linked list for cleanup.
+		// Allocated pointer is saved by InstanceList::constructor.
+		FB_NEW InstanceControl::InstanceLink<I>(instance);
+	}
+};
+
+template <class I>
+class TraditionalDelete
+{
+public:
+	TraditionalDelete()
+		: instance(nullptr)
+	{ }
+
+	void registerInstance(I* inst)
+	{
+		fb_assert(!instance);
+		instance = inst;
+	}
+
+	~TraditionalDelete()
+	{
+		if (instance)
+			instance->dtor();
+	}
+
+private:
+	I* instance;
+};
+
+template <typename T, class A = DefaultInstanceAllocator<T>, template <class I> class DestroyControl = DeleteInstance >
+class InitInstance : private DestroyControl<InitInstance<T, A, DestroyControl> >
 {
 private:
 	T* instance;
-	volatile bool flag;
+	std::atomic<bool> flag;
+	A allocator;
+
 public:
 	InitInstance()
-		: flag(false) { }
+		: instance(NULL), flag(false)
+	{ }
+
 	T& operator()()
 	{
-		if (!flag) {
-			MutexLockGuard guard(*StaticMutex::mutex);
-			if (!flag) {
-				instance = I::init();
+		if (!flag)
+		{
+			MutexLockGuard guard(*StaticMutex::mutex, "InitInstance");
+			if (!flag)
+			{
+				instance = allocator.create();
 				flag = true;
+				DestroyControl<InitInstance<T, A, DestroyControl> >::registerInstance(this);
 			}
 		}
 		return *instance;
+	}
+
+	void dtor()
+	{
+		MutexLockGuard guard(*StaticMutex::mutex, "InitInstance - dtor");
+		flag = false;
+		allocator.destroy(instance);
+		instance = NULL;
+	}
+};
+
+// Static - create instance of some class in static char[] buffer. Never destroy it.
+
+template <typename T>
+class StaticInstanceAllocator
+{
+private:
+	alignas(alignof(T)) char buf[sizeof(T)];
+
+public:
+	T* create()
+	{
+		return new(buf) T();
+	}
+
+	static void destroy(T*)
+	{ }
+};
+
+template <typename T>
+class Static : private InitInstance<T, StaticInstanceAllocator<T> >
+{
+public:
+	Static()
+	{ }
+
+	T* operator->()
+	{
+		return &(this->operator()());
+	}
+
+	T* operator&()
+	{
+		return operator->();
 	}
 };
 

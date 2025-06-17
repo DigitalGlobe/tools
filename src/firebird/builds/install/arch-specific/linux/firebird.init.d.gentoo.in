@@ -1,0 +1,54 @@
+#!/sbin/openrc-run
+#Gentoo Linux OpenRC
+# description: Start/Stop firebird database server
+#
+# This file belongs in /etc/init.d where it will be run
+# on system startup and shutdown to start the background
+# Firebird database server daemon
+
+fb_install_prefix=@prefix@
+
+# To run more instances of firebird:
+#   Copy @prefix@ somewhere
+#   Copy this script under a new name
+#   Change INSTANCE and FIREBIRD below (all instance names should be unique)
+#   Edit the copied firebird.conf to change at least RemoteServicePort
+#   Optionally run rc-update to autostart the new service
+INSTANCE=default
+FIREBIRD=@FB_CONFDIR@
+
+FBRunUser=firebird
+FBRunGroup=firebird
+
+fbRunDir=/var/run/firebird
+fbLockDir=/tmp/firebird
+
+pidfile="$fbRunDir/$INSTANCE.pid"
+FULLNAME="firebird server [$INSTANCE]"
+LD_LIBRARY_PATH=$FIREBIRD/lib:$LD_LIBRARY_PATH
+
+export FIREBIRD LD_LIBRARY_PATH
+
+# Normally this 3 lines are not needed, keep them just in case of something VERY starnge
+ISC_USER=
+ISC_PASSWORD=
+export ISC_USER ISC_PASSWORD
+
+GUARDIAN=$FIREBIRD/bin/fbguard
+if [ ! -x $GUARDIAN ]; then
+	GUARDIAN=@FB_SBINDIR@/fbguard
+fi
+
+command="${GUARDIAN}"
+command_args="-pidfile ${pidfile} -daemon -forever"
+start_stop_daemon_args="-p ${pidfile} -u ${FBRunUser}:${FBRunGroup}"
+
+start_pre() {
+	checkpath -q -d -m 0755 -o ${FBRunUser}:${FBRunGroup} ${fbRunDir} || return 1
+	checkpath -q -d -m 0770 -o ${FBRunUser}:${FBRunGroup} ${fbLockDir} || return 1
+}
+
+depend() {
+	need net
+}
+

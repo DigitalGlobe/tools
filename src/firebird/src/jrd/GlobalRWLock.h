@@ -34,7 +34,7 @@
 #include "../jrd/jrd.h"
 #include "../jrd/lck.h"
 #include "../jrd/lck_proto.h"
-#include "../include/fb_types.h"
+#include "fb_types.h"
 #include "os/pio.h"
 #include "../common/classes/condition.h"
 
@@ -52,14 +52,14 @@ DEFINE_TRACE_ROUTINE(cos_trace);
 
 namespace Jrd {
 
-typedef USHORT locktype_t;
+enum lck_t;
 
 class GlobalRWLock : public Firebird::PermanentStorage
 {
 public:
-	GlobalRWLock(thread_db* tdbb, MemoryPool& p, locktype_t lckType,
-			lck_owner_t lock_owner, bool lock_caching = true,
-			size_t lockLen = 0, const UCHAR* lockStr = NULL);
+	GlobalRWLock(thread_db* tdbb, MemoryPool& p,
+				 lck_t lckType, bool lock_caching = true,
+				 FB_SIZE_T lockLen = 0, const UCHAR* lockStr = NULL);
 
 	virtual ~GlobalRWLock();
 
@@ -69,7 +69,7 @@ public:
 	bool lockRead(thread_db* tdbb, SSHORT wait, const bool queueJump = false);
 	void unlockRead(thread_db* tdbb);
 	bool tryReleaseLock(thread_db* tdbb);
-	void shutdownLock();
+	void shutdownLock(thread_db* tdbb);
 
 protected:
 	// Flag to indicate that somebody is waiting via lock manager.
@@ -87,8 +87,9 @@ protected:
 
 	virtual void blockingAstHandler(thread_db* tdbb);
 
-private:
 	Firebird::Mutex counterMutex;	// Protects counter and blocking flag
+
+private:
 	ULONG pendingLock;
 
 	ULONG	readers;

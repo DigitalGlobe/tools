@@ -26,15 +26,14 @@
  */
 
 
-#ifndef FB_MISC_STATUS_H
-#define FB_MISC_STATUS_H
+#ifndef JRD_STATUS_H
+#define JRD_STATUS_H
 
-#include <stdlib.h>				// size_t
-#include "../jrd/common.h"		// ISC_STATUS
+#include "../common/status.h"
 
-const int MAX_ERRMSG_LEN	= 128;
-const int MAX_ERRSTR_LEN	= 1024;
+namespace Jrd
+{
+	typedef Firebird::CheckStatusWrapper FbStatusVector;
+}
 
-void PARSE_STATUS(const ISC_STATUS* status_vector, int &length, int &warning);
-
-#endif // FB_MISC_STATUS_H
+#endif // JRD_STATUS_H

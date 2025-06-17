@@ -47,7 +47,7 @@ CREATE DOMAIN lastname      AS VARCHAR(25) COLLATE FR_FR;
 
 CREATE DOMAIN phonenumber   AS VARCHAR(20);
 
-CREATE DOMAIN countryname   AS VARCHAR(15); 
+CREATE DOMAIN countryname   AS VARCHAR(15);
 
 CREATE DOMAIN addressline   AS VARCHAR(40);
 
@@ -441,7 +441,7 @@ CREATE TABLE sales
                         NOT NULL
                         CHECK (order_status in
                             ('new', 'open', 'shipped', 'waiting')),
-    order_date      TIMESTAMP 
+    order_date      TIMESTAMP
 			DEFAULT 'NOW'
                         NOT NULL,
     ship_date       TIMESTAMP
@@ -501,7 +501,7 @@ COMMIT;
 /****************************************************************************
  *
  *	Create stored procedures.
- * 
+ *
 *****************************************************************************/
 
 
@@ -548,7 +548,6 @@ BEGIN
 	WHEN SQLCODE -530 DO
 		EXCEPTION unknown_emp_id;
 	END
-	SUSPEND;
 END !!
 
 
@@ -612,7 +611,6 @@ BEGIN
 	IF (any_sales > 0) THEN
 	BEGIN
 		EXCEPTION reassign_sales;
-		SUSPEND;
 	END
 
 	/*
@@ -646,8 +644,6 @@ BEGIN
 	 */
 	DELETE FROM employee
 	WHERE emp_no = :emp_num;
-
-	SUSPEND;
 END !!
 
 
@@ -848,14 +844,12 @@ BEGIN
 	IF (ord_stat = 'shipped') THEN
 	BEGIN
 		EXCEPTION order_already_shipped;
-		SUSPEND;
 	END
 
 	/*	Customer is on hold. */
 	ELSE IF (hold_stat = '*') THEN
 	BEGIN
 		EXCEPTION customer_on_hold;
-		SUSPEND;
 	END
 
 	/*
@@ -872,22 +866,14 @@ BEGIN
 	DO
 	BEGIN
 		EXCEPTION customer_check;
-
-		UPDATE customer
-		SET on_hold = '*'
-		WHERE cust_no = :cust_no;
-
-		SUSPEND;
 	END
 
 	/*
 	 *	Ship the order.
 	 */
 	UPDATE sales
-	SET order_status = 'shipped', ship_date = 'NOW' 
+	SET order_status = 'shipped', ship_date = 'NOW'
 	WHERE po_number = :po_num;
-
-	SUSPEND;
 END !!
 
 
@@ -904,7 +890,7 @@ BEGIN
            AND (language_req IS NOT NULL))
     INTO :languages;
     IF (languages = ' ') THEN  /* Prints 'NULL' instead of blanks */
-       languages = 'NULL';         
+       languages = 'NULL';
     i = i +1;
     SUSPEND;
   END
@@ -912,16 +898,16 @@ END!!
 
 
 
-CREATE PROCEDURE all_langs RETURNS 
-    (code VARCHAR(5), grade VARCHAR(5), 
+CREATE PROCEDURE all_langs RETURNS
+    (code VARCHAR(5), grade VARCHAR(5),
      country VARCHAR(15), LANG VARCHAR(15)) AS
     BEGIN
-	FOR SELECT job_code, job_grade, job_country FROM job 
+	FOR SELECT job_code, job_grade, job_country FROM job
 		INTO :code, :grade, :country
 
 	DO
 	BEGIN
-	    FOR SELECT languages FROM show_langs 
+	    FOR SELECT languages FROM show_langs
  		    (:code, :grade, :country) INTO :lang DO
 	        SUSPEND;
 	    /* Put nice separators between rows */
@@ -944,7 +930,7 @@ CREATE PROCEDURE FRENCH_CUST_SORT
 RETURNS (customer VARCHAR(40), city VARCHAR(25), country VARCHAR(15))
 AS
 BEGIN
-        FOR SELECT customer, city, country 
+        FOR SELECT customer, city, country
 	    FROM customer ORDER BY customer
             INTO :customer, :city, :country
         DO
@@ -956,7 +942,7 @@ CREATE PROCEDURE GERMAN_CUST_SORT
 RETURNS (customer VARCHAR(40), city VARCHAR(25), country VARCHAR(15))
 AS
 BEGIN
-        FOR SELECT customer, city, country 
+        FOR SELECT customer, city, country
 	    FROM customer ORDER BY customer COLLATE DE_DE
             INTO :customer, :city, :country
         DO
@@ -968,7 +954,7 @@ CREATE PROCEDURE NORWAY_CUST_SORT
 RETURNS (customer VARCHAR(40), city VARCHAR(25), country VARCHAR(15))
 AS
 BEGIN
-        FOR SELECT customer, city, country 
+        FOR SELECT customer, city, country
 	    FROM customer ORDER BY customer COLLATE NO_NO
             INTO :customer, :city, :country
         DO

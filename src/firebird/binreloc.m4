@@ -48,30 +48,8 @@ AC_DEFUN([AM_BINRELOC],
 	if test "x$br_cv_binreloc" = "xyes"; then
 		BINRELOC_CFLAGS="-DENABLE_BINRELOC"
 		AC_DEFINE(ENABLE_BINRELOC,,[Use binary relocation?])
-		if test "x$enable_binreloc_threads" = "xyes"; then
-			AC_CHECK_LIB([pthread], [pthread_getspecific])
-		fi
-
-		AC_CACHE_CHECK([whether binary relocation should use threads],
-			       [br_cv_binreloc_threads],
-			       [if test "x$enable_binreloc_threads" = "xyes"; then
-					if test "x$ac_cv_lib_pthread_pthread_getspecific" = "xyes"; then
-						br_cv_binreloc_threads=yes
-					else
-						br_cv_binreloc_threads=no
-					fi
-			        else
-					br_cv_binreloc_threads=no
-				fi])
-
-		if test "x$br_cv_binreloc_threads" = "xyes"; then
-			BINRELOC_LIBS="-lpthread"
-			AC_DEFINE(BR_PTHREAD,1,[Include pthread support for binary relocation?])
-		else
-			BINRELOC_CFLAGS="$BINRELOC_CFLAGS -DBR_PTHREADS=0"
-			AC_DEFINE(BR_PTHREAD,0,[Include pthread support for binary relocation?])
-		fi
 	fi
+
 	AC_SUBST(BINRELOC_CFLAGS)
 	AC_SUBST(BINRELOC_LIBS)
 ])

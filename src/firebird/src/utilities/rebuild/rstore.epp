@@ -22,12 +22,12 @@
  */
 
 #include "firebird.h"
-#include "../jrd/ibase.h"
+#include "ibase.h"
 #include "../jrd/ods.h"
 #include "../utilities/rebuild/rebuild.h"
 #include "../utilities/rebuild/rebui_proto.h"
 #include "../utilities/rebuild/rstor_proto.h"
-#include "../jrd/gds_proto.h"
+#include "../yvalve/gds_proto.h"
 
 DATABASE DB = STATIC FILENAME "rebuild.fdb";
 

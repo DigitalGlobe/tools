@@ -17,17 +17,13 @@
 # Start of file prefix.mingw:	$(VERSION)	$(PLATFORM)
 #
 # 2003-Sep-27 BRS Removed IPSERVER after XNET is included
-# 
+#
 
 # -Wno-unused-variable is used due to unused gpre generated variables
-PROD_FLAGS=-O2  -march=i586 -DMINGW -Wall -Wshadow -Wundef -Wno-long-long -Wno-unused-variable -Wno-sign-compare -Wno-parentheses -Wno-switch -fmessage-length=0 -Dlint -DWIN32_LEAN_AND_MEAN -MMD -mthreads
-DEV_FLAGS=-ggdb -march=i586 -DMINGW -Wall -Wshadow -Wundef -Wno-long-long -Wno-unused-variable -Wno-sign-compare -Wno-parentheses -Wno-switch -fmessage-length=0 -Dlint -DWIN32_LEAN_AND_MEAN -MMD -mthreads
+PROD_FLAGS=-O2  -DMINGW -Werror=delete-incomplete -Wall -Wshadow -Wundef -Wno-long-long -Wno-unused-variable -Wno-sign-compare -Wno-parentheses -Wno-switch -fmessage-length=0 -Dlint -DWIN32_LEAN_AND_MEAN -MMD -mthreads -Wno-non-virtual-dtor
+DEV_FLAGS=-ggdb -DMINGW -Werror=delete-incomplete -Wall -Wshadow -Wundef -Wno-long-long -Wno-unused-variable -Wno-sign-compare -Wno-parentheses -Wno-switch -fmessage-length=0 -Dlint -DWIN32_LEAN_AND_MEAN -MMD -mthreads -Wno-non-virtual-dtor
 
 PLATFORM_PATH=os/win32
-
-OS_SPECIFIC_Files=thd_priority.cpp
-
-OS_ServerFiles= os/win32/srvr_w32 os/win32/window.cpp os/win32/chop.cpp os/win32/property.cpp os/win32/cntl.cpp 
 
 # Override link command for implicit stdc++ linking
 LIB_LINK=$(LD)
@@ -36,7 +32,7 @@ LIB_LINK_OPTIONS+=-Wl,--enable-stdcall-fixup
 
 # Strip symbols from release versions to decrease size
 ifeq ($(IsProdTypeBuild),Y)
-LINK_OPTS+=-Wl,-s
+EXE_LINK_OPTIONS+=-Wl,-s
 LIB_LINK_OPTIONS+=-Wl,-s
 endif
 
@@ -44,15 +40,9 @@ endif
 LIB_LINK_IMPLIB:=-Wl,--out-implib,firebird/lib/fbclient_ms.lib
 LIB_GUI:= -mwindows -lcomctl32 -lgdi32
 
-
-EMBED_UTIL_TARGETS:=gstat gsec nbackup fb_lock_print
-CLIENT_UTIL_TARGETS:=gstat gsec instsvc instreg nbackup fb_lock_print
-
-Physical_IO_Module=os/win32/winnt.cpp
-
 # Add resources to some files
 FilesToAddVersionInfo=$(LIBFBEMBED_SO) $(LIBFBCLIENT_SO) $(LIBFBINTL_SO) \
- $(GSTAT) $(GSEC) $(GFIX) $(QLI) $(ISQL) $(GBAK) $(GPRE)
+ $(GSTAT) $(GSEC) $(GFIX) $(ISQL) $(GBAK) $(GPRE)
 # TODO: guardians also must be here
 FilesToAddDialog=$(FB_SUPER_SERVER) $(FB_CLASSIC_SERVER)
 FilesToAddDialog2=$(IBGUARD)
@@ -73,11 +63,7 @@ LIB=$(BIN)
 
 # Special options for UDF link
 LINK_UDF = $(LIB_LINK) $(LIB_LINK_OPTIONS) $(call LIB_LINK_SONAME,$(1).$(SHRLIB_EXT)) -L$(LIB) -lib_util
-LINK_UDF_LIBS = 
+LINK_UDF_LIBS =
 
 # Special options for trace plugin link
-LINK_TRACE_LIBS = -L$(LIB) $(SO_LINK_LIBS) $(ICU_LIBS)
-
-# This is ugly HACK!!! Must be removed as soon as somebody find
-# a way to use routines from server
-TRACE_OS_Sources = jrd/gds.cpp jrd/isc_ipc.cpp
+LINK_TRACE_LIBS = -L$(LIB) $(SO_LINK_LIBS)

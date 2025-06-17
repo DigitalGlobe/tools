@@ -28,7 +28,7 @@
 #define JRD_INTLMANAGER_H
 
 #include "../common/classes/fb_string.h"
-#include "../config/ConfObj.h"
+#include "../common/config/config_file.h"
 
 struct charset;
 struct texttype;
@@ -40,12 +40,14 @@ class IntlManager
 public:
 	static bool initialize();
 
+	static bool charSetInstalled(const Firebird::string& charSetName);
+
 	static bool collationInstalled(const Firebird::string& collationName,
 								   const Firebird::string& charSetName);
 
 	static bool lookupCharSet(const Firebird::string& charSetName, charset* cs);
 
-	static bool lookupCollation(const Firebird::string& collationName,
+	static void lookupCollation(const Firebird::string& collationName,
 								const Firebird::string& charSetName,
 								USHORT attributes, const UCHAR* specificAttributes,
 								ULONG specificAttributesLen, bool ignoreAttributes,
@@ -84,7 +86,7 @@ public:
 	const static CollationDefinition defaultCollations[];
 
 private:
-	static Firebird::string getConfigInfo(const ConfObj& confObj);
+	static Firebird::string getConfigInfo(const ConfigFile::Parameter* par);
 
 	static bool registerCharSetCollation(const Firebird::string& name,
 		const Firebird::PathName& filename, const Firebird::string& externalName,

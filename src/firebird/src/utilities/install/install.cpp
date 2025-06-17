@@ -28,7 +28,6 @@
 #include "firebird.h"
 #include <stdio.h>
 #include <windows.h>
-#include "../jrd/common.h"
 //#include "../jrd/license.h"
 #include "../utilities/install/install_nt.h"
 #include "../utilities/install/install_proto.h"

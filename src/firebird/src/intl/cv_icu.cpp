@@ -28,27 +28,57 @@
 #include "../intl/ldcommon.h"
 #include "ld_proto.h"
 #include "cv_icu.h"
-#include "unicode/ucnv.h"
+#include <unicode/ucnv.h>
+#include "../common/unicode_util.h"
+
+namespace {
+
+static void U_EXPORT2 FB_UCNV_FROM_U_CALLBACK_STOP(
+                const void* /*context*/,
+                UConverterFromUnicodeArgs* /*fromUArgs*/,
+                const UChar* /*codeUnits*/,
+                int32_t /*length*/,
+                UChar32 /*codePoint*/,
+                UConverterCallbackReason /*reason*/,
+                UErrorCode* /*err*/)
+{
+	/*
+	 * A stable implementation of callback function UCNV_FROM_U_CALLBACK_STOP.
+	 *
+	 * It is equal to a behaviour of old ICU (from FB2.1 and FB3).
+	 *
+	 * ICU from FB4 (v63.1) translates "ignorable" symbols (..., 0x115F, ...) into an empty string
+	 * and this is incompatible with conversion of built-in charsets where
+	 * a such case leads to a translation error.
+	 *
+	 */
+
+	/* the caller must have set the error code accordingly */
+	return;
+}
+
+} // namespace
 
 
 static UConverter* create_converter(csconvert* cv, UErrorCode* status)
 {
-	UConverter* conv = ucnv_open(cv->csconvert_impl->cs->charset_name, status);
+	Jrd::UnicodeUtil::ConversionICU& cIcu(Jrd::UnicodeUtil::getConversionICU());
+	UConverter* conv = cIcu.ucnv_open(cv->csconvert_impl->cs->charset_name, status);
 	const void* oldContext;
 
 	UConverterFromUCallback oldFromAction;
-	ucnv_setFromUCallBack(
+	cIcu.ucnv_setFromUCallBack(
 		conv,
-		UCNV_FROM_U_CALLBACK_STOP,
+		FB_UCNV_FROM_U_CALLBACK_STOP,
 		NULL,
 		&oldFromAction,
 		&oldContext,
 		status);
 
 	UConverterToUCallback oldToAction;
-	ucnv_setToUCallBack(
+	cIcu.ucnv_setToUCallBack(
 		conv,
-		UCNV_TO_U_CALLBACK_STOP,
+		cIcu.UCNV_TO_U_CALLBACK_STOP,
 		NULL,
 		&oldToAction,
 		&oldContext,
@@ -88,10 +118,11 @@ static ULONG unicode_to_icu(csconvert* cv,
 	Firebird::Aligner<UChar> alignedSource(src, srcLen);
 	const UChar* source = alignedSource;
 	char* target = reinterpret_cast<char*>(dst);
-	ucnv_fromUnicode(conv, &target, target + dstLen, &source,
+	Jrd::UnicodeUtil::ConversionICU& cIcu(Jrd::UnicodeUtil::getConversionICU());
+	cIcu.ucnv_fromUnicode(conv, &target, target + dstLen, &source,
 		source + srcLen / sizeof(UChar), NULL, TRUE, &status);
 
-	*errPosition = (source - alignedSource) * sizeof(UChar);
+	*errPosition = static_cast<ULONG>((source - alignedSource) * sizeof(UChar));
 
 	if (!U_SUCCESS(status))
 	{
@@ -115,7 +146,7 @@ static ULONG unicode_to_icu(csconvert* cv,
 		}
 	}
 
-	ucnv_close(conv);
+	cIcu.ucnv_close(conv);
 
 	return target - reinterpret_cast<char*>(dst);
 }
@@ -143,7 +174,8 @@ static ULONG icu_to_unicode(csconvert* cv,
 	const char* source = reinterpret_cast<const char*>(src);
 	Firebird::OutAligner<UChar> alignedTarget(dst, dstLen);
 	UChar* target = alignedTarget;
-	ucnv_toUnicode(conv, &target, target + dstLen / sizeof(UChar), &source,
+	Jrd::UnicodeUtil::ConversionICU& cIcu(Jrd::UnicodeUtil::getConversionICU());
+	cIcu.ucnv_toUnicode(conv, &target, target + dstLen / sizeof(UChar), &source,
 		source + srcLen, NULL, TRUE, &status);
 
 	*errPosition = source - reinterpret_cast<const char*>(src);
@@ -164,7 +196,7 @@ static ULONG icu_to_unicode(csconvert* cv,
 				status = U_ZERO_ERROR;
 				char errBytes[16];
 				int8_t errLen = sizeof(errBytes);
-				ucnv_getInvalidChars(conv, errBytes, &errLen, &status);
+				cIcu.ucnv_getInvalidChars(conv, errBytes, &errLen, &status);
 				if (!U_SUCCESS(status))
 					*errCode = CS_CONVERT_ERROR;
 				else
@@ -184,9 +216,9 @@ static ULONG icu_to_unicode(csconvert* cv,
 		}
 	}
 
-	ucnv_close(conv);
+	cIcu.ucnv_close(conv);
 
-	return (target - alignedTarget) * sizeof(UChar);
+	return static_cast<ULONG>((target - alignedTarget) * sizeof(UChar));
 }
 
 
@@ -196,13 +228,13 @@ void CVICU_convert_init(charset* cs)
 	cs->charset_to_unicode.csconvert_name = "ICU->UNICODE";
 	cs->charset_to_unicode.csconvert_fn_convert = icu_to_unicode;
 	cs->charset_to_unicode.csconvert_fn_destroy = convert_destroy;
-	cs->charset_to_unicode.csconvert_impl = new CsConvertImpl();
+	cs->charset_to_unicode.csconvert_impl = FB_NEW CsConvertImpl();
 	cs->charset_to_unicode.csconvert_impl->cs = cs;
 
 	cs->charset_from_unicode.csconvert_version = CSCONVERT_VERSION_1;
 	cs->charset_from_unicode.csconvert_name = "UNICODE->ICU";
 	cs->charset_from_unicode.csconvert_fn_convert = unicode_to_icu;
 	cs->charset_from_unicode.csconvert_fn_destroy = convert_destroy;
-	cs->charset_from_unicode.csconvert_impl = new CsConvertImpl();
+	cs->charset_from_unicode.csconvert_impl = FB_NEW CsConvertImpl();
 	cs->charset_from_unicode.csconvert_impl->cs = cs;
 }

@@ -58,20 +58,42 @@ Exception re-raise semantics (FB 1.5)
     Evaluates to no-op if used outside the exception handling block.
 
 
-Run-time error codes (FB 1.5)
------------------------------
+Parameterized exceptions (FB 3.0)
+---------------------------------
 
   Function:
-    Allows to get a numeric error code for the catched exception.
+    Allow to define exception message with slots for parameters and pass the parameters when
+    raising the exception.
 
   Author:
-    Dmitry Yemanov <yemanov@yandex.ru>
+    Adriano dos Santos Fernandes <adrianosf at gmail.com>
 
-  Syntax rules:
-    SQLCODE / GDSCODE;
+  Syntax:
+    EXCEPTION <name> USING ( <value list> )
 
-  Scope:
-    PSQL, context of the exception handling block
+  Example:
+    create exception e_invalid_val 'Invalid value @1 for the field @2';
 
-  See also:
-    README.context_variables
+    ...
+    if (val < 1000) then
+       thing = val;
+    else
+       exception e_invalid_val using (val, 'thing');
+    end
+
+  Notes:
+    The maximum number of arguments passed is 9.
+
+    In the exception message, @NN (example: @10) is considered as @1 followed by the literal 0.
+
+    The status vector is generated using these codes combination:
+      isc_except, <exception number>,
+      isc_formatted_exception, <formatted exception message>, <exception parameters>
+
+    Since new error code (isc_formatted_exception) is used, it's necessary that the client is v3.0
+    or at least uses firebird.msg from v3.0 so that it can translate the status vector to string.
+
+    @N means the N parameter (where N starts at 1) passed in the exception raise command. If a N
+    parameter is not passed, the text is not substituted. If NULL is passed, it's replaced by string
+    '*** null ***'. If more parameters are passed than used in the exception message, they are
+    ignored.

@@ -48,7 +48,7 @@
 #include "../install/install_nt.h"
 #include "../install/servi_proto.h"
 #include "../install/registry.h"
-#include "../../remote/os/win32/window.h"
+#include "../../remote/server/os/win32/window.h"
 #include "../../iscguard/iscguard.h"
 
 extern USHORT svc_error (SLONG, const TEXT*, SC_HANDLE);
@@ -129,7 +129,7 @@ public:
 
     SERVICE_STATUS service_status;
 
-	int m_Error_Status;				//This is set by the calls to SERVICES_
+	DWORD m_Error_Status;			//This is set by the calls to SERVICES_
 									//and is also set by GetLastError()
 									//It is tested in ShowError to prevent
 									//the same error message being reported.

@@ -27,10 +27,10 @@
 #ifndef NBK_PROTO_H
 #define NBK_PROTO_H
 
-#include "../jrd/ThreadData.h"
+#include "../common/ThreadData.h"
 #include "../common/UtilSvc.h"
 
 void nbackup(Firebird::UtilSvc*);
-THREAD_ENTRY_DECLARE NBACKUP_main(THREAD_ENTRY_PARAM);
+int NBACKUP_main(Firebird::UtilSvc*);
 
 #endif // NBK_PROTO_H

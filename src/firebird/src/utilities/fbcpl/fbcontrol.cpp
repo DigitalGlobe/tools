@@ -5,7 +5,7 @@
 #include "FBControl.h"
 
 #ifdef _DEBUG
-#define new DEBUG_NEW
+#define FB_NEW DEBUG_NEW
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif

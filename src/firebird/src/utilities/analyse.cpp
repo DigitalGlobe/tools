@@ -22,7 +22,6 @@
  */
 
 #include "firebird.h"
-#include "../jrd/common.h"
 
 #ifdef HAVE_TIMES
 #include <sys/types.h>
@@ -48,6 +47,8 @@
 #include "../jrd/jrd.h"
 #include "../jrd/ods.h"
 #include "../jrd/perf.h"
+
+using namespace syscall_io;
 
 #ifndef HAVE_TIMES
 static time_t times(struct tms*);
@@ -109,7 +110,7 @@ void main( int argc, char **argv)
 	}
 
 	SLONG reads = 0, writes = 0;
-	trace = fopen("trace.log", "r");
+	trace = os_utils::fopen("trace.log", "r");
 	page_size = 1024;
 	SLONG sequence = 0;
 
@@ -330,7 +331,7 @@ static void db_open( const char* file_name, USHORT file_length)
  *
  **************************************/
 
-	if ((file = open(file_name, 2)) == -1)
+	if ((file = os_utils::open(file_name, 2)) == -1)
 		db_error(errno);
 }
 
@@ -353,7 +354,7 @@ static PAG db_read( SLONG page_number)
 	if (!global_buffer)
 		global_buffer = (pag*) malloc(page_size);
 
-	if (lseek (file, offset, 0) == -1)
+	if (os_utils::lseek (file, offset, 0) == -1)
 		db_error(errno);
 
 	if (read(file, global_buffer, page_size) == -1)

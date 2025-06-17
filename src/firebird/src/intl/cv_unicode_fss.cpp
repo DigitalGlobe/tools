@@ -253,7 +253,7 @@ ULONG fss_to_unicode(ULONG src_len,
 		*err_code = CS_TRUNCATION_ERROR;
 	}
 	*err_position = src_start - src_len;
-	return ((dest_ptr - start) * sizeof(*dest_ptr));
+	return static_cast<ULONG>((dest_ptr - start) * sizeof(*dest_ptr));
 }
 
 
@@ -325,6 +325,6 @@ ULONG CS_UTFFSS_unicode_to_fss(csconvert* obj,
 		*err_code = CS_TRUNCATION_ERROR;
 	}
 	*err_position = src_start - unicode_len;
-	return ((fss_str - start) * sizeof(*fss_str));
+	return static_cast<ULONG>((fss_str - start) * sizeof(*fss_str));
 }
 

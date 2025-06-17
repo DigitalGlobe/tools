@@ -25,8 +25,8 @@
 #include "firebird.h"
 #include "../common/classes/alloc.h"
 #include "../intl/ldcommon.h"
-#include "../jrd/CharSet.h"
-#include "../jrd/IntlUtil.h"
+#include "../common/CharSet.h"
+#include "../common/IntlUtil.h"
 #include "lc_narrow.h"
 #include "ld_proto.h"
 #include <limits.h>
@@ -168,8 +168,6 @@ USHORT LC_NARROW_string_to_key(texttype* obj, USHORT iInLen, const BYTE* pInChar
 {
 	fb_assert(pOutChar != NULL);
 	fb_assert(pInChar != NULL);
-	// fb_assert (iInLen   <= LANGFAM2_MAX_KEY);
-	fb_assert(iOutLen <= LANGFAM2_MAX_KEY);
 	fb_assert(iOutLen >= LC_NARROW_key_length(obj, iInLen));
 
 	TextTypeImpl* impl = static_cast<TextTypeImpl*>(obj->texttype_impl);
@@ -268,7 +266,8 @@ USHORT LC_NARROW_string_to_key(texttype* obj, USHORT iInLen, const BYTE* pInChar
 			}
 		}
 		else
-		{					// (col->IsCompress)
+		{
+			// (col->IsCompress)
 			const bool complete = (USHORT) (i + 1) < iInLen;
 
 			if (complete)
@@ -766,7 +765,7 @@ ULONG LC_NARROW_canonical(texttype* obj, ULONG srcLen, const UCHAR* src, ULONG d
 
 		if ((impl->texttype_flags & (TEXTTYPE_secondary_insensitive | TEXTTYPE_tertiary_insensitive)) == 0)
 		{
-			put(dst, (USHORT) ((primary << 8) | (coll->Secondary << 4) | coll->Tertiary));
+			put(dst, (USHORT) ((primary << 8) | (coll->Secondary << SortOrderTblEntrySecondaryBits) | coll->Tertiary));
 		}
 		else if ((impl->texttype_flags & TEXTTYPE_secondary_insensitive) == 0)
 		{
@@ -809,7 +808,7 @@ bool LC_NARROW_family2(
 	if (attributes & ~TEXTTYPE_ATTR_PAD_SPACE)
 		return false;
 
-	TextTypeImpl* impl = FB_NEW(*getDefaultMemoryPool()) TextTypeImpl;
+	TextTypeImpl* impl = FB_NEW_POOL(*getDefaultMemoryPool()) TextTypeImpl;
 
 	tt->texttype_version			= TEXTTYPE_VERSION_1;
 	tt->texttype_name				= name;

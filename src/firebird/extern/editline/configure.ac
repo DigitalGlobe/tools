@@ -1,40 +1,75 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
+#
+# Compile with debug symbols:
+#    CFLAGS="-ggdb -pedandic -O0" ./configure
+#    CFLAGS="-ggdb -Wall -Wextra -pedantic -O0" ./configure
+#
+# Use libtool (glibtool on OSX) to debug:
+#
+#    libtool --mode=execute gdb examples/tc1
+# 
+# Run valgrind like this, but note
+# http://invisible-island.net/ncurses/ncurses.faq.html#config_leaks.
+#
+#    libtool --mode=execute valgrind --leak-check=full examples/tc1
+#
+# A valgrind suppressions file for ncurses is available at 
+# http://www.opensource.apple.com/source/ncurses/ncurses-27/ncurses/misc/ncurses.supp
+#
+#    libtool --mode=execute valgrind --suppressions=ncurses.supp.txt --leak-check=full examples/tc1
+#
+# Verbose output can be enabled with
+#    "./configure --disable-silent-rules" or "make V=1"
+#
 
-AC_INIT(libedit, [EL_RELEASE],, libedit-[EL_TIMESTAMP_CVSEXPORT])
+AC_INIT(libedit, [EL_RELEASE],, libedit-[EL_TIMESTAMP])
+AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([src/strlcat.c])
 AC_CONFIG_HEADER([config.h])
 
+# features of Posix that are extensions to C (define _GNU_SOURCE)
+AC_USE_SYSTEM_EXTENSIONS
+
 AM_INIT_AUTOMAKE
-AC_CANONICAL_HOST
-
-# changes to AR_FLAGS must be made before we call AC_PROG_LIBTOOL
-case $host in
-   *-sun-*) AC_DEFINE([_SUNOS], [], [Solaris's term.h does horrid things.]);;
-   *-aix*) test -z "$AR_FLAGS" && AR_FLAGS="-X64 cru";;
-esac
-
 AC_PROG_LIBTOOL
+
 # libtool -version-info
-AC_SUBST(LT_VERSION, [0:24:0])
+AC_SUBST(LT_VERSION, [0:47:0])
+
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 # Checks for programs.
-AC_PROG_CXX
-AC_PROG_CC
+AC_PROG_CC_C99
+#AC_PROG_CC
 AC_PROG_LN_S
 AC_PROG_AWK
 EL_MANTYPE
 
-AC_CHECK_LIB(curses, tgetent,,
-   [AC_CHECK_LIB(ncurses, tgetent,,
-      [AC_MSG_ERROR([libtermcap, libcurses or libncurses are required!])] )] )
+
+AC_CHECK_LIB(tinfo, tgetent,,
+  [AC_CHECK_LIB(terminfo, tgetent,,
+    [AC_CHECK_LIB(termcap, tgetent,,
+       [AC_CHECK_LIB(termlib, tgetent,,
+           [AC_CHECK_LIB(curses, tgetent,,
+               [AC_CHECK_LIB(ncurses, tgetent,,
+                   [AC_MSG_ERROR([libcurses or libncurses are required!])]
+               )]
+           )]
+       )]
+    )]
+  )]
+)
+
+
+### use option --enable-widec to turn on use of wide-character support
+EL_ENABLE_WIDEC
 
 # Checks for header files.
-AC_FUNC_ALLOCA
 AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([fcntl.h limits.h malloc.h stdlib.h string.h sys/ioctl.h sys/param.h unistd.h curses.h ncurses.h sys/cdefs.h])
+AC_CHECK_HEADERS([fcntl.h limits.h malloc.h stdlib.h string.h sys/ioctl.h sys/param.h unistd.h curses.h ncurses.h sys/cdefs.h termcap.h])
 
 AC_CHECK_HEADER([termios.h], [], [AC_MSG_ERROR([termios.h is required!])],[])
 
@@ -46,6 +81,17 @@ AC_CHECK_HEADERS([term.h],,,
 # include <ncurses.h>
 #endif
 ]])
+
+# Check for dirent.d_namlen field explicitly
+# (This is a bit more straightforward than, if not quite as portable as,
+# the recipe given by the autoconf maintainers.)
+AC_CHECK_MEMBER(struct dirent.d_namlen,
+AC_DEFINE([HAVE_STRUCT_DIRENT_D_NAMLEN],[1],
+[Define to 1 if struct dirent has member d_namlen]),,
+[#if HAVE_DIRENT_H
+#include <dirent.h>
+#endif
+])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -62,16 +108,37 @@ AC_PROG_GCC_TRADITIONAL
 #AC_FUNC_REALLOC
 AC_TYPE_SIGNAL
 AC_FUNC_STAT
-AC_CHECK_FUNCS([endpwent isascii memchr memset re_comp regcomp strcasecmp strchr strcspn strdup strerror strrchr strstr strtol issetugid])
+AC_CHECK_FUNCS([endpwent isascii memchr memset re_comp regcomp strcasecmp strchr strcspn strdup strerror strrchr strstr strtol issetugid wcsdup strlcpy strlcat fgetln vis strvis strunvis __secure_getenv secure_getenv])
+
+# strlcpy
+AC_CHECK_FUNC(strlcpy, found_strlcpy=yes, found_strlcpy=no)
+AM_CONDITIONAL(HAVE_STRLCPY, [test "x$found_strlcpy" = xyes])
+
+# strlcat
+AC_CHECK_FUNC(strlcat, found_strlcat=yes, found_strlcat=no)
+AM_CONDITIONAL(HAVE_STRLCAT, [test "x$found_strlcat" = xyes])
+
+# vis
+AC_CHECK_FUNC(vis, found_vis=yes, found_vis=no)
+AM_CONDITIONAL(HAVE_VIS, [test "x$found_vis" = xyes])
+
+# unvis
+AC_CHECK_FUNC(unvis, found_unvis=yes, found_unvis=no)
+AM_CONDITIONAL(HAVE_UNVIS, [test "x$found_unvis" = xyes])
+
+
 EL_GETPW_R_POSIX
 EL_GETPW_R_DRAFT
 
+
 AH_BOTTOM([
-#include <sys.h>
+#include "sys.h"
 #define SCCSID
 #undef LIBC_SCCS
+#define lint
 ])
 
 AC_CONFIG_FILES([Makefile
+                 libedit.pc
                  src/Makefile])
 AC_OUTPUT

@@ -25,7 +25,7 @@
 #define JRD_VAL_PROTO_H
 
 bool VAL_validate(Jrd::thread_db*, USHORT);
-THREAD_ENTRY_DECLARE VAL_service(THREAD_ENTRY_PARAM);
+int VAL_service(Firebird::UtilSvc*);
 
 const int IN_SW_VAL_TAB_INCL		= 1;
 const int IN_SW_VAL_TAB_EXCL		= 2;
@@ -33,20 +33,18 @@ const int IN_SW_VAL_IDX_INCL		= 3;
 const int IN_SW_VAL_IDX_EXCL		= 4;
 const int IN_SW_VAL_LOCK_TIMEOUT	= 5;
 const int IN_SW_VAL_DATABASE		= 6;
-const int IN_SW_VAL_TRUSTED_USER	= 7;
 
-static struct in_sw_tab_t val_option_in_sw_table [] =
+static const Switches::in_sw_tab_t val_option_in_sw_table[] =
 {
-	{IN_SW_VAL_TAB_INCL,		isc_spb_val_tab_incl,		"TAB_INCLUDE",	0, 0, 0, false,	0,	5, NULL},
-	{IN_SW_VAL_TAB_EXCL,		isc_spb_val_tab_excl,		"TAB_EXCLUDE",	0, 0, 0, false,	0,	5, NULL},
-	{IN_SW_VAL_IDX_INCL,		isc_spb_val_idx_incl,		"IDX_INCLUDE",	0, 0, 0, false,	0,	5, NULL},
-	{IN_SW_VAL_IDX_EXCL,		isc_spb_val_idx_excl,		"IDX_EXCLUDE",	0, 0, 0, false,	0,	5, NULL},
-	{IN_SW_VAL_LOCK_TIMEOUT,	isc_spb_val_lock_timeout,	"WAIT", 		0, 0, 0, false,	0,	1, NULL},
+	{IN_SW_VAL_TAB_INCL,		isc_spb_val_tab_incl,		"TAB_INCLUDE",	0, 0, 0, false,	false,	0,	5, NULL},
+	{IN_SW_VAL_TAB_EXCL,		isc_spb_val_tab_excl,		"TAB_EXCLUDE",	0, 0, 0, false,	false,	0,	5, NULL},
+	{IN_SW_VAL_IDX_INCL,		isc_spb_val_idx_incl,		"IDX_INCLUDE",	0, 0, 0, false,	false,	0,	5, NULL},
+	{IN_SW_VAL_IDX_EXCL,		isc_spb_val_idx_excl,		"IDX_EXCLUDE",	0, 0, 0, false,	false,	0,	5, NULL},
+	{IN_SW_VAL_LOCK_TIMEOUT,	isc_spb_val_lock_timeout,	"WAIT", 		0, 0, 0, false,	false,	0,	1, NULL},
 
-	{IN_SW_VAL_DATABASE,		isc_spb_dbname,				"DATABASE",		0, 0, 0, false,	0,	1, NULL},
-	{IN_SW_VAL_TRUSTED_USER,	0,				TRUSTED_USER_SWITCH,		0, 0, 0, false,	0,	TRUSTED_USER_SWITCH_LEN, NULL},
+	{IN_SW_VAL_DATABASE,		isc_spb_dbname,				"DATABASE",		0, 0, 0, false,	false,	0,	1, NULL},
 
-	{0, 0, NULL, 0, 0, 0, false, 0, 0, NULL}		// End of List
+	{0, 0, NULL, 0, 0, 0, false, false,	0, 0, NULL}		// End of List
 };
 
 #endif // JRD_VAL_PROTO_H

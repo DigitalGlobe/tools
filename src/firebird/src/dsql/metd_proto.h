@@ -27,48 +27,47 @@
 #define DSQL_METD_PROTO_H
 
 #include "../common/classes/GenericMap.h"
-#include "../common/classes/MetaName.h"
+#include "../jrd/MetaName.h"
 #include "../common/classes/fb_pair.h"
-
-typedef Firebird::GenericMap<Firebird::MetaNamePair> MetaNamePairMap;
 
 // forward declarations
 namespace Jrd {
-	class dsql_req;
-	class dsql_str;
-	class CompiledStatement;
+	typedef Firebird::GenericMap<Jrd::MetaNamePair> MetaNamePairMap;
+
+	class DsqlRequest;
+	class DsqlCompilerScratch;
+	class jrd_tra;
+	class dsql_intlsym;
+	class dsql_fld;
+	class dsql_udf;
+	class dsql_prc;
+	class dsql_rel;
+	class FieldNode;
 };
 
-void METD_drop_charset(Jrd::dsql_req*, const Firebird::MetaName&);
-void METD_drop_collation(Jrd::dsql_req*, const Jrd::dsql_str*);
-void METD_drop_function(Jrd::dsql_req*, const Jrd::dsql_str*);
-void METD_drop_procedure(Jrd::dsql_req*, const Jrd::dsql_str*);
-void METD_drop_relation(Jrd::dsql_req*, const Jrd::dsql_str*);
+void METD_drop_charset(Jrd::jrd_tra*, const Jrd::MetaName&);
+void METD_drop_collation(Jrd::jrd_tra*, const Jrd::MetaName&);
+void METD_drop_function(Jrd::jrd_tra*, const Jrd::QualifiedName&);
+void METD_drop_procedure(Jrd::jrd_tra*, const Jrd::QualifiedName&);
+void METD_drop_relation(Jrd::jrd_tra*, const Jrd::MetaName&);
 
-Jrd::dsql_intlsym*  METD_get_charset(Jrd::dsql_req*, USHORT, const char* name); // UTF-8
-USHORT   METD_get_charset_bpc(Jrd::dsql_req*, SSHORT);
-Firebird::MetaName METD_get_charset_name(Jrd::dsql_req*, SSHORT);
-Jrd::dsql_intlsym* METD_get_collation(Jrd::dsql_req*, const Jrd::dsql_str*, USHORT charset_id);
-USHORT   METD_get_col_default(Jrd::dsql_req*, const char*, const char*, bool*, UCHAR*, USHORT);
-Jrd::dsql_str*      METD_get_default_charset(Jrd::dsql_req*);
-bool METD_get_domain(Jrd::dsql_req*, class Jrd::dsql_fld*, const char* name); // UTF-8
-USHORT   METD_get_domain_default(Jrd::dsql_req*, const TEXT*, bool*, UCHAR*, USHORT);
-bool METD_get_exception(Jrd::dsql_req*, const Jrd::dsql_str*);
-Jrd::dsql_udf*      METD_get_function(Jrd::dsql_req*, const Jrd::dsql_str*);
-Jrd::dsql_nod* METD_get_primary_key(Jrd::dsql_req*, const Jrd::dsql_str*);
-Jrd::dsql_prc* METD_get_procedure(Jrd::CompiledStatement*, const Jrd::dsql_str*);
-void METD_get_procedure_parameter(Jrd::CompiledStatement* statement,
-	const Firebird::MetaName& procedure, const Firebird::MetaName& parameter,
-	Firebird::UCharBuffer& buffer);
-Jrd::dsql_rel* METD_get_relation(Jrd::CompiledStatement*, const char*);
-bool   METD_get_trigger(Jrd::dsql_req*, const Jrd::dsql_str*, Jrd::dsql_str**, USHORT*);
-bool   METD_get_type(Jrd::dsql_req*, const Jrd::dsql_str*, const char*, SSHORT*);
-Jrd::dsql_rel* METD_get_view_base(Jrd::CompiledStatement* request,
-							 const char* view_name,	// UTF-8
-							 MetaNamePairMap& fields);
-Jrd::dsql_rel* METD_get_view_relation(Jrd::CompiledStatement* request,
-								const char* view_name,         // UTF-8
-								const char* relation_or_alias); // UTF-8
+Jrd::dsql_intlsym* METD_get_charset(Jrd::jrd_tra*, USHORT, const char* name);
+USHORT METD_get_charset_bpc(Jrd::jrd_tra*, SSHORT);
+Jrd::MetaName METD_get_charset_name(Jrd::jrd_tra*, SSHORT);
+Jrd::dsql_intlsym* METD_get_collation(Jrd::jrd_tra*, const Jrd::MetaName&, USHORT charset_id);
+Jrd::MetaName METD_get_default_charset(Jrd::jrd_tra*);
+bool METD_get_domain(Jrd::jrd_tra*, class Jrd::TypeClause*, const Jrd::MetaName& name);
+Jrd::dsql_udf* METD_get_function(Jrd::jrd_tra*, Jrd::DsqlCompilerScratch*,
+	const Jrd::QualifiedName&);
+void METD_get_primary_key(Jrd::jrd_tra*, const Jrd::MetaName&,
+	Firebird::Array<NestConst<Jrd::FieldNode> >&);
+Jrd::dsql_prc* METD_get_procedure(Jrd::jrd_tra*, Jrd::DsqlCompilerScratch*,
+	const Jrd::QualifiedName&);
+Jrd::dsql_rel* METD_get_relation(Jrd::jrd_tra*, Jrd::DsqlCompilerScratch*, const Jrd::MetaName&);
+bool METD_get_type(Jrd::jrd_tra*, const Jrd::MetaName&, const char*, SSHORT*);
+Jrd::dsql_rel* METD_get_view_base(Jrd::jrd_tra*, Jrd::DsqlCompilerScratch*, const char* view_name,
+	Jrd::MetaNamePairMap& fields);
+bool METD_get_view_relation(Jrd::jrd_tra*, Jrd::DsqlCompilerScratch*, const Jrd::MetaName& view_name,
+	const Jrd::MetaName& relation_or_alias, Jrd::dsql_rel*& relation, Jrd::dsql_prc*& procedure);
 
 #endif // DSQL_METD_PROTO_H
-

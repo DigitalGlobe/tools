@@ -24,32 +24,31 @@
 #ifndef ISQL_ISQL_PROTO_H
 #define ISQL_ISQL_PROTO_H
 
-#include "../common/classes/SafeArg.h"
+#include <firebird/Interface.h>
+
+struct IsqlVar;
 
 void	ISQL_array_dimensions(const TEXT*);
-TEXT*	ISQL_blankterm2(const TEXT* input, TEXT* output);
 //void	ISQL_build_table_list(void**, FILE*, FILE*, FILE*);
 //void	ISQL_build_view_list(void**, FILE*, FILE*, FILE*);
 //int	ISQL_commit_work(int, FILE*, FILE*, FILE*);
-void	ISQL_copy_SQL_id(const TEXT*, TEXT*, TEXT);
-// CVC: Not found, probably in some lost GUI-related file.
-//int		ISQL_create_database(TEXT*,
-//								SCHAR**,
-//								SCHAR*,
-//								SCHAR*, FILE*, FILE*, FILE*);
 bool	ISQL_dbcheck();
 void	ISQL_disconnect_database(bool);
-void	ISQL_errmsg(const ISC_STATUS*);
-void	ISQL_warning(ISC_STATUS*);
+bool	ISQL_errmsg(Firebird::IStatus*);
+void	ISQL_warning(Firebird::IStatus*);
 void	ISQL_exit_db();
 // CVC: Not found.
 //int		ISQL_extract(TEXT*, int, FILE*, FILE*, FILE*);
 int		ISQL_frontend_command(TEXT*, FILE*, FILE*, FILE*);
 bool	ISQL_get_base_column_null_flag(const TEXT*, const SSHORT, const TEXT*);
-void	ISQL_get_character_sets(SSHORT, SSHORT, bool, bool, TEXT*);
+void	ISQL_get_character_sets(SSHORT, SSHORT, bool, bool, bool, TEXT*);
 SSHORT	ISQL_get_default_char_set_id();
 void	ISQL_get_default_source(const TEXT*, TEXT*, ISC_QUAD*);
 SSHORT	ISQL_get_field_length(const TEXT*);
+SSHORT	ISQL_get_char_length(
+	SSHORT fieldLength,
+	SSHORT characterLengthNull, SSHORT characterLength,
+	SSHORT characterSetIdNull, SSHORT characterSetId);
 SLONG	ISQL_get_index_segments(TEXT*, const size_t, const TEXT*, bool);
 bool	ISQL_get_null_flag(const TEXT*, TEXT*);
 void	ISQL_get_version(bool);
@@ -58,22 +57,16 @@ SSHORT	ISQL_init(FILE*, FILE*);
 bool	ISQL_is_domain(const TEXT*);
 #endif
 int		ISQL_main(int, char**);
-void	ISQL_make_upper(TEXT*);
-void	ISQL_msg_get(USHORT number, TEXT* msg,
-					 const MsgFormat::SafeArg& args = MsgFormat::SafeArg());
-void	ISQL_msg_get(USHORT number, USHORT size, TEXT* msg,
-					 const MsgFormat::SafeArg& args = MsgFormat::SafeArg());
-void	ISQL_print_validation(FILE*, ISC_QUAD*, bool, FB_API_HANDLE);
-void	ISQL_printf(FILE*, const char*);
-void	ISQL_printf2(FILE*, const char*, ...);
+bool	ISQL_printNumericType(const char* fieldName, const int fieldType, const int fieldSubType,
+	const int fieldPrecision, const int fieldScale);
+void	ISQL_print_validation(FILE*, ISC_QUAD*, bool, Firebird::ITransaction*);
 //void	ISQL_query_database(SSHORT*, FILE*, FILE*, FILE*);
-void	ISQL_remove_and_unescape_quotes(TEXT* string, const char quote);
 //void	ISQL_reset_settings();
 void	ISQL_ri_action_print(const TEXT*, const TEXT*, bool);
 //int	ISQL_sql_statement(TEXT*, FILE*, FILE*, FILE*);
-void	ISQL_truncate_term(TEXT*, USHORT);
 //void	ISQL_win_err(const char*);
-processing_state ISQL_print_item_blob(FILE*, const XSQLVAR*, FB_API_HANDLE, int subtype);
+processing_state ISQL_print_item_blob(FILE*, const IsqlVar*, Firebird::ITransaction*, int subtype);
+processing_state ISQL_fill_var(IsqlVar*, Firebird::IMessageMetadata*, unsigned, UCHAR*);
+bool ISQL_statement_ends_in_comment(const char* statement);
 
 #endif // ISQL_ISQL_PROTO_H
-

@@ -49,19 +49,18 @@
 #include "firebird.h"
 #include "../common/config/config.h"
 #include "../common/config/dir_list.h"
-#include "../jrd/os/path_utils.h"
+#include "../common/os/path_utils.h"
 #include "../common/classes/init.h"
 #include "../jrd/jrd.h"
 
-#include "../jrd/common.h"
 #include "../jrd/flu.h"
-#include "../jrd/gdsassert.h"
+#include "../common/gdsassert.h"
 
 #include "../jrd/flu_proto.h"
-#include "../jrd/gds_proto.h"
+#include "../yvalve/gds_proto.h"
 #include "../jrd/err_proto.h"
 
-#include "gen/iberror.h"
+#include "iberror.h"
 
 #include <string.h>
 
@@ -110,19 +109,15 @@ namespace {
 		// always try to use module "as is"
 		{MOD_SUFFIX, "", false},
 
-#ifdef HPUX
-		{MOD_SUFFIX, ".sl", true},
-#endif
-
 #ifdef DYNAMIC_SHARED_LIBRARIES
-		{MOD_SUFFIX, ".so", true},
+		{MOD_SUFFIX, "." SHRLIB_EXT, true},
 		{MOD_PREFIX, "lib", true},
 #endif
-
+/*
 #ifdef DARWIN
 		{MOD_SUFFIX, ".dylib", true},
 #endif
-
+*/
 	};
 
 	// UDF/BLOB filter verifier
@@ -138,6 +133,11 @@ namespace {
 			: DirectoryList(p)
 		{
 			initialize();
+		}
+
+		~UdfDirectoryList()
+		{
+			//printf("Destroyed directory list\n");
 		}
 	};
 	Firebird::InitInstance<UdfDirectoryList> iUdfDirectoryList;
@@ -165,16 +165,10 @@ namespace Jrd
 	}
 
 
-	FPTR_INT Module::lookup(const char* module, const char* name, DatabaseModules& interest)
+	FPTR_INT Module::lookup(const char* module, const char* name, Database* dbb)
 	{
-		FPTR_INT function = FUNCTIONS_entrypoint(module, name);
-		if (function)
-		{
-			return function;
-		}
-
 		// Try to find loadable module
-		Module m = lookupModule(module, true);
+		Module m = lookupModule(module);
 		if (! m)
 		{
 			return 0;
@@ -184,40 +178,16 @@ namespace Jrd
 		terminate_at_space(symbol, name);
 		void* rc = m.lookupSymbol(symbol);
 		if (rc)
-		{
-			if (!interest.exist(m))
-			{
-				interest.add(m);
-			}
-		}
+			dbb->registerModule(m);
 
 		return (FPTR_INT)rc;
 	}
 
-	FPTR_INT Module::lookup(const TEXT* module, const TEXT* name)
-	{
-		FPTR_INT function = FUNCTIONS_entrypoint(module, name);
-		if (function)
-		{
-			return function;
-		}
-
-		// Try to find loadable module
-		Module m = lookupModule(module, false);
-		if (! m)
-		{
-			return 0;
-		}
-
-		Firebird::string symbol;
-		terminate_at_space(symbol, name);
-		return (FPTR_INT)(m.lookupSymbol(symbol));
-	}
-
 	// flag 'udf' means pass name-path through UdfDirectoryList
-	Module Module::lookupModule(const char* name, bool udf)
+	Module Module::lookupModule(const char* name)
 	{
-		Firebird::MutexLockGuard lg(modulesMutex);
+		Firebird::MutexLockGuard lg(modulesMutex, FB_FUNCTION);
+
 		Firebird::PathName initialModule;
 		terminate_at_space(initialModule, name);
 
@@ -255,53 +225,37 @@ namespace Jrd
 				return Module(im);
 			}
 
-			if (udf)
+			// UdfAccess verification
+			Firebird::PathName path, relative;
+
+			// Search for module name in UdfAccess restricted
+			// paths list
+			PathUtils::splitLastComponent(path, relative, fixedModule);
+			if (path.isEmpty() && PathUtils::isRelative(fixedModule))
 			{
-				// UdfAccess verification
-				Firebird::PathName path, relative;
-
-				// Search for module name in UdfAccess restricted
-				// paths list
-				PathUtils::splitLastComponent(path, relative, fixedModule);
-				if (path.length() == 0 && PathUtils::isRelative(fixedModule))
+				path = fixedModule;
+				if (! iUdfDirectoryList().expandFileName(fixedModule, path))
 				{
-					path = fixedModule;
-					if (! iUdfDirectoryList().expandFileName(fixedModule, path))
-					{
-						// relative path was used, but no appropriate file present
-						continue;
-					}
-				}
-
-				// The module name, including directory path,
-				// must satisfy UdfAccess entry in config file.
-				if (! iUdfDirectoryList().isPathInList(fixedModule))
-				{
-					ERR_post(Arg::Gds(isc_conf_access_denied) << Arg::Str("UDF/BLOB-filter module") <<
-																 Arg::Str(initialModule));
-				}
-
-				ModuleLoader::Module* mlm = ModuleLoader::loadModule(fixedModule);
-				if (mlm)
-				{
-					im = FB_NEW(*getDefaultMemoryPool())
-						InternalModule(*getDefaultMemoryPool(), mlm, initialModule, fixedModule);
-					loadedModules().add(im);
-					return Module(im);
+					// relative path was used, but no appropriate file present
+					continue;
 				}
 			}
-			else
+
+			// The module name, including directory path,
+			// must satisfy UdfAccess entry in config file.
+			if (! iUdfDirectoryList().isPathInList(fixedModule))
 			{
-				// try to load permanent module
-				ModuleLoader::Module* mlm = ModuleLoader::loadModule(fixedModule);
-				if (mlm)
-				{
-					im = FB_NEW(*getDefaultMemoryPool())
-						InternalModule(*getDefaultMemoryPool(), mlm, initialModule, fixedModule);
-					loadedModules().add(im);
-					im->acquire();	// make permanent
-					return Module(im);
-				}
+				ERR_post(Arg::Gds(isc_conf_access_denied) << Arg::Str("UDF/BLOB-filter module") <<
+															 Arg::Str(initialModule));
+			}
+
+			ModuleLoader::Module* mlm = ModuleLoader::loadModule(NULL, fixedModule);
+			if (mlm)
+			{
+				im = FB_NEW_POOL(*getDefaultMemoryPool())
+					InternalModule(*getDefaultMemoryPool(), mlm, initialModule, fixedModule);
+				loadedModules().add(im);
+				return Module(im);
 			}
 		}
 
@@ -313,24 +267,27 @@ namespace Jrd
 	{
 		if (interMod)
 		{
-			Firebird::MutexLockGuard lg(modulesMutex);
-			if (interMod->release() == 0)
+			Firebird::MutexLockGuard lg(modulesMutex, FB_FUNCTION);
+			interMod = NULL;	// This makes RefPtr call release()
+		}
+	}
+
+	Module::InternalModule::~InternalModule()
+	{
+		fb_assert(modulesMutex->locked());
+
+		delete handle;
+
+		for (FB_SIZE_T m = 0; m < loadedModules().getCount(); m++)
+		{
+			if (loadedModules()[m] == this)
 			{
-				for (size_t m = 0; m < loadedModules().getCount(); m++)
-				{
-					if (loadedModules()[m] == interMod)
-					{
-						loadedModules().remove(m);
-						delete interMod;
-						return;
-					}
-				}
-				fb_assert(false);
-				// In production server we delete interMod here
-				// (though this is not normal case)
-				delete interMod;
+				loadedModules().remove(m);
+				return;
 			}
 		}
+
+		fb_assert(false);
 	}
 
 } // namespace Jrd

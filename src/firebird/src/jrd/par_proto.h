@@ -25,47 +25,64 @@
 #define JRD_PAR_PROTO_H
 
 namespace Jrd {
-	class jrd_nod;
 	class CompilerScratch;
 	class jrd_rel;
-	class jrd_req;
+	class Request;
+	class Statement;
 	class thread_db;
-	struct ItemInfo;
+	class ItemInfo;
+	class BoolExprNode;
+	class CompoundStmtNode;
 	class DmlNode;
+	class MessageNode;
+	class SortNode;
+	class StmtNode;
+	class ValueExprNode;
+	class ValueListNode;
 }
-
-/* blr type classes */
-
-const int OTHER			= 0;
-const int STATEMENT		= 1;
-const int TYPE_BOOL		= 2;
-const int VALUE			= 3;
-const int TYPE_RSE		= 4;
-const int RELATION		= 5;
-const int ACCESS_TYPE	= 6;
 
 struct dsc;
 
-Jrd::jrd_nod*	PAR_blr(Jrd::thread_db* tdbb, Jrd::jrd_rel* relation, const UCHAR* blr, ULONG blr_length,
-						Jrd::CompilerScratch* view_csb, Firebird::AutoPtr<Jrd::CompilerScratch>& csb,
-						Jrd::jrd_req** request_ptr, const bool trigger, USHORT flags);
-Jrd::jrd_nod*	PAR_blr(Jrd::thread_db* tdbb, Jrd::jrd_rel* relation, const UCHAR* blr, ULONG blr_length,
-						Jrd::CompilerScratch* view_csb, Jrd::jrd_req** request_ptr, const bool trigger, USHORT flags);
+Jrd::ValueListNode*	PAR_args(Jrd::thread_db*, Jrd::CompilerScratch*, USHORT, USHORT);
+Jrd::ValueListNode*	PAR_args(Jrd::thread_db*, Jrd::CompilerScratch*);
+Jrd::DmlNode* PAR_blr(Jrd::thread_db*, Jrd::jrd_rel*, const UCHAR*, ULONG blr_length,
+	Jrd::CompilerScratch*, Jrd::CompilerScratch**, Jrd::Statement**, const bool, USHORT);
+void PAR_preparsed_node(Jrd::thread_db*, Jrd::jrd_rel*, Jrd::DmlNode*,
+	Jrd::CompilerScratch*, Jrd::CompilerScratch**, Jrd::Statement**, const bool, USHORT);
+Jrd::BoolExprNode* PAR_validation_blr(Jrd::thread_db*, Jrd::jrd_rel*, const UCHAR* blr,
+	ULONG blr_length, Jrd::CompilerScratch*, Jrd::CompilerScratch**, USHORT);
+StreamType		PAR_context(Jrd::CompilerScratch*, SSHORT*);
+void			PAR_dependency(Jrd::thread_db* tdbb, Jrd::CompilerScratch* csb, StreamType stream,
+	SSHORT id, const Jrd::MetaName& field_name);
+USHORT			PAR_datatype(Firebird::BlrReader&, dsc*);
 USHORT			PAR_desc(Jrd::thread_db*, Jrd::CompilerScratch*, dsc*, Jrd::ItemInfo* = NULL);
-Jrd::jrd_nod*	PAR_gen_field(Jrd::thread_db*, USHORT, USHORT);
-Jrd::jrd_nod*	PAR_make_field(Jrd::thread_db*, Jrd::CompilerScratch*, USHORT, const Firebird::MetaName&);
-Jrd::jrd_nod*	PAR_make_list(Jrd::thread_db*, Jrd::NodeStack&);
-Jrd::jrd_nod*	PAR_make_node(Jrd::thread_db*, int);
-void 			PAR_parse(Jrd::thread_db* tdbb, Firebird::AutoPtr<Jrd::CompilerScratch>& csb,
-						  const UCHAR* blr, ULONG blr_length, bool internal_flag,
-						  USHORT dbginfo_length = 0, const UCHAR* dbginfo = NULL);
+void			PAR_error(Jrd::CompilerScratch*, const Firebird::Arg::StatusVector&, bool isSyntaxError = true);
+SSHORT			PAR_find_proc_field(const Jrd::jrd_prc*, const Jrd::MetaName&);
+Jrd::ValueExprNode* PAR_gen_field(Jrd::thread_db* tdbb, StreamType stream, USHORT id, bool byId = false);
+Jrd::ValueExprNode* PAR_make_field(Jrd::thread_db*, Jrd::CompilerScratch*, USHORT, const Jrd::MetaName&);
+Jrd::CompoundStmtNode*	PAR_make_list(Jrd::thread_db*, Jrd::StmtNodeStack&);
+ULONG			PAR_marks(Jrd::CompilerScratch*);
+Jrd::CompilerScratch*	PAR_parse(Jrd::thread_db*, const UCHAR* blr, ULONG blr_length,
+	bool internal_flag, ULONG = 0, const UCHAR* = NULL);
 
+Jrd::RecordSourceNode* PAR_parseRecordSource(Jrd::thread_db* tdbb, Jrd::CompilerScratch* csb);
+void			PAR_procedure_parms(Jrd::thread_db*, Jrd::CompilerScratch*, Jrd::jrd_prc*,
+	Jrd::MessageNode**, Jrd::ValueListNode**, Jrd::ValueListNode**, bool input_flag);
+Jrd::RseNode*	PAR_rse(Jrd::thread_db*, Jrd::CompilerScratch*, SSHORT);
+Jrd::RseNode*	PAR_rse(Jrd::thread_db*, Jrd::CompilerScratch*);
+Jrd::SortNode*	PAR_sort(Jrd::thread_db*, Jrd::CompilerScratch*, UCHAR, bool);
+Jrd::SortNode*	PAR_sort_internal(Jrd::thread_db*, Jrd::CompilerScratch*, bool, USHORT);
 SLONG			PAR_symbol_to_gdscode(const Firebird::string&);
 
-typedef Jrd::DmlNode* (*NodeParseFunc)(Jrd::thread_db* tdbb, MemoryPool& pool, Jrd::CompilerScratch* csb);
+typedef Jrd::DmlNode* (*NodeParseFunc)(Jrd::thread_db* tdbb, MemoryPool& pool,
+	Jrd::CompilerScratch* csb, const UCHAR blrOp);
 
-Jrd::jrd_nod* PAR_parse_node(Jrd::thread_db* tdbb, Jrd::CompilerScratch* csb, USHORT expected);
+Jrd::BoolExprNode* PAR_parse_boolean(Jrd::thread_db* tdbb, Jrd::CompilerScratch* csb);
+Jrd::ValueExprNode* PAR_parse_value(Jrd::thread_db* tdbb, Jrd::CompilerScratch* csb);
+Jrd::StmtNode* PAR_parse_stmt(Jrd::thread_db* tdbb, Jrd::CompilerScratch* csb);
+Jrd::DmlNode* PAR_parse_node(Jrd::thread_db* tdbb, Jrd::CompilerScratch* csb);
 void PAR_register(UCHAR blr, NodeParseFunc parseFunc);
 void PAR_syntax_error(Jrd::CompilerScratch* csb, const TEXT* string);
+void PAR_warning(const Firebird::Arg::StatusVector& v);
 
 #endif // JRD_PAR_PROTO_H

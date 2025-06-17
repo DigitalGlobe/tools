@@ -35,8 +35,9 @@
 #endif
 #include <string.h>
 #include <math.h>
-#include <ibase.h>
+#include "firebird/ibase.h"
 #include "example.h"
+#include "firebird/ib_util.h"
 
 #define BADVAL -9999L
 #define MYBUF_LEN 15		/* number of chars to get for */
@@ -81,7 +82,7 @@ char* EXPORT fn_lower_c(char* s) /* VARCHAR input */
 	char *buf;
 	short length = 0;
 
-	char *buffer = (char *)malloc(256);
+	char *buffer = (char *)ib_util_malloc(256);
 
 	length = (short)*s;
 	s += 2;
@@ -109,7 +110,7 @@ char* EXPORT fn_strcat(char* s1, char* s2)
 	short length1, length2;
 	char *p;
 
-	char *buffer2 = (char *)malloc(512);
+	char *buffer2 = (char *)ib_util_malloc(512);
 	
 	length1 = (short)*s1;
 	length2 = (short)*s2;
@@ -146,7 +147,7 @@ char* EXPORT fn_substr(char* s,
     short i = 0;
 	short j = 0;
 
-	char *buffer = (char *)malloc(256);
+	char *buffer = (char *)ib_util_malloc(256);
 
         if (*m > *n || *m < 1 || *n < 1) return "Bad parameters in substring"; 
 
@@ -167,7 +168,7 @@ char* EXPORT fn_trim(char* s)
 {
 	short j = 0;
 
-	char *buffer = (char *)malloc(256);
+	char *buffer = (char *)ib_util_malloc(256);
 
         while (*s == ' ')       /* skip leading blanks */
                 s++;
@@ -188,7 +189,7 @@ char* EXPORT fn_trunc(char* s, short* m)
 {
 	short j = 2;	/* leave 1st 2 bytes for VARCHAR output */
 
-	char *buffer = (char *)malloc(256);
+	char *buffer = (char *)ib_util_malloc(256);
 
 	while (*s && j < *m + 2)	/* need to add 2 */
 		buffer[j++] = *s++;
@@ -263,7 +264,7 @@ char* EXPORT fn_sysdate()
  
         char *time_str;
 
-	char *datebuf = (char *)malloc(12);
+	char *datebuf = (char *)ib_util_malloc(12);
  
         time (&time_sec);
         time_str = ctime (&time_sec);

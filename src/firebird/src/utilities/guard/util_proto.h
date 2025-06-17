@@ -29,7 +29,7 @@
 #endif
 
 
-pid_t	UTIL_start_process(const char* process, const char* process2, char** argv, const char* prog_name);
+pid_t	UTIL_start_process(const char* process, char** argv, const char* prog_name);
 int 	UTIL_wait_for_child(pid_t child_pid, const volatile sig_atomic_t& shutting_down);
 int 	UTIL_shutdown_child(pid_t child_pid, unsigned timeout_term, unsigned timeout_kill);
 int 	UTIL_ex_lock(const char* file);

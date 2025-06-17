@@ -59,14 +59,14 @@ public:
 	// Compare with path given by constant
 	bool operator==(const char* path) const
 	{
-		return PathName(*this) == path;
+		return this->operator PathName() == path;
 	}
 	// Check, whether pPath lies inside directory tree,
 	// specified by *this ParsedPath. Also checks against
 	// possible symbolic links.
 	bool contains(const ParsedPath& pPath) const;
 	// Returns path, containing elements from 0 to n-1
-	PathName subPath(size_t n) const;
+	PathName subPath(FB_SIZE_T n) const;
 };
 
 

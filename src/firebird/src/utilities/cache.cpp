@@ -26,11 +26,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
-#include "../jrd/common.h"
-#include "../jrd/ibase.h"
+#include "ibase.h"
 #include "../jrd/license.h"
-#include "../jrd/gds_proto.h"
-#include "../jrd/why_proto.h"
+#include "../yvalve/gds_proto.h"
+#include "../yvalve/why_proto.h"
 
 #ifdef HAVE_IO_H
 #include <io.h>
@@ -125,7 +124,7 @@ int CLIB_ROUTINE main( int argc, char **argv)
 					break;
 
 				case 'Z':
-					printf("Shared cache manager version %s\n", GDS_VERSION);
+					printf("Shared cache manager version %s\n", FB_VERSION);
 					exit(FINI_OK);
 				}
 			}

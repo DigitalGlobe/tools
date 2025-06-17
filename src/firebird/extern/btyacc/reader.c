@@ -1200,7 +1200,7 @@ void advance_to_start()
 	    syntax_error(lineno, line, s_cptr); } }
 
     c = nextc();
-    if (!isalpha(c) && c != '_' && c != '.' && c != '_')
+    if (!isalpha(c) && c != '_' && c != '.' && c != '$')
 	syntax_error(lineno, line, cptr);
     bp = get_name();
     if (goal == 0) {

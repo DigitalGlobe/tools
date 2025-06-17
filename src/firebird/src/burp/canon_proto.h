@@ -24,8 +24,8 @@
 #ifndef BURP_CANON_PROTO_H
 #define BURP_CANON_PROTO_H
 
-ULONG	CAN_encode_decode (burp_rel*, lstring*, UCHAR*, int);
-ULONG	CAN_slice (lstring*, lstring*, int, /*USHORT,*/ UCHAR*);
+ULONG	CAN_encode_decode (burp_rel* relation, lstring* buffer, UCHAR* data, bool direction, bool useMissingOffset = false);
+ULONG	CAN_slice (lstring* buffer, lstring* slice, bool direction, UCHAR* sdl);
 
 #endif	// BURP_CANON_PROTO_H
 

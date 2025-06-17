@@ -26,12 +26,14 @@
 
 namespace Jrd {
 	struct jrd_trg;
+	class dsql_dbb;
 }
 
-void	INI_format(const TEXT*, const TEXT*);
-USHORT	INI_get_trig_flags(const TEXT*);
+void	INI_format(Jrd::thread_db*, const Firebird::string&);
+USHORT	INI_get_trig_flags(const Jrd::MetaName&);
 void	INI_init(Jrd::thread_db*);
-void	INI_init2(Jrd::thread_db*);
+void	INI_init_dsql(Jrd::thread_db*, Jrd::dsql_dbb* database);
+Firebird::string INI_owner_privileges();
+void	INI_upgrade(Jrd::thread_db*);
 
 #endif // JRD_INI_PROTO_H
-

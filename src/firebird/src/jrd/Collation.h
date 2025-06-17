@@ -30,21 +30,22 @@
 #ifndef JRD_COLLATION_H
 #define JRD_COLLATION_H
 
-#include "TextType.h"
+#include "../common/TextType.h"
 
 
 namespace Jrd {
 
 class Lock;
+class BaseSubstringSimilarMatcher;
 
 class Collation : public TextType
 {
 public:
-	static Collation* createInstance(MemoryPool& pool, TTYPE_ID id, texttype* tt, CharSet* cs);
+	static Collation* createInstance(MemoryPool& pool, TTYPE_ID id, texttype* tt, USHORT attributes, CharSet* cs);
 
 protected:
-	Collation(TTYPE_ID id, texttype *a_tt, CharSet* a_cs)
-		: TextType(id, a_tt, a_cs),
+	Collation(TTYPE_ID id, texttype *a_tt, USHORT a_attributes, CharSet* a_cs)
+		: TextType(id, a_tt, a_attributes, a_cs),
 		  useCount(0),
 		  existenceLock(NULL),
 		  obsolete(false)
@@ -54,22 +55,30 @@ protected:
 public:
 	virtual bool matches(MemoryPool& pool, const UCHAR* a, SLONG b, const UCHAR* c, SLONG d) = 0;
 	virtual bool sleuthCheck(MemoryPool& pool, USHORT a, const UCHAR* b, SLONG c, const UCHAR* d, SLONG e) = 0;
-	virtual ULONG sleuthMerge(MemoryPool& pool, const UCHAR* a, SLONG b, const UCHAR* c, SLONG d, UCHAR* e/*, SLONG f*/) = 0;
+	virtual ULONG sleuthMerge(MemoryPool& pool, const UCHAR* a, SLONG b, const UCHAR* c, SLONG d,
+		UCHAR* e/*, SLONG f*/) = 0;
 
 	virtual bool starts(MemoryPool& pool, const UCHAR* s, SLONG sl, const UCHAR* p, SLONG pl) = 0;
 	virtual PatternMatcher* createStartsMatcher(MemoryPool& pool, const UCHAR* p, SLONG pl) = 0;
 
-	virtual bool like(MemoryPool& pool, const UCHAR* s, SLONG sl, const UCHAR* p, SLONG pl, const UCHAR* escape, SLONG escape_length) = 0;
-	virtual PatternMatcher* createLikeMatcher(MemoryPool& pool, const UCHAR* p, SLONG pl, const UCHAR* escape, SLONG escape_length) = 0;
+	virtual bool like(MemoryPool& pool, const UCHAR* s, SLONG sl, const UCHAR* p, SLONG pl,
+		const UCHAR* escape, SLONG escapeLen) = 0;
+	virtual PatternMatcher* createLikeMatcher(MemoryPool& pool, const UCHAR* p, SLONG pl,
+		const UCHAR* escape, SLONG escapeLen) = 0;
 
-	virtual bool similarTo(MemoryPool& pool, const UCHAR* s, SLONG sl, const UCHAR* p, SLONG pl, const UCHAR* escape, SLONG escape_length) = 0;
-	virtual PatternMatcher* createSimilarToMatcher(MemoryPool& pool, const UCHAR* p, SLONG pl, const UCHAR* escape, SLONG escape_length) = 0;
+	virtual bool similarTo(thread_db* tdbb, MemoryPool& pool, const UCHAR* s, SLONG sl, const UCHAR* p, SLONG pl,
+		const UCHAR* escape, SLONG escapeLen) = 0;
+	virtual PatternMatcher* createSimilarToMatcher(thread_db* tdbb, MemoryPool& pool, const UCHAR* p, SLONG pl,
+		const UCHAR* escape, SLONG escapeLen) = 0;
+
+	virtual BaseSubstringSimilarMatcher* createSubstringSimilarMatcher(thread_db* tdbb, MemoryPool& pool,
+		const UCHAR* p, SLONG pl, const UCHAR* escape, SLONG escapeLen) = 0;
 
 	virtual bool contains(MemoryPool& pool, const UCHAR* s, SLONG sl, const UCHAR* p, SLONG pl) = 0;
 	virtual PatternMatcher* createContainsMatcher(MemoryPool& pool, const UCHAR* p, SLONG pl) = 0;
 
-	void release();
-	void destroy();
+	void release(thread_db* tdbb);
+	void destroy(thread_db* tdbb);
 	void incUseCount(thread_db* tdbb);
 	void decUseCount(thread_db* tdbb);
 

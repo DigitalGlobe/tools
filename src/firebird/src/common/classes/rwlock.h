@@ -29,12 +29,14 @@
 #ifndef CLASSES_RWLOCK_H
 #define CLASSES_RWLOCK_H
 
+#include "../common/classes/fb_atomic.h"
+#include "../common/classes/Reasons.h"
+
 #ifdef WIN_NT
 
 #include <windows.h>
 #include <limits.h>
 
-#include "../common/classes/fb_atomic.h"
 #include "../common/classes/locks.h"
 
 
@@ -45,7 +47,7 @@ const int LOCK_WRITER_OFFSET = 50000;
 
 // Should work pretty fast if atomic operations are native.
 // This is not the case for Win95
-class RWLock
+class RWLock : public Reasons
 {
 private:
 	AtomicCounter lock; // This is the actual lock
@@ -70,8 +72,9 @@ private:
 			system_call_failed::raise("CreateEvent");
 	}
 
-	// Forbid copy constructor
-	RWLock(const RWLock& source);
+	// Forbid copying
+	RWLock(const RWLock&);
+	RWLock& operator=(const RWLock&);
 
 public:
 	RWLock() { init(); }
@@ -91,65 +94,73 @@ public:
 	}
 	void unblockWaiting()
 	{
-		if (blockedWriters.value()) {
+		if (blockedWriters.value())
+		{
 			if (!SetEvent(writers_event))
 				system_call_failed::raise("SetEvent");
 		}
-		else if (blockedReaders) {
-			MutexLockGuard guard(blockedReadersLock);
+		else if (blockedReaders)
+		{
+			MutexLockGuard guard(blockedReadersLock, "RWLock::unblockWaiting");
 			if (blockedReaders && !ReleaseSemaphore(readers_semaphore, blockedReaders, NULL))
 			{
 				system_call_failed::raise("ReleaseSemaphore");
 			}
 		}
 	}
-	bool tryBeginRead()
+	bool tryBeginRead(const char* aReason)
 	{
 		if (lock.value() < 0)
 			return false;
-		if (++lock > 0)
+		if (lock.exchangeAdd(1) >= 0)
+		{
+			reason(aReason);
 			return true;
+		}
 		// We stepped on writer's toes. Fix our mistake
-		if (--lock == 0)
+		if (lock.exchangeAdd(-1) == 1)
 			unblockWaiting();
 		return false;
 	}
-	bool tryBeginWrite()
+	bool tryBeginWrite(const char* aReason)
 	{
 		if (lock.value())
 			return false;
 		if (lock.exchangeAdd(-LOCK_WRITER_OFFSET) == 0)
+		{
+			reason(aReason);
 			return true;
+		}
 		// We stepped on somebody's toes. Fix our mistake
 		if (lock.exchangeAdd(LOCK_WRITER_OFFSET) == -LOCK_WRITER_OFFSET)
 			unblockWaiting();
 		return false;
 	}
-	void beginRead()
+	void beginRead(const char* aReason)
 	{
-		if (!tryBeginRead())
+		if (!tryBeginRead(aReason))
 		{
 			{ // scope block
-				MutexLockGuard guard(blockedReadersLock);
+				MutexLockGuard guard(blockedReadersLock, "RWLock::beginRead");
 				++blockedReaders;
 			}
-			while (!tryBeginRead())
+			while (!tryBeginRead(aReason))
 			{
 				if (WaitForSingleObject(readers_semaphore, INFINITE) != WAIT_OBJECT_0)
 					system_call_failed::raise("WaitForSingleObject");
 			}
 			{ // scope block
-				MutexLockGuard guard(blockedReadersLock);
+				MutexLockGuard guard(blockedReadersLock, "RWLock::beginRead");
 				--blockedReaders;
 			}
 		}
 	}
-	void beginWrite()
+	void beginWrite(const char* aReason)
 	{
-		if (!tryBeginWrite())
+		if (!tryBeginWrite(aReason))
 		{
 			++blockedWriters;
-			while (!tryBeginWrite())
+			while (!tryBeginWrite(aReason))
 			{
 				if (WaitForSingleObject(writers_event, INFINITE) != WAIT_OBJECT_0)
 					system_call_failed::raise("WaitForSingleObject");
@@ -174,7 +185,7 @@ public:
 
 #else
 
-#include <pthread.h>
+#include "fb_pthread.h"
 #include <errno.h>
 
 namespace Firebird
@@ -182,76 +193,124 @@ namespace Firebird
 
 class MemoryPool;
 
-class RWLock
+class RWLock : public Reasons
 {
 private:
 	pthread_rwlock_t lock;
-	// Forbid copy constructor
-	RWLock(const RWLock& source);
+
+#ifdef DEV_BUILD
+	AtomicCounter lockCounter;
+#endif
+
+	// Forbid copying
+	RWLock(const RWLock&);
+	RWLock& operator=(const RWLock&);
 
 	void init()
 	{
-#if defined(LINUX) && !defined(USE_VALGRIND)
+		int code;
+#if defined(LINUX) && !defined(USE_VALGRIND) && defined(HAVE_PTHREAD_RWLOCKATTR_SETKIND_NP)
 		pthread_rwlockattr_t attr;
-		if (pthread_rwlockattr_init(&attr))
-			system_call_failed::raise("pthread_rwlockattr_init");
+		if ((code = pthread_rwlockattr_init(&attr)))
+			system_call_failed::raise("pthread_rwlockattr_init", code);
 		// Do not worry if target misses support for this option
 		pthread_rwlockattr_setkind_np(&attr, PTHREAD_RWLOCK_PREFER_WRITER_NONRECURSIVE_NP);
-		if (pthread_rwlock_init(&lock, NULL))
-			system_call_failed::raise("pthread_rwlock_init");
-		if (pthread_rwlockattr_destroy(&attr))
-			system_call_failed::raise("pthread_rwlockattr_destroy");
+		if ((code = pthread_rwlock_init(&lock, NULL)))
+			system_call_failed::raise("pthread_rwlock_init", code);
+		if ((code = pthread_rwlockattr_destroy(&attr)))
+			system_call_failed::raise("pthread_rwlockattr_destroy", code);
 #else
-		if (pthread_rwlock_init(&lock, NULL))
-			system_call_failed::raise("pthread_rwlock_init");
+		if ((code = pthread_rwlock_init(&lock, NULL)))
+			system_call_failed::raise("pthread_rwlock_init", code);
 #endif
 	}
 
 public:
 	RWLock() { init(); }
 	explicit RWLock(class MemoryPool&) { init(); }
+
 	~RWLock()
 	{
-		if (pthread_rwlock_destroy(&lock))
-			system_call_failed::raise("pthread_rwlock_destroy");
+#ifdef DEV_BUILD
+		fb_assert(lockCounter.value() == 0);
+#endif
+
+		if (const int code = pthread_rwlock_destroy(&lock))
+			system_call_failed::raise("pthread_rwlock_destroy", code);
 	}
-	void beginRead()
+
+	void beginRead(const char* aReason)
 	{
-		if (pthread_rwlock_rdlock(&lock))
-			system_call_failed::raise("pthread_rwlock_rdlock");
+		if (const int code = pthread_rwlock_rdlock(&lock))
+			system_call_failed::raise("pthread_rwlock_rdlock", code);
+
+#ifdef DEV_BUILD
+		++lockCounter;
+#endif
+		reason(aReason);
 	}
-	bool tryBeginRead()
+
+	bool tryBeginRead(const char* aReason)
 	{
 		const int code = pthread_rwlock_tryrdlock(&lock);
 		if (code == EBUSY)
 			return false;
 		if (code)
-			system_call_failed::raise("pthread_rwlock_tryrdlock");
+			system_call_failed::raise("pthread_rwlock_tryrdlock", code);
+
+#ifdef DEV_BUILD
+		++lockCounter;
+#endif
+		reason(aReason);
 		return true;
 	}
+
 	void endRead()
 	{
-		if (pthread_rwlock_unlock(&lock))
-			system_call_failed::raise("pthread_rwlock_unlock");
+#ifdef DEV_BUILD
+		if (lockCounter.exchangeAdd(-1) <= 0)
+			fb_assert(false);
+#endif
+
+		if (const int code = pthread_rwlock_unlock(&lock))
+			system_call_failed::raise("pthread_rwlock_unlock", code);
 	}
-	bool tryBeginWrite()
+
+	bool tryBeginWrite(const char* aReason)
 	{
 		const int code = pthread_rwlock_trywrlock(&lock);
 		if (code == EBUSY)
 			return false;
 		if (code)
-			system_call_failed::raise("pthread_rwlock_trywrlock");
+			system_call_failed::raise("pthread_rwlock_trywrlock", code);
+
+#ifdef DEV_BUILD
+		++lockCounter;
+#endif
+		reason(aReason);
 		return true;
 	}
-	void beginWrite()
+
+	void beginWrite(const char* aReason)
 	{
-		if (pthread_rwlock_wrlock(&lock))
-			system_call_failed::raise("pthread_rwlock_wrlock");
+		if (const int code = pthread_rwlock_wrlock(&lock))
+			system_call_failed::raise("pthread_rwlock_wrlock", code);
+
+#ifdef DEV_BUILD
+		++lockCounter;
+#endif
+		reason(aReason);
 	}
+
 	void endWrite()
 	{
-		if (pthread_rwlock_unlock(&lock))
-			system_call_failed::raise("pthread_rwlock_unlock");
+#ifdef DEV_BUILD
+		if (lockCounter.exchangeAdd(-1) <= 0)
+			fb_assert(false);
+#endif
+
+		if (const int code = pthread_rwlock_unlock(&lock))
+			system_call_failed::raise("pthread_rwlock_unlock", code);
 	}
 };
 
@@ -265,12 +324,23 @@ namespace Firebird {
 class ReadLockGuard
 {
 public:
-	ReadLockGuard(RWLock &alock)
+	explicit ReadLockGuard(RWLock& alock, const char* aReason)
 		: lock(&alock)
 	{
-		lock->beginRead();
+		lock->beginRead(aReason);
 	}
-	~ReadLockGuard() { release(); }
+
+	explicit ReadLockGuard(RWLock* alock, const char* aReason)
+		: lock(alock)
+	{
+		if (lock)
+			lock->beginRead(aReason);
+	}
+
+	~ReadLockGuard()
+	{
+		release();
+	}
 
 	void release()
 	{
@@ -282,21 +352,34 @@ public:
 	}
 
 private:
-	// Forbid copy constructor
-	ReadLockGuard(const ReadLockGuard& source);
-	RWLock *lock;
+	// Forbid copying
+	ReadLockGuard(const ReadLockGuard&);
+	ReadLockGuard& operator=(const ReadLockGuard&);
+
+	RWLock* lock;
 };
 
 // RAII holder of write lock
 class WriteLockGuard
 {
 public:
-	WriteLockGuard(RWLock &alock)
+	explicit WriteLockGuard(RWLock& alock, const char* aReason)
 		: lock(&alock)
 	{
-		lock->beginWrite();
+		lock->beginWrite(aReason);
 	}
-	~WriteLockGuard() { release(); }
+
+	explicit WriteLockGuard(RWLock* alock, const char* aReason)
+		: lock(alock)
+	{
+		if (lock)
+			lock->beginWrite(aReason);
+	}
+
+	~WriteLockGuard()
+	{
+		release();
+	}
 
 	void release()
 	{
@@ -308,12 +391,13 @@ public:
 	}
 
 private:
-	// Forbid copy constructor
-	WriteLockGuard(const WriteLockGuard& source);
-	RWLock *lock;
+	// Forbid copying
+	WriteLockGuard(const WriteLockGuard&);
+	WriteLockGuard& operator=(const WriteLockGuard&);
+
+	RWLock* lock;
 };
 
 } // namespace Firebird
 
 #endif // #ifndef CLASSES_RWLOCK_H
-

@@ -22,9 +22,8 @@
  */
 
 #include "UserBlob.h"
-#include "../jrd/ibase.h"
-#include "../jrd/common.h"
-#include "../jrd/gds_proto.h"
+#include "ibase.h"
+#include "../yvalve/gds_proto.h"
 
 static const USHORT SEGMENT_LIMIT = 65535;
 //static SLONG fb_vax_integer(const UCHAR* ptr, int length);
@@ -49,7 +48,7 @@ bool UserBlob::open(FB_API_HANDLE& db, FB_API_HANDLE& trans, ISC_QUAD& blobid,
 	if (m_direction != dir_none)
 		return false;
 
-	if (bpb_len > 0 && !bpb || blobIsNull(blobid))
+	if ((bpb_len > 0 && !bpb) || blobIsNull(blobid))
 		return false;
 
 	if (!isc_open_blob2(m_status, &db, &trans, &m_blob, &blobid, bpb_len, bpb))
@@ -105,7 +104,7 @@ bool UserBlob::close(bool force_internal_SV)
 	return rc;
 }
 
-bool UserBlob::getSegment(size_t len, void* buffer, size_t& real_len)
+bool UserBlob::getSegment(FB_SIZE_T len, void* buffer, FB_SIZE_T& real_len)
 {
 	real_len = 0;
 
@@ -128,7 +127,7 @@ bool UserBlob::getSegment(size_t len, void* buffer, size_t& real_len)
 	return false;
 }
 
-bool UserBlob::getData(size_t len, void* buffer, size_t& real_len,
+bool UserBlob::getData(FB_SIZE_T len, void* buffer, FB_SIZE_T& real_len,
 						bool use_sep, const UCHAR separator)
 {
 	if (!m_blob || m_direction == dir_write)
@@ -163,7 +162,7 @@ bool UserBlob::getData(size_t len, void* buffer, size_t& real_len,
 	return rc;
 }
 
-bool UserBlob::putSegment(size_t len, const void* buffer)
+bool UserBlob::putSegment(FB_SIZE_T len, const void* buffer)
 {
 #ifdef DEV_BUILD
 	if (!m_blob || m_direction == dir_read)
@@ -178,7 +177,7 @@ bool UserBlob::putSegment(size_t len, const void* buffer)
 	return !isc_put_segment(m_status, &m_blob, ilen, buf2);
 }
 
-bool UserBlob::putSegment(size_t len, const void* buffer, size_t& real_len)
+bool UserBlob::putSegment(FB_SIZE_T len, const void* buffer, FB_SIZE_T& real_len)
 {
 #ifdef DEV_BUILD
 	if (!m_blob || m_direction == dir_read)
@@ -198,7 +197,7 @@ bool UserBlob::putSegment(size_t len, const void* buffer, size_t& real_len)
 	return true;
 }
 
-bool UserBlob::putData(size_t len, const void* buffer, size_t& real_len)
+bool UserBlob::putData(FB_SIZE_T len, const void* buffer, FB_SIZE_T& real_len)
 {
 	if (!m_blob || m_direction == dir_read)
 		return false;
@@ -221,8 +220,8 @@ bool UserBlob::putData(size_t len, const void* buffer, size_t& real_len)
 	return true;
 }
 
-bool UserBlob::getInfo(size_t items_size, const UCHAR* items,
-						size_t info_size, UCHAR* blob_info) const
+bool UserBlob::getInfo(FB_SIZE_T items_size, const UCHAR* items,
+						FB_SIZE_T info_size, UCHAR* blob_info) const
 {
 	if (!m_blob || m_direction != dir_read)
 		return false;

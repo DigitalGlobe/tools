@@ -24,7 +24,7 @@
 #ifndef JRD_MET_H
 #define JRD_MET_H
 
-/* Record types for record summary blob records */
+// Record types for record summary blob records
 
 enum rsr_t {
 	RSR_field_id,
@@ -40,39 +40,36 @@ enum rsr_t {
 	RSR_dimensions,
 	RSR_array_desc,
 
-	RSR_relation_id,			/* The following are Gateway specific */
-	RSR_relation_name,			/* and are used to speed the acquiring */
-	RSR_rel_sys_flag,			/* of relation information */
+	RSR_relation_id,			// The following are Gateway specific
+	RSR_relation_name,			// and are used to speed the acquiring
+	RSR_rel_sys_flag,			// of relation information
 	RSR_view_blr,
 	RSR_owner_name,
-	RSR_field_type,				/* The following are also Gateway */
-	RSR_field_scale,			/* specific and relate to field info */
+	RSR_field_type,				// The following are also Gateway
+	RSR_field_scale,			// specific and relate to field info
 	RSR_field_length,
 	RSR_field_sub_type,
-	RSR_field_not_null
+	RSR_field_not_null,
+	RSR_field_generator_name,
+	RSR_field_identity_type
 };
 
-/* Temporary field block */
+// Temporary field block
 
 class TemporaryField : public pool_alloc<type_tfb>
 {
 public:
-	TemporaryField*	tfb_next;		/* next block in chain */
-	USHORT			tfb_id;				/* id of field in relation */
+	TemporaryField*	tfb_next;		// next block in chain
+	USHORT			tfb_id;			// id of field in relation
 	USHORT			tfb_flags;
-	DSC				tfb_desc;
+	dsc				tfb_desc;
+	Jrd::impure_value	tfb_default;
 };
 
 // tfb_flags
 
 const int TFB_computed			= 1;
 const int TFB_array				= 2;
-
-// index status
-
-const SSHORT MET_object_active		= 0;
-const SSHORT MET_object_inactive	= 1;
-const SSHORT MET_object_unknown	= 2;
 
 
 const int TRIGGER_PRE_STORE		= 1;
@@ -130,4 +127,4 @@ const int TRIGGER_COMBINED_MAX	= 128;
 
 #include "../jrd/obj.h"
 
-#endif /* JRD_MET_H */
+#endif // JRD_MET_H

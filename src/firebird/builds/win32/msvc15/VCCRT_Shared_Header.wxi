@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<Include xmlns="http://schemas.microsoft.com/wix/2006/wi">
+
+    <?define PRODUCT_ID = * ?>
+
+    <?define PACKAGE_ID = * ?>
+
+    <?define MANUFACTURER = "The Firebird Project" ?>
+
+    <?define DESCRIPTION = "MSI to redistribute Visual Studio Runtime libraries" ?>
+
+    <?define COMMENTS = "This MSI specially created for Firebird." ?>
+
+    <?define MS_CRT_VER = "$(env.VCToolsVersion)" ?>
+
+    <?define MSMDIR = "$(env.VCToolsRedistDir)\MergeModules" ?>
+
+    <?define MSM = "microsoft_vc$(env.MSVC_RUNTIME_MAJOR_VERSION)$(env.MSVC_RUNTIME_MINOR_VERSION)_crt_$(var.CPUArch).msm" ?>
+
+</Include>

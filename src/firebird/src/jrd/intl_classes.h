@@ -29,13 +29,13 @@
 #define JRD_INTL_CLASSES_H
 
 #include "firebird.h"
-#include "../jrd/jrd.h"
-#include "../jrd/intlobj_new.h"
+
+#include "../common/intlobj_new.h"
 #include "../jrd/constants.h"
-#include "../jrd/unicode_util.h"
-#include "../jrd/CsConvert.h"
-#include "../jrd/CharSet.h"
-#include "../jrd/TextType.h"
+#include "../common/unicode_util.h"
+#include "../common/CsConvert.h"
+#include "../common/CharSet.h"
+#include "../common/TextType.h"
 
 namespace Jrd {
 
@@ -61,6 +61,17 @@ protected:
 	TextType* textType;
 };
 
+class BaseSubstringSimilarMatcher : public PatternMatcher
+{
+public:
+	BaseSubstringSimilarMatcher(MemoryPool& pool, TextType* ttype)
+		: PatternMatcher(pool, ttype)
+	{
+	}
+
+	virtual void getResultInfo(unsigned* start, unsigned* length) = 0;
+};
+
 class NullStrConverter
 {
 public:
@@ -69,33 +80,25 @@ public:
 	}
 };
 
-template <typename PrevConverter>
+template <typename PrevConverter = NullStrConverter>
 class UpcaseConverter : public PrevConverter
 {
 public:
 	UpcaseConverter(MemoryPool& pool, TextType* obj, const UCHAR*& str, SLONG& len)
 		: PrevConverter(pool, obj, str, len)
 	{
-		if (len > (int) sizeof(tempBuffer))
-			out_str = FB_NEW(pool) UCHAR[len];
-		else
-			out_str = tempBuffer;
-		obj->str_to_upper(len, str, len, out_str);
-		str = out_str;
-	}
+		const auto charSet = obj->getCharSet();
+		const auto bufferSize = len / charSet->minBytesPerChar() * charSet->maxBytesPerChar();
 
-	~UpcaseConverter()
-	{
-		if (out_str != tempBuffer)
-			delete[] out_str;
+		len = obj->str_to_upper(len, str, bufferSize, tempBuffer.getBuffer(bufferSize, false));
+		str = tempBuffer.begin();
 	}
 
 private:
-	UCHAR tempBuffer[100];
-	UCHAR* out_str;
+	Firebird::UCharBuffer tempBuffer;
 };
 
-template <typename PrevConverter>
+template <typename PrevConverter = NullStrConverter>
 class CanonicalConverter : public PrevConverter
 {
 public:
@@ -104,35 +107,20 @@ public:
 	{
 		const SLONG out_len = len / obj->getCharSet()->minBytesPerChar() * obj->getCanonicalWidth();
 
-		if (out_len > (int) sizeof(tempBuffer))
-			out_str = FB_NEW(pool) UCHAR[out_len];
-		else
-			out_str = tempBuffer;
-
 		if (str)
 		{
-			len = obj->canonical(len, str, out_len, out_str) * obj->getCanonicalWidth();
-			str = out_str;
+			len = obj->canonical(len, str, out_len, tempBuffer.getBuffer(out_len, false)) * obj->getCanonicalWidth();
+			str = tempBuffer.begin();
 		}
 		else
 			len = 0;
 	}
 
-	~CanonicalConverter()
-	{
-		if (out_str != tempBuffer)
-			delete[] out_str;
-	}
-
 private:
-	UCHAR tempBuffer[100];
-	UCHAR* out_str;
+	Firebird::UCharBuffer tempBuffer;
 };
 
 } // namespace Jrd
-
-
-#include "../jrd/Collation.h"
 
 
 #endif	// JRD_INTL_CLASSES_H

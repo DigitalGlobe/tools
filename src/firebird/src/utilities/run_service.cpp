@@ -24,9 +24,8 @@
 #include "firebird.h"
 #include <stdio.h>
 #include <string.h>
-#include "../jrd/common.h"
-#include "../jrd/ibase.h"
-#include "../jrd/gds_proto.h"
+#include "ibase.h"
+#include "../yvalve/gds_proto.h"
 
 static const SCHAR recv_items[] = { isc_info_svc_to_eof };
 static const SCHAR send_timeout[] = { isc_info_svc_timeout, 1, 0, 30 };

@@ -26,31 +26,28 @@
 
 #include "../jrd/jrd.h"
 #include "../jrd/btr.h"
-#include "../jrd/rse.h"
 #include "../jrd/lls.h"
 
 namespace Jrd {
-	class jrd_req;
+	class Request;
 	class jrd_rel;
-	class jrd_nod;
-	class RecordSelExpr;
 	class RecordSource;
 	struct index_desc;
 	class CompilerScratch;
 	class OptimizerBlk;
+	class SortedStream;
+	class SortNode;
+	class MapNode;
 }
 
-bool OPT_access_path(const Jrd::jrd_req*, UCHAR*, SLONG, ULONG*);
-Jrd::RecordSource* OPT_compile(Jrd::thread_db*, Jrd::CompilerScratch*,
-							   Jrd::RecordSelExpr*, Jrd::NodeStack*);
-
-// Begin only exported for VMS
-Jrd::jrd_nod* OPT_make_dbkey(Jrd::OptimizerBlk*, Jrd::jrd_nod*,
-								  USHORT);
-Jrd::jrd_nod* OPT_make_index(Jrd::thread_db*, Jrd::OptimizerBlk*, Jrd::jrd_rel*,
-								  Jrd::index_desc*);
-int OPT_match_index(Jrd::OptimizerBlk*, USHORT, Jrd::index_desc*);
-// End only exported for VMS
+Firebird::string OPT_get_plan(Jrd::thread_db* tdbb, const Jrd::Statement* statement, bool detailed);
+Jrd::RecordSource* OPT_compile(Jrd::thread_db* tdbb, Jrd::CompilerScratch* csb,
+	Jrd::RseNode* rse, Jrd::BoolExprNodeStack* parent_stack);
+void OPT_compile_relation(Jrd::thread_db* tdbb, Jrd::jrd_rel* relation, Jrd::CompilerScratch* csb,
+	StreamType stream, bool needIndices);
+void OPT_gen_aggregate_distincts(Jrd::thread_db* tdbb, Jrd::CompilerScratch* csb, Jrd::MapNode* map);
+Jrd::SortedStream* OPT_gen_sort(Jrd::thread_db* tdbb, Jrd::CompilerScratch* csb, const Jrd::StreamList& streams,
+	const Jrd::StreamList* dbkey_streams, Jrd::RecordSource* prior_rsb, Jrd::SortNode* sort,
+	bool refetch_flag, bool project_flag);
 
 #endif // JRD_OPT_PROTO_H
-

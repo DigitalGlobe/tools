@@ -12,13 +12,23 @@
 //
 #define YYBTYACC 1
 
+#include "firebird.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "dsql.tab.h"
-#include "Parser.h"
-
-#define YYERROR_DETAILED
+#include "../dsql/Nodes.h"
+#include "../dsql/AggNodes.h"
+#include "../dsql/DdlNodes.h"
+#include "../dsql/BoolNodes.h"
+#include "../dsql/ExprNodes.h"
+#include "../dsql/PackageNodes.h"
+#include "../dsql/StmtNodes.h"
+#include "../dsql/WinNodes.h"
+#include "../jrd/RecordSourceNodes.h"
+#include "../common/classes/Nullable.h"
+#include "gen/parse.h"
+#include "../dsql/Parser.h"
 
 %% tables
 
@@ -62,12 +72,12 @@ extern _C_ const char *yyrule[];
 
 // If delete function is not defined by the user, do not deletions.
 #ifndef YYDELETEVAL
-#define YYDELETEVAL(v, n) 
+#define YYDELETEVAL(v, n)
 #endif
 
 // If delete function is not defined by the user, do not deletions.
 #ifndef YYDELETEPOSN
-#define YYDELETEPOSN(v, n) 
+#define YYDELETEPOSN(v, n)
 #endif
 
 #define yyclearin (yychar = (-1))
@@ -75,7 +85,7 @@ extern _C_ const char *yyrule[];
 #define yyerrok (yyps->errflag = 0)
 
 #ifndef YYSTACKGROWTH
-#define YYSTACKGROWTH 16
+#define YYSTACKGROWTH 128
 #endif
 
 #ifndef YYDEFSTACKSIZE
@@ -89,7 +99,6 @@ int yydebug;
 
 #define YYABORT  goto yyabort
 #define YYACCEPT goto yyaccept
-#define YYERROR  goto yyerrlab
 #define YYVALID         do { if (yyps->save)          goto yyvalid; } while(0)
 #define YYVALID_NESTED  do { if (yyps->save && \
                                  yyps->save->save == 0) goto yyvalid; } while(0)
@@ -107,7 +116,7 @@ int yydebug;
 
 void Parser::yySCopy(YYSTYPE* to, YYSTYPE* from, int size)
 {
-  int i;                             
+  int i;
   for (i = size - 1; i >= 0; i--) {
     to[i] = from[i];
   }
@@ -116,7 +125,7 @@ void Parser::yySCopy(YYSTYPE* to, YYSTYPE* from, int size)
 
 void Parser::yyPCopy(YYPOSN* to, YYPOSN* from, int size)
 {
-  int i;                             
+  int i;
   for (i = size - 1; i >= 0; i--) {
     to[i] = from[i];
   }
@@ -125,33 +134,33 @@ void Parser::yyPCopy(YYPOSN* to, YYPOSN* from, int size)
 
 void Parser::yyMoreStack(yyparsestate* yyps)
 {
-  int p = yyps->ssp - yyps->ss;                               
+  int p = yyps->ssp - yyps->ss;
   Yshort  *tss = yyps->ss;
   YYSTYPE *tvs = yyps->vs;
   YYPOSN  *tps = yyps->ps;
-  yyps->ss = new Yshort [yyps->stacksize + YYSTACKGROWTH];   
-  yyps->vs = new YYSTYPE[yyps->stacksize + YYSTACKGROWTH];  
-  yyps->ps = new YYPOSN [yyps->stacksize + YYSTACKGROWTH];  
-  memcpy(yyps->ss, tss, yyps->stacksize * sizeof(Yshort));  
+  yyps->ss = FB_NEW_POOL(getPool()) Yshort [yyps->stacksize + YYSTACKGROWTH];
+  yyps->vs = FB_NEW_POOL(getPool()) YYSTYPE[yyps->stacksize + YYSTACKGROWTH];
+  yyps->ps = FB_NEW_POOL(getPool()) YYPOSN [yyps->stacksize + YYSTACKGROWTH];
+  memcpy(yyps->ss, tss, yyps->stacksize * sizeof(Yshort));
   yySCopy(yyps->vs, tvs, yyps->stacksize);
   yyPCopy(yyps->ps, tps, yyps->stacksize);
   yyps->stacksize += YYSTACKGROWTH;
   delete[] tss;
   delete[] tvs;
   delete[] tps;
-  yyps->ssp = yyps->ss + p;                                   
-  yyps->vsp = yyps->vs + p;                                   
-  yyps->psp = yyps->ps + p;                                   
+  yyps->ssp = yyps->ss + p;
+  yyps->vsp = yyps->vs + p;
+  yyps->psp = yyps->ps + p;
 }
 
 
 Parser::yyparsestate* Parser::yyNewState(int size)
 {
-  yyparsestate *p = new yyparsestate;
+  yyparsestate *p = FB_NEW_POOL(getPool()) yyparsestate;
   p->stacksize = size + 4;
-  p->ss = new Yshort [size + 4];
-  p->vs = new YYSTYPE[size + 4];
-  p->ps = new YYPOSN [size + 4];
+  p->ss = FB_NEW_POOL(getPool()) Yshort [size + 4];
+  p->vs = FB_NEW_POOL(getPool()) YYSTYPE[size + 4];
+  p->ps = FB_NEW_POOL(getPool()) YYPOSN [size + 4];
   memset(&p->vs[0], 0, (size + 4) * sizeof(YYSTYPE));
   memset(&p->ps[0], 0, (size + 4) * sizeof(YYPOSN));
   return p;
@@ -167,33 +176,45 @@ void Parser::yyFreeState(Parser::yyparsestate* p)
 }
 
 
+void Parser::setNodeLineColumn(Node* node)
+{
+	// Check if we are not accessing the position stack below its base.
+	if (&YYPOSNARG(1) >= yyps->ps)
+	{
+		node->line = YYPOSNARG(1).firstLine;
+		node->column = YYPOSNARG(1).firstColumn;
+	}
+}
+
+
 int Parser::parseAux()
 {
-  int yym, yyn, yystate, yychar, yynewerrflag;
+  // ASF: yym moved to Parser.h
+  int /*yym, */yyn, yystate, yychar, yynewerrflag;
   yyparsestate *yyerrctx = NULL;
   int reduce_posn;
 
 #if YYDEBUG
   const char *yys;
-  
+
   if ((yys = getenv("YYDEBUG"))) {
     yyn = *yys;
     if (yyn >= '0' && yyn <= '9')
-      yydebug = yyn - '0'; 
+      yydebug = yyn - '0';
   }
 #endif
-  
+
   yyps = yyNewState(YYDEFSTACKSIZE);
   yyps->save = 0;
   yynerrs = 0;
   yyps->errflag = 0;
   yychar = (-1);
-  
+
   yyps->ssp = yyps->ss;
   yyps->vsp = yyps->vs;
   yyps->psp = yyps->ps;
   *(yyps->ssp) = yystate = 0;
-  
+
 
   //
   // Main parsing loop
@@ -213,14 +234,14 @@ int Parser::parseAux()
       yys = 0;
       if (yychar <= YYMAXTOKEN) yys = yyname[yychar];
       if (!yys) yys = "illegal-symbol";
-      printf("yydebug[%d,%p]: state %d, reading %d (%s)", 
+      printf("yydebug[%d,%p]: state %d, reading %d (%s)",
 	     int(yydepth), yytrial, yystate, yychar, yys);
 #ifdef YYDBPR
       printf("<");
       YYDBPR(yylval);
       printf(">");
 #endif
-      printf("\n"); 
+      printf("\n");
     }
 #endif
   }
@@ -237,7 +258,7 @@ int Parser::parseAux()
     if (yypath) {
 #if YYDEBUG
       if (yydebug) {
-        printf("yydebug[%d,%p]: CONFLICT in state %d: following successful trial parse\n", 
+        printf("yydebug[%d,%p]: CONFLICT in state %d: following successful trial parse\n",
 	       int(yydepth), yytrial, yystate);
       }
 #endif
@@ -245,15 +266,15 @@ int Parser::parseAux()
       yyparsestate *save = yypath;
       yypath = save->save;
       ctry = save->ctry;
-      if (save->state != yystate) 
+      if (save->state != yystate)
         goto yyabort;
-      yyFreeState(save); 
+      yyFreeState(save);
 
     } else {
 
 #if YYDEBUG
       if (yydebug) {
-        printf("yydebug[%d,%p]: CONFLICT in state %d. ", 
+        printf("yydebug[%d,%p]: CONFLICT in state %d. ",
 	       int(yydepth), yytrial, yystate);
         if (yyps->save) {
           printf("ALREADY in conflict. Continue trial parse.");
@@ -279,17 +300,17 @@ int Parser::parseAux()
         if (yydebug && yychar >= 0)
           printf("yydebug[%p]: backtracking 1 token\n", yytrial);
 #endif
-        ctry++; 
+        ctry++;
       }
       save->ctry = ctry;
       if (!yyps->save) {
         // If this is a first conflict in the stack, start saving lexemes
         if (!yylexemes) {
-          yylexemes = new Yshort[YYSTACKGROWTH];
-          yylvals = new YYSTYPE[YYSTACKGROWTH];
-          yylvlim = yylvals + YYSTACKGROWTH; 
-          yylpsns = new YYPOSN[YYSTACKGROWTH];
-          yylplim = yylpsns + YYSTACKGROWTH; 
+          yylexemes = FB_NEW_POOL(getPool()) Yshort[YYSTACKGROWTH];
+          yylvals = FB_NEW_POOL(getPool()) YYSTYPE[YYSTACKGROWTH];
+          yylvlim = yylvals + YYSTACKGROWTH;
+          yylpsns = FB_NEW_POOL(getPool()) YYPOSN[YYSTACKGROWTH];
+          yylplim = yylpsns + YYSTACKGROWTH;
         }
         if (yylvp == yylve) {
           yylvp = yylve = yylvals;
@@ -299,16 +320,16 @@ int Parser::parseAux()
             *yylve++ = yylval;
             *yylpe++ = yyposn;
             *yylexp = yychar;
-            yychar = -1; 
-          } 
-        } 
+            yychar = -1;
+          }
+        }
       }
       if (yychar >= 0) {
         yylvp--, yylpp--, yylexp--;
-        yychar = -1; 
+        yychar = -1;
       }
       save->lexeme = yylvp - yylvals;
-      yyps->save = save; 
+      yyps->save = save;
     }
     if (yytable[yyn] == ctry) {
 #if YYDEBUG
@@ -321,11 +342,11 @@ int Parser::parseAux()
       yychar = -1;
       if (yyps->errflag > 0) --yyps->errflag;
       yystate = yyctable[ctry];
-      goto yyshift; 
+      goto yyshift;
     } else {
       yyn = yyctable[ctry];
-      goto yyreduce; 
-    } 
+      goto yyreduce;
+    }
   }
 
   //
@@ -364,13 +385,8 @@ int Parser::parseAux()
   // Action: error
   //
   if (yyps->errflag) goto yyinrecovery;
-  yynewerrflag = 1;
-  goto yyerrhandler;
-yyerrlab:
-  yynewerrflag = 0;
-yyerrhandler:
-  while (yyps->save) { 
-    int ctry; 
+  while (yyps->save) {
+    int ctry;
     yyparsestate *save = yyps->save;
 #if YYDEBUG
     if (yydebug)
@@ -419,7 +435,7 @@ yyerrhandler:
     if (!yyps->save) {
 #if YYDEBUG
       if (yydebug) {
-        printf("yydebug[%p]: trial parse FAILED, entering ERROR mode\n", 
+        printf("yydebug[%p]: trial parse FAILED, entering ERROR mode\n",
 	       yytrial);
       }
 #endif
@@ -440,33 +456,25 @@ yyerrhandler:
       yyFreeState(yyerrctx);
       yyerrctx = NULL;
     }
-    yynewerrflag = 1; 
   }
-  if (yynewerrflag) {
-#ifdef YYERROR_DETAILED
-    yyerror_detailed("syntax error", yychar, yylval, yyposn);
-#else
-    yyerror("syntax error");
-#endif
-  }
+  yyerror_detailed("syntax error", yychar, yylval, yyposn);
   ++yynerrs;
+
  yyinrecovery:
   if (yyps->errflag < 3) {
     yyps->errflag = 3;
     for (;;) {
-      if ((yyn = yysindex[*(yyps->ssp)]) && 
+      if ((yyn = yysindex[*(yyps->ssp)]) &&
 	  (yyn += YYERRCODE) >= 0 &&
-          yyn <= YYTABLESIZE && 
+          yyn <= YYTABLESIZE &&
 	  yycheck[yyn] == YYERRCODE) {
 #if YYDEBUG
         if (yydebug)
           printf("yydebug[%d,%p]: state %d, ERROR recovery shifts to state %d\n",
                  int(yydepth), yytrial, *(yyps->ssp), yytable[yyn]);
 #endif
-        /* Use label yyerrlab, so that compiler does not warn */
-        if (yyps->errflag != yyps->errflag) goto yyerrlab;
         yystate = yytable[yyn];
-        goto yyshift; 
+        goto yyshift;
       } else {
 #if YYDEBUG
         if (yydebug)
@@ -493,7 +501,7 @@ yyerrhandler:
       if (yychar <= YYMAXTOKEN) yys = yyname[yychar];
       if (!yys) yys = "illegal-symbol";
       printf("yydebug[%d,%p]: state %d, ERROR recovery discards token %d (%s)\n",
-             int(yydepth), yytrial, yystate, yychar, yys); 
+             int(yydepth), yytrial, yystate, yychar, yys);
     }
 #endif
     if (!yytrial) {
@@ -572,7 +580,7 @@ yyreduce:
   if (yystate == 0 && yym == 0) {
 #if YYDEBUG
     if (yydebug) {
-      printf("yydebug[%d,%p]: after reduction, shifting from state 0 to state %d\n", 
+      printf("yydebug[%d,%p]: after reduction, shifting from state 0 to state %d\n",
 	     int(yydepth), yytrial, YYFINAL);
     }
 #endif
@@ -591,8 +599,8 @@ yyreduce:
         yys = 0;
         if (yychar <= YYMAXTOKEN) yys = yyname[yychar];
         if (!yys) yys = "illegal-symbol";
-        printf("yydebug[%d,%p]: state %d, reading %d (%s)\n", 
-	       int(yydepth), yytrial, YYFINAL, yychar, yys); 
+        printf("yydebug[%d,%p]: state %d, reading %d (%s)\n",
+	       int(yydepth), yytrial, YYFINAL, yychar, yys);
       }
 #endif
     }
@@ -681,7 +689,7 @@ yyabort:
   while (yypath) {
     yyparsestate *save = yypath;
     yypath = save->save;
-    yyFreeState(save); 
+    yyFreeState(save);
   }
   return (1);
 
@@ -700,7 +708,7 @@ yyaccept:
   while (yypath) {
     yyparsestate *save = yypath;
     yypath = save->save;
-    yyFreeState(save); 
+    yyFreeState(save);
   }
   return (0);
 }
@@ -735,12 +743,12 @@ int Parser::yyexpand()
   int p = yylvp - yylvals;
   int s = yylvlim - yylvals;
   s += YYSTACKGROWTH;
-  { Yshort  *tl = yylexemes; 
+  { Yshort  *tl = yylexemes;
     YYSTYPE *tv = yylvals;
     YYPOSN  *tp = yylpsns;
-    yylvals = new YYSTYPE[s];
-    yylpsns = new YYPOSN[s];
-    yylexemes = new Yshort[s];
+    yylvals = FB_NEW_POOL(getPool()) YYSTYPE[s];
+    yylpsns = FB_NEW_POOL(getPool()) YYPOSN[s];
+    yylexemes = FB_NEW_POOL(getPool()) Yshort[s];
     memcpy(yylexemes, tl, (s - YYSTACKGROWTH) * sizeof(Yshort));
     yySCopy(yylvals, tv, s - YYSTACKGROWTH);
     yyPCopy(yylpsns, tp, s - YYSTACKGROWTH);

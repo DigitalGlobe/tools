@@ -30,7 +30,7 @@
 #include "firebird.h"
 #include <stdlib.h>
 #include <string.h>
-#include "../jrd/ibase.h"
+#include "ibase.h"
 #include "../gpre/gpre.h"
 #include "../jrd/align.h"
 #include "../gpre/cmd_proto.h"
@@ -205,23 +205,6 @@ void CMP_compile_request( gpre_req* request)
 	if (request->req_values)
 		request->req_vport = make_port(request, request->req_values);
 
-#ifdef SCROLLABLE_CURSORS
-	// If there is an asynchronous message to be sent, make a port for it
-
-	if (request->req_flags & REQ_sql_cursor && request->req_database->dbb_base_level >= 5)
-	{
-		gpre_fld* direction_field = MET_make_field("direction", dtype_short, sizeof(SSHORT), false);
-		gpre_fld* offset_field = MET_make_field("offset", dtype_long, sizeof(SLONG), false);
-
-		reference = request->req_avalues;
-		reference->ref_field = direction_field;
-		reference = reference->ref_next;
-		reference->ref_field = offset_field;
-
-		request->req_aport = make_port(request, request->req_avalues);
-	}
-#endif
-
 	// If this is a FOR type request, an eof field reference needs
 	// to be generated.  Do it.
 
@@ -248,7 +231,7 @@ void CMP_compile_request( gpre_req* request)
 	gpre_port* port;
 	if ((request->req_flags & REQ_sql_returning) ||
 		((request->req_type != REQ_insert) && (request->req_type != REQ_store2) &&
-			(request->req_type != REQ_set_generator)))
+		 (request->req_type != REQ_set_generator)))
 	{
 		request->req_primary = port = make_port(request, reference);
 	}
@@ -378,7 +361,7 @@ ULONG CMP_next_ident()
 
 void CMP_stuff_symbol( gpre_req* request, const gpre_sym* symbol)
 {
-	request->add_byte(strlen(symbol->sym_string));
+	request->add_byte(static_cast<int>(strlen(symbol->sym_string)));
 
 	for (const TEXT* p = symbol->sym_string; *p; p++)
 		request->add_byte(*p);
@@ -425,6 +408,8 @@ void CMP_t_start( gpre_tra* trans)
 		*text++ = isc_tpb_autocommit;
 	if (trans->tra_flags & TRA_no_auto_undo)
 		*text++ = isc_tpb_no_auto_undo;
+	if (trans->tra_flags & TRA_auto_release_temp_blobid)
+		*text++ = isc_tpb_auto_release_temp_blobid;
 	*text = 0;
 	const USHORT tpb_len = text - tpb_buffer;
 
@@ -459,8 +444,9 @@ void CMP_t_start( gpre_tra* trans)
 			{
 				*p++ = lock_block->rrl_lock_mode;
 				const char* q = lock_block->rrl_relation->rel_symbol->sym_string;
-				*p++ = strlen(q);
-				while (*q)
+				UCHAR temp = static_cast<UCHAR>(strlen(q));
+				*p++ = temp;
+				while (*q && temp-- > 0)
 					*p++ = *q++;
 				*p++ = lock_block->rrl_lock_level;
 			}
@@ -772,7 +758,7 @@ static void cmp_field( gpre_req* request, const gpre_fld* field,
 	switch (field->fld_dtype)
 	{
 	case dtype_cstring:
-		if (!(field->fld_flags & FLD_charset) && field->fld_ttype)
+		if (!(field->fld_flags & FLD_charset) && field->fld_ttype >= dsc_text_type_metadata)
 		{
 			request->add_byte(blr_cstring);
 			request->add_word(field->fld_length);
@@ -788,7 +774,7 @@ static void cmp_field( gpre_req* request, const gpre_fld* field,
 		break;
 
 	case dtype_text:
-		if (!(field->fld_flags & FLD_charset) && field->fld_ttype)
+		if (!(field->fld_flags & FLD_charset) && field->fld_ttype >= dsc_text_type_metadata)
 		{
 			request->add_byte(blr_text);
 			request->add_word(field->fld_length);
@@ -804,7 +790,7 @@ static void cmp_field( gpre_req* request, const gpre_fld* field,
 		break;
 
 	case dtype_varying:
-		if (!(field->fld_flags & FLD_charset) && field->fld_ttype)
+		if (!(field->fld_flags & FLD_charset) && field->fld_ttype >= dsc_text_type_metadata)
 		{
 			request->add_byte(blr_varying);
 			request->add_word(field->fld_length);
@@ -863,6 +849,9 @@ static void cmp_field( gpre_req* request, const gpre_fld* field,
 			request->add_byte(blr_d_float);
 		else
 			request->add_byte(blr_double);
+		break;
+	case dtype_boolean:
+		request->add_byte(blr_bool);
 		break;
 
 	default:
@@ -1033,18 +1022,19 @@ static void cmp_loop( gpre_req* request)
 	CME_rse(selection, request);
 	request->add_byte(blr_begin);
 
+	const bool isReturning = request->req_flags & REQ_sql_returning;
 	gpre_nod* node = (req_node->nod_type == nod_list) ? req_node->nod_arg[0] : req_node;
 
 	switch (node->nod_type)
 	{
 	case nod_modify:
 		{
-			const int blr_op = (request->req_flags & REQ_sql_returning) ? blr_modify2 : blr_modify;
+			const int blr_op = isReturning ? blr_modify2 : blr_modify;
 			request->add_byte(blr_op);
 			request->add_byte(for_context->ctx_internal);
 			request->add_byte(update_context->ctx_internal);
 			cmp_assignment_list(node->nod_arg[0], request);
-			if (request->req_flags & REQ_sql_returning)
+			if (isReturning)
 				cmp_returning(request, node->nod_arg[1]);
 		}
 		break;
@@ -1052,7 +1042,7 @@ static void cmp_loop( gpre_req* request)
 		cmp_store(request, node);
 		break;
 	case nod_erase:
-		if (request->req_flags & REQ_sql_returning)
+		if (isReturning)
 		{
 			request->add_byte(blr_begin);
 			cmp_returning(request, node->nod_arg[0]);
@@ -1311,7 +1301,7 @@ static void cmp_ready( gpre_req* request)
 	if (db->dbb_c_user && !db->dbb_r_user)
 	{
 		request->add_byte(isc_dpb_user_name);
-		l = strlen(db->dbb_c_user);
+		l = static_cast<SSHORT>(strlen(db->dbb_c_user));
 		request->add_byte(l);
 		p = db->dbb_c_user;
 		while (l--)
@@ -1321,7 +1311,7 @@ static void cmp_ready( gpre_req* request)
 	if (db->dbb_c_password && !db->dbb_r_password)
 	{
 		request->add_byte(isc_dpb_password);
-		l = strlen(db->dbb_c_password);
+		l = static_cast<SSHORT>(strlen(db->dbb_c_password));
 		request->add_byte(l);
 		p = db->dbb_c_password;
 		while (l--)
@@ -1331,7 +1321,7 @@ static void cmp_ready( gpre_req* request)
 	if (db->dbb_c_sql_role && !db->dbb_r_sql_role)
 	{
 		request->add_byte(isc_dpb_sql_role_name);
-		l = strlen(db->dbb_c_sql_role);
+		l = static_cast<SSHORT>(strlen(db->dbb_c_sql_role));
 		request->add_byte(l);
 		p = db->dbb_c_sql_role;
 		while (l--)
@@ -1342,7 +1332,7 @@ static void cmp_ready( gpre_req* request)
 	{
 		// Language must be an ASCII string
 		request->add_byte(isc_dpb_lc_messages);
-		l = strlen(db->dbb_c_lc_messages);
+		l = static_cast<SSHORT>(strlen(db->dbb_c_lc_messages));
 		request->add_byte(l);
 		p = db->dbb_c_lc_messages;
 		while (l--)
@@ -1353,7 +1343,7 @@ static void cmp_ready( gpre_req* request)
 	{
 		// Character Format must be an ASCII string
 		request->add_byte(isc_dpb_lc_ctype);
-		l = strlen(db->dbb_c_lc_ctype);
+		l = static_cast<SSHORT>(strlen(db->dbb_c_lc_ctype));
 		request->add_byte(l);
 		p = db->dbb_c_lc_ctype;
 		while (l--)
@@ -1542,7 +1532,7 @@ static void cmp_set_generator( gpre_req* request)
 	const TEXT* string = setgen->sgen_name;
 	const SLONG value = setgen->sgen_value;
 	const SINT64 int64value = setgen->sgen_int64value;
-	request->add_byte(strlen(string));
+	request->add_byte(static_cast<int>(strlen(string)));
 	while (*string)
 		request->add_byte(*string++);
 	request->add_byte(blr_literal);
@@ -1743,17 +1733,20 @@ static gpre_port* make_port( gpre_req* request, ref* reference)
 			CPR_bugcheck("missing prototype field for value");
 		if (temp->ref_value && (temp->ref_flags & REF_array_elem))
 			field = field->fld_array;
-		if ((field->fld_length & 7) == 0)
+		FLD_LENGTH len = field->fld_length;
+		if (field->fld_dtype == dtype_varying)
+			len += sizeof(USHORT);
+		if ((len & 7) == 0)
 		{
 			temp->ref_next = alignments[2];
 			alignments[2] = temp;
 		}
-		else if ((field->fld_length & 3) == 0)
+		else if ((len & 3) == 0)
 		{
 			temp->ref_next = alignments[1];
 			alignments[1] = temp;
 		}
-		else if ((field->fld_length & 1) == 0)
+		else if ((len & 1) == 0)
 		{
 			temp->ref_next = alignments[0];
 			alignments[0] = temp;
@@ -1786,7 +1779,10 @@ static gpre_port* make_port( gpre_req* request, ref* reference)
 #ifdef GPRE_FORTRAN
 		reference->ref_offset = port->por_length;
 #endif
-		port->por_length += field->fld_length;
+		FLD_LENGTH len = field->fld_length;
+		if (field->fld_dtype == dtype_varying)
+			len += sizeof(USHORT);
+		port->por_length += len;
 	}
 
 	return port;

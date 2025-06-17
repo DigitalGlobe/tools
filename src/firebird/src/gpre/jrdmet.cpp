@@ -27,8 +27,7 @@
 //
 
 #include "firebird.h"
-#include "../jrd/ibase.h"
-#include "../jrd/common.h"
+#include "ibase.h"
 #include "../jrd/constants.h"
 #include "../jrd/ods.h"
 
@@ -68,8 +67,7 @@ void JRDMET_init( gpre_dbb* db)
 		const int* fld = relfld + RFLD_RPT;
 		for (int n = 0; fld[RFLD_F_NAME]; ++n, fld += RFLD_F_LENGTH)
 		{
-			const gfld* gfield =
-				fld[RFLD_F_UPD_MINOR] ? &gfields[fld[RFLD_F_UPD_ID]] : &gfields[fld[RFLD_F_ID]];
+			const gfld* gfield = &gfields[fld[RFLD_F_ID]];
 			gpre_fld* field = (gpre_fld*) MSC_alloc(FLD_LEN);
 			relation->rel_fields = field;
 			field->fld_relation = relation;
@@ -80,22 +78,33 @@ void JRDMET_init( gpre_dbb* db)
 			field->fld_sub_type = gfield->gfld_sub_type;
 			if (field->fld_dtype == dtype_varying || field->fld_dtype == dtype_text)
 			{
-				field->fld_dtype = dtype_cstring;
+				if (gfield->gfld_sub_type == dsc_text_type_fixed)
+					field->fld_dtype = dtype_text;
+				else
+				{
+					field->fld_dtype = dtype_cstring;
+					++field->fld_length;
+				}
+
 				field->fld_flags |= FLD_text;
-				++field->fld_length;
+
 				if (gfield->gfld_sub_type == dsc_text_type_metadata)
 				{
-					field->fld_flags |= FLD_charset;
+					if (gpreGlob.sw_language == lang_internal)
+						field->fld_flags |= FLD_charset;
+
 					field->fld_charset_id = CS_METADATA;
 					field->fld_collate_id = COLLATE_NONE;
 					field->fld_ttype = ttype_metadata;
 				}
 				else
 				{
-					field->fld_flags |= FLD_charset;
-					field->fld_charset_id = CS_NONE;
+					if (gpreGlob.sw_language == lang_internal)
+						field->fld_flags |= FLD_charset;
+
+					field->fld_charset_id = gfield->gfld_sub_type == dsc_text_type_fixed ? CS_BINARY : CS_NONE;
 					field->fld_collate_id = COLLATE_NONE;
-					field->fld_ttype = ttype_none;
+					field->fld_ttype = gfield->gfld_sub_type == dsc_text_type_fixed ? ttype_binary : ttype_none;
 				}
 			}
 			else if (field->fld_dtype == dtype_blob)

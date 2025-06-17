@@ -86,7 +86,8 @@ public:
 	// Set bit
 	void set(T value)
 	{
-		if (singular) {
+		if (singular)
+		{
 			// If we are trying to set the same bit as already set - do nothing
 			if (singular_value == value)
 				return;
@@ -101,8 +102,10 @@ public:
 			bucket.bits = BUNCH_ONE << (singular_value - bucket.start_value);
 			tree.add(bucket);
 		}
-		else {
-			if (tree.isEmpty()) {
+		else
+		{
+			if (tree.isEmpty())
+			{
 				singular = true;
 				singular_value = value;
 				return;
@@ -124,10 +127,12 @@ public:
 
 	bool clear(T value)
 	{
-		if (singular) {
+		if (singular)
+		{
 			fb_assert(tree.isEmpty());
 
-			if (value == singular_value) {
+			if (value == singular_value)
+			{
 				singular = false;
 				return true;
 			}
@@ -135,10 +140,12 @@ public:
 		}
 
 		const T val_aligned = value & ~(T)(BUNCH_BITS - 1);
-		if (tree.isPositioned(val_aligned) || tree.locate(val_aligned)) {
+		if (tree.isPositioned(val_aligned) || tree.locate(val_aligned))
+		{
 			const BUNCH_T bit_mask = BUNCH_ONE << (value - val_aligned);
 			Bucket *current_bucket = &tree.current();
-			if (current_bucket->bits & bit_mask) {
+			if (current_bucket->bits & bit_mask)
+			{
 				current_bucket->bits &= ~bit_mask;
 				if (!current_bucket->bits)
 					tree.fastRemove();
@@ -150,13 +157,15 @@ public:
 
 	bool test(T value)
 	{
-		if (singular) {
+		if (singular)
+		{
 			fb_assert(tree.isEmpty());
 			return (value == singular_value);
 		}
 
 		const T val_aligned = value & ~(T) (BUNCH_BITS - 1);
-		if (tree.isPositioned(val_aligned) || tree.locate(val_aligned)) {
+		if (tree.isPositioned(val_aligned) || tree.locate(val_aligned))
+		{
 			const BUNCH_T bit_mask = BUNCH_ONE << (value - val_aligned);
 			return tree.current().bits & bit_mask;
 		}
@@ -255,7 +264,8 @@ public:
 			// If need arises to use it in performance-critical places separation
 			// of handling for different LocType cases may make sense.
 
-			if (bitmap->singular) {
+			if (bitmap->singular)
+			{
 				// Trivial handling for singular bitmap
 				current_value = bitmap->singular_value;
 
@@ -290,11 +300,14 @@ public:
 					key++;
 					lt = locGreatEqual;
 					break;
+				default:
+					break;
 			}
 
 			// Look up a bucket for our key
 			T key_aligned = key & ~(T) (BUNCH_BITS - 1);
-			if (!treeAccessor.locate(lt, key_aligned)) {
+			if (!treeAccessor.locate(lt, key_aligned))
+			{
 				// If we didn't find the desired bucket no way we can find desired value
 				return false;
 			}
@@ -347,11 +360,13 @@ public:
 				case locLessEqual:
 				{
 					// Initialize bit_mask
-					if (treeAccessor.current().start_value == key_aligned) {
+					if (treeAccessor.current().start_value == key_aligned)
+					{
 						current_value = key;
 						bit_mask = BUNCH_ONE << (key - key_aligned);
 					}
-					else {
+					else
+					{
 						current_value = treeAccessor.current().start_value;
 						bit_mask = BUNCH_ONE << (BUNCH_BITS - 1);
 					}
@@ -383,6 +398,9 @@ public:
 					// Bucket must contain one bit at least
 					fb_assert(false);
 				}
+
+				default:
+					break;
 			}
 			fb_assert(false); // Invalid constant is used ?
 			return false;
@@ -396,7 +414,8 @@ public:
 			if (!bitmap)
 				return false;
 
-			if (bitmap->singular) {
+			if (bitmap->singular)
+			{
 				current_value = bitmap->singular_value;
 				return true;
 			}
@@ -427,7 +446,8 @@ public:
 			if (!bitmap)
 				return false;
 
-			if (bitmap->singular) {
+			if (bitmap->singular)
+			{
 				current_value = bitmap->singular_value;
 				return true;
 			}
@@ -466,8 +486,10 @@ public:
 
 			// Scan bucket forwards looking for a match
 			BUNCH_T tree_bits = treeAccessor.current().bits;
-			while (try_mask) {
-				if (tree_bits & try_mask) {
+			while (try_mask)
+			{
+				if (tree_bits & try_mask)
+				{
 					bit_mask = try_mask;
 					current_value = try_value;
 					return true;
@@ -516,8 +538,10 @@ public:
 
 			// Scan bucket backwards looking for a match
 			BUNCH_T tree_bits = treeAccessor.current().bits;
-			while (try_mask) {
-				if (tree_bits & try_mask) {
+			while (try_mask)
+			{
+				if (tree_bits & try_mask)
+				{
 					bit_mask = try_mask;
 					current_value = try_value;
 					return true;
@@ -535,7 +559,8 @@ public:
 			try_mask = BUNCH_ONE << (BUNCH_BITS - 1);
 			try_value = treeAccessor.current().start_value + BUNCH_BITS - 1;
 			do {
-				if (tree_bits & try_mask) {
+				if (tree_bits & try_mask)
+				{
 					bit_mask = try_mask;
 					current_value = try_value;
 					return true;
@@ -582,13 +607,15 @@ SparseBitmap<T, InternalTypes>::bit_or(SparseBitmap<T, InternalTypes>** bitmap1,
 	fb_assert(map1 != map2);
 
 	// First bitmap is singular. Set appropriate bit in second and return it
-	if (map1->singular) {
+	if (map1->singular)
+	{
 		map2->set(map1->singular_value);
 		return bitmap2;
 	}
 
 	// Second bitmap is singular. Set appropriate bit in first and return it
-	if (map2->singular) {
+	if (map2->singular)
+	{
 		map1->set(map2->singular_value);
 		return bitmap1;
 	}
@@ -596,12 +623,14 @@ SparseBitmap<T, InternalTypes>::bit_or(SparseBitmap<T, InternalTypes>** bitmap1,
 	SparseBitmap *source, *dest, **result;
 
 	// If second bitmap seems larger then use it as a target
-	if (map2->tree.seemsBiggerThan(map1->tree)) {
+	if (map2->tree.seemsBiggerThan(map1->tree))
+	{
 		dest = map2;
 		source = map1;
 		result = bitmap2;
 	}
-	else {
+	else
+	{
 		dest = map1;
 		source = map2;
 		result = bitmap1;
@@ -628,14 +657,16 @@ SparseBitmap<T, InternalTypes>::bit_or(SparseBitmap<T, InternalTypes>** bitmap1,
 		if (destFound)
 		{
 			// See if we need to skip value in destination tree
-			if (destValue < sourceValue) {
+			if (destValue < sourceValue)
+			{
 				if ((destFound = dest->tree.getNext()))
 					destValue = dest->tree.current().start_value;
 				continue;
 			}
 
 			// Positions of our trees match
-			if (destValue == sourceValue) {
+			if (destValue == sourceValue)
+			{
 				dest->tree.current().bits |= source->tree.current().bits;
 
 				if ((destFound = dest->tree.getNext()))
@@ -648,7 +679,8 @@ SparseBitmap<T, InternalTypes>::bit_or(SparseBitmap<T, InternalTypes>** bitmap1,
 
 			// Need to add some buckets to destination tree.
 			// Try to add them in a row to avoid accessor resync after addition
-			while (true) {
+			while (true)
+			{
 				dest->tree.add(source->tree.current());
 
 				if (!(sourceFound = source->tree.getNext()))
@@ -657,7 +689,8 @@ SparseBitmap<T, InternalTypes>::bit_or(SparseBitmap<T, InternalTypes>** bitmap1,
 				sourceValue = source->tree.current().start_value;
 
 				// Resync accessor position if necessary
-				if (destValue <= sourceValue) {
+				if (destValue <= sourceValue)
+				{
 					dest->tree.locate(destValue);
 					break;
 				}
@@ -694,7 +727,8 @@ SparseBitmap<T, InternalTypes>::bit_and(SparseBitmap<T, InternalTypes>** bitmap1
 	fb_assert(map1 != map2);
 
 	// First bitmap is singular. Test appropriate bit in second and return first
-	if (map1->singular) {
+	if (map1->singular)
+	{
 		if (map2->test(map1->singular_value))
 			return bitmap1;
 
@@ -702,7 +736,8 @@ SparseBitmap<T, InternalTypes>::bit_and(SparseBitmap<T, InternalTypes>** bitmap1
 	}
 
 	// Second bitmap is singular. Test appropriate bit in first and return second
-	if (map2->singular) {
+	if (map2->singular)
+	{
 		if (map1->test(map2->singular_value))
 			return bitmap2;
 
@@ -712,12 +747,14 @@ SparseBitmap<T, InternalTypes>::bit_and(SparseBitmap<T, InternalTypes>** bitmap1
 	SparseBitmap *source, *dest, **result;
 
 	// If second bitmap seems smaller then use it as a target
-	if (map1->tree.seemsBiggerThan(map2->tree)) {
+	if (map1->tree.seemsBiggerThan(map2->tree))
+	{
 		dest = map2;
 		source = map1;
 		result = bitmap2;
 	}
-	else {
+	else
+	{
 		dest = map1;
 		source = map2;
 		result = bitmap1;
@@ -743,14 +780,16 @@ SparseBitmap<T, InternalTypes>::bit_and(SparseBitmap<T, InternalTypes>** bitmap1
 		if (sourceFound)
 		{
 			// See if we need to skip value in destination tree
-			if (sourceValue < destValue) {
+			if (sourceValue < destValue)
+			{
 				if ((sourceFound = source->tree.getNext()))
 					sourceValue = source->tree.current().start_value;
 				continue;
 			}
 
 			// Positions of our trees match
-			if (sourceValue == destValue) {
+			if (sourceValue == destValue)
+			{
 				const BUNCH_T bits = dest->tree.current().bits &= source->tree.current().bits;
 
 				// Move to the next item of destination tree

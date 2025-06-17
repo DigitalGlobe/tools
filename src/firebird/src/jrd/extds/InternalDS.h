@@ -34,15 +34,15 @@ public:
 	explicit InternalProvider(const char* prvName) :
 		Provider(prvName)
 	{
-		m_flags = (prvMultyStmts | prvMultyTrans);
 	}
 
 	~InternalProvider()
 	{}
 
+	virtual void jrdAttachmentEnd(Jrd::thread_db* tdbb, Jrd::Attachment* att, bool forced);
+
 	virtual void initialize() {}
-	virtual void jrdAttachmentEnd(Jrd::thread_db* tdbb, Jrd::Attachment* att);
-	virtual void getRemoteError(ISC_STATUS* status, Firebird::string& err) const;
+	virtual void getRemoteError(const Jrd::FbStatusVector* status, Firebird::string& err) const;
 
 protected:
 	virtual Connection* doCreateConnection();
@@ -56,30 +56,28 @@ protected:
 
 	explicit InternalConnection(InternalProvider& prov) :
 	  Connection(prov),
-	  m_attachment(0),
-	  m_isCurrent(false)
+	  m_attachment(0)
 	{}
 
 	virtual ~InternalConnection();
 
 public:
-	virtual void attach(Jrd::thread_db* tdbb, const Firebird::string& dbName,
-		const Firebird::string& user, const Firebird::string& pwd,
-		const Firebird::string& role);
+	virtual void attach(Jrd::thread_db* tdbb);
 
-	virtual bool cancelExecution(Jrd::thread_db* tdbb);
+	virtual bool cancelExecution(bool forced);
+	virtual bool resetSession(Jrd::thread_db* tdbb);
 
 	virtual bool isAvailable(Jrd::thread_db* tdbb, TraScope traScope) const;
 
 	virtual bool isConnected() const { return (m_attachment != 0); }
+	virtual bool validate(Jrd::thread_db* tdbb);
 
-	virtual bool isSameDatabase(Jrd::thread_db* tdbb, const Firebird::string& dbName,
-		const Firebird::string& user, const Firebird::string& pwd,
-		const Firebird::string& role) const;
+	virtual bool isSameDatabase(const Firebird::PathName& dbName,
+		Firebird::ClumpletReader& dpb, const CryptHash& ch) const override;
 
-	bool isCurrent() const { return m_isCurrent; }
+	virtual bool isCurrent() const { return m_dpb.isEmpty(); }
 
-	Jrd::Attachment* getJrdAtt() { return m_attachment; }
+	Jrd::JAttachment* getJrdAtt() { return m_attachment; }
 
 	virtual Blob* createBlob();
 
@@ -88,8 +86,8 @@ protected:
 	virtual Statement* doCreateStatement();
 	virtual void doDetach(Jrd::thread_db* tdbb);
 
-	Jrd::Attachment* m_attachment;
-	bool m_isCurrent;
+	Firebird::AutoPlugin<Jrd::JProvider> m_provider;
+	Firebird::RefPtr<Jrd::JAttachment> m_attachment;
 };
 
 
@@ -107,16 +105,16 @@ protected:
 	virtual ~InternalTransaction() {}
 
 public:
-	Jrd::jrd_tra* getJrdTran() { return m_transaction; }
+	Jrd::JTransaction* getJrdTran() { return m_transaction; }
 
 protected:
-	virtual void doStart(ISC_STATUS* status, Jrd::thread_db* tdbb, Firebird::ClumpletWriter& tpb);
-	virtual void doPrepare(ISC_STATUS* status, Jrd::thread_db* tdbb, int info_len, const char* info);
-	virtual void doCommit(ISC_STATUS* status, Jrd::thread_db* tdbb, bool retain);
-	virtual void doRollback(ISC_STATUS* status, Jrd::thread_db* tdbb, bool retain);
+	virtual void doStart(Jrd::FbStatusVector* status, Jrd::thread_db* tdbb, Firebird::ClumpletWriter& tpb);
+	virtual void doPrepare(Jrd::FbStatusVector* status, Jrd::thread_db* tdbb, int info_len, const char* info);
+	virtual void doCommit(Jrd::FbStatusVector* status, Jrd::thread_db* tdbb, bool retain);
+	virtual void doRollback(Jrd::FbStatusVector* status, Jrd::thread_db* tdbb, bool retain);
 
 	InternalConnection& m_IntConnection;
-	Jrd::jrd_tra* m_transaction;
+	Firebird::RefPtr<Jrd::JTransaction> m_transaction;
 };
 
 
@@ -130,6 +128,7 @@ protected:
 
 protected:
 	virtual void doPrepare(Jrd::thread_db* tdbb, const Firebird::string& sql);
+	virtual void doSetTimeout(Jrd::thread_db* tdbb, unsigned int timeout);
 	virtual void doExecute(Jrd::thread_db* tdbb);
 	virtual void doOpen(Jrd::thread_db* tdbb);
 	virtual bool doFetch(Jrd::thread_db* tdbb);
@@ -146,9 +145,9 @@ protected:
 	InternalConnection& m_intConnection;
 	InternalTransaction* m_intTransaction;
 
-	Jrd::dsql_req* m_request;
-	Firebird::UCharBuffer m_inBlr;
-	Firebird::UCharBuffer m_outBlr;
+	Firebird::RefPtr<Jrd::JStatement> m_request;
+	Firebird::RefPtr<Jrd::JResultSet> m_cursor;
+	Firebird::RefPtr<Firebird::MsgMetadata> m_inMetadata, m_outMetadata;
 };
 
 
@@ -171,8 +170,8 @@ public:
 
 private:
 	InternalConnection& m_connection;
-	Jrd::blb* m_blob;
-	Jrd::bid m_blob_id;
+	Firebird::RefPtr<Jrd::JBlob> m_blob;
+	ISC_QUAD m_blob_id;
 };
 
 } // namespace EDS

@@ -25,7 +25,6 @@
 #define JRD_LCK_PROTO_H
 
 #include "../jrd/lck.h"
-#include "../lock/lock_proto.h"
 
 namespace Jrd {
 	enum lck_t;
@@ -37,24 +36,22 @@ bool	LCK_convert(Jrd::thread_db*, Jrd::Lock*, USHORT, SSHORT);
 bool	LCK_convert_opt(Jrd::thread_db*, Jrd::Lock*, USHORT);
 void	LCK_downgrade(Jrd::thread_db*, Jrd::Lock*);
 void	LCK_fini(Jrd::thread_db*, Jrd::lck_owner_t);
-SLONG	LCK_get_owner_handle(Jrd::thread_db*, Jrd::lck_t);
-SLONG	LCK_get_owner_handle_by_type(Jrd::thread_db*, Jrd::lck_owner_t);
 void	LCK_init(Jrd::thread_db*, Jrd::lck_owner_t);
 bool	LCK_lock(Jrd::thread_db*, Jrd::Lock*, USHORT, SSHORT);
 bool	LCK_lock_opt(Jrd::thread_db*, Jrd::Lock*, USHORT, SSHORT);
-SLONG	LCK_query_data(Jrd::thread_db*, Jrd::Lock*, Jrd::lck_t, USHORT);
-SLONG	LCK_read_data(Jrd::thread_db*, Jrd::Lock*);
+LOCK_DATA_T LCK_query_data(Jrd::thread_db*, Jrd::lck_t, USHORT);
+LOCK_DATA_T LCK_read_data(Jrd::thread_db*, Jrd::Lock*);
 void	LCK_release(Jrd::thread_db*, Jrd::Lock*);
 void	LCK_re_post(Jrd::thread_db*, Jrd::Lock*);
-void	LCK_write_data(Jrd::thread_db*, Jrd::Lock*, SLONG);
+void	LCK_write_data(Jrd::thread_db*, Jrd::Lock*, LOCK_DATA_T);
 
 
 class AutoLock
 {
 public:
-	explicit AutoLock(Jrd::thread_db* tdbb, Jrd::Lock* lck = NULL) :
-		m_tdbb(tdbb),
-		m_lock(lck)
+	explicit AutoLock(Jrd::thread_db* tdbb, Jrd::Lock* lck = NULL)
+		: m_tdbb(tdbb),
+		  m_lock(lck)
 	{
 	}
 

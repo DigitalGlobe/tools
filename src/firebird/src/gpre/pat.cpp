@@ -108,6 +108,27 @@ static const struct ops
 		{ NL, "" }
 	};
 
+//____________________________________________________________
+//
+//		Align output to a specific column for output.  If the
+//		column is negative, don't do anything.
+//
+
+static int align(char* p, int column)
+{
+	if (column < 0)
+		return 0;
+
+	char* const begin = p;
+
+	for (int i = column / 8; i; --i)
+		*p++ = '\t';
+
+	for (int i = column % 8; i; --i)
+		*p++ = ' ';
+
+	return p - begin;
+}
 
 //____________________________________________________________
 //
@@ -156,8 +177,7 @@ void PATTERN_expand( USHORT column, const TEXT* pattern, PAT* args)
 	TEXT* p = buffer;
 	*p++ = '\n';
 	bool sw_gen = true;
-	for (USHORT n = column; n; --n)
-		*p++ = ' ';
+	p += align(p, column);
 
 	SSHORT value;				// value needs to be signed since some of the
 								// values printed out are signed.
@@ -171,15 +191,17 @@ void PATTERN_expand( USHORT column, const TEXT* pattern, PAT* args)
 			{
 				*p++ = c;
 				if ((c == '\n') && (*pattern))
-					for (USHORT n = column; n; --n)
-						*p++ = ' ';
+					p += align(p, column);
 			}
 			continue;
 		}
 		bool sw_ident = false;
 		const TEXT* string = NULL;
 		const ref* reference = NULL;
-		bool handle_flag = false, long_flag = false;
+#ifdef GPRE_ADA
+		bool handle_flag = false;
+#endif
+		bool long_flag = false;
 		const ops* oper_iter;
 		for (oper_iter = operators; oper_iter->ops_type != NL; oper_iter++)
 		{
@@ -205,7 +227,9 @@ void PATTERN_expand( USHORT column, const TEXT* pattern, PAT* args)
 			continue;
 
 		case RH:
+#ifdef GPRE_ADA
 			handle_flag = true;
+#endif
 			string = args->pat_request->req_handle;
 			break;
 
@@ -218,7 +242,9 @@ void PATTERN_expand( USHORT column, const TEXT* pattern, PAT* args)
 			break;
 
 		case RT:
+#ifdef GPRE_ADA
 			handle_flag = true;
+#endif
 			string = args->pat_request->req_trans;
 			break;
 
@@ -229,7 +255,9 @@ void PATTERN_expand( USHORT column, const TEXT* pattern, PAT* args)
 			break;
 
 		case DH:
+#ifdef GPRE_ADA
 			handle_flag = true;
+#endif
 			string = args->pat_database->dbb_name->sym_string;
 			break;
 
@@ -417,7 +445,7 @@ void PATTERN_expand( USHORT column, const TEXT* pattern, PAT* args)
 			}
 		}
 		else if (long_flag) {
-			sprintf(p, "%" SLONGFORMAT , long_value);
+			sprintf(p, "%" SLONGFORMAT, long_value);
 		}
 		else {
 			sprintf(p, "%d", value);
@@ -429,7 +457,7 @@ void PATTERN_expand( USHORT column, const TEXT* pattern, PAT* args)
 
 	*p = 0;
 
-#if (defined GPRE_ADA || defined GPRE_COBOL || defined GPRE_FORTRAN) && !defined(BOOT_BUILD)
+#if (defined GPRE_ADA || defined GPRE_COBOL || defined GPRE_FORTRAN)
 	switch (gpreGlob.sw_language)
 	{
 #ifdef GPRE_ADA
@@ -458,11 +486,11 @@ void PATTERN_expand( USHORT column, const TEXT* pattern, PAT* args)
 #endif
 
 	default:
-		fputs(buffer, gpreGlob.out_file);
+		fprintf(gpreGlob.out_file, "%s", buffer);
 		break;
 	}
 #else
-	fputs(buffer, gpreGlob.out_file);
+	fprintf(gpreGlob.out_file, "%s", buffer);
 #endif
 
 }

@@ -37,12 +37,12 @@ void	BLF_close_blob(Jrd::thread_db*, Jrd::BlobControl**);
 void	BLF_create_blob(Jrd::thread_db*, Jrd::jrd_tra*, Jrd::BlobControl**, Jrd::bid*,
 										 USHORT, const UCHAR*,
 										 Jrd::FPTR_BFILTER_CALLBACK, Jrd::BlobFilter*);
-ISC_STATUS	BLF_get_segment(Jrd::thread_db*, Jrd::BlobControl**, USHORT*, USHORT, UCHAR*);
+ISC_STATUS	BLF_get_segment(Jrd::thread_db*, Jrd::BlobControl**, USHORT*, USHORT, void*);
 Jrd::BlobFilter*	BLF_lookup_internal_filter(Jrd::thread_db*, SSHORT, SSHORT);
 void	BLF_open_blob(Jrd::thread_db*, Jrd::jrd_tra*, Jrd::BlobControl**, const Jrd::bid*,
 									   USHORT, const UCHAR*,
 									   Jrd::FPTR_BFILTER_CALLBACK, Jrd::BlobFilter*);
-void	BLF_put_segment(Jrd::thread_db*, Jrd::BlobControl**, USHORT, const UCHAR*);
+void	BLF_put_segment(Jrd::thread_db*, Jrd::BlobControl**, USHORT, const void*);
 
 } /* extern "C" */
 

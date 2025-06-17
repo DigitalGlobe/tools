@@ -31,53 +31,50 @@
 #ifndef JRD_JRD_H
 #define JRD_JRD_H
 
-#include "../jrd/gdsassert.h"
-#include "../jrd/common.h"
-#include "../jrd/dsc.h"
-#include "../jrd/btn.h"
+#include "../common/gdsassert.h"
+#include "../common/dsc.h"
+#include "../jrd/err_proto.h"
 #include "../jrd/jrd_proto.h"
+#include "../jrd/obj.h"
 #include "../jrd/val.h"
+#include "../jrd/status.h"
 
 #include "../common/classes/fb_atomic.h"
 #include "../common/classes/fb_string.h"
-#include "../common/classes/MetaName.h"
+#include "../jrd/MetaName.h"
+#include "../common/classes/NestConst.h"
 #include "../common/classes/array.h"
 #include "../common/classes/objects_array.h"
 #include "../common/classes/stack.h"
 #include "../common/classes/timestamp.h"
 #include "../common/classes/GenericMap.h"
+#include "../common/classes/Synchronize.h"
 #include "../common/utils_proto.h"
+#include "../common/StatusHolder.h"
 #include "../jrd/RandomGenerator.h"
-#include "../jrd/os/guid.h"
+#include "../common/os/guid.h"
 #include "../jrd/sbm.h"
 #include "../jrd/scl.h"
+#include "../jrd/Routine.h"
+#include "../jrd/ExtEngineManager.h"
+#include "../jrd/Attachment.h"
+#include "firebird/Interface.h"
 
-#ifdef DEV_BUILD
-#define DEBUG                   if (debug) DBG_supervisor(debug);
-//#define VIO_DEBUG				// remove this for production build
-#else // PROD
-#define DEBUG
-#undef VIO_DEBUG
-#endif
+#include <cds/threading/model.h>	// cds::threading::Manager
 
-#define BUGCHECK(number)        ERR_bugcheck (number, __FILE__, __LINE__)
-#define CORRUPT(number)         ERR_corrupt (number)
-#define IBERROR(number)         ERR_error (number)
+#define BUGCHECK(number)		ERR_bugcheck(number, __FILE__, __LINE__)
+#define SOFT_BUGCHECK(number)	ERR_soft_bugcheck(number, __FILE__, __LINE__)
+#define CORRUPT(number)			ERR_corrupt(number)
+#define IBERROR(number)			ERR_error(number)
 
-#ifdef WIN_NT
-#define REEXPAND_DBNAME
-#endif
 
 #define BLKCHK(blk, type)       if (!blk->checkHandle()) BUGCHECK(147)
 
-#define DEV_BLKCHK(blk, type)	// nothing
+#define DEV_BLKCHK(blk, type)	do { } while (false)	// nothing
 
 
 // Thread data block / IPC related data blocks
-#include "../jrd/ThreadData.h"
-
-// recursive mutexes
-#include "../common/thd.h"
+#include "../common/ThreadData.h"
 
 // Definition of block types for data allocation in JRD
 #include "../include/fb_blk.h"
@@ -91,14 +88,12 @@
 
 #include "../jrd/RuntimeStatistics.h"
 #include "../jrd/Database.h"
+#include "../jrd/lck.h"
 
 // Error codes
-#include "../include/gen/iberror.h"
+#include "iberror.h"
 
-class str;
 struct dsc;
-struct thread;
-struct mod;
 
 namespace EDS {
 	class Connection;
@@ -106,20 +101,17 @@ namespace EDS {
 
 namespace Jrd {
 
-const int QUANTUM			= 100;	// Default quantum
-const int SWEEP_QUANTUM		= 10;	// Make sweeps less disruptive
-const ULONG MAX_CALLBACKS		= 50;
+const unsigned MAX_CALLBACKS	= 50;
 
 // fwd. decl.
 class thread_db;
 class Attachment;
 class jrd_tra;
-class jrd_req;
-class Lock;
+class Request;
+class Statement;
 class jrd_file;
 class Format;
-class jrd_nod;
-class BufferControl;
+class BufferDesc;
 class SparseBitmap;
 class jrd_rel;
 class ExternalFile;
@@ -127,9 +119,7 @@ class ViewContext;
 class IndexBlock;
 class IndexLock;
 class ArrayField;
-class Symbol;
 struct sort_context;
-class RecordSelExpr;
 class vcl;
 class TextType;
 class Parameter;
@@ -137,48 +127,89 @@ class jrd_fld;
 class dsql_dbb;
 class PreparedStatement;
 class TraceManager;
+class MessageNode;
 
-// The database block, the topmost block in the metadata
-// cache for a database
 
 // Relation trigger definition
 
 class Trigger
 {
 public:
-	Firebird::HalfStaticArray<UCHAR, 128> blr;	// BLR code
-	Firebird::HalfStaticArray<UCHAR, 128> debugInfo;	// debug info
-	jrd_req*	trig_request;				// Compiled request. Gets filled on first invocation
-	bool		compile_in_progress;
-	bool		sys_trigger;
-	UCHAR		type;						// Trigger type
+	Firebird::HalfStaticArray<UCHAR, 128> blr;			// BLR code
+	Firebird::HalfStaticArray<UCHAR, 128> debugInfo;	// Debug info
+	Statement* statement;							// Compiled statement
+	bool		releaseInProgress;
+	bool		sysTrigger;
+	FB_UINT64	type;						// Trigger type
 	USHORT		flags;						// Flags as they are in RDB$TRIGGERS table
 	jrd_rel*	relation;					// Trigger parent relation
-	Firebird::MetaName	name;				// Trigger name
+	MetaName	name;				// Trigger name
+	MetaName	engine;				// External engine name
+	Firebird::string	entryPoint;			// External trigger entrypoint
+	Firebird::string	extBody;			// External trigger body
+	ExtEngineManager::Trigger* extTrigger;	// External trigger
+	Nullable<bool> ssDefiner;
+	MetaName	owner;				// Owner for SQL SECURITY
+
+	bool isActive() const;
+
 	void compile(thread_db*);				// Ensure that trigger is compiled
 	void release(thread_db*);				// Try to free trigger request
 
 	explicit Trigger(MemoryPool& p)
-		: blr(p), debugInfo(p), name(p)
+		: blr(p),
+		  debugInfo(p),
+		  releaseInProgress(false),
+		  name(p),
+		  engine(p),
+		  entryPoint(p),
+		  extBody(p),
+		  extTrigger(NULL)
 	{}
 
-	~Trigger() {}
+	virtual ~Trigger()
+	{
+		delete extTrigger;
+	}
 };
 
 
+// Array of triggers (suppose separate arrays for triggers of different types)
 
-//
-// Database attachments
-//
-const int DBB_read_seq_count		= 0;
-const int DBB_read_idx_count		= 1;
-const int DBB_update_count			= 2;
-const int DBB_insert_count			= 3;
-const int DBB_delete_count			= 4;
-const int DBB_backout_count			= 5;
-const int DBB_purge_count			= 6;
-const int DBB_expunge_count			= 7;
-const int DBB_max_count				= 8;
+class TrigVector : public Firebird::ObjectsArray<Trigger>
+{
+public:
+	explicit TrigVector(Firebird::MemoryPool& pool)
+		: Firebird::ObjectsArray<Trigger>(pool),
+		  useCount(0)
+	{ }
+
+	TrigVector()
+		: Firebird::ObjectsArray<Trigger>(),
+		  useCount(0)
+	{ }
+
+	void addRef()
+	{
+		++useCount;
+	}
+
+	bool hasActive() const;
+
+	void decompile(thread_db* tdbb);
+
+	void release();
+	void release(thread_db* tdbb);
+
+	~TrigVector()
+	{
+		fb_assert(useCount.value() == 0);
+	}
+
+private:
+	Firebird::AtomicCounter useCount;
+};
+
 
 //
 // Flags to indicate normal internal requests vs. dyn internal requests
@@ -187,266 +218,63 @@ const int IRQ_REQUESTS				= 1;
 const int DYN_REQUESTS				= 2;
 
 
-//
-// Errors during validation - will be returned on info calls
-// CVC: It seems they will be better in a header for val.cpp that's not val.h
-// Do not forget to add new constants to inf.cpp:INF_database_info
-//
-const int VAL_PAG_WRONG_TYPE			= 0;
-const int VAL_PAG_CHECKSUM_ERR			= 1;
-const int VAL_PAG_DOUBLE_ALLOC			= 2;
-const int VAL_PAG_IN_USE				= 3;
-const int VAL_PAG_ORPHAN				= 4;
-const int VAL_BLOB_INCONSISTENT			= 5;
-const int VAL_BLOB_CORRUPT				= 6;
-const int VAL_BLOB_TRUNCATED			= 7;
-const int VAL_REC_CHAIN_BROKEN			= 8;
-const int VAL_DATA_PAGE_CONFUSED		= 9;
-const int VAL_DATA_PAGE_LINE_ERR		= 10;
-const int VAL_INDEX_PAGE_CORRUPT		= 11;
-const int VAL_P_PAGE_LOST				= 12;
-const int VAL_P_PAGE_INCONSISTENT		= 13;
-const int VAL_REC_DAMAGED				= 14;
-const int VAL_REC_BAD_TID				= 15;
-const int VAL_REC_FRAGMENT_CORRUPT		= 16;
-const int VAL_REC_WRONG_LENGTH			= 17;
-const int VAL_INDEX_ROOT_MISSING		= 18;
-const int VAL_TIP_LOST					= 19;
-const int VAL_TIP_LOST_SEQUENCE			= 20;
-const int VAL_TIP_CONFUSED				= 21;
-const int VAL_REL_CHAIN_ORPHANS			= 22;
-const int VAL_INDEX_MISSING_ROWS		= 23;
-const int VAL_INDEX_ORPHAN_CHILD		= 24;
-const int VAL_INDEX_CYCLE				= 25;
-const int VAL_INDEX_BAD_LEFT_SIBLING	= 26;
-const int VAL_INDEX_MISSES_NODE			= 27;
-const int VAL_DATA_PAGE_ISNT_IN_PIP		= 28;
-const int VAL_DATA_PAGE_SLOT_NOT_FOUND	= 29;
-const int VAL_DATA_PAGE_SLOT_BAD_VAL	= 30;
-const int VAL_DATA_PAGE_HASNO_PP		= 31;
-const int VAL_MAX_ERROR					= 32;
-
-
-struct DSqlCacheItem
-{
-	Lock* lock;
-	bool locked;
-	bool obsolete;
-};
-
-typedef Firebird::GenericMap<Firebird::Pair<Firebird::Left<
-	Firebird::string, DSqlCacheItem> > > DSqlCache;
-
-
-//
-// the attachment block; one is created for each attachment to a database
-//
-class Attachment : public pool_alloc<type_att>, public Firebird::PublicHandle
-{
-public:
-	static Attachment* create(Database* dbb)
-	{
-		MemoryPool* const pool = dbb->createPool();
-
-		try
-		{
-			Attachment* const attachment = FB_NEW(*pool) Attachment(pool, dbb);
-			pool->setStatsGroup(attachment->att_memory_stats);
-			return attachment;
-		}
-		catch (const Firebird::Exception&)
-		{
-			dbb->deletePool(pool);
-			throw;
-		}
-	}
-
-	static void destroy(Attachment* const attachment);
-
-/*	Attachment()
-	:	att_database(0),
-		att_next(0),
-		att_blocking(0),
-		att_user(0),
-		att_transactions(0),
-		att_dbkey_trans(0),
-		att_requests(0),
-		att_active_sorts(0),
-		att_id_lock(0),
-		att_attachment_id(0),
-		att_lock_owner_handle(0),
-		att_event_session(0),
-		att_security_class(0),
-		att_security_classes(0),
-		att_flags(0),
-		att_charset(0),
-		att_long_locks(0),
-		att_compatibility_table(0),
-		att_val_errors(0),
-		att_working_directory(0), 
-		att_fini_sec_db(false)
-	{
-		att_counts[0] = 0;
-	}*/
-
-	MemoryPool* const att_pool;					// Memory pool
-	Firebird::MemoryStats att_memory_stats;
-
-	Database*	att_database;				// Parent database block
-	Attachment*	att_next;					// Next attachment to database
-	UserId*		att_user;					// User identification
-	jrd_tra*	att_transactions;			// Transactions belonging to attachment
-	jrd_tra*	att_dbkey_trans;			// transaction to control db-key scope
-	SLONG		att_oldest_snapshot;		// GTT's record versions older than this can be gargage-collected
-
-	jrd_req*	att_requests;				// Requests belonging to attachment
-	sort_context*	att_active_sorts;		// Active sorts
-	Lock*		att_id_lock;				// Attachment lock (if any)
-	SLONG		att_attachment_id;			// Attachment ID
-	Lock*		att_cancel_lock;			// lock to cancel the active request
-	const ULONG	att_lock_owner_id;			// ID for the lock manager
-	SLONG		att_lock_owner_handle;		// Handle for the lock manager
-	ULONG		att_backup_state_counter;	// Counter of backup state locks for attachment
-	SLONG		att_event_session;			// Event session id, if any
-	SecurityClass*	att_security_class;		// security class for database
-	SecurityClassList*	att_security_classes;	// security classes
-	vcl*		att_counts[DBB_max_count];
-	RuntimeStatistics	att_stats;
-	ULONG		att_flags;					// Flags describing the state of the attachment
-	SSHORT		att_charset;				// user's charset specified in dpb
-	Lock*		att_long_locks;				// outstanding two phased locks
-	Lock*		att_wait_lock;				// lock at which attachment waits currently
-	vec<Lock*>*	att_compatibility_table;	// hash table of compatible locks
-	vcl*		att_val_errors;
-	Firebird::PathName	att_working_directory;	// Current working directory is cached
-	Firebird::PathName	att_filename;			// alias used to attach the database
-	const Firebird::TimeStamp	att_timestamp;	// Connection date and time
-	Firebird::StringMap att_context_vars;	// Context variables for the connection
-	Firebird::string att_network_protocol;	// Network protocol used by client for connection
-	Firebird::string att_remote_address;	// Protocol-specific addess of remote client
-	SLONG att_remote_pid;					// Process id of remote client
-	Firebird::PathName att_remote_process;	// Process name of remote client
-	RandomGenerator att_random_generator;	// Random bytes generator
-#ifndef SUPERSERVER
-	Lock*		att_temp_pg_lock;			// temporary pagespace ID lock
-#endif
-	DSqlCache att_dsql_cache;	// DSQL cache locks
-	Firebird::SortedArray<void*> att_udf_pointers;
-	dsql_dbb* att_dsql_instance;
-
-	EDS::Connection* att_ext_connection;	// external connection executed by this attachment
-	ULONG att_ext_call_depth;				// external connection call depth, 0 for user attachment
-	TraceManager* att_trace_manager;		// Trace API manager
-	bool att_fini_sec_db;
-	Firebird::string att_requested_role;	// Role requested by user
-
-	bool locksmith() const;
-
-	PreparedStatement* prepareStatement(thread_db* tdbb, Firebird::MemoryPool& pool,
-		jrd_tra* transaction, const Firebird::string& text);
-
-	void signalCancel(thread_db* tdbb);
-	void signalShutdown(thread_db* tdbb);
-
-	bool backupStateWriteLock(thread_db* tdbb, SSHORT wait);
-	void backupStateWriteUnLock(thread_db* tdbb);
-	bool backupStateReadLock(thread_db* tdbb, SSHORT wait);
-	void backupStateReadUnLock(thread_db* tdbb);
-
-private:
-	Attachment(MemoryPool* pool, Database* dbb);
-	~Attachment();
-};
-
-
-// Attachment flags
-
-const ULONG ATT_no_cleanup			= 0x1;		// Don't expunge, purge, or garbage collect
-const ULONG ATT_shutdown			= 0x2;		// attachment has been shutdown
-//const ULONG ATT_purge_error			= 0x4;		// trouble happened in purge attachment
-const ULONG ATT_shutdown_manager	= 0x8;		// attachment requesting shutdown
-const ULONG ATT_lck_init_done		= 0x10;		// LCK_init() called for the attachment
-const ULONG ATT_exclusive			= 0x20;		// attachment wants exclusive database access
-const ULONG ATT_attach_pending		= 0x40;		// Indicate attachment is only pending
-const ULONG ATT_exclusive_pending	= 0x80;		// Indicate exclusive attachment pending
-const ULONG ATT_gbak_attachment		= 0x100;	// Indicate GBAK attachment
-
-#ifdef GARBAGE_THREAD
-const ULONG ATT_notify_gc			= 0x200;	// Notify garbage collector to expunge, purge ..
-const ULONG ATT_disable_notify_gc	= 0x400;	// Temporarily perform own garbage collection
-const ULONG ATT_garbage_collector	= 0x800;	// I'm a garbage collector
-
-const ULONG ATT_NO_CLEANUP			= (ATT_no_cleanup | ATT_notify_gc);
-#else
-const ULONG ATT_NO_CLEANUP			= ATT_no_cleanup;
-#endif
-
-const ULONG ATT_cancel_raise		= 0x1000;	// Cancel currently running operation
-const ULONG ATT_cancel_disable		= 0x2000;	// Disable cancel operations
-const ULONG ATT_gfix_attachment		= 0x4000;	// Indicate a GFIX attachment
-const ULONG ATT_gstat_attachment	= 0x8000;	// Indicate a GSTAT attachment
-const ULONG ATT_no_db_triggers		= 0x10000;	// Don't execute database triggers
-const ULONG ATT_manual_lock			= 0x20000;	// Was locked manually
-
-
-inline bool Attachment::locksmith() const
-{
-	return att_user && att_user->locksmith();
-}
-
-
 // Procedure block
 
-class jrd_prc : public pool_alloc<type_prc>
+class jrd_prc : public Routine
 {
 public:
-	USHORT prc_id;
-	USHORT prc_flags;
-	USHORT prc_inputs;
-	USHORT prc_defaults;
-	USHORT prc_outputs;
-	//jrd_nod*	prc_input_msg;				// It's set once by met.epp and never used.
-	jrd_nod*	prc_output_msg;
-	Format*		prc_input_fmt;
-	Format*		prc_output_fmt;
-	Format*		prc_format;
-	vec<Parameter*>*	prc_input_fields;	// vector of field blocks
-	vec<Parameter*>*	prc_output_fields;	// vector of field blocks
-	prc_t		prc_type;					// procedure type
-	jrd_req*	prc_request;				// compiled procedure request
-	USHORT prc_use_count;					// requests compiled with procedure
-	SSHORT prc_int_use_count;				// number of procedures compiled with procedure, set and
-											// used internally in the MET_clear_cache procedure
-											// no code should rely on value of this field
-											// (it will usually be 0)
-	Lock* prc_existence_lock;				// existence lock, if any
-	Firebird::MetaName prc_security_name;	// security class name for procedure
-	Firebird::MetaName prc_name;			// ascic name
-	USHORT prc_alter_count;					// No. of times the procedure was altered
+	const Format*	prc_record_format;
+	prc_t			prc_type;					// procedure type
+
+	const ExtEngineManager::Procedure* getExternal() const { return prc_external; }
+	void setExternal(ExtEngineManager::Procedure* value) { prc_external = value; }
+
+private:
+	const ExtEngineManager::Procedure* prc_external;
 
 public:
 	explicit jrd_prc(MemoryPool& p)
-		: prc_security_name(p), prc_name(p)
-	{}
+		: Routine(p),
+		  prc_record_format(NULL),
+		  prc_type(prc_legacy),
+		  prc_external(NULL)
+	{
+	}
+
+public:
+	virtual int getObjectType() const
+	{
+		return obj_procedure;
+	}
+
+	virtual SLONG getSclType() const
+	{
+		return obj_procedures;
+	}
+
+	virtual void releaseFormat()
+	{
+		delete prc_record_format;
+		prc_record_format = NULL;
+	}
+
+	virtual ~jrd_prc()
+	{
+		delete prc_external;
+	}
+
+	virtual bool checkCache(thread_db* tdbb) const;
+	virtual void clearCache(thread_db* tdbb);
+
+	virtual void releaseExternal()
+	{
+		delete prc_external;
+		prc_external = NULL;
+	}
+
+protected:
+	virtual bool reload(thread_db* tdbb);	// impl is in met.epp
 };
-
-// prc_flags
-
-const USHORT PRC_scanned			= 1;	// Field expressions scanned
-const USHORT PRC_system				= 2;	// Set in met.epp, never tested.
-const USHORT PRC_obsolete			= 4;	// Procedure known gonzo
-const USHORT PRC_being_scanned		= 8;	// New procedure needs dependencies during scan
-//const USHORT PRC_blocking			= 16;	// Blocking someone from dropping procedure
-const USHORT PRC_create				= 32;	// Newly created. Set in met.epp, never tested or disabled.
-const USHORT PRC_being_altered		= 64;	// Procedure is getting altered
-									// This flag is used to make sure that MET_remove_procedure
-									// does not delete and remove procedure block from cache
-									// so dfw.epp:modify_procedure() can flip procedure body without
-									// invalidating procedure pointers from other parts of metadata cache
-const USHORT PRC_check_existence	= 128;	// Existence lock released
-
-const USHORT MAX_PROC_ALTER			= 64;	// No. of times an in-cache procedure can be altered
-
 
 
 // Parameter block
@@ -456,12 +284,24 @@ class Parameter : public pool_alloc<type_prm>
 public:
 	USHORT		prm_number;
 	dsc			prm_desc;
-	jrd_nod*	prm_default_value;
-	Firebird::MetaName prm_name;			// asciiz name
-//public:
+	NestConst<ValueExprNode>	prm_default_value;
+	bool		prm_nullable;
+	prm_mech_t	prm_mechanism;
+	MetaName prm_name;
+	MetaName prm_field_source;
+	MetaName prm_type_of_column;
+	MetaName prm_type_of_table;
+	Nullable<USHORT> prm_text_type;
+	FUN_T		prm_fun_mechanism;
+
+public:
 	explicit Parameter(MemoryPool& p)
-		: prm_name(p)
-	{ }
+		: prm_name(p),
+		  prm_field_source(p),
+		  prm_type_of_column(p),
+		  prm_type_of_table(p)
+	{
+	}
 };
 
 // Index block to cache index information
@@ -470,121 +310,14 @@ class IndexBlock : public pool_alloc<type_idb>
 {
 public:
 	IndexBlock*	idb_next;
-	jrd_nod*	idb_expression;				// node tree for index expression
-	jrd_req*	idb_expression_request;		// request in which index expression is evaluated
+	ValueExprNode* idb_expression;			// node tree for index expression
+	Statement* idb_expression_statement;	// statement for index expression evaluation
 	dsc			idb_expression_desc;		// descriptor for expression result
+	BoolExprNode* idb_condition;			// node tree for index condition
+	Statement* idb_condition_statement;		// statement for index condition evaluation
 	Lock*		idb_lock;					// lock to synchronize changes to index
 	USHORT		idb_id;
 };
-
-
-
-// general purpose vector
-template <class T, BlockType TYPE = type_vec>
-class vec_base : protected pool_alloc<TYPE>
-{
-public:
-	typedef typename Firebird::Array<T>::iterator iterator;
-	typedef typename Firebird::Array<T>::const_iterator const_iterator;
-	/*
-	static vec_base* newVector(MemoryPool& p, int len)
-	{
-		return FB_NEW(p) vec_base<T, TYPE>(p, len);
-	}
-	static vec_base* newVector(MemoryPool& p, const vec_base& base)
-	{
-		return FB_NEW(p) vec_base<T, TYPE>(p, base);
-	}
-	*/
-
-	size_t count() const { return v.getCount(); }
-	T& operator[](size_t index) { return v[index]; }
-	const T& operator[](size_t index) const { return v[index]; }
-
-	iterator begin() { return v.begin(); }
-	iterator end() { return v.end(); }
-
-	const_iterator begin() const { return v.begin(); }
-	const_iterator end() const { return v.end(); }
-
-	void clear() { v.clear(); }
-
-//	T* memPtr() { return &*(v.begin()); }
-	T* memPtr() { return &v[0]; }
-
-	void resize(size_t n, T val = T()) { v.resize(n, val); }
-
-	void operator delete(void* mem) { MemoryPool::globalFree(mem); }
-
-protected:
-	vec_base(MemoryPool& p, int len)
-		: v(p, len)
-	{
-		v.resize(len);
-	}
-	vec_base(MemoryPool& p, const vec_base& base)
-		: v(p)
-	{
-		v = base.v;
-	}
-
-private:
-	Firebird::Array<T> v;
-};
-
-template <typename T>
-class vec : public vec_base<T, type_vec>
-{
-public:
-	static vec* newVector(MemoryPool& p, int len)
-	{
-		return FB_NEW(p) vec<T>(p, len);
-	}
-	static vec* newVector(MemoryPool& p, const vec& base)
-	{
-		return FB_NEW(p) vec<T>(p, base);
-	}
-	static vec* newVector(MemoryPool& p, vec* base, int len)
-	{
-		if (!base)
-			base = FB_NEW(p) vec<T>(p, len);
-		else if (len > (int) base->count())
-			base->resize(len);
-		return base;
-	}
-
-private:
-	vec(MemoryPool& p, int len) : vec_base<T, type_vec>(p, len) {}
-	vec(MemoryPool& p, const vec& base) : vec_base<T, type_vec>(p, base) {}
-};
-
-class vcl : public vec_base<SLONG, type_vcl>
-{
-public:
-	static vcl* newVector(MemoryPool& p, int len)
-	{
-		return FB_NEW(p) vcl(p, len);
-	}
-	static vcl* newVector(MemoryPool& p, const vcl& base)
-	{
-		return FB_NEW(p) vcl(p, base);
-	}
-	static vcl* newVector(MemoryPool& p, vcl* base, int len)
-	{
-		if (!base)
-			base = FB_NEW(p) vcl(p, len);
-		else if (len > (int) base->count())
-			base->resize(len);
-		return base;
-	}
-
-private:
-	vcl(MemoryPool& p, int len) : vec_base<SLONG, type_vcl>(p, len) {}
-	vcl(MemoryPool& p, const vcl& base) : vec_base<SLONG, type_vcl>(p, base) {}
-};
-
-//#define TEST_VECTOR(vector, number)      ((vector && number < vector->count()) ?
-//					  (*vector)[number] : NULL)
 
 
 //
@@ -592,7 +325,7 @@ private:
 //
 struct teb
 {
-	Attachment** teb_database;
+	Attachment* teb_database;
 	int teb_tpb_length;
 	const UCHAR* teb_tpb;
 };
@@ -608,15 +341,13 @@ struct win
 {
 	PageNumber win_page;
 	Ods::pag* win_buffer;
-	exp_index_buf* win_expanded_buffer;
 	class BufferDesc* win_bdb;
 	SSHORT win_scans;
 	USHORT win_flags;
-//	explicit win(SLONG wp) : win_page(wp), win_flags(0) {}
 	explicit win(const PageNumber& wp)
 		: win_page(wp), win_bdb(NULL), win_flags(0)
 	{}
-	win(const USHORT pageSpaceID, const SLONG pageNum)
+	win(const USHORT pageSpaceID, const ULONG pageNum)
 		: win_page(pageSpaceID, pageNum), win_bdb(NULL), win_flags(0)
 	{}
 };
@@ -629,11 +360,11 @@ typedef win WIN;
 // alternative would be to initialize 16 elements of the array with 16 calls
 // to the constructor: win my_array[n] = {win(-1), ... (win-1)};
 // When all places are changed, this class can disappear and win's constructor
-// may get the default value of -1 to "wp".
+// may get the default value of ~0 to "wp".
 struct win_for_array: public win
 {
 	win_for_array()
-		: win(DB_PAGE_SPACE, -1)
+		: win(DB_PAGE_SPACE, ~0)
 	{}
 };
 
@@ -645,60 +376,192 @@ const USHORT WIN_garbage_collector	= 4;	// garbage collector's window
 const USHORT WIN_garbage_collect	= 8;	// scan left a page for garbage collector
 
 
-// Thread specific database block
-class thread_db : public ThreadData
+#ifdef USE_ITIMER
+class TimeoutTimer final :
+	public Firebird::RefCntIface<Firebird::ITimerImpl<TimeoutTimer, Firebird::CheckStatusWrapper> >
 {
+public:
+	explicit TimeoutTimer()
+		: m_started(0),
+		  m_expired(false),
+		  m_value(0),
+		  m_error(0)
+	{ }
+
+	// ITimer implementation
+	void handler();
+
+	bool expired() const
+	{
+		return m_expired;
+	}
+
+	unsigned int getValue() const
+	{
+		return m_value;
+	}
+
+	unsigned int getErrCode() const
+	{
+		return m_error;
+	}
+
+	// milliseconds left before timer expiration
+	unsigned int timeToExpire() const;
+
+	// evaluate expire timestamp using start timestamp
+	bool getExpireTimestamp(const ISC_TIMESTAMP_TZ start, ISC_TIMESTAMP_TZ& exp) const;
+
+	// set timeout value in milliseconds and secondary error code
+	void setup(unsigned int value, ISC_STATUS error)
+	{
+		m_value = value;
+		m_error = error;
+	}
+
+	void start();
+	void stop();
+
 private:
-	MemoryPool*	tdbb_default;
+	SINT64 m_started;
+	bool m_expired;
+	unsigned int m_value;	// milliseconds
+	ISC_STATUS m_error;
+};
+#else
+class TimeoutTimer : public Firebird::RefCounted
+{
+public:
+	explicit TimeoutTimer()
+		: m_start(0),
+		  m_value(0),
+		  m_error(0)
+	{ }
+
+	bool expired() const;
+
+	unsigned int getValue() const
+	{
+		return m_value;
+	}
+
+	unsigned int getErrCode() const
+	{
+		return m_error;
+	}
+
+	// milliseconds left before timer expiration
+	unsigned int timeToExpire() const;
+
+	// clock value when timer will expire
+	bool getExpireClock(SINT64& clock) const;
+
+	// set timeout value in milliseconds and secondary error code
+	void setup(unsigned int value, ISC_STATUS error)
+	{
+		m_start = 0;
+		m_value = value;
+		m_error = error;
+	}
+
+	void start();
+	void stop();
+
+private:
+	SINT64 currTime() const
+	{
+		return fb_utils::query_performance_counter() * 1000 / fb_utils::query_performance_frequency();
+	}
+
+	SINT64 m_start;
+	unsigned int m_value;	// milliseconds
+	ISC_STATUS m_error;
+};
+#endif // USE_ITIMER
+
+// Thread specific database block
+
+// tdbb_flags
+
+const ULONG TDBB_sweeper				= 1;		// Thread sweeper or garbage collector
+const ULONG TDBB_no_cache_unwind		= 2;		// Don't unwind page buffer cache
+const ULONG TDBB_backup_write_locked	= 4;    	// BackupManager has write lock on LCK_backup_database
+const ULONG TDBB_stack_trace_done		= 8;		// PSQL stack trace is added into status-vector
+const ULONG TDBB_dont_post_dfw			= 16;		// dont post DFW tasks as deferred work is performed now
+const ULONG TDBB_sys_error				= 32;		// error shouldn't be handled by the looper
+const ULONG TDBB_verb_cleanup			= 64;		// verb cleanup is in progress
+const ULONG TDBB_use_db_page_space		= 128;		// use database (not temporary) page space in GTT operations
+const ULONG TDBB_detaching				= 256;		// detach is in progress
+const ULONG TDBB_wait_cancel_disable	= 512;		// don't cancel current waiting operation
+const ULONG TDBB_cache_unwound			= 1024;		// page cache was unwound
+const ULONG TDBB_reset_stack			= 2048;		// stack should be reset after stack overflow exception
+const ULONG TDBB_dfw_cleanup			= 4096;		// DFW cleanup phase is active
+const ULONG TDBB_repl_in_progress		= 8192;		// Prevent recursion in replication
+const ULONG TDBB_replicator				= 16384;	// Replicator
+const ULONG TDBB_async					= 32768;	// Async context (set in AST)
+
+class thread_db : public Firebird::ThreadData
+{
+	const static int QUANTUM		= 100;	// Default quantum
+	const static int SWEEP_QUANTUM	= 10;	// Make sweeps less disruptive
+
+private:
+	MemoryPool*	defaultPool;
 	void setDefaultPool(MemoryPool* p)
 	{
-		tdbb_default = p;
+		defaultPool = p;
 	}
 	friend class Firebird::SubsystemContextPoolHolder <Jrd::thread_db, MemoryPool>;
 	Database*	database;
 	Attachment*	attachment;
 	jrd_tra*	transaction;
-	jrd_req*	request;
+	Request*	request;
 	RuntimeStatistics *reqStat, *traStat, *attStat, *dbbStat;
 
 public:
-	explicit thread_db(ISC_STATUS* status)
-		: ThreadData(ThreadData::tddDBB)
+	explicit thread_db(FbStatusVector* status)
+		: ThreadData(ThreadData::tddDBB),
+		  defaultPool(NULL),
+		  database(NULL),
+		  attachment(NULL),
+		  transaction(NULL),
+		  request(NULL),
+		  tdbb_status_vector(status),
+		  tdbb_quantum(QUANTUM),
+		  tdbb_flags(0),
+		  tdbb_temp_traid(0),
+		  tdbb_bdbs(*getDefaultMemoryPool()),
+		  tdbb_thread(Firebird::ThreadSync::getThread("thread_db"))
 	{
-		tdbb_default = NULL;
-		database = NULL;
-		attachment = NULL;
-		transaction = NULL;
-		request = NULL;
-		tdbb_quantum = QUANTUM;
-		tdbb_flags = 0;
-		tdbb_temp_traid = 0;
-		tdbb_latch_count = 0;
-		QUE_INIT(tdbb_latches);
 		reqStat = traStat = attStat = dbbStat = RuntimeStatistics::getDummy();
-
-		tdbb_status_vector = status;
 		fb_utils::init_status(tdbb_status_vector);
 	}
 
 	~thread_db()
 	{
-		fb_assert(QUE_EMPTY(tdbb_latches));
-		fb_assert(tdbb_latch_count == 0);
+		resetStack();
+
+#ifdef DEV_BUILD
+		for (FB_SIZE_T n = 0; n < tdbb_bdbs.getCount(); ++n)
+		{
+			fb_assert(tdbb_bdbs[n] == NULL);
+		}
+#endif
 	}
 
-	ISC_STATUS*	tdbb_status_vector;
-	SSHORT		tdbb_quantum;		// Cycles remaining until voluntary schedule
-	USHORT		tdbb_flags;
+	FbStatusVector*	tdbb_status_vector;
+	SLONG		tdbb_quantum;		// Cycles remaining until voluntary schedule
+	ULONG		tdbb_flags;
 
-	SLONG		tdbb_temp_traid;	// current temporary table scope
+	TraNumber	tdbb_temp_traid;	// current temporary table scope
 
-	int			tdbb_latch_count;	// count of all latches held by thread
-	que			tdbb_latches;		// shared latches held by thread
+	// BDB's held by thread
+	Firebird::HalfStaticArray<BufferDesc*, 16> tdbb_bdbs;
+	Firebird::ThreadSync* tdbb_thread;
 
 	MemoryPool* getDefaultPool()
 	{
-		return tdbb_default;
+		return defaultPool;
 	}
 
 	Database* getDatabase()
@@ -711,11 +574,7 @@ public:
 		return database;
 	}
 
-	void setDatabase(Database* val)
-	{
-		database = val;
-		dbbStat = val ? &val->dbb_stats : RuntimeStatistics::getDummy();
-	}
+	void setDatabase(Database* val);
 
 	Attachment* getAttachment()
 	{
@@ -727,11 +586,7 @@ public:
 		return attachment;
 	}
 
-	void setAttachment(Attachment* val)
-	{
-		attachment = val;
-		attStat = val ? &val->att_stats : RuntimeStatistics::getDummy();
-	}
+	void setAttachment(Attachment* val);
 
 	jrd_tra* getTransaction()
 	{
@@ -745,66 +600,204 @@ public:
 
 	void setTransaction(jrd_tra* val);
 
-	jrd_req* getRequest()
+	Request* getRequest()
 	{
 		return request;
 	}
 
-	const jrd_req* getRequest() const
+	const Request* getRequest() const
 	{
 		return request;
 	}
 
-	void setRequest(jrd_req* val);
+	void setRequest(Request* val);
 
-	void bumpStats(const RuntimeStatistics::StatType index)
+	SSHORT getCharSet() const;
+
+	void markAsSweeper()
 	{
-		reqStat->bumpValue(index);
-		traStat->bumpValue(index);
-		attStat->bumpValue(index);
-		dbbStat->bumpValue(index);
+		tdbb_quantum = SWEEP_QUANTUM;
+		tdbb_flags |= TDBB_sweeper;
 	}
 
-	void bumpStats(const RuntimeStatistics::StatType index, SLONG relation_id)
+	void bumpStats(const RuntimeStatistics::StatType index, SINT64 delta = 1)
 	{
-		reqStat->bumpValue(index, relation_id);
-		//traStat->bumpValue(index, relation_id);
-		//attStat->bumpValue(index, relation_id);
-		//dbbStat->bumpValue(index, relation_id);
+		reqStat->bumpValue(index, delta);
+		traStat->bumpValue(index, delta);
+		attStat->bumpValue(index, delta);
+
+		if ((tdbb_flags & TDBB_async) && !attachment)
+			dbbStat->bumpValue(index, delta);
+
+		// else dbbStat is adjusted from attStat, see Attachment::mergeAsyncStats()
 	}
 
-	bool checkCancelState(bool punt);
+	void bumpRelStats(const RuntimeStatistics::StatType index, SLONG relation_id, SINT64 delta = 1)
+	{
+		// We don't bump counters for dbbStat here, they're merged from attStats on demand
+
+		reqStat->bumpValue(index, delta);
+		traStat->bumpValue(index, delta);
+		attStat->bumpValue(index, delta);
+
+		const RuntimeStatistics* const dummyStat = RuntimeStatistics::getDummy();
+
+		// We expect that at least attStat is present (not a dummy object)
+
+		fb_assert(attStat != dummyStat);
+
+		// Relation statistics is a quite complex beast, so a conditional check
+		// does not hurt. It also allows to avoid races while accessing the static
+		// dummy object concurrently.
+
+		if (reqStat != dummyStat)
+			reqStat->bumpRelValue(index, relation_id, delta);
+
+		if (traStat != dummyStat)
+			traStat->bumpRelValue(index, relation_id, delta);
+
+		if (attStat != dummyStat)
+			attStat->bumpRelValue(index, relation_id, delta);
+	}
+
+	ISC_STATUS getCancelState(ISC_STATUS* secondary = NULL);
+	void checkCancelState();
+	void reschedule();
+	const TimeoutTimer* getTimeoutTimer() const
+	{
+		return tdbb_reqTimer;
+	}
+
+	// Returns minimum of passed wait timeout and time to expiration of reqTimer.
+	// Timer value is rounded to the upper whole second.
+	ULONG adjustWait(ULONG wait) const;
+
+	void registerBdb(BufferDesc* bdb)
+	{
+		if (tdbb_bdbs.isEmpty()) {
+			tdbb_flags &= ~TDBB_cache_unwound;
+		}
+		fb_assert(!(tdbb_flags & TDBB_cache_unwound));
+
+		FB_SIZE_T pos;
+		if (tdbb_bdbs.find(NULL, pos))
+			tdbb_bdbs[pos] = bdb;
+		else
+			tdbb_bdbs.add(bdb);
+	}
+
+	bool clearBdb(BufferDesc* bdb)
+	{
+		if (tdbb_bdbs.isEmpty())
+		{
+			// hvlad: the only legal case when thread holds no latches but someone
+			// tried to release latch is when CCH_unwind was called (and released
+			// all latches) but caller is unaware about it. See CORE-3034, for example.
+			// Else it is bug and should be BUGCHECK'ed.
+
+			if (tdbb_flags & TDBB_cache_unwound)
+				return false;
+		}
+		fb_assert(!(tdbb_flags & TDBB_cache_unwound));
+
+		FB_SIZE_T pos;
+		if (!tdbb_bdbs.find(bdb, pos))
+			BUGCHECK(300);	// can't find shared latch
+
+		tdbb_bdbs[pos] = NULL;
+
+		if (pos == tdbb_bdbs.getCount() - 1)
+		{
+			while (true)
+			{
+				if (tdbb_bdbs[pos] != NULL)
+				{
+					tdbb_bdbs.shrink(pos + 1);
+					break;
+				}
+
+				if (pos == 0)
+				{
+					tdbb_bdbs.shrink(0);
+					break;
+				}
+
+				--pos;
+			}
+		}
+
+		return true;
+	}
+
+	void resetStack()
+	{
+		if (tdbb_flags & TDBB_reset_stack)
+		{
+			tdbb_flags &= ~TDBB_reset_stack;
+#ifdef WIN_NT
+			_resetstkoflw();
+#endif
+		}
+	}
+
+	class TimerGuard
+	{
+	public:
+		TimerGuard(thread_db* tdbb, TimeoutTimer* timer, bool autoStop)
+			: m_tdbb(tdbb),
+			  m_autoStop(autoStop && timer),
+			  m_saveTimer(tdbb->tdbb_reqTimer)
+		{
+			m_tdbb->tdbb_reqTimer = timer;
+			if (timer && timer->expired())
+				m_tdbb->tdbb_quantum = 0;
+		}
+
+		~TimerGuard()
+		{
+			if (m_autoStop)
+				m_tdbb->tdbb_reqTimer->stop();
+
+			m_tdbb->tdbb_reqTimer = m_saveTimer;
+		}
+
+	private:
+		thread_db* m_tdbb;
+		bool m_autoStop;
+		Firebird::RefPtr<TimeoutTimer> m_saveTimer;
+	};
+
+private:
+	Firebird::RefPtr<TimeoutTimer> tdbb_reqTimer;
+
 };
-
-// tdbb_flags
-
-const USHORT TDBB_sweeper				= 1;	// Thread sweeper or garbage collector
-const USHORT TDBB_no_cache_unwind		= 2;	// Don't unwind page buffer cache
-const USHORT TDBB_prc_being_dropped		= 4;	// Dropping a procedure
-const USHORT TDBB_backup_write_locked	= 8;    // BackupManager has write lock on LCK_backup_database
-const USHORT TDBB_stack_trace_done		= 16;	// PSQL stack trace is added into status-vector
-const USHORT TDBB_shutdown_manager		= 32;	// Server shutdown thread
-const USHORT TDBB_dont_post_dfw			= 64;	// dont post DFW tasks as deferred work is performed now
-const USHORT TDBB_sys_error				= 128;	// error shouldn't be handled by the looper
-const USHORT TDBB_verb_cleanup			= 256;	// verb cleanup is in progress
-const USHORT TDBB_use_db_page_space		= 512;	// use database (not temporary) page space in GTT operations
-const USHORT TDBB_detaching				= 1024;	// detach is in progress
-const USHORT TDBB_wait_cancel_disable	= 2048;	// don't cancel current waiting operation
-const USHORT TDBB_cache_unwound			= 4096;	// page cache was unwound 
-const USHORT TDBB_dfw_cleanup			= 8192;	// DFW cleanup phase is active
 
 class ThreadContextHolder
 {
 public:
-	explicit ThreadContextHolder(ISC_STATUS* status = NULL)
-		: context(status ? status : local_status)
+	explicit ThreadContextHolder(Firebird::CheckStatusWrapper* status = NULL)
+		: context(status ? status : &localStatus)
 	{
 		context.putSpecific();
+
+		if (!cds::threading::Manager::isThreadAttached())
+			cds::threading::Manager::attachThread();
+	}
+
+	ThreadContextHolder(Database* dbb, Jrd::Attachment* att, FbStatusVector* status = NULL)
+		: context(status ? status : &localStatus)
+	{
+		context.putSpecific();
+		context.setDatabase(dbb);
+		context.setAttachment(att);
+
+		if (!cds::threading::Manager::isThreadAttached())
+			cds::threading::Manager::attachThread();
 	}
 
 	~ThreadContextHolder()
 	{
-		ThreadData::restoreSpecific();
+		Firebird::ThreadData::restoreSpecific();
 	}
 
 	thread_db* operator->()
@@ -822,10 +815,29 @@ private:
 	ThreadContextHolder(const ThreadContextHolder&);
 	ThreadContextHolder& operator= (const ThreadContextHolder&);
 
-	ISC_STATUS_ARRAY local_status;
+	Firebird::FbLocalStatus localStatus;
 	thread_db context;
 };
 
+
+// Helper class to temporarily activate sweeper context
+class ThreadSweepGuard
+{
+public:
+	explicit ThreadSweepGuard(thread_db* tdbb)
+		: m_tdbb(tdbb)
+	{
+		m_tdbb->markAsSweeper();
+	}
+
+	~ThreadSweepGuard()
+	{
+		m_tdbb->tdbb_flags &= ~TDBB_sweeper;
+	}
+
+private:
+	thread_db* const m_tdbb;
+};
 
 // CVC: This class was designed to restore the thread's default status vector automatically.
 // In several places, tdbb_status_vector is replaced by a local temporary.
@@ -835,8 +847,7 @@ public:
 	explicit ThreadStatusGuard(thread_db* tdbb)
 		: m_tdbb(tdbb), m_old_status(tdbb->tdbb_status_vector)
 	{
-		fb_utils::init_status(m_local_status);
-		m_tdbb->tdbb_status_vector = m_local_status;
+		m_tdbb->tdbb_status_vector = &m_local_status;
 	}
 
 	~ThreadStatusGuard()
@@ -844,22 +855,27 @@ public:
 		m_tdbb->tdbb_status_vector = m_old_status;
 	}
 
-	//ISC_STATUS* restore()
-	//{
-	//	return m_tdbb->tdbb_status_vector = m_old_status; // copy, not comparison
-	//}
+	FbStatusVector* restore()
+	{
+		m_tdbb->tdbb_status_vector = m_old_status;
+		return m_old_status;
+	}
 
-	operator ISC_STATUS*() { return m_local_status; }
+	operator FbStatusVector*() { return &m_local_status; }
+	FbStatusVector* operator->() { return &m_local_status; }
+
+	operator const FbStatusVector*() const { return &m_local_status; }
+	const FbStatusVector* operator->() const { return &m_local_status; }
 
 	void copyToOriginal()
 	{
-		memcpy(m_old_status, m_local_status, sizeof(ISC_STATUS_ARRAY));
+		fb_utils::copyStatus(m_old_status, &m_local_status);
 	}
 
 private:
+	Firebird::FbLocalStatus m_local_status;
 	thread_db* const m_tdbb;
-	ISC_STATUS* const m_old_status;
-	ISC_STATUS_ARRAY m_local_status;
+	FbStatusVector* const m_old_status;
 
 	// copying is prohibited
 	ThreadStatusGuard(const ThreadStatusGuard&);
@@ -867,72 +883,17 @@ private:
 };
 
 
-// AST attachment holder - controls AST mutex in attachment block
-
-class AstAttachmentHolder
-{
-public:
-	explicit AstAttachmentHolder(Attachment* attachment);
-
-	~AstAttachmentHolder()
-	{
-		if (mtx)
-		{
-			destroy();
-		}
-	}
-
-private:
-	Firebird::ExistenceMutex* mtx;
-
-	void destroy();
-};
-
-
-// Checks that passed pointer is not NULL
-
-class AttachmentNotNull
-{
-public:
-	explicit AttachmentNotNull(Attachment* attachment);
-	AttachmentNotNull();
-};
-
-
-
-// AST routines context helper
-
-class AstContextHolder :
-	public AttachmentNotNull,		// when needed checks NULL pointer passed
-	public ThreadContextHolder,		// creates thread_db block for AST routine
-	public AstAttachmentHolder,		// controls AST mutex in attachment block
-	public Database::SyncGuard		// controls dbb_sync mutex
-{
-public:
-	explicit AstContextHolder(Database* dbb, Attachment* attachment = NULL);
-	AstContextHolder(ISC_STATUS* status, Attachment* attachment);
-};
-
-
-// duplicate context of firebird string to store in jrd_nod::nod_arg
+// duplicate context of firebird string
 inline char* stringDup(MemoryPool& p, const Firebird::string& s)
 {
-	char* rc = (char*) p.allocate(s.length() + 1
-#ifdef DEBUG_GDS_ALLOC
-		, __FILE__, __LINE__
-#endif
-		);
+	char* rc = (char*) p.allocate(s.length() + 1 ALLOC_ARGS);
 	strcpy(rc, s.c_str());
 	return rc;
 }
 
 inline char* stringDup(MemoryPool& p, const char* s, size_t l)
 {
-	char* rc = (char*) p.allocate(l + 1
-#ifdef DEBUG_GDS_ALLOC
-		, __FILE__, __LINE__
-#endif
-		);
+	char* rc = (char*) p.allocate(l + 1 ALLOC_ARGS);
 	memcpy(rc, s, l);
 	rc[l] = 0;
 	return rc;
@@ -952,15 +913,16 @@ typedef Firebird::HalfStaticArray<UCHAR, 256> MoveBuffer;
 
 } //namespace Jrd
 
-// Random string block -- as long as impure areas don't have
-// constructors and destructors, the need this varying string
-
-class VaryingString : public pool_alloc_rpt<SCHAR, type_str>
+inline bool JRD_reschedule(Jrd::thread_db* tdbb, bool force = false)
 {
-public:
-	USHORT str_length;
-	UCHAR str_data[2];			// one byte for ALLOC and one for the NULL
-};
+	if (force || --tdbb->tdbb_quantum < 0)
+	{
+		tdbb->reschedule();
+		return true;
+	}
+
+	return false;
+}
 
 // Threading macros
 
@@ -984,8 +946,8 @@ public:
 
 inline Jrd::thread_db* JRD_get_thread_data()
 {
-	ThreadData* p1 = ThreadData::getSpecific();
-	if (p1 && p1->getType() == ThreadData::tddDBB)
+	Firebird::ThreadData* p1 = Firebird::ThreadData::getSpecific();
+	if (p1 && p1->getType() == Firebird::ThreadData::tddDBB)
 	{
 		Jrd::thread_db* p2 = (Jrd::thread_db*) p1;
 		if (p2->getDatabase() && !p2->getDatabase()->checkHandle())
@@ -998,27 +960,27 @@ inline Jrd::thread_db* JRD_get_thread_data()
 
 inline void CHECK_TDBB(const Jrd::thread_db* tdbb)
 {
-	fb_assert(tdbb && (tdbb->getType() == ThreadData::tddDBB) &&
+	fb_assert(tdbb && (tdbb->getType() == Firebird::ThreadData::tddDBB) &&
 		(!tdbb->getDatabase() || tdbb->getDatabase()->checkHandle()));
 }
 
 inline void CHECK_DBB(const Jrd::Database* dbb)
 {
-	fb_assert(dbb->checkHandle());
+	fb_assert(dbb && dbb->checkHandle());
 }
 
 #else // PROD_BUILD
 
 inline Jrd::thread_db* JRD_get_thread_data()
 {
-	return (Jrd::thread_db*) ThreadData::getSpecific();
+	return (Jrd::thread_db*) Firebird::ThreadData::getSpecific();
 }
 
-inline void CHECK_DBB(const Jrd::Database* dbb)
+inline void CHECK_DBB(const Jrd::Database*)
 {
 }
 
-inline void CHECK_TDBB(const Jrd::thread_db* tdbb)
+inline void CHECK_TDBB(const Jrd::thread_db*)
 {
 }
 
@@ -1032,7 +994,7 @@ inline Jrd::Database* GET_DBB()
 /*-------------------------------------------------------------------------*
  * macros used to set thread_db and Database pointers when there are not set already *
  *-------------------------------------------------------------------------*/
-inline void SET_TDBB(Jrd::thread_db* &tdbb)
+inline void SET_TDBB(Jrd::thread_db*& tdbb)
 {
 	if (tdbb == NULL) {
 		tdbb = JRD_get_thread_data();
@@ -1040,7 +1002,7 @@ inline void SET_TDBB(Jrd::thread_db* &tdbb)
 	CHECK_TDBB(tdbb);
 }
 
-inline void SET_DBB(Jrd::Database* &dbb)
+inline void SET_DBB(Jrd::Database*& dbb)
 {
 	if (dbb == NULL) {
 		dbb = GET_DBB();
@@ -1051,14 +1013,230 @@ inline void SET_DBB(Jrd::Database* &dbb)
 
 // global variables for engine
 
-extern int debug;
-
 namespace Jrd {
 	typedef Firebird::SubsystemContextPoolHolder <Jrd::thread_db, MemoryPool> ContextPoolHolder;
-}
 
-#ifdef REEXPAND_DBNAME
-Firebird::Mutex& JRD_get_dbinitmutex();
-#endif
+	class DatabaseContextHolder : public Jrd::ContextPoolHolder
+	{
+	public:
+		explicit DatabaseContextHolder(thread_db* tdbb)
+			: Jrd::ContextPoolHolder(tdbb, tdbb->getDatabase()->dbb_permanent)
+		{}
+
+	private:
+		// copying is prohibited
+		DatabaseContextHolder(const DatabaseContextHolder&);
+		DatabaseContextHolder& operator=(const DatabaseContextHolder&);
+	};
+
+	class BackgroundContextHolder : public ThreadContextHolder, public DatabaseContextHolder,
+		public Jrd::Attachment::SyncGuard
+	{
+	public:
+		BackgroundContextHolder(Database* dbb, Jrd::Attachment* att, FbStatusVector* status, const char* f)
+			: ThreadContextHolder(dbb, att, status),
+			  DatabaseContextHolder(operator thread_db*()),
+			  Jrd::Attachment::SyncGuard(att, f)
+		{}
+
+	private:
+		// copying is prohibited
+		BackgroundContextHolder(const BackgroundContextHolder&);
+		BackgroundContextHolder& operator=(const BackgroundContextHolder&);
+	};
+
+	class AttachmentHolder
+	{
+	public:
+		static const unsigned ATT_LOCK_ASYNC			= 1;
+		static const unsigned ATT_DONT_LOCK				= 2;
+		static const unsigned ATT_NO_SHUTDOWN_CHECK		= 4;
+		static const unsigned ATT_NON_BLOCKING			= 8;
+
+		AttachmentHolder(thread_db* tdbb, StableAttachmentPart* sa, unsigned lockFlags, const char* from);
+		~AttachmentHolder();
+
+	private:
+		Firebird::RefPtr<StableAttachmentPart> sAtt;
+		bool async;			// async mutex should be locked instead normal
+		bool nolock; 		// if locked manually, no need to take lock recursively
+		bool blocking;		// holder instance is blocking other instances
+
+	private:
+		// copying is prohibited
+		AttachmentHolder(const AttachmentHolder&);
+		AttachmentHolder& operator =(const AttachmentHolder&);
+	};
+
+	class EngineContextHolder final : public ThreadContextHolder, private AttachmentHolder, private DatabaseContextHolder
+	{
+	public:
+		template <typename I>
+		EngineContextHolder(Firebird::CheckStatusWrapper* status, I* interfacePtr, const char* from,
+							unsigned lockFlags = 0);
+	};
+
+	class AstLockHolder : public Firebird::ReadLockGuard
+	{
+	public:
+		AstLockHolder(Database* dbb, const char* f)
+			: Firebird::ReadLockGuard(dbb->dbb_ast_lock, f)
+		{
+			if (dbb->dbb_flags & DBB_no_ast)
+			{
+				// usually to be swallowed by the AST, but it allows to skip its execution
+				Firebird::status_exception::raise(Firebird::Arg::Gds(isc_unavailable));
+			}
+		}
+	};
+
+	class AsyncContextHolder : public AstLockHolder, public Jrd::Attachment::SyncGuard,
+		public ThreadContextHolder, public DatabaseContextHolder
+	{
+	public:
+		AsyncContextHolder(Database* dbb, const char* f, Lock* lck = NULL)
+			: AstLockHolder(dbb, f),
+			  Jrd::Attachment::SyncGuard(lck ?
+				lck->getLockStable() : Firebird::RefPtr<StableAttachmentPart>(), f, true),
+			  ThreadContextHolder(dbb, lck ? lck->getLockAttachment() : NULL),
+			  DatabaseContextHolder(operator thread_db*())
+		{
+			if (lck)
+			{
+				// The lock could be released while we were waiting on the attachment mutex.
+				// This may cause a segfault due to lck_attachment == NULL stored in tdbb.
+
+				if (!lck->lck_id)
+				{
+					// usually to be swallowed by the AST, but it allows to skip its execution
+					Firebird::status_exception::raise(Firebird::Arg::Gds(isc_unavailable));
+				}
+
+				fb_assert((operator thread_db*())->getAttachment());
+			}
+
+			(*this)->tdbb_flags |= TDBB_async;
+		}
+
+	private:
+		// copying is prohibited
+		AsyncContextHolder(const AsyncContextHolder&);
+		AsyncContextHolder& operator=(const AsyncContextHolder&);
+	};
+
+	class EngineCheckout
+	{
+	public:
+		enum Type
+		{
+			REQUIRED,
+			UNNECESSARY,
+			AVOID
+		};
+
+		EngineCheckout(thread_db* tdbb, const char* from, Type type = REQUIRED)
+			: m_tdbb(tdbb), m_from(from)
+		{
+			if (type != AVOID)
+			{
+				Attachment* const att = tdbb ? tdbb->getAttachment() : NULL;
+
+				if (att)
+					m_ref = att->getStable();
+
+				fb_assert(type == UNNECESSARY || m_ref.hasData());
+
+				if (m_ref.hasData())
+					m_ref->getSync()->leave();
+			}
+		}
+
+		EngineCheckout(Attachment* att, const char* from, Type type = REQUIRED)
+			: m_tdbb(nullptr), m_from(from)
+		{
+			if (type != AVOID)
+			{
+				fb_assert(type == UNNECESSARY || att);
+
+				if (att && att->att_use_count)
+				{
+					m_ref = att->getStable();
+					m_ref->getSync()->leave();
+				}
+			}
+		}
+
+		~EngineCheckout()
+		{
+			if (m_ref.hasData())
+				m_ref->getSync()->enter(m_from);
+
+			// If we were signalled to cancel/shutdown, react as soon as possible.
+			// We cannot throw immediately, but we can reschedule ourselves.
+
+			if (m_tdbb && m_tdbb->tdbb_quantum > 0 && m_tdbb->getCancelState() != FB_SUCCESS)
+				m_tdbb->tdbb_quantum = 0;
+		}
+
+	private:
+		// copying is prohibited
+		EngineCheckout(const EngineCheckout&);
+		EngineCheckout& operator=(const EngineCheckout&);
+
+		thread_db* const m_tdbb;
+		Firebird::RefPtr<StableAttachmentPart> m_ref;
+		const char* m_from;
+	};
+
+	class CheckoutLockGuard
+	{
+	public:
+		CheckoutLockGuard(thread_db* tdbb, Firebird::Mutex& mutex,
+						  const char* from, bool optional = false)
+			: m_mutex(mutex)
+		{
+			if (!m_mutex.tryEnter(from))
+			{
+				EngineCheckout cout(tdbb, from, optional ? EngineCheckout::UNNECESSARY : EngineCheckout::REQUIRED);
+				m_mutex.enter(from);
+			}
+		}
+
+		~CheckoutLockGuard()
+		{
+			m_mutex.leave();
+		}
+
+	private:
+		// copying is prohibited
+		CheckoutLockGuard(const CheckoutLockGuard&);
+		CheckoutLockGuard& operator=(const CheckoutLockGuard&);
+
+		Firebird::Mutex& m_mutex;
+	};
+
+	class CheckoutSyncGuard
+	{
+	public:
+		CheckoutSyncGuard(thread_db* tdbb, Firebird::SyncObject& sync,
+						  Firebird::SyncType type,
+						  const char* from, bool optional = false)
+			: m_sync(&sync, from)
+		{
+			if (!m_sync.lockConditional(type, from))
+			{
+				EngineCheckout cout(tdbb, from, optional ? EngineCheckout::UNNECESSARY : EngineCheckout::REQUIRED);
+				m_sync.lock(type);
+			}
+		}
+
+	private:
+		// copying is prohibited
+		CheckoutSyncGuard(const CheckoutSyncGuard&);
+		CheckoutSyncGuard& operator=(const CheckoutSyncGuard&);
+
+		Firebird::Sync m_sync;
+	};
+}
 
 #endif // JRD_JRD_H

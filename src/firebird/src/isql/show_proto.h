@@ -24,15 +24,22 @@
 #ifndef ISQL_SHOW_PROTO_H
 #define ISQL_SHOW_PROTO_H
 
+#include "../common/classes/fb_string.h"
+#include <firebird/Interface.h>
+#include "../jrd/obj.h"
+
 void	SHOW_comments(bool force);
-bool	SHOW_dbb_parameters (FB_API_HANDLE, SCHAR*, const SCHAR*, USHORT, bool, const char*);
-processing_state	SHOW_grants (const SCHAR*, const SCHAR*, USHORT);
-processing_state	SHOW_grants2 (const SCHAR*, const SCHAR*, USHORT, const TEXT*, bool);
+bool	SHOW_dbb_parameters (Firebird::IAttachment*, SCHAR*, const UCHAR*, unsigned, bool, const char*);
+processing_state	SHOW_grants (const SCHAR*, const SCHAR*, ObjectType);
+processing_state	SHOW_grants2 (const SCHAR*, const SCHAR*, ObjectType, const TEXT*, bool);
 void	SHOW_grant_roles (const SCHAR*, bool*);
 void	SHOW_grant_roles2 (const SCHAR*, bool*, const TEXT*, bool);
-void	SHOW_print_metadata_text_blob(FILE*, ISC_QUAD*, bool escape_squote = false);
+void	SHOW_print_metadata_text_blob(FILE*, ISC_QUAD*, bool escape_squote = false,
+	bool avoid_end_in_single_line_comment = false);
 processing_state	SHOW_metadata(const SCHAR* const*, SCHAR**);
 void	SHOW_read_owner();
+const Firebird::string SHOW_trigger_action(SINT64);
+processing_state	SHOW_maps(bool extract, const SCHAR* map_name);
+bool	SHOW_system_privileges(const char* role, const char* prfx, bool lf);
 
 #endif // ISQL_SHOW_PROTO_H
-

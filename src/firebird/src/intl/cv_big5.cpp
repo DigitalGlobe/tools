@@ -66,13 +66,15 @@ ULONG CVBIG5_big5_to_unicode(csconvert* obj,
 			const UCHAR c1 = *src_ptr++;
 
 			if (BIG51(c1))
-			{	// first byte is Big5
+			{
+				// first byte is Big5
 				if (src_len == 1) {
 					*err_code = CS_BAD_INPUT;
 					break;
 				}
 				const UCHAR c2 = *src_ptr++;
-				if (!(BIG52(c2))) {	// Bad second byte
+				if (!(BIG52(c2))) {
+					// Bad second byte
 					*err_code = CS_BAD_INPUT;
 					break;
 				}
@@ -86,7 +88,8 @@ ULONG CVBIG5_big5_to_unicode(csconvert* obj,
 			}
 		}
 		else
-		{					// it is ASCII
+		{
+			// it is ASCII
 
 			wide = *src_ptr++;
 			this_len = 1;
@@ -109,7 +112,7 @@ ULONG CVBIG5_big5_to_unicode(csconvert* obj,
 		*err_code = CS_TRUNCATION_ERROR;
 	}
 	*err_position = src_start - src_len;
-	return ((dest_ptr - start) * sizeof(*dest_ptr));
+	return static_cast<ULONG>((dest_ptr - start) * sizeof(*dest_ptr));
 }
 
 
@@ -159,7 +162,8 @@ ULONG CVBIG5_unicode_to_big5(csconvert* obj,
 		const int tmp1 = big5_ch / 256;
 		const int tmp2 = big5_ch % 256;
 		if (tmp1 == 0)
-		{		// ASCII character
+		{
+			// ASCII character
 
 			fb_assert((UCHAR(tmp2) & 0x80) == 0);
 
@@ -187,7 +191,7 @@ ULONG CVBIG5_unicode_to_big5(csconvert* obj,
 		*err_code = CS_TRUNCATION_ERROR;
 	}
 	*err_position = src_start - unicode_len;
-	return ((big5_str - start) * sizeof(*big5_str));
+	return static_cast<ULONG>((big5_str - start) * sizeof(*big5_str));
 }
 
 

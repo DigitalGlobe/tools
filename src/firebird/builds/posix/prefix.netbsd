@@ -18,17 +18,10 @@
 #
 # 2 Oct 2002, Nickolay Samofatov - Major Cleanup
 
-OS_ServerFiles=inet_server.cpp
+EXE_LINK_OPTIONS=-Wl,--rpath -Wl,@prefix@/lib
 
-LINK_OPTS=-Wl,--rpath -Wl,@prefix@/lib
-
-PROD_FLAGS=-O -fno-builtin -DNDEBUG -pipe -MMD -fPIC
-DEV_FLAGS=-g -DDEBUG_GDS_ALLOC -pipe -MMD -p -fPIC  -Wall -Wno-switch -Wno-parentheses 
+PROD_FLAGS=-O -fno-builtin -pipe -MMD -fPIC
+DEV_FLAGS=-g -DDEBUG_GDS_ALLOC -pipe -MMD -p -fPIC  -Werror=delete-incomplete -Wall -Wno-switch -Wno-parentheses -Wno-non-virtual-dtor
 
 LIB_LINK_OPTIONS= -shared
 LIB_PLATFORM_RPATH= -Wl,--rpath -Wl,$(1)
-
-EMBED_UTIL_TARGETS=gstat gsec fbguard nbackup fb_lock_print
-CLIENT_UTIL_TARGETS=gstat gsec fbguard fbmgr_bin nbackup fb_lock_print
-
-Physical_IO_Module=os/posix/unix.cpp

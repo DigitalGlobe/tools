@@ -54,7 +54,7 @@
 
 
 
-	    checkString=`ps -ef | egrep "(fb_inet_server)" |grep -v grep`
+	    checkString=`ps -ef | egrep "(fb_inet_server|fb_smp_server)" |grep -v grep`
 
 	    if [ ! -z "$checkString" ] 
 	      then

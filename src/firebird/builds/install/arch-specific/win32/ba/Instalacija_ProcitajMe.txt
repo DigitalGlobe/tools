@@ -1,5 +1,5 @@
-Firebird Database Server $MAJOR.$MINOR.$RELEASE
-==================================================
+﻿Firebird Database Server $MAJOR.$MINOR.$RELEASE
+===============================================
 
 Ovaj dokument je vodic za instalaciju ovog paketa
 Firebird-a $MAJOR.$MINOR za Windows platformu. Ovaj tekst
@@ -8,21 +8,22 @@ u generalnom smislu. Kao dodatak, ovaj tekst je
 primarno namijenjen korisnicima binarne instalacije.
 
 Pretpostavljamo da citaoci ovog dokumenta su vec
-upoznati sa Firebird-om 2.1. Ako evaluirate
+upoznati sa Firebird-om. Ako evaluirate
 Firebird $MAJOR.$MINOR kao dio migracione strategije
-sa Fb 2.1 preporucujemo vam da pogledate Fb $MAJOR.$MINOR 
+sa Fb 2.5 preporucujemo vam da pogledate Fb $MAJOR.$MINOR 
 dokumentaciju kako bi razumjeli promjene napravljene 
-uzmedju 2.1 i $MAJOR.$MINOR.
+izmedju 2.5 i $MAJOR.$MINOR.
 
 
 Sadrzaj
 --------
 
 o Prije instalacije
-o Problemi sa instalacijom MS VC runtime biblioteka
+o Deployment gds32.dll
+o Instalacija Guardian-a
+o Re-instalacija Firebird-a
 o Poznati problemi u vezi s instalacijom
 o Deinstalacija
-o Druge biljeske
 o Instalacija batch datotekom
 
 
@@ -33,26 +34,47 @@ Preporucuje se DEINSTALIRATI sve prethodne
 verzije Firebird-a ili InterBase-a prije instalacije
 ovog paketa. Veoma je vazno provjeriti da su
 fbclient.dll i gds32.dll uklonjeni iz <system32>.
+Pogledajte UNINSTALL sekciju ispod za vise informacija o ovome.
+
+Ako ste instalirali beta ili alpha verziju 
+firebird-a, instalacija ce preimenovati firebird.conf i
+security$MAJOR.fdb jer ove datoteke vise nisu kompatibilne.
 
 
-Problemi sa instalacijom MS VC runtime biblioteka
------------------------------------------------------
+Deployment gds32.dll
+-----------------------
 
-Dosta posla je uradjeno da osigura da MS Visual
-C runtime biblioteke se ispravno instalirane putem
-instalacionog programa. Medjutim, u slucaju problema moze
-biti potrebno uraditi deploy oficijelnog vcredist.exe.
-Ispravne verzije za ovaj build Firebird-a mogu se
-naci ovdje:
+Ova compatibility biblioteka se vise ne deploy-a u 
+windows system direktorij po default-u. Ne mozemo
+garantovati da ce potrebne MSVC runtime biblioteke biti 
+dostupne. U svakom slucaju  postoji opcija za ovo u vrijeme
+instalacije, zajedno sa sistemskim deployment-om fbclient.dll.
 
-    http://www.microsoft.com/downloads/details.aspx?familyid=32BC1BEE-A3F9-4C13-9C99-220B62A191EE&displaylang=en
-
-  i za x64 ovdje:
-
-    http://www.microsoft.com/downloads/details.aspx?familyid=90548130-4468-4BBC-9673-D6ACABD5D13B&displaylang=en
+Obavezno provjerite da Vas ciljni sistem ima adekvatne
+MSVC10 runtime biblioteke ako koristite ove opcije.
 
 
-Drugi poznati problemi vezani za instalaciju
+Instalacija Guardian-a
+----------------------------
+
+Nadamo se da izbacimo Guardian. On ne radi s 
+Classic serverom i instalacija ga ne nudi 
+ako je Classic izabran. Ako su izabrani
+SuperServer ili SuperClassic, onda je ponudjen
+ali nije izabran po default-u.
+
+
+Re-instalacija Firebird-a
+-------------------------
+
+Instalacioni program radi sve sto moze da detektuje i 
+sacuva prethodnu instalaciju. Ako instalacija detektuje 
+firebird.conf ili security$MAJOR.fdb onda nece ponuditi 
+opciju da instalira legacy_auth. Niti ce ponuditi 
+opciju da postavi SYSDBA username i password.
+
+
+Poznati problemi vezani za instalaciju
 ---------------------------------
 
 o Moguce je jedino koristiti instalacioni program
@@ -64,25 +86,21 @@ o Nazalost, instalacioni program ne moze pouzdano
   detektovati da li je prethodna verzija Firebird
   Classic server-a pokrenuta.
 
-o Poznate su zone preklapanja izmedju
-  32-bit i 64-bit instalacija:
+o Service installer (instsvc) koristi isto
+  default instance ime za 32-bit i 64-bit
+  instalacije. To je "by design". Servisi postoje
+  u jedinstvenom "name space-u".
 
-  - Service installer (instsvc) koristi isto
-    default instance ime za 32-bit i 64-bit
-    instalacije. To je "by design". Servisi postoje
-    u jedinstvenom "name space-u".
+o Obavezno instalirajte kao administrator. tj,  
+  na programu za instalaciju kliknite desnom tipkom misa 
+  i izaberite 'Run as administrator'. U suprotnom 
+  instalacioni program mozda nece moci pokrenuti 
+  Firebird service na kraju instalacije.
 
-  - Ako su 32-bit i 64-bit control panel applet-i
-    instalirani, oba ce pokazivati na istu default
-    instancu.
-
-o Kada se instalira pod Vista-om budite sigurni da
-  instalirate kao administrator. tj, ako koristite
-  instalacioni program uradite sljedece:
-  desni click i izaberite 'Run as administrator'.
-  U suprotnom instalacioni program nece biti sposoban
-  da pokrene Firebird service na kraju instalacije.
-
+o Biblioteke deploy-ane putem instclient programa se mozda 
+  nece moci ucitati ako MS runtime biblioteke nisu instalirane. 
+  Ovo moze biti problem ako instalirate na starije Windows
+  platforme. 
 
 Deinstalacija
 --------------
@@ -102,14 +120,15 @@ o Ako je Firebird pokrenut kao aplikacija (umjesto kao
  deinstalacija ce zavrsiti s greskom.
  Moracete izbrisati ostatke rucno.
 
-o Deinstalacija ostavlja 5 datoteka u install
+o Deinstalacija ostavlja 6 datoteka u install
   direktoriju:
 
-  - aliases.conf
+  - databases.conf
   - firebird.conf
   - fbtrace.conf
+  - replication.conf
   - firebird.log
-  - security2.fdb
+  - security$MAJOR.fdb
 
   Ovo je uradjeno namjerno. Ove datoteke su sve
   potencijalno modifikovane od strane korisnika i mogu
@@ -122,24 +141,6 @@ o Novi feature deinstalacionog programa je opcija da se
   broj dijeljenih datoteka svake od gore navedenih
   datoteka. Ako je moguce onda ce ih pobrisati.
 
-o Deinstalacija nece ukloniti MS VC runtime
-  biblioteke iz system-skog direktorija. One mogu
-  biti uklonjene rucno kroz control panel, ali ovo
-  ne bi trebalo biti potrebno u normalnim okolnostima.
-
-
-Druge biljeske
----------------
-
- Firebird zahtijeva WinSock2. Sve Win32 platforme bi trebale
- imati ovo, izuzevsi Win95. Testiranje na prisustvo Winsock2
- biblioteke se obavlje u toku instalacije. Ako nije nadjen,
- instalacija nece uspjeti. Posjetite ovaj link:
-
-    http://support.microsoft.com/default.aspx?/scid=kb;EN-US;q177719
-
- da bi saznali kako isti instalirati.
-
 
 Instalacija batch datotekom
 ------------------------------
@@ -150,3 +151,4 @@ Molimo da pogledate ovaj dokument:
     installation_scripted.txt
 
 za sve detalje.
+

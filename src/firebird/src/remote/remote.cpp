@@ -24,25 +24,105 @@
 #include "firebird.h"
 #include <string.h>
 #include <stdlib.h>
-#include "../jrd/ibase.h"
+#include "ibase.h"
 #include "../remote/remote.h"
-#include "../jrd/file_params.h"
-#include "../jrd/gdsassert.h"
+#include "../common/file_params.h"
+#include "../common/gdsassert.h"
 #include "../remote/proto_proto.h"
 #include "../remote/remot_proto.h"
-#include "../remote/xdr_proto.h"
-#include "../jrd/gds_proto.h"
-#include "../jrd/thread_proto.h"
+#include "../yvalve/gds_proto.h"
 #include "../common/config/config.h"
 #include "../common/classes/init.h"
+#include "../common/db_alias.h"
+#include "firebird/Interface.h"
+#include "../common/os/mod_loader.h"
+#include "../jrd/license.h"
+#include "../common/classes/ImplementHelper.h"
+#include "../common/utils_proto.h"
+
+using namespace Firebird;
 
 #ifdef DEV_BUILD
-Firebird::AtomicCounter rem_port::portCounter;
+AtomicCounter rem_port::portCounter;
 #endif
 
 #ifdef REMOTE_DEBUG
 IMPLEMENT_TRACE_ROUTINE(remote_trace, "REMOTE")
 #endif
+
+
+const ParametersSet dpbParam =
+{
+	isc_dpb_dummy_packet_interval,
+	isc_dpb_user_name,
+	isc_dpb_auth_block,
+	isc_dpb_password,
+	isc_dpb_password_enc,
+	isc_dpb_trusted_auth,
+	isc_dpb_auth_plugin_name,
+	isc_dpb_auth_plugin_list,
+	isc_dpb_specific_auth_data,
+	isc_dpb_address_path,
+	isc_dpb_process_id,
+	isc_dpb_process_name,
+	isc_dpb_encrypt_key,
+	isc_dpb_client_version,
+	isc_dpb_remote_protocol,
+	isc_dpb_host_name,
+	isc_dpb_os_user,
+	isc_dpb_config,
+	isc_dpb_utf8_filename,
+	isc_dpb_map_attach
+};
+
+const ParametersSet spbParam =
+{
+	isc_spb_dummy_packet_interval,
+	isc_spb_user_name,
+	isc_spb_auth_block,
+	isc_spb_password,
+	isc_spb_password_enc,
+	isc_spb_trusted_auth,
+	isc_spb_auth_plugin_name,
+	isc_spb_auth_plugin_list,
+	isc_spb_specific_auth_data,
+	isc_spb_address_path,
+	isc_spb_process_id,
+	isc_spb_process_name,
+	0,
+	isc_spb_client_version,
+	isc_spb_remote_protocol,
+	isc_spb_host_name,
+	isc_spb_os_user,
+	isc_spb_config,
+	isc_spb_utf8_filename,
+	0
+};
+
+const ParametersSet connectParam =
+{
+	0,
+	CNCT_login,
+	0,
+	0,
+	0,
+	0,
+	CNCT_plugin_name,
+	CNCT_plugin_list,
+	CNCT_specific_data,
+	0,
+	0,
+	0,
+	0,
+	0,
+	0,
+	CNCT_host,
+	CNCT_user,
+	0,
+	0,
+	0
+};
+
 
 const SLONG DUMMY_INTERVAL		= 60;	// seconds
 const int ATTACH_FAILURE_SPACE	= 16 * 1024;	// bytes
@@ -92,9 +172,9 @@ void REMOTE_cleanup_transaction( Rtr* transaction)
 }
 
 
-ULONG REMOTE_compute_batch_size(rem_port* port,
-								USHORT buffer_used, P_OP op_code,
-								const rem_fmt* format)
+USHORT REMOTE_compute_batch_size(rem_port* port,
+								 USHORT buffer_used, P_OP op_code,
+								 const rem_fmt* format)
 {
 /**************************************
  *
@@ -135,33 +215,11 @@ ULONG REMOTE_compute_batch_size(rem_port* port,
  * The client calculates this number (n from the list above)
  * and sends it to the server.
  *
- * I asked why it is that the client doesn't just ask for a packet
- * full of records and let the server return however many fits in
- * a packet.  According to Sudesh, this is because of a bug in
- * Superserver which showed up in the WIN_NT 4.2.x kits.  So I
- * imagine once we up the protocol so that we can be sure we're not
- * talking to a 4.2 kit, then we can make this optimization.
- *           - Deej 2/28/97
- *
- * Note: A future optimization can look at setting the packet
- * size to optimize the transfer.
- *
- * Note: This calculation must use worst-case to determine the
- * packing.  Should the data record have VARCHAR data, it is
- * often possible to fit more than the packing specification
- * into each packet.  This is also a candidate for future
- * optimization.
- *
  * The data size is either the XDR data representation, or the
  * actual message size (rounded up) if this is a symmetric
  * architecture connection.
  *
  **************************************/
-
-	const USHORT MAX_PACKETS_PER_BATCH	= 4;	// packets    - picked by SWAG
-	const USHORT MIN_PACKETS_PER_BATCH	= 2;	// packets    - picked by SWAG
-	const USHORT DESIRED_ROWS_PER_BATCH	= 20;	// data rows  - picked by SWAG
-	const USHORT MIN_ROWS_PER_BATCH		= 10;	// data rows  - picked by SWAG
 
 	const USHORT op_overhead = (USHORT) xdr_protocol_overhead(op_code);
 
@@ -172,53 +230,24 @@ ULONG REMOTE_compute_batch_size(rem_port* port,
 			   format->fmt_length, op_overhead);
 #endif
 
-	ULONG row_size;
-	if (port->port_flags & PORT_symmetric)
-	{
-		// Same architecture connection
-		row_size = (ROUNDUP(format->fmt_length, 4) + op_overhead);
-	}
-	else
-	{
-		// Using XDR for data transfer
-		row_size = (ROUNDUP(format->fmt_net_length, 4) + op_overhead);
-	}
+	const ULONG row_size = op_overhead +
+		(port->port_flags & PORT_symmetric) ?
+			ROUNDUP(format->fmt_length, 4) : 	// Same architecture connection
+			ROUNDUP(format->fmt_net_length, 4);	// Using XDR for data transfer
 
-	USHORT num_packets = (USHORT) (((DESIRED_ROWS_PER_BATCH * row_size)	// data set
-							 + buffer_used	// used in 1st pkt
-							 + (port->port_buff_size - 1))	// to round up
-							/ port->port_buff_size);
-	if (num_packets > MAX_PACKETS_PER_BATCH)
-	{
-		num_packets = (USHORT) (((MIN_ROWS_PER_BATCH * row_size)	// data set
-								 + buffer_used	// used in 1st pkt
-								 + (port->port_buff_size - 1))	// to round up
-								/ port->port_buff_size);
-	}
-	num_packets = MAX(num_packets, MIN_PACKETS_PER_BATCH);
+	ULONG result = (port->port_protocol >= PROTOCOL_VERSION13) ?
+		MAX_ROWS_PER_BATCH : (MAX_PACKETS_PER_BATCH * port->port_buff_size - buffer_used) / row_size;
 
-	// Now that we've picked the number of packets in a batch,
-	// pack as many rows as we can into the set of packets
+	// Don't ask for more records than we can cache
 
-	ULONG result = (num_packets * port->port_buff_size - buffer_used) / row_size;
+	result = MIN(result, MAX_BATCH_CACHE_SIZE / format->fmt_length);
 
-	// Must always send some messages, even if message size is more
-	// than packet size.
+	// Must always send some messages, even if message is larger than packet
 
 	result = MAX(result, MIN_ROWS_PER_BATCH);
 
-#ifdef DEBUG
-	{
-		// CVC: I don't see the point in replacing this with fb_utils::readenv().
-		const char* p = getenv("DEBUG_BATCH_SIZE");
-		if (p)
-			result = atoi(p);
-		fprintf(stderr, "row_size = %lu num_packets = %d\n", row_size, num_packets);
-		fprintf(stderr, "result = %lu\n", result);
-	}
-#endif
-
-	return result;
+	fb_assert(result <= MAX_USHORT);
+	return static_cast<USHORT>(result);
 }
 
 
@@ -266,15 +295,12 @@ Rrq* REMOTE_find_request(Rrq* request, USHORT level)
 		const rem_fmt* format = tail->rrq_format;
 		if (!format)
 			continue;
-		RMessage* msg = new RMessage(format->fmt_length);
+		RMessage* msg = FB_NEW RMessage(format->fmt_length);
 		tail->rrq_xdr = msg;
 #ifdef DEBUG_REMOTE_MEMORY
 		printf("REMOTE_find_request       allocate message %x\n", msg);
 #endif
 		msg->msg_next = msg;
-#ifdef SCROLLABLE_CURSORS
-		msg->msg_prior = msg;
-#endif
 		msg->msg_number = tail->rrq_message->msg_number;
 		tail->rrq_message = msg;
 	}
@@ -295,13 +321,14 @@ void REMOTE_free_packet( rem_port* port, PACKET * packet, bool partial)
  *	Zero out a full packet block (partial == false) or
  *	part of packet used in last operation (partial == true)
  **************************************/
-	XDR xdr;
+	RemoteXdr xdr;
 	USHORT n;
 
 	if (packet)
 	{
-		xdrmem_create(&xdr, reinterpret_cast<char*>(packet), sizeof(PACKET), XDR_FREE);
-		xdr.x_public = (caddr_t) port;
+		xdr.create(reinterpret_cast<char*>(packet), sizeof(PACKET), XDR_FREE);
+		xdr.x_public = port;
+		xdr.x_local = (port->port_type == rem_port::XNET);
 
 		if (partial) {
 			xdr_protocol(&xdr, packet);
@@ -326,7 +353,7 @@ void REMOTE_free_packet( rem_port* port, PACKET * packet, bool partial)
 }
 
 
-void REMOTE_get_timeout_params(rem_port* port, Firebird::ClumpletReader* pb)
+void REMOTE_get_timeout_params(rem_port* port, ClumpletReader* pb)
 {
 /**************************************
  *
@@ -346,11 +373,11 @@ void REMOTE_get_timeout_params(rem_port* port, Firebird::ClumpletReader* pb)
 
 	fb_assert(isc_dpb_connect_timeout == isc_spb_connect_timeout);
 
-	port->port_connect_timeout =
-		pb && pb->find(isc_dpb_connect_timeout) ? pb->getInt() : Config::getConnectionTimeout();
+	port->port_connect_timeout = pb && pb->find(isc_dpb_connect_timeout) ?
+		pb->getInt() : port->getPortConfig()->getConnectionTimeout();
 
 	port->port_flags |= PORT_dummy_pckt_set;
-	port->port_dummy_packet_interval = Config::getDummyPacketInterval();
+	port->port_dummy_packet_interval = port->getPortConfig()->getDummyPacketInterval();
 	if (port->port_dummy_packet_interval < 0)
 		port->port_dummy_packet_interval = DUMMY_INTERVAL;
 
@@ -377,7 +404,7 @@ rem_str* REMOTE_make_string(const SCHAR* input)
  *	address of new string.
  *
  **************************************/
-	const USHORT length = strlen(input);
+	const USHORT length = static_cast<USHORT>(strlen(input));
 	rem_str* string = FB_NEW_RPT(*getDefaultMemoryPool(), length) rem_str;
 #ifdef DEBUG_REMOTE_MEMORY
 	printf("REMOTE_make_string        allocate string  %x\n", string);
@@ -511,7 +538,8 @@ void REMOTE_reset_request( Rrq* request, RMessage* active_message)
 
 	// Initialize the request status to FB_SUCCESS
 
-	request->rrq_status_vector[1] = 0;
+	//request->rrq_status_vector[1] = 0;
+	request->rrqStatus.clear();
 }
 
 
@@ -552,33 +580,10 @@ void REMOTE_reset_statement( Rsr* statement)
 
 	temp->msg_next = message->msg_next;
 	message->msg_next = message;
-#ifdef SCROLLABLE_CURSORS
-	message->msg_prior = message;
-#endif
 
 	statement->rsr_buffer = statement->rsr_message;
 
 	REMOTE_release_messages(temp);
-}
-
-
-void REMOTE_save_status_strings( ISC_STATUS* vector)
-{
-/**************************************
- *
- *	R E M O T E _ s a v e _ s t a t u s _ s t r i n g s
- *
- **************************************
- *
- * Functional description
- *	There has been a failure during attach/create database.
- *	The included string have been allocated off of the database block,
- *	which is going to be released before the message gets passed
- *	back to the user.  So, to preserve information, copy any included
- *	strings to a special buffer.
- *
- **************************************/
-	Firebird::makePermanentVector(vector);
 }
 
 
@@ -593,8 +598,19 @@ void rem_port::linkParent(rem_port* const parent)
 	this->port_next = parent->port_clients;
 	this->port_server = parent->port_server;
 	this->port_server_flags = parent->port_server_flags;
+	this->port_config = parent->port_config;
 
 	parent->port_clients = parent->port_next = this;
+}
+
+const RefPtr<const Config>& rem_port::getPortConfig() const
+{
+	return port_config.hasData() ? port_config : Config::getDefaultConfig();
+}
+
+RefPtr<const Config> rem_port::getPortConfig()
+{
+	return port_config.hasData() ? port_config : Config::getDefaultConfig();
 }
 
 void rem_port::unlinkParent()
@@ -656,6 +672,14 @@ bool rem_port::select_multi(UCHAR* buffer, SSHORT bufsize, SSHORT* length, RemPo
 	return (*this->port_select_multi)(this, buffer, bufsize, length, port);
 }
 
+void rem_port::abort_aux_connection()
+{
+	if (this->port_abort_aux_connection)
+	{
+		(*this->port_abort_aux_connection)(this);
+	}
+}
+
 XDR_INT rem_port::send(PACKET* pckt)
 {
 	return (*this->port_send_packet)(this, pckt);
@@ -676,8 +700,17 @@ rem_port* rem_port::request(PACKET* pckt)
 	return (*this->port_request)(this, pckt);
 }
 
-#ifdef REM_SERVER
-bool_t REMOTE_getbytes (XDR* xdrs, SCHAR* buff, u_int count)
+void rem_port::auxAcceptError(PACKET* packet)
+{
+	if (port_protocol >= PROTOCOL_VERSION13)
+	{
+		packet->p_operation = op_abort_aux_connection;
+		// Ignore error return - we are already processing auxiliary connection error from the wire
+		send(packet);
+	}
+}
+
+bool_t REMOTE_getbytes (RemoteXdr* xdrs, SCHAR* buff, unsigned bytecount)
 {
 /**************************************
  *
@@ -689,9 +722,6 @@ bool_t REMOTE_getbytes (XDR* xdrs, SCHAR* buff, u_int count)
  *	Get a bunch of bytes from a port buffer
  *
  **************************************/
-	SLONG bytecount = count;
-
-	// Use memcpy to optimize bulk transfers.
 
 	while (bytecount > 0)
 	{
@@ -711,11 +741,15 @@ bool_t REMOTE_getbytes (XDR* xdrs, SCHAR* buff, u_int count)
 			bytecount -= xdrs->x_handy;
 			xdrs->x_handy = 0;
 		}
-		rem_port* port = (rem_port*) xdrs->x_public;
-		Firebird::RefMutexGuard queGuard(*port->port_que_sync, "REMOTE_getbytes");
+
+		rem_port* port = xdrs->x_public;
+		RefMutexEnsureUnlock queGuard(*port->port_que_sync, FB_FUNCTION);
+		queGuard.enter();
 		if (port->port_qoffset >= port->port_queue.getCount())
 		{
-			port->port_flags |= PORT_partial_data;
+			queGuard.leave();
+
+			port->port_partial_data = true;
 			return FALSE;
 		}
 
@@ -728,36 +762,18 @@ bool_t REMOTE_getbytes (XDR* xdrs, SCHAR* buff, u_int count)
 
 	return TRUE;
 }
-#endif //REM_SERVER
-
-#ifdef TRUSTED_AUTH
-ServerAuth::ServerAuth(const char* fName, int fLen, const Firebird::ClumpletWriter& pb,
-					   ServerAuth::Part2* p2, P_OP op)
-	: fileName(*getDefaultMemoryPool()), clumplet(*getDefaultMemoryPool()),
-	  part2(p2), operation(op)
-{
-	fileName.assign(fName, fLen);
-	size_t pbLen = pb.getBufferLength();
-	if (pbLen)
-	{
-		memcpy(clumplet.getBuffer(pbLen), pb.getBuffer(), pbLen);
-	}
-	authSspi = FB_NEW(*getDefaultMemoryPool()) AuthSspi;
-}
-
-ServerAuth::~ServerAuth()
-{
-	delete authSspi;
-}
-#endif // TRUSTED_AUTH
 
 void PortsCleanup::registerPort(rem_port* port)
 {
-	Firebird::MutexLockGuard guard(m_mutex);
+	MutexLockGuard guard(m_mutex, FB_FUNCTION);
+
+	if (closing)
+		return;
+
 	if (!m_ports)
 	{
-		Firebird::MemoryPool& pool = *getDefaultMemoryPool();
-		m_ports = FB_NEW (pool) PortsArray(pool);
+		MemoryPool& pool = *getDefaultMemoryPool();
+		m_ports = FB_NEW_POOL (pool) PortsArray(pool);
 	}
 
 	m_ports->add(port);
@@ -765,11 +781,14 @@ void PortsCleanup::registerPort(rem_port* port)
 
 void PortsCleanup::unRegisterPort(rem_port* port)
 {
-	Firebird::MutexLockGuard guard(m_mutex);
+	MutexLockGuard guard(m_mutex, FB_FUNCTION);
+
+	if (closing)
+		return;
 
 	if (m_ports)
 	{
-		size_t i;
+		FB_SIZE_T i;
 		const bool found = m_ports->find(port, i);
 		//fb_assert(found);
 		if (found)
@@ -779,19 +798,23 @@ void PortsCleanup::unRegisterPort(rem_port* port)
 
 void PortsCleanup::closePorts()
 {
-	if (!this)
-	{
-		return;
-	}
+	if (m_ports)
+		delay();
 
-	Firebird::MutexLockGuard guard(m_mutex);
+	MutexLockGuard guard(m_mutex, FB_FUNCTION);
+	AutoSetRestore cl(&closing, true);
+
+	{ // scope
+		MutexUnlockGuard g2(m_mutex, FB_FUNCTION);
+		Thread::yield();
+	}
 
 	if (m_ports)
 	{
 		rem_port* const* ptr = m_ports->begin();
 		const rem_port* const* end = m_ports->end();
 		for (; ptr < end; ptr++) {
-			(*ptr)->force_close();
+			closePort(*ptr);
 		}
 
 		delete m_ports;
@@ -799,33 +822,24 @@ void PortsCleanup::closePorts()
 	}
 }
 
-rem_port::~rem_port()
+void PortsCleanup::closePort(rem_port* port)
 {
-	if (port_events_shutdown)
-	{
-		port_events_shutdown(this);
-	}
-
-	delete port_version;
-	delete port_connection;
-	delete port_user_name;
-	delete port_host;
-	delete port_protocol_str;
-	delete port_address_str;
-
-#ifdef DEBUG_XDR_MEMORY
-	delete port_packet_vector;
-#endif
-
-#ifdef TRUSTED_AUTH
-	delete port_trusted_auth;
-#endif
-
-#ifdef DEV_BUILD
-	--portCounter;
-#endif
+	port->force_close();
 }
 
+void PortsCleanup::delay()
+{
+}
+
+ServerAuthBase::~ServerAuthBase()
+{
+}
+
+ServerCallbackBase::~ServerCallbackBase()
+{
+}
+
+/*
 void Rdb::set_async_vector(ISC_STATUS* userStatus) throw()
 {
 	rdb_async_status_vector = userStatus;
@@ -842,3 +856,910 @@ ISC_STATUS* Rdb::get_status_vector() throw()
 {
 	return rdb_async_thread_id == getThreadId() ? rdb_async_status_vector : rdb_status_vector;
 }
+*/
+
+
+bool RBlobInfo::getLocalInfo(unsigned int itemsLength, const unsigned char* items,
+	unsigned int bufferLength, unsigned char* buffer)
+{
+	if (!valid)
+		return false;
+
+	unsigned char* p = buffer;
+	const unsigned char* const end = buffer + bufferLength;
+
+	for (auto item = items; p && (item < items + itemsLength); item++)
+	{
+		if (*item == isc_info_end)
+			break;
+
+		switch (*item)
+		{
+		case isc_info_blob_num_segments:
+			p = fb_utils::putInfoItemInt(*item, num_segments, p, end);
+			break;
+
+		case isc_info_blob_max_segment:
+			p = fb_utils::putInfoItemInt(*item, max_segment, p, end);
+			break;
+
+		case isc_info_blob_total_length:
+			p = fb_utils::putInfoItemInt(*item, total_length, p, end);
+			break;
+
+		case isc_info_blob_type:
+			p = fb_utils::putInfoItemInt(*item, blob_type, p, end);
+			break;
+
+		default:
+			// unknown info item, let remote server handle it
+			return false;
+		}
+	}
+
+	if (p < end)
+		*p++ = isc_info_end;
+
+	return true;
+}
+
+
+void RBlobInfo::parseInfo(unsigned int bufferLength, const unsigned char* buffer)
+{
+	int c = 0;
+	valid = false;
+
+	ClumpletReader p(ClumpletReader::InfoResponse, buffer, bufferLength);
+	for (; !p.isEof(); p.moveNext())
+	{
+		switch (p.getClumpTag())
+		{
+		case isc_info_blob_num_segments:
+			num_segments = p.getInt();
+			c++;
+			break;
+		case isc_info_blob_max_segment:
+			max_segment = p.getInt();
+			c++;
+			break;
+		case isc_info_blob_total_length:
+			total_length = p.getInt();
+			c++;
+			break;
+		case isc_info_blob_type:
+			blob_type = p.getInt();
+			c++;
+			break;
+		case isc_info_end:
+			break;
+		default:
+			fb_assert(false);
+			break;
+		}
+	}
+	valid = (c == 4);
+}
+
+void Rrq::saveStatus(const Exception& ex) throw()
+{
+	if (rrqStatus.isSuccess())
+	{
+		LocalStatus ls;
+		CheckStatusWrapper tmp(&ls);
+		ex.stuffException(&tmp);
+		rrqStatus.save(&tmp);
+	}
+}
+
+void Rrq::saveStatus(IStatus* v) throw()
+{
+	if (rrqStatus.isSuccess())
+	{
+		rrqStatus.save(v);
+	}
+}
+
+void Rsr::saveException(const Exception& ex, bool overwrite)
+{
+	if (!rsr_status) {
+		rsr_status = FB_NEW StatusHolder();
+	}
+
+	if (overwrite || !rsr_status->getError())
+	{
+		LocalStatus ls;
+		CheckStatusWrapper temp(&ls);
+		ex.stuffException(&temp);
+		rsr_status->save(&temp);
+	}
+}
+
+string rem_port::getRemoteId() const
+{
+	fb_assert(port_protocol_id.hasData());
+	string id = port_protocol_id;
+
+	if (port_address.hasData())
+		id += string("/") + port_address;
+
+	return id;
+}
+
+LegacyPlugin REMOTE_legacy_auth(const char* nm, int p)
+{
+	const char* legacyTrusted = "WIN_SSPI";
+	if (fb_utils::stricmp(legacyTrusted, nm) == 0 &&
+		(p == PROTOCOL_VERSION11 || p == PROTOCOL_VERSION12))
+	{
+		return PLUGIN_TRUSTED;
+	}
+
+	const char* legacyAuth = "LEGACY_AUTH";
+	if (fb_utils::stricmp(legacyAuth, nm) == 0 && p < PROTOCOL_VERSION13)
+	{
+		return PLUGIN_LEGACY;
+	}
+
+	return PLUGIN_NEW;
+}
+
+PathName ClntAuthBlock::getPluginName()
+{
+	return plugins.hasData() ? plugins.name() : "";
+}
+
+template <typename T>
+static void addMultiPartConnectParameter(const T& dataToAdd,
+	ClumpletWriter& user_id, UCHAR param)
+{
+	FB_SIZE_T remaining = dataToAdd.getCount();
+	fb_assert(remaining <= 254u * 256u); // paranoid check => 65024
+	UCHAR part = 0;
+	UCHAR buffer[255];
+	typename T::const_pointer ptr = dataToAdd.begin();
+
+	while (remaining > 0)
+	{
+		FB_SIZE_T step = remaining;
+		if (step > 254)
+			step = 254;
+
+		remaining -= step;
+		buffer[0] = part++;
+		fb_assert(part || remaining == 0);
+		memcpy(&buffer[1], ptr, step);
+		ptr += step;
+
+		user_id.insertBytes(param, buffer, step + 1);
+		if (!part) // we completed 256 loops, almost impossible but check anyway.
+			break;
+	}
+}
+
+void ClntAuthBlock::extractDataFromPluginTo(ClumpletWriter& user_id)
+{
+	// Add user login name
+	if (cliOrigUserName.hasData())
+	{
+		HANDSHAKE_DEBUG(fprintf(stderr, "Cli: extractDataFromPluginTo: cliOrigUserName=%s\n",
+			cliOrigUserName.c_str()));
+		user_id.insertString(CNCT_login, cliOrigUserName);
+	}
+
+	// Add plugin name
+	PathName pluginName = getPluginName();
+	if (pluginName.hasData())
+	{
+		HANDSHAKE_DEBUG(fprintf(stderr, "Cli: extractDataFromPluginTo: pluginName=%s\n", pluginName.c_str()));
+		user_id.insertString(CNCT_plugin_name, pluginName);
+	}
+
+	// Add plugin list
+	if (pluginList.hasData())
+	{
+		user_id.insertString(CNCT_plugin_list, pluginList);
+	}
+
+	// This is specially tricky field - user_id is limited to 255 bytes per entry,
+	// and we have no ways to override this limit cause it can be sent to any version server.
+	// Therefore divide data into 254-byte parts, leaving first byte for the number of that part.
+	// This appears more reliable than put them in strict order.
+	addMultiPartConnectParameter(dataFromPlugin, user_id, CNCT_specific_data);
+
+	// Client's wirecrypt requested level
+	user_id.insertInt(CNCT_client_crypt, clntConfig->getWireCrypt(WC_CLIENT));
+}
+
+void ClntAuthBlock::resetClnt(const CSTRING* listStr)
+{
+	if (listStr)
+	{
+		if (dataForPlugin.hasData())
+		{
+			// We should not change plugins iterator now
+			return;
+		}
+
+		ClumpletReader srvList(ClumpletReader::UnTagged,
+										 listStr->cstr_address, listStr->cstr_length);
+
+		if (srvList.find(TAG_KNOWN_PLUGINS))
+		{
+			srvList.getPath(serverPluginList);
+		}
+	}
+
+	dataForPlugin.clear();
+	dataFromPlugin.clear();
+	firstTime = true;
+
+	pluginList = dpbPlugins.hasData() ? dpbPlugins :
+		clntConfig->getPlugins(IPluginManager::TYPE_AUTH_CLIENT);
+
+	PathName final;
+	if (serverPluginList.hasData())
+	{
+		ParsedList::mergeLists(final, serverPluginList, pluginList);
+		if (final.length() == 0)
+		{
+			HANDSHAKE_DEBUG(fprintf(stderr, "Cli: No matching plugins on client\n"));
+			(Arg::Gds(isc_login)
+#ifdef DEV_BUILD
+								<< Arg::Gds(isc_random) << "No matching plugins on client"
+#endif
+								).raise();
+		}
+	}
+	else
+	{
+		final = pluginList;
+	}
+
+	plugins.set(final.c_str());
+}
+
+RefPtr<const Config>* ClntAuthBlock::getConfig()
+{
+	return clntConfig.hasData() ? &clntConfig : NULL;
+}
+
+void ClntAuthBlock::storeDataForPlugin(unsigned int length, const unsigned char* data)
+{
+	dataForPlugin.assign(data, length);
+	HANDSHAKE_DEBUG(fprintf(stderr, "Cli: accepted data for plugin length=%d\n", length));
+}
+
+RefPtr<const Config> REMOTE_get_config(const PathName* dbName,
+	const string* dpb_config)
+{
+	RefPtr<const Config> config;
+
+	if (dbName && dbName->hasData())
+	{
+		PathName dummy;
+		expandDatabaseName(*dbName, dummy, &config);
+	}
+	else
+		config = Config::getDefaultConfig();
+
+	Config::merge(config, dpb_config);
+
+	return config;
+}
+
+void REMOTE_check_response(IStatus* warning, Rdb* rdb, PACKET* packet, bool checkKeys)
+{
+/**************************************
+ *
+ *	R E M O T E _ c h e c k _ r e s p o n s e
+ *
+ **************************************
+ *
+ * Functional description
+ *	Check response to a remote call.
+ *
+ **************************************/
+
+	rdb->rdb_port->checkResponse(warning, packet, checkKeys);
+}
+
+void rem_port::checkResponse(IStatus* warning, PACKET* packet, bool checkKeys)
+{
+/**************************************
+ *
+ *	R E M O T E _ c h e c k _ r e s p o n s e
+ *
+ **************************************
+ *
+ * Functional description
+ *	Check response to a remote call.
+ *
+ **************************************/
+
+	// Get status vector
+
+	const ISC_STATUS success_vector[] = {isc_arg_gds, FB_SUCCESS, isc_arg_end};
+	const ISC_STATUS *vector = success_vector;
+	if (packet->p_resp.p_resp_status_vector)
+	{
+		vector = packet->p_resp.p_resp_status_vector->value();
+	}
+
+	// Translate any gds codes into local operating specific codes
+
+	StaticStatusVector newVector;
+
+	while (*vector != isc_arg_end)
+	{
+		const ISC_STATUS vec = *vector++;
+		newVector.push(vec);
+
+		switch ((USHORT) vec)
+		{
+		case isc_arg_warning:
+		case isc_arg_gds:
+			newVector.push(*vector++);
+			break;
+
+		case isc_arg_cstring:
+			newVector.push(*vector++);
+			// fall down
+
+		default:
+			newVector.push(*vector++);
+			break;
+		}
+	}
+
+	newVector.push(isc_arg_end);
+	vector = newVector.begin();
+
+	const ISC_STATUS pktErr = vector[1];
+	if (pktErr == isc_shutdown || pktErr == isc_att_shutdown)
+	{
+		port_flags |= PORT_rdb_shutdown;
+	}
+	else if (checkKeys)
+	{
+		addServerKeys(&packet->p_resp.p_resp_data);
+	}
+
+	if ((packet->p_operation == op_response || packet->p_operation == op_response_piggyback) &&
+		!vector[1])
+	{
+		Arg::StatusVector s(vector);
+		s.copyTo(warning);
+		return;
+	}
+
+	HANDSHAKE_DEBUG(fprintf(stderr, "Raising exception %d in checkResponse\n", vector[1] ? vector[1] : isc_net_read_err));
+
+	if (!vector[1])
+	{
+		Arg::Gds(isc_net_read_err).raise();
+	}
+
+	status_exception::raise(vector);
+}
+
+static void setCStr(CSTRING& to, const char* from)
+{
+	to.cstr_address = reinterpret_cast<UCHAR*>(const_cast<char*>(from));
+	to.cstr_length = (ULONG) strlen(from);
+	to.cstr_allocated = 0;
+}
+
+void rem_port::addServerKeys(const CSTRING* passedStr)
+{
+	ClumpletReader newKeys(ClumpletReader::UnTagged,
+									 passedStr->cstr_address, passedStr->cstr_length);
+
+	PathName type, plugins, plugin;
+	unsigned len;
+	KnownServerKey* currentKey = nullptr;
+	for (newKeys.rewind(); !newKeys.isEof(); newKeys.moveNext())
+	{
+		switch(newKeys.getClumpTag())
+		{
+		case TAG_KEY_TYPE:
+			newKeys.getPath(type);
+			break;
+		case TAG_KEY_PLUGINS:
+			newKeys.getPath(plugins);
+			plugins += ' ';
+			plugins.insert(0, " ");
+			currentKey = &port_known_server_keys.add();
+			currentKey->type = type;
+			currentKey->plugins = plugins;
+			break;
+		case TAG_PLUGIN_SPECIFIC:
+			plugin.assign(newKeys.getBytes(), newKeys.getClumpLength());
+			len = strlen(plugin.c_str()) + 1;
+			if (len < plugin.length())
+			{
+				const char* data = &plugin[len];
+				len = plugin.length() - len;
+				plugin.recalculate_length();
+				currentKey->addSpecificData(plugin, len, data);
+			}
+			break;
+		}
+	}
+}
+
+bool rem_port::tryNewKey(InternalCryptKey* cryptKey)
+{
+	for (unsigned t = 0; t < port_known_server_keys.getCount(); ++t)
+	{
+		if (tryKeyType(port_known_server_keys[t], cryptKey))
+		{
+			return true;
+		}
+	}
+
+	port_crypt_keys.push(cryptKey);
+	return false;
+}
+
+bool rem_port::tryKeyType(const KnownServerKey& srvKey, InternalCryptKey* cryptKey)
+{
+	if (port_crypt_complete)
+	{
+		return true;
+	}
+
+	if (srvKey.type != cryptKey->keyName)
+	{
+		return false;
+	}
+
+	if (getPortConfig()->getWireCrypt(WC_CLIENT) == WIRE_CRYPT_DISABLED)
+	{
+		port_crypt_complete = true;
+		return true;
+	}
+
+	// we got correct key's type pair
+	// check what about crypt plugin for it
+	ParsedList clientPlugins(getPortConfig()->getPlugins(IPluginManager::TYPE_WIRE_CRYPT));
+	for (unsigned n = 0; n < clientPlugins.getCount(); ++n)
+	{
+		PathName p(clientPlugins[n]);
+		WIRECRYPT_DEBUG(fprintf(stderr, "tryKeyType, client plugin %s\n", p.c_str()));
+		if (srvKey.plugins.find(" " + p + " ") != PathName::npos)
+		{
+			WIRECRYPT_DEBUG(fprintf(stderr, "tryKeyType, server listed plugin %s\n", p.c_str()));
+			GetPlugins<IWireCryptPlugin>
+				cp(IPluginManager::TYPE_WIRE_CRYPT, p.c_str());
+			if (cp.hasData())
+			{
+				WIRECRYPT_DEBUG(fprintf(stderr, "tryKeyType, client loaded plugin %s\n", p.c_str()));
+				LocalStatus st;
+				CheckStatusWrapper statusWrapper(&st);
+
+				// Pass IV to plugin
+				//const UCharBuffer* specificData = srvKey.findSpecificData(p);
+				auto* specificData = srvKey.findSpecificData(p);
+				if (specificData)
+				{
+					cp.plugin()->setSpecificData(&statusWrapper, srvKey.type.c_str(),
+						specificData->getCount(), specificData->begin());
+					check(&st, isc_wish_list);
+				}
+
+				// Pass key to plugin
+				cp.plugin()->setKey(&statusWrapper, cryptKey);
+				if (st.getState() & IStatus::STATE_ERRORS)
+				{
+					status_exception::raise(&st);
+				}
+
+				// Looks like we've found correct crypt plugin and key for it
+				port_crypt_plugin = cp.plugin();
+				port_crypt_plugin->addRef();
+
+				// Now it's time to notify server about choice done
+				// Notice - port_crypt_complete flag is not set still,
+				// therefore sent packet will be not encrypted
+				PACKET crypt;
+				crypt.p_operation = op_crypt;
+				setCStr(crypt.p_crypt.p_key, cryptKey->keyName.c_str());
+				setCStr(crypt.p_crypt.p_plugin, p.c_str());
+				send(&crypt);
+
+				// Validate answer - decryptor is not affected by port_crypt_complete,
+				// therefore OK to do
+				receive(&crypt);
+				checkResponse(&statusWrapper, &crypt);
+
+				// Complete port-crypt init
+				port_crypt_complete = true;
+
+				REMOTE_free_packet(this, &crypt, true);
+
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+const char* SrvAuthBlock::getLogin()
+{
+	return userName.nullStr();
+}
+
+const unsigned char* SrvAuthBlock::getData(unsigned int* length)
+{
+	*length = (ULONG) dataForPlugin.getCount();
+
+	if (*length && pluginName != plugins->name())
+		*length = 0;
+
+	return *length ? dataForPlugin.begin() : NULL;
+}
+
+void SrvAuthBlock::putData(CheckStatusWrapper* status, unsigned int length, const void* data)
+{
+	status->init();
+	try
+	{
+		memcpy(dataFromPlugin.getBuffer(length), data, length);
+	}
+	catch (const Exception& ex)
+	{
+		ex.stuffException(status);
+	}
+}
+
+ICryptKey* SrvAuthBlock::newKey(CheckStatusWrapper* status)
+{
+	status->init();
+	try
+	{
+		InternalCryptKey* k = FB_NEW InternalCryptKey;
+
+		k->keyName = pluginName.c_str();
+		WIRECRYPT_DEBUG(fprintf(stderr, "Srv: newkey %s\n", k->keyName.c_str());)
+		port->port_crypt_keys.push(k);
+		newKeys.push(k);
+
+		return k;
+	}
+	catch (const Exception& ex)
+	{
+		ex.stuffException(status);
+	}
+	return NULL;
+}
+
+void rem_port::versionInfo(string& version) const
+{
+	version.printf("%s/%s", FB_VERSION, port_version->str_data);
+#ifndef WIRE_COMPRESS_SUPPORT
+	if (port_crypt_plugin)
+		version += ":C";
+#else
+	if (port_crypt_plugin || port_compressed)
+		version += ':';
+	if (port_crypt_plugin)
+		version += 'C';
+	if (port_compressed)
+		version += 'Z';
+#endif
+}
+
+
+#ifdef WIRE_COMPRESS_SUPPORT
+static InitInstance<ZLib> zlib;
+#endif // WIRE_COMPRESS_SUPPORT
+
+rem_port::~rem_port()
+{
+	delete port_srv_auth;
+	delete port_srv_auth_block;
+	delete port_version;
+	delete port_connection;
+	delete port_host;
+	delete port_server_crypt_callback;
+
+#ifdef DEBUG_XDR_MEMORY
+	delete port_packet_vector;
+#endif
+
+	while (port_crypt_keys.hasData())
+	{
+		delete port_crypt_keys.pop();
+	}
+
+	if (port_crypt_plugin)
+		PluginManagerInterfacePtr()->releasePlugin(port_crypt_plugin);
+
+#ifdef DEV_BUILD
+	--portCounter;
+#endif
+
+#ifdef WIRE_COMPRESS_SUPPORT
+	if (port_compressed)
+	{
+		zlib().deflateEnd(&port_send_stream);
+		zlib().inflateEnd(&port_recv_stream);
+	}
+#endif
+}
+
+bool REMOTE_inflate(rem_port* port, PacketReceive* packet_receive, UCHAR* buffer,
+	SSHORT buffer_length, SSHORT* length)
+{
+#ifdef WIRE_COMPRESS_SUPPORT
+	if (!port->port_compressed)
+	{
+		const bool ret = packet_receive(port, buffer, buffer_length, length);
+		if (ret)
+			port->bumpLogBytes(rem_port::RECEIVE, *length);
+		return ret;
+	}
+
+	z_stream& strm = port->port_recv_stream;
+	strm.avail_out = buffer_length;
+	strm.next_out = buffer;
+
+	for (;;)
+	{
+		if (strm.avail_in)
+		{
+#ifdef COMPRESS_DEBUG
+			fprintf(stderr, "Data to inflate %d port %p\n", strm.avail_in, port);
+#if COMPRESS_DEBUG > 1
+			for (unsigned n = 0; n < strm.avail_in; ++n) fprintf(stderr, "%02x ", strm.next_in[n]);
+			fprintf(stderr, "\n");
+#endif
+#endif
+
+			if (zlib().inflate(&strm, Z_NO_FLUSH) != Z_OK)
+			{
+#ifdef COMPRESS_DEBUG
+				fprintf(stderr, "Inflate error\n");
+#endif
+				port->port_z_data = false;
+				return false;
+			}
+#ifdef COMPRESS_DEBUG
+			fprintf(stderr, "Inflated data %d\n", buffer_length - strm.avail_out);
+#if COMPRESS_DEBUG > 1
+			for (unsigned n = 0; n < buffer_length - strm.avail_out; ++n) fprintf(stderr, "%02x ", buffer[n]);
+			fprintf(stderr, "\n");
+#endif
+#endif
+			if (strm.next_out != buffer)
+				break;
+
+			if (port->port_z_data)		// Was called from select_multi() but nothing decompressed
+			{
+				port->port_z_data = false;
+				return false;
+			}
+
+			UCHAR* compressed = &port->port_compressed[REM_RECV_OFFSET(port->port_buff_size)];
+			if (strm.next_in != compressed)
+			{
+				memmove(compressed, strm.next_in, strm.avail_in);
+				strm.next_in = compressed;
+			}
+		}
+		else
+			strm.next_in = &port->port_compressed[REM_RECV_OFFSET(port->port_buff_size)];
+
+		SSHORT l = (SSHORT) (port->port_buff_size - strm.avail_in);
+		if ((!packet_receive(port, strm.next_in, l, &l)) || (l <= 0))	// fixit - 2 ways to report errors in same routine
+		{
+			port->port_z_data = false;
+			return false;
+		}
+
+		strm.avail_in += l;
+	}
+
+	*length = (SSHORT) (buffer_length - strm.avail_out);
+	if (strm.avail_in)	// Z-buffer still has some data - probably can call inflate() once more on them
+		port->port_z_data = true;
+	else
+		port->port_z_data = false;
+
+#ifdef COMPRESS_DEBUG
+	fprintf(stderr, "ZLib buffer %s\n", port->port_z_data ? "has data" : "is empty");
+#endif
+
+	port->bumpLogBytes(rem_port::RECEIVE, *length);
+	return true;
+#else
+	const bool ret = packet_receive(port, buffer, buffer_length, length);
+	if (ret)
+		port->bumpLogBytes(rem_port::RECEIVE, *length);
+	return ret;
+#endif
+}
+
+bool REMOTE_deflate(RemoteXdr* xdrs, ProtoWrite* proto_write, PacketSend* packet_send, bool flush)
+{
+	rem_port* port = xdrs->x_public;
+	port->bumpLogBytes(rem_port::SEND, xdrs->x_private - xdrs->x_base);
+
+#ifdef WIRE_COMPRESS_SUPPORT
+	if (!(port->port_compressed && (port->port_flags & PORT_compressed)))
+		return proto_write(xdrs);
+
+	z_stream& strm = port->port_send_stream;
+	strm.avail_in = xdrs->x_private - xdrs->x_base;
+	strm.next_in = (Bytef*) xdrs->x_base;
+
+	if (!strm.next_out)
+	{
+		strm.avail_out = port->port_buff_size;
+		strm.next_out = (Bytef*) &port->port_compressed[REM_SEND_OFFSET(port->port_buff_size)];
+	}
+
+	bool expectMoreOut = flush;
+
+	while (strm.avail_in || expectMoreOut)
+	{
+#ifdef COMPRESS_DEBUG
+		fprintf(stderr, "Data to deflate %d port %p\n", strm.avail_in, port);
+#if COMPRESS_DEBUG>1
+		for (unsigned n = 0; n < strm.avail_in; ++n) fprintf(stderr, "%02x ", strm.next_in[n]);
+		fprintf(stderr, "\n");
+#endif
+#endif
+		int ret = zlib().deflate(&strm, flush ? Z_SYNC_FLUSH : Z_NO_FLUSH);
+		if (ret == Z_BUF_ERROR)
+			ret = 0;
+		if (ret != 0)
+		{
+#ifdef COMPRESS_DEBUG
+			fprintf(stderr, "Deflate error %d\n", ret);
+#endif
+			return false;
+		}
+
+#ifdef COMPRESS_DEBUG
+		fprintf(stderr, "Deflated data %d\n", port->port_buff_size - strm.avail_out);
+#if COMPRESS_DEBUG>1
+		for (unsigned n = 0; n < port->port_buff_size - strm.avail_out; ++n)
+			fprintf(stderr, "%02x ", port->port_compressed[REM_SEND_OFFSET(port->port_buff_size) + n]);
+		fprintf(stderr, "\n");
+#endif
+#endif
+
+		expectMoreOut = !strm.avail_out;
+		if ((port->port_buff_size != strm.avail_out) && (flush || !strm.avail_out))
+		{
+#if COMPRESS_DEBUG > 1
+			fprintf(stderr, "Send packet %d bytes size\n", port->port_buff_size - strm.avail_out);
+#endif
+			if (!packet_send(port, (SCHAR*) &port->port_compressed[REM_SEND_OFFSET(port->port_buff_size)],
+				(SSHORT) (port->port_buff_size - strm.avail_out)))
+			{
+				return false;
+			}
+
+			strm.avail_out = port->port_buff_size;
+			strm.next_out = (Bytef*)&port->port_compressed[REM_SEND_OFFSET(port->port_buff_size)];
+		}
+	}
+
+	xdrs->x_private = xdrs->x_base;
+	xdrs->x_handy = port->port_buff_size;
+
+	return true;
+#else
+	return proto_write(xdrs);
+#endif
+}
+
+bool rem_port::checkCompression()
+{
+#ifdef WIRE_COMPRESS_SUPPORT
+	return zlib();
+#else
+	return false;
+#endif
+}
+
+void rem_port::initCompression()
+{
+#ifdef WIRE_COMPRESS_SUPPORT
+	if (port_protocol >= PROTOCOL_VERSION13 && !port_compressed && zlib())
+	{
+		port_send_stream.zalloc = ZLib::allocFunc;
+		port_send_stream.zfree = ZLib::freeFunc;
+		port_send_stream.opaque = Z_NULL;
+		int ret = zlib().deflateInit(&port_send_stream, Z_DEFAULT_COMPRESSION);
+		if (ret != Z_OK)
+			(Arg::Gds(isc_deflate_init) << Arg::Num(ret)).raise();
+		port_send_stream.next_out = NULL;
+
+		port_recv_stream.zalloc = ZLib::allocFunc;
+		port_recv_stream.zfree = ZLib::freeFunc;
+		port_recv_stream.opaque = Z_NULL;
+		port_recv_stream.avail_in = 0;
+		port_recv_stream.next_in = Z_NULL;
+		ret = zlib().inflateInit(&port_recv_stream);
+		if (ret != Z_OK)
+		{
+			zlib().deflateEnd(&port_send_stream);
+			(Arg::Gds(isc_inflate_init) << Arg::Num(ret)).raise();
+		}
+
+		try
+		{
+			port_compressed.reset(FB_NEW_POOL(getPool()) UCHAR[port_buff_size * 2]);
+		}
+		catch (const Exception&)
+		{
+			zlib().deflateEnd(&port_send_stream);
+			zlib().inflateEnd(&port_recv_stream);
+			throw;
+		}
+
+		memset(port_compressed, 0, port_buff_size * 2);
+		port_recv_stream.next_in = &port_compressed[REM_RECV_OFFSET(port_buff_size)];
+
+#ifdef COMPRESS_DEBUG
+		fprintf(stderr, "Completed init port %p\n", this);
+#endif
+	}
+#endif
+}
+
+
+void InternalCryptKey::setSymmetric(CheckStatusWrapper* status, const char* type,
+	unsigned keyLength, const void* key)
+{
+	try
+	{
+		if (type)
+			keyName = type;
+		encrypt.set(keyLength, key);
+		decrypt.clear();
+	}
+	catch (const Exception& ex)
+	{
+		ex.stuffException(status);
+	}
+}
+
+void InternalCryptKey::setAsymmetric(CheckStatusWrapper* status, const char* type,
+	unsigned encryptKeyLength, const void* encryptKey, unsigned decryptKeyLength,
+	const void* decryptKey)
+{
+	try
+	{
+		if (type)
+			keyName = type;
+		encrypt.set(encryptKeyLength, encryptKey);
+		decrypt.set(decryptKeyLength, decryptKey);
+	}
+	catch (const Exception& ex)
+	{
+		ex.stuffException(status);
+	}
+}
+
+const void* InternalCryptKey::getEncryptKey(unsigned* length)
+{
+	return encrypt.get(length);
+}
+
+const void* InternalCryptKey::getDecryptKey(unsigned* length)
+{
+	return decrypt.getCount() > 0 ? decrypt.get(length) : encrypt.get(length);
+}
+
+
+signed char wcCompatible[3][3] = {
+/*				 DISABLED				ENABLED					REQUIRED */
+/* DISABLED */	{WIRECRYPT_DISABLED,	WIRECRYPT_DISABLED,		WIRECRYPT_BROKEN},
+/* ENABLED  */	{WIRECRYPT_DISABLED,	WIRECRYPT_ENABLED,		WIRECRYPT_REQUIRED},
+/* REQUIRED */	{WIRECRYPT_BROKEN,		WIRECRYPT_REQUIRED,		WIRECRYPT_REQUIRED}
+};

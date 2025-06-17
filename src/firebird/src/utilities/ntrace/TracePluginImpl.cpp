@@ -30,19 +30,27 @@
 #include <math.h>
 
 #include "TracePluginImpl.h"
-#include "TraceUnicodeUtils.h"
 #include "PluginLogWriter.h"
 #include "os/platform.h"
-#include "../../jrd/isc_f_proto.h"
-#include "../../jrd/req.h"
-#include "../../jrd/svc.h"
-#include "../../jrd/os/path_utils.h"
-
+#include "firebird/impl/consts_pub.h"
+#include "../../common/isc_f_proto.h"
+#include "../../common/dsc.h"
+#include "../../common/MsgUtil.h"
+#include "../../common/utils_proto.h"
+#include "../../common/UtilSvc.h"
+#include "../../jrd/svc_undoc.h"
+#include "../../jrd/constants.h"
+#include "../../common/os/path_utils.h"
+#include "firebird/impl/inf_pub.h"
+#include "firebird/impl/sqlda_pub.h"
+#include "../../common/classes/ImplementHelper.h"
+#include "../../common/SimpleStatusVector.h"
+#include "../../jrd/status.h"
 
 using namespace Firebird;
 using namespace Jrd;
 
-static const char* DEFAULT_LOG_NAME = "default_trace.log";
+static const char* const DEFAULT_LOG_NAME = "default_trace.log";
 
 #ifdef WIN_NT
 #define NEWLINE "\r\n"
@@ -50,71 +58,21 @@ static const char* DEFAULT_LOG_NAME = "default_trace.log";
 #define NEWLINE "\n"
 #endif
 
+
 /// TracePluginImpl
-
-TracePlugin* TracePluginImpl::createSkeletalPlugin()
-{
-	TracePlugin* plugin_ptr = FB_NEW(*getDefaultMemoryPool()) TracePlugin;
-	memset(plugin_ptr, 0, sizeof(TracePlugin));
-	plugin_ptr->tpl_version = NTRACE_VERSION;
-	plugin_ptr->tpl_shutdown = TracePluginImpl::ntrace_shutdown;
-	plugin_ptr->tpl_get_error = TracePluginImpl::ntrace_get_error;
-	return plugin_ptr;
-}
-
-TracePlugin* TracePluginImpl::createFullPlugin(const TracePluginConfig& configuration, TraceInitInfo* initInfo)
-{
-	TracePlugin* plugin_ptr = createSkeletalPlugin();
-	try
-	{
-		TracePluginImpl* pluginImpl = FB_NEW(*getDefaultMemoryPool()) TracePluginImpl(configuration, initInfo);
-		plugin_ptr->tpl_object = pluginImpl;
-
-		plugin_ptr->tpl_event_attach = ntrace_event_attach;
-		plugin_ptr->tpl_event_detach = ntrace_event_detach;
-		plugin_ptr->tpl_event_transaction_start = ntrace_event_transaction_start;
-		plugin_ptr->tpl_event_transaction_end = ntrace_event_transaction_end;
-
-		plugin_ptr->tpl_event_set_context = ntrace_event_set_context;
-		plugin_ptr->tpl_event_proc_execute = ntrace_event_proc_execute;
-		plugin_ptr->tpl_event_trigger_execute = ntrace_event_trigger_execute;
-
-		plugin_ptr->tpl_event_dsql_prepare = ntrace_event_dsql_prepare;
-		plugin_ptr->tpl_event_dsql_free = ntrace_event_dsql_free;
-		plugin_ptr->tpl_event_dsql_execute = ntrace_event_dsql_execute;
-
-		plugin_ptr->tpl_event_blr_compile = ntrace_event_blr_compile;
-		plugin_ptr->tpl_event_blr_execute = ntrace_event_blr_execute;
-		plugin_ptr->tpl_event_dyn_execute = ntrace_event_dyn_execute;
-
-		plugin_ptr->tpl_event_service_attach = ntrace_event_service_attach;
-		plugin_ptr->tpl_event_service_start = ntrace_event_service_start;
-		plugin_ptr->tpl_event_service_query = ntrace_event_service_query;
-		plugin_ptr->tpl_event_service_detach = ntrace_event_service_detach;
-
-		plugin_ptr->tpl_event_error = ntrace_event_error;
-		
-		plugin_ptr->tpl_event_sweep = ntrace_event_sweep;
-	}
-	catch(const Firebird::Exception&)
-	{
-		plugin_ptr->tpl_shutdown(plugin_ptr);
-		throw;
-	}
-
-	return plugin_ptr;
-}
 
 const char* TracePluginImpl::marshal_exception(const Firebird::Exception& ex)
 {
-	ISC_STATUS_ARRAY status = {0};
-	ex.stuff_exception(&status[0]);
-	
-	char buff[1024];
-	char *p = buff, *const end = buff + sizeof(buff) - 1;
+	Firebird::StaticStatusVector st;
+	ex.stuffException(st);
+	const ISC_STATUS* status = st.begin();
 
-	const ISC_STATUS *s = status;
-	while ((end > p) && fb_interpret(p, end - p, &s))
+	char buff[1024];
+	char* p = buff;
+	char* const end = buff + sizeof(buff) - 1;
+
+	const ISC_STATUS* s = status;
+	while (end > p && fb_interpret(p, end - p, &s))
 	{
 		p += strlen(p);
 		if (p < end)
@@ -126,7 +84,10 @@ const char* TracePluginImpl::marshal_exception(const Firebird::Exception& ex)
 	return get_error_string();
 }
 
-TracePluginImpl::TracePluginImpl(const TracePluginConfig &configuration, TraceInitInfo* initInfo) :
+TracePluginImpl::TracePluginImpl(IPluginBase* plugin,
+								 const TracePluginConfig& configuration,
+								 ITraceInitInfo* initInfo) :
+	factory(plugin),
 	operational(false),
 	session_id(initInfo->getTraceSessionID()),
 	session_name(*getDefaultMemoryPool()),
@@ -137,7 +98,9 @@ TracePluginImpl::TracePluginImpl(const TracePluginConfig &configuration, TraceIn
 	transactions(getDefaultMemoryPool()),
 	statements(getDefaultMemoryPool()),
 	services(getDefaultMemoryPool()),
-	unicodeCollation(*getDefaultMemoryPool())
+	routines(*getDefaultMemoryPool()),
+	include_codes(*getDefaultMemoryPool()),
+	exclude_codes(*getDefaultMemoryPool())
 {
 	const char* ses_name = initInfo->getTraceSessionName();
 	session_name = ses_name && *ses_name ? ses_name : " ";
@@ -156,11 +119,9 @@ TracePluginImpl::TracePluginImpl(const TracePluginConfig &configuration, TraceIn
 			logname.insert(0, root);
 		}
 
-		logWriter = FB_NEW (*getDefaultMemoryPool())
-			PluginLogWriter(logname.c_str(), config.max_log_size * 1024 * 1024);
+		logWriter = FB_NEW PluginLogWriter(logname.c_str(), config.max_log_size * 1024 * 1024);
+		logWriter->addRef();
 	}
-
-	Jrd::TextType *textType = unicodeCollation.getTextType();
 
 	// Compile filtering regular expressions
 	const char* str = NULL;
@@ -172,9 +133,10 @@ TracePluginImpl::TracePluginImpl(const TracePluginConfig &configuration, TraceIn
 			string filter(config.include_filter);
 			ISC_systemToUtf8(filter);
 
-			include_matcher = new TraceSimilarToMatcher(
-				*getDefaultMemoryPool(), textType, (const UCHAR*) filter.c_str(),
-				filter.length(), '\\', true);
+			include_matcher = FB_NEW SimilarToRegex(
+				*getDefaultMemoryPool(), SimilarToFlag::CASE_INSENSITIVE,
+				filter.c_str(), filter.length(),
+				"\\", 1);
 		}
 
 		if (config.exclude_filter.hasData())
@@ -183,9 +145,10 @@ TracePluginImpl::TracePluginImpl(const TracePluginConfig &configuration, TraceIn
 			string filter(config.exclude_filter);
 			ISC_systemToUtf8(filter);
 
-			exclude_matcher = new TraceSimilarToMatcher(
-				*getDefaultMemoryPool(), textType, (const UCHAR*) filter.c_str(),
-				filter.length(), '\\', true);
+			exclude_matcher = FB_NEW SimilarToRegex(
+				*getDefaultMemoryPool(), SimilarToFlag::CASE_INSENSITIVE,
+				filter.c_str(), filter.length(),
+				"\\", 1);
 		}
 	}
 	catch (const Exception&)
@@ -202,6 +165,13 @@ TracePluginImpl::TracePluginImpl(const TracePluginConfig &configuration, TraceIn
 				str, config.db_filename.c_str());
 		}
 	}
+
+	// parse filters for gds error codes
+	if (!config.include_gds_codes.isEmpty())
+		str2Array(config.include_gds_codes, include_codes);
+
+	if (!config.exclude_gds_codes.isEmpty())
+		str2Array(config.exclude_gds_codes, exclude_codes);
 
 	operational = true;
 	log_init();
@@ -246,6 +216,45 @@ TracePluginImpl::~TracePluginImpl()
 	}
 }
 
+bool TracePluginImpl::checkRoutine(StmtNumber stmt_id)
+{
+	{ // scope
+		ReadLockGuard lock(routinesLock, FB_FUNCTION);
+
+		if (routines.exist(stmt_id))
+			return true;
+	}
+
+	WriteLockGuard lock(routinesLock, FB_FUNCTION);
+
+	if (!routines.exist(stmt_id))
+		routines.add(stmt_id);
+
+	return false;
+}
+
+template <class C>
+string TracePluginImpl::getPlan(C* routine)
+{
+	const char* access_path = config.print_plan ?
+		(config.explain_plan ? routine->getExplainedPlan() : routine->getPlan())
+		: NULL;
+
+	if (access_path && *access_path)
+	{
+		const size_t access_path_length = strlen(access_path);
+
+		string temp;
+		temp.printf(NEWLINE
+			"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+			"%.*s" NEWLINE, access_path_length, access_path);
+
+		return temp;
+	}
+
+	return NEWLINE;
+}
+
 void TracePluginImpl::logRecord(const char* action)
 {
 	// We use atomic file appends for logging. Do not try to break logging
@@ -265,21 +274,29 @@ void TracePluginImpl::logRecord(const char* action)
 	// TODO: implement adjusting of line breaks
 	// line.adjustLineBreaks();
 
-	logWriter->write(record.c_str(), record.length());
+	LocalStatus ls;
+	CheckStatusWrapper status(&ls);
+
+	logWriter->write_s(&status, record.c_str(), record.length());
+
+	if (ls.getState() & IStatus::STATE_ERRORS && ls.getErrors()[1] == isc_interface_version_too_old)
+		logWriter->write(record.c_str(), record.length());
+	else
+		check(&status);
 
 	record = "";
 }
 
-void TracePluginImpl::logRecordConn(const char* action, TraceDatabaseConnection* connection)
+void TracePluginImpl::logRecordConn(const char* action, ITraceDatabaseConnection* connection)
 {
 	// Lookup connection description
-	const int conn_id = connection->getConnectionID();
+	const AttNumber conn_id = connection->getConnectionID();
 	bool reg = false;
 
 	while (true)
 	{
 		{
-			ReadLockGuard lock(connectionsLock);
+			ReadLockGuard lock(connectionsLock, FB_FUNCTION);
 			ConnectionsTree::Accessor accessor(&connections);
 			if (accessor.locate(conn_id))
 			{
@@ -291,7 +308,7 @@ void TracePluginImpl::logRecordConn(const char* action, TraceDatabaseConnection*
 		if (reg)
 		{
 			string temp;
-			temp.printf("\t%s (ATT_%d, <unknown, bug?>)" NEWLINE,
+			temp.printf("\t%s (ATT_%" SQUADFORMAT", <unknown, bug?>)" NEWLINE,
 				config.db_filename.c_str(), conn_id);
 			record.insert(0, temp);
 			break;
@@ -304,7 +321,7 @@ void TracePluginImpl::logRecordConn(const char* action, TraceDatabaseConnection*
 	// don't keep failed connection
 	if (!conn_id)
 	{
-		WriteLockGuard lock(connectionsLock);
+		WriteLockGuard lock(connectionsLock, FB_FUNCTION);
 		ConnectionsTree::Accessor accessor(&connections);
 		if (accessor.locate(conn_id))
 		{
@@ -316,16 +333,19 @@ void TracePluginImpl::logRecordConn(const char* action, TraceDatabaseConnection*
 	logRecord(action);
 }
 
-void TracePluginImpl::logRecordTrans(const char* action, TraceDatabaseConnection* connection,
-	TraceTransaction* transaction)
+void TracePluginImpl::logRecordTrans(const char* action, ITraceDatabaseConnection* connection,
+	ITraceTransaction* transaction)
 {
-	const int tra_id = transaction->getTransactionID();
+	TraNumber tra_id = transaction->getPreviousID();
+	if (!tra_id)
+		tra_id = transaction->getTransactionID();
+
 	bool reg = false;
 	while (true)
 	{
 		// Lookup transaction description
 		{
-			ReadLockGuard lock(transactionsLock);
+			ReadLockGuard lock(transactionsLock, FB_FUNCTION);
 			TransactionsTree::Accessor accessor(&transactions);
 			if (accessor.locate(tra_id))
 			{
@@ -337,7 +357,7 @@ void TracePluginImpl::logRecordTrans(const char* action, TraceDatabaseConnection
 		if (reg)
 		{
 			string temp;
-			temp.printf("\t\t(TRA_%d, <unknown, bug?>)" NEWLINE, transaction->getTransactionID());
+			temp.printf("\t\t(TRA_%" SQUADFORMAT", <unknown, bug?>)" NEWLINE, tra_id);
 			record.insert(0, temp);
 			break;
 		}
@@ -349,11 +369,16 @@ void TracePluginImpl::logRecordTrans(const char* action, TraceDatabaseConnection
 	logRecordConn(action, connection);
 }
 
-void TracePluginImpl::logRecordProc(const char* action, TraceDatabaseConnection* connection,
-	TraceTransaction* transaction, const char* proc_name)
+void TracePluginImpl::logRecordProc(const char* action, ITraceDatabaseConnection* connection,
+	ITraceTransaction* transaction, ITraceProcedure* procedure)
 {
+	const StmtNumber stmt_id = procedure->getStmtID();
+
 	string temp;
-	temp.printf(NEWLINE "Procedure %s:" NEWLINE, proc_name);
+	temp.printf(NEWLINE "%s %s:", "Procedure", procedure->getProcName());
+
+	temp += (stmt_id && !checkRoutine(stmt_id)) ? getPlan(procedure) : NEWLINE;
+
 	record.insert(0, temp);
 
 	if (!transaction) {
@@ -364,10 +389,117 @@ void TracePluginImpl::logRecordProc(const char* action, TraceDatabaseConnection*
 	}
 }
 
-void TracePluginImpl::logRecordStmt(const char* action, TraceDatabaseConnection* connection,
-	TraceTransaction* transaction, TraceStatement* statement, bool isSQL)
+void TracePluginImpl::logRecordFunc(const char* action, ITraceDatabaseConnection* connection,
+	ITraceTransaction* transaction, ITraceFunction* function)
 {
-	const int stmt_id = statement->getStmtID();
+	const StmtNumber stmt_id = function->getStmtID();
+
+	string temp;
+	temp.printf(NEWLINE "%s %s:", "Function", function->getFuncName());
+
+	temp += (stmt_id && !checkRoutine(stmt_id)) ? getPlan(function) : NEWLINE;
+
+	record.insert(0, temp);
+
+	if (!transaction) {
+		logRecordConn(action, connection);
+	}
+	else {
+		logRecordTrans(action, connection, transaction);
+	}
+}
+
+void TracePluginImpl::logRecordTrig(const char* action, ITraceDatabaseConnection* connection,
+	ITraceTransaction* transaction, ITraceTrigger* trigger)
+{
+	const StmtNumber stmt_id = trigger->getStmtID();
+
+	string name = "Trigger";
+
+	if (trigger->getTriggerName())
+	{
+		string trgname;
+		trgname.printf(" %s", trigger->getTriggerName());
+		name += trgname;
+	}
+
+	if ((trigger->getWhich() != ITraceTrigger::TYPE_ALL) && trigger->getRelationName())
+	{
+		string relation;
+		relation.printf(" FOR %s", trigger->getRelationName());
+		name += relation;
+	}
+
+	string extras;
+	switch (trigger->getWhich())
+	{
+		case ITraceTrigger::TYPE_ALL:
+			extras = "ON ";	//// TODO: Why ALL means ON (DATABASE) triggers?
+			break;
+		case ITraceTrigger::TYPE_BEFORE:
+			extras = "BEFORE ";
+			break;
+		case ITraceTrigger::TYPE_AFTER:
+			extras = "AFTER ";
+			break;
+		default:
+			extras = "<unknown> ";
+			break;
+	}
+
+	switch (trigger->getAction())
+	{
+		case TRIGGER_INSERT:
+			extras += "INSERT";
+			break;
+		case TRIGGER_UPDATE:
+			extras += "UPDATE";
+			break;
+		case TRIGGER_DELETE:
+			extras += "DELETE";
+			break;
+		case TRIGGER_CONNECT:
+			extras += "CONNECT";
+			break;
+		case TRIGGER_DISCONNECT:
+			extras += "DISCONNECT";
+			break;
+		case TRIGGER_TRANS_START:
+			extras += "TRANSACTION_START";
+			break;
+		case TRIGGER_TRANS_COMMIT:
+			extras += "TRANSACTION_COMMIT";
+			break;
+		case TRIGGER_TRANS_ROLLBACK:
+			extras + "TRANSACTION_ROLLBACK";
+			break;
+		case TRIGGER_DDL:
+			extras += "DDL";
+			break;
+		default:
+			extras += "Unknown trigger action";
+			break;
+	}
+
+	string temp;
+	temp.printf(NEWLINE "%s (%s):", name.c_str(), extras.c_str());
+
+	temp += (stmt_id && !checkRoutine(stmt_id)) ? getPlan(trigger) : NEWLINE;
+
+	record.insert(0, temp);
+
+	if (!transaction) {
+		logRecordConn(action, connection);
+	}
+	else {
+		logRecordTrans(action, connection, transaction);
+	}
+}
+
+void TracePluginImpl::logRecordStmt(const char* action, ITraceDatabaseConnection* connection,
+	ITraceTransaction* transaction, ITraceStatement* statement, bool isSQL)
+{
+	const StmtNumber stmt_id = statement->getStmtID();
 	bool reg = false;
 	bool log = true;
 
@@ -375,7 +507,7 @@ void TracePluginImpl::logRecordStmt(const char* action, TraceDatabaseConnection*
 	{
 		// Lookup description for statement
 		{
-			ReadLockGuard lock(statementsLock);
+			ReadLockGuard lock(statementsLock, FB_FUNCTION);
 
 			StatementsTree::Accessor accessor(&statements);
 			if (accessor.locate(stmt_id))
@@ -394,16 +526,16 @@ void TracePluginImpl::logRecordStmt(const char* action, TraceDatabaseConnection*
 		if (reg)
 		{
 			string temp;
-			temp.printf(NEWLINE "Statement %d, <unknown, bug?>:" NEWLINE, stmt_id);
+			temp.printf(NEWLINE "Statement %" SQUADFORMAT", <unknown, bug?>:" NEWLINE, stmt_id);
 			record.insert(0, temp);
 			break;
 		}
 
 		if (isSQL) {
-			register_sql_statement((TraceSQLStatement*) statement);
+			register_sql_statement((ITraceSQLStatement*) statement);
 		}
 		else {
-			register_blr_statement((TraceBLRStatement*) statement);
+			register_blr_statement((ITraceBLRStatement*) statement);
 		}
 		reg = true;
 	}
@@ -411,7 +543,7 @@ void TracePluginImpl::logRecordStmt(const char* action, TraceDatabaseConnection*
 	// don't need to keep failed statement
 	if (!stmt_id)
 	{
-		WriteLockGuard lock(statementsLock);
+		WriteLockGuard lock(statementsLock, FB_FUNCTION);
 		StatementsTree::Accessor accessor(&statements);
 		if (accessor.locate(stmt_id))
 		{
@@ -420,7 +552,7 @@ void TracePluginImpl::logRecordStmt(const char* action, TraceDatabaseConnection*
 		}
 	}
 
-	if (!log) 
+	if (!log)
 	{
 		record = "";
 		return;
@@ -434,16 +566,16 @@ void TracePluginImpl::logRecordStmt(const char* action, TraceDatabaseConnection*
 	}
 }
 
-void TracePluginImpl::logRecordServ(const char* action, TraceServiceConnection* service)
+void TracePluginImpl::logRecordServ(const char* action, ITraceServiceConnection* service)
 {
-	const ntrace_service_t svc_id = service->getServiceID();
+	ServiceId svc_id = service->getServiceID();
 	bool reg = false;
 
 	while (true)
 	{
 		// Lookup service description
 		{
-			ReadLockGuard lock(servicesLock);
+			ReadLockGuard lock(servicesLock, FB_FUNCTION);
 
 			ServicesTree::Accessor accessor(&services);
 			if (accessor.locate(svc_id))
@@ -468,8 +600,8 @@ void TracePluginImpl::logRecordServ(const char* action, TraceServiceConnection* 
 	logRecord(action);
 }
 
-void TracePluginImpl::logRecordError(const char* action, TraceBaseConnection* connection, 
-	TraceStatusVector* status)
+void TracePluginImpl::logRecordError(const char* action, ITraceConnection* connection,
+	ITraceStatusVector* status)
 {
 	const char* err = status->getText();
 
@@ -479,12 +611,12 @@ void TracePluginImpl::logRecordError(const char* action, TraceBaseConnection* co
 	{
 		switch (connection->getKind())
 		{
-		case connection_database: 
-			logRecordConn(action, (TraceDatabaseConnection*) connection);
+		case ITraceConnection::KIND_DATABASE:
+			logRecordConn(action, (ITraceDatabaseConnection*) connection);
 			break;
 
-		case connection_service:
-			logRecordServ(action, (TraceServiceConnection*) connection);
+		case ITraceConnection::KIND_SERVICE:
+			logRecordServ(action, (ITraceServiceConnection*) connection);
 			break;
 
 		default:
@@ -504,25 +636,25 @@ void TracePluginImpl::appendGlobalCounts(const PerformanceInfo* info)
 
 	ntrace_counter_t cnt;
 
-	if ((cnt = info->pin_counters[RuntimeStatistics::PAGE_READS]) != 0)
+	if ((cnt = info->pin_counters[PerformanceInfo::READS]) != 0)
 	{
 		temp.printf(", %" QUADFORMAT"d read(s)", cnt);
 		record.append(temp);
 	}
 
-	if ((cnt = info->pin_counters[RuntimeStatistics::PAGE_WRITES]) != 0)
+	if ((cnt = info->pin_counters[PerformanceInfo::WRITES]) != 0)
 	{
 		temp.printf(", %" QUADFORMAT"d write(s)", cnt);
 		record.append(temp);
 	}
 
-	if ((cnt = info->pin_counters[RuntimeStatistics::PAGE_FETCHES]) != 0)
+	if ((cnt = info->pin_counters[PerformanceInfo::FETCHES]) != 0)
 	{
 		temp.printf(", %" QUADFORMAT"d fetch(es)", cnt);
 		record.append(temp);
 	}
 
-	if ((cnt = info->pin_counters[RuntimeStatistics::PAGE_MARKS]) != 0)
+	if ((cnt = info->pin_counters[PerformanceInfo::MARKS]) != 0)
 	{
 		temp.printf(", %" QUADFORMAT"d mark(s)", cnt);
 		record.append(temp);
@@ -536,19 +668,32 @@ void TracePluginImpl::appendTableCounts(const PerformanceInfo *info)
 	if (!config.print_perf || info->pin_count == 0)
 		return;
 
-	record.append(NEWLINE
-		"Table                             Natural     Index    Update    Insert    Delete   Backout     Purge   Expunge" NEWLINE
-		"***************************************************************************************************************" NEWLINE );
+	const TraceCounts* trc = info->pin_tables;
+	const TraceCounts* trc_end = trc + info->pin_count;
 
-	const TraceCounts* trc;
-	const TraceCounts* trc_end;
+	FB_SIZE_T max_len = 0;
+	for (; trc < trc_end; trc++)
+	{
+		FB_SIZE_T len = fb_strlen(trc->trc_relation_name);
+		if (max_len < len)
+			max_len = len;
+	}
+
+	if (max_len < 32)
+		max_len = 32;
+
+	record.append(NEWLINE"Table");
+	record.append(max_len - 5, ' ');
+	record.append("   Natural     Index    Update    Insert    Delete   Backout     Purge   Expunge" NEWLINE);
+	record.append(max_len + 80, '*');
+	record.append(NEWLINE);
 
 	string temp;
-	for (trc = info->pin_tables, trc_end = trc + info->pin_count; trc < trc_end; trc++)
+	for (trc = info->pin_tables; trc < trc_end; trc++)
 	{
 		record.append(trc->trc_relation_name);
-		record.append(MAX_SQL_IDENTIFIER_LEN - strlen(trc->trc_relation_name), ' ');
-		for (int j = 0; j < DBB_max_rel_count; j++)
+		record.append(max_len - fb_strlen(trc->trc_relation_name), ' ');
+		for (int j = 0; j <= TraceCounts::EXPUNGES; j++)
 		{
 			if (trc->trc_counters[j] == 0)
 			{
@@ -588,9 +733,78 @@ void TracePluginImpl::formatStringArgument(string& result, const UCHAR* str, siz
 }
 
 
-void TracePluginImpl::appendParams(TraceParams* params)
+bool TracePluginImpl::filterStatus(const ISC_STATUS* status, GdsCodesArray& arr)
 {
-	const size_t paramcount = params->getCount();
+	FB_SIZE_T pos;
+
+	while (*status != isc_arg_end)
+	{
+		const ISC_STATUS s = *status;
+
+		switch (s)
+		{
+		case isc_arg_gds:
+		case isc_arg_warning:
+			if (arr.find(status[1], pos))
+				return true;
+			status += 2;
+			break;
+
+		case isc_arg_cstring:
+			status += 3;
+			break;
+
+		default:
+			status += 2;
+			break;
+		}
+	}
+
+	return false;
+}
+
+
+void TracePluginImpl::str2Array(const Firebird::string& str, GdsCodesArray& arr)
+{
+	// input: string with comma-delimited list of gds codes values and\or gds codes names
+	// output: sorted array of gds codes values
+
+	const char *sep = " ,";
+
+	FB_SIZE_T p1 = 0, p2 = 0;
+	while (p2 < str.length())
+	{
+		p2 = str.find_first_of(sep, p1);
+		if (p2 == string::npos)
+			p2 = str.length();
+
+		string s = str.substr(p1, p2 - p1);
+
+		ISC_STATUS code = atol(s.c_str());
+
+		if (!code && !(code = MsgUtil::getCodeByName(s.c_str())))
+		{
+			fatal_exception::raiseFmt(
+				"Error parsing error codes filter: \n"
+				"\t%s\n"
+				"\tbad item is: %s, at position: %d",
+				str.c_str(), s.c_str(), p1 + 1);
+		}
+
+		// avoid duplicates
+
+		FB_SIZE_T ins_pos;
+		if (!arr.find(code, ins_pos))
+			arr.insert(ins_pos, code);
+
+		p1 = str.find_first_not_of(sep, p2);
+	}
+}
+
+
+void TracePluginImpl::appendParams(ITraceParams* params)
+{
+	const FB_SIZE_T paramcount = params->getCount();
 	if (!paramcount)
 		return;
 
@@ -599,7 +813,7 @@ void TracePluginImpl::appendParams(TraceParams* params)
 	string paramvalue;
 	string temp;
 
-	for (size_t i = 0; i < paramcount; i++)
+	for (FB_SIZE_T i = 0; i < paramcount; i++)
 	{
 		const struct dsc* parameters = params->getParam(i);
 
@@ -615,13 +829,19 @@ void TracePluginImpl::appendParams(TraceParams* params)
 		switch (parameters->dsc_dtype)
 		{
 			case dtype_text:
-				paramtype.printf("char(%d)", parameters->dsc_length);
+				if (parameters->getTextType() == fb_text_subtype_binary)
+					paramtype.printf("binary(%d)", parameters->dsc_length);
+				else
+					paramtype.printf("char(%d)", parameters->dsc_length);
 				break;
 			case dtype_cstring:
 				paramtype.printf("cstring(%d)", parameters->dsc_length - 1);
 				break;
 			case dtype_varying:
-				paramtype.printf("varchar(%d)", parameters->dsc_length - 2);
+				if (parameters->getTextType() == fb_text_subtype_binary)
+					paramtype.printf("varbinary(%d)", parameters->dsc_length - 2);
+				else
+					paramtype.printf("varchar(%d)", parameters->dsc_length - 2);
 				break;
 			case dtype_blob:
 				paramtype = "blob";
@@ -639,14 +859,28 @@ void TracePluginImpl::appendParams(TraceParams* params)
 				else
 					paramtype = "smallint";
 				break;
-
 			case dtype_long:
 				if (parameters->dsc_scale)
 					paramtype.printf("integer(*, %d)", parameters->dsc_scale);
 				else
 					paramtype = "integer";
 				break;
+			case dtype_int64:
+				if (parameters->dsc_scale)
+					paramtype.printf("bigint(*, %d)", parameters->dsc_scale);
+				else
+					paramtype = "bigint";
+				break;
+			case dtype_int128:
+				if (parameters->dsc_scale)
+					paramtype.printf("int128(*, %d)", parameters->dsc_scale);
+				else
+					paramtype = "int128";
+				break;
 
+			case dtype_real:
+				paramtype = "float";
+				break;
 			case dtype_double:
 				if (parameters->dsc_scale)
 					paramtype.printf("double precision(*, %d)", parameters->dsc_scale);
@@ -654,16 +888,13 @@ void TracePluginImpl::appendParams(TraceParams* params)
 					paramtype = "double precision";
 				break;
 
-			case dtype_int64:
-				if (parameters->dsc_scale)
-					paramtype.printf("bigint(*, %d)", parameters->dsc_scale);
-				else
-					paramtype = "bigint";
+			case dtype_dec64:
+				paramtype = "decfloat(16)";
+				break;
+			case dtype_dec128:
+				paramtype = "decfloat(34)";
 				break;
 
-			case dtype_real:
-				paramtype = "float";
-				break;
 			case dtype_sql_date:
 				paramtype = "date";
 				break;
@@ -673,8 +904,13 @@ void TracePluginImpl::appendParams(TraceParams* params)
 			case dtype_timestamp:
 				paramtype = "timestamp";
 				break;
+
 			case dtype_dbkey:
 				paramtype = "db_key";
+				break;
+
+			case dtype_boolean:
+				paramtype = "boolean";
 				break;
 
 			default:
@@ -693,19 +929,41 @@ void TracePluginImpl::appendParams(TraceParams* params)
 			{
 				// Handle potentially long string values
 				case dtype_text:
-					formatStringArgument(paramvalue,
-						parameters->dsc_address, parameters->dsc_length);
+				{
+					FbLocalStatus status;
+					const char* text = params->getTextUTF8(&status, i);
+
+					if (status->getState() & IStatus::STATE_ERRORS)
+					{
+						formatStringArgument(paramvalue,
+							parameters->dsc_address, parameters->dsc_length);
+					}
+					else
+						formatStringArgument(paramvalue, (UCHAR*) text, strlen(text));
+
 					break;
+				}
 				case dtype_cstring:
 					formatStringArgument(paramvalue,
 						parameters->dsc_address,
 						strlen(reinterpret_cast<const char*>(parameters->dsc_address)));
 					break;
 				case dtype_varying:
-					formatStringArgument(paramvalue,
-						parameters->dsc_address + 2,
-						*(USHORT*)parameters->dsc_address);
+				{
+					FbLocalStatus status;
+					const char* text = params->getTextUTF8(&status, i);
+
+					if (status->getState() & IStatus::STATE_ERRORS)
+					{
+						formatStringArgument(paramvalue,
+							parameters->dsc_address + 2,
+							*(USHORT*)parameters->dsc_address);
+					}
+					else
+						formatStringArgument(paramvalue, (UCHAR*) text, strlen(text));
+
 					break;
+				}
 
 				// Handle quad
 				case dtype_quad:
@@ -750,6 +1008,27 @@ void TracePluginImpl::appendParams(TraceParams* params)
 					}
 					break;
 
+				case dtype_dec64:
+					((Decimal64*) parameters->dsc_address)->toString(paramvalue);
+					break;
+
+				case dtype_dec128:
+					((Decimal128*) parameters->dsc_address)->toString(paramvalue);
+					break;
+
+				case dtype_int128:
+					try
+					{
+						((Int128*) parameters->dsc_address)->toString(parameters->dsc_scale, paramvalue);
+					}
+					catch (const Exception& ex)
+					{
+						StaticStatusVector status;
+						ex.stuffException(status);
+						paramvalue.printf("Conversion error %d\n", status[1]);
+					}
+					break;
+
 				case dtype_sql_date:
 				{
 					struct tm times;
@@ -779,6 +1058,11 @@ void TracePluginImpl::appendParams(TraceParams* params)
 						ts.value().timestamp_time % ISC_TIME_SECONDS_PRECISION);
 					break;
 				}
+
+				case dtype_boolean:
+					paramvalue = *parameters->dsc_address ? "<true>" : "<false>";
+					break;
+
 				default:
 					paramvalue = "<unknown>";
 			}
@@ -877,7 +1161,7 @@ void TracePluginImpl::appendServiceQueryParams(size_t send_item_length,
 				break;
 
 			case isc_info_svc_get_env_lock:
-				recv_query.printf(NEWLINE "\t\t retrieve the setting of $FIREBIRD_LCK");
+				recv_query.printf(NEWLINE "\t\t retrieve the setting of $FIREBIRD_LOCK");
 				break;
 
 			case isc_info_svc_get_env_msg:
@@ -939,11 +1223,17 @@ void TracePluginImpl::appendServiceQueryParams(size_t send_item_length,
 			case isc_info_svc_to_eof:
 				recv_query.printf(NEWLINE "\t\t retrieve as much of the server output as will fit in the supplied buffer");
 				break;
+
 			case isc_info_svc_limbo_trans:
 				recv_query.printf(NEWLINE "\t\t retrieve the limbo transactions");
 				break;
+
 			case isc_info_svc_get_users:
 				recv_query.printf(NEWLINE "\t\t retrieve the user information");
+				break;
+
+			case isc_info_svc_stdin:
+				recv_query.printf(NEWLINE "\t\t retrieve the size of data to send to the server");
 				break;
 		}
 	}
@@ -959,7 +1249,8 @@ void TracePluginImpl::log_init()
 {
 	if (config.log_initfini)
 	{
-		record.printf("\tSESSION_%d %s" NEWLINE "\t%s" NEWLINE, session_id, session_name.c_str(), config.db_filename.c_str());
+		record.printf("\tSESSION_%d %s" NEWLINE "\t%s" NEWLINE,
+			session_id, session_name.c_str(), config.db_filename.c_str());
 		logRecord("TRACE_INIT");
 	}
 }
@@ -968,7 +1259,8 @@ void TracePluginImpl::log_finalize()
 {
 	if (config.log_initfini)
 	{
-		record.printf("\tSESSION_%d %s" NEWLINE "\t%s" NEWLINE, session_id, session_name.c_str(), config.db_filename.c_str());
+		record.printf("\tSESSION_%d %s" NEWLINE "\t%s" NEWLINE,
+			session_id, session_name.c_str(), config.db_filename.c_str());
 		logRecord("TRACE_FINI");
 	}
 
@@ -976,15 +1268,16 @@ void TracePluginImpl::log_finalize()
 	logWriter = NULL;
 }
 
-void TracePluginImpl::register_connection(TraceDatabaseConnection* connection)
+void TracePluginImpl::register_connection(ITraceDatabaseConnection* connection)
 {
 	ConnectionData conn_data;
 	conn_data.id = connection->getConnectionID();
-	conn_data.description = FB_NEW(*getDefaultMemoryPool()) string(*getDefaultMemoryPool());
+	conn_data.description = FB_NEW_POOL(*getDefaultMemoryPool()) string(*getDefaultMemoryPool());
 
 	string tmp(*getDefaultMemoryPool());
 
-	conn_data.description->printf("\t%s (ATT_%d",  connection->getDatabaseName(), connection->getConnectionID());
+	conn_data.description->printf("\t%s (ATT_%" SQUADFORMAT,
+		connection->getDatabaseName(), connection->getConnectionID());
 
 	const char* user = connection->getUserName();
 	if (user)
@@ -1029,26 +1322,26 @@ void TracePluginImpl::register_connection(TraceDatabaseConnection* connection)
 
 	// Adjust the list of connections
 	{
-		WriteLockGuard lock(connectionsLock);
+		WriteLockGuard lock(connectionsLock, FB_FUNCTION);
 		connections.add(conn_data);
 	}
 }
 
-void TracePluginImpl::log_event_attach(TraceDatabaseConnection* connection,
-	ntrace_boolean_t create_db, ntrace_result_t att_result)
+void TracePluginImpl::log_event_attach(ITraceDatabaseConnection* connection,
+	FB_BOOLEAN create_db, ntrace_result_t att_result)
 {
 	if (config.log_connections)
 	{
 		const char* event_type;
 		switch (att_result)
 		{
-			case res_successful:
+			case ITracePlugin::RESULT_SUCCESS:
 				event_type = create_db ? "CREATE_DATABASE" : "ATTACH_DATABASE";
 				break;
-			case res_failed:
+			case ITracePlugin::RESULT_FAILED:
 				event_type = create_db ? "FAILED CREATE_DATABASE" : "FAILED ATTACH_DATABASE";
 				break;
-			case res_unauthorized:
+			case ITracePlugin::RESULT_UNAUTHORIZED:
 				event_type = create_db ? "UNAUTHORIZED CREATE_DATABASE" : "UNAUTHORIZED ATTACH_DATABASE";
 				break;
 			default:
@@ -1061,7 +1354,7 @@ void TracePluginImpl::log_event_attach(TraceDatabaseConnection* connection,
 	}
 }
 
-void TracePluginImpl::log_event_detach(TraceDatabaseConnection* connection, ntrace_boolean_t drop_db)
+void TracePluginImpl::log_event_detach(ITraceDatabaseConnection* connection, FB_BOOLEAN drop_db)
 {
 	if (config.log_connections)
 	{
@@ -1069,7 +1362,7 @@ void TracePluginImpl::log_event_detach(TraceDatabaseConnection* connection, ntra
 	}
 
 	// Get rid of connection descriptor
-	WriteLockGuard lock(connectionsLock);
+	WriteLockGuard lock(connectionsLock, FB_FUNCTION);
 	if (connections.locate(connection->getConnectionID()))
 	{
 		connections.current().deallocate_references();
@@ -1077,29 +1370,43 @@ void TracePluginImpl::log_event_detach(TraceDatabaseConnection* connection, ntra
 	}
 }
 
-void TracePluginImpl::register_transaction(TraceTransaction* transaction)
+void TracePluginImpl::register_transaction(ITraceTransaction* transaction)
 {
 	TransactionData trans_data;
-	trans_data.id = transaction->getTransactionID();
-	trans_data.description = FB_NEW(*getDefaultMemoryPool()) string(*getDefaultMemoryPool());
-	trans_data.description->printf("\t\t(TRA_%d, ", trans_data.id);
+	trans_data.id = transaction->getPreviousID();
+	if (!trans_data.id)
+		trans_data.id = transaction->getTransactionID();
+
+	trans_data.description = FB_NEW_POOL(*getDefaultMemoryPool()) string(*getDefaultMemoryPool());
+	trans_data.description->printf("\t\t(TRA_%" SQUADFORMAT", ", trans_data.id);
+
+	if (transaction->getInitialID() != transaction->getTransactionID())
+	{
+		string tmp;
+		tmp.printf("INIT_%" SQUADFORMAT", ", transaction->getInitialID());
+		trans_data.description->append(tmp);
+	}
 
 	switch (transaction->getIsolation())
 	{
-	case tra_iso_consistency:
+	case ITraceTransaction::ISOLATION_CONSISTENCY:
 		trans_data.description->append("CONSISTENCY");
 		break;
 
-	case tra_iso_concurrency:
+	case ITraceTransaction::ISOLATION_CONCURRENCY:
 		trans_data.description->append("CONCURRENCY");
 		break;
 
-	case tra_iso_read_committed_recver:
+	case ITraceTransaction::ISOLATION_READ_COMMITTED_RECVER:
 		trans_data.description->append("READ_COMMITTED | REC_VERSION");
 		break;
 
-	case tra_iso_read_committed_norecver:
+	case ITraceTransaction::ISOLATION_READ_COMMITTED_NORECVER:
 		trans_data.description->append("READ_COMMITTED | NO_REC_VERSION");
+		break;
+
+	case ITraceTransaction::ISOLATION_READ_COMMITTED_READ_CONSISTENCY:
+		trans_data.description->append("READ_COMMITTED | READ_CONSISTENCY");
 		break;
 
 	default:
@@ -1131,14 +1438,14 @@ void TracePluginImpl::register_transaction(TraceTransaction* transaction)
 
 	// Remember transaction
 	{
-		WriteLockGuard lock(transactionsLock);
+		WriteLockGuard lock(transactionsLock, FB_FUNCTION);
 		transactions.add(trans_data);
 	}
 }
 
 
-void TracePluginImpl::log_event_transaction_start(TraceDatabaseConnection* connection,
-		TraceTransaction* transaction, size_t /*tpb_length*/,
+void TracePluginImpl::log_event_transaction_start(ITraceDatabaseConnection* connection,
+		ITraceTransaction* transaction, size_t /*tpb_length*/,
 		const ntrace_byte_t* /*tpb*/, ntrace_result_t tra_result)
 {
 	if (config.log_transactions)
@@ -1146,13 +1453,13 @@ void TracePluginImpl::log_event_transaction_start(TraceDatabaseConnection* conne
 		const char* event_type;
 		switch (tra_result)
 		{
-			case res_successful:
+			case ITracePlugin::RESULT_SUCCESS:
 				event_type = "START_TRANSACTION";
 				break;
-			case res_failed:
+			case ITracePlugin::RESULT_FAILED:
 				event_type = "FAILED START_TRANSACTION";
 				break;
-			case res_unauthorized:
+			case ITracePlugin::RESULT_UNAUTHORIZED:
 				event_type = "UNAUTHORIZED START_TRANSACTION";
 				break;
 			default:
@@ -1163,12 +1470,28 @@ void TracePluginImpl::log_event_transaction_start(TraceDatabaseConnection* conne
 	}
 }
 
-void TracePluginImpl::log_event_transaction_end(TraceDatabaseConnection* connection,
-		TraceTransaction* transaction, ntrace_boolean_t commit,
-		ntrace_boolean_t retain_context, ntrace_result_t tra_result)
+void TracePluginImpl::log_event_transaction_end(ITraceDatabaseConnection* connection,
+		ITraceTransaction* transaction, FB_BOOLEAN commit,
+		FB_BOOLEAN retain_context, ntrace_result_t tra_result)
 {
 	if (config.log_transactions)
 	{
+		if (retain_context || transaction->getInitialID() != transaction->getTransactionID())
+		{
+			string temp;
+			//temp.printf("\tInitial number %" SQUADFORMAT NEWLINE, transaction->getInitialID());
+			//record.append(temp);
+
+			if (retain_context)
+			{
+				//temp.printf("\tOld number %" SQUADFORMAT NEWLINE, transaction->getPreviousID());
+				//record.append(temp);
+
+				temp.printf("\tNew number %" SQUADFORMAT NEWLINE, transaction->getTransactionID());
+				record.append(temp);
+			}
+		}
+
 		PerformanceInfo* info = transaction->getPerf();
 		if (info)
 		{
@@ -1179,17 +1502,17 @@ void TracePluginImpl::log_event_transaction_end(TraceDatabaseConnection* connect
 		const char* event_type;
 		switch (tra_result)
 		{
-			case res_successful:
+			case ITracePlugin::RESULT_SUCCESS:
 				event_type = commit ?
 					(retain_context ? "COMMIT_RETAINING"   : "COMMIT_TRANSACTION") :
 					(retain_context ? "ROLLBACK_RETAINING" : "ROLLBACK_TRANSACTION");
 				break;
-			case res_failed:
+			case ITracePlugin::RESULT_FAILED:
 				event_type = commit ?
 					(retain_context ? "FAILED COMMIT_RETAINING"   : "FAILED COMMIT_TRANSACTION") :
 					(retain_context ? "FAILED ROLLBACK_RETAINING" : "FAILED ROLLBACK_TRANSACTION");
 				break;
-			case res_unauthorized:
+			case ITracePlugin::RESULT_UNAUTHORIZED:
 				event_type = commit ?
 					(retain_context ? "UNAUTHORIZED COMMIT_RETAINING"   : "UNAUTHORIZED COMMIT_TRANSACTION") :
 					(retain_context ? "UNAUTHORIZED ROLLBACK_RETAINING" : "UNAUTHORIZED ROLLBACK_TRANSACTION");
@@ -1201,11 +1524,12 @@ void TracePluginImpl::log_event_transaction_end(TraceDatabaseConnection* connect
 		logRecordTrans(event_type, connection, transaction);
 	}
 
-	if (!retain_context)
+	const ISC_INT64 delId = retain_context ? transaction->getPreviousID() : transaction->getTransactionID();
+	if (!retain_context || transaction->getPreviousID() != transaction->getTransactionID())
 	{
 		// Forget about the transaction
-		WriteLockGuard lock(transactionsLock);
-		if (transactions.locate(transaction->getTransactionID()))
+		WriteLockGuard lock(transactionsLock, FB_FUNCTION);
+		if (transactions.locate(delId))
 		{
 			transactions.current().deallocate_references();
 			transactions.fastRemove();
@@ -1213,8 +1537,8 @@ void TracePluginImpl::log_event_transaction_end(TraceDatabaseConnection* connect
 	}
 }
 
-void TracePluginImpl::log_event_set_context(TraceDatabaseConnection* connection,
-		TraceTransaction* transaction, TraceContextVariable* variable)
+void TracePluginImpl::log_event_set_context(ITraceDatabaseConnection* connection,
+		ITraceTransaction* transaction, ITraceContextVariable* variable)
 {
 	const char* ns = variable->getNameSpace();
 	const char* name = variable->getVarName();
@@ -1236,8 +1560,32 @@ void TracePluginImpl::log_event_set_context(TraceDatabaseConnection* connection,
 	}
 }
 
-void TracePluginImpl::log_event_proc_execute(TraceDatabaseConnection* connection, TraceTransaction* transaction,
-		TraceProcedure* procedure, bool started, ntrace_result_t proc_result)
+void TracePluginImpl::log_event_proc_compile(ITraceDatabaseConnection* connection,
+	ITraceProcedure* procedure, ntrace_counter_t time_millis, ntrace_result_t proc_result)
+{
+	if (config.log_procedure_compile)
+	{
+		const char* event_type;
+		switch (proc_result)
+		{
+			case ITracePlugin::RESULT_SUCCESS:
+				event_type = "COMPILE_PROCEDURE";
+				break;
+			case ITracePlugin::RESULT_FAILED:
+				event_type = "FAILED COMPILE_PROCEDURE";
+				break;
+			default:
+				event_type = "Unknown event in COMPILE_PROCEDURE";
+				break;
+		}
+		record.printf("%7d ms" NEWLINE, time_millis);
+		logRecordProc(event_type, connection, nullptr, procedure);
+	}
+}
+
+void TracePluginImpl::log_event_proc_execute(ITraceDatabaseConnection* connection,
+	ITraceTransaction* transaction, ITraceProcedure* procedure, bool started,
+	ntrace_result_t proc_result)
 {
 	if (!config.log_procedure_start && started)
 		return;
@@ -1250,9 +1598,10 @@ void TracePluginImpl::log_event_proc_execute(TraceDatabaseConnection* connection
 	if (config.time_threshold && info && info->pin_time < config.time_threshold)
 		return;
 
-	TraceParams* params = procedure->getInputs();
+	ITraceParams* params = procedure->getInputs();
 	if (params && params->getCount())
 	{
+		record.append(NEWLINE);
 		appendParams(params);
 		record.append(NEWLINE);
 	}
@@ -1272,15 +1621,15 @@ void TracePluginImpl::log_event_proc_execute(TraceDatabaseConnection* connection
 	const char* event_type;
 	switch (proc_result)
 	{
-		case res_successful:
+		case ITracePlugin::RESULT_SUCCESS:
 			event_type = started ? "EXECUTE_PROCEDURE_START" :
 								   "EXECUTE_PROCEDURE_FINISH";
 			break;
-		case res_failed:
+		case ITracePlugin::RESULT_FAILED:
 			event_type = started ? "FAILED EXECUTE_PROCEDURE_START" :
 								   "FAILED EXECUTE_PROCEDURE_FINISH";
 			break;
-		case res_unauthorized:
+		case ITracePlugin::RESULT_UNAUTHORIZED:
 			event_type = started ? "UNAUTHORIZED EXECUTE_PROCEDURE_START" :
 								   "UNAUTHORIZED EXECUTE_PROCEDURE_FINISH";
 			break;
@@ -1289,10 +1638,167 @@ void TracePluginImpl::log_event_proc_execute(TraceDatabaseConnection* connection
 			break;
 	}
 
-	logRecordProc(event_type, connection, transaction, procedure->getProcName());
+	logRecordProc(event_type, connection, transaction, procedure);
 }
 
-void TracePluginImpl::register_sql_statement(TraceSQLStatement* statement)
+void TracePluginImpl::log_event_func_compile(ITraceDatabaseConnection* connection,
+	ITraceFunction* function, ntrace_counter_t time_millis, ntrace_result_t func_result)
+{
+	if (config.log_function_compile)
+	{
+		const char* event_type;
+		switch (func_result)
+		{
+			case ITracePlugin::RESULT_SUCCESS:
+				event_type = "COMPILE_FUNCTION";
+				break;
+			case ITracePlugin::RESULT_FAILED:
+				event_type = "FAILED COMPILE_FUNCTION";
+				break;
+			default:
+				event_type = "Unknown event in COMPILE_FUNCTION";
+				break;
+		}
+		record.printf("%7d ms" NEWLINE, time_millis);
+		logRecordFunc(event_type, connection, nullptr, function);
+	}
+}
+
+void TracePluginImpl::log_event_func_execute(ITraceDatabaseConnection* connection,
+	ITraceTransaction* transaction, ITraceFunction* function, bool started,
+	ntrace_result_t func_result)
+{
+	if (!config.log_function_start && started)
+		return;
+
+	if (!config.log_function_finish && !started)
+		return;
+
+	// Do not log operation if it is below time threshold
+	const PerformanceInfo* info = started ? NULL : function->getPerf();
+	if (config.time_threshold && info && info->pin_time < config.time_threshold)
+		return;
+
+	ITraceParams* params = function->getInputs();
+	if (params && params->getCount())
+	{
+		record.append(NEWLINE);
+		appendParams(params);
+		record.append(NEWLINE);
+	}
+
+	if (!started && func_result == ITracePlugin::RESULT_SUCCESS)
+	{
+		params = function->getResult();
+		{
+			record.append("returns:" NEWLINE);
+			appendParams(params);
+			record.append(NEWLINE);
+		}
+	}
+
+	if (info)
+	{
+		if (info->pin_records_fetched)
+		{
+			string temp;
+			temp.printf("%" QUADFORMAT"d records fetched" NEWLINE, info->pin_records_fetched);
+			record.append(temp);
+		}
+		appendGlobalCounts(info);
+		appendTableCounts(info);
+	}
+
+	const char* event_type;
+	switch (func_result)
+	{
+		case ITracePlugin::RESULT_SUCCESS:
+			event_type = started ? "EXECUTE_FUNCTION_START" :
+								   "EXECUTE_FUNCTION_FINISH";
+			break;
+		case ITracePlugin::RESULT_FAILED:
+			event_type = started ? "FAILED EXECUTE_FUNCTION_START" :
+								   "FAILED EXECUTE_FUNCTION_FINISH";
+			break;
+		case ITracePlugin::RESULT_UNAUTHORIZED:
+			event_type = started ? "UNAUTHORIZED EXECUTE_FUNCTION_START" :
+								   "UNAUTHORIZED EXECUTE_FUNCTION_FINISH";
+			break;
+		default:
+			event_type = "Unknown event at executing function";
+			break;
+	}
+
+	logRecordFunc(event_type, connection, transaction, function);
+}
+
+void TracePluginImpl::log_event_trigger_compile(ITraceDatabaseConnection* connection,
+	ITraceTrigger* trigger, ntrace_counter_t time_millis, ntrace_result_t trig_result)
+{
+	if (config.log_trigger_compile)
+	{
+		const char* event_type;
+		switch (trig_result)
+		{
+			case ITracePlugin::RESULT_SUCCESS:
+				event_type = "COMPILE_TRIGGER";
+				break;
+			case ITracePlugin::RESULT_FAILED:
+				event_type = "FAILED COMPILE_TRIGGER";
+				break;
+			default:
+				event_type = "Unknown event in COMPILE_TRIGGER";
+				break;
+		}
+		record.printf("%7d ms" NEWLINE, time_millis);
+		logRecordTrig(event_type, connection, nullptr, trigger);
+	}
+}
+
+void TracePluginImpl::log_event_trigger_execute(ITraceDatabaseConnection* connection,
+	ITraceTransaction* transaction, ITraceTrigger* trigger, bool started, ntrace_result_t trig_result)
+{
+	if (!config.log_trigger_start && started)
+		return;
+
+	if (!config.log_trigger_finish && !started)
+		return;
+
+	// Do not log operation if it is below time threshold
+	const PerformanceInfo* info = started ? NULL : trigger->getPerf();
+	if (config.time_threshold && info && info->pin_time < config.time_threshold)
+		return;
+
+	if (info)
+	{
+		appendGlobalCounts(info);
+		appendTableCounts(info);
+	}
+
+	const char* event_type;
+	switch (trig_result)
+	{
+		case ITracePlugin::RESULT_SUCCESS:
+			event_type = started ? "EXECUTE_TRIGGER_START" :
+								   "EXECUTE_TRIGGER_FINISH";
+			break;
+		case ITracePlugin::RESULT_FAILED:
+			event_type = started ? "FAILED EXECUTE_TRIGGER_START" :
+								   "FAILED EXECUTE_TRIGGER_FINISH";
+			break;
+		case ITracePlugin::RESULT_UNAUTHORIZED:
+			event_type = started ? "UNAUTHORIZED EXECUTE_TRIGGER_START" :
+								   "UNAUTHORIZED EXECUTE_TRIGGER_FINISH";
+			break;
+		default:
+			event_type = "Unknown event at executing trigger";
+			break;
+	}
+
+	logRecordTrig(event_type, connection, transaction, trigger);
+}
+
+void TracePluginImpl::register_sql_statement(ITraceSQLStatement* statement)
 {
 	StatementData stmt_data;
 	stmt_data.id = statement->getStmtID();
@@ -1307,32 +1813,18 @@ void TracePluginImpl::register_sql_statement(TraceSQLStatement* statement)
 	if (!sql_length)
 		return;
 
-	if (config.include_filter.hasData() || config.exclude_filter.hasData())
-	{
-		const char* sqlUtf8 = statement->getTextUTF8();
-		size_t utf8_length = strlen(sqlUtf8);
+	if (config.include_filter.hasData())
+		need_statement = include_matcher->matches(sql, sql_length);
 
-		if (config.include_filter.hasData())
-		{
-			include_matcher->reset();
-			include_matcher->process((const UCHAR*) sqlUtf8, utf8_length);
-			need_statement = include_matcher->result();
-		}
-
-		if (need_statement && config.exclude_filter.hasData())
-		{
-			exclude_matcher->reset();
-			exclude_matcher->process((const UCHAR*) sqlUtf8, utf8_length);
-			need_statement = !exclude_matcher->result();
-		}
-	}
+	if (need_statement && config.exclude_filter.hasData())
+		need_statement = !exclude_matcher->matches(sql, sql_length);
 
 	if (need_statement)
 	{
-		stmt_data.description = FB_NEW(*getDefaultMemoryPool()) string(*getDefaultMemoryPool());
+		stmt_data.description = FB_NEW_POOL(*getDefaultMemoryPool()) string(*getDefaultMemoryPool());
 
 		if (stmt_data.id) {
-			stmt_data.description->printf(NEWLINE "Statement %d:", stmt_data.id);
+			stmt_data.description->printf(NEWLINE "Statement %" SQUADFORMAT":", stmt_data.id);
 		}
 
 		string temp(*getDefaultMemoryPool());
@@ -1352,20 +1844,7 @@ void TracePluginImpl::register_sql_statement(TraceSQLStatement* statement)
 		}
 		*stmt_data.description += temp;
 
-		const char* access_path = config.print_plan ? statement->getPlan() : NULL;
-		if (access_path && *access_path)
-		{
-			const size_t access_path_length = strlen(access_path);
-			temp.printf(NEWLINE
-				"^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-				"%.*s" NEWLINE, access_path_length, access_path);
-
-			*stmt_data.description += temp;
-		}
-		else
-		{
-			*stmt_data.description += NEWLINE;
-		}
+		*stmt_data.description += getPlan(statement);
 	}
 	else
 	{
@@ -1374,13 +1853,13 @@ void TracePluginImpl::register_sql_statement(TraceSQLStatement* statement)
 
 	// Remember statement
 	{
-		WriteLockGuard lock(statementsLock);
+		WriteLockGuard lock(statementsLock, FB_FUNCTION);
 		statements.add(stmt_data);
 	}
 }
 
-void TracePluginImpl::log_event_dsql_prepare(TraceDatabaseConnection* connection,
-		TraceTransaction* transaction, TraceSQLStatement* statement,
+void TracePluginImpl::log_event_dsql_prepare(ITraceDatabaseConnection* connection,
+		ITraceTransaction* transaction, ITraceSQLStatement* statement,
 		ntrace_counter_t time_millis, ntrace_result_t req_result)
 {
 	if (config.log_statement_prepare)
@@ -1388,13 +1867,13 @@ void TracePluginImpl::log_event_dsql_prepare(TraceDatabaseConnection* connection
 		const char* event_type;
 		switch (req_result)
 		{
-			case res_successful:
+			case ITracePlugin::RESULT_SUCCESS:
 				event_type = "PREPARE_STATEMENT";
 				break;
-			case res_failed:
+			case ITracePlugin::RESULT_FAILED:
 				event_type = "FAILED PREPARE_STATEMENT";
 				break;
-			case res_unauthorized:
+			case ITracePlugin::RESULT_UNAUTHORIZED:
 				event_type = "UNAUTHORIZED PREPARE_STATEMENT";
 				break;
 			default:
@@ -1406,8 +1885,8 @@ void TracePluginImpl::log_event_dsql_prepare(TraceDatabaseConnection* connection
 	}
 }
 
-void TracePluginImpl::log_event_dsql_free(TraceDatabaseConnection* connection,
-		TraceSQLStatement* statement, unsigned short option)
+void TracePluginImpl::log_event_dsql_free(ITraceDatabaseConnection* connection,
+		ITraceSQLStatement* statement, unsigned short option)
 {
 	if (config.log_statement_free)
 	{
@@ -1417,7 +1896,7 @@ void TracePluginImpl::log_event_dsql_free(TraceDatabaseConnection* connection,
 
 	if (option == DSQL_drop)
 	{
-		WriteLockGuard lock(statementsLock);
+		WriteLockGuard lock(statementsLock, FB_FUNCTION);
 		if (statements.locate(statement->getStmtID()))
 		{
 			delete statements.current().description;
@@ -1426,10 +1905,12 @@ void TracePluginImpl::log_event_dsql_free(TraceDatabaseConnection* connection,
 	}
 }
 
-void TracePluginImpl::log_event_dsql_execute(TraceDatabaseConnection* connection,
-		TraceTransaction* transaction, TraceSQLStatement* statement,
-		bool started, ntrace_result_t req_result)
+void TracePluginImpl::log_event_dsql_execute(ITraceDatabaseConnection* connection,
+		ITraceTransaction* transaction, ITraceSQLStatement* statement,
+		bool started, unsigned number, ntrace_result_t req_result)
 {
+	const bool restart = started && (number > 0);
+
 	if (started && !config.log_statement_start)
 		return;
 
@@ -1441,7 +1922,14 @@ void TracePluginImpl::log_event_dsql_execute(TraceDatabaseConnection* connection
 	if (config.time_threshold && info && info->pin_time < config.time_threshold)
 		return;
 
-	TraceParams *params = statement->getInputs();
+	if (restart)
+	{
+		string temp;
+		temp.printf("Restarted %d time(s)" NEWLINE, number);
+		record.append(temp);
+	}
+
+	ITraceParams *params = statement->getInputs();
 	if (params && params->getCount())
 	{
 		record.append(NEWLINE);
@@ -1459,35 +1947,40 @@ void TracePluginImpl::log_event_dsql_execute(TraceDatabaseConnection* connection
 		appendTableCounts(info);
 	}
 
-	const char* event_type;
+	string event_type;
+
+	if (restart)
+		event_type = "EXECUTE_STATEMENT_RESTART";
+	else if (started)
+		event_type = "EXECUTE_STATEMENT_START";
+	else
+		event_type = "EXECUTE_STATEMENT_FINISH";
+
 	switch (req_result)
 	{
-		case res_successful:
-			event_type = started ? "EXECUTE_STATEMENT_START" :
-								   "EXECUTE_STATEMENT_FINISH";
+		case ITracePlugin::RESULT_SUCCESS:
 			break;
-		case res_failed:
-			event_type = started ? "FAILED EXECUTE_STATEMENT_START" :
-								   "FAILED EXECUTE_STATEMENT_FINISH";
+		case ITracePlugin::RESULT_FAILED:
+			event_type.insert(0, "FAILED ");
 			break;
-		case res_unauthorized:
-			event_type = started ? "UNAUTHORIZED EXECUTE_STATEMENT_START" :
-								   "UNAUTHORIZED EXECUTE_STATEMENT_FINISH";
+		case ITracePlugin::RESULT_UNAUTHORIZED:
+			event_type.insert(0, "UNAUTHORIZED ");
 			break;
 		default:
 			event_type = "Unknown event at executing statement";
 			break;
 	}
-	logRecordStmt(event_type, connection, transaction, statement, true);
+
+	logRecordStmt(event_type.c_str(), connection, transaction, statement, true);
 }
 
 
-void TracePluginImpl::register_blr_statement(TraceBLRStatement* statement)
+void TracePluginImpl::register_blr_statement(ITraceBLRStatement* statement)
 {
-	string* description = FB_NEW(*getDefaultMemoryPool()) string(*getDefaultMemoryPool());
+	string* description = FB_NEW_POOL(*getDefaultMemoryPool()) string(*getDefaultMemoryPool());
 
 	if (statement->getStmtID()) {
-		description->printf(NEWLINE "Statement %d:" NEWLINE, statement->getStmtID());
+		description->printf(NEWLINE "Statement %" SQUADFORMAT":" NEWLINE, statement->getStmtID());
 	}
 
 	if (config.print_blr)
@@ -1518,19 +2011,19 @@ void TracePluginImpl::register_blr_statement(TraceBLRStatement* statement)
 	StatementData stmt_data;
 	stmt_data.id = statement->getStmtID();
 	stmt_data.description = description;
-	WriteLockGuard lock(statementsLock);
+	WriteLockGuard lock(statementsLock, FB_FUNCTION);
 
 	statements.add(stmt_data);
 }
 
-void TracePluginImpl::log_event_blr_compile(TraceDatabaseConnection* connection,
-	TraceTransaction* transaction, TraceBLRStatement* statement,
+void TracePluginImpl::log_event_blr_compile(ITraceDatabaseConnection* connection,
+	ITraceTransaction* transaction, ITraceBLRStatement* statement,
 	ntrace_counter_t time_millis, ntrace_result_t req_result)
 {
 	if (config.log_blr_requests)
 	{
 		{
-			ReadLockGuard lock(statementsLock);
+			ReadLockGuard lock(statementsLock, FB_FUNCTION);
 			StatementsTree::Accessor accessor(&statements);
 			if (accessor.locate(statement->getStmtID()))
 				return;
@@ -1539,13 +2032,13 @@ void TracePluginImpl::log_event_blr_compile(TraceDatabaseConnection* connection,
 		const char* event_type;
 		switch (req_result)
 		{
-			case res_successful:
+			case ITracePlugin::RESULT_SUCCESS:
 				event_type = "COMPILE_BLR";
 				break;
-			case res_failed:
+			case ITracePlugin::RESULT_FAILED:
 				event_type = "FAILED COMPILE_BLR";
 				break;
-			case res_unauthorized:
+			case ITracePlugin::RESULT_UNAUTHORIZED:
 				event_type = "UNAUTHORIZED COMPILE_BLR";
 				break;
 			default:
@@ -1559,8 +2052,8 @@ void TracePluginImpl::log_event_blr_compile(TraceDatabaseConnection* connection,
 	}
 }
 
-void TracePluginImpl::log_event_blr_execute(TraceDatabaseConnection* connection,
-		TraceTransaction* transaction, TraceBLRStatement* statement,
+void TracePluginImpl::log_event_blr_execute(ITraceDatabaseConnection* connection,
+		ITraceTransaction* transaction, ITraceBLRStatement* statement,
 		ntrace_result_t req_result)
 {
 	PerformanceInfo *info = statement->getPerf();
@@ -1577,13 +2070,13 @@ void TracePluginImpl::log_event_blr_execute(TraceDatabaseConnection* connection,
 		const char* event_type;
 		switch (req_result)
 		{
-			case res_successful:
+			case ITracePlugin::RESULT_SUCCESS:
 				event_type = "EXECUTE_BLR";
 				break;
-			case res_failed:
+			case ITracePlugin::RESULT_FAILED:
 				event_type = "FAILED EXECUTE_BLR";
 				break;
-			case res_unauthorized:
+			case ITracePlugin::RESULT_UNAUTHORIZED:
 				event_type = "UNAUTHORIZED EXECUTE_BLR";
 				break;
 			default:
@@ -1595,8 +2088,8 @@ void TracePluginImpl::log_event_blr_execute(TraceDatabaseConnection* connection,
 	}
 }
 
-void TracePluginImpl::log_event_dyn_execute(TraceDatabaseConnection* connection,
-	TraceTransaction* transaction, TraceDYNRequest* request,
+void TracePluginImpl::log_event_dyn_execute(ITraceDatabaseConnection* connection,
+	ITraceTransaction* transaction, ITraceDYNRequest* request,
 	ntrace_counter_t time_millis, ntrace_result_t req_result)
 {
 	if (config.log_dyn_requests)
@@ -1632,13 +2125,13 @@ void TracePluginImpl::log_event_dyn_execute(TraceDatabaseConnection* connection,
 		const char* event_type;
 		switch (req_result)
 		{
-			case res_successful:
+			case ITracePlugin::RESULT_SUCCESS:
 				event_type = "EXECUTE_DYN";
 				break;
-			case res_failed:
+			case ITracePlugin::RESULT_FAILED:
 				event_type = "FAILED EXECUTE_DYN";
 				break;
-			case res_unauthorized:
+			case ITracePlugin::RESULT_UNAUTHORIZED:
 				event_type = "UNAUTHORIZED EXECUTE_DYN";
 				break;
 			default:
@@ -1654,7 +2147,7 @@ void TracePluginImpl::log_event_dyn_execute(TraceDatabaseConnection* connection,
 }
 
 
-void TracePluginImpl::register_service(TraceServiceConnection* service)
+void TracePluginImpl::register_service(ITraceServiceConnection* service)
 {
 	string username(service->getUserName());
 	string remote_address;
@@ -1673,8 +2166,20 @@ void TracePluginImpl::register_service(TraceServiceConnection* service)
 			remote_address = "internal";
 	}
 
-	if (username.isEmpty())
-		username = "<user is unknown>";
+
+	if (!username.isEmpty())
+	{
+		const char* role = service->getRoleName();
+		if (role && *role)
+		{
+			username.append(":");
+			username.append(role);
+		}
+	}
+	else
+	{
+		username = "<unknown_user>";
+	}
 
 	tmp = service->getRemoteProcessName();
 	if (tmp && *tmp) {
@@ -1683,7 +2188,7 @@ void TracePluginImpl::register_service(TraceServiceConnection* service)
 
 	ServiceData serv_data;
 	serv_data.id = service->getServiceID();
-	serv_data.description = FB_NEW(*getDefaultMemoryPool()) string(*getDefaultMemoryPool());
+	serv_data.description = FB_NEW_POOL(*getDefaultMemoryPool()) string(*getDefaultMemoryPool());
 	serv_data.description->printf("\t%s, (Service %p, %s, %s%s)" NEWLINE,
 		service->getServiceMgr(), serv_data.id,
 		username.c_str(), remote_address.c_str(), remote_process.c_str());
@@ -1691,17 +2196,17 @@ void TracePluginImpl::register_service(TraceServiceConnection* service)
 
 	// Adjust the list of services
 	{
-		WriteLockGuard lock(servicesLock);
+		WriteLockGuard lock(servicesLock, FB_FUNCTION);
 		services.add(serv_data);
 	}
 }
 
 
-bool TracePluginImpl::checkServiceFilter(TraceServiceConnection* service, bool started)
+bool TracePluginImpl::checkServiceFilter(ITraceServiceConnection* service, bool started)
 {
-	ReadLockGuard lock(servicesLock);
+	ReadLockGuard lock(servicesLock, FB_FUNCTION);
 
-	ServiceData *data = NULL;
+	ServiceData* data = NULL;
 	ServicesTree::Accessor accessor(&services);
 	if (accessor.locate(service->getServiceID()))
 		data = &accessor.current();
@@ -1710,22 +2215,14 @@ bool TracePluginImpl::checkServiceFilter(TraceServiceConnection* service, bool s
 		return data->enabled;
 
 	const char* svcName = service->getServiceName();
-	const int svcNameLen = strlen(svcName);
+	const int svcNameLen = static_cast<int>(strlen(svcName));
 	bool enabled = true;
 
 	if (config.include_filter.hasData())
-	{
-		include_matcher->reset();
-		include_matcher->process((const UCHAR*) svcName, svcNameLen);
-		enabled = include_matcher->result();
-	}
+		enabled = include_matcher->matches(svcName, svcNameLen);
 
 	if (enabled && config.exclude_filter.hasData())
-	{
-		exclude_matcher->reset();
-		exclude_matcher->process((const UCHAR*) svcName, svcNameLen);
-		enabled = !exclude_matcher->result();
-	}
+		enabled = !exclude_matcher->matches(svcName, svcNameLen);
 
 	if (data) {
 		data->enabled = enabled;
@@ -1735,7 +2232,7 @@ bool TracePluginImpl::checkServiceFilter(TraceServiceConnection* service, bool s
 }
 
 
-void TracePluginImpl::log_event_service_attach(TraceServiceConnection* service,
+void TracePluginImpl::log_event_service_attach(ITraceServiceConnection* service,
 	ntrace_result_t att_result)
 {
 	if (config.log_services)
@@ -1743,13 +2240,13 @@ void TracePluginImpl::log_event_service_attach(TraceServiceConnection* service,
 		const char* event_type;
 		switch (att_result)
 		{
-			case res_successful:
+			case ITracePlugin::RESULT_SUCCESS:
 				event_type = "ATTACH_SERVICE";
 				break;
-			case res_failed:
+			case ITracePlugin::RESULT_FAILED:
 				event_type = "FAILED ATTACH_SERVICE";
 				break;
-			case res_unauthorized:
+			case ITracePlugin::RESULT_UNAUTHORIZED:
 				event_type = "UNAUTHORIZED ATTACH_SERVICE";
 				break;
 			default:
@@ -1761,7 +2258,7 @@ void TracePluginImpl::log_event_service_attach(TraceServiceConnection* service,
 	}
 }
 
-void TracePluginImpl::log_event_service_start(TraceServiceConnection* service,
+void TracePluginImpl::log_event_service_start(ITraceServiceConnection* service,
 	size_t switches_length, const char* switches, ntrace_result_t start_result)
 {
 	if (config.log_services)
@@ -1772,13 +2269,13 @@ void TracePluginImpl::log_event_service_start(TraceServiceConnection* service,
 		const char* event_type;
 		switch (start_result)
 		{
-			case res_successful:
+			case ITracePlugin::RESULT_SUCCESS:
 				event_type = "START_SERVICE";
 				break;
-			case res_failed:
+			case ITracePlugin::RESULT_FAILED:
 				event_type = "FAILED START_SERVICE";
 				break;
-			case res_unauthorized:
+			case ITracePlugin::RESULT_UNAUTHORIZED:
 				event_type = "UNAUTHORIZED START_SERVICE";
 				break;
 			default:
@@ -1797,7 +2294,7 @@ void TracePluginImpl::log_event_service_start(TraceServiceConnection* service,
 			sw.printf("\t%.*s" NEWLINE, switches_length, switches);
 
 			// Delete terminator symbols from service switches
-			for (size_t i = 0; i < sw.length(); ++i)
+			for (FB_SIZE_T i = 0; i < sw.length(); ++i)
 			{
 				if (sw[i] == Firebird::SVC_TRMNTR)
 				{
@@ -1813,7 +2310,7 @@ void TracePluginImpl::log_event_service_start(TraceServiceConnection* service,
 	}
 }
 
-void TracePluginImpl::log_event_service_query(TraceServiceConnection* service,
+void TracePluginImpl::log_event_service_query(ITraceServiceConnection* service,
 	size_t send_item_length, const ntrace_byte_t* send_items,
 	size_t recv_item_length, const ntrace_byte_t* recv_items,
 	ntrace_result_t query_result)
@@ -1833,13 +2330,13 @@ void TracePluginImpl::log_event_service_query(TraceServiceConnection* service,
 		const char* event_type;
 		switch (query_result)
 		{
-			case res_successful:
+			case ITracePlugin::RESULT_SUCCESS:
 				event_type = "QUERY_SERVICE";
 				break;
-			case res_failed:
+			case ITracePlugin::RESULT_FAILED:
 				event_type = "FAILED QUERY_SERVICE";
 				break;
-			case res_unauthorized:
+			case ITracePlugin::RESULT_UNAUTHORIZED:
 				event_type = "UNAUTHORIZED QUERY_SERVICE";
 				break;
 			default:
@@ -1851,20 +2348,21 @@ void TracePluginImpl::log_event_service_query(TraceServiceConnection* service,
 	}
 }
 
-void TracePluginImpl::log_event_service_detach(TraceServiceConnection* service, ntrace_result_t detach_result)
+void TracePluginImpl::log_event_service_detach(ITraceServiceConnection* service,
+	ntrace_result_t detach_result)
 {
 	if (config.log_services)
 	{
 		const char* event_type;
 		switch (detach_result)
 		{
-			case res_successful:
+			case ITracePlugin::RESULT_SUCCESS:
 				event_type = "DETACH_SERVICE";
 				break;
-			case res_failed:
+			case ITracePlugin::RESULT_FAILED:
 				event_type = "FAILED DETACH_SERVICE";
 				break;
-			case res_unauthorized:
+			case ITracePlugin::RESULT_UNAUTHORIZED:
 				event_type = "UNAUTHORIZED DETACH_SERVICE";
 				break;
 			default:
@@ -1876,7 +2374,7 @@ void TracePluginImpl::log_event_service_detach(TraceServiceConnection* service, 
 
 	// Get rid of connection descriptor
 	{
-		WriteLockGuard lock(servicesLock);
+		WriteLockGuard lock(servicesLock, FB_FUNCTION);
 		if (services.locate(service->getServiceID()))
 		{
 			services.current().deallocate_references();
@@ -1885,139 +2383,54 @@ void TracePluginImpl::log_event_service_detach(TraceServiceConnection* service, 
 	}
 }
 
-void TracePluginImpl::log_event_trigger_execute(TraceDatabaseConnection* connection, TraceTransaction* transaction,
-		TraceTrigger* trigger, bool started, ntrace_result_t trig_result)
-{
-	if (!config.log_trigger_start && started)
-		return;
-
-	if (!config.log_trigger_finish && !started)
-		return;
-
-	// Do not log operation if it is below time threshold
-	const PerformanceInfo* info = started ? NULL : trigger->getPerf();
-	if (config.time_threshold && info && info->pin_time < config.time_threshold)
-		return;
-
-	string trgname(trigger->getTriggerName());
-
-	if (trgname.empty())
-		trgname = "<unknown>";
-
-	if ((trigger->getWhich() != trg_all) && trigger->getRelationName())
-	{
-		string relation;
-		relation.printf(" FOR %s", trigger->getRelationName());
-		trgname.append(relation);
-	}
-
-	string action;
-	switch (trigger->getWhich())
-	{
-		case trg_all:
-			action = "ON ";
-			break;
-		case trg_before:
-			action = "BEFORE ";
-			break;
-		case trg_after:
-			action = "AFTER ";
-			break;
-		default:
-			action = "<unknown> ";
-			break;
-	}
-
-	switch (trigger->getAction())
-	{
-		case jrd_req::req_trigger_insert:
-			action.append("INSERT");
-			break;
-		case jrd_req::req_trigger_update:
-			action.append("UPDATE");
-			break;
-		case jrd_req::req_trigger_delete:
-			action.append("DELETE");
-			break;
-		case jrd_req::req_trigger_connect:
-			action.append("CONNECT");
-			break;
-		case jrd_req::req_trigger_disconnect:
-			action.append("DISCONNECT");
-			break;
-		case jrd_req::req_trigger_trans_start:
-			action.append("TRANSACTION_START");
-			break;
-		case jrd_req::req_trigger_trans_commit:
-			action.append("TRANSACTION_COMMIT");
-			break;
-		case jrd_req::req_trigger_trans_rollback:
-			action.append("TRANSACTION_ROLLBACK");
-			break;
-		default:
-			action.append("Unknown trigger action");
-			break;
-	}
-
-	record.printf("\t%s (%s) " NEWLINE, trgname.c_str(), action.c_str());
-
-	if (info)
-	{
-		appendGlobalCounts(info);
-		appendTableCounts(info);
-	}
-
-	const char* event_type;
-	switch (trig_result)
-	{
-		case res_successful:
-			event_type = started ? "EXECUTE_TRIGGER_START" :
-								   "EXECUTE_TRIGGER_FINISH";
-			break;
-		case res_failed:
-			event_type = started ? "FAILED EXECUTE_TRIGGER_START" :
-								   "FAILED EXECUTE_TRIGGER_FINISH";
-			break;
-		case res_unauthorized:
-			event_type = started ? "UNAUTHORIZED EXECUTE_TRIGGER_START" :
-								   "UNAUTHORIZED EXECUTE_TRIGGER_FINISH";
-			break;
-		default:
-			event_type = "Unknown event at executing trigger";
-			break;
-	}
-
-	logRecordTrans(event_type, connection, transaction);
-}
-
-void TracePluginImpl::log_event_error(TraceBaseConnection* connection, TraceStatusVector* status, const char* function)
+void TracePluginImpl::log_event_error(ITraceConnection* connection, ITraceStatusVector* status,
+	const char* function)
 {
 	string event_type;
 	if (config.log_errors && status->hasError())
+	{
+		const ISC_STATUS* errs = status->getStatus()->getErrors();
+
+		if (!include_codes.isEmpty() && !filterStatus(errs, include_codes))
+			return;
+
+		if (!exclude_codes.isEmpty() && filterStatus(errs, exclude_codes))
+			return;
+
 		event_type.printf("ERROR AT %s", function);
+	}
 	else if (config.log_warnings && status->hasWarning())
+	{
+		const ISC_STATUS* warns = status->getStatus()->getWarnings();
+
+		if (!include_codes.isEmpty() && !filterStatus(warns, include_codes))
+			return;
+
+		if (!exclude_codes.isEmpty() && filterStatus(warns, exclude_codes))
+			return;
+
 		event_type.printf("WARNING AT %s", function);
+	}
 	else
 		return;
 
 	logRecordError(event_type.c_str(), connection, status);
 }
 
-
-void TracePluginImpl::log_event_sweep(TraceDatabaseConnection* connection, TraceSweepInfo* sweep, 
+void TracePluginImpl::log_event_sweep(ITraceDatabaseConnection* connection, ITraceSweepInfo* sweep,
 	ntrace_process_state_t sweep_state)
 {
 	if (!config.log_sweep)
 		return;
 
-	if (sweep_state == process_state_started ||
-		sweep_state == process_state_finished) 
+	if (sweep_state == SWEEP_STATE_STARTED ||
+		sweep_state == SWEEP_STATE_FINISHED)
 	{
 		record.printf("\nTransaction counters:\n"
-			"\tOldest interesting %10ld\n"
-			"\tOldest active      %10ld\n"
-			"\tOldest snapshot    %10ld\n"
-			"\tNext transaction   %10ld\n",
+			"\tOldest interesting %10" SQUADFORMAT"\n"
+			"\tOldest active      %10" SQUADFORMAT"\n"
+			"\tOldest snapshot    %10" SQUADFORMAT"\n"
+			"\tNext transaction   %10" SQUADFORMAT"\n",
 			sweep->getOIT(),
 			sweep->getOAT(),
 			sweep->getOST(),
@@ -2035,19 +2448,19 @@ void TracePluginImpl::log_event_sweep(TraceDatabaseConnection* connection, Trace
 	const char* event_type = NULL;
 	switch (sweep_state)
 	{
-	case process_state_started:
+	case SWEEP_STATE_STARTED:
 		event_type = "SWEEP_START";
 		break;
 
-	case process_state_finished:
+	case SWEEP_STATE_FINISHED:
 		event_type = "SWEEP_FINISH";
 		break;
 
-	case process_state_failed:
+	case SWEEP_STATE_FAILED:
 		event_type = "SWEEP_FAILED";
 		break;
 
-	case process_state_progress:
+	case SWEEP_STATE_PROGRESS:
 		event_type = "SWEEP_PROGRESS";
 		break;
 
@@ -2060,54 +2473,37 @@ void TracePluginImpl::log_event_sweep(TraceDatabaseConnection* connection, Trace
 	logRecordConn(event_type, connection);
 }
 
-
 //***************************** PLUGIN INTERFACE ********************************
 
-ntrace_boolean_t TracePluginImpl::ntrace_shutdown(const TracePlugin* tpl_plugin)
-{
-	if (tpl_plugin)
-	{
-		// Kill implementation object
-		delete static_cast<TracePluginImpl*>(tpl_plugin->tpl_object);
-	}
-
-	// Kill plugin structure
-	delete tpl_plugin;
-	return true;
-}
-
-const char* TracePluginImpl::ntrace_get_error(const TracePlugin* /*tpl_plugin*/)
+const char* TracePluginImpl::trace_get_error()
 {
 	return get_error_string();
 }
 
 // Create/close attachment
-ntrace_boolean_t TracePluginImpl::ntrace_event_attach(const TracePlugin* tpl_plugin,
-	TraceDatabaseConnection* connection, ntrace_boolean_t create_db,
-	ntrace_result_t att_result)
+FB_BOOLEAN TracePluginImpl::trace_attach(ITraceDatabaseConnection* connection,
+	FB_BOOLEAN create_db, ntrace_result_t att_result)
 {
 	try
 	{
-		static_cast<TracePluginImpl*>(tpl_plugin->tpl_object)->log_event_attach(connection,
-			create_db, att_result);
+		log_event_attach(connection, create_db, att_result);
 		return true;
 	}
-	catch(const Firebird::Exception& ex)
+	catch (const Firebird::Exception& ex)
 	{
 		marshal_exception(ex);
 		return false;
 	}
 }
 
-ntrace_boolean_t TracePluginImpl::ntrace_event_detach(const TracePlugin* tpl_plugin,
-	TraceDatabaseConnection* connection, ntrace_boolean_t drop_db)
+FB_BOOLEAN TracePluginImpl::trace_detach(ITraceDatabaseConnection* connection, FB_BOOLEAN drop_db)
 {
 	try
 	{
-		static_cast<TracePluginImpl*>(tpl_plugin->tpl_object)->log_event_detach(connection, drop_db);
+		log_event_detach(connection, drop_db);
 		return true;
 	}
-	catch(const Firebird::Exception& ex)
+	catch (const Firebird::Exception& ex)
 	{
 		marshal_exception(ex);
 		return false;
@@ -2115,34 +2511,32 @@ ntrace_boolean_t TracePluginImpl::ntrace_event_detach(const TracePlugin* tpl_plu
 }
 
 // Start/end transaction
-ntrace_boolean_t TracePluginImpl::ntrace_event_transaction_start(const TracePlugin* tpl_plugin,
-	TraceDatabaseConnection* connection, TraceTransaction* transaction,
-	size_t tpb_length, const ntrace_byte_t* tpb, ntrace_result_t tra_result)
+FB_BOOLEAN TracePluginImpl::trace_transaction_start(ITraceDatabaseConnection* connection,
+	ITraceTransaction* transaction, unsigned tpb_length, const ntrace_byte_t* tpb,
+	ntrace_result_t tra_result)
 {
 	try
 	{
-		static_cast<TracePluginImpl*>(tpl_plugin->tpl_object)->log_event_transaction_start(connection,
-			transaction, tpb_length, tpb, tra_result);
+		log_event_transaction_start(connection, transaction, tpb_length, tpb, tra_result);
 		return true;
 	}
-	catch(const Firebird::Exception& ex)
+	catch (const Firebird::Exception& ex)
 	{
 		marshal_exception(ex);
 		return false;
 	}
 }
 
-ntrace_boolean_t TracePluginImpl::ntrace_event_transaction_end(const TracePlugin* tpl_plugin,
-	TraceDatabaseConnection* connection, TraceTransaction* transaction,
-	ntrace_boolean_t commit, ntrace_boolean_t retain_context, ntrace_result_t tra_result)
+FB_BOOLEAN TracePluginImpl::trace_transaction_end(ITraceDatabaseConnection* connection,
+	ITraceTransaction* transaction, FB_BOOLEAN commit, FB_BOOLEAN retain_context,
+	ntrace_result_t tra_result)
 {
 	try
 	{
-		static_cast<TracePluginImpl*>(tpl_plugin->tpl_object)->log_event_transaction_end(connection,
-			transaction, commit, retain_context, tra_result);
+		log_event_transaction_end(connection, transaction, commit, retain_context, tra_result);
 		return true;
 	}
-	catch(const Firebird::Exception& ex)
+	catch (const Firebird::Exception& ex)
 	{
 		marshal_exception(ex);
 		return false;
@@ -2150,17 +2544,31 @@ ntrace_boolean_t TracePluginImpl::ntrace_event_transaction_end(const TracePlugin
 }
 
 // Assignment to context variables
-ntrace_boolean_t TracePluginImpl::ntrace_event_set_context(const struct TracePlugin* tpl_plugin,
-		TraceDatabaseConnection* connection, TraceTransaction* transaction,
-		TraceContextVariable* variable)
+FB_BOOLEAN TracePluginImpl::trace_set_context(ITraceDatabaseConnection* connection,
+	ITraceTransaction* transaction, ITraceContextVariable* variable)
 {
 	try
 	{
-		static_cast<TracePluginImpl*>(tpl_plugin->tpl_object)->log_event_set_context(connection,
-			transaction, variable);
+		log_event_set_context(connection, transaction, variable);
 		return true;
 	}
-	catch(const Firebird::Exception& ex)
+	catch (const Firebird::Exception& ex)
+	{
+		marshal_exception(ex);
+		return false;
+	}
+}
+
+// Stored procedure compiling
+FB_BOOLEAN TracePluginImpl::trace_proc_compile(ITraceDatabaseConnection* connection,
+	ITraceProcedure* procedure, ISC_INT64 time_millis, ntrace_result_t proc_result)
+{
+	try
+	{
+		log_event_proc_compile(connection, procedure, time_millis, proc_result);
+		return true;
+	}
+	catch (const Firebird::Exception& ex)
 	{
 		marshal_exception(ex);
 		return false;
@@ -2168,34 +2576,82 @@ ntrace_boolean_t TracePluginImpl::ntrace_event_set_context(const struct TracePlu
 }
 
 // Stored procedure executing
-ntrace_boolean_t TracePluginImpl::ntrace_event_proc_execute(const struct TracePlugin* tpl_plugin,
-		TraceDatabaseConnection* connection, TraceTransaction* transaction, TraceProcedure* procedure,
-		bool started, ntrace_result_t proc_result)
+FB_BOOLEAN TracePluginImpl::trace_proc_execute(ITraceDatabaseConnection* connection,
+	ITraceTransaction* transaction, ITraceProcedure* procedure,
+	FB_BOOLEAN started, ntrace_result_t proc_result)
 {
 	try
 	{
-		static_cast<TracePluginImpl*>(tpl_plugin->tpl_object)->log_event_proc_execute(connection,
-			transaction, procedure, started, proc_result);
+		log_event_proc_execute(connection, transaction, procedure, started, proc_result);
 		return true;
 	}
-	catch(const Firebird::Exception& ex)
+	catch (const Firebird::Exception& ex)
 	{
 		marshal_exception(ex);
 		return false;
 	}
 }
 
-ntrace_boolean_t TracePluginImpl::ntrace_event_trigger_execute(const TracePlugin* tpl_plugin,
-	TraceDatabaseConnection* connection, TraceTransaction* transaction, TraceTrigger* trigger,
-	bool started, ntrace_result_t trig_result)
+// Stored function compiling
+FB_BOOLEAN TracePluginImpl::trace_func_compile(ITraceDatabaseConnection* connection,
+	ITraceFunction* function, ISC_INT64 time_millis, ntrace_result_t func_result)
 {
 	try
 	{
-		static_cast<TracePluginImpl*>(tpl_plugin->tpl_object)->log_event_trigger_execute(
-			connection, transaction, trigger, started, trig_result);
+		log_event_func_compile(connection, function, time_millis, func_result);
 		return true;
 	}
-	catch(const Firebird::Exception& ex)
+	catch (const Firebird::Exception& ex)
+	{
+		marshal_exception(ex);
+		return false;
+	}
+}
+
+// Stored function executing
+FB_BOOLEAN TracePluginImpl::trace_func_execute(ITraceDatabaseConnection* connection,
+	ITraceTransaction* transaction, ITraceFunction* function,
+	FB_BOOLEAN started, ntrace_result_t func_result)
+{
+	try
+	{
+		log_event_func_execute(connection, transaction, function, started, func_result);
+		return true;
+	}
+	catch (const Firebird::Exception& ex)
+	{
+		marshal_exception(ex);
+		return false;
+	}
+}
+
+// Stored trigger compiling
+FB_BOOLEAN TracePluginImpl::trace_trigger_compile(ITraceDatabaseConnection* connection,
+	ITraceTrigger* trigger, ISC_INT64 time_millis, ntrace_result_t trig_result)
+{
+	try
+	{
+		log_event_trigger_compile(connection, trigger, time_millis, trig_result);
+		return true;
+	}
+	catch (const Firebird::Exception& ex)
+	{
+		marshal_exception(ex);
+		return false;
+	}
+}
+
+// Stored trigger executing
+FB_BOOLEAN TracePluginImpl::trace_trigger_execute(ITraceDatabaseConnection* connection,
+	ITraceTransaction* transaction, ITraceTrigger* trigger,
+	FB_BOOLEAN started, ntrace_result_t trig_result)
+{
+	try
+	{
+		log_event_trigger_execute(connection, transaction, trigger, started, trig_result);
+		return true;
+	}
+	catch (const Firebird::Exception& ex)
 	{
 		marshal_exception(ex);
 		return false;
@@ -2204,50 +2660,63 @@ ntrace_boolean_t TracePluginImpl::ntrace_event_trigger_execute(const TracePlugin
 
 
 // DSQL statement lifecycle
-ntrace_boolean_t TracePluginImpl::ntrace_event_dsql_prepare(const TracePlugin* tpl_plugin,
-	TraceDatabaseConnection* connection, TraceTransaction* transaction,
-	TraceSQLStatement* statement, ntrace_counter_t time_millis, ntrace_result_t req_result)
+FB_BOOLEAN TracePluginImpl::trace_dsql_prepare(ITraceDatabaseConnection* connection,
+	ITraceTransaction* transaction, ITraceSQLStatement* statement, ISC_INT64 time_millis,
+	ntrace_result_t req_result)
 {
 	try
 	{
-		static_cast<TracePluginImpl*>(tpl_plugin->tpl_object)->log_event_dsql_prepare(connection,
-			transaction, statement, time_millis, req_result);
+		log_event_dsql_prepare(connection, transaction, statement, time_millis, req_result);
 		return true;
 	}
-	catch(const Firebird::Exception& ex)
+	catch (const Firebird::Exception& ex)
 	{
 		marshal_exception(ex);
 		return false;
 	}
 }
 
-ntrace_boolean_t TracePluginImpl::ntrace_event_dsql_free(const TracePlugin* tpl_plugin,
-	TraceDatabaseConnection* connection, TraceSQLStatement* statement, unsigned short option)
+FB_BOOLEAN TracePluginImpl::trace_dsql_free(ITraceDatabaseConnection* connection,
+	ITraceSQLStatement* statement, unsigned option)
 {
 	try
 	{
-		static_cast<TracePluginImpl*>(tpl_plugin->tpl_object)->log_event_dsql_free(connection,
-			statement, option);
+		log_event_dsql_free(connection, statement, option);
 		return true;
 	}
-	catch(const Firebird::Exception& ex)
+	catch (const Firebird::Exception& ex)
 	{
 		marshal_exception(ex);
 		return false;
 	}
 }
 
-ntrace_boolean_t TracePluginImpl::ntrace_event_dsql_execute(const TracePlugin* tpl_plugin,
-	TraceDatabaseConnection* connection, TraceTransaction* transaction, TraceSQLStatement* statement,
-	bool started, ntrace_result_t req_result)
+FB_BOOLEAN TracePluginImpl::trace_dsql_execute(ITraceDatabaseConnection* connection,
+	ITraceTransaction* transaction, ITraceSQLStatement* statement,
+	FB_BOOLEAN started, ntrace_result_t req_result)
 {
 	try
 	{
-		static_cast<TracePluginImpl*>(tpl_plugin->tpl_object)->log_event_dsql_execute(
-			connection, transaction, statement, started, req_result);
+		log_event_dsql_execute(connection, transaction, statement, started, 0, req_result);
 		return true;
 	}
-	catch(const Firebird::Exception& ex)
+	catch (const Firebird::Exception& ex)
+	{
+		marshal_exception(ex);
+		return false;
+	}
+}
+
+FB_BOOLEAN TracePluginImpl::trace_dsql_restart(ITraceDatabaseConnection* connection,
+	ITraceTransaction* transaction, ITraceSQLStatement* statement, unsigned number)
+{
+	try
+	{
+		log_event_dsql_execute(connection, transaction, statement, true, number,
+			ITracePlugin::RESULT_SUCCESS);
+		return true;
+	}
+	catch (const Firebird::Exception& ex)
 	{
 		marshal_exception(ex);
 		return false;
@@ -2256,34 +2725,31 @@ ntrace_boolean_t TracePluginImpl::ntrace_event_dsql_execute(const TracePlugin* t
 
 
 // BLR requests
-ntrace_boolean_t TracePluginImpl::ntrace_event_blr_compile(const TracePlugin* tpl_plugin,
-	TraceDatabaseConnection* connection, TraceTransaction* transaction,
-	TraceBLRStatement* statement, ntrace_counter_t time_millis, ntrace_result_t req_result)
+FB_BOOLEAN TracePluginImpl::trace_blr_compile(ITraceDatabaseConnection* connection,
+	ITraceTransaction* transaction, ITraceBLRStatement* statement, ISC_INT64 time_millis,
+	ntrace_result_t req_result)
 {
 	try
 	{
-		static_cast<TracePluginImpl*>(tpl_plugin->tpl_object)->log_event_blr_compile(connection,
-			transaction, statement, time_millis, req_result);
+		log_event_blr_compile(connection, transaction, statement, time_millis, req_result);
 		return true;
 	}
-	catch(const Firebird::Exception& ex)
+	catch (const Firebird::Exception& ex)
 	{
 		marshal_exception(ex);
 		return false;
 	}
 }
 
-ntrace_boolean_t TracePluginImpl::ntrace_event_blr_execute(const TracePlugin* tpl_plugin,
-	TraceDatabaseConnection* connection, TraceTransaction* transaction,
-	TraceBLRStatement* statement, ntrace_result_t req_result)
+FB_BOOLEAN TracePluginImpl::trace_blr_execute(ITraceDatabaseConnection* connection,
+	ITraceTransaction* transaction, ITraceBLRStatement* statement, ntrace_result_t req_result)
 {
 	try
 	{
-		static_cast<TracePluginImpl*>(tpl_plugin->tpl_object)->log_event_blr_execute(connection,
-			transaction, statement, req_result);
+		log_event_blr_execute(connection, transaction, statement, req_result);
 		return true;
 	}
-	catch(const Firebird::Exception& ex)
+	catch (const Firebird::Exception& ex)
 	{
 		marshal_exception(ex);
 		return false;
@@ -2291,17 +2757,16 @@ ntrace_boolean_t TracePluginImpl::ntrace_event_blr_execute(const TracePlugin* tp
 }
 
 // DYN requests
-ntrace_boolean_t TracePluginImpl::ntrace_event_dyn_execute(const TracePlugin* tpl_plugin,
-	TraceDatabaseConnection* connection, TraceTransaction* transaction,
-	TraceDYNRequest* request, ntrace_counter_t time_millis, ntrace_result_t req_result)
+FB_BOOLEAN TracePluginImpl::trace_dyn_execute(ITraceDatabaseConnection* connection,
+	ITraceTransaction* transaction, ITraceDYNRequest* request, ISC_INT64 time_millis,
+	ntrace_result_t req_result)
 {
 	try
 	{
-		static_cast<TracePluginImpl*>(tpl_plugin->tpl_object)->log_event_dyn_execute(connection,
-			transaction, request, time_millis, req_result);
+		log_event_dyn_execute(connection, transaction, request, time_millis, req_result);
 		return true;
 	}
-	catch(const Firebird::Exception& ex)
+	catch (const Firebird::Exception& ex)
 	{
 		marshal_exception(ex);
 		return false;
@@ -2309,52 +2774,47 @@ ntrace_boolean_t TracePluginImpl::ntrace_event_dyn_execute(const TracePlugin* tp
 }
 
 // Using the services
-ntrace_boolean_t TracePluginImpl::ntrace_event_service_attach(const TracePlugin* tpl_plugin,
-	TraceServiceConnection* service, ntrace_result_t att_result)
+FB_BOOLEAN TracePluginImpl::trace_service_attach(ITraceServiceConnection* service,
+	ntrace_result_t att_result)
 {
 	try
 	{
-		static_cast<TracePluginImpl*>(tpl_plugin->tpl_object)->log_event_service_attach(
-			service, att_result);
+		log_event_service_attach(service, att_result);
 		return true;
 	}
-	catch(const Firebird::Exception& ex)
+	catch (const Firebird::Exception& ex)
 	{
 		marshal_exception(ex);
 		return false;
 	}
 }
 
-ntrace_boolean_t TracePluginImpl::ntrace_event_service_start(const TracePlugin* tpl_plugin,
-	TraceServiceConnection* service, size_t switches_length, const char* switches,
-	ntrace_result_t start_result)
+FB_BOOLEAN TracePluginImpl::trace_service_start(ITraceServiceConnection* service,
+	unsigned switches_length, const char* switches, ntrace_result_t start_result)
 {
 	try
 	{
-		static_cast<TracePluginImpl*>(tpl_plugin->tpl_object)->log_event_service_start(
-			service, switches_length, switches, start_result);
+		log_event_service_start(service, switches_length, switches, start_result);
 		return true;
 	}
-	catch(const Firebird::Exception& ex)
+	catch (const Firebird::Exception& ex)
 	{
 		marshal_exception(ex);
 		return false;
 	}
 }
 
-ntrace_boolean_t TracePluginImpl::ntrace_event_service_query(const TracePlugin* tpl_plugin,
-	TraceServiceConnection* service, size_t send_item_length,
-	const ntrace_byte_t* send_items, size_t recv_item_length,
+FB_BOOLEAN TracePluginImpl::trace_service_query(ITraceServiceConnection* service,
+	unsigned send_item_length, const ntrace_byte_t* send_items, unsigned recv_item_length,
 	const ntrace_byte_t* recv_items, ntrace_result_t query_result)
 {
 	try
 	{
-		static_cast<TracePluginImpl*>(tpl_plugin->tpl_object)->log_event_service_query(
-			service, send_item_length, send_items, recv_item_length, recv_items,
-			query_result);
+		log_event_service_query(service, send_item_length, send_items,
+								recv_item_length, recv_items, query_result);
 		return true;
 	}
-	catch(const Firebird::Exception& ex)
+	catch (const Firebird::Exception& ex)
 	{
 		marshal_exception(ex);
 		return false;
@@ -2362,48 +2822,45 @@ ntrace_boolean_t TracePluginImpl::ntrace_event_service_query(const TracePlugin* 
 
 }
 
-ntrace_boolean_t TracePluginImpl::ntrace_event_service_detach(const TracePlugin* tpl_plugin,
-	TraceServiceConnection* service, ntrace_result_t detach_result)
+FB_BOOLEAN TracePluginImpl::trace_service_detach(ITraceServiceConnection* service,
+	ntrace_result_t detach_result)
 {
 	try
 	{
-		static_cast<TracePluginImpl*>(tpl_plugin->tpl_object)->log_event_service_detach(
-			service, detach_result);
+		log_event_service_detach(service, detach_result);
 		return true;
 	}
-	catch(const Firebird::Exception& ex)
+	catch (const Firebird::Exception& ex)
 	{
 		marshal_exception(ex);
 		return false;
 	}
 }
 
-ntrace_boolean_t TracePluginImpl::ntrace_event_error(const TracePlugin* tpl_plugin,
-	TraceBaseConnection* connection, TraceStatusVector* status, const char* function)
+FB_BOOLEAN TracePluginImpl::trace_event_error(ITraceConnection* connection,
+	ITraceStatusVector* status, const char* function)
 {
 	try
 	{
-		static_cast<TracePluginImpl*>(tpl_plugin->tpl_object)->log_event_error(
-			connection, status, function);
+		log_event_error(connection, status, function);
 		return true;
 	}
-	catch(const Firebird::Exception& ex)
+	catch (const Firebird::Exception& ex)
 	{
 		marshal_exception(ex);
 		return false;
 	}
 }
 
-ntrace_boolean_t TracePluginImpl::ntrace_event_sweep(const struct TracePlugin* tpl_plugin,
-	TraceDatabaseConnection* connection, TraceSweepInfo* sweep, ntrace_process_state_t sweep_state)
+FB_BOOLEAN TracePluginImpl::trace_event_sweep(ITraceDatabaseConnection* connection,
+	ITraceSweepInfo* sweep, ntrace_process_state_t sweep_state)
 {
 	try
 	{
-		static_cast<TracePluginImpl*>(tpl_plugin->tpl_object)->log_event_sweep(
-			connection, sweep, sweep_state);
+		log_event_sweep(connection, sweep, sweep_state);
 		return true;
 	}
-	catch(const Firebird::Exception& ex)
+	catch (const Firebird::Exception& ex)
 	{
 		marshal_exception(ex);
 		return false;

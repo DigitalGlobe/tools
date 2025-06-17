@@ -32,39 +32,40 @@ namespace Jrd {
 	class TraceTransactionEnd;
 }
 
-bool	TRA_active_transactions(Jrd::thread_db*, Jrd::Database*);
-void	TRA_cleanup(Jrd::thread_db*);
-void	TRA_commit(Jrd::thread_db*, Jrd::jrd_tra*, const bool);
-void	TRA_extend_tip(Jrd::thread_db*, ULONG /*, struct Jrd::win* */);
-int		TRA_fetch_state(Jrd::thread_db*, SLONG);
-void	TRA_get_inventory(Jrd::thread_db*, UCHAR*, ULONG, ULONG);
-int		TRA_get_state(Jrd::thread_db*, SLONG);
+bool	TRA_active_transactions(Jrd::thread_db* tdbb, Jrd::Database*);
+bool	TRA_cleanup(Jrd::thread_db*);
+void	TRA_commit(Jrd::thread_db* tdbb, Jrd::jrd_tra*, const bool);
+void	TRA_extend_tip(Jrd::thread_db* tdbb, ULONG /*, struct Jrd::win* */);
+int		TRA_fetch_state(Jrd::thread_db* tdbb, TraNumber number);
+void	TRA_get_inventory(Jrd::thread_db* tdbb, UCHAR*, TraNumber base, TraNumber top);
+int		TRA_get_state(Jrd::thread_db* tdbb, TraNumber number);
 
 #ifdef SUPERSERVER_V2
-void	TRA_header_write(Jrd::thread_db*, Jrd::Database*, SLONG);
+void	TRA_header_write(Jrd::thread_db* tdbb, Jrd::Database* dbb, TraNumber number);
 #endif
-void	TRA_init(Jrd::Database*);
-void	TRA_invalidate(Jrd::Database*, ULONG);
-void	TRA_link_cursor(Jrd::jrd_tra*, Jrd::dsql_req*);
-void	TRA_unlink_cursor(Jrd::jrd_tra*, Jrd::dsql_req*);
-void	TRA_post_resources(Jrd::thread_db*, Jrd::jrd_tra*, Jrd::ResourceList&);
-bool	TRA_pc_active(Jrd::thread_db*, SLONG);
-bool	TRA_precommited(Jrd::thread_db*, SLONG, SLONG);
-void	TRA_prepare(Jrd::thread_db*, Jrd::jrd_tra*, USHORT, const UCHAR*);
-Jrd::jrd_tra*	TRA_reconnect(Jrd::thread_db*, const UCHAR*, USHORT);
-void	TRA_release_transaction(Jrd::thread_db*, Jrd::jrd_tra*, Jrd::TraceTransactionEnd*);
-void	TRA_rollback(Jrd::thread_db*, Jrd::jrd_tra*, const bool, const bool);
-void	TRA_set_state(Jrd::thread_db*, Jrd::jrd_tra*, SLONG, SSHORT);
-int		TRA_snapshot_state(Jrd::thread_db*, const Jrd::jrd_tra*, SLONG);
-Jrd::jrd_tra*	TRA_start(Jrd::thread_db*, ULONG flags, SSHORT lock_timeout, Jrd::jrd_tra* outer = NULL);
-Jrd::jrd_tra*	TRA_start(Jrd::thread_db*, int, const UCHAR*, Jrd::jrd_tra* outer = NULL);
-int		TRA_state(const UCHAR*, ULONG, ULONG);
-void	TRA_sweep(Jrd::thread_db*);
+void	TRA_init(Jrd::Attachment*);
+void	TRA_invalidate(Jrd::thread_db* tdbb, ULONG);
+void	TRA_link_cursor(Jrd::jrd_tra*, Jrd::DsqlCursor*);
+void	TRA_unlink_cursor(Jrd::jrd_tra*, Jrd::DsqlCursor*);
+void	TRA_post_resources(Jrd::thread_db* tdbb, Jrd::jrd_tra*, Jrd::ResourceList&);
+bool	TRA_is_active(Jrd::thread_db*, TraNumber);
+void	TRA_prepare(Jrd::thread_db* tdbb, Jrd::jrd_tra*, USHORT, const UCHAR*);
+Jrd::jrd_tra*	TRA_reconnect(Jrd::thread_db* tdbb, const UCHAR*, USHORT);
+void	TRA_release_transaction(Jrd::thread_db* tdbb, Jrd::jrd_tra*, Jrd::TraceTransactionEnd*);
+void	TRA_rollback(Jrd::thread_db* tdbb, Jrd::jrd_tra*, const bool, const bool);
+void	TRA_set_state(Jrd::thread_db* tdbb, Jrd::jrd_tra* transaction, TraNumber number, int state);
+int		TRA_snapshot_state(Jrd::thread_db* tdbb, const Jrd::jrd_tra* trans, TraNumber number, CommitNumber* snapshot = NULL);
+Jrd::jrd_tra*	TRA_start(Jrd::thread_db* tdbb, ULONG flags, SSHORT lock_timeout, Jrd::jrd_tra* outer = NULL);
+Jrd::jrd_tra*	TRA_start(Jrd::thread_db* tdbb, int, const UCHAR*, Jrd::jrd_tra* outer = NULL);
+int		TRA_state(const UCHAR*, TraNumber oldest, TraNumber number);
+void	TRA_sweep(Jrd::thread_db* tdbb);
 void	TRA_update_counters(Jrd::thread_db*, Jrd::Database*);
-int		TRA_wait(Jrd::thread_db*, Jrd::jrd_tra*, SLONG, Jrd::jrd_tra::wait_t);
-void	TRA_attach_request(Jrd::jrd_tra* transaction, Jrd::jrd_req* request);
-void	TRA_detach_request(Jrd::jrd_req* request);
-void	TRA_sweep_shutdown();
+int		TRA_wait(Jrd::thread_db* tdbb, Jrd::jrd_tra* trans, TraNumber number, Jrd::jrd_tra::wait_t wait);
+void	TRA_attach_request(Jrd::jrd_tra* transaction, Jrd::Request* request);
+void	TRA_detach_request(Jrd::Request* request);
+void	TRA_setup_request_snapshot(Jrd::thread_db*, Jrd::Request* request);
+void	TRA_release_request_snapshot(Jrd::thread_db*, Jrd::Request* request);
+Jrd::Request* TRA_get_prior_request(Jrd::thread_db*);
+void	TRA_shutdown_sweep();
 
 #endif // JRD_TRA_PROTO_H
-

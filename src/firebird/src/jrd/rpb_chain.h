@@ -23,7 +23,7 @@
 #ifndef JRD_RPB_CHAIN_H
 #define JRD_RPB_CHAIN_H
 
-#include "../jrd/gdsassert.h"
+#include "../common/gdsassert.h"
 #include <string.h>
 
 #include "../common/classes/array.h"
@@ -53,7 +53,7 @@ public:
 			   i1.level > i2.level;
 	}
 
-	static inline const traRpbListElement& generate(const void* /*sender*/, const traRpbListElement& item)
+	static inline const traRpbListElement& generate(const traRpbListElement& item)
 	{
 		return item;
 	}

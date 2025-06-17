@@ -26,17 +26,16 @@
  */
 
 #include "firebird.h"
+
 #include "../../common/classes/TempFile.h"
 #include "../../common/StatusArg.h"
 #include "../../common/utils_proto.h"
-#include "../../jrd/common.h"
 #include "../../jrd/err_proto.h"
-#include "../../jrd/isc_proto.h"
-#include "../../jrd/isc_s_proto.h"
+#include "../../common/isc_proto.h"
+#include "../../common/isc_s_proto.h"
 #include "../../jrd/jrd.h"
-#include "../../jrd/os/path_utils.h"
-#include "../../jrd/os/config_root.h"
-#include "../../jrd/os/os_utils.h"
+#include "../../common/os/path_utils.h"
+#include "../../common/os/os_utils.h"
 #include "../../jrd/trace/TraceConfigStorage.h"
 
 #ifdef HAVE_UNISTD_H
@@ -55,11 +54,17 @@
 #define O_BINARY 0
 #endif
 
+#ifdef WIN_NT
+#include <process.h>
+#define getpid _getpid
+#endif
+
+
 using namespace Firebird;
 
 namespace Jrd {
 
-static const int TOUCH_INTERVAL = 60 * 60;		// in seconds, one hour should be enough
+static const FB_UINT64 TOUCH_INTERVAL = 60 * 60;	// in seconds, one hour should be enough
 
 void checkFileError(const char* filename, const char* operation, ISC_STATUS iscError)
 {
@@ -79,17 +84,14 @@ void checkFileError(const char* filename, const char* operation, ISC_STATUS iscE
 #endif
 }
 
-ConfigStorage::ConfigStorage() :
-	m_base(NULL),
-	m_recursive(0),
-	m_mutexTID(0),
-	m_cfg_file(-1),
-	m_dirty(false),
-	m_shutdown(true),
-	m_touchSemaphore(FB_NEW(*getDefaultMemoryPool()) AnyRef<Semaphore>),
-	m_touchSemRef(*m_touchSemaphore)
+ConfigStorage::ConfigStorage()
+	: m_timer(FB_NEW TouchFile),
+	  m_sharedMemory(NULL),
+	  m_filename(getPool()),
+	  m_recursive(0),
+	  m_mutexTID(0),
+	  m_dirty(false)
 {
-	PathName filename;
 #ifdef WIN_NT
 	DWORD sesID = 0;
 
@@ -100,583 +102,909 @@ ConfigStorage::ConfigStorage() :
 	PFnProcessIdToSessionId pfnProcessIdToSessionId =
 		(PFnProcessIdToSessionId) GetProcAddress(hmodKernel32, "ProcessIdToSessionId");
 
-	if (fb_utils::isGlobalKernelPrefix() ||
+	if (fb_utils::privateNameSpaceReady() ||
+		fb_utils::isGlobalKernelPrefix() ||
 		!pfnProcessIdToSessionId ||
 		pfnProcessIdToSessionId(GetCurrentProcessId(), &sesID) == 0 ||
 		sesID == 0)
 	{
-		filename.printf(TRACE_FILE); // TODO: it must be per engine instance
+		m_filename.printf(TRACE_FILE); // TODO: it must be per engine instance
 	}
 	else
 	{
-		filename.printf("%s.%u", TRACE_FILE, sesID);
+		m_filename.printf("%s.%u", TRACE_FILE, sesID);
 	}
 #else
-	filename.printf(TRACE_FILE); // TODO: it must be per engine instance
+	m_filename.printf(TRACE_FILE); // TODO: it must be per engine instance
 #endif
 
-	ISC_STATUS_ARRAY status;
-	(void)	// errors are checked indirectly using m_base
-		ISC_map_file(status, filename.c_str(), initShMem, this, sizeof(ShMemHeader), &m_handle);
-	if (!m_base)
-	{
-		iscLogStatus("ConfigStorage: Cannot initialize the shared memory region", status);
-		status_exception::raise(status);
-	}
-
-	fb_assert(m_base->version == 1 || m_base->version == 2);
+	initSharedFile();
 
 	StorageGuard guard(this);
-	checkFile();
-	++m_base->cnt_uses;
+	checkAudit();
 
-	if (m_base->version == 2) 
-	{
-		if (gds__thread_start(touchThread, (void*) this, THREAD_medium, 0, NULL))
-			gds__log("Trace facility: can't start touch thread");
-		else
-		{
-			m_shutdown = false;
-			m_touchStart.tryEnter(3);
-		}
-	}
+	TEXT fullName[MAXPATHLEN];
+	iscPrefixLock(fullName, m_filename.c_str(), false);
+	m_timer->start(fullName);	// do we still need a timer ?
+
+	++(m_sharedMemory->getHeader()->cnt_uses);
 }
 
 ConfigStorage::~ConfigStorage()
 {
-	shutdown();
-
-	::close(m_cfg_file);
-	m_cfg_file = -1;
-
-	{
-		StorageGuard guard(this);
-		--m_base->cnt_uses;
-		if (m_base->cnt_uses == 0)
-		{
-			unlink(m_base->cfg_file_name);
-			memset(m_base->cfg_file_name, 0, sizeof(m_base->cfg_file_name));
-
-			ISC_remove_map_file(&m_handle);
-		}
-	}
-
-	ISC_mutex_fini(m_mutex);
-	ISC_STATUS_ARRAY status;
-	ISC_unmap_file(status, &m_handle);
+	fb_assert(!m_timer);
 }
 
+void ConfigStorage::initSharedFile()
+{
+	try
+	{
+		m_sharedMemory.reset(FB_NEW_POOL(getPool())
+			SharedMemory<TraceCSHeader>(m_filename.c_str(), TraceCSHeader::TRACE_STORAGE_MIN_SIZE, this));
+
+		checkHeader(m_sharedMemory->getHeader());
+	}
+	catch (const Exception& ex)
+	{
+		iscLogException("ConfigStorage: Cannot initialize the shared memory region", ex);
+		throw;
+	}
+}
 
 void ConfigStorage::shutdown()
 {
-	if (!m_shutdown)
-	{
-		m_shutdown = true;
-		m_touchSemaphore->Semaphore::release();
-		m_touchStop.tryEnter(3);
+	if (!m_timer)
+		return;
 
-		// allow touch thread to finish its execution completely, including
-		// CRT and system cleanup code
-		THD_sleep(10);
+	MutexLockGuard localGuard(m_localMutex, FB_FUNCTION);
+
+	m_timer->stop();
+	m_timer = NULL;
+
+	{
+		StorageGuard guard(this);
+		fb_assert(m_sharedMemory->getHeader()->cnt_uses != 0);
+		--(m_sharedMemory->getHeader()->cnt_uses);
+		if (m_sharedMemory->getHeader()->cnt_uses == 0)
+		{
+			m_sharedMemory->removeMapFile();
+		}
 	}
+
+	m_sharedMemory = NULL;
 }
 
-void ConfigStorage::checkMutex(const TEXT* string, int state)
+void ConfigStorage::mutexBug(int state, const char* string)
 {
-	if (state)
-	{
-		TEXT msg[BUFFER_TINY];
+	TEXT msg[BUFFER_TINY];
 
-		sprintf(msg, "ConfigStorage: mutex %s error, status = %d", string, state);
-		fb_utils::logAndDie(msg);
-	}
+	// While string is kept below length 70, all is well.
+	sprintf(msg, "ConfigStorage: mutex %s error, status = %d", string, state);
+	fb_utils::logAndDie(msg);
 }
 
-void ConfigStorage::initShMem(void* arg, sh_mem* shmemData, bool initialize)
+bool ConfigStorage::initialize(SharedMemoryBase* sm, bool init)
 {
-	ConfigStorage* const storage = (ConfigStorage*) arg;
-	fb_assert(storage);
-
-#ifdef WIN_NT
-	checkMutex("init", ISC_mutex_init(&storage->m_winMutex, shmemData->sh_mem_name));
-	storage->m_mutex = &storage->m_winMutex;
-#endif
-
-	ShMemHeader* const header = (ShMemHeader*) shmemData->sh_mem_address;
-	storage->m_base = header;
+	TraceCSHeader* header = reinterpret_cast<TraceCSHeader*>(sm->sh_mem_header);
 
 	// Initialize the shared data header
-	if (initialize)
+	if (init)
 	{
-		header->version = 2;
+		initHeader(header);
+
 		header->change_number = 0;
 		header->session_number = 1;
 		header->cnt_uses = 0;
-		header->touch_time = 0;
-		memset(header->cfg_file_name, 0, sizeof(header->cfg_file_name));
-#ifndef WIN_NT
-		checkMutex("init", ISC_mutex_init(shmemData, &header->mutex, &storage->m_mutex));
+
+		header->mem_max_size = TraceCSHeader::TRACE_STORAGE_MAX_SIZE;
+		header->mem_allocated = sm->sh_mem_length_mapped;
+		header->mem_used = sizeof(TraceCSHeader);
+		header->mem_offset = sizeof(TraceCSHeader);
+		header->slots_free = 0;
+		header->slots_cnt = 0;
+		memset(header->slots, 0, sizeof(TraceCSHeader::slots));
 	}
-	else
-	{
-		checkMutex("map", ISC_map_mutex(shmemData, &header->mutex, &storage->m_mutex));
-#endif
-	}
+
+	return true;
 }
 
-void ConfigStorage::checkFile()
+void ConfigStorage::checkAudit()
 {
-	if (m_cfg_file >= 0)
+	if (m_sharedMemory->getHeader()->change_number != 0)
 		return;
 
-	char* cfg_file_name = m_base->cfg_file_name;
-
-	if (!(*cfg_file_name))
-	{
-		fb_assert(m_base->cnt_uses == 0);
-
-		char dir[MAXPATHLEN];
-		iscPrefixLock(dir, "", true);
-
-		PathName filename = TempFile::create("fb_trace_", dir);
-		filename.copyTo(cfg_file_name, sizeof(m_base->cfg_file_name));
-		m_cfg_file = os_utils::openCreateSharedFile(cfg_file_name, O_BINARY);
-	}
-	else
-	{
-		m_cfg_file = ::open(cfg_file_name, O_RDWR | O_BINARY);
-	}
-
-	if (m_cfg_file < 0) {
-		checkFileError(cfg_file_name, "open", isc_io_open_err);
-	}
+	// Prevent second attempt to create audit session if first one was failed.
+	// This also prevents multiply logging of the same error.
+	setDirty();
 
 	// put default (audit) trace file contents into storage
-	if (m_base->change_number == 0)
+	AutoPtr<FILE> cfgFile;
+
+	try
 	{
-		FILE* cfgFile = NULL;
+		PathName configFileName(Config::getAuditTraceConfigFile());
 
-		try
+		// remove quotes around path if present
+		configFileName.alltrim(" '\"");
+
+		if (configFileName.empty())
+			return;
+
+		if (PathUtils::isRelative(configFileName))
 		{
-			PathName configFileName(Config::getAuditTraceConfigFile());
-
-			// remove quotes around path if present
-			{ // scope
-				const size_t pathLen = configFileName.length();
-				if (pathLen > 1 && configFileName[0] == '"' &&
-					configFileName[pathLen - 1] == '"')
-				{
-					configFileName.erase(0, 1);
-					configFileName.erase(pathLen - 2, 1);
-				}
-			}
-
-			if (configFileName.empty())
-				return;
-
-			if (PathUtils::isRelative(configFileName))
-			{
-				PathName root(Config::getRootDirectory());
-				PathUtils::ensureSeparator(root);
-				configFileName.insert(0, root);
-			}
-
-			cfgFile = fopen(configFileName.c_str(), "rb");
-			if (!cfgFile) {
-				checkFileError(configFileName.c_str(), "fopen", isc_io_open_err);
-			}
-
-			TraceSession session(*getDefaultMemoryPool());
-
-			fseek(cfgFile, 0, SEEK_END);
-			const long len = ftell(cfgFile);
-			if (len)
-			{
-				fseek(cfgFile, 0, SEEK_SET);
-				char* p = session.ses_config.getBuffer(len + 1);
-
-				if (fread(p, 1, len, cfgFile) != size_t(len)) {
-					checkFileError(configFileName.c_str(), "fread", isc_io_read_err);
-				}
-				p[len] = 0;
-			}
-			else {
-				gds__log("Audit configuration file \"%s\" is empty", configFileName.c_str());
-			}
-
-			session.ses_user = SYSDBA_USER_NAME;
-			session.ses_name = "Firebird Audit";
-			session.ses_flags = trs_admin | trs_system;
-
-			addSession(session);
+			PathName root(Config::getRootDirectory());
+			PathUtils::ensureSeparator(root);
+			configFileName.insert(0, root);
 		}
-		catch(const Exception& ex)
+
+		cfgFile = os_utils::fopen(configFileName.c_str(), "rb");
+		if (!cfgFile) {
+			checkFileError(configFileName.c_str(), "fopen", isc_io_open_err);
+		}
+
+		TraceSession session(*getDefaultMemoryPool());
+
+		fseek(cfgFile, 0, SEEK_END);
+		const long len = ftell(cfgFile);
+		if (len)
 		{
-			ISC_STATUS_ARRAY temp;
-			ex.stuff_exception(temp);
-			iscLogStatus("Cannot open audit configuration file", temp);
+			fseek(cfgFile, 0, SEEK_SET);
+			char* p = session.ses_config.getBuffer(len + 1);
+
+			if (fread(p, 1, len, cfgFile) != size_t(len)) {
+				checkFileError(configFileName.c_str(), "fread", isc_io_read_err);
+			}
+			p[len] = 0;
+		}
+		else
+		{
+			gds__log("Audit configuration file \"%s\" is empty", configFileName.c_str());
+			return;
 		}
 
-		if (cfgFile) {
-			fclose(cfgFile);
-		}
+		session.ses_user = DBA_USER_NAME;
+		session.ses_name = "Firebird Audit";
+		session.ses_flags = trs_admin | trs_system;
+
+		addSession(session);
 	}
-
-	touchFile();
-}
-
-
-void ConfigStorage::touchFile()
-{
-	os_utils::touchFile(m_base->cfg_file_name);
-}
-
-
-THREAD_ENTRY_DECLARE ConfigStorage::touchThread(THREAD_ENTRY_PARAM arg)
-{
-	ConfigStorage* storage = (ConfigStorage*) arg;
-	storage->touchThreadFunc();
-	return 0;
-}
-
-
-void ConfigStorage::touchThreadFunc()
-{
-	{ // "semaphore" scope
-		AnyRef<Semaphore>* semaphore = m_touchSemaphore;
-		Reference semRef(*semaphore);
-
-		m_touchStart.release();
-
-		int delay = TOUCH_INTERVAL / 2;
-		while (!semaphore->tryEnter(delay))
-		{
-			StorageGuard guard(this);
-
-			time_t now;
-			time(&now);
-
-			if (!m_base->touch_time || m_base->touch_time <= now)
-			{
-				touchFile();
-				m_base->touch_time = now + TOUCH_INTERVAL;
-			}
-
-			delay = difftime(m_base->touch_time, now);
-		}
-	} // scope
-	m_touchStop.release();
+	catch (const Exception& ex)
+	{
+		iscLogException("Cannot open audit configuration file", ex);
+	}
 }
 
 
 void ConfigStorage::acquire()
 {
+	if (!m_sharedMemory)
+		(Arg::Gds(isc_random) << "Trace shared memory can not be accessed").raise();
+
 	fb_assert(m_recursive >= 0);
-	const FB_THREAD_ID currTID = getThreadId();
+	const ThreadId currTID = getThreadId();
 
 	if (m_mutexTID == currTID)
-		m_recursive++;
-	else
 	{
-		checkMutex("lock", ISC_mutex_lock(m_mutex));
+		m_recursive++;
+		return;
+	}
 
-		fb_assert(m_recursive == 0);
-		m_recursive = 1;
+	m_sharedMemory->mutexLock();
 
-		fb_assert(m_mutexTID == 0);
-		m_mutexTID = currTID;
+	fb_assert(m_recursive == 0);
+	m_recursive = 1;
+
+	fb_assert(m_mutexTID == 0);
+	m_mutexTID = currTID;
+
+	while (m_sharedMemory->getHeader()->isDeleted())
+	{
+		// Shared memory must be empty at this point
+		fb_assert(m_sharedMemory->getHeader()->cnt_uses == 0);
+
+		m_sharedMemory->mutexUnlock();
+		m_sharedMemory.reset();
+
+		Thread::yield();
+
+		initSharedFile();
+		m_sharedMemory->mutexLock();
+	}
+
+	TraceCSHeader* header = m_sharedMemory->getHeader();
+	if (header->mem_allocated > m_sharedMemory->sh_mem_length_mapped)
+	{
+#ifdef HAVE_OBJECT_MAP
+		FbLocalStatus status;
+		if (!m_sharedMemory->remapFile(&status, header->mem_allocated, false))
+		{
+			release();
+			status_exception::raise(&status);
+		}
+#else
+		release();
+		fb_assert(false);
+		(Arg::Gds(isc_random) << Arg::Str("Trace storage memory remapping error")).raise();
+#endif
 	}
 }
 
 void ConfigStorage::release()
 {
-	fb_assert(m_recursive > 0);
+	fb_assert(m_sharedMemory);
 
-	const FB_THREAD_ID currTID = getThreadId();
-	fb_assert(m_mutexTID == currTID);
+	fb_assert(m_recursive > 0);
+	fb_assert(m_mutexTID == getThreadId());
 
 	if (--m_recursive == 0)
 	{
 		checkDirty();
 		m_mutexTID = 0;
-		checkMutex("unlock", ISC_mutex_unlock(m_mutex));
+		m_sharedMemory->mutexUnlock();
 	}
+}
+
+ULONG ConfigStorage::allocSlot(ULONG slotSize)
+{
+	fb_assert(validate());
+
+	TraceCSHeader* header = m_sharedMemory->getHeader();
+
+	if (header->slots_free == 0 && header->slots_cnt == TraceCSHeader::TRACE_STORAGE_MAX_SLOTS)
+		(Arg::Gds(isc_random) << Arg::Str("No enough free slots")).raise();
+
+	// try to extend shared memory, if needed
+	if (header->mem_used + slotSize > header->mem_allocated)
+	{
+		if (header->mem_allocated >= header->mem_max_size)
+			(Arg::Gds(isc_random) << Arg::Str("No enough memory for new trase session")).raise();
+
+		ULONG newAlloc = FB_ALIGN(header->mem_used + slotSize, header->mem_allocated);
+		newAlloc = MIN(newAlloc, header->mem_max_size);
+
+#ifdef HAVE_OBJECT_MAP
+		FbLocalStatus status;
+		if (!m_sharedMemory->remapFile(&status, newAlloc, true))
+			status_exception::raise(&status);
+#else
+		(Arg::Gds(isc_random) << Arg::Str("Can not remap trace storage memory")).raise();
+#endif
+		header = m_sharedMemory->getHeader();
+		header->mem_allocated = m_sharedMemory->sh_mem_length_mapped;
+
+		fb_assert(validate());
+	}
+
+	fb_assert(header->mem_used + slotSize <= header->mem_allocated);
+	setDirty();
+
+	bool reuseFreeSlot = false;
+	if (header->slots_free)
+	{
+		// find free slot with best fit size
+		ULONG idxFound = 0;
+		ULONG lenFound = 0;
+		for (ULONG i = 0; i < header->slots_cnt; i++)
+		{
+			TraceCSHeader::Slot* slot = header->slots + i;
+			if (!slot->used && slot->size >= slotSize &&
+				(!lenFound || lenFound > slot->size))
+			{
+				lenFound = slot->size;
+				idxFound = i;
+			}
+		}
+
+		if (lenFound)
+		{
+			header->slots_free--;
+			reuseFreeSlot = true;
+
+			// move free slot to the top position
+			if (idxFound != header->slots_cnt - 1)
+			{
+				TraceCSHeader::Slot tmp = header->slots[idxFound];
+
+				const FB_SIZE_T mv = sizeof(TraceCSHeader::Slot) * (header->slots_cnt - idxFound - 1);
+				memmove(&header->slots[idxFound], &header->slots[idxFound + 1], mv);
+
+				header->slots[header->slots_cnt - 1] = tmp;
+			}
+		}
+	}
+
+	if (!reuseFreeSlot)
+	{
+		if (header->mem_offset + slotSize > header->mem_allocated || header->slots_free)
+		{
+			compact();
+
+			fb_assert(validate());
+			fb_assert(header->mem_offset + slotSize <= header->mem_allocated);
+		}
+
+		header->slots_cnt++;
+	}
+
+	TraceCSHeader::Slot* slot = &header->slots[header->slots_cnt - 1];
+
+	if (!reuseFreeSlot)
+	{
+		fb_assert(header->mem_offset + slotSize < header->mem_allocated);
+
+		slot->size = slotSize;
+		slot->offset = header->mem_offset;
+		header->mem_offset += slotSize;
+	}
+	header->mem_used += slotSize;
+	slot->used = slotSize;
+
+	slot->ses_id = header->session_number++;
+	slot->ses_flags = 0;
+	slot->ses_pid = getpid();
+
+	fb_assert(validate());
+	return header->slots_cnt - 1;
+}
+
+struct SlotByOffset
+{
+	ULONG index;		// slot index
+	ULONG offset;		// initial data ofset
+
+	static ULONG generate(const SlotByOffset& i) { return i.offset; }
+};
+
+typedef SortedArray<SlotByOffset, EmptyStorage<SlotByOffset>, ULONG, SlotByOffset>
+			SlotsByOffsetArray;
+
+
+void ConfigStorage::compact()
+{
+	SlotsByOffsetArray data(*getDefaultMemoryPool());
+
+	TraceCSHeader* header = m_sharedMemory->getHeader();
+
+	const ULONG pid = getpid();
+
+	ULONG check_used, check_size;
+	check_used = check_size = sizeof(TraceCSHeader);
+
+	// Track undeleted slots from dead processes
+	Firebird::SortedArray<ULONG, InlineStorage<ULONG, 16>> deadProcesses;
+
+	// collect used slots, sort them by offset
+	for (TraceCSHeader::Slot* slot = header->slots; slot < header->slots + header->slots_cnt; slot++)
+	{
+		if (slot->used && slot->ses_pid != pid &&
+			((slot->ses_flags & trs_system) == 0) && // System sessions are shared for multiple connections so they may live without the original process
+			!ISC_check_process_existence(slot->ses_pid))
+		{
+			// A SUPER server may shut down, but its Storage shared memory continues to live due to an embedded user session.
+			// The process might allocate multiple slots, so count them carefully.
+			deadProcesses.add(slot->ses_pid);
+
+			markDeleted(slot);
+		}
+
+		SlotByOffset item;
+		item.index = slot - header->slots;
+		item.offset = slot->offset;
+
+		check_used += slot->used;
+		check_size += slot->size;
+		data.add(item);
+	}
+
+	// Process that created storages disappeared, count it out
+	fb_assert(header->cnt_uses > deadProcesses.getCount());
+	header->cnt_uses -= deadProcesses.getCount();
+	deadProcesses.clear();
+
+	fb_assert(check_used == header->mem_used);
+	fb_assert(check_size == header->mem_offset);
+
+	// remove unused space between sessions data
+	ULONG destOffset = sizeof(TraceCSHeader);
+	for (SlotByOffset* item = data.begin(); item < data.end(); item++)
+	{
+		TraceCSHeader::Slot* slot = header->slots + item->index;
+		if (slot->used == 0)
+		{
+			slot->size = 0;
+			continue;
+		}
+
+		fb_assert(slot->offset >= destOffset);
+
+		if (slot->offset > destOffset)
+		{
+			char* dst = reinterpret_cast<char*>(header) + destOffset;
+			const char* src = reinterpret_cast<const char*>(header) + slot->offset;
+			memmove(dst, src, slot->used);
+
+			slot->offset = destOffset;
+		}
+		slot->size = slot->used;
+		destOffset += slot->used;
+	}
+
+	header->mem_offset = destOffset;
+
+	// remove unused slots
+	if (header->slots_free)
+	{
+		TraceCSHeader::Slot* dst, *src, *last;
+		dst = src = header->slots;
+		last = header->slots + header->slots_cnt;
+		while (src < last)
+		{
+			if (src->used && !dst->used)
+			{
+				memcpy(dst, src, sizeof(TraceCSHeader::Slot));
+				src->used = 0;
+			}
+			src++;
+
+			while (dst->used && dst < src)
+				dst++;
+
+			fb_assert(dst == src || !dst->used && dst < src);
+		}
+
+		fb_assert(dst == last || !dst->used && dst < last);
+		fb_assert(dst - header->slots == header->slots_cnt - header->slots_free);
+
+		header->slots_free = 0;
+		header->slots_cnt = dst - header->slots;
+	}
+}
+
+bool ConfigStorage::validate()
+{
+	TraceCSHeader* header = m_sharedMemory->getHeader();
+
+	if (!header)
+		return true;
+
+	if (header->mem_max_size != TraceCSHeader::TRACE_STORAGE_MAX_SIZE)
+		return false;
+
+	if (header->mem_allocated > header->mem_max_size)
+		return false;
+
+	if (header->mem_allocated < TraceCSHeader::TRACE_STORAGE_MIN_SIZE)
+		return false;
+
+	if (header->mem_offset < sizeof(TraceCSHeader))
+		return false;
+
+	if (header->mem_offset > header->mem_allocated)
+		return false;
+
+	if (header->mem_used < sizeof(TraceCSHeader))
+		return false;
+
+	if (header->mem_used > header->mem_offset)
+		return false;
+
+	if (header->slots_cnt > TraceCSHeader::TRACE_STORAGE_MAX_SLOTS)
+		return false;
+
+	if (header->slots_free > header->slots_cnt)
+		return false;
+
+	ULONG check_used, check_size, check_free, prev_id;
+	check_used = check_size = sizeof(TraceCSHeader);
+	check_free = prev_id = 0;
+
+	SlotsByOffsetArray data(*getDefaultMemoryPool());
+
+	TraceCSHeader::Slot* slot;
+	for (slot = header->slots; slot < header->slots + header->slots_cnt; slot++)
+	{
+		if (slot->offset < sizeof(TraceCSHeader))
+			return false;
+
+		if (slot->offset + slot->size > header->mem_offset)
+			return false;
+
+		if (slot->used > slot->size)
+			return false;
+
+		if (slot->ses_id > header->session_number)
+			return false;
+
+		if (prev_id >= slot->ses_id)
+			return false;
+
+		prev_id = slot->ses_id;
+		check_used += slot->used;
+		check_size += slot->size;
+		if (!slot->used)
+			check_free++;
+
+		SlotByOffset item;
+		item.index = slot - header->slots;
+		item.offset = slot->offset;
+		data.add(item);
+	};
+
+	if (check_used != header->mem_used)
+		return false;
+
+	if (check_size != header->mem_offset)
+		return false;
+
+	if (check_free != header->slots_free)
+		return false;
+
+	ULONG check_offset = sizeof(TraceCSHeader);
+	for (SlotByOffset* item = data.begin(); item < data.end(); item++)
+	{
+		slot = header->slots + item->index;
+		if (slot->offset != check_offset)
+			return false;
+
+		check_offset += slot->size;
+	}
+
+	return true;
+}
+
+
+ULONG ConfigStorage::getSessionSize(const TraceSession& session)
+{
+	ULONG ret = 1; // tagEnd
+	const ULONG sz = 1 + sizeof(ULONG);		// sizeof tag + sizeof len
+
+	ULONG len = session.ses_name.length();
+	if (len)
+		ret += sz + len;
+
+	if ((len = session.ses_auth.getCount()))
+		ret += sz + len;
+
+	if ((len = session.ses_user.getCount()))
+		ret += sz + len;
+
+	if ((len = session.ses_role.length()))
+		ret += sz + len;
+
+	if ((len = session.ses_config.length()))
+		ret += sz + len;
+
+	if ((len = sizeof(session.ses_start)))
+		ret += sz + len;
+
+	if ((len = session.ses_logfile.length()))
+		ret += sz + len;
+
+	return ret;
+}
+
+bool ConfigStorage::findSession(ULONG sesId, ULONG& idx)
+{
+	TraceCSHeader* header = m_sharedMemory->getHeader();
+
+	ULONG hi = header->slots_cnt, lo = 0;
+	while (hi > lo)
+	{
+		const ULONG temp = (hi + lo) >> 1;
+		if (sesId > header->slots[temp].ses_id)
+			lo = temp + 1;
+		else
+			hi = temp;
+	}
+	idx = lo;
+	return (hi != header->slots_cnt) && (header->slots[lo].ses_id <= sesId);
 }
 
 void ConfigStorage::addSession(TraceSession& session)
 {
+	const ULONG size = getSessionSize(session);
+	const ULONG idx = allocSlot(size);
+
+	TraceCSHeader* header = m_sharedMemory->getHeader();
+	TraceCSHeader::Slot* slot = &header->slots[idx];
+
 	setDirty();
-	session.ses_id = m_base->session_number++;
+
+	// setup some session fields
+	session.ses_id = slot->ses_id;
 	session.ses_flags |= trs_active;
+	slot->ses_flags = session.ses_flags;
 	time(&session.ses_start);
 
-	const long pos1 = lseek(m_cfg_file, 0, SEEK_END);
-	if (pos1 < 0)
-	{
-		const char* fn = m_base->cfg_file_name;
-		ERR_post(Arg::Gds(isc_io_error) << Arg::Str("lseek") << Arg::Str(fn) <<
-			Arg::Gds(isc_io_read_err) << SYS_ERR(errno));
-	}
+	char* p = reinterpret_cast<char*> (header) + slot->offset;
+	Writer writer(p, slot->size);
 
-	putItem(tagID, sizeof(session.ses_id), &session.ses_id);
 	if (!session.ses_name.empty()) {
-		putItem(tagName, session.ses_name.length(), session.ses_name.c_str());
+		writer.write(tagName, session.ses_name.length(), session.ses_name.c_str());
 	}
-	putItem(tagUserName, session.ses_user.length(), session.ses_user.c_str());
-	putItem(tagFlags, sizeof(session.ses_flags), &session.ses_flags);
-	putItem(tagConfig, session.ses_config.length(), session.ses_config.c_str());
-	putItem(tagStartTS, sizeof(session.ses_start), &session.ses_start);
+	if (session.ses_auth.hasData()) {
+		writer.write(tagAuthBlock, session.ses_auth.getCount(), session.ses_auth.begin());
+	}
+	if (!session.ses_user.empty()) {
+		writer.write(tagUserName, session.ses_user.length(), session.ses_user.c_str());
+	}
+	if (session.ses_role.hasData()) {
+		writer.write(tagRole, session.ses_role.length(), session.ses_role.c_str());
+	}
+	if (!session.ses_config.empty()) {
+		writer.write(tagConfig, session.ses_config.length(), session.ses_config.c_str());
+	}
+	writer.write(tagStartTS, sizeof(session.ses_start), &session.ses_start);
 	if (!session.ses_logfile.empty()) {
-		putItem(tagLogFile, session.ses_logfile.length(), session.ses_logfile.c_str());
+		writer.write(tagLogFile, session.ses_logfile.length(), session.ses_logfile.c_str());
 	}
-	putItem(tagEnd, 0, NULL);
-
-	// const long pos2 = lseek(m_cfg_file, 0, SEEK_END);
-	// m_base->used_space += pos2 - pos1;
+	writer.write(tagEnd, 0, NULL);
 }
 
-bool ConfigStorage::getNextSession(TraceSession& session)
+bool ConfigStorage::getSession(Firebird::TraceSession& session, GET_FLAGS getFlag)
 {
-	ITEM tag = tagID;
-	ULONG len;
+	ULONG idx;
+	if (!findSession(session.ses_id, idx))
+		return false;
+
+	TraceCSHeader* header = m_sharedMemory->getHeader();
+	TraceCSHeader::Slot* slot = &header->slots[idx];
+
+	if (slot->ses_id != session.ses_id || !slot->used)
+		return false;
+
+	return readSession(slot, session, getFlag);
+}
+
+bool ConfigStorage::getNextSession(TraceSession& session, GET_FLAGS getFlag, ULONG& nextIdx)
+{
+	TraceCSHeader* header = m_sharedMemory->getHeader();
+
+	while (nextIdx < header->slots_cnt)
+	{
+		TraceCSHeader::Slot* slot = header->slots + nextIdx;
+		nextIdx++;
+
+		if (slot->used)
+			return readSession(slot, session, getFlag);
+	}
+	return false;
+}
+
+bool ConfigStorage::readSession(TraceCSHeader::Slot* slot, TraceSession& session, GET_FLAGS getFlag)
+{
+	const ULONG getMask[3] =
+	{
+		MAX_ULONG,				// ALL
+		0,						// FLAGS
+		(1 << tagAuthBlock)	|
+		(1 << tagUserName) |
+		(1 << tagRole)			// AUTH
+	};
+
+	TraceCSHeader* header = m_sharedMemory->getHeader();
+
 	session.clear();
+	session.ses_id = slot->ses_id;
+	session.ses_flags = slot->ses_flags;
+
+	if (getFlag == FLAGS)
+		return true;
+
+	char* p = reinterpret_cast<char*> (header) + slot->offset;
+	Reader reader(p, slot->size);
 
 	while (true)
 	{
-		if (!getItemLength(tag, len))
+		ITEM tag;
+		ULONG len;
+
+		void* p = NULL;
+		const void* data = reader.read(tag, len);
+
+		if (!data)
 			return false;
 
 		if (tag == tagEnd)
-		{
-			if (session.ses_id != 0)
-				return true;
+			return true;
 
+		const ULONG tagMask = (1 << tag);
+		if (!(tagMask & getMask[getFlag]))
 			continue;
-		}
-
-		void* p = NULL;
 
 		switch (tag)
 		{
-			case tagID:
-				fb_assert(len == sizeof(session.ses_id));
-				p = &session.ses_id;
-				break;
-
 			case tagName:
-				if (session.ses_id)
-					p = session.ses_name.getBuffer(len);
+				p = session.ses_name.getBuffer(len);
 				break;
 
 			case tagUserName:
-				if (session.ses_id)
-					p = session.ses_user.getBuffer(len);
-				break;
-
-			case tagFlags:
-				fb_assert(len == sizeof(session.ses_flags));
-				if (session.ses_id)
-					p = &session.ses_flags;
+				p = session.ses_user.getBuffer(len);
 				break;
 
 			case tagConfig:
-				if (session.ses_id)
-					p = session.ses_config.getBuffer(len);
+				p = session.ses_config.getBuffer(len);
 				break;
 
 			case tagStartTS:
 				fb_assert(len == sizeof(session.ses_start));
-				if (session.ses_id)
-					p = &session.ses_start;
+				p = &session.ses_start;
 				break;
 
 			case tagLogFile:
-				if (session.ses_id)
-					p = session.ses_logfile.getBuffer(len);
+				p = session.ses_logfile.getBuffer(len);
+				break;
+
+			case tagAuthBlock:
+				p = session.ses_auth.getBuffer(len);
+				break;
+
+			case tagRole:
+				p = session.ses_role.getBuffer(len);
 				break;
 
 			default:
 				fb_assert(false);
+				return false;
 		}
 
 		if (p)
-		{
-			if (::read(m_cfg_file, p, len) != len)
-				checkFileError(m_base->cfg_file_name, "read", isc_io_read_err);
-		}
-		else
-		{
-			if (lseek(m_cfg_file, len, SEEK_CUR) < 0)
-				checkFileError(m_base->cfg_file_name, "lseek", isc_io_read_err);
-		}
+			memcpy(p, data, len);
 	}
 
-	return true;
+	return false;
 }
 
 void ConfigStorage::removeSession(ULONG id)
 {
-	ITEM tag = tagID;
-	ULONG len;
+	ULONG idx;
+	if (!findSession(id, idx))
+		return;
 
-	restart();
-	while (true)
+	TraceCSHeader* header = m_sharedMemory->getHeader();
+	TraceCSHeader::Slot* slot = &header->slots[idx];
+
+	if (slot->ses_id != id)
+		return;
+
+	fb_assert(validate());
+	markDeleted(slot);
+	fb_assert(validate());
+}
+
+void ConfigStorage::markDeleted(TraceCSHeader::Slot* slot)
+{
+	if (!slot->used)
+		return;
+
+	TraceCSHeader* header = m_sharedMemory->getHeader();
+	setDirty();
+
+	header->slots_free++;
+	header->mem_used -= slot->used;
+
+	slot->used = 0;
+}
+
+void ConfigStorage::updateFlags(TraceSession& session)
+{
+	ULONG idx;
+	if (!findSession(session.ses_id, idx))
+		return;
+
+	TraceCSHeader* header = m_sharedMemory->getHeader();
+	TraceCSHeader::Slot* slot = &header->slots[idx];
+
+	if (slot->ses_id != session.ses_id)
+		return;
+
+	setDirty();
+	slot->ses_flags = session.ses_flags;
+}
+
+bool ConfigStorage::Accessor::getNext(TraceSession& session, GET_FLAGS getFlag)
+{
+	if (m_guard)
+		return m_storage->getNextSession(session, getFlag, m_nextIdx);
+
+	StorageGuard guard(m_storage);
+
+	// Restore position, if required: find index of slot with session ID greater than m_sesId.
+	if (m_change_number != m_storage->getChangeNumber())
 	{
-		if (!getItemLength(tag, len))
-			return;
+		if (m_storage->findSession(m_sesId, m_nextIdx))
+			m_nextIdx++;
 
-		if (tag == tagID)
-		{
-			ULONG currID;
-			fb_assert(len == sizeof(currID));
-
-			bool err = (::read(m_cfg_file, &currID, len) != len);
-			if (!err && currID == id)
-			{
-				setDirty();
-
-				currID = 0;
-				// Do not delete this temporary signed var, otherwise we get
-				// warning C4146: unary minus operator applied to unsigned type, result still unsigned
-				// but we need a negative offset here.
-				const long local_len = len;
-				if (lseek(m_cfg_file, -local_len, SEEK_CUR) < 0)
-					checkFileError(m_base->cfg_file_name, "lseek", isc_io_read_err);
-
-				if (write(m_cfg_file, &currID, len) != len)
-					checkFileError(m_base->cfg_file_name, "write", isc_io_write_err);
-
-				break;
-			}
-		}
-		else
-		{
-			if (lseek(m_cfg_file, len, SEEK_CUR) < 0)
-				checkFileError(m_base->cfg_file_name, "lseek", isc_io_read_err);
-		}
+		m_change_number = m_storage->getChangeNumber();
 	}
-}
 
-
-void ConfigStorage::restart()
-{
-	checkDirty();
-
-	if (lseek(m_cfg_file, 0, SEEK_SET) < 0)
-		checkFileError(m_base->cfg_file_name, "lseek", isc_io_read_err);
-}
-
-
-void ConfigStorage::updateSession(TraceSession& session)
-{
-	restart();
-
-	ITEM tag;
-	ULONG len;
-	ULONG currID = 0;
-
-	while (true)
+	if (m_storage->getNextSession(session, getFlag, m_nextIdx))
 	{
-		if (!getItemLength(tag, len))
-			return;
-
-		void* p = NULL;
-		switch (tag)
-		{
-			case tagID:
-				fb_assert(len == sizeof(currID));
-				read(m_cfg_file, &currID, len);
-				continue;
-
-			case tagFlags:
-				fb_assert(len == sizeof(session.ses_flags));
-				if (currID == session.ses_id)
-					p = &session.ses_flags;
-				break;
-
-			case tagEnd:
-				if (currID == session.ses_id)
-					return;
-				len = 0;
-				break;
-		}
-
-		if (p)
-		{
-			setDirty();
-			if (write(m_cfg_file, p, len) != len)
-				checkFileError(m_base->cfg_file_name, "write", isc_io_write_err);
-		}
-		else if (len)
-		{
-			if (lseek(m_cfg_file, len, SEEK_CUR) < 0)
-				checkFileError(m_base->cfg_file_name, "lseek", isc_io_read_err);
-		}
+		m_sesId = session.ses_id;
+		return true;
 	}
+
+	return false;
 }
 
-
-void ConfigStorage::putItem(ITEM tag, ULONG len, const void* data)
+void ConfigStorage::Writer::write(ITEM tag, ULONG len, const void* data)
 {
-	const char tag_data = (char) tag;
-	ULONG to_write = sizeof(tag_data);
-	if (write(m_cfg_file, &tag_data, to_write) != to_write)
-		checkFileError(m_base->cfg_file_name, "write", isc_io_write_err);
+	if (m_mem + 1 > m_end)
+		(Arg::Gds(isc_random) << Arg::Str("Item data not fits into memory")).raise();
 
+	*m_mem++ = tag;
 	if (tag == tagEnd)
 		return;
 
-	to_write = sizeof(len);
-	if (write(m_cfg_file, &len, to_write) != to_write)
-		checkFileError(m_base->cfg_file_name, "write", isc_io_write_err);
+	if (m_mem + sizeof(len) + len > m_end)
+		(Arg::Gds(isc_random) << Arg::Str("Item data not fits into memory")).raise();
 
-	if (len)
-	{
-		if (write(m_cfg_file, data, len) != len)
-			checkFileError(m_base->cfg_file_name, "write", isc_io_write_err);
-	}
+	memcpy(m_mem, &len, sizeof(len));
+	m_mem += sizeof(len);
+
+	memcpy(m_mem, data, len);
+	m_mem += len;
 }
 
-bool ConfigStorage::getItemLength(ITEM& tag, ULONG& len)
+const void* ConfigStorage::Reader::read(ITEM& tag, ULONG& len)
 {
-	char data;
-	const int cnt_read = read(m_cfg_file, &data, sizeof(data));
+	if (m_mem + 1 > m_end)
+		return NULL;
 
-	if (cnt_read == 0)
-		return false;
-
-	if (cnt_read < 0)
-		checkFileError(m_base->cfg_file_name, "read", isc_io_read_err);
-
-	tag = (ITEM) data;
-
+	tag = (ITEM) *m_mem++;
 	if (tag == tagEnd)
+	{
 		len = 0;
-	else
-	{
-		if (read(m_cfg_file, &len, sizeof(ULONG)) != sizeof(ULONG))
-			checkFileError(m_base->cfg_file_name, "read", isc_io_read_err);
+		return m_mem;
 	}
 
-	return true;
-}
+	if (m_mem + sizeof(ULONG) > m_end)
+		return NULL;
 
-ConfigStorage* StorageInstance::getStorage()
-{
-	if (!storage)
+	memcpy(&len, m_mem, sizeof(ULONG));
+	m_mem += sizeof(ULONG);
+
+	if (m_mem + len <= m_end)
 	{
-		MutexLockGuard guard(initMtx);
-		if (!storage)
-		{
-			storage = new ConfigStorage;
-		}
+		const void* data = m_mem;
+		m_mem += len;
+		return data;
 	}
-	return storage;
+
+	return NULL;
 }
 
-StorageInstance::~StorageInstance()
+void ConfigStorage::TouchFile::handler()
 {
-	delete storage;
+	try
+	{
+		if (!os_utils::touchFile(fileName.c_str()))
+			system_call_failed::raise("utime");
+
+		FbLocalStatus s;
+		TimerInterfacePtr()->start(&s, this, TOUCH_INTERVAL * 1000 * 1000);
+		s.check();
+	}
+	catch (const Exception& e)
+	{
+		iscLogException("TouchFile failed", e);
+	}
+}
+
+void ConfigStorage::TouchFile::start(const char* fName)
+{
+	fileName = fName;
+
+	FbLocalStatus s;
+	TimerInterfacePtr()->start(&s, this, TOUCH_INTERVAL * 1000 * 1000);
+	check(&s);
+}
+
+void ConfigStorage::TouchFile::stop()
+{
+	FbLocalStatus s;
+	TimerInterfacePtr()->stop(&s, this);
+	// ignore error in stop timer
 }
 
 } // namespace Jrd

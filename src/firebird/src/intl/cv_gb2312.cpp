@@ -72,13 +72,15 @@ ULONG CVGB_gb2312_to_unicode(csconvert* obj,
 			const UCHAR c1 = *src_ptr++;
 
 			if (GB1(c1))
-			{		// first byte is GB2312
+			{
+				// first byte is GB2312
 				if (src_len == 1) {
 					*err_code = CS_BAD_INPUT;
 					break;
 				}
 				const UCHAR c2 = *src_ptr++;
-				if (!(GB2(c2))) {	// Bad second byte
+				if (!(GB2(c2))) {
+					// Bad second byte
 					*err_code = CS_BAD_INPUT;
 					break;
 				}
@@ -92,7 +94,8 @@ ULONG CVGB_gb2312_to_unicode(csconvert* obj,
 			}
 		}
 		else
-		{					// it is ASCII
+		{
+			// it is ASCII
 
 			wide = *src_ptr++;
 			this_len = 1;
@@ -115,7 +118,7 @@ ULONG CVGB_gb2312_to_unicode(csconvert* obj,
 		*err_code = CS_TRUNCATION_ERROR;
 	}
 	*err_position = src_start - src_len;
-	return ((dest_ptr - start) * sizeof(*dest_ptr));
+	return static_cast<ULONG>((dest_ptr - start) * sizeof(*dest_ptr));
 }
 
 
@@ -164,7 +167,8 @@ ULONG CVGB_unicode_to_gb2312(csconvert* obj,
 		const int tmp1 = gb_ch / 256;
 		const int tmp2 = gb_ch % 256;
 		if (tmp1 == 0)
-		{		// ASCII character
+		{
+			// ASCII character
 
 			fb_assert((UCHAR(tmp2) & 0x80) == 0);
 
@@ -192,7 +196,7 @@ ULONG CVGB_unicode_to_gb2312(csconvert* obj,
 		*err_code = CS_TRUNCATION_ERROR;
 	}
 	*err_position = src_start - unicode_len;
-	return ((gb_str - start) * sizeof(*gb_str));
+	return static_cast<ULONG>((gb_str - start) * sizeof(*gb_str));
 }
 
 

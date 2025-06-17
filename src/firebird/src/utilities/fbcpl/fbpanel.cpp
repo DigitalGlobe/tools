@@ -41,6 +41,7 @@
 
 #include "stdafx.h"
 #include "../install/registry.h"
+#include "../jrd/build_no.h"
 
 #include "FBPanel.h"
 #include "FBDialog.h"
@@ -58,8 +59,8 @@ LONG CFBPanel::OnInquire(UINT /*uAppNum*/, NEWCPLINFO* pInfo)
     pInfo->lData = 0;
     pInfo->hIcon = ::LoadIcon(AfxGetResourceHandle(), MAKEINTRESOURCE(IDI_ICON1));
     // Shouldn't this read FB 2 without fixing the minor version?
-    strcpy(pInfo->szName, "Firebird Server Manager");
-    strcpy(pInfo->szInfo, "Configure Firebird Database Server");
+    strcpy(pInfo->szName, "Firebird "FB_MAJOR_VER" Server Manager");
+    strcpy(pInfo->szInfo, "Configure Firebird "FB_MAJOR_VER" Database Server");
     strcpy(pInfo->szHelpFile, "");
     return 0; // OK (don't send CPL_INQUIRE msg)
 }
@@ -72,8 +73,9 @@ LONG CFBPanel::OnDblclk(HWND hwndCPl, UINT /*uAppNum*/, LONG /*lData*/)
 
     // Create the dialog box using the parent window handle
     CFBDialog dlg(CWnd::FromHandle(hwndCPl));
-
-	try {
+	bool error = true;
+	try
+	{
 		// Check if Firebird is installed by reading the registry
 		HKEY hkey;
 		if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, REG_KEY_ROOT_INSTANCES, 0, KEY_QUERY_VALUE, &hkey)
@@ -91,7 +93,7 @@ LONG CFBPanel::OnDblclk(HWND hwndCPl, UINT /*uAppNum*/, LONG /*lData*/)
 			RegCloseKey(hkey);
 
 			dlg.m_FB_Version = "not known";
-			CString afilename = dlg.m_Root_Path + "bin\\gbak.exe";
+			CString afilename = dlg.m_Root_Path + "gbak.exe";
 			buffer_size = GetFileVersionInfoSize( (LPCTSTR) afilename, 0);
 			void* VersionInfo = new char [buffer_size];
 			void* ProductVersion = 0;
@@ -125,6 +127,7 @@ LONG CFBPanel::OnDblclk(HWND hwndCPl, UINT /*uAppNum*/, LONG /*lData*/)
 			}
 			delete[] (char*) VersionInfo;
 
+			error = false;
 			// Show the dialog box
 			if (dlg.DoModal() != IDOK)
 				return 0;
@@ -133,6 +136,11 @@ LONG CFBPanel::OnDblclk(HWND hwndCPl, UINT /*uAppNum*/, LONG /*lData*/)
 	catch ( ... )
 	{
 		//raise an error
+		error = true;
+	}
+
+	if (error)
+	{
 		dlg.MessageBox("Firebird does not appear to be installed correctly.", "Installation Error", MB_OK);
 	}
     return 0;

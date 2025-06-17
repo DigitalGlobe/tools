@@ -27,13 +27,12 @@
 static const char* const REMOTE_SERVICE			= "FirebirdServer%s";
 static const char* const REMOTE_DISPLAY_NAME	= "Firebird Server - %s";
 static const char* const REMOTE_DISPLAY_DESCR	= "Firebird Database Server - www.firebirdsql.org";
-static const char* const REMOTE_SS_EXECUTABLE	= "bin\\fbserver";
-static const char* const REMOTE_CS_EXECUTABLE	= "bin\\fb_inet_server";
+static const char* const REMOTE_EXECUTABLE		= "firebird";
 
 static const char* const ISCGUARD_SERVICE		= "FirebirdGuardian%s";
 static const char* const ISCGUARD_DISPLAY_NAME	= "Firebird Guardian - %s";
 static const char* const ISCGUARD_DISPLAY_DESCR	= "Firebird Server Guardian - www.firebirdsql.org";
-static const char* const ISCGUARD_EXECUTABLE	= "bin\\fbguard";
+static const char* const ISCGUARD_EXECUTABLE	= "fbguard";
 
 static const char* const SERVER_MUTEX			= "FirebirdServerMutex%s";
 static const char* const GUARDIAN_MUTEX			= "FirebirdGuardianMutex%s";
@@ -69,7 +68,6 @@ const USHORT HIGH_PRIORITY		= 2;
 // sw_arch
 const USHORT ARCH_SS			= 0;
 const USHORT ARCH_CS			= 1;
-const USHORT ARCH_SCS			= 2;
 
 // sw_client
 const USHORT CLIENT_NONE		= 0;

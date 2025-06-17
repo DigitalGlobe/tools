@@ -29,7 +29,6 @@
 #include <windows.h>
 #include <ntsecapi.h>
 #include <aclapi.h>
-#include "../jrd/common.h"
 #include "../utilities/install/install_nt.h"
 #include "../utilities/install/servi_proto.h"
 #include "../utilities/install/registry.h"
@@ -258,7 +257,7 @@ USHORT SERVICES_start(SC_HANDLE manager,
 		return (*err_handler) (errnum, "StartService", NULL);
 	}
 
-	/* Wait for the service to actually start before returning. */
+	// Wait for the service to actually start before returning.
 	SERVICE_STATUS service_status;
 
 	do
@@ -309,7 +308,7 @@ USHORT SERVICES_stop(SC_HANDLE manager,
 		return (*err_handler) (errnum, "ControlService", NULL);
 	}
 
-	/* Wait for the service to actually stop before returning. */
+	// Wait for the service to actually stop before returning.
 	do
 	{
 		if (!QueryServiceStatus(service, &service_status))
@@ -367,7 +366,7 @@ USHORT SERVICES_status (const char* service_name)
 	{
 		case SERVICE_RUNNING : status = FB_SERVICE_STATUS_RUNNING; break;
 		case SERVICE_STOPPED : status = FB_SERVICE_STATUS_STOPPED; break;
-		case SERVICE_START_PENDING :	/* fall over the next case */
+		case SERVICE_START_PENDING :	// fall over the next case
 		case SERVICE_STOP_PENDING : status = FB_SERVICE_STATUS_PENDING; break;
 	}
 
@@ -463,7 +462,7 @@ USHORT SERVICES_grant_privilege(const TEXT* account, pfnSvcError err_handler, co
 		tempStr[string_buff_size - 1] = 0;
 
 		PrivilegeString.Buffer = tempStr;
-		PrivilegeString.Length = wcslen(tempStr) * sizeof(WCHAR);
+		PrivilegeString.Length = static_cast<USHORT>(wcslen(tempStr) * sizeof(WCHAR));
 		PrivilegeString.MaximumLength = sizeof(tempStr);
 		if ((lsaErr = LsaAddAccountRights(PolicyHandle, pSid, &PrivilegeString, 1)) != (NTSTATUS) 0)
 		{
