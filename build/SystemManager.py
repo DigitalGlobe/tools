@@ -542,8 +542,9 @@ class SystemManager:
 
     def _copyfile(self, src, dst):
 
-        if not os.path.exists(dst):
-            os.makedirs(dst)
+        parent = os.path.dirname(dst)
+        if not os.path.exists(parent):
+            os.makedirs(parent)
 
         # print(f"{src} -> {dst}")
         shutil.copy2(src=src, dst=dst)
