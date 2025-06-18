@@ -10,7 +10,6 @@ CXXFLAGS = $(CXXFLAGS) /I..
 
 STATIC = $(LIB_NAME)
 LIB    = $(STATIC).lib
-DLLNAME= $(STATIC).dll
 
 all: $(LIB)
 

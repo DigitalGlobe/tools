@@ -3,15 +3,7 @@
 # makefile variables for compiling on windows
 # -----------------------------------------------------------------------------
 
-!ifdef RELEASE_BUILD
 LIB_NAME= ga
-PDB_NAME= ga.pdb
-DLL_NAME= ga.dll
-!else
-LIB_NAME= ga_d
-PDB_NAME= ga_d.pdb
-DLL_NAME= ga_d.dll
-!endif
 
 ### Set these directories to whatever is appropriate for your system.  These 
 ### used only if you do a 'make install'.  They specify where the library and
@@ -45,7 +37,7 @@ INSTALL     = copy
 # /YX     automate precompiled header
 # /FD     generate file dependencies
 
-CFLAGS   = /nologo /D_WINDOWS /DWIN32 /D_MBCS /W3 /GR /GX /TP /Fd$(PDB_NAME)
+CFLAGS   = /nologo /D_WINDOWS /DWIN32 /D_MBCS /W3 /GR /GX /TP
 LFLAGS   = /nologo /subsystem:console /incremental:no
 
 !ifdef RELEASE_BUILD
@@ -63,7 +55,7 @@ LINKFLAGS    = $(LFLAGS) /debug
 !ifdef SHARED_BUILD
 !ifdef LIBRARY_BUILD
 CXXFLAGS  = $(CXXDLLFLAGS) /DCOMPILE_GALIB_AS_DLL /D_USRDLL
-LINKFLAGS = $(LINKFLAGS) /dll 
+LINKFLAGS = $(LINKFLAGS) /dll
 !else
 CXXFLAGS  = $(CXXEXEFLAGS) /DUSE_GALIB_AS_DLL
 LINKFLAGS = $(LINKFLAGS)
