@@ -3,11 +3,11 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2012  Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2012  Sandro Santilli <strk@kbt.io>
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -33,11 +33,10 @@
 #include <geos/noding/IntersectionAdder.h>
 #include <geos/noding/MCIndexNoder.h>
 
-#include <geos/noding/snapround/SimpleSnapRounder.h>
 #include <geos/noding/snapround/MCIndexSnapRounder.h>
 
-#include <memory> // for auto_ptr
-#include <iostream> 
+#include <memory> // for unique_ptr
+#include <iostream>
 
 namespace geos {
 namespace noding { // geos.noding
@@ -49,105 +48,113 @@ namespace {
  */
 class SegmentStringExtractor: public geom::GeometryComponentFilter {
 public:
-  SegmentStringExtractor(SegmentString::NonConstVect& to)
-    : _to(to)
-  {}
+    SegmentStringExtractor(SegmentString::NonConstVect& to,
+                           bool constructZ,
+                           bool constructM)
+        : _to(to)
+        , _constructZ(constructZ)
+        , _constructM(constructM)
+    {}
 
-  void filter_ro(const geom::Geometry * g) {
-    const geom::LineString *ls = dynamic_cast<const geom::LineString *>(g);
-    if ( ls ) {
-      geom::CoordinateSequence* coord = ls->getCoordinates(); 
-      // coord ownership transferred to SegmentString
-      SegmentString *ss = new NodedSegmentString(coord, 0);
-      _to.push_back(ss);
+    void
+    filter_ro(const geom::Geometry* g) override
+    {
+        const geom::LineString* ls = dynamic_cast<const geom::LineString*>(g);
+        if(ls) {
+            auto coord = ls->getCoordinates();
+            // coord ownership transferred to SegmentString
+            SegmentString* ss = new NodedSegmentString(coord.release(), _constructZ, _constructM, nullptr);
+            _to.push_back(ss);
+        }
     }
-  }
 private:
-  SegmentString::NonConstVect& _to;
+    SegmentString::NonConstVect& _to;
+    bool _constructZ;
+    bool _constructM;
 
-  SegmentStringExtractor(SegmentStringExtractor const&); /*= delete*/
-  SegmentStringExtractor& operator=(SegmentStringExtractor const&); /*= delete*/
+    SegmentStringExtractor(SegmentStringExtractor const&); /*= delete*/
+    SegmentStringExtractor& operator=(SegmentStringExtractor const&); /*= delete*/
 };
 
 }
 
 
 /* public static */
-std::auto_ptr<geom::Geometry>
+std::unique_ptr<geom::Geometry>
 GeometryNoder::node(const geom::Geometry& geom)
 {
-  GeometryNoder noder(geom);
-  return noder.getNoded();
+    GeometryNoder noder(geom);
+    return noder.getNoded();
 }
 
 /* public */
 GeometryNoder::GeometryNoder(const geom::Geometry& g)
-  :
-  argGeom(g)
+    :
+    argGeom(g)
 {
+    util::ensureNoCurvedComponents(argGeom);
 }
 
 /* private */
-std::auto_ptr<geom::Geometry>
+std::unique_ptr<geom::Geometry>
 GeometryNoder::toGeometry(SegmentString::NonConstVect& nodedEdges)
 {
-  const geom::GeometryFactory *geomFact = argGeom.getFactory();
+    const geom::GeometryFactory* geomFact = argGeom.getFactory();
 
-  std::set< OrientedCoordinateArray > ocas;
+    std::set< OrientedCoordinateArray > ocas;
 
-  // Create a geometry out of the noded substrings.
-  std::vector< geom::Geometry* >* lines = new std::vector< geom::Geometry * >();
-  lines->reserve(nodedEdges.size());
-  for ( unsigned int i = 0, n = nodedEdges.size(); i < n; ++i )
-  {
-    SegmentString* ss = nodedEdges [i];
+    // Create a geometry out of the noded substrings.
+    std::vector<std::unique_ptr<geom::Geometry>> lines;
+    lines.reserve(nodedEdges.size());
+    for(auto& ss :  nodedEdges) {
+        const geom::CoordinateSequence* coords = ss->getCoordinates();
 
-    const geom::CoordinateSequence* coords = ss->getCoordinates();
-
-    // Check if an equivalent edge is known 
-    OrientedCoordinateArray oca1( *coords );
-    if ( ocas.insert(oca1).second ) {
-      geom::Geometry* tmp = geomFact->createLineString( coords->clone() );
-      lines->push_back( tmp );
+        // Check if an equivalent edge is known
+        OrientedCoordinateArray oca1(*coords);
+        if(ocas.insert(oca1).second) {
+            lines.push_back(geomFact->createLineString(coords->clone()));
+        }
     }
-  }
 
-  std::auto_ptr<geom::Geometry> noded ( geomFact->createMultiLineString( lines ) );
-
-  return noded;
+    return geomFact->createMultiLineString(std::move(lines));
 }
 
 /* public */
-std::auto_ptr<geom::Geometry> 
+std::unique_ptr<geom::Geometry>
 GeometryNoder::getNoded()
 {
-  SegmentString::NonConstVect lineList;
-  extractSegmentStrings(argGeom, lineList);
+    SegmentString::NonConstVect p_lineList;
+    if (argGeom.isEmpty())
+        return argGeom.clone();
 
-  Noder& noder = getNoder();
-  SegmentString::NonConstVect* nodedEdges = 0;
+    extractSegmentStrings(argGeom, p_lineList);
 
-  try {
-    noder.computeNodes( &lineList );
-    nodedEdges = noder.getNodedSubstrings();
-  }
-  catch (const std::exception& ex)
-  {
-    for (size_t i=0, n=lineList.size(); i<n; ++i)
-      delete lineList[i];
-    throw ex;
-  }
+    Noder& p_noder = getNoder();
+    SegmentString::NonConstVect* nodedEdges = nullptr;
 
-  std::auto_ptr<geom::Geometry> noded = toGeometry(*nodedEdges);
+    try {
+        p_noder.computeNodes(&p_lineList);
+        nodedEdges = p_noder.getNodedSubstrings();
+    }
+    catch(const std::exception&) {
+        for(std::size_t i = 0, n = p_lineList.size(); i < n; ++i) {
+            delete p_lineList[i];
+        }
+        throw;
+    }
 
-  for ( unsigned int i = 0, n = nodedEdges->size(); i < n; ++i )
-    delete ( *nodedEdges )[i];
-  delete nodedEdges;
+    std::unique_ptr<geom::Geometry> noded = toGeometry(*nodedEdges);
 
-  for (size_t i=0, n=lineList.size(); i<n; ++i)
-    delete lineList[i];
+    for(auto* elem : (*nodedEdges)) {
+        delete elem;
+    }
+    delete nodedEdges;
 
-  return noded;
+    for(auto* elem : p_lineList) {
+        delete elem;
+    }
+
+    return noded;
 }
 
 /* private static */
@@ -155,39 +162,22 @@ void
 GeometryNoder::extractSegmentStrings(const geom::Geometry& g,
                                      SegmentString::NonConstVect& to)
 {
-  SegmentStringExtractor ex(to);
-	g.apply_ro(&ex);
+    SegmentStringExtractor ex(to, g.hasZ(), g.hasM());
+    g.apply_ro(&ex);
 }
 
 /* private */
 Noder&
 GeometryNoder::getNoder()
 {
-  if ( ! noder.get() )
-  {
-    const geom::PrecisionModel *pm = argGeom.getFactory()->getPrecisionModel();
-#if 0
-    using algorithm::LineIntersector;
-		LineIntersector li;
-		IntersectionAdder intersectionAdder(li);
-    noder.reset( new MCIndexNoder(&intersectionAdder) );
-#else
-
-    IteratedNoder* in = new IteratedNoder(pm);
-    //in->setMaximumIterations(0);
-    noder.reset( in );
-
-    //using snapround::SimpleSnapRounder;
-    //noder.reset( new SimpleSnapRounder(*pm) );
-
-    //using snapround::MCIndexSnapRounder;
-    //noder.reset( new MCIndexSnapRounder(*pm) );
-#endif
-  }
-  return *noder;
-  
-
+    if(! noder.get()) {
+        const geom::PrecisionModel* pm = argGeom.getFactory()->getPrecisionModel();
+        IteratedNoder* in = new IteratedNoder(pm);
+        noder.reset(in);
+    }
+    return *noder;
 }
+
 
 } // namespace geos.noding
 } // namespace geos

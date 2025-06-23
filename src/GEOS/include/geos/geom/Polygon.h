@@ -3,13 +3,13 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2011 Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2011 Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2005 2006 Refractions Research Inc.
  * Copyright (C) 2001-2002 Vivid Solutions Inc.
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -18,31 +18,26 @@
  *
  **********************************************************************/
 
-#ifndef GEOS_GEOM_POLYGON_H
-#define GEOS_GEOM_POLYGON_H
+#pragma once
 
 #include <geos/export.h>
 #include <string>
 #include <vector>
-#include <geos/platform.h>
 #include <geos/geom/Geometry.h> // for inheritance
-#include <geos/geom/Polygonal.h> // for inheritance
-#include <geos/geom/Envelope.h> // for proper use of auto_ptr<>
+#include <geos/geom/Envelope.h> // for proper use of unique_ptr<>
+#include <geos/geom/LinearRing.h>
 #include <geos/geom/Dimension.h> // for Dimension::DimensionType
+#include <geos/geom/SurfaceImpl.h>
 
-#include <geos/inline.h>
-
-#include <memory> // for auto_ptr
+#include <memory> // for unique_ptr
 
 // Forward declarations
 namespace geos {
-	namespace geom { // geos::geom
-		class Coordinate;
-		class CoordinateArraySequence;
-		class CoordinateSequenceFilter;
-		class LinearRing;
-		class LineString;
-	}
+namespace geom { // geos::geom
+class Coordinate;
+class CoordinateSequenceFilter;
+class LineString;
+}
 }
 
 namespace geos {
@@ -63,133 +58,81 @@ namespace geom { // geos::geom
  *  Specification for SQL</A> .
  *
  */
-class GEOS_DLL Polygon: public virtual Geometry, public Polygonal
-{
+class GEOS_DLL Polygon: public SurfaceImpl<LinearRing> {
 
 public:
 
-	friend class GeometryFactory;
+    friend class GeometryFactory;
 
-	/// A vector of const Polygon pointers
-	typedef std::vector<const Polygon *> ConstVect;
+    /// A vector of const Polygon pointers
+    typedef std::vector<const Polygon*> ConstVect;
 
-	virtual ~Polygon();
+    ~Polygon() override = default;
 
-	/**
-	 * Creates and returns a full copy of this {@link Polygon} object.
-	 * (including all coordinates contained by it).
-	 *
-	 * @return a clone of this instance
-	 */
-	virtual Geometry *clone() const { return new Polygon(*this); }
+    std::unique_ptr<CoordinateSequence>
+    getCoordinates() const override;
 
-	CoordinateSequence* getCoordinates() const;
+    /**
+     * Creates and returns a full copy of this {@link Polygon} object.
+     * (including all coordinates contained by it).
+     *
+     * @return a clone of this instance
+     */
+    std::unique_ptr<Polygon> clone() const
+    {
+        return std::unique_ptr<Polygon>(cloneImpl());
+    }
 
-	size_t getNumPoints() const;
+    /** \brief
+     * Computes the boundary of this geometry
+     *
+     * @return a lineal geometry (which may be empty)
+     * @see Geometry#getBoundary
+     */
+    std::unique_ptr<Geometry> getBoundary() const override;
 
-	/// Returns surface dimension (2)
-	Dimension::DimensionType getDimension() const;
+    std::string getGeometryType() const override;
+    GeometryTypeId getGeometryTypeId() const override;
 
-	/// Returns coordinate dimension.
-	virtual int getCoordinateDimension() const;
+    void normalize() override;
 
-	/// Returns 1 (Polygon boundary is a MultiLineString)
-	int getBoundaryDimension() const;
+    std::unique_ptr<Polygon> reverse() const { return std::unique_ptr<Polygon>(reverseImpl()); }
 
-	/** \brief
-	 * Computes the boundary of this geometry
-	 *
-	 * @return a lineal geometry (which may be empty)
-	 * @see Geometry#getBoundary
-	 */
-	Geometry* getBoundary() const;
+    double getArea() const override;
 
-	bool isEmpty() const;
+    bool isRectangle() const override;
 
-	/** \brief
-	 * Tests if a valid polygon is simple.
-	 * This method always returns true, since a valid polygon is always simple
-	 *
-	 * @return <code>true</code>
-	 */
-	bool isSimple() const;
-	
-	/// Returns the exterior ring (shell)
-	const LineString* getExteriorRing() const;
-
-	/// Returns number of interior rings (hole)
-	size_t getNumInteriorRing() const;
-
-	/// Get nth interior ring (hole)
-	const LineString* getInteriorRingN(std::size_t n) const;
-
-	std::string getGeometryType() const;
-	virtual GeometryTypeId getGeometryTypeId() const;
-	bool equalsExact(const Geometry *other, double tolerance=0) const;
-	void apply_rw(const CoordinateFilter *filter);
-	void apply_ro(CoordinateFilter *filter) const;
-	void apply_rw(GeometryFilter *filter);
-	void apply_ro(GeometryFilter *filter) const;
-	void apply_rw(CoordinateSequenceFilter& filter);
-	void apply_ro(CoordinateSequenceFilter& filter) const;
-
-	Geometry* convexHull() const;
-
-	void normalize();
-
-	int compareToSameClass(const Geometry *p) const; //was protected
-
-	const Coordinate* getCoordinate() const;
-
-	double getArea() const;
-
- 	/// Returns the perimeter of this <code>Polygon</code>
-	double getLength() const;
-
-	void apply_rw(GeometryComponentFilter *filter);
-
-	void apply_ro(GeometryComponentFilter *filter) const;
-
-	bool isRectangle() const;
+    /**
+    * \brief
+    * Apply a ring ordering convention to this polygon, with
+    * interior rings having an opposite orientation to the
+    * specified exterior orientation.
+    *
+    * \param exteriorCW should exterior ring be clockwise?
+    */
+    void orientRings(bool exteriorCW);
 
 protected:
 
+    using SurfaceImpl::SurfaceImpl;
 
-	Polygon(const Polygon &p);
+    Polygon* cloneImpl() const override { return new Polygon(*this); }
 
-	/**
-	 * Constructs a <code>Polygon</code> with the given exterior 
-	 * and interior boundaries.
-	 *
-	 * @param  newShell  the outer boundary of the new Polygon,
-	 *                   or <code>null</code> or an empty
-	 *		     LinearRing if the empty geometry
-	 *                   is to be created.
-	 *
-	 * @param  newHoles  the LinearRings defining the inner
-	 *                   boundaries of the new Polygon, or
-	 *                   null or empty LinearRing 
-	 *                   if the empty  geometry is to be created.
-	 *
-	 * @param newFactory the GeometryFactory used to create this geometry
-	 *
-	 * Polygon will take ownership of Shell and Holes LinearRings 
-	 */
-	Polygon(LinearRing *newShell, std::vector<Geometry *> *newHoles,
-		const GeometryFactory *newFactory);
+    Polygon* reverseImpl() const override;
 
-	LinearRing *shell;
+    int
+    getSortIndex() const override
+    {
+        return SORTINDEX_POLYGON;
+    };
 
-	std::vector<Geometry *> *holes; //Actually vector<LinearRing *>
-
-	Envelope::AutoPtr computeEnvelopeInternal() const;
 
 private:
 
-	void normalize(LinearRing *ring, bool clockwise);
+    void normalize(LinearRing* ring, bool clockwise);
+
 };
 
 } // namespace geos::geom
 } // namespace geos
 
-#endif // ndef GEOS_GEOM_POLYGON_H

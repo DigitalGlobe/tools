@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  *
@@ -17,9 +17,9 @@
  *
  **********************************************************************/
 
-#ifndef GEOS_NODING_SEGMENTSTRINGUTIL_H
-#define GEOS_NODING_SEGMENTSTRINGUTIL_H
+#pragma once
 
+#include <geos/noding/BasicSegmentString.h>
 #include <geos/noding/NodedSegmentString.h>
 #include <geos/geom/LineString.h>
 #include <geos/geom/CoordinateSequence.h>
@@ -30,46 +30,38 @@ namespace noding { // geos::noding
 
 /** \brief
  * Utility methods for processing {@link SegmentString}s.
- * 
+ *
  * @author Martin Davis
  *
  */
-class SegmentStringUtil
-{
+class SegmentStringUtil {
 public:
-	/** \brief
-	 * Extracts all linear components from a given {@link Geometry}
-	 * to {@link SegmentString}s.
-	 *
-	 * The SegmentString data item is set to be the source Geometry.
-	 * 
-	 * @param geom the geometry to extract from
-	 * @param segStr a List of SegmentStrings (output parameter).
-	 *               Ownership of elements pushed to the vector
-	 *               is transferred to caller. 
-	 */
-	static void extractSegmentStrings(const geom::Geometry * g,
-					  SegmentString::ConstVect& segStr)
-	{
-		geom::LineString::ConstVect lines;
-		geom::util::LinearComponentExtracter::getLines(*g, lines);
+    /** \brief
+     * Extracts all linear components from a given [Geometry](@ref geom::Geometry)
+     * to [SegmentStrings](@ref SegmentString)
+     *
+     * The SegmentString data item is set to be the source Geometry.
+     *
+     * @param g the geometry to extract from
+     * @param segStr a List of SegmentStrings (output parameter).
+     *               Ownership of elements pushed to the vector
+     *               is transferred to caller.
+     */
+    static void
+    extractSegmentStrings(const geom::Geometry* g,
+                          SegmentString::ConstVect& segStr)
+    {
+        geom::LineString::ConstVect lines;
+        geom::util::LinearComponentExtracter::getLines(*g, lines);
 
-		for (std::size_t i=0, n=lines.size(); i<n; i++)
-		{
-			geom::LineString* line = (geom::LineString*)(lines[i]);
-
-			// we take ownership of the coordinates here
-			// TODO: check if this can be optimized by getting
-			//       the internal CS.
-			geom::CoordinateSequence* pts = line->getCoordinates();
-
-			segStr.push_back(new NodedSegmentString(pts, g));
-		}
-	}
+        for(const geom::LineString* line : lines) {
+            auto pts = line->getCoordinatesRO();
+            segStr.push_back(new BasicSegmentString(const_cast<geom::CoordinateSequence*>(pts), g));
+        }
+    }
 
 };
 
 } // geos::noding
 } // geos
 
-#endif // GEOS_NODING_SEGMENTSTRINGUTIL_H

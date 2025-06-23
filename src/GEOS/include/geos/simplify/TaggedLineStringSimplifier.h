@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -21,8 +21,7 @@
  *
  **********************************************************************/
 
-#ifndef GEOS_SIMPLIFY_TAGGEDLINESTRINGSIMPLIFIER_H
-#define GEOS_SIMPLIFY_TAGGEDLINESTRINGSIMPLIFIER_H
+#pragma once
 
 #include <geos/export.h>
 #include <cstddef>
@@ -36,19 +35,26 @@
 
 // Forward declarations
 namespace geos {
-	namespace algorithm {
-		class LineIntersector;
-	}
-	namespace geom {
-		class CoordinateSequence;
-		class LineSegment;
-	}
-	namespace simplify {
-		class TaggedLineSegment;
-		class TaggedLineString;
-		class LineSegmentIndex;
-	}
+namespace algorithm {
+class LineIntersector;
 }
+namespace geom {
+class CoordinateSequence;
+class Coordinate;
+class LineSegment;
+}
+namespace simplify {
+class TaggedLineSegment;
+class TaggedLineString;
+class LineSegmentIndex;
+class ComponentJumpChecker;
+}
+}
+
+using geos::geom::CoordinateSequence;
+using geos::geom::Coordinate;
+using geos::geom::LineSegment;
+
 
 namespace geos {
 namespace simplify { // geos::simplify
@@ -64,101 +70,105 @@ class GEOS_DLL TaggedLineStringSimplifier {
 
 public:
 
-	TaggedLineStringSimplifier(LineSegmentIndex* inputIndex,
-		LineSegmentIndex* outputIndex);
+    TaggedLineStringSimplifier(LineSegmentIndex* inputIndex,
+                               LineSegmentIndex* outputIndex,
+                               const ComponentJumpChecker* jumpChecker);
 
-	/** \brief
-	 * Sets the distance tolerance for the simplification.
-	 *
-	 * All vertices in the simplified geometry will be within this
-	 * distance of the original geometry.
-	 *
-	 * @param d the approximation tolerance to use
-	 */
-	void setDistanceTolerance(double d);
-
-	/**
-	 * Simplifies the given {@link TaggedLineString}
-	 * using the distance tolerance specified.
-	 *
-	 * @param line the linestring to simplify
-	 */
-	void simplify(TaggedLineString* line);
+    /**
+     * Simplifies the given {@link TaggedLineString}
+     * using the distance tolerance specified.
+     *
+     * @param line the linestring to simplify
+     * @param distanceTolerance simplification tolerance
+     */
+    void simplify(TaggedLineString* line, double distanceTolerance);
 
 
 private:
 
-	// externally owned
-	LineSegmentIndex* inputIndex;
+    // externally owned
+    LineSegmentIndex* inputIndex;
 
-	// externally owned
-	LineSegmentIndex* outputIndex;
+    // externally owned
+    LineSegmentIndex* outputIndex;
 
-	std::auto_ptr<algorithm::LineIntersector> li;
+    const ComponentJumpChecker* jumpChecker;
 
-	/// non-const as segments are possibly added to it
-	TaggedLineString* line;
+    std::unique_ptr<algorithm::LineIntersector> li;
 
-	const geom::CoordinateSequence* linePts;
+    /// non-const as segments are possibly added to it
+    TaggedLineString* line;
 
-	double distanceTolerance;
+    const CoordinateSequence* linePts;
 
-	void simplifySection(std::size_t i, std::size_t j,
-			std::size_t depth);
+    void simplifySection(std::size_t i, std::size_t j, std::size_t depth, double distanceTolerance);
 
-	static std::size_t findFurthestPoint(
-			const geom::CoordinateSequence* pts,
-			std::size_t i, std::size_t j,
-			double& maxDistance);
+    void simplifyRingEndpoint(double distanceTolerance);
 
-	bool hasBadIntersection(const TaggedLineString* parentLine,
-                       const std::vector<std::size_t>& sectionIndex,
-                       const geom::LineSegment& candidateSeg);
+    static std::size_t findFurthestPoint(
+        const CoordinateSequence* pts,
+        std::size_t i, std::size_t j,
+        double& maxDistance);
 
-	bool hasBadInputIntersection(const TaggedLineString* parentLine,
-                       const std::vector<std::size_t>& sectionIndex,
-                       const geom::LineSegment& candidateSeg);
+    bool isTopologyValid(
+        const TaggedLineString* lineIn,
+        std::size_t sectionStart, std::size_t sectionEnd,
+        const LineSegment& flatSeg);
 
-	bool hasBadOutputIntersection(const geom::LineSegment& candidateSeg);
+    bool isTopologyValid(
+        const TaggedLineString* lineIn,
+        const LineSegment* seg1, const LineSegment* seg2,
+        const LineSegment& flatSeg);
 
-	bool hasInteriorIntersection(const geom::LineSegment& seg0,
-			const geom::LineSegment& seg1) const;
+    bool hasInputIntersection(const LineSegment& flatSeg);
 
-	std::auto_ptr<TaggedLineSegment> flatten(
-			std::size_t start, std::size_t end);
+    bool hasInputIntersection(
+        const TaggedLineString* lineIn,
+        std::size_t excludeStart, std::size_t excludeEnd,
+        const LineSegment& flatSeg);
 
-	/** \brief
-	 * Tests whether a segment is in a section of a TaggedLineString
-	 *
-	 * @param line
-	 * @param sectionIndex
-	 * @param seg
-	 * @return
-	 */
-	static bool isInLineSection(
-		const TaggedLineString* parentLine,
-		const std::vector<std::size_t>& sectionIndex,
-		const TaggedLineSegment* seg);
+    bool isCollinear(const Coordinate& pt, const LineSegment& seg) const;
 
-	/** \brief
-	 * Remove the segs in the section of the line
-	 *
-	 * @param line
-	 * @param pts
-	 * @param sectionStartIndex
-	 * @param sectionEndIndex
-	 */
-	void remove(const TaggedLineString* line,
-			std::size_t start,
-			std::size_t end);
- 
+    bool hasOutputIntersection(const LineSegment& flatSeg);
+
+    bool hasInvalidIntersection(
+        const LineSegment& seg0,
+        const LineSegment& seg1) const;
+
+
+    std::unique_ptr<TaggedLineSegment> flatten(
+        std::size_t start, std::size_t end);
+
+    /** \brief
+     * Tests whether a segment is in a section of a TaggedLineString.
+     * Sections may wrap around the endpoint of the line, 
+     * to support ring endpoint simplification.
+     * This is indicated by excludedStart > excludedEnd
+     *
+     * @param line line to be checked for the presence of `seg`
+     * @param excludeStart  the index of the first segment in the excluded section  
+     * @param excludeEnd the index of the last segment in the excluded section
+     * @param seg segment to look for in `line`
+     * @return true if the test segment intersects some segment in the line not in the excluded section
+     */
+    static bool isInLineSection(
+        const TaggedLineString* line,
+        const std::size_t excludeStart, const std::size_t excludeEnd,
+        const TaggedLineSegment* seg);
+
+    /** \brief
+     * Remove the segs in the section of the line
+     *
+     * @param line
+     * @param start
+     * @param end
+     */
+    void remove(const TaggedLineString* line,
+                std::size_t start,
+                std::size_t end);
+
 };
 
-inline void
-TaggedLineStringSimplifier::setDistanceTolerance(double d)
-{
-	distanceTolerance = d;
-}
 
 } // namespace geos::simplify
 } // namespace geos
@@ -166,6 +176,3 @@ TaggedLineStringSimplifier::setDistanceTolerance(double d)
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
-
-#endif // GEOS_SIMPLIFY_TAGGEDLINESTRINGSIMPLIFIER_H
-

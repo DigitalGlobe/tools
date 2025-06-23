@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -17,24 +17,26 @@
  **********************************************************************/
 
 
+#include <geos/geom/Geometry.h>
 #include <geos/geom/prep/PreparedPoint.h>
-#include <geos/geom/Point.h>
+
+#include "geos/util.h"
 
 namespace geos {
 namespace geom { // geos.geom
 namespace prep { // geos.geom.prep
 
-bool 
+bool
 PreparedPoint::intersects(const geom::Geometry* g) const
 {
-	if (! envelopesIntersect( g)) return false;
+    util::ensureNoCurvedComponents(g);
 
-	const Point *pt_geom = dynamic_cast<const Point *>(g);
-	if (pt_geom) 
-        return getGeometry().equals(g);
+    if(! envelopesIntersect(g)) {
+        return false;
+    }
 
-	// This avoids computing topology for the test geometry
-	return isAnyTargetComponentInTest( g);
+    // This avoids computing topology for the test geometry
+    return isAnyTargetComponentInTest(g);
 }
 
 } // namespace geos.geom.prep

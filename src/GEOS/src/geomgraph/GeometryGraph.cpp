@@ -3,13 +3,13 @@
  * GEOS - Geometry Engine Open Source
  * http://geos.osgeo.org
  *
- * Copyright (C) 2011 Sandro Santilli <strk@keybit.net>
+ * Copyright (C) 2011 Sandro Santilli <strk@kbt.io>
  * Copyright (C) 2005-2006 Refractions Research Inc.
  * Copyright (C) 2001-2002 Vivid Solutions Inc.
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -18,22 +18,22 @@
  *
  **********************************************************************/
 
-#include <geos/algorithm/CGAlgorithms.h>
+#include <geos/algorithm/Orientation.h>
 #include <geos/algorithm/BoundaryNodeRule.h>
 
 #include <geos/util/UnsupportedOperationException.h>
+#include <geos/util.h>
 
 #include <geos/geomgraph/GeometryGraph.h>
 #include <geos/geomgraph/Node.h>
 #include <geos/geomgraph/Edge.h>
 #include <geos/geomgraph/Label.h>
-#include <geos/geomgraph/Position.h>
+#include <geos/geom/Position.h>
 
-#include <geos/geomgraph/index/SimpleMCSweepLineIntersector.h> 
-#include <geos/geomgraph/index/SegmentIntersector.h> 
+#include <geos/geomgraph/index/SimpleMCSweepLineIntersector.h>
+#include <geos/geomgraph/index/SegmentIntersector.h>
 #include <geos/geomgraph/index/EdgeSetIntersector.h>
 
-#include <geos/geom/CoordinateArraySequence.h> 
 #include <geos/geom/CoordinateSequence.h>
 #include <geos/geom/Location.h>
 #include <geos/geom/Point.h>
@@ -47,10 +47,10 @@
 #include <geos/geom/GeometryCollection.h>
 #include <geos/util/Interrupt.h>
 
-#include <geos/inline.h>
+#include <geos/operation/valid/RepeatedPointRemover.h>
 
 #include <vector>
-#include <memory> // auto_ptr
+#include <memory> // std::unique_ptr
 #include <cassert>
 #include <typeinfo>
 
@@ -58,11 +58,7 @@
 #define GEOS_DEBUG 0
 #endif
 
-#ifndef GEOS_INLINE
-# include "geos/geomgraph/GeometryGraph.inl"
-#endif
 
-using namespace std;
 using namespace geos::geomgraph::index;
 using namespace geos::algorithm;
 using namespace geos::geom;
@@ -75,9 +71,9 @@ namespace geomgraph { // geos.geomgraph
  * for determining whether
  * a component (node or edge) that appears multiple times in elements
  * of a MultiGeometry is in the boundary or the interior of the Geometry
- * 
+ *
  * The SFS uses the "Mod-2 Rule", which this function implements
- * 
+ *
  * An alternative (and possibly more intuitive) rule would be
  * the "At Most One Rule":
  *    isInBoundary = (componentCount == 1)
@@ -85,42 +81,41 @@ namespace geomgraph { // geos.geomgraph
 bool
 GeometryGraph::isInBoundary(int boundaryCount)
 {
-	// the "Mod-2 Rule"
-	return boundaryCount%2==1;
+    // the "Mod-2 Rule"
+    return boundaryCount % 2 == 1;
 }
 
-int
+Location
 GeometryGraph::determineBoundary(int boundaryCount)
 {
-	return isInBoundary(boundaryCount)?Location::BOUNDARY : Location::INTERIOR;
+    return isInBoundary(boundaryCount) ? Location::BOUNDARY : Location::INTERIOR;
 }
 
 
 EdgeSetIntersector*
 GeometryGraph::createEdgeSetIntersector()
 {
-	// various options for computing intersections, from slowest to fastest
+    // various options for computing intersections, from slowest to fastest
 
-	//private EdgeSetIntersector esi = new SimpleEdgeSetIntersector();
-	//private EdgeSetIntersector esi = new MonotoneChainIntersector();
-	//private EdgeSetIntersector esi = new NonReversingChainIntersector();
-	//private EdgeSetIntersector esi = new SimpleSweepLineIntersector();
-	//private EdgeSetIntersector esi = new MCSweepLineIntersector();
+    //private EdgeSetIntersector esi = new SimpleEdgeSetIntersector();
+    //private EdgeSetIntersector esi = new MonotoneChainIntersector();
+    //private EdgeSetIntersector esi = new NonReversingChainIntersector();
+    //private EdgeSetIntersector esi = new SimpleSweepLineIntersector();
+    //private EdgeSetIntersector esi = new MCSweepLineIntersector();
 
-	//return new SimpleEdgeSetIntersector();
-	return new SimpleMCSweepLineIntersector();
+    //return new SimpleEdgeSetIntersector();
+    return new SimpleMCSweepLineIntersector();
 }
 
 /*public*/
-vector<Node*>*
+std::vector<Node*>*
 GeometryGraph::getBoundaryNodes()
 {
-	if ( ! boundaryNodes.get() )
-	{
-		boundaryNodes.reset(new vector<Node*>());
-		getBoundaryNodes(*(boundaryNodes.get()));
-	}
-	return boundaryNodes.get();
+    if(! boundaryNodes.get()) {
+        boundaryNodes.reset(new std::vector<Node*>());
+        getBoundaryNodes(*(boundaryNodes.get()));
+    }
+    return boundaryNodes.get();
 }
 
 /*public*/
@@ -128,102 +123,105 @@ CoordinateSequence*
 GeometryGraph::getBoundaryPoints()
 {
 
-	if ( ! boundaryPoints.get() ) 
-	{
-		// Collection will be destroied by GeometryGraph dtor
-		vector<Node*>* coll = getBoundaryNodes();
-		boundaryPoints.reset(new CoordinateArraySequence(coll->size()));
-		size_t i=0;
-		for (vector<Node*>::iterator it=coll->begin(), endIt=coll->end();
-			it!=endIt; ++it)
-		{
-			Node *node=*it;
-			boundaryPoints->setAt(node->getCoordinate(), i++);
-		}
-	}
+    if(! boundaryPoints.get()) {
+        // Collection will be destroyed by GeometryGraph dtor
+        std::vector<Node*>* coll = getBoundaryNodes();
+        boundaryPoints.reset(new CoordinateSequence(coll->size()));
+        std::size_t i = 0;
+        for(std::vector<Node*>::iterator it = coll->begin(), endIt = coll->end();
+                it != endIt; ++it) {
+            Node* node = *it;
+            boundaryPoints->setAt(node->getCoordinate(), i++);
+        }
+    }
 
-	// We keep ownership of this, will be destroyed by destructor
-	return boundaryPoints.get();
+    // We keep ownership of this, will be destroyed by destructor
+    return boundaryPoints.get();
 }
 
 Edge*
-GeometryGraph::findEdge(const LineString *line)
+GeometryGraph::findEdge(const LineString* line) const
 {
-	return lineEdgeMap.find(line)->second;
+    return lineEdgeMap.find(line)->second;
 }
 
 void
-GeometryGraph::computeSplitEdges(vector<Edge*> *edgelist)
+GeometryGraph::computeSplitEdges(std::vector<Edge*>* edgelist)
 {
 #if GEOS_DEBUG
-	cerr<<"["<<this<<"] GeometryGraph::computeSplitEdges() scanning "<<edges->size()<<" local and "<<edgelist->size()<<" provided edges"<<endl;
+    std::cerr << "[" << this << "] GeometryGraph::computeSplitEdges() scanning " << edges->size() << " local and " <<
+         edgelist->size() << " provided edges" << std::endl;
 #endif
-	for (vector<Edge*>::iterator i=edges->begin(), endIt=edges->end();
-		i!=endIt; ++i)
-	{
-		Edge *e=*i;
+    for(std::vector<Edge*>::iterator i = edges->begin(), endIt = edges->end();
+            i != endIt; ++i) {
+        Edge* e = *i;
 #if GEOS_DEBUG
-		cerr<<"   "<<e->print()<<" adding split edges from arg"<<endl;
+        std::cerr << "   " << e->print() << " adding split edges from arg" << std::endl;
 #endif
-		e->eiList.addSplitEdges(edgelist);
-	}
+        e->eiList.addSplitEdges(edgelist);
+    }
 #if GEOS_DEBUG
-	cerr<<"["<<this<<"] GeometryGraph::computeSplitEdges() completed "<<endl;
+    std::cerr << "[" << this << "] GeometryGraph::computeSplitEdges() completed " << std::endl;
 #endif
 }
 
 void
-GeometryGraph::add(const Geometry *g)
-	//throw (UnsupportedOperationException *)
+GeometryGraph::add(const Geometry* g)
+//throw (UnsupportedOperationException *)
 {
-	if (g->isEmpty()) return;
+    util::ensureNoCurvedComponents(g);
 
-	// check if this Geometry should obey the Boundary Determination Rule
-	// all collections except MultiPolygons obey the rule
-	if ( dynamic_cast<const MultiPolygon*>(g) )
-		useBoundaryDeterminationRule = false;
+    if(g->isEmpty()) {
+        return;
+    }
+
+    // check if this Geometry should obey the Boundary Determination Rule
+    // all collections except MultiPolygons obey the rule
+    if(dynamic_cast<const MultiPolygon*>(g)) {
+        useBoundaryDeterminationRule = false;
+    }
 
 
-	if ( const Polygon* x = dynamic_cast<const Polygon*>(g) )
-		addPolygon(x);
+    if(const Polygon* x1 = dynamic_cast<const Polygon*>(g)) {
+        addPolygon(x1);
+    }
 
-	// LineString also handles LinearRings
-	else if ( const LineString* x = dynamic_cast<const LineString*>(g) )
-		addLineString(x);
+    // LineString also handles LinearRings
+    else if(const LineString* x2 = dynamic_cast<const LineString*>(g)) {
+        addLineString(x2);
+    }
 
-	else if ( const Point* x = dynamic_cast<const Point*>(g) )
-		addPoint(x);
+    else if(const Point* x3 = dynamic_cast<const Point*>(g)) {
+        addPoint(x3);
+    }
 
-	else if ( const GeometryCollection* x =
-            dynamic_cast<const GeometryCollection*>(g) )
-  {
-		addCollection(x);
-  }
+    else if(const GeometryCollection* x4 =
+                dynamic_cast<const GeometryCollection*>(g)) {
+        addCollection(x4);
+    }
 
-	else {
-		string out=typeid(*g).name();
-		throw util::UnsupportedOperationException("GeometryGraph::add(Geometry *): unknown geometry type: "+out);
-	}
+    else {
+        std::string out = typeid(*g).name();
+        throw util::UnsupportedOperationException("GeometryGraph::add(Geometry *): unknown geometry type: " + out);
+    }
 }
 
 void
-GeometryGraph::addCollection(const GeometryCollection *gc)
+GeometryGraph::addCollection(const GeometryCollection* gc)
 {
-	for (size_t i=0, n=gc->getNumGeometries(); i<n; ++i)
-	{
-		const Geometry *g=gc->getGeometryN(i);
-		add(g);
-	}
+    for(std::size_t i = 0, n = gc->getNumGeometries(); i < n; ++i) {
+        add(gc->getGeometryN(i));
+    }
 }
 
 /*
  * Add a Point to the graph.
  */
 void
-GeometryGraph::addPoint(const Point *p)
+GeometryGraph::addPoint(const Point* p)
 {
-	const Coordinate& coord=*(p->getCoordinate());
-	insertPoint(argIndex, coord, Location::INTERIOR);
+    const Coordinate& coord = p->getCoordinatesRO()->getAt(0);
+    insertPoint(argIndex, coord, Location::INTERIOR);
 }
 
 /*
@@ -233,95 +231,82 @@ GeometryGraph::addPoint(const Point *p)
  * the left and right locations must be interchanged.
  */
 void
-GeometryGraph::addPolygonRing(const LinearRing *lr, int cwLeft, int cwRight)
-	// throw IllegalArgumentException (see below)
+GeometryGraph::addPolygonRing(const LinearRing* lr, Location cwLeft, Location cwRight)
+// throw IllegalArgumentException (see below)
 {
-	// skip empty component (see bug #234)
-	if ( lr->isEmpty() ) return;
+    // skip empty component (see bug #234)
+    if(lr->isEmpty()) {
+        return;
+    }
 
-	const CoordinateSequence *lrcl = lr->getCoordinatesRO();
+    const CoordinateSequence* lrcl = lr->getCoordinatesRO();
 
-	CoordinateSequence* coord=CoordinateSequence::removeRepeatedPoints(lrcl);
-	if (coord->getSize()<4) {
-		hasTooFewPointsVar=true;
-		invalidPoint=coord->getAt(0); // its now a Coordinate
-		delete coord;
-		return;
-	}
-	int left=cwLeft;
-	int right=cwRight;
+    auto coord = geos::operation::valid::RepeatedPointRemover::removeRepeatedPoints(lrcl);
+    if(coord->getSize() < 4) {
+        hasTooFewPointsVar = true;
+        invalidPoint = coord->getAt(0); // its now a Coordinate
+        return;
+    }
+    Location left = cwLeft;
+    Location right = cwRight;
 
-	/*
-	 * the isCCW call might throw an
-	 * IllegalArgumentException if degenerate ring does
-	 * not contain 3 distinct points.
-	 */
-	try
-	{
-		if (CGAlgorithms::isCCW(coord)) {
-			left=cwRight;
-			right=cwLeft;
-		}
-	}
-	catch(...)
-	{
-		delete coord;
-		throw;
-	}
+    /*
+     * the isCCW call might throw an
+     * IllegalArgumentException if degenerate ring does
+     * not contain 3 distinct points.
+     */
+    if(Orientation::isCCW(coord.get())) {
+        left = cwRight;
+        right = cwLeft;
+    }
 
-	Edge *e=new Edge(coord, Label(argIndex, Location::BOUNDARY, left, right));
-	lineEdgeMap[lr]=e;
-	insertEdge(e);
-	insertPoint(argIndex,coord->getAt(0), Location::BOUNDARY);
+    auto coordRaw = coord.release();
+    Edge* e = new Edge(coordRaw, Label(argIndex, Location::BOUNDARY, left, right));
+    lineEdgeMap[lr] = e;
+    insertEdge(e);
+    insertPoint(argIndex, coordRaw->getAt(0), Location::BOUNDARY);
 }
 
 void
-GeometryGraph::addPolygon(const Polygon *p)
+GeometryGraph::addPolygon(const Polygon* p)
 {
-	const LineString* ls;
-	const LinearRing* lr;
+    const LinearRing* lr = p->getExteriorRing();
 
-	ls = p->getExteriorRing();
-	assert(dynamic_cast<const LinearRing*>(ls));
-	lr = static_cast<const LinearRing*>(ls);
-	addPolygonRing(lr, Location::EXTERIOR, Location::INTERIOR);
-	for (size_t i=0, n=p->getNumInteriorRing(); i<n; ++i)
-	{
-		// Holes are topologically labelled opposite to the shell, since
-		// the interior of the polygon lies on their opposite side
-		// (on the left, if the hole is oriented CW)
-		ls = p->getInteriorRingN(i);
-		assert(dynamic_cast<const LinearRing*>(ls));
-		lr = static_cast<const LinearRing*>(ls);
-		addPolygonRing(lr, Location::INTERIOR, Location::EXTERIOR);
-	}
+    addPolygonRing(lr, Location::EXTERIOR, Location::INTERIOR);
+    for(std::size_t i = 0, n = p->getNumInteriorRing(); i < n; ++i) {
+        // Holes are topologically labelled opposite to the shell, since
+        // the interior of the polygon lies on their opposite side
+        // (on the left, if the hole is oriented CW)
+        lr = p->getInteriorRingN(i);
+        addPolygonRing(lr, Location::INTERIOR, Location::EXTERIOR);
+    }
 }
 
 void
-GeometryGraph::addLineString(const LineString *line)
+GeometryGraph::addLineString(const LineString* line)
 {
-	CoordinateSequence* coord=CoordinateSequence::removeRepeatedPoints(line->getCoordinatesRO());
-	if(coord->getSize()<2) {
-		hasTooFewPointsVar=true;
-		invalidPoint=coord->getAt(0);
-		delete coord;
-		return;
-	}
+    auto coord = operation::valid::RepeatedPointRemover::removeRepeatedPoints(line->getCoordinatesRO());
+    if(coord->getSize() < 2) {
+        hasTooFewPointsVar = true;
+        invalidPoint = coord->getAt(0);
+        return;
+    }
 
-	Edge *e=new Edge(coord, Label(argIndex, Location::INTERIOR));
-	lineEdgeMap[line]=e;
-	insertEdge(e);
+    auto coordRaw = coord.release();
+    Edge* e = new Edge(coordRaw, Label(argIndex, Location::INTERIOR));
+    lineEdgeMap[line] = e;
+    insertEdge(e);
 
-	/*
-	 * Add the boundary points of the LineString, if any.
-	 * Even if the LineString is closed, add both points as if they
-	 * were endpoints.
-	 * This allows for the case that the node already exists and is
-	 * a boundary point.
-	 */
-	assert(coord->size() >= 2); // found LineString with single point
-	insertBoundaryPoint(argIndex, coord->getAt(0));
-	insertBoundaryPoint(argIndex, coord->getAt(coord->getSize()-1));
+    /*
+     * Add the boundary points of the LineString, if any.
+     * Even if the LineString is closed, add both points as if they
+     * were endpoints.
+     * This allows for the case that the node already exists and is
+     * a boundary point.
+     */
+    assert(coordRaw->size() >= 2); // found LineString with single point
+    insertBoundaryPoint(argIndex, coordRaw->getAt(0));
+    insertBoundaryPoint(argIndex, coordRaw->getAt(coordRaw->getSize() - 1));
 }
 
 /*
@@ -329,13 +314,13 @@ GeometryGraph::addLineString(const LineString *line)
  * to be correct.
  */
 void
-GeometryGraph::addEdge(Edge *e)
+GeometryGraph::addEdge(Edge* e)
 {
-	insertEdge(e);
-	const CoordinateSequence* coord=e->getCoordinates();
-	// insert the endpoint as a node, to mark that it is on the boundary
-	insertPoint(argIndex,coord->getAt(0),Location::BOUNDARY);
-	insertPoint(argIndex,coord->getAt(coord->getSize()-1),Location::BOUNDARY);
+    insertEdge(e);
+    const CoordinateSequence* coord = e->getCoordinates();
+    // insert the endpoint as a node, to mark that it is on the boundary
+    insertPoint(argIndex, coord->getAt(0), Location::BOUNDARY);
+    insertPoint(argIndex, coord->getAt(coord->getSize() - 1), Location::BOUNDARY);
 }
 
 /*
@@ -345,110 +330,106 @@ GeometryGraph::addEdge(Edge *e)
 void
 GeometryGraph::addPoint(Coordinate& pt)
 {
-	insertPoint(argIndex,pt,Location::INTERIOR);
+    insertPoint(argIndex, pt, Location::INTERIOR);
 }
 
 template <class T, class C>
-void collect_intersecting_edges(const Envelope *env, T start, T end, C &to)
+void
+collect_intersecting_edges(const Envelope* env, T start, T end, C& to)
 {
-  for (T i=start; i != end; ++i)
-  {
-    Edge *e = *i;
-    if ( e->getEnvelope()->intersects(env) ) to.push_back(e);
-  }
+    for(T i = start; i != end; ++i) {
+        Edge* e = *i;
+        if(e->getEnvelope()->intersects(env)) {
+            to.push_back(e);
+        }
+    }
 }
 
 /*public*/
-SegmentIntersector*
-GeometryGraph::computeSelfNodes(LineIntersector &li,
-  bool computeRingSelfNodes, const Envelope *env)
+std::unique_ptr<SegmentIntersector>
+GeometryGraph::computeSelfNodes(LineIntersector& li,
+                                bool computeRingSelfNodes, const Envelope* env)
 {
-	SegmentIntersector *si=new SegmentIntersector(&li,true,false);
-    	auto_ptr<EdgeSetIntersector> esi(createEdgeSetIntersector());
+    auto si = detail::make_unique<SegmentIntersector>(&li, true, false);
+    std::unique_ptr<EdgeSetIntersector> esi(createEdgeSetIntersector());
 
-	typedef vector<Edge*> EC;
-	EC *se = edges;
-	EC self_edges_copy;
-	if ( env && ! env->covers(parentGeom->getEnvelopeInternal()) ) {
-		collect_intersecting_edges(env, se->begin(), se->end(), self_edges_copy);
-    //cerr << "(computeSelfNodes) Self edges reduced from " << se->size() << " to " << self_edges_copy.size() << endl;
-		se = &self_edges_copy;
-	}
+    typedef std::vector<Edge*> EC;
+    EC* se = edges;
+    EC self_edges_copy;
 
-	// optimized test for Polygons and Rings
-	if (! computeRingSelfNodes
-	    && ( dynamic_cast<const LinearRing*>(parentGeom)
-	    || dynamic_cast<const Polygon*>(parentGeom)
-	    || dynamic_cast<const MultiPolygon*>(parentGeom) ))
-	{
-		esi->computeIntersections(se, si, false);
-	}
-	else
-	{
-		esi->computeIntersections(se, si, true);
-	}
+    if(env && ! env->covers(parentGeom->getEnvelopeInternal())) {
+        collect_intersecting_edges(env, se->begin(), se->end(), self_edges_copy);
+        //cerr << "(computeSelfNodes) Self edges reduced from " << se->size() << " to " << self_edges_copy.size() << std::endl;
+        se = &self_edges_copy;
+    }
+
+    bool isRings = dynamic_cast<const LinearRing*>(parentGeom)
+                   || dynamic_cast<const Polygon*>(parentGeom)
+                   || dynamic_cast<const MultiPolygon*>(parentGeom);
+
+    bool computeAllSegments = computeRingSelfNodes || ! isRings;
+
+    esi->computeIntersections(se, si.get(), computeAllSegments);
 
 #if GEOS_DEBUG
-	cerr << "SegmentIntersector # tests = " << si->numTests << endl;
+    std::cerr << "SegmentIntersector # tests = " << si->numTests << std::endl;
 #endif // GEOS_DEBUG
 
-	addSelfIntersectionNodes(argIndex);
-	return si;
+    addSelfIntersectionNodes(argIndex);
+    return si;
 }
 
-SegmentIntersector*
-GeometryGraph::computeEdgeIntersections(GeometryGraph *g,
-	LineIntersector *li, bool includeProper, const Envelope *env)
+std::unique_ptr<SegmentIntersector>
+GeometryGraph::computeEdgeIntersections(GeometryGraph* g,
+                                        LineIntersector* li, bool includeProper, const Envelope* env)
 {
 #if GEOS_DEBUG
-	cerr<<"GeometryGraph::computeEdgeIntersections call"<<endl;
+    std::cerr << "GeometryGraph::computeEdgeIntersections call" << std::endl;
 #endif
-	SegmentIntersector *si=new SegmentIntersector(li, includeProper, true);
+    std::unique_ptr<SegmentIntersector> si(new SegmentIntersector(li, includeProper, true));
 
-	si->setBoundaryNodes(getBoundaryNodes(), g->getBoundaryNodes());
-	auto_ptr<EdgeSetIntersector> esi(createEdgeSetIntersector());
+    si->setBoundaryNodes(getBoundaryNodes(), g->getBoundaryNodes());
+    std::unique_ptr<EdgeSetIntersector> esi(createEdgeSetIntersector());
 
-	typedef vector<Edge*> EC;
+    typedef std::vector<Edge*> EC;
 
-	EC self_edges_copy;
-	EC other_edges_copy;
+    EC self_edges_copy;
+    EC other_edges_copy;
 
-	EC *se = edges;
-	EC *oe = g->edges;
-	if ( env && ! env->covers(parentGeom->getEnvelopeInternal()) ) {
-		collect_intersecting_edges(env, se->begin(), se->end(), self_edges_copy);
-    //cerr << "Self edges reduced from " << se->size() << " to " << self_edges_copy.size() << endl;
-		se = &self_edges_copy;
-	}
-	if ( env && ! env->covers(g->parentGeom->getEnvelopeInternal()) ) {
-		collect_intersecting_edges(env, oe->begin(), oe->end(), other_edges_copy);
-    //cerr << "Other edges reduced from " << oe->size() << " to " << other_edges_copy.size() << endl;
-		oe = &other_edges_copy;
-	}
-	esi->computeIntersections(se, oe, si);
+    EC* se = edges;
+    EC* oe = g->edges;
+    if(env && ! env->covers(parentGeom->getEnvelopeInternal())) {
+        collect_intersecting_edges(env, se->begin(), se->end(), self_edges_copy);
+        //cerr << "Self edges reduced from " << se->size() << " to " << self_edges_copy.size() << std::endl;
+        se = &self_edges_copy;
+    }
+    if(env && ! env->covers(g->parentGeom->getEnvelopeInternal())) {
+        collect_intersecting_edges(env, oe->begin(), oe->end(), other_edges_copy);
+        //cerr << "Other edges reduced from " << oe->size() << " to " << other_edges_copy.size() << std::endl;
+        oe = &other_edges_copy;
+    }
+    esi->computeIntersections(se, oe, si.get());
 #if GEOS_DEBUG
-	cerr<<"GeometryGraph::computeEdgeIntersections returns"<<endl;
+    std::cerr << "GeometryGraph::computeEdgeIntersections returns" << std::endl;
 #endif
-	return si;
+    return si;
 }
 
 void
-GeometryGraph::insertPoint(int argIndex, const Coordinate& coord,
-	int onLocation)
+GeometryGraph::insertPoint(uint8_t p_argIndex, const Coordinate &coord,
+                           geom::Location onLocation)
 {
 #if GEOS_DEBUG > 1
-	cerr<<"GeometryGraph::insertPoint("<<coord.toString()<<" called"<<endl;
+    std::cerr << "GeometryGraph::insertPoint(" << coord.toString() << " called" << std::endl;
 #endif
-	Node *n=nodes->addNode(coord);
-	Label& lbl = n->getLabel();
-	if ( lbl.isNull() )
-	{
-		n->setLabel(argIndex, onLocation);
-	}
-	else
-	{
-		lbl.setLocation(argIndex, onLocation);
-	}
+    Node* n = nodes->addNode(coord);
+    Label& lbl = n->getLabel();
+    if(lbl.isNull()) {
+        n->setLabel(p_argIndex, onLocation);
+    }
+    else {
+        lbl.setLocation(p_argIndex, onLocation);
+    }
 }
 
 /*
@@ -458,130 +439,116 @@ GeometryGraph::insertPoint(int argIndex, const Coordinate& coord,
  * iff if it is in the boundaries of an odd number of Geometries
  */
 void
-GeometryGraph::insertBoundaryPoint(int argIndex, const Coordinate& coord)
+GeometryGraph::insertBoundaryPoint(uint8_t p_argIndex, const Coordinate &coord)
 {
-	Node *n=nodes->addNode(coord);
-	// nodes always have labels
-	Label& lbl = n->getLabel();
+    Node* n = nodes->addNode(coord);
+    // nodes always have labels
+    Label& lbl = n->getLabel();
 
-	// the new point to insert is on a boundary
-	int boundaryCount=1;
+    // the new point to insert is on a boundary
+    int boundaryCount = 1;
 
-	// determine the current location for the point (if any)
-	int loc = lbl.getLocation(argIndex,Position::ON);
-	if (loc==Location::BOUNDARY) boundaryCount++;
+    // determine the current location for the point (if any)
+    Location loc = lbl.getLocation(p_argIndex, Position::ON);
+    if(loc == Location::BOUNDARY) {
+        boundaryCount++;
+    }
 
-	// determine the boundary status of the point according to the
-	// Boundary Determination Rule
-	int newLoc = determineBoundary(boundaryNodeRule, boundaryCount);
-	lbl.setLocation(argIndex,newLoc);
+    // determine the boundary status of the point according to the
+    // Boundary Determination Rule
+    Location newLoc = determineBoundary(boundaryNodeRule, boundaryCount);
+    lbl.setLocation(p_argIndex, newLoc);
 }
 
 /*private*/
 void
-GeometryGraph::addSelfIntersectionNodes(int argIndex)
+GeometryGraph::addSelfIntersectionNodes(uint8_t p_argIndex)
 {
-	for (vector<Edge*>::iterator i=edges->begin(), endIt=edges->end();
-		i!=endIt; ++i)
-	{
-		Edge *e=*i;
-		int eLoc = e->getLabel().getLocation(argIndex);
-		EdgeIntersectionList &eiL = e->eiList;
-		for (EdgeIntersectionList::iterator
-			eiIt=eiL.begin(), eiEnd=eiL.end();
-			eiIt!=eiEnd; ++eiIt)
-		{
-			EdgeIntersection *ei=*eiIt;
-			addSelfIntersectionNode(argIndex, ei->coord, eLoc);
-			GEOS_CHECK_FOR_INTERRUPTS();
-		}
-	}
+    for(Edge* e : *edges) {
+        Location eLoc = e->getLabel().getLocation(p_argIndex);
+        const EdgeIntersectionList& eiL = e->eiList;
+        for(const EdgeIntersection& ei : eiL) {
+            addSelfIntersectionNode(p_argIndex, ei.coord, eLoc);
+            GEOS_CHECK_FOR_INTERRUPTS();
+        }
+    }
 }
 
 /*private*/
 void
-GeometryGraph::addSelfIntersectionNode(int argIndex,
-	const Coordinate& coord, int loc)
+GeometryGraph::addSelfIntersectionNode(uint8_t p_argIndex,
+                                       const Coordinate &coord, Location loc)
 {
-	// if this node is already a boundary node, don't change it
-	if (isBoundaryNode(argIndex,coord)) return;
-	if (loc==Location::BOUNDARY && useBoundaryDeterminationRule)
-	{
-		insertBoundaryPoint(argIndex,coord);
-	}
-	else
-	{
-		insertPoint(argIndex,coord,loc);
-	}
+    // if this node is already a boundary node, don't change it
+    if(isBoundaryNode(p_argIndex, coord)) {
+        return;
+    }
+    if(loc == Location::BOUNDARY && useBoundaryDeterminationRule) {
+        insertBoundaryPoint(p_argIndex, coord);
+    }
+    else {
+        insertPoint(p_argIndex, coord, loc);
+    }
 }
 
-vector<Edge*> *
+std::vector<Edge*>*
 GeometryGraph::getEdges()
 {
-	return edges;
+    return edges;
 }
 
 bool
 GeometryGraph::hasTooFewPoints()
 {
-	return hasTooFewPointsVar;
+    return hasTooFewPointsVar;
 }
 
 const Coordinate&
 GeometryGraph::getInvalidPoint()
 {
-	return invalidPoint;
+    return invalidPoint;
 }
 
-GeometryGraph::GeometryGraph(int newArgIndex,
-		const geom::Geometry *newParentGeom)
-	:
-	PlanarGraph(),
-	parentGeom(newParentGeom),
-	useBoundaryDeterminationRule(true),
+GeometryGraph::GeometryGraph(uint8_t newArgIndex,
+                             const geom::Geometry* newParentGeom)
+    :
+    PlanarGraph(),
+    parentGeom(newParentGeom),
+    useBoundaryDeterminationRule(true),
     boundaryNodeRule(algorithm::BoundaryNodeRule::getBoundaryOGCSFS()),
-	argIndex(newArgIndex),
-	hasTooFewPointsVar(false)
+    argIndex(newArgIndex),
+    hasTooFewPointsVar(false)
 {
-	if (parentGeom!=NULL) add(parentGeom);
+    if(parentGeom != nullptr) {
+        add(parentGeom);
+    }
 }
 
-GeometryGraph::GeometryGraph(int newArgIndex,
-		const geom::Geometry *newParentGeom,
-		const algorithm::BoundaryNodeRule& bnr)
-	:
-	PlanarGraph(),
-	parentGeom(newParentGeom),
-	useBoundaryDeterminationRule(true),
-	boundaryNodeRule(bnr),
-	argIndex(newArgIndex),
-	hasTooFewPointsVar(false)
+GeometryGraph::GeometryGraph(uint8_t newArgIndex,
+                             const geom::Geometry* newParentGeom,
+                             const algorithm::BoundaryNodeRule& bnr)
+    :
+    PlanarGraph(),
+    parentGeom(newParentGeom),
+    useBoundaryDeterminationRule(true),
+    boundaryNodeRule(bnr),
+    argIndex(newArgIndex),
+    hasTooFewPointsVar(false)
 {
-	if (parentGeom!=NULL) add(parentGeom);
+    if(parentGeom != nullptr) {
+        add(parentGeom);
+    }
 }
-
-GeometryGraph::GeometryGraph()
-	:
-	PlanarGraph(),
-	parentGeom(NULL),
-	useBoundaryDeterminationRule(true),
-    boundaryNodeRule(algorithm::BoundaryNodeRule::getBoundaryOGCSFS()),
-	argIndex(-1),
-	hasTooFewPointsVar(false)
-{
-}
-
 
 /* public static */
-int
+Location
 GeometryGraph::determineBoundary(
-	             const algorithm::BoundaryNodeRule& boundaryNodeRule,
-	                                            int boundaryCount)
+    const algorithm::BoundaryNodeRule& boundaryNodeRule,
+    int boundaryCount)
 {
-	return boundaryNodeRule.isInBoundary(boundaryCount)
-		? Location::BOUNDARY : Location::INTERIOR;
+    return boundaryNodeRule.isInBoundary(boundaryCount)
+           ? Location::BOUNDARY : Location::INTERIOR;
 }
 
 } // namespace geos.geomgraph
 } // namespace geos
-

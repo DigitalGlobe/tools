@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -21,7 +21,7 @@
 #include <vector>
 
 #include <geos/profiler.h>
-#include <geos/util/TopologyException.h> 
+#include <geos/util/TopologyException.h>
 #include <geos/noding/IteratedNoder.h>
 #include <geos/noding/SegmentString.h>
 #include <geos/noding/MCIndexNoder.h>
@@ -31,7 +31,6 @@
 #define GEOS_DEBUG 0
 #endif
 
-using namespace std;
 using namespace geos::geom;
 
 namespace geos {
@@ -39,62 +38,78 @@ namespace noding { // geos.noding
 
 /* private */
 void
-IteratedNoder::node(vector<SegmentString*> *segStrings,
-		int *numInteriorIntersections)
+IteratedNoder::node(std::vector<SegmentString*>* segStrings,
+                    int& numInteriorIntersections,
+                    CoordinateXY& intersectionPoint)
 {
-	IntersectionAdder si(li);
-	MCIndexNoder noder;
-	noder.setSegmentIntersector(&si);
-	noder.computeNodes(segStrings);
-	nodedSegStrings = noder.getNodedSubstrings();
-	*numInteriorIntersections = si.numInteriorIntersections;
-//System.out.println("# intersection tests: " + si.numTests);
+    IntersectionAdder si(li);
+    MCIndexNoder noder;
+    noder.setSegmentIntersector(&si);
+    noder.computeNodes(segStrings);
+    nodedSegStrings = noder.getNodedSubstrings();
+    numInteriorIntersections = si.numInteriorIntersections;
+
+    if (si.hasProperInteriorIntersection()) {
+        intersectionPoint = si.getProperIntersectionPoint();
+    }
 }
 
 /* public */
 void
 IteratedNoder::computeNodes(SegmentString::NonConstVect* segStrings)
-	// throw(GEOSException);
+// throw(GEOSException);
 {
-	int numInteriorIntersections;
-	nodedSegStrings = segStrings;
-	int nodingIterationCount = 0;
-	int lastNodesCreated = -1;
-	vector<SegmentString*> *lastStrings = 0;
-	do {
+    int numInteriorIntersections;
+    nodedSegStrings = segStrings;
+    int nodingIterationCount = 0;
+    int lastNodesCreated = -1;
+    std::vector<SegmentString*>* lastStrings = nullptr;
+    CoordinateXY intersectionPoint = CoordinateXY::getNull();
 
-		// NOTE: will change this.nodedSegStrings
-		node(nodedSegStrings, &numInteriorIntersections);
+    do {
+        // NOTE: will change this.nodedSegStrings
+        node(nodedSegStrings, numInteriorIntersections, intersectionPoint);
 
-		// Delete noded strings from previous iteration
-		if ( lastStrings ) {
-			for ( unsigned int i = 0, n = lastStrings->size(); i < n; ++i )
-				delete (*lastStrings)[i];
-			delete lastStrings;
-		}
-		lastStrings = nodedSegStrings;
+        // Delete noded strings from previous iteration
+        if(lastStrings) {
+            for(auto& s : *lastStrings) {
+                delete s;
+            }
+            delete lastStrings;
+        }
+        lastStrings = nodedSegStrings;
 
-		nodingIterationCount++;
-		int nodesCreated = numInteriorIntersections;
+        nodingIterationCount++;
+        int nodesCreated = numInteriorIntersections;
 
-		/**
-		 * Fail if the number of nodes created is not declining.
-		 * However, allow a few iterations at least before doing this
-		 */
-		//cerr<<"# nodes created: "<<nodesCreated<<endl;
-		if (lastNodesCreated > 0
-				&& nodesCreated >= lastNodesCreated
-				&& nodingIterationCount > maxIter)
-		{
-			stringstream s;
-			s<<"Iterated noding failed to converge after "<<
-                                    nodingIterationCount << " iterations";
-			throw util::TopologyException(s.str());
-		}
-		lastNodesCreated = nodesCreated;
+        /*
+         * Fail if the number of nodes created is not declining.
+         * However, allow a few iterations at least before doing this
+         */
+        //cerr<<"# nodes created: "<<nodesCreated<<endl;
+        if(lastNodesCreated > 0
+                && nodesCreated >= lastNodesCreated
+                && nodingIterationCount > maxIter) {
 
-	} while (lastNodesCreated > 0);
-	//cerr<<"# nodings = "<<nodingIterationCount<<endl;
+            // Delete noded strings from previous iteration
+            if(lastStrings) {
+                for(auto& s : *lastStrings) {
+                    delete s;
+                }
+                delete lastStrings;
+            }
+
+            std::stringstream s;
+            s << "Iterated noding failed to converge after " <<
+              nodingIterationCount << " iterations (near " <<
+              intersectionPoint << ")";
+            throw util::TopologyException(s.str());
+        }
+        lastNodesCreated = nodesCreated;
+
+    }
+    while(lastNodesCreated > 0);
+    //cerr<<"# nodings = "<<nodingIterationCount<<endl;
 }
 
 

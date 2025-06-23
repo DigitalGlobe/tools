@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -21,25 +21,66 @@
 #ifndef GEOS_UTIL_H
 #define GEOS_UTIL_H
 
-//#include <geos/util/AssertionFailedException.h>
-#include <geos/util/GEOSException.h>
-#include <geos/util/IllegalArgumentException.h>
-#include <geos/util/TopologyException.h>
-//#include <geos/util/UnsupportedOperationException.h>
-//#include <geos/util/CoordinateArrayFilter.h>
-//#include <geos/util/UniqueCoordinateArrayFilter.h>
-#include <geos/util/GeometricShapeFactory.h>
-//#include <geos/util/math.h>
+#include <cassert>
+#include <memory>
+#include <type_traits>
+#include <geos/util/UnsupportedOperationException.h>
 
 //
-// Private macros definition 
-// 
+// Private macros definition
+//
 
-namespace geos
+namespace geos {
+template<class T>
+void
+ignore_unused_variable_warning(T const &) {}
+
+namespace detail {
+using std::make_unique;
+
+/** Use detail::down_cast<Derived*>(pointer_to_base) as equivalent of
+ * static_cast<Derived*>(pointer_to_base) with safe checking in debug
+ * mode.
+ *
+ * Only works if no virtual inheritance is involved.
+ *
+ * @param f pointer to a base class
+ * @return pointer to a derived class
+ */
+template<typename To, typename From> inline To down_cast(From* f)
 {
-    template<class T>
-    void ignore_unused_variable_warning(T const& ) {}
+    static_assert(
+        (std::is_base_of<From,
+                        typename std::remove_pointer<To>::type>::value),
+        "target type not derived from source type");
+#if GEOS_DEBUG
+    assert(f == nullptr || dynamic_cast<To>(f) != nullptr);
+#endif
+    return static_cast<To>(f);
 }
 
+} // namespace detail
+
+namespace util {
+
+template<typename T>
+void ensureNoCurvedComponents(const T& geom)
+{
+    if (geom.hasCurvedComponents()) {
+        throw UnsupportedOperationException("Curved geometry types are not supported.");
+    }
+}
+
+template<typename T>
+void ensureNoCurvedComponents(const T* geom)
+{
+    ensureNoCurvedComponents(*geom);
+}
+
+
+}
+
+
+} // namespace geos
 
 #endif // GEOS_UTIL_H

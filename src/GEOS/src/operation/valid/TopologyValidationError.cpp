@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -22,65 +22,68 @@
 
 #include <string>
 
-using namespace std;
+
 using namespace geos::geom;
 
 namespace geos {
 namespace operation { // geos.operation
 namespace valid { // geos.operation.valid
 
-const char* TopologyValidationError::errMsg[]={
-	"Topology Validation Error",
-	"Repeated Point",
-	"Hole lies outside shell",
-	"Holes are nested",
-	"Interior is disconnected",
-	"Self-intersection",
-	"Ring Self-intersection",
-	"Nested shells",
-	"Duplicate Rings",
-	"Too few points in geometry component",
-	"Invalid Coordinate",
-	"Ring is not closed"
+const char* TopologyValidationError::errMsg[] = {
+    "Topology Validation Error",
+    "Repeated Point",
+    "Hole lies outside shell",
+    "Holes are nested",
+    "Interior is disconnected",
+    "Self-intersection",
+    "Ring Self-intersection",
+    "Nested shells",
+    "Duplicate Rings",
+    "Too few points in geometry component",
+    "Invalid Coordinate",
+    "Ring is not closed"
 };
 
 TopologyValidationError::TopologyValidationError(int newErrorType,
-		const Coordinate& newPt)
-	:
-	errorType(newErrorType),
-	pt(newPt)
+        const CoordinateXY& newPt)
+    :
+    errorType(newErrorType),
+    pt(newPt)
 {
 }
 
 TopologyValidationError::TopologyValidationError(int newErrorType)
-	:
-	errorType(newErrorType),
-	pt(Coordinate::getNull())
+    :
+    errorType(newErrorType),
+    pt(Coordinate::getNull())
 {
 }
 
 int
-TopologyValidationError::getErrorType()
+TopologyValidationError::getErrorType() const
 {
-	return errorType;
+    return errorType;
 }
 
-Coordinate&
-TopologyValidationError::getCoordinate()
+const CoordinateXY&
+TopologyValidationError::getCoordinate() const
 {
-	return pt;
+    return pt;
 }
 
-string
-TopologyValidationError::getMessage()
+std::string
+TopologyValidationError::getMessage() const
 {
-	return string(errMsg[errorType]);
+    if (errorType >= 0)
+        return std::string(errMsg[errorType]);
+    else
+        return std::string("");
 }
 
-string
-TopologyValidationError::toString()
+std::string
+TopologyValidationError::toString() const
 {
-	return getMessage().append(" at or near point ").append(pt.toString());
+    return getMessage().append(" at or near point ").append(pt.toString());
 }
 
 } // namespace geos.operation.valid

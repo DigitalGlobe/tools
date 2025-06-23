@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -16,24 +16,24 @@
  *
  **********************************************************************/
 
-#ifndef GEOS_OP_RELATE_EDGEENDBUILDER_H
-#define GEOS_OP_RELATE_EDGEENDBUILDER_H
+#pragma once
 
 #include <geos/export.h>
 
+#include <memory>
 #include <vector>
 
 // Forward declarations
 namespace geos {
-	namespace geom {
-		class IntersectionMatrix;
-		class Coordinate;
-	}
-	namespace geomgraph {
-		class Edge;
-		class EdgeIntersection;
-		class EdgeEnd;
-	}
+namespace geom {
+class IntersectionMatrix;
+class Coordinate;
+}
+namespace geomgraph {
+class Edge;
+class EdgeIntersection;
+class EdgeEnd;
+}
 }
 
 
@@ -47,26 +47,24 @@ namespace relate { // geos::operation::relate
  */
 class GEOS_DLL EdgeEndBuilder {
 public:
-	EdgeEndBuilder() {}
+    EdgeEndBuilder() {}
 
-	std::vector<geomgraph::EdgeEnd*> *computeEdgeEnds(std::vector<geomgraph::Edge*> *edges);
-	void computeEdgeEnds(geomgraph::Edge *edge,std::vector<geomgraph::EdgeEnd*> *l);
+    std::vector<std::unique_ptr<geomgraph::EdgeEnd>> computeEdgeEnds(std::vector<geomgraph::Edge*>* edges);
+    void computeEdgeEnds(geomgraph::Edge* edge, std::vector<std::unique_ptr<geomgraph::EdgeEnd>>& l);
 
 protected:
 
-	void createEdgeEndForPrev(geomgraph::Edge *edge,
-			std::vector<geomgraph::EdgeEnd*> *l,
-			geomgraph::EdgeIntersection *eiCurr,
-			geomgraph::EdgeIntersection *eiPrev);
+    void createEdgeEndForPrev(geomgraph::Edge* edge,
+                              std::vector<std::unique_ptr<geomgraph::EdgeEnd>>& l,
+                              const geomgraph::EdgeIntersection* eiCurr,
+                              const geomgraph::EdgeIntersection* eiPrev);
 
-	void createEdgeEndForNext(geomgraph::Edge *edge,
-			std::vector<geomgraph::EdgeEnd*> *l,
-			geomgraph::EdgeIntersection *eiCurr,
-			geomgraph::EdgeIntersection *eiNext);
+    void createEdgeEndForNext(geomgraph::Edge* edge,
+                              std::vector<std::unique_ptr<geomgraph::EdgeEnd>>& l,
+                              const geomgraph::EdgeIntersection* eiCurr,
+                              const geomgraph::EdgeIntersection* eiNext);
 };
 
 } // namespace geos:operation:relate
 } // namespace geos:operation
 } // namespace geos
-
-#endif // GEOS_OP_RELATE_EDGEENDBUILDER_H

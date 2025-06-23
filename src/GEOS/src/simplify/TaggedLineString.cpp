@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -20,9 +20,10 @@
 #include <geos/simplify/TaggedLineSegment.h>
 #include <geos/geom/CoordinateSequence.h>
 #include <geos/geom/LineString.h>
-#include <geos/geom/Geometry.h> // for auto_ptr destructor 
+#include <geos/geom/LinearRing.h>
+#include <geos/geom/Geometry.h> // for unique_ptr destructor
 #include <geos/geom/GeometryFactory.h>
-#include <geos/geom/CoordinateSequenceFactory.h>
+#include <geos/util.h>
 
 #include <cassert>
 #include <memory>
@@ -31,75 +32,76 @@
 #define GEOS_DEBUG 0
 #endif
 
-#ifdef GEOS_DEBUG
+#if GEOS_DEBUG
 #include <iostream>
 #endif
 
 using namespace geos::geom;
-using namespace std;
+
 
 namespace geos {
 namespace simplify { // geos::simplify
 
 /*public*/
 TaggedLineString::TaggedLineString(const geom::LineString* nParentLine,
-			std::size_t nMinimumSize)
-	:
-	parentLine(nParentLine),
-	minimumSize(nMinimumSize)
+    std::size_t nMinimumSize,
+    bool bIsRing)
+    : parentLine(nParentLine)
+    , minimumSize(nMinimumSize)
+    , m_isRing(bIsRing)
 {
-	init();
+    init();
 }
 
 /*public*/
 TaggedLineString::~TaggedLineString()
 {
 #if GEOS_DEBUG
-	cerr << "TaggedLineString[" << this << "] destructor"
-	     << endl;
+    std::cerr << "TaggedLineString[" << this << "] destructor"
+         << std::endl;
 #endif
 
-	for (std::size_t i=0, n=segs.size(); i<n; i++)
-		delete segs[i];
+    for(std::size_t i = 0, n = segs.size(); i < n; i++) {
+        delete segs[i];
+    }
 
-	for (std::size_t i=0, n=resultSegs.size(); i<n; i++)
-		delete resultSegs[i];
+    for(std::size_t i = 0, n = resultSegs.size(); i < n; i++) {
+        delete resultSegs[i];
+    }
 }
 
 /*private*/
 void
 TaggedLineString::init()
 {
-	assert(parentLine);
-	const CoordinateSequence* pts = parentLine->getCoordinatesRO();
+    assert(parentLine);
+    const CoordinateSequence* pts = parentLine->getCoordinatesRO();
 
 #if GEOS_DEBUG
-	cerr << "TaggedLineString[" << this << "] pts.size() " << pts->size()
-	     << endl;
+    std::cerr << "TaggedLineString[" << this << "] pts.size() " << pts->size()
+         << std::endl;
 #endif
 
-	if ( pts->size() )
-	{
+    if(!pts->isEmpty()) {
 
-		segs.reserve(pts->size()-1);
+        segs.reserve(pts->size() - 1);
 
-		for (std::size_t i=0, n=pts->size()-1; i<n; i++)
-		{
-			TaggedLineSegment* seg = new TaggedLineSegment(
-					pts->getAt(i),
-					pts->getAt(i+1),
-					parentLine, i);
+        for(std::size_t i = 0, n = pts->size() - 1; i < n; i++) {
+            TaggedLineSegment* seg = new TaggedLineSegment(
+                pts->getAt(i),
+                pts->getAt(i + 1),
+                parentLine, i);
 
-			segs.push_back(seg);
-		}
+            segs.push_back(seg);
+        }
 
-	}
+    }
 
 #if GEOS_DEBUG
-	cerr << "TaggedLineString[" << this << "] segs.size " << segs.size()
-	    << endl;
-	cerr << "TaggedLineString[" << this << "] resultSegs.size " << resultSegs.size()
-	    << endl;
+    std::cerr << "TaggedLineString[" << this << "] segs.size " << segs.size()
+         << std::endl;
+    std::cerr << "TaggedLineString[" << this << "] resultSegs.size " << resultSegs.size()
+         << std::endl;
 #endif
 }
 
@@ -107,143 +109,191 @@ TaggedLineString::init()
 std::size_t
 TaggedLineString::getMinimumSize() const
 {
-	return minimumSize;
+    return minimumSize;
 }
 
 /*public*/
-const geom::LineString* 
+bool
+TaggedLineString::isRing() const
+{
+    return m_isRing;
+}
+
+/*public*/
+const geom::LineString*
 TaggedLineString::getParent() const
 {
-	return parentLine;
+    return parentLine;
 }
 
 /*public*/
 const CoordinateSequence*
 TaggedLineString::getParentCoordinates() const
 {
-	assert(parentLine);
-	return parentLine->getCoordinatesRO();
+    assert(parentLine);
+    return parentLine->getCoordinatesRO();
 }
 
 /*public*/
-CoordinateSequence::AutoPtr
+CoordinateSequence::Ptr
 TaggedLineString::getResultCoordinates() const
 {
 
 #if GEOS_DEBUG
-	cerr << __FUNCTION__ << " resultSegs.size: "
-	     << resultSegs.size() << endl;
+    std::cerr << __FUNCTION__ << " resultSegs.size: "
+         << resultSegs.size() << std::endl;
 #endif
 
-	CoordVectPtr pts = extractCoordinates(resultSegs);
+    auto pts = extractCoordinates(resultSegs);
 
 #if GEOS_DEBUG
-	cerr << __FUNCTION__ << " extracted Coords.size: "
-	     << pts->size() << endl;
+    std::cerr << __FUNCTION__ << " extracted Coords.size: "
+         << pts->size() << std::endl;
 #endif
 
-
-	CoordVect* v = pts.release();
-	return CoordinateSequence::AutoPtr(parentLine->getFactory()->getCoordinateSequenceFactory()->create(v));
-
+    return pts;
 }
 
 /*private static*/
-TaggedLineString::CoordVectPtr
+std::unique_ptr<CoordinateSequence>
 TaggedLineString::extractCoordinates(
-		const std::vector<TaggedLineSegment*>& segs)
+    const std::vector<TaggedLineSegment*>& segs)
 {
-	CoordVectPtr pts(new CoordVect());
+    auto pts = detail::make_unique<geom::CoordinateSequence>();
 
 #if GEOS_DEBUG
-	cerr << __FUNCTION__ << " segs.size: " << segs.size() << endl;
+    std::cerr << __FUNCTION__ << " segs.size: " << segs.size() << std::endl;
 #endif
 
-	std::size_t i=0, size=segs.size();
+    const std::size_t size = segs.size();
 
-	if ( size ) {
-		for (; i<size; i++)
-		{
-			TaggedLineSegment* seg = segs[i];
-			assert(seg);
-			pts->push_back(seg->p0);
-		}
+    if(size) {
+        for(std::size_t i = 0; i < size; i++) {
+                TaggedLineSegment* seg = segs[i];
+            assert(seg);
+            pts->add(seg->p0);
+        }
 
-		// add last point
-		pts->push_back(segs[size-1]->p1);
-	}
+        // add last point
+        pts->add(segs[size - 1]->p1);
+    }
 
-	return pts;
+    return pts;
 }
+
+
+const Coordinate&
+TaggedLineString::getCoordinate(std::size_t i) const
+{
+    return parentLine->getCoordinateN(i);
+}
+
+std::size_t
+TaggedLineString::size() const
+{
+    return parentLine->getNumPoints();
+}
+
+const Coordinate&
+TaggedLineString::getComponentPoint() const
+{
+    //-- when simplified use a valid coordinate
+    if (resultSegs.size() > 0) {
+        return resultSegs[0]->p0;
+    }
+    return getParentCoordinates()->getAt(1);
+}
+
+
+
+
 
 /*public*/
 std::size_t
 TaggedLineString::getResultSize() const
 {
-	unsigned resultSegsSize = resultSegs.size();
-	return resultSegsSize == 0 ? 0 : resultSegsSize + 1;
+    auto resultSegsSize = resultSegs.size();
+    return resultSegsSize == 0 ? 0 : resultSegsSize + 1;
 }
 
 /*public*/
 TaggedLineSegment*
-TaggedLineString::getSegment(std::size_t i) 
+TaggedLineString::getSegment(std::size_t i)
 {
-	return segs[i];
+    return segs[i];
 }
 
 /*public*/
 const TaggedLineSegment*
 TaggedLineString::getSegment(std::size_t i) const
 {
-	return segs[i];
+    return segs[i];
 }
 
 /*public*/
-vector<TaggedLineSegment*>&
+std::vector<TaggedLineSegment*>&
 TaggedLineString::getSegments()
 {
-	assert(0);
-	return segs;
+    return segs;
 }
 
 /*public*/
-const vector<TaggedLineSegment*>&
+const std::vector<TaggedLineSegment*>&
 TaggedLineString::getSegments() const
 {
-	return segs;
+    return segs;
 }
 
 /*public*/
-auto_ptr<Geometry>
+const std::vector<TaggedLineSegment*>&
+TaggedLineString::getResultSegments() const
+{
+    return resultSegs;
+}
+
+/*public*/
+std::unique_ptr<Geometry>
 TaggedLineString::asLineString() const
 {
-	return parentLine->getFactory()->createLineString(
-			getResultCoordinates());
+    return parentLine->getFactory()->createLineString(
+               getResultCoordinates());
 }
 
 /*public*/
-auto_ptr<Geometry>
+std::unique_ptr<Geometry>
 TaggedLineString::asLinearRing() const
 {
-	return parentLine->getFactory()->createLinearRing(
-			getResultCoordinates());
+    return std::unique_ptr<Geometry>(parentLine->getFactory()->createLinearRing(
+               getResultCoordinates()));
 }
 
 /*public*/
 void
-TaggedLineString::addToResult(auto_ptr<TaggedLineSegment> seg)
+TaggedLineString::addToResult(std::unique_ptr<TaggedLineSegment> seg)
 {
 #if GEOS_DEBUG
-	cerr << "TaggedLineString[" << this << "] adding "
-	     << " seg " << seg.get() << " to result"
-	     << endl;
+    std::cerr << "TaggedLineString[" << this << "] adding "
+         << " seg " << seg.get() << " to result"
+         << std::endl;
 #endif
-	resultSegs.push_back(seg.release());
+    resultSegs.push_back(seg.release());
 #if GEOS_DEBUG
-	cerr << "TaggedLineString[" << this << "] adding "
-	     << " seg " << seg.get() << " to result"
-	     << endl;
+    std::cerr << "TaggedLineString[" << this << "] adding "
+         << " seg " << seg.get() << " to result"
+         << std::endl;
 #endif
+}
+
+const TaggedLineSegment*
+TaggedLineString::removeRingEndpoint()
+{
+    auto* firstSeg = resultSegs.front();
+    auto* lastSeg = resultSegs.back();
+
+    firstSeg->p0 = lastSeg->p0;
+    resultSegs.pop_back();
+    delete lastSeg;
+    return firstSeg;
 }
 
 } // namespace geos::simplify

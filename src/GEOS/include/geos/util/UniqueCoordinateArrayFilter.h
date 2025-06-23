@@ -8,13 +8,12 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
 
-#ifndef GEOS_UTIL_UNIQUECOORDINATEARRAYFILTER_H
-#define GEOS_UTIL_UNIQUECOORDINATEARRAYFILTER_H
+#pragma once
 
 #include <geos/export.h>
 #include <cassert>
@@ -39,47 +38,72 @@ namespace util { // geos::util
  *
  *  Last port: util/UniqueCoordinateArrayFilter.java rev. 1.17
  */
-class GEOS_DLL UniqueCoordinateArrayFilter: public geom::CoordinateFilter
-{
+class GEOS_DLL UniqueCoordinateArrayFilter : public geom::CoordinateInspector<UniqueCoordinateArrayFilter> {
 public:
-	/**
-	 * Constructs a CoordinateArrayFilter.
-	 *
-	 * @param target The destination set. 
-	 */
-	UniqueCoordinateArrayFilter(geom::Coordinate::ConstVect &target)
-		: pts(target)
-	{}
+    /**
+     * Constructs a CoordinateArrayFilter.
+     *
+     * @param target The destination set.
+     */
+    UniqueCoordinateArrayFilter(std::vector<const geom::Coordinate*>& target)
+        : pts(target)
+        , maxUnique(NO_COORD_INDEX)
+    {}
 
-	/**
-	 * Destructor.
-	 * Virtual dctor promises appropriate behaviour when someone will
-	 * delete a derived-class object via a base-class pointer.
-	 * http://www.parashift.com/c++-faq-lite/virtual-functions.html#faq-20.7
-	 */
-	virtual ~UniqueCoordinateArrayFilter() {}
+    UniqueCoordinateArrayFilter(std::vector<const geom::Coordinate*>& target, std::size_t p_maxUnique)
+        : pts(target)
+        , maxUnique(p_maxUnique)
+    {}
 
-	/**
-	 * Performs a filtering operation with or on coord in "read-only" mode.
-	 * @param coord The "read-only" Coordinate to which
-	 * 				the filter is applied.
-	 */
-	virtual void filter_ro(const geom::Coordinate *coord)
-	{
-		if ( uniqPts.insert(coord).second )
-		{
-			pts.push_back(coord);
-		}
+    /**
+     * Destructor.
+     * Virtual dctor promises appropriate behaviour when someone will
+     * delete a derived-class object via a base-class pointer.
+     * http://www.parashift.com/c++-faq-lite/virtual-functions.html#faq-20.7
+     */
+    ~UniqueCoordinateArrayFilter() override {}
+
+    /**
+     * Performs a filtering operation with or on coord in "read-only" mode.
+     * @param coord The "read-only" Coordinate to which
+     * 				the filter is applied.
+     */
+    template<typename CoordType>
+    void filter(const CoordType* coord)
+    {
+        if(uniqPts.insert(coord).second) {
+            // TODO make `pts` a CoordinateSequence rather than coercing the type
+            pts.push_back(coord);
+        }
+        if(maxUnique != NO_COORD_INDEX && uniqPts.size() > maxUnique) {
+            done = true;
+        }
+    }
+
+    void filter(const geom::CoordinateXY*) {
+        assert(0); // not supported
+    }
+
+
+    void filter(const geom::CoordinateXYM*) {
+        assert(0); // not supported
+    }
+
+    bool isDone() const override {
+        return done;
     }
 
 private:
-	geom::Coordinate::ConstVect &pts;	// target set reference
-	geom::Coordinate::ConstSet uniqPts; 	// unique points set
+    std::vector<const geom::Coordinate*>& pts;	// target set reference
+    std::set<const geom::CoordinateXY*, geom::CoordinateLessThan> uniqPts; 	// unique points set
+    std::size_t maxUnique; // stop visiting when we have this many unique coordinates
+    bool done = false;
 
     // Declare type as noncopyable
-    UniqueCoordinateArrayFilter(const UniqueCoordinateArrayFilter& other);
-    UniqueCoordinateArrayFilter& operator=(const UniqueCoordinateArrayFilter& rhs);
+    UniqueCoordinateArrayFilter(const UniqueCoordinateArrayFilter& other) = delete;
+    UniqueCoordinateArrayFilter& operator=(const UniqueCoordinateArrayFilter& rhs) = delete;
 };
+
 
 } // namespace geos::util
 } // namespace geos
@@ -88,4 +112,3 @@ private:
 #pragma warning(pop)
 #endif
 
-#endif // GEOS_UTIL_UNIQUECOORDINATEARRAYFILTER_H

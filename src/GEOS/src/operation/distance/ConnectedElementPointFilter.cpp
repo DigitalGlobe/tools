@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -25,7 +25,7 @@
 #include <vector>
 #include <typeinfo>
 
-using namespace std;
+
 using namespace geos::geom;
 
 namespace geos {
@@ -33,24 +33,27 @@ namespace operation { // geos.operation
 namespace distance { // geos.operation.distance
 
 /**
-* Returns a list containing a Coordinate from each Polygon, LineString, and Point
-* found inside the specified geometry. Thus, if the specified geometry is
-* not a GeometryCollection, an empty list will be returned.
-*/
-vector<const Coordinate*>*
-ConnectedElementPointFilter::getCoordinates(const Geometry *geom)
+ * Returns a list containing a Coordinate from each Polygon, LineString, and Point
+ * found inside the specified geometry. Thus, if the specified geometry is
+ * not a GeometryCollection, an empty list will be returned.
+ */
+std::vector<const CoordinateXY*>*
+ConnectedElementPointFilter::getCoordinates(const Geometry* geom)
 {
-	vector<const Coordinate*> *points=new vector<const Coordinate*>();
-	ConnectedElementPointFilter c(points);
-	geom->apply_ro(&c);
-	return points;
+    std::vector<const CoordinateXY*>* points = new std::vector<const CoordinateXY*>();
+    ConnectedElementPointFilter c(points);
+    geom->apply_ro(&c);
+    return points;
 }
 
-void ConnectedElementPointFilter::filter_ro(const Geometry *geom) {
-	if ((typeid(*geom)==typeid(Point)) ||
-		(typeid(*geom)==typeid(LineString)) ||
-		(typeid(*geom)==typeid(Polygon)))
-			pts->push_back(geom->getCoordinate());
+void
+ConnectedElementPointFilter::filter_ro(const Geometry* geom)
+{
+    if((typeid(*geom) == typeid(Point)) ||
+            (typeid(*geom) == typeid(LineString)) ||
+            (typeid(*geom) == typeid(Polygon))) {
+        pts->push_back(geom->getCoordinate());
+    }
 }
 
 } // namespace geos.operation.distance

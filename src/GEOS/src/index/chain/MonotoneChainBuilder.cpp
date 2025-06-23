@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -16,10 +16,12 @@
  *
  **********************************************************************/
 
-#include <geos/index/chain/MonotoneChainBuilder.h> 
-#include <geos/index/chain/MonotoneChain.h> 
+#include <geos/index/chain/MonotoneChainBuilder.h>
+#include <geos/index/chain/MonotoneChain.h>
 #include <geos/geom/CoordinateSequence.h>
-#include <geos/geomgraph/Quadrant.h>
+#include <geos/geom/CoordinateFilter.h>
+#include <geos/geom/Quadrant.h>
+
 
 #include <cassert>
 #include <cstdio>
@@ -33,109 +35,81 @@
 #include <iostream>
 #endif
 
-using namespace std;
-using namespace geos::geomgraph;
+
 using namespace geos::geom;
 
 namespace geos {
 namespace index { // geos.index
 namespace chain { // geos.index.chain
 
-/* static public */
-vector<MonotoneChain*>*
-MonotoneChainBuilder::getChains(const CoordinateSequence* pts, void* context)
-{
-	vector<MonotoneChain*>* mcList = new vector<MonotoneChain*>();
-	getChains(pts, context, *mcList);
-	return mcList;
-}
+/** \brief
+ * Finds the index of the last point in each monotone chain
+ * of the provided coordinate sequence.
+ */
+class ChainBuilder : public CoordinateFilter {
+public:
+    ChainBuilder(const CoordinateSequence* pts, void* context, std::vector<MonotoneChain> & list) :
+     m_prev(nullptr),
+     m_i(0),
+     m_quadrant(-1),
+     m_start(0),
+     m_seq(pts),
+     m_context(context),
+     m_list(list) {}
+
+    void filter_ro(const CoordinateXY* c) override {
+        process(c);
+
+        m_prev = c;
+        m_i++;
+    }
+
+    void finish() {
+        finishChain();
+    }
+
+private:
+    void finishChain() {
+        if ( m_i == 0 ) return;
+        std::size_t chainEnd = m_i - 1;
+        m_list.emplace_back(*m_seq, m_start, chainEnd, m_context);
+        m_start = chainEnd;
+    }
+
+    void process(const CoordinateXY* curr) {
+        if (m_prev == nullptr || curr->equals2D(*m_prev)) {
+            return;
+        }
+
+        int currQuad = Quadrant::quadrant(*m_prev, *curr);
+
+        if (m_quadrant < 0) {
+            m_quadrant = currQuad;
+        }
+
+        if (currQuad != m_quadrant) {
+            finishChain();
+            m_quadrant = currQuad;
+        }
+    }
+
+    const CoordinateXY* m_prev;
+    std::size_t m_i;
+    int m_quadrant;
+    std::size_t m_start;
+    const CoordinateSequence* m_seq;
+    void* m_context;
+    std::vector<MonotoneChain>& m_list;
+};
+
 
 /* static public */
 void
 MonotoneChainBuilder::getChains(const CoordinateSequence* pts, void* context,
-                                vector<MonotoneChain*>& mcList)
-{
-	vector<std::size_t> startIndex;
-	getChainStartIndices(*pts, startIndex);
-	std::size_t nindexes = startIndex.size();
-	if (nindexes > 0)
-	{
-		std::size_t n = nindexes - 1;
-		for(std::size_t i = 0; i < n; i++)
-		{
-			MonotoneChain* mc = new MonotoneChain(*pts, startIndex[i], startIndex[i+1], context);
-			mcList.push_back(mc);
-		}
-	}
-}
-
-/* static public */
-void
-MonotoneChainBuilder::getChainStartIndices(const CoordinateSequence& pts,
-                                           vector<std::size_t>& startIndexList)
-{
-	// find the startpoint (and endpoints) of all monotone chains
-	// in this edge
-	std::size_t start = 0;
-	startIndexList.push_back(start);
-	const std::size_t n = pts.getSize() - 1;
-	do
-	{
-		std::size_t last = findChainEnd(pts, start);
-		startIndexList.push_back(last);
-		start = last;
-	} while (start < n);
-
-}
-
-/* private static */
-std::size_t
-MonotoneChainBuilder::findChainEnd(const CoordinateSequence& pts, std::size_t start)
-{
-
-	const std::size_t npts = pts.getSize(); // cache
-
-	assert(start < npts);
-	assert(npts); // should be implied by the assertion above,
-	              // 'start' being unsigned
-
-	std::size_t safeStart = start;
-
-        // skip any zero-length segments at the start of the sequence
-        // (since they cannot be used to establish a quadrant)
-	while ( safeStart < npts - 1
-		&& pts[safeStart].equals2D(pts[safeStart+1]) ) 
-	{
-		++safeStart;
-	}
-
-	// check if there are NO non-zero-length segments
-	if (safeStart >= npts - 1) {
-		return npts - 1;
-	}
-
-	// determine overall quadrant for chain
-	// (which is the starting quadrant)
-	int chainQuad = Quadrant::quadrant(pts[safeStart],
-	                                   pts[safeStart + 1]);
-	std::size_t last = start + 1;
-	while (last < npts)
-	{
-		// skip zero-length segments, but include them in the chain
-		if (! pts[last - 1].equals2D( pts[last] ) )
-		{
-			// compute quadrant for next possible segment in chain
-			int quad = Quadrant::quadrant( pts[last - 1],
-			                               pts[last]      );
-			if (quad != chainQuad) break;
-		}
-		++last;	
-	}
-#if GEOS_DEBUG
-	std::cerr<<"MonotoneChainBuilder::findChainEnd() returning"<<std::endl;
-#endif
-
-	return last - 1;
+                                std::vector<MonotoneChain>& mcList) {
+    ChainBuilder builder(pts, context, mcList);
+    pts->apply_ro(&builder);
+    builder.finish();
 }
 
 } // namespace geos.index.chain

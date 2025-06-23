@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -22,8 +22,7 @@
  *
  **********************************************************************/
 
-#ifndef GEOS_SIMPLIFY_TAGGEDLINESTRING_H
-#define GEOS_SIMPLIFY_TAGGEDLINESTRING_H
+#pragma once
 
 #include <geos/export.h>
 #include <vector>
@@ -36,88 +35,104 @@
 
 // Forward declarations
 namespace geos {
-	namespace geom {
-		class Coordinate;
-		class CoordinateSequence;
-		class Geometry;
-		class LineString;
-		class LinearRing;
-	}
-	namespace simplify {
-		class TaggedLineSegment;
-	}
+namespace geom {
+class Coordinate;
+class CoordinateSequence;
+class Geometry;
+class LineString;
+class LinearRing;
 }
+namespace simplify {
+class TaggedLineSegment;
+}
+}
+
+using geos::geom::Coordinate;
+using geos::geom::CoordinateSequence;
 
 namespace geos {
 namespace simplify { // geos::simplify
 
 
 /** \brief
- *
- * Contains and owns a list of TaggedLineSegments
- *
+ * Contains and owns a list of TaggedLineSegments.
  */
 class GEOS_DLL TaggedLineString {
 
 public:
 
-	typedef std::vector<geom::Coordinate> CoordVect;
-	
-	typedef std::auto_ptr<CoordVect> CoordVectPtr;
+    typedef std::vector<Coordinate> CoordVect;
 
-	typedef geom::CoordinateSequence CoordSeq;
+    typedef std::unique_ptr<CoordVect> CoordVectPtr;
 
-	typedef std::auto_ptr<geom::CoordinateSequence> CoordSeqPtr;
+    typedef CoordinateSequence CoordSeq;
 
-	TaggedLineString(const geom::LineString* nParentLine,
-			std::size_t minimumSize=2);
+    typedef std::unique_ptr<CoordinateSequence> CoordSeqPtr;
 
-	~TaggedLineString();
+    TaggedLineString(const geom::LineString* nParentLine,
+                     std::size_t minimumSize,
+                     bool bIsRing);
 
-	std::size_t getMinimumSize() const;
+    ~TaggedLineString();
 
-	const geom::LineString* getParent() const;
+    std::size_t getMinimumSize() const;
 
-	const CoordSeq* getParentCoordinates() const;
+    bool isRing() const;
 
-	CoordSeqPtr getResultCoordinates() const;
+    const geom::LineString* getParent() const;
 
-	std::size_t getResultSize() const;
+    const CoordSeq* getParentCoordinates() const;
 
-	TaggedLineSegment* getSegment(std::size_t i);
+    CoordSeqPtr getResultCoordinates() const;
 
-	const TaggedLineSegment* getSegment(std::size_t i) const;
+    const Coordinate& getCoordinate(std::size_t i) const;
 
-	std::vector<TaggedLineSegment*>& getSegments();
+    std::size_t size() const;
 
-	const std::vector<TaggedLineSegment*>& getSegments() const;
+    const Coordinate& getComponentPoint() const;
 
-	void addToResult(std::auto_ptr<TaggedLineSegment> seg);
+    std::size_t getResultSize() const;
 
-	std::auto_ptr<geom::Geometry> asLineString() const;
+    TaggedLineSegment* getSegment(std::size_t i);
 
-	std::auto_ptr<geom::Geometry> asLinearRing() const;
+    const TaggedLineSegment* getSegment(std::size_t i) const;
+
+    std::vector<TaggedLineSegment*>& getSegments();
+
+    const std::vector<TaggedLineSegment*>& getSegments() const;
+
+    const std::vector<TaggedLineSegment*>& getResultSegments() const;
+
+    void addToResult(std::unique_ptr<TaggedLineSegment> seg);
+
+    const TaggedLineSegment* removeRingEndpoint();
+
+    std::unique_ptr<geom::Geometry> asLineString() const;
+
+    std::unique_ptr<geom::Geometry> asLinearRing() const;
 
 private:
 
-	const geom::LineString* parentLine;
+    const geom::LineString* parentLine;
 
-	// TaggedLineSegments owned by this object
-	std::vector<TaggedLineSegment*> segs;
+    // TaggedLineSegments owned by this object
+    std::vector<TaggedLineSegment*> segs;
 
-	// TaggedLineSegments owned by this object
-	std::vector<TaggedLineSegment*> resultSegs;
+    // TaggedLineSegments owned by this object
+    std::vector<TaggedLineSegment*> resultSegs;
 
-	std::size_t minimumSize;
+    std::size_t minimumSize;
 
-	void init();
+    bool m_isRing;
 
-	static CoordVectPtr extractCoordinates(
-			const std::vector<TaggedLineSegment*>& segs);
+    void init();
 
-	// Copying is turned off
-	TaggedLineString(const TaggedLineString&);
-	TaggedLineString& operator= (const TaggedLineString&);
+    static std::unique_ptr<CoordinateSequence> extractCoordinates(
+        const std::vector<TaggedLineSegment*>& segs);
+
+    // Copying is turned off
+    TaggedLineString(const TaggedLineString&);
+    TaggedLineString& operator= (const TaggedLineString&);
 
 };
 
@@ -128,4 +143,3 @@ private:
 #pragma warning(pop)
 #endif
 
-#endif // GEOS_SIMPLIFY_TAGGEDLINESTRING_H

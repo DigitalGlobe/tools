@@ -22,50 +22,51 @@
 #include <geos/linearref/LinearLocation.h>
 #include <geos/linearref/LocationIndexOfLine.h>
 #include <geos/linearref/LocationIndexOfPoint.h>
+#include <geos/util/IllegalArgumentException.h>
 
-using namespace std;
+
 
 using namespace geos::geom;
 
-namespace geos
-{
-namespace linearref   // geos.linearref
-{
+namespace geos {
+namespace linearref { // geos.linearref
 
 /* public static */
 LinearLocation*
 LocationIndexOfLine::indicesOf(const Geometry* linearGeom,
-		const Geometry* subLine)
+                               const Geometry* subLine)
 {
-	LocationIndexOfLine locater(linearGeom);
-	return locater.indicesOf(subLine);
+    LocationIndexOfLine locater(linearGeom);
+    return locater.indicesOf(subLine);
 }
 
-LocationIndexOfLine::LocationIndexOfLine(const Geometry* linearGeom) :
-		linearGeom(linearGeom) {}
+LocationIndexOfLine::LocationIndexOfLine(const Geometry* p_linearGeom) :
+    linearGeom(p_linearGeom) {}
 
 /* public */
 LinearLocation*
 LocationIndexOfLine::indicesOf(const Geometry* subLine) const
 {
-	Coordinate startPt = dynamic_cast<const LineString*> (subLine->getGeometryN(0))->getCoordinateN(0);
-	const LineString* lastLine = dynamic_cast<const LineString*> (subLine->getGeometryN(subLine->getNumGeometries() - 1));
-	Coordinate endPt = lastLine->getCoordinateN(lastLine->getNumPoints() - 1);
+    const LineString* firstLine = dynamic_cast<const LineString*>(subLine->getGeometryN(0));
+    const LineString* lastLine = dynamic_cast<const LineString*>(subLine->getGeometryN(subLine->getNumGeometries() - 1));
+    if(! firstLine || !lastLine) {
+        throw util::IllegalArgumentException("LocationIndexOfLine::indicesOf only works with geometry collections of LineString");
+    }
+    const CoordinateXY& startPt = firstLine->getCoordinateN(0);
+    const CoordinateXY& endPt = lastLine->getCoordinateN(lastLine->getNumPoints() - 1);
 
-	LocationIndexOfPoint locPt(linearGeom);
-	LinearLocation *subLineLoc = new LinearLocation[2];
-	subLineLoc[0] = locPt.indexOf(startPt);
+    LocationIndexOfPoint locPt(linearGeom);
+    LinearLocation* subLineLoc = new LinearLocation[2];
+    subLineLoc[0] = locPt.indexOf(startPt);
 
-	// check for case where subline is zero length
-	if (subLine->getLength() == 0.0)
-	{
-		subLineLoc[1] = subLineLoc[0];
-	}
-	else
-	{
-		subLineLoc[1] = locPt.indexOfAfter(endPt, &subLineLoc[0]);
-	}
-	return subLineLoc;
+    // check for case where subline is zero length
+    if(subLine->getLength() == 0.0) {
+        subLineLoc[1] = subLineLoc[0];
+    }
+    else {
+        subLineLoc[1] = locPt.indexOfAfter(endPt, &subLineLoc[0]);
+    }
+    return subLineLoc;
 }
 }
 }

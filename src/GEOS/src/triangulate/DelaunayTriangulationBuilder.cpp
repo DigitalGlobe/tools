@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -23,129 +23,130 @@
 #include <geos/geom/GeometryFactory.h>
 #include <geos/geom/Coordinate.h>
 #include <geos/geom/CoordinateSequence.h>
+#include <geos/operation/valid/RepeatedPointRemover.h>
 #include <geos/triangulate/IncrementalDelaunayTriangulator.h>
 #include <geos/triangulate/quadedge/QuadEdgeSubdivision.h>
+#include <geos/operation/valid/RepeatedPointRemover.h>
+#include <geos/operation/valid/RepeatedPointTester.h>
+#include <geos/util.h>
 
 namespace geos {
 namespace triangulate { //geos.triangulate
 
 using namespace geos::geom;
 
-CoordinateSequence*
+std::unique_ptr<CoordinateSequence>
 DelaunayTriangulationBuilder::extractUniqueCoordinates(
-		const Geometry& geom)
+    const Geometry& geom)
 {
-	geom::CoordinateSequence *coords = geom.getCoordinates();
-	unique(*coords);
-	return coords;
+    std::unique_ptr<CoordinateSequence> seq(geom.getCoordinates());
+    return unique(seq.get());
 }
 
-void
-DelaunayTriangulationBuilder::unique(CoordinateSequence& coords)
+std::unique_ptr<CoordinateSequence>
+DelaunayTriangulationBuilder::unique(const CoordinateSequence* seq)
 {
-	std::vector<Coordinate> coordVector;
-	coords.toVector(coordVector);
-	std::sort(coordVector.begin(), coordVector.end(), geos::geom::CoordinateLessThen());
-	coords.setPoints(coordVector);
-	coords.removeRepeatedPoints();
+    auto sortedSeq = detail::make_unique<CoordinateSequence>(*seq);
+    std::sort(sortedSeq->items<Coordinate>().begin(), sortedSeq->items<Coordinate>().end(), geos::geom::CoordinateLessThan());
+
+    operation::valid::RepeatedPointTester rpt;
+    if (rpt.hasRepeatedPoint(sortedSeq.get())) {
+        return operation::valid::RepeatedPointRemover::removeRepeatedPoints(sortedSeq.get());
+    } else {
+        return sortedSeq;
+    }
 }
 
-IncrementalDelaunayTriangulator::VertexList*
+IncrementalDelaunayTriangulator::VertexList
 DelaunayTriangulationBuilder::toVertices(
-		const CoordinateSequence &coords)
+    const CoordinateSequence& coords)
 {
-	IncrementalDelaunayTriangulator::VertexList* vertexList =
-		new IncrementalDelaunayTriangulator::VertexList();
+    IncrementalDelaunayTriangulator::VertexList vertexList(coords.size());
 
-	for(size_t iter=0; iter < coords.size(); ++iter)
-	{
-		vertexList->push_back(quadedge::Vertex(coords.getAt(iter)));
-	}
-	return vertexList;
+    for(std::size_t i = 0; i < coords.size(); i++) {
+        vertexList[i] = quadedge::Vertex(coords.getAt(i));
+    }
+    return vertexList;
 }
 
 DelaunayTriangulationBuilder::DelaunayTriangulationBuilder() :
-	siteCoords(NULL), tolerance(0.0), subdiv(NULL)
+    siteCoords(nullptr), tolerance(0.0), subdiv(nullptr)
 {
-}
-
-DelaunayTriangulationBuilder::~DelaunayTriangulationBuilder() 
-{
-	if(siteCoords)
-		delete siteCoords;
-	if(subdiv)
-		delete subdiv;
 }
 
 void
 DelaunayTriangulationBuilder::setSites(const Geometry& geom)
 {
-	if(siteCoords)
-		delete siteCoords;
-	// remove any duplicate points (they will cause the triangulation to fail)
-	siteCoords = extractUniqueCoordinates(geom);
+    util::ensureNoCurvedComponents(geom);
+
+    // remove any duplicate points (they will cause the triangulation to fail)
+    siteCoords = extractUniqueCoordinates(geom);
 }
 
 void
 DelaunayTriangulationBuilder::setSites(const CoordinateSequence& coords)
 {
-	if(siteCoords)
-		delete siteCoords;
-	siteCoords = coords.clone();
-	// remove any duplicate points (they will cause the triangulation to fail)
-	unique(*siteCoords);
+    // remove any duplicate points (they will cause the triangulation to fail)
+    siteCoords = unique(&coords);
 }
 
 void
 DelaunayTriangulationBuilder::create()
 {
-	if(subdiv != NULL || siteCoords == NULL)
-		return;
+    if(subdiv != nullptr || siteCoords == nullptr) {
+        return;
+    }
 
-	Envelope siteEnv;
-	siteCoords ->expandEnvelope(siteEnv);
-	IncrementalDelaunayTriangulator::VertexList* vertices = toVertices(*siteCoords);
-	subdiv = new quadedge::QuadEdgeSubdivision(siteEnv, tolerance);
-	IncrementalDelaunayTriangulator triangulator = IncrementalDelaunayTriangulator(subdiv);
-	triangulator.insertSites(*vertices);
-	delete vertices;
+    if (siteCoords->isEmpty()) {
+        return;
+
+    }
+
+    Envelope siteEnv = siteCoords->getEnvelope();
+    auto vertices = toVertices(*siteCoords);
+    std::sort(vertices.begin(),
+              vertices.end()); // Best performance from locator when inserting points near each other
+
+    subdiv.reset(new quadedge::QuadEdgeSubdivision(siteEnv, tolerance));
+    IncrementalDelaunayTriangulator triangulator = IncrementalDelaunayTriangulator(subdiv.get());
+    triangulator.insertSites(vertices);
 }
 
 quadedge::QuadEdgeSubdivision&
 DelaunayTriangulationBuilder::getSubdivision()
 {
-	create();
-	return *subdiv;
+    create();
+    return *subdiv;
 }
 
-std::auto_ptr<MultiLineString>
+std::unique_ptr<MultiLineString>
 DelaunayTriangulationBuilder::getEdges(
     const GeometryFactory& geomFact)
 {
-	create();
-	return subdiv->getEdges(geomFact);
+    create();
+    if (!subdiv) {
+        return geomFact.createMultiLineString();
+    }
+
+    return subdiv->getEdges(geomFact);
 }
 
-std::auto_ptr<geom::GeometryCollection>
+std::unique_ptr<geom::GeometryCollection>
 DelaunayTriangulationBuilder::getTriangles(
-		const geom::GeometryFactory& geomFact)
+    const geom::GeometryFactory& geomFact)
 {
-	create();
-	return subdiv->getTriangles(geomFact);
+    create();
+    if (!subdiv) {
+        return geomFact.createGeometryCollection();
+    }
+
+    return subdiv->getTriangles(geomFact);
 }
 
 geom::Envelope
 DelaunayTriangulationBuilder::envelope(const geom::CoordinateSequence& coords)
 {
-	Envelope env;
-	std::vector<Coordinate> coord_vector;
-	coords.toVector(coord_vector);
-	for(std::vector<Coordinate>::iterator it= coord_vector.begin() ; it!=coord_vector.end() ; ++it)
-	{   
-		const Coordinate& coord = *it;
-		env.expandToInclude(coord);
-	}   
-	return env;
+    return coords.getEnvelope();
 }
 
 

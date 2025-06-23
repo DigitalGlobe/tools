@@ -7,12 +7,12 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
  *
- * Last port: operation/distance/ConnectedElementLocationFilter.java rev. 1.4 (JTS-1.10)
+ * Last port: operation/distance/ConnectedElementLocationFilter.java b98e8234
  *
  **********************************************************************/
 
@@ -27,7 +27,7 @@
 #include <vector>
 #include <typeinfo>
 
-using namespace std;
+
 using namespace geos::geom;
 
 namespace geos {
@@ -35,33 +35,37 @@ namespace operation { // geos.operation
 namespace distance { // geos.operation.distance
 
 /*public*/
-vector<GeometryLocation*>*
-ConnectedElementLocationFilter::getLocations(const Geometry *geom)
+std::vector<GeometryLocation>
+ConnectedElementLocationFilter::getLocations(const Geometry* geom)
 {
-	vector<GeometryLocation*> *loc=new vector<GeometryLocation*>();
-	ConnectedElementLocationFilter c(loc);
-	geom->apply_ro(&c);
-	return loc;
+    ConnectedElementLocationFilter c;
+    geom->apply_ro(&c);
+    return std::move(c.locations);
 }
 
 void
-ConnectedElementLocationFilter::filter_ro(const Geometry *geom)
+ConnectedElementLocationFilter::filter_ro(const Geometry* geom)
 {
-	if ((typeid(*geom)==typeid(Point)) ||
-		(typeid(*geom)==typeid(LineString)) ||
-		(typeid(*geom)==typeid(LinearRing)) ||
-		(typeid(*geom)==typeid(Polygon)))
-	{
-		locations->push_back(new GeometryLocation(geom, 0, *(geom->getCoordinate())));
-	}
+    if (geom->isEmpty()) return;
+    if((typeid(*geom) == typeid(Point)) ||
+            (typeid(*geom) == typeid(LineString)) ||
+            (typeid(*geom) == typeid(LinearRing)) ||
+            (typeid(*geom) == typeid(Polygon))) {
+        locations.emplace_back(geom, 0, *(geom->getCoordinate()));
+    }
 }
 
-void ConnectedElementLocationFilter::filter_rw(Geometry *geom){
-	if ((typeid(*geom)==typeid(Point)) ||
-		(typeid(*geom)==typeid(LineString)) ||
-		(typeid(*geom)==typeid(LinearRing)) ||
-		(typeid(*geom)==typeid(Polygon)))
-			locations->push_back(new GeometryLocation(geom, 0, *(geom->getCoordinate())));
+void
+ConnectedElementLocationFilter::filter_rw(Geometry* geom)
+{
+    // empty geometries do not provide a location
+    if (geom->isEmpty()) return;
+    if((typeid(*geom) == typeid(Point)) ||
+            (typeid(*geom) == typeid(LineString)) ||
+            (typeid(*geom) == typeid(LinearRing)) ||
+            (typeid(*geom) == typeid(Polygon))) {
+        locations.emplace_back(geom, 0, *(geom->getCoordinate()));
+    }
 }
 
 } // namespace geos.operation.distance

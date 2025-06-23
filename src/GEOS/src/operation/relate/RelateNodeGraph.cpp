@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -27,11 +27,12 @@
 #include <geos/geomgraph/Edge.h>
 #include <geos/geomgraph/Label.h>
 #include <geos/geom/Location.h>
+#include <geos/util.h>
 
 #include <vector>
 #include <map>
 
-using namespace std;
+
 using namespace geos::geomgraph;
 using namespace geos::geom;
 
@@ -41,41 +42,38 @@ namespace relate { // geos.operation.relate
 
 RelateNodeGraph::RelateNodeGraph()
 {
-	nodes=new NodeMap(RelateNodeFactory::instance());
+    nodes = new NodeMap(RelateNodeFactory::instance());
 }
 
-RelateNodeGraph::~RelateNodeGraph() {
-	delete nodes;
+RelateNodeGraph::~RelateNodeGraph()
+{
+    delete nodes;
 }
 
-map<Coordinate*,Node*,CoordinateLessThen>&
+NodeMap::container&
 RelateNodeGraph::getNodeMap()
 {
-	return nodes->nodeMap;
+    return nodes->nodeMap;
 }
 
 void
-RelateNodeGraph::build(GeometryGraph *geomGraph)
+RelateNodeGraph::build(GeometryGraph* geomGraph)
 {
-	// compute nodes for intersections between previously noded edges
-	computeIntersectionNodes(geomGraph,0);
+    // compute nodes for intersections between previously noded edges
+    computeIntersectionNodes(geomGraph, 0);
 
-	/**
-	 * Copy the labelling for the nodes in the parent Geometry.  These override
-	 * any labels determined by intersections.
-	 */
-	copyNodesAndLabels(geomGraph,0);
+    /*
+     * Copy the labelling for the nodes in the parent Geometry.  These override
+     * any labels determined by intersections.
+     */
+    copyNodesAndLabels(geomGraph, 0);
 
-	/**
-	 * Build EdgeEnds for all intersections.
-	 */
-	EdgeEndBuilder *eeBuilder=new EdgeEndBuilder();
-	vector<EdgeEnd*> *eeList=eeBuilder->computeEdgeEnds(geomGraph->getEdges());
-	insertEdgeEnds(eeList);
-	delete eeBuilder;
-	delete eeList;
-	//Debug.println("==== NodeList ===");
-	//Debug.print(nodes);
+    /*
+     * Build EdgeEnds for all intersections.
+     */
+    EdgeEndBuilder eeBuilder;
+    auto&& eeList = eeBuilder.computeEdgeEnds(geomGraph->getEdges());
+    insertEdgeEnds(eeList);
 }
 
 /**
@@ -85,33 +83,31 @@ RelateNodeGraph::build(GeometryGraph *geomGraph)
  * This allows nodes created by either self-intersections or
  * mutual intersections to be labelled.
  * Endpoint nodes will already be labelled from when they were inserted.
- * 
+ *
  * Precondition: edge intersections have been computed.
  */
 void
 RelateNodeGraph::computeIntersectionNodes(GeometryGraph *geomGraph,
-	int argIndex)
+                                          uint8_t argIndex)
 {
-	vector<Edge*> *edges=geomGraph->getEdges();
-	vector<Edge*>::iterator edgeIt=edges->begin();
-	for( ; edgeIt<edges->end(); ++edgeIt)
-	{
-		Edge *e=*edgeIt;
-		int eLoc=e->getLabel().getLocation(argIndex);
-		EdgeIntersectionList &eiL=e->getEdgeIntersectionList();
-		EdgeIntersectionList::iterator eiIt=eiL.begin();
-		EdgeIntersectionList::iterator eiEnd=eiL.end();
-		for( ; eiIt!=eiEnd; ++eiIt) {
-			EdgeIntersection *ei=*eiIt;
-			RelateNode *n=(RelateNode*) nodes->addNode(ei->coord);
-			if (eLoc==Location::BOUNDARY)
-				n->setLabelBoundary(argIndex);
-			else {
-				if (n->getLabel().isNull(argIndex))
-				  n->setLabel(argIndex,Location::INTERIOR);
-			}
-		}
-	}
+    std::vector<Edge*>* edges = geomGraph->getEdges();
+    std::vector<Edge*>::iterator edgeIt = edges->begin();
+    for(; edgeIt < edges->end(); ++edgeIt) {
+        Edge* e = *edgeIt;
+        Location eLoc = e->getLabel().getLocation(argIndex);
+        const EdgeIntersectionList& eiL = e->getEdgeIntersectionList();
+        for(const EdgeIntersection& ei : eiL) {
+            RelateNode* n = detail::down_cast<RelateNode*>(nodes->addNode(ei.coord));
+            if(eLoc == Location::BOUNDARY) {
+                n->setLabelBoundary(argIndex);
+            }
+            else {
+                if(n->getLabel().isNull(argIndex)) {
+                    n->setLabel(argIndex, Location::INTERIOR);
+                }
+            }
+        }
+    }
 }
 
 /**
@@ -124,25 +120,22 @@ RelateNodeGraph::computeIntersectionNodes(GeometryGraph *geomGraph,
  * in the interior due to the Boundary Determination Rule)
  */
 void
-RelateNodeGraph::copyNodesAndLabels(GeometryGraph *geomGraph,int argIndex)
+RelateNodeGraph::copyNodesAndLabels(GeometryGraph *geomGraph, uint8_t argIndex)
 {
-	map<Coordinate*,Node*,CoordinateLessThen> &nMap=geomGraph->getNodeMap()->nodeMap;
-	map<Coordinate*,Node*,CoordinateLessThen>::iterator nodeIt;
-	for(nodeIt=nMap.begin();nodeIt!=nMap.end();nodeIt++) {
-		Node *graphNode=nodeIt->second;
-		Node *newNode=nodes->addNode(graphNode->getCoordinate());
-		newNode->setLabel(argIndex,graphNode->getLabel().getLocation(argIndex));
-		//node.print(System.out);
-	}
+    const auto& nMap = geomGraph->getNodeMap()->nodeMap;
+    for(const auto& entry : nMap) {
+        const Node* graphNode = entry.second.get();
+        Node* newNode = nodes->addNode(graphNode->getCoordinate());
+        newNode->setLabel(argIndex, graphNode->getLabel().getLocation(argIndex));
+    }
 }
 
 void
-RelateNodeGraph::insertEdgeEnds(vector<EdgeEnd*> *ee)
+RelateNodeGraph::insertEdgeEnds(std::vector<std::unique_ptr<EdgeEnd>>& ee)
 {
-	for(vector<EdgeEnd*>::iterator i=ee->begin();i<ee->end();i++) {
-		EdgeEnd *e=*i;
-		nodes->add(e);
-	}
+    for(auto& e : ee) {
+        nodes->add(std::move(e));
+    }
 }
 
 } // namespace geos.operation.relate

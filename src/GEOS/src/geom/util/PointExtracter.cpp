@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -21,36 +21,45 @@
 #include <geos/geom/util/PointExtracter.h>
 
 namespace geos {
-   namespace geom { // geos.geom
-      namespace util { // geos.geom.util
+namespace geom { // geos.geom
+namespace util { // geos.geom.util
 
 
-          void PointExtracter::getPoints(const Geometry &geom, Point::ConstVect &ret)
-         {
-            PointExtracter pe(ret);
-            geom.apply_ro(&pe);
-         }
+void
+PointExtracter::getPoints(const Geometry& geom, Point::ConstVect& ret)
+{
+    if (!geom.hasDimension(Dimension::P)) {
+        return;
+    }
 
-         /**
-         * Constructs a PointExtracterFilter with a list in which
-         * to store Points found.
-         */
-         PointExtracter::PointExtracter(Point::ConstVect& newComps)
-            :
-         comps(newComps)
-         {}
+    PointExtracter pe(ret);
+    geom.apply_ro(&pe);
+}
 
-         void PointExtracter::filter_rw(Geometry *geom)
-         {
-            if ( const Point *p=dynamic_cast<const Point *>(geom) )
-               comps.push_back(p);
-         }
+/**
+ * Constructs a PointExtracterFilter with a list in which
+ * to store Points found.
+ */
+PointExtracter::PointExtracter(Point::ConstVect& newComps)
+    :
+    comps(newComps)
+{}
 
-         void PointExtracter::filter_ro(const Geometry *geom)
-         {
-            if ( const Point *p=dynamic_cast<const Point *>(geom) )
-               comps.push_back(p);
-         }
-      }
-   }
+void
+PointExtracter::filter_rw(Geometry* geom)
+{
+    if (geom->getGeometryTypeId() == GEOS_POINT) {
+        comps.push_back(static_cast<const Point*>(geom));
+    }
+}
+
+void
+PointExtracter::filter_ro(const Geometry* geom)
+{
+    if (geom->getGeometryTypeId() == GEOS_POINT) {
+        comps.push_back(static_cast<const Point*>(geom));
+    }
+}
+}
+}
 }

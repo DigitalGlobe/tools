@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -16,8 +16,9 @@
  *
  **********************************************************************/
 
-#include <geos/simplify/TaggedLinesSimplifier.h>
+#include <geos/simplify/ComponentJumpChecker.h>
 #include <geos/simplify/LineSegmentIndex.h>
+#include <geos/simplify/TaggedLinesSimplifier.h>
 #include <geos/simplify/TaggedLineStringSimplifier.h>
 #include <geos/algorithm/LineIntersector.h>
 
@@ -29,39 +30,48 @@
 #define GEOS_DEBUG 0
 #endif
 
-#ifdef GEOS_DEBUG
+#if GEOS_DEBUG
 #include <iostream>
 #endif
 
 using namespace geos::geom;
-using namespace std;
+
 
 namespace geos {
 namespace simplify { // geos::simplify
 
 /*public*/
 TaggedLinesSimplifier::TaggedLinesSimplifier()
-	:
-	inputIndex(new LineSegmentIndex()),
-	outputIndex(new LineSegmentIndex()),
-	taggedlineSimplifier(new TaggedLineStringSimplifier(inputIndex.get(),
-		outputIndex.get()))
-{
-}
+    : inputIndex(new LineSegmentIndex())
+    , outputIndex(new LineSegmentIndex())
+    , distanceTolerance(0.0)
+{}
+
 
 /*public*/
 void
 TaggedLinesSimplifier::setDistanceTolerance(double d)
 {
-	taggedlineSimplifier->setDistanceTolerance(d);
+    distanceTolerance = d;
 }
 
-/*private*/
+
+/*public*/
 void
-TaggedLinesSimplifier::simplify(TaggedLineString& tls)
+TaggedLinesSimplifier::simplify(std::vector<TaggedLineString*>& taggedLines)
 {
-	taggedlineSimplifier->simplify(&tls);
+    ComponentJumpChecker jumpChecker(taggedLines);
+
+    for (auto* tls : taggedLines) {
+        inputIndex->add(*tls);
+    }
+
+    for (auto* tls : taggedLines) {
+        TaggedLineStringSimplifier tlss(inputIndex.get(), outputIndex.get(), &jumpChecker);
+        tlss.simplify(tls, distanceTolerance);
+    }
 }
+
 
 } // namespace geos::simplify
 } // namespace geos

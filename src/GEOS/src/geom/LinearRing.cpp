@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -16,6 +16,8 @@
  * Last port: geom/LinearRing.java r320 (JTS-1.12)
  *
  **********************************************************************/
+
+#include <geos/algorithm/Orientation.h>
 
 #include <geos/geom/LinearRing.h>
 #include <geos/geom/Dimension.h>
@@ -28,108 +30,101 @@
 #include <string>
 #include <memory>
 
-using namespace std;
-
 namespace geos {
 namespace geom { // geos::geom
 
 /*public*/
-LinearRing::LinearRing(const LinearRing &lr): Geometry(lr), LineString(lr) {}
+LinearRing::LinearRing(const LinearRing& lr): LineString(lr) {}
 
 /*public*/
-LinearRing::LinearRing(CoordinateSequence* newCoords,
-		const GeometryFactory *newFactory)
-	:
-	Geometry(newFactory),
-	LineString(newCoords, newFactory)
+LinearRing::LinearRing(CoordinateSequence::Ptr && newCoords,
+                       const GeometryFactory& newFactory)
+        : LineString(std::move(newCoords), newFactory)
 {
-	validateConstruction();	
+    validateConstruction();
 }
-
-/*public*/
-LinearRing::LinearRing(CoordinateSequence::AutoPtr newCoords,
-		const GeometryFactory *newFactory)
-	:
-	Geometry(newFactory),
-	LineString(newCoords, newFactory)
-{
-	validateConstruction();	
-}
-
 
 void
 LinearRing::validateConstruction()
 {
-	// Empty ring is valid
-	if ( points->isEmpty() ) return;
+    // Empty ring is valid
+    if(points->isEmpty()) {
+        return;
+    }
 
-	if ( !LineString::isClosed() )
-	{
-		throw util::IllegalArgumentException(
-		  "Points of LinearRing do not form a closed linestring"
-		);
-	}
+    if(!LineString::isClosed()) {
+        throw util::IllegalArgumentException(
+            "Points of LinearRing do not form a closed linestring"
+        );
+    }
 
-	if ( points->getSize() < MINIMUM_VALID_SIZE )
-	{
-		std::ostringstream os;
-		os << "Invalid number of points in LinearRing found "
-		   << points->getSize() << " - must be 0 or >= 4";
-		throw util::IllegalArgumentException(os.str());
-	}
-}
-
-
-		
-// superclass LineString will delete internal CoordinateSequence
-LinearRing::~LinearRing(){
+    if(points->getSize() < MINIMUM_VALID_SIZE) {
+        std::ostringstream os;
+        os << "Invalid number of points in LinearRing found "
+           << points->getSize() << " - must be 0 or >= " << MINIMUM_VALID_SIZE;
+        throw util::IllegalArgumentException(os.str());
+    }
 }
 
 int
 LinearRing::getBoundaryDimension() const
 {
-	return Dimension::False;
-}
-
-bool
-LinearRing::isSimple() const
-{
-	return true;
+    return Dimension::False;
 }
 
 bool
 LinearRing::isClosed() const
 {
-	if ( points->isEmpty() ) {
-		// empty LinearRings are closed by definition
-		return true;
-	}
-	return LineString::isClosed();
+    if(points->isEmpty()) {
+        // empty LinearRings are closed by definition
+        return true;
+    }
+    return LineString::isClosed();
 }
 
-string LinearRing::getGeometryType() const {
-	return "LinearRing";
+std::string
+LinearRing::getGeometryType() const
+{
+    return "LinearRing";
 }
 
-void LinearRing::setPoints(CoordinateSequence* cl){
-	const vector<Coordinate> *v=cl->toVector();
-	points->setPoints(*(v));
-	//delete v;
+void
+LinearRing::setPoints(const CoordinateSequence* cl)
+{
+    points = cl->clone();
 }
 
 GeometryTypeId
-LinearRing::getGeometryTypeId() const {
-	return GEOS_LINEARRING;
+LinearRing::getGeometryTypeId() const
+{
+    return GEOS_LINEARRING;
 }
 
-Geometry*
-LinearRing::reverse() const
+void
+LinearRing::orient(bool isCW)
 {
-	assert(points.get());
-	CoordinateSequence* seq = points->clone();
-	CoordinateSequence::reverse(seq);
-	assert(getFactory());
-	return getFactory()->createLinearRing(seq);
+    if (isEmpty()) {
+        return;
+    }
+
+    if (algorithm::Orientation::isCCW(points.get()) == isCW) {
+        points->reverse();
+    }
+
+}
+
+LinearRing*
+LinearRing::reverseImpl() const
+{
+    if(isEmpty()) {
+        return clone().release();
+    }
+
+    assert(points.get());
+    auto seq = points->clone();
+    seq->reverse();
+    assert(getFactory());
+    return getFactory()->createLinearRing(std::move(seq)).release();
 }
 
 } // namespace geos::geom

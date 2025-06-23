@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -29,12 +29,12 @@ namespace index { // geos.index
 namespace chain { // geos.index.chain
 
 void
-MonotoneChainOverlapAction::overlap(MonotoneChain& mc1, size_t start1,
-		MonotoneChain& mc2, size_t start2)
+MonotoneChainOverlapAction::overlap(const MonotoneChain& mc1, std::size_t start1,
+                                    const MonotoneChain& mc2, std::size_t start2)
 {
-	mc1.getLineSegment(start1, overlapSeg1);
-	mc2.getLineSegment(start2, overlapSeg2);
-	overlap(overlapSeg1, overlapSeg2);
+    mc1.getLineSegment(start1, overlapSeg1);
+    mc2.getLineSegment(start2, overlapSeg2);
+    overlap(overlapSeg1, overlapSeg2);
 }
 
 } // namespace geos.index.chain

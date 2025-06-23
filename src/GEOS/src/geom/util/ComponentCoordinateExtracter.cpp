@@ -7,7 +7,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -20,43 +20,51 @@ namespace geos {
 namespace geom { // geos.geom
 namespace util { // geos.geom.util
 
-         ComponentCoordinateExtracter::ComponentCoordinateExtracter( std::vector<const Coordinate*> &newComps)
-            :
-         comps(newComps)
-         {}
+ComponentCoordinateExtracter::ComponentCoordinateExtracter(std::vector<const CoordinateXY*>& newComps)
+    :
+    comps(newComps)
+{}
 
-         void ComponentCoordinateExtracter::filter_rw( Geometry * geom)
-         {
-            if (	geom->getGeometryTypeId() == geos::geom::GEOS_LINEARRING 
-               ||	geom->getGeometryTypeId() == geos::geom::GEOS_LINESTRING
-               ||	geom->getGeometryTypeId() == geos::geom::GEOS_POINT ) 
-               comps.push_back( geom->getCoordinate() );
-            //if (	typeid( *geom ) == typeid( LineString )
-            //	||	typeid( *geom ) == typeid( Point ) )
-            //if ( const Coordinate *ls=dynamic_cast<const Coordinate *>(geom) )
-            //	comps.push_back(ls);
-         }
+void
+ComponentCoordinateExtracter::filter_rw(Geometry* geom)
+{
+    if (geom->isEmpty())
+        return;
+    if(geom->getGeometryTypeId() == geos::geom::GEOS_LINEARRING
+            ||	geom->getGeometryTypeId() == geos::geom::GEOS_LINESTRING
+            ||	geom->getGeometryTypeId() == geos::geom::GEOS_POINT) {
+        comps.push_back(geom->getCoordinate());
+    }
+    //if (	typeid( *geom ) == typeid( LineString )
+    //	||	typeid( *geom ) == typeid( Point ) )
+    //if ( const Coordinate *ls=dynamic_cast<const Coordinate *>(geom) )
+    //	comps.push_back(ls);
+}
 
-         void ComponentCoordinateExtracter::filter_ro( const Geometry * geom)
-         {
-            //if (	typeid( *geom ) == typeid( LineString )
-            //	||	typeid( *geom ) == typeid( Point ) )
-            if (	geom->getGeometryTypeId() == geos::geom::GEOS_LINEARRING 
-               ||	geom->getGeometryTypeId() == geos::geom::GEOS_LINESTRING
-               ||	geom->getGeometryTypeId() == geos::geom::GEOS_POINT ) 
-               comps.push_back( geom->getCoordinate() );
-            //if ( const Coordinate *ls=dynamic_cast<const Coordinate *>(geom) )
-            //	comps.push_back(ls);
-         }
+void
+ComponentCoordinateExtracter::filter_ro(const Geometry* geom)
+{
+    if (geom->isEmpty())
+        return;
+    //if (	typeid( *geom ) == typeid( LineString )
+    //	||	typeid( *geom ) == typeid( Point ) )
+    if(geom->getGeometryTypeId() == geos::geom::GEOS_LINEARRING
+            ||	geom->getGeometryTypeId() == geos::geom::GEOS_LINESTRING
+            ||	geom->getGeometryTypeId() == geos::geom::GEOS_POINT) {
+        comps.push_back(geom->getCoordinate());
+    }
+    //if ( const Coordinate *ls=dynamic_cast<const Coordinate *>(geom) )
+    //	comps.push_back(ls);
+}
 
 
-         void ComponentCoordinateExtracter::getCoordinates(const Geometry &geom, std::vector<const Coordinate*> &ret)
-         {
-            ComponentCoordinateExtracter cce(ret);
-            geom.apply_ro(&cce);
-         }
+void
+ComponentCoordinateExtracter::getCoordinates(const Geometry& geom, std::vector<const CoordinateXY*>& ret)
+{
+    ComponentCoordinateExtracter cce(ret);
+    geom.apply_ro(&cce);
+}
 
 } // namespace geos.geom.util
 } // namespace geos.geom
 } // namespace geos
-

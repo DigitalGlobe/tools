@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Public Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************
@@ -32,97 +32,92 @@
 #define GEOS_DEBUG 0
 #endif
 
-using namespace std;
 using namespace geos::geom;
 
 namespace geos {
 namespace geomgraph { // geos.geomgraph
 
-NodeMap::NodeMap(const NodeFactory &newNodeFact)
-	:
-	nodeFact(newNodeFact)
+NodeMap::NodeMap(const NodeFactory& newNodeFact)
+    :
+    nodeFact(newNodeFact)
 {
 #if GEOS_DEBUG
-	cerr<<"["<<this<<"] NodeMap::NodeMap"<<endl;
+    std::cerr << "[" << this << "] NodeMap::NodeMap" << std::endl;
 #endif
-}
-
-NodeMap::~NodeMap()
-{
-	NodeMap::const_iterator it=nodeMap.begin();
-	for (;it!=nodeMap.end();it++) {
-		delete it->second;
-	}
 }
 
 Node*
 NodeMap::addNode(const Coordinate& coord)
 {
 #if GEOS_DEBUG
-        cerr<<"["<<this<<"] NodeMap::addNode("<<coord.toString()<<")";
+    std::cerr << "[" << this << "] NodeMap::addNode(" << coord.toString() << ")";
 #endif
-        Node *node=find(coord);
-        if (node==NULL) {
+    Node* node = find(coord);
+    if(node == nullptr) {
 #if GEOS_DEBUG
-                cerr<<" is new"<<endl;
+        std::cerr << " is new" << std::endl;
 #endif
-                node=nodeFact.createNode(coord);
-		Coordinate* c = const_cast<Coordinate *>(
-			&(node->getCoordinate()));
-                nodeMap[c]=node;
-                //nodeMap[const_cast<Coordinate *>(&coord)]=node;
-        }
-        else
-        {
+        node = nodeFact.createNode(coord);
+        Coordinate* c = const_cast<Coordinate*>(
+                            &(node->getCoordinate()));
+        nodeMap[c] = std::unique_ptr<Node>(node);
+        node = nodeMap[c].get();
+    }
+    else {
 #if GEOS_DEBUG
-                cerr<<" already found ("<<node->getCoordinate().toString()<<") - adding Z"<<endl;
+        std::cerr << " already found (" << node->getCoordinate().toString() << ") - adding Z" << std::endl;
 #endif
-                node->addZ(coord.z);
-        }
-        return node;
+        node->addZ(coord.z);
+    }
+    return node;
 }
 
 // first arg cannot be const because
 // it is liable to label-merging ... --strk;
 Node*
-NodeMap::addNode(Node *n)
+NodeMap::addNode(Node* n)
 {
-	assert(n);
+    assert(n);
 
 #if GEOS_DEBUG
-	cerr<<"["<<this<<"] NodeMap::addNode("<<n->print()<<")";
+    std::cerr << "[" << this << "] NodeMap::addNode(" << n->print() << ")";
 #endif
-	Coordinate *c=const_cast<Coordinate *>(&n->getCoordinate());
-	Node *node=find(*c);
-	if (node==NULL) {
+    Coordinate* c = const_cast<Coordinate*>(&n->getCoordinate());
+    Node* node = find(*c);
+    if(node == nullptr) {
 #if GEOS_DEBUG
-		cerr<<" is new"<<endl;
+        std::cerr << " is new" << std::endl;
 #endif
-		nodeMap[c]=n;
-		return n;
-	}
+        nodeMap[c] = std::unique_ptr<Node>(n);
+        return nodeMap[c].get();
+    }
 #if GEOS_DEBUG
-	else
-	{
-		cerr<<" found already, merging label"<<endl;
-		const vector<double>&zvals = n->getZ();
-		for (unsigned int i=0; i<zvals.size(); i++)
-		{
-			node->addZ(zvals[i]);
-		}
-	}
+    else {
+        std::cerr << " found already, merging label" << std::endl;
+        const std::vector<double>& zvals = n->getZ();
+        for(unsigned int i = 0; i < zvals.size(); i++) {
+            node->addZ(zvals[i]);
+        }
+    }
 #endif // GEOS_DEBUG
 
-	node->mergeLabel(*n);
-	return node;
+    node->mergeLabel(*n);
+    return node;
 }
 
 void
-NodeMap::add(EdgeEnd *e)
+NodeMap::add(EdgeEnd* e)
 {
-	Coordinate& p=e->getCoordinate();
-	Node *n=addNode(p);
-	n->add(e);
+    Coordinate& p = e->getCoordinate();
+    Node* n = addNode(p);
+    n->add(e);
+}
+
+void
+NodeMap::add(std::unique_ptr<EdgeEnd>&& e)
+{
+    add(e.get());
+    e.release();
 }
 
 /*
@@ -131,37 +126,38 @@ NodeMap::add(EdgeEnd *e)
 Node*
 NodeMap::find(const Coordinate& coord) const
 {
-	Coordinate *c=const_cast<Coordinate *>(&coord);
+    Coordinate* c = const_cast<Coordinate*>(&coord);
 
-	NodeMap::const_iterator found=nodeMap.find(c);
+    const auto& found = nodeMap.find(c);
 
-	if (found==nodeMap.end())
-		return NULL;
-	else
-		return found->second;
+    if(found == nodeMap.end()) {
+        return nullptr;
+    }
+    else {
+        return found->second.get();
+    }
 }
 
 void
-NodeMap::getBoundaryNodes(int geomIndex, vector<Node*>&bdyNodes) const
+NodeMap::getBoundaryNodes(uint8_t geomIndex, std::vector<Node*>& bdyNodes) const
 {
-	NodeMap::const_iterator it=nodeMap.begin();
-	for (;it!=nodeMap.end();it++) {
-		Node *node=it->second;
-		if (node->getLabel().getLocation(geomIndex)==Location::BOUNDARY)
-			bdyNodes.push_back(node);
-	}
+    for(const auto& it: nodeMap) {
+        Node* node = it.second.get();
+        if(node->getLabel().getLocation(geomIndex) == Location::BOUNDARY) {
+            bdyNodes.push_back(node);
+        }
+    }
 }
 
-string
+std::string
 NodeMap::print() const
 {
-	string out="";
-	NodeMap::const_iterator it=nodeMap.begin();
-	for (;it!=nodeMap.end();it++) {
-		Node *node=it->second;
-		out+=node->print();
-	}
-	return out;
+    std::string out = "";
+    for(const auto& it: nodeMap) {
+        const Node* node = it.second.get();
+        out += node->print();
+    }
+    return out;
 }
 
 } // namespace geos.geomgraph

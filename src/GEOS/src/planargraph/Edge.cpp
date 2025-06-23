@@ -8,7 +8,7 @@
  *
  * This is free software; you can redistribute and/or modify it under
  * the terms of the GNU Lesser General Licence as published
- * by the Free Software Foundation. 
+ * by the Free Software Foundation.
  * See the COPYING file for more information.
  *
  **********************************************************************/
@@ -29,61 +29,76 @@ namespace planargraph {
  *  adds this Edge to its from-Node.
  */
 void
-Edge::setDirectedEdges(DirectedEdge *de0, DirectedEdge *de1)
+Edge::setDirectedEdges(DirectedEdge* de0, DirectedEdge* de1)
 {
-	dirEdge.push_back(de0);
-	dirEdge.push_back(de1);
-	de0->setEdge(this);
-	de1->setEdge(this);
-	de0->setSym(de1);
-	de1->setSym(de0);
-	de0->getFromNode()->addOutEdge(de0);
-	de1->getFromNode()->addOutEdge(de1);
+    dirEdge.push_back(de0);
+    dirEdge.push_back(de1);
+    de0->setEdge(this);
+    de1->setEdge(this);
+    de0->setSym(de1);
+    de1->setSym(de0);
+    de0->getFromNode()->addOutEdge(de0);
+    de1->getFromNode()->addOutEdge(de1);
 }
 
 /**
-* Returns one of the DirectedEdges associated with this Edge.
-* @param i 0 or 1
-*/
-DirectedEdge *
+ * Returns one of the DirectedEdges associated with this Edge.
+ * @param i 0 or 1
+ */
+DirectedEdge*
 Edge::getDirEdge(int i)
 {
-	return dirEdge[i];
+    // keep signature signed to avoid conflict with Edge::getDirEdge(Node*) when i == 0
+    return dirEdge[static_cast<std::size_t>(i)];
 }
 
 /*
  * Returns the DirectedEdge that starts from the given node, or null if the
  * node is not one of the two nodes associated with this Edge.
  */
-DirectedEdge *
-Edge::getDirEdge(Node *fromNode)
+DirectedEdge*
+Edge::getDirEdge(Node* fromNode)
 {
-	if (dirEdge[0]->getFromNode()==fromNode) return dirEdge[0];
-	if (dirEdge[1]->getFromNode()==fromNode) return dirEdge[1];
-	// node not found
-	// possibly should throw an exception here?
-	return NULL;
+    if(dirEdge[0]->getFromNode() == fromNode) {
+        return dirEdge[0];
+    }
+    if(dirEdge[1]->getFromNode() == fromNode) {
+        return dirEdge[1];
+    }
+    // node not found
+    // possibly should throw an exception here?
+    return nullptr;
 }
 
 /**
-* If <code>node</code> is one of the two nodes associated with this Edge,
-* returns the other node; otherwise returns null.
-*/
+ * If <code>node</code> is one of the two nodes associated with this Edge,
+ * returns the other node; otherwise returns null.
+ */
 Node*
-Edge::getOppositeNode(Node *node)
+Edge::getOppositeNode(Node* node)
 {
-	if (dirEdge[0]->getFromNode()==node) return dirEdge[0]->getToNode();
-	if (dirEdge[1]->getFromNode()==node) return dirEdge[1]->getToNode();
-	// node not found
-	// possibly should throw an exception here?
-	return NULL;
+    if(dirEdge[0]->getFromNode() == node) {
+        return dirEdge[0]->getToNode();
+    }
+    if(dirEdge[1]->getFromNode() == node) {
+        return dirEdge[1]->getToNode();
+    }
+    // node not found
+    // possibly should throw an exception here?
+    return nullptr;
 }
 
-std::ostream& operator<<(std::ostream& os, const Edge& n) {
-	os << "Edge ";
-	if ( n.isMarked() ) os << " Marked ";
-	if ( n.isVisited() ) os << " Visited ";
-	return os;
+std::ostream&
+operator<<(std::ostream& os, const Edge& n)
+{
+    os << "Edge ";
+    if(n.isMarked()) {
+        os << " Marked ";
+    }
+    if(n.isVisited()) {
+        os << " Visited ";
+    }
+    return os;
 }
 
 } // namespace planargraph
