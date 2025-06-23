@@ -2,14 +2,18 @@ if ( NOT DEFINED CMAKE_BUILD_TYPE )
   set( CMAKE_BUILD_TYPE Release CACHE STRING "Build type" )
 endif ()
 
-project (glew)
+project (glew C)
 
-cmake_minimum_required (VERSION 2.8.7)
+cmake_minimum_required (VERSION 2.8.12)
 
 include(GNUInstallDirs)
 
-if (COMMAND cmake_policy)
+if(POLICY CMP0003)
   cmake_policy (SET CMP0003 NEW)
+endif()
+
+if(POLICY CMP0042)
+  cmake_policy (SET CMP0042 NEW)
 endif()
 
 set(CMAKE_DEBUG_POSTFIX d)
@@ -36,6 +40,13 @@ set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+find_package (OpenGL REQUIRED)
+
+# X11 required except for Windows and Apple OSX platforms
+if (NOT WIN32 AND NOT APPLE)
+  find_package (X11)
+endif()
+
 if (WIN32)
   set (GLEW_LIB_NAME glew32)
 else ()
@@ -43,10 +54,7 @@ else ()
   set (DLL_PREFIX lib)
 endif ()
 
-find_package (OpenGL REQUIRED)
-find_package (X11)
-
-set (GLEW_LIBRARIES ${OPENGL_LIBRARIES})
+set (GLEW_LIBRARIES ${OPENGL_LIBRARIES} ${X11_LIBRARIES})
 
 add_definitions (-DGLEW_NO_GLU)
 
@@ -75,9 +83,19 @@ if (GLEW_OSMESA)
   set (X11_LIBRARIES)
 endif ()
 
+#### EGL ####
+
+if (GLEW_EGL AND UNIX)
+  add_definitions (-DGLEW_EGL)
+  if (OpenGL::EGL)
+    message (FATAL_ERROR "EGL library set but not found.")
+  endif()
+  set (GLEW_LIBRARIES ${OPENGL_LIBRARIES} ${OPENGL_egl_LIBRARY})
+endif ()
+
 #### GLEW ####
 
-include_directories (${GLEW_DIR}/include)
+include_directories (${GLEW_DIR}/include ${X11_INCLUDE_DIR})
 
 set (GLEW_PUBLIC_HEADERS_FILES ${GLEW_DIR}/include/GL/wglew.h ${GLEW_DIR}/include/GL/glew.h ${GLEW_DIR}/include/GL/glxew.h)
 set (GLEW_SRC_FILES ${GLEW_DIR}/src/glew.c)
@@ -87,7 +105,9 @@ if (WIN32)
 endif ()
 
 add_library (glew SHARED ${GLEW_PUBLIC_HEADERS_FILES} ${GLEW_SRC_FILES})
-set_target_properties (glew PROPERTIES COMPILE_DEFINITIONS "GLEW_BUILD" OUTPUT_NAME "${GLEW_LIB_NAME}" PREFIX "${DLL_PREFIX}")
+set_target_properties (glew PROPERTIES COMPILE_DEFINITIONS "GLEW_BUILD" OUTPUT_NAME "${GLEW_LIB_NAME}" PREFIX "${DLL_PREFIX}"
+                                       VERSION ${GLEW_VERSION}
+                                       SOVERSION ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR})
 add_library (glew_s STATIC ${GLEW_PUBLIC_HEADERS_FILES} ${GLEW_SRC_FILES})
 set_target_properties (glew_s PROPERTIES COMPILE_DEFINITIONS "GLEW_STATIC" OUTPUT_NAME "${GLEW_LIB_NAME}" PREFIX lib)
 
@@ -101,6 +121,9 @@ if (MSVC)
   target_compile_options (glew_s PRIVATE -GS-)
   # remove stdlib dependency
   target_link_libraries (glew LINK_PRIVATE -nodefaultlib -noentry)
+  target_link_libraries (glew LINK_PRIVATE libvcruntime.lib)
+  target_link_libraries (glew LINK_PRIVATE msvcrt.lib )
+  string(REGEX REPLACE "/RTC(su|[1su])" "" CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
 elseif (WIN32 AND ((CMAKE_C_COMPILER_ID MATCHES "GNU") OR (CMAKE_C_COMPILER_ID MATCHES "Clang")))
   # remove stdlib dependency on windows with GCC and Clang (for similar reasons
   # as to MSVC - to allow it to be used with any Windows compiler)
@@ -158,7 +181,11 @@ if (BUILD_UTILS)
     list (APPEND GLEWINFO_SRC_FILES ${GLEW_DIR}/build/glewinfo.rc)
   endif ()
   add_executable (glewinfo ${GLEWINFO_SRC_FILES})
-  target_link_libraries (glewinfo glew)
+  if(NOT DEFINED BUILD_SHARED_LIBS OR BUILD_SHARED_LIBS)
+     target_link_libraries (glewinfo glew)
+  else()
+     target_link_libraries (glewinfo glew_s)
+  endif()
   if (NOT WIN32)
     target_link_libraries(glewinfo ${X11_LIBRARIES})
   endif ()
@@ -168,7 +195,11 @@ if (BUILD_UTILS)
     list (APPEND VISUALINFO_SRC_FILES ${GLEW_DIR}/build/visualinfo.rc)
   endif ()
   add_executable (visualinfo ${VISUALINFO_SRC_FILES})
-  target_link_libraries (visualinfo glew)
+  if(NOT DEFINED BUILD_SHARED_LIBS OR BUILD_SHARED_LIBS)
+     target_link_libraries (visualinfo glew)
+  else()
+     target_link_libraries (visualinfo glew_s)
+  endif()
   if (NOT WIN32)
     target_link_libraries(visualinfo ${X11_LIBRARIES})
   endif ()
@@ -185,13 +216,19 @@ set (version ${GLEW_VERSION})
 set (libname ${GLEW_LIB_NAME})
 set (cflags)
 set (requireslib glu)
-configure_file (${GLEW_DIR}/glew.pc.in ${GLEW_DIR}/glew.pc @ONLY)
 
-install(FILES ${GLEW_DIR}/glew.pc 
+#  Mac OSX has no glu.pc unless optional X11/GLX is installed
+if (APPLE)
+  set (requireslib)
+endif ()
+
+configure_file (${GLEW_DIR}/glew.pc.in ${CMAKE_CURRENT_BINARY_DIR}/glew.pc @ONLY)
+
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/glew.pc
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
 
-if(WIN32 AND (NOT MSVC_VERSION LESS 1600) AND (NOT CMAKE_VERSION VERSION_LESS "3.1"))
+if(WIN32 AND MSVC AND (NOT MSVC_VERSION LESS 1600) AND (NOT CMAKE_VERSION VERSION_LESS "3.1"))
     install(
         FILES $<TARGET_PDB_FILE:glew>
         DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -212,4 +249,15 @@ if(MAYBE_EXPORT)
       ${CMAKE_CURRENT_SOURCE_DIR}/glew-config.cmake
       ${CMAKE_CURRENT_SOURCE_DIR}/CopyImportedTargetProperties.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/glew)
+endif()
+
+if(NOT TARGET uninstall)
+  configure_file(
+      ${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in
+      ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake
+      IMMEDIATE @ONLY)
+
+  add_custom_target(uninstall
+      COMMAND ${CMAKE_COMMAND} -P
+      ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
 endif()
