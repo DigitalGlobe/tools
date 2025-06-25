@@ -200,6 +200,7 @@ class SystemManager:
     #                       <code>releaseSpecified</code> parameter is
     #                       <code>True</code>, this method will handle
     #                       <code>d</code> suffixes in debug file names
+    #    suffix           : adds suffix to the end of the base filename
     def distributeFiles(
         self,
         sourcePathName,
@@ -209,13 +210,26 @@ class SystemManager:
         dConsidered = True,
         hierarchical=False,
         flattenhierarchy=False,
+        suffix=None
     ):
 
-        regexPattern = filePattern.replace(".", "\.")
+        regexPattern = filePattern.replace(".", "\\.")
         regexPattern = regexPattern.replace("*", ".*")
         regexPattern = f"^{regexPattern}$"
 
-        sync(sourcedir=sourcePathName, targetdir=targetPathName, action='sync', create=True, only=(regexPattern,))
+        if suffix is not None:
+            files = glob.glob(os.path.join(sourcePathName, filePattern))
+            for file in files:
+                f = os.path.basename(file)
+                (base, ext) = os.path.splitext(f)
+                ext = suffix + ext
+
+                p = os.path.dirname(file)[len(sourcePathName):]
+
+                self.copyFile(file, os.path.join(targetPathName, p, f'{base}{ext}'))
+
+        else:
+            sync(sourcedir=sourcePathName, targetdir=targetPathName, action='sync', create=True, only=(regexPattern,))
 
     # ----------------------------------------------------------------------
     # Executes a specified command line.
