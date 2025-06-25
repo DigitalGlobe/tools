@@ -37,9 +37,9 @@ Texture * create_planet_texture (void) {
          int mi = i - TEXTURE_SIZE/2;
          int mj = j - TEXTURE_SIZE/2;
 
-         pixmap [3*TEXTURE_SIZE*i + 3*j] = (100*mi*mi + 40*mj*mj) >> 8;
-         pixmap [3*TEXTURE_SIZE*i + 3*j + 1] = (10*mi*mi + 4*mj*mj) ;
-         pixmap [3*TEXTURE_SIZE*i + 3*j + 2] = (1000*mi*mi + 400*mj*mj) >> 16 ;
+         pixmap [3*TEXTURE_SIZE*i + 3*j] = (unsigned char) (100*mi*mi + 40*mj*mj) >> 8;
+         pixmap [3*TEXTURE_SIZE*i + 3*j + 1] = (unsigned char) (10*mi*mi + 4*mj*mj) ;
+         pixmap [3*TEXTURE_SIZE*i + 3*j + 2] = (unsigned char) (1000*mi*mi + 400*mj*mj) >> 16 ;
 
       }
    }
@@ -63,12 +63,12 @@ Texture * create_check_texture (void) {
    for (i=0; i< TEXTURE_SIZE; i++) {
       for (j=0; j< TEXTURE_SIZE; j++) {
 
-         pixmap [3*TEXTURE_SIZE*i + 3*j] = 
-		255 * ( (((i)/32) %2) == (((j)/32) %2));
-         pixmap [3*TEXTURE_SIZE*i + 3*j + 1] = 
-		255 * ( (((i)/32) %2) == (((j)/32) %2));
-         pixmap [3*TEXTURE_SIZE*i + 3*j + 2] = 
-		255 * ( (((i)/32) %2) == (((j)/32) %2));
+         pixmap [3*TEXTURE_SIZE*i + 3*j] = (unsigned char)
+                (255 * ( (((i)/32) %2) == (((j)/32) %2)));
+         pixmap [3*TEXTURE_SIZE*i + 3*j + 1] = (unsigned char)
+                (255 * ( (((i)/32) %2) == (((j)/32) %2)));
+         pixmap [3*TEXTURE_SIZE*i + 3*j + 2] = (unsigned char)
+                (255 * ( (((i)/32) %2) == (((j)/32) %2)));
       }
    }
 
@@ -90,9 +90,9 @@ Texture * create_barberpole_texture (void) {
 
    for (i=0; i< TEXTURE_SIZE; i++) {
       for (j=0; j< TEXTURE_SIZE; j++) {
-         pixmap [3*TEXTURE_SIZE*i + 3*j] = 255 * (((i+j)/32) %2);
-         pixmap [3*TEXTURE_SIZE*i + 3*j + 1] = 255 * (((i+j)/32) %2);
-         pixmap [3*TEXTURE_SIZE*i + 3*j + 2] = 255 * (((i+j)/32) %2);
+         pixmap [3*TEXTURE_SIZE*i + 3*j] = (unsigned char) (255 * (((i+j)/32) %2));
+         pixmap [3*TEXTURE_SIZE*i + 3*j + 1] = (unsigned char) (255 * (((i+j)/32) %2));
+         pixmap [3*TEXTURE_SIZE*i + 3*j + 2] = (unsigned char) (255 * (((i+j)/32) %2));
 
       }
    }
@@ -116,12 +116,12 @@ Texture * create_wild_tooth_texture (void) {
    for (i=0; i< TEXTURE_SIZE; i++) {
       for (j=0; j< TEXTURE_SIZE; j++) {
 
-         pixmap [3*TEXTURE_SIZE*i + 3*j] = 
-         255 * ( (((i+j)/32) %2) == (((i-j)/32) %2));
-         pixmap [3*TEXTURE_SIZE*i + 3*j + 1] = 
-         255 * ( (((i+j)/32) %2) == (((i-j)/32) %2));
-         pixmap [3*TEXTURE_SIZE*i + 3*j + 2] = 
-         255 * ( (((i+j)/32) %2) == (((i-j)/32) %2));
+         pixmap [3*TEXTURE_SIZE*i + 3*j] = (unsigned char)
+         (255 * ( (((i+j)/32) %2) == (((i-j)/32) %2)));
+         pixmap [3*TEXTURE_SIZE*i + 3*j + 1] = (unsigned char)
+         (255 * ( (((i+j)/32) %2) == (((i-j)/32) %2)));
+         pixmap [3*TEXTURE_SIZE*i + 3*j + 2] = (unsigned char)
+         (255 * ( (((i+j)/32) %2) == (((i-j)/32) %2)));
 
       }
    }

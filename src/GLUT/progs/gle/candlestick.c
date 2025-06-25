@@ -25,14 +25,14 @@
 
 /* =========================================================== */
 
-#define SET_RGB(rgb,r,g,b) {			\
-	rgb[0]=r; rgb[1]=g; rgb[2]=b;		\
+#define SET_RGB(rgb,r,g,b) {                    \
+        rgb[0]=r; rgb[1]=g; rgb[2]=b;           \
 } 
 
 typedef struct _material {
 
    /* public data areas */
-   float emission[3];	
+   float emission[3];   
    float ambient[3];  
    float diffuse[3];  
    float specular[3]; 
@@ -58,7 +58,7 @@ class goPolyline {
       int  nfree;
 
    public:
-      goPolyline ();		// by default, construct 3D polyline
+      goPolyline ();            // by default, construct 3D polyline
       goPolyline (int);            // construct arbitrary dimension polyline
       void Print ();
       void AddPoint (double x, double y);
@@ -83,47 +83,47 @@ typedef struct contour {
 #define pfree numContourPoints
 #define nfree numContourNorms
 
-#define NEW_CONTOUR(self) {			\
-   self -> pts = (SVec *) malloc (100*sizeof (double));	\
-   self -> norms = (SVec *) malloc (100*sizeof (double));	\
-   self -> pfree = 0;		\
-   self -> nfree = 0;		\
+#define NEW_CONTOUR(self) {                     \
+   self -> pts = (SVec *) malloc (100*sizeof (double)); \
+   self -> norms = (SVec *) malloc (100*sizeof (double));       \
+   self -> pfree = 0;           \
+   self -> nfree = 0;           \
 }
 
-#define ADD_POINT(self,x,y) { 			\
-   self -> pts[self->pfree][0] = x;		\
-   self -> pts[self->pfree][1] = y;		\
-   self->pfree ++;				\
+#define ADD_POINT(self,x,y) {                   \
+   self -> pts[self->pfree][0] = x;             \
+   self -> pts[self->pfree][1] = y;             \
+   self->pfree ++;                              \
 }
 
-#define ADD_NORMAL(self,x,y) { 			\
-   self -> norms[self->nfree][0] = x;		\
-   self -> norms[self->nfree][1] = y;		\
-   self->nfree ++;				\
+#define ADD_NORMAL(self,x,y) {                  \
+   self -> norms[self->nfree][0] = x;           \
+   self -> norms[self->nfree][1] = y;           \
+   self->nfree ++;                              \
 }
 
-#define MAKE_NORMAL(self) {			\
-   float dx, dy, w;				\
-   dx = self -> pts [self->pfree -1][0];	\
-   dx -= self -> pts [self->pfree -2][0];	\
-   dy = self -> pts [self->pfree -1][1];	\
-   dy -= self -> pts [self->pfree -2][1];	\
-   w = 1.0 / sqrt (dx*dx+dy*dy);		\
-   dx *= w;					\
-   dy *= w;					\
-   self -> norms[self->nfree][0] = -dy;		\
-   self -> norms[self->nfree][1] = dx;		\
-   self -> nfree ++;				\
+#define MAKE_NORMAL(self) {                     \
+   float dx, dy, w;                             \
+   dx = self -> pts [self->pfree -1][0];        \
+   dx -= self -> pts [self->pfree -2][0];       \
+   dy = self -> pts [self->pfree -1][1];        \
+   dy -= self -> pts [self->pfree -2][1];       \
+   w = 1.0 / sqrt (dx*dx+dy*dy);                \
+   dx *= w;                                     \
+   dy *= w;                                     \
+   self -> norms[self->nfree][0] = -dy;         \
+   self -> norms[self->nfree][1] = dx;          \
+   self -> nfree ++;                            \
 }
 
 /* =========================================================== */
 /* class gleExtrustion */
 
 typedef struct _extrusion {
-   Material	*material;	/* material description */
-   Contour 	*contour;	/* 2D contour */
+   Material     *material;      /* material description */
+   Contour      *contour;       /* 2D contour */
 
-   double radius;		/* for polycylinder, torus */
+   double radius;               /* for polycylinder, torus */
    double startRadius;     /* spiral starts in x-y plane */
    double drdTheta;        /* change in radius per revolution */
    double startZ;          /* starting z value */
@@ -135,12 +135,12 @@ typedef struct _extrusion {
 
 } Extrusion;
 
-#define  NEW_EXTRUSION(self) {		\
-   self -> material = (Material *) malloc (sizeof (Material));	\
-   self -> contour = (Contour *) malloc (sizeof (Contour));	\
-   NEW_CONTOUR (self->contour);					\
+#define  NEW_EXTRUSION(self) {          \
+   self -> material = (Material *) malloc (sizeof (Material));  \
+   self -> contour = (Contour *) malloc (sizeof (Contour));     \
+   NEW_CONTOUR (self->contour);                                 \
 }
-	
+        
 
 /* =========================================================== */
 Extrusion *candle = NULL;

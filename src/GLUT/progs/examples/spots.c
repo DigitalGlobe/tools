@@ -49,7 +49,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-#define TWO_PI	(2*M_PI)
+#define TWO_PI  (2*M_PI)
 
 typedef struct lightRec {
   float amb[4];
@@ -303,6 +303,16 @@ visibility(int state)
   }
 }
 
+void
+keyboard(unsigned char c, int x, int y)
+{
+  switch (c) {
+  case 27:
+    exit(0);
+    break;
+  }
+}
+
 int
 main(int argc, char **argv)
 {
@@ -322,6 +332,7 @@ main(int argc, char **argv)
   glutCreateWindow("GLUT spotlight swing");
   glutDisplayFunc(display);
   glutVisibilityFunc(visibility);
+  glutKeyboardFunc(keyboard);
 
   glMatrixMode(GL_PROJECTION);
   glFrustum(-1, 1, -1, 1, 2, 6);

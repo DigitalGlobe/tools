@@ -366,6 +366,11 @@ void muiNewUIList(int listid)
     muiError("muiNewUIList: No more UI lists available");
 }
 
+/* Disable VC 7.1 warning: unreachable code */
+#if defined(_MSC_VER)
+#pragma warning( disable : 4702 )
+#endif
+
 int muiGetListId(int uilist)
 {
     int i;
@@ -374,6 +379,7 @@ int muiGetListId(int uilist)
 	if (muilistindex[i] == uilist) return i;	
     }
     muiError("muiAddToUIList: illegal UI list identifier");
+    /* Unreachable code. */
     return -1;
 }
 
@@ -385,6 +391,7 @@ muiCons *muiGetListCons(int uilist)
 	if (muilistindex[i] == uilist) return muilist[i];	
     }
     muiError("muiGetListCons: illegal UI list identifier");
+    /* Unreachable code. */
     return (muiCons *)0;
 }
 
@@ -586,12 +593,14 @@ enum muiReturnValue buttonhandler(muiObject *obj, int event, int value, int x, i
 	    return MUI_NO_ACTION;
 	case MUI_DEVICE_RELEASE:
 	    if (SelectedObj != obj) {
-		muiSetSelect(SelectedObj, 0);
-		muiSetLocate(SelectedObj, 0);
-		muiDrawObject(SelectedObj);
-		muiSetLocate(obj, 1);
-		LocatedObj = obj;
-		muiDrawObject(obj);
+	        if (SelectedObj) {
+		    muiSetSelect(SelectedObj, 0);
+		    muiSetLocate(SelectedObj, 0);
+		    muiDrawObject(SelectedObj);
+		    muiSetLocate(obj, 1);
+		    LocatedObj = obj;
+		    muiDrawObject(obj);
+		}
 		return MUI_NO_ACTION;
 	    }
 	    if (obj->type == MUI_RADIOBUTTON || obj->type == MUI_TINYRADIOBUTTON) {
@@ -626,6 +635,7 @@ enum muiReturnValue buttonhandler(muiObject *obj, int event, int value, int x, i
 	    return MUI_NO_ACTION;
 	default:
 	    muiError("buttonhandler: wacko event");
+            /* Unreachable code. */
 	    return MUI_NO_ACTION;
     }
 }

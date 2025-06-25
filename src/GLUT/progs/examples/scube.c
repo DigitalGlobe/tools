@@ -58,14 +58,14 @@ static int useQuads = 1;
 static int tick = -1;
 static int moving = 1;
 
-#define GREY	0
-#define RED	1
-#define GREEN	2
-#define BLUE	3
-#define CYAN	4
-#define MAGENTA	5
-#define YELLOW	6
-#define BLACK	7
+#define GREY    0
+#define RED     1
+#define GREEN   2
+#define BLUE    3
+#define CYAN    4
+#define MAGENTA 5
+#define YELLOW  6
+#define BLACK   7
 
 static float materialColor[8][4] =
 {

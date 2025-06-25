@@ -8,25 +8,25 @@
 #include "glsmapint.h"
 
 void smapSetEye(SphereMap *smap,
-	GLfloat eyex, GLfloat eyey,	GLfloat eyez)
+    GLfloat eyex, GLfloat eyey, GLfloat eyez)
 {
-	smap->eye[X] = eyex;
-	smap->eye[Y] = eyey;
-	smap->eye[Z] = eyez;
+    smap->eye[X] = eyex;
+    smap->eye[Y] = eyey;
+    smap->eye[Z] = eyez;
 }
 
 void smapSetUp(SphereMap *smap,
-	GLfloat upx, GLfloat upy, GLfloat upz)
+    GLfloat upx, GLfloat upy, GLfloat upz)
 {
-	smap->up[X] = upx;
-	smap->up[Y] = upy;
-	smap->up[Z] = upz;
+    smap->up[X] = upx;
+    smap->up[Y] = upy;
+    smap->up[Z] = upz;
 }
 
 void smapSetObject(SphereMap *smap,
-	GLfloat objx, GLfloat objy, GLfloat objz)
+    GLfloat objx, GLfloat objy, GLfloat objz)
 {
-	smap->obj[X] = objx;
-	smap->obj[Y] = objy;
-	smap->obj[Z] = objz;
+    smap->obj[X] = objx;
+    smap->obj[Y] = objy;
+    smap->obj[Z] = objz;
 }

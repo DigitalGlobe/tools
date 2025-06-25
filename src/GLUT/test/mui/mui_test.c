@@ -42,18 +42,18 @@
 extern int mui_singlebuffered;
 
 char *strs[] = { "Line 1", "Line 2", "Longer line 3", "Very, very, very long line number four", 
-	    "Line 5", "Sixth line", "Seventh line", "Line number 8",  "9", "10", "The eleventh line", 
-	    "line 12", "Line number 13", "Quite long line 14", "15",
-	    "Line 1", "Line 2", "Longer line 3", "Very, very, very long line number four", 
-	    "Line 5", "Sixth line", "Seventh line", "Line number 8",  "9", "10", "The eleventh line", 
-	    "line 12", "Line number 13", "Quite long line 14", "15", 0, };
+            "Line 5", "Sixth line", "Seventh line", "Line number 8",  "9", "10", "The eleventh line", 
+            "line 12", "Line number 13", "Quite long line 14", "15",
+            "Line 1", "Line 2", "Longer line 3", "Very, very, very long line number four", 
+            "Line 5", "Sixth line", "Seventh line", "Line number 8",  "9", "10", "The eleventh line", 
+            "line 12", "Line number 13", "Quite long line 14", "15", 0, };
 
 muiObject *b1, *b2, *b3, *rb1, *rb2, *rb3, *t, *t1, *l, *l1, *vs, *tl;
 muiObject *trb1, *trb2, *trb3, *pd, *hs;
 
-int M1, M2, M3;	/* menus */
+int M1, M2, M3; /* menus */
 
-void	controltltop(muiObject *obj, enum muiReturnValue value)
+void    controltltop(muiObject *obj, enum muiReturnValue value)
 {
     float sliderval;
 
@@ -100,7 +100,7 @@ void maketestui(void)
     int xmin, ymin, xmax, ymax;
 
     maketestmenus();
-    muiNewUIList(1);	/* makes an MUI display list (number 1) */
+    muiNewUIList(1);    /* makes an MUI display list (number 1) */
     b1 = muiNewButton(10, 100, 10, 35);
     b2 = muiNewButton(10, 100, 40, 65);
     b3 = muiNewButton(10, 100, 70, 95);
@@ -150,9 +150,9 @@ int main(int argc, char **argv)
     glutInitWindowPosition(100, 100);
     glutInitWindowSize(300, 500);
     if (mui_singlebuffered)
-	glutInitDisplayMode( GLUT_RGB | GLUT_SINGLE );
+        glutInitDisplayMode( GLUT_RGB | GLUT_SINGLE );
     else
-	glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE );
+        glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE );
     glutCreateWindow("test");
     maketestui();
     muiInit();

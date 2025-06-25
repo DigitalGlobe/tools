@@ -8,13 +8,13 @@
 #include "glsmapint.h"
 
 void smapSetPositionLightsFunc(SphereMap *smap,
-	void (*positionLights)(int view, void *context))
+    void (*positionLights)(int view, void *context))
 {
-	smap->positionLights = positionLights;
+    smap->positionLights = positionLights;
 }
 
 void smapSetDrawViewFunc(SphereMap *smap,
-	void (*drawView)(int view, void *context))
+    void (*drawView)(int view, void *context))
 {
-	smap->drawView = drawView;
+    smap->drawView = drawView;
 }

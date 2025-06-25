@@ -8,7 +8,7 @@
 #include "glutint.h"
 
 /* CENTRY */
-void APIENTRY
+void GLUTAPIENTRY
 glutSwapBuffers(void)
 {
   GLUTwindow *window = __glutCurrentWindow;

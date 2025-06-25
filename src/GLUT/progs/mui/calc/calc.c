@@ -345,13 +345,14 @@ void kbd(unsigned char c, int x, int y)
     
 }
 
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     glutInit(&argc, argv);
     initcalc();
     formatentry(Displaylines-1);
     glutKeyboardFunc(kbd);  /* overrides mui cmd */
     glutMainLoop();
+    return 0;             /* ANSI C requires main to return int. */
 }
 
 int inputptr = 0;

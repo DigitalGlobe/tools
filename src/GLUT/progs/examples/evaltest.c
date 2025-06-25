@@ -318,7 +318,7 @@ RenderEval(void)
     default:;
       /* Mesa makes GLenum be a C "enum" and gcc will warn if
          all the cases of an enum are not tested in a switch
-	 statement.  Add default case to supress the error. */
+         statement.  Add default case to supress the error. */
     }
     break;
   }

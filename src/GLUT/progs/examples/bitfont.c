@@ -8,6 +8,13 @@
 #include <string.h>
 #include <GL/glut.h>
 
+enum {
+  DL_BOGUS = 0,
+  DL_MSG1,
+  DL_MSG2,
+  DL_MSG3
+};
+
 void *font = GLUT_BITMAP_TIMES_ROMAN_24;
 void *fonts[] =
 {
@@ -19,9 +26,46 @@ char defaultMessage[] = "GLUT means OpenGL.";
 char *message = defaultMessage;
 
 void
+output(int x, int y, char *string)
+{
+  int len, i;
+
+  glRasterPos2f(x, y);
+  len = (int) strlen(string);
+  for (i = 0; i < len; i++) {
+    glutBitmapCharacter(font, string[i]);
+  }
+}
+
+void
+updateDisplayLists(int updateAll)
+{
+  /* Calling glutBitmapCharacter is more expensive than you
+     might think since it has to ensure that the right
+     glPixelStore state is set.  It saves and restores the
+     pixel store state just to be safe.  It is more efficient
+     to put the bitmap calls into a display list because
+     the pixel store save and restore is not compiled into
+     the display lists (since pixel store state is client
+     state). */
+  if (updateAll) {
+    glNewList(DL_MSG1, GL_COMPILE);
+      output(0, 24, "This is written in a GLUT bitmap font.");
+    glEndList();
+    glNewList(DL_MSG3, GL_COMPILE);
+      output(50, 145, "(positioned in pixels with upper-left origin)");
+    glEndList();
+  }
+  glNewList(DL_MSG2, GL_COMPILE);
+    output(100, 100, message);
+  glEndList();
+}
+
+void
 selectFont(int newfont)
 {
   font = fonts[newfont];
+  updateDisplayLists(1);
   glutPostRedisplay();
 }
 
@@ -36,6 +80,8 @@ selectMessage(int msg)
     message = "ABCDEFGHIJKLMNOP";
     break;
   }
+  updateDisplayLists(0);
+  glutPostRedisplay();
 }
 
 void
@@ -56,30 +102,12 @@ selectColor(int color)
 }
 
 void
-tick(void)
-{
-  glutPostRedisplay();
-}
-
-void
-output(int x, int y, char *string)
-{
-  int len, i;
-
-  glRasterPos2f(x, y);
-  len = (int) strlen(string);
-  for (i = 0; i < len; i++) {
-    glutBitmapCharacter(font, string[i]);
-  }
-}
-
-void
 display(void)
 {
   glClear(GL_COLOR_BUFFER_BIT);
-  output(0, 24, "This is written in a GLUT bitmap font.");
-  output(100, 100, message);
-  output(50, 145, "(positioned in pixels with upper-left origin)");
+  glCallList(DL_MSG1);
+  glCallList(DL_MSG2);
+  glCallList(DL_MSG3);
   glutSwapBuffers();
 }
 
@@ -91,6 +119,19 @@ reshape(int w, int h)
   glLoadIdentity();
   gluOrtho2D(0, w, h, 0);
   glMatrixMode(GL_MODELVIEW);
+}
+
+void
+keyboard(unsigned char c, int x, int y)
+{
+  switch (c) {
+  case 27:
+    exit(0);
+    break;
+  case ' ':
+    glutPostRedisplay();
+    break;
+  }
 }
 
 int
@@ -105,12 +146,12 @@ main(int argc, char **argv)
     }
   }
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-  glutInitWindowSize(500, 150);
+  glutInitWindowSize(1000, 300);
   glutCreateWindow("GLUT bitmap font example");
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glutDisplayFunc(display);
   glutReshapeFunc(reshape);
-  glutIdleFunc(tick);
+  glutKeyboardFunc(keyboard);
   msg_submenu = glutCreateMenu(selectMessage);
   glutAddMenuEntry("abc", 1);
   glutAddMenuEntry("ABC", 2);
@@ -125,6 +166,7 @@ main(int argc, char **argv)
   glutAddSubMenu("Messages", msg_submenu);
   glutAddSubMenu("Color", color_submenu);
   glutAttachMenu(GLUT_RIGHT_BUTTON);
+  updateDisplayLists(1);
   glutMainLoop();
   return 0;             /* ANSI C requires main to return int. */
 }

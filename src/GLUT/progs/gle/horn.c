@@ -21,15 +21,15 @@ double points [NPTS][3];
 int idx = 0;
 
 /* some utilities for filling that array */
-#define PNT(x,y,z) { 			\
-   points[idx][0] = x; 			\
-   points[idx][1] = y; 			\
-   points[idx][2] = z;			\
-   idx ++;				\
+#define PNT(x,y,z) {                    \
+   points[idx][0] = x;                  \
+   points[idx][1] = y;                  \
+   points[idx][2] = z;                  \
+   idx ++;                              \
 }
 
-#define RAD(r) {			\
-   radii[idx] = r;			\
+#define RAD(r) {                        \
+   radii[idx] = r;                      \
 }
 
 /* 

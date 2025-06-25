@@ -11,6 +11,7 @@
    text in a stroke font: one line antialiased, the other not.  */
 
 #include <GL/glut.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 
@@ -75,7 +76,6 @@ display(void)
   glCallList(1);        /* render ico display list */
   glPopMatrix();
 
-  glPushAttrib(GL_ENABLE_BIT);
   glDisable(GL_DEPTH_TEST);
   glDisable(GL_LIGHTING);
   glMatrixMode(GL_PROJECTION);
@@ -94,7 +94,10 @@ display(void)
   glPopMatrix();
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
-  glPopAttrib();
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_LIGHTING);
+  glEnable(GL_BLEND);
+  glEnable(GL_LINE_SMOOTH);
   glMatrixMode(GL_MODELVIEW);
 
   glutSwapBuffers();
@@ -118,6 +121,14 @@ visible(int vis)
     glutIdleFunc(NULL);
 }
 
+void
+keyboard(unsigned char c, int x, int y)
+{
+  if (c == 27) {
+    exit(0);
+  }
+}
+
 int 
 main(int argc, char **argv)
 {
@@ -126,6 +137,7 @@ main(int argc, char **argv)
   glutCreateWindow("blender");
   glutDisplayFunc(display);
   glutVisibilityFunc(visible);
+  glutKeyboardFunc(keyboard);
 
   glNewList(1, GL_COMPILE);  /* create ico display list */
   glutSolidIcosahedron();

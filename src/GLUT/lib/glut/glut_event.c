@@ -1,5 +1,5 @@
 
-/* Copyright (c) Mark J. Kilgard, 1994, 1995, 1996, 1997, 1998. */
+/* Copyright (c) Mark J. Kilgard, 1994, 1995, 1996, 1997, 1998, 2000, 2001. */
 
 /* This program is freely distributable without licensing fees
    and is provided without guarantee or warrantee expressed or
@@ -16,7 +16,7 @@
    prototypes for the select system call is based on logic
    from the X11R6.3 version of <X11/Xpoll.h>. */
 
-#if !defined(_WIN32)
+#ifndef _WIN32
 # ifdef __sgi
 #  include <bstring.h>    /* prototype for bzero used by FD_ZERO */
 # endif
@@ -34,7 +34,7 @@
 
 #include <sys/types.h>
 
-#if !defined(_WIN32)
+#ifndef _WIN32
 # if defined(__vms) && ( __VMS_VER < 70000000 )
 #  include <sys/time.h>
 # else
@@ -45,12 +45,8 @@
 # include <unistd.h>
 # include <X11/Xlib.h>
 # include <X11/keysym.h>
+# include <X11/Xatom.h>
 #else
-# ifdef __CYGWIN32__
-#  include <sys/time.h>
-# else
-#  include <sys/timeb.h>
-# endif
 # ifdef __hpux
    /* XXX Bert Gijsbers <bert@mc.bio.uva.nl> reports that HP-UX
       needs different keysyms for the End, Insert, and Delete keys
@@ -84,7 +80,7 @@ GLUTmenu *__glutMappedMenu;
 GLUTmenu *__glutCurrentMenu = NULL;
 
 void (*__glutUpdateInputDeviceMaskFunc) (GLUTwindow *);
-#if !defined(_WIN32)
+#ifndef _WIN32
 void (*__glutMenuItemEnterOrLeave)(GLUTmenuItem * item, int num, int type) = NULL;
 void (*__glutFinishMenu)(Window win, int x, int y);
 void (*__glutPaintMenu)(GLUTmenu * menu);
@@ -95,33 +91,37 @@ GLUTmenu * (*__glutGetMenu)(Window win);
 #endif
 
 Atom __glutMotifHints = None;
+Atom __glutNetWMState = None;
+Atom __glutNetWMStateFullscreen = None;
 /* Modifier mask of ~0 implies not in core input callback. */
 unsigned int __glutModifierMask = (unsigned int) ~0;
 int __glutWindowDamaged = 0;
 
-void APIENTRY
+void GLUTAPIENTRY
 glutIdleFunc(GLUTidleCB idleFunc)
 {
   __glutIdleFunc = idleFunc;
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutTimerFunc(unsigned int interval, GLUTtimerCB timerFunc, int value)
 {
   GLUTtimer *timer, *other;
   GLUTtimer **prevptr;
-  struct timeval now;
+  GLUTtimeval now;
 
-  if (!timerFunc)
+  if (!timerFunc) {
     return;
+  }
 
   if (freeTimerList) {
     timer = freeTimerList;
     freeTimerList = timer->next;
   } else {
     timer = (GLUTtimer *) malloc(sizeof(GLUTtimer));
-    if (!timer)
+    if (!timer) {
       __glutFatalError("out of memory.");
+    }
   }
 
   timer->func = timerFunc;
@@ -152,7 +152,7 @@ glutTimerFunc(unsigned int interval, GLUTtimerCB timerFunc, int value)
 void
 handleTimeouts(void)
 {
-  struct timeval now;
+  GLUTtimeval now;
   GLUTtimer *timer;
 
   /* Assumption is that __glutTimerList is already determined
@@ -164,8 +164,9 @@ handleTimeouts(void)
     __glutTimerList = timer->next;
     timer->next = freeTimerList;
     freeTimerList = timer;
-    if (!__glutTimerList)
+    if (!__glutTimerList) {
       break;
+    }
   }
 }
 
@@ -203,7 +204,7 @@ __glutPostRedisplay(GLUTwindow * window, int layerMask)
 }
 
 /* CENTRY */
-void APIENTRY
+void GLUTAPIENTRY
 glutPostRedisplay(void)
 {
   __glutPostRedisplay(__glutCurrentWindow, GLUT_REDISPLAY_WORK);
@@ -213,7 +214,7 @@ glutPostRedisplay(void)
    glutSetWindow call (entailing an expensive OpenGL context switch),
    particularly useful when multiple windows need redisplays posted at
    the same times.  See also glutPostWindowOverlayRedisplay. */
-void APIENTRY
+void GLUTAPIENTRY
 glutPostWindowRedisplay(int win)
 {
   __glutPostRedisplay(__glutWindowList[win - 1], GLUT_REDISPLAY_WORK);
@@ -256,8 +257,7 @@ markWindowHidden(GLUTwindow * window)
   }
 }
 
-#if !defined(_WIN32)
-
+#ifndef _WIN32
 static void
 purgeStaleWindow(Window win)
 {
@@ -278,6 +278,8 @@ purgeStaleWindow(Window win)
     }
   }
 }
+
+# ifndef __vms  /* See comment about VMS below. */
 
 /* Unlike XNextEvent, if a signal arrives,
    interruptibleXNextEvent will return (with a zero return
@@ -314,28 +316,22 @@ interruptibleXNextEvent(Display * dpy, XEvent * event)
     }
   }
 }
-
+# endif
 #endif
 
 static void
 processEventsAndTimeouts(void)
 {
-#if defined ( _WIN32 )
-	MSG msg;
-	
-	while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-		TranslateMessage( &msg );
-		DispatchMessage( &msg );
-		if ( msg.message == WM_QUIT ) {
-			exit( 0 );
-		}
-	}
-	if (__glutTimerList) {
-		handleTimeouts();
-	}
-#else  /* _WIN32 */
-
   do {
+#ifdef _WIN32
+    MSG event;
+
+    if(!GetMessage(&event, NULL, 0, 0)) /* bail if no more messages */
+      exit(0);
+    TranslateMessage(&event);           /* translate virtual-key messages */
+    DispatchMessage(&event);            /* call the window proc */
+    /* see win32_event.c for event (message) processing procedures */
+#else
     static int mappedMenuButton;
     GLUTeventParser *parser;
     XEvent event, ahead;
@@ -344,7 +340,17 @@ processEventsAndTimeouts(void)
     GLUTspecialCB special;
     int gotEvent, width, height;
 
+# ifdef __vms
+    /* Jouk Jansen <joukj@dutsm43.stm.tudelft.nl> reports that VMS 7.2 has
+       problems correctly selecting on file descriptors returned by
+       Xlib's ConnectionNumber.  This is reported to be a bug in the
+       VMS/DECWindows run-time libraries.  Compaq engineering is unable or
+       does not want to make a fix as of January 2000.  For this reason,
+       VMS will not support an interruptible event loop. */
+    gotEvent = XNextEvent(__glutDisplay, &event);
+# else
     gotEvent = interruptibleXNextEvent(__glutDisplay, &event);
+# endif
     if (gotEvent) {
       switch (event.type) {
       case MappingNotify:
@@ -426,11 +432,11 @@ processEventsAndTimeouts(void)
           window = __glutGetWindow(event.xbutton.window);
           if (window) {
             GLUTmenu *menu;
-	    int menuNum;
+            int menuNum;
 
             menuNum = window->menu[event.xbutton.button - 1];
             /* Make sure that __glutGetMenuByNum is only called if there
-	       really is a menu present. */
+               really is a menu present. */
             if ((menuNum > 0) && (menu = __glutGetMenuByNum(menuNum))) {
               if (event.type == ButtonPress && !__glutMappedMenu) {
                 __glutStartMenu(menu, window,
@@ -494,32 +500,32 @@ processEventsAndTimeouts(void)
         if (!window) {
           break;
         }
-	if (event.type == KeyPress) {
-	  keyboard = window->keyboard;
-	} else {
+        if (event.type == KeyPress) {
+          keyboard = window->keyboard;
+        } else {
 
-	  /* If we are ignoring auto repeated keys for this window,
-	     check if the next event in the X event queue is a KeyPress
-	     for the exact same key (and at the exact same time) as the
-	     key being released.  The X11 protocol will send auto
-	     repeated keys as such KeyRelease/KeyPress pairs. */
+          /* If we are ignoring auto repeated keys for this window,
+             check if the next event in the X event queue is a KeyPress
+             for the exact same key (and at the exact same time) as the
+             key being released.  The X11 protocol will send auto
+             repeated keys as such KeyRelease/KeyPress pairs. */
 
-	  if (window->ignoreKeyRepeat) {
-	    if (XEventsQueued(__glutDisplay, QueuedAfterReading)) {
-	      XPeekEvent(__glutDisplay, &ahead);
-	      if (ahead.type == KeyPress
-	        && ahead.xkey.window == event.xkey.window
-	        && ahead.xkey.keycode == event.xkey.keycode
-	        && ahead.xkey.time == event.xkey.time) {
-		/* Pop off the repeated KeyPress and ignore
-		   the auto repeated KeyRelease/KeyPress pair. */
-	        XNextEvent(__glutDisplay, &event);
-	        break;
-	      }
-	    }
-	  }
-	  keyboard = window->keyboardUp;
-	}
+          if (window->ignoreKeyRepeat) {
+            if (XEventsQueued(__glutDisplay, QueuedAfterReading)) {
+              XPeekEvent(__glutDisplay, &ahead);
+              if (ahead.type == KeyPress
+                && ahead.xkey.window == event.xkey.window
+                && ahead.xkey.keycode == event.xkey.keycode
+                && ahead.xkey.time == event.xkey.time) {
+                /* Pop off the repeated KeyPress and ignore
+                   the auto repeated KeyRelease/KeyPress pair. */
+                XNextEvent(__glutDisplay, &event);
+                break;
+              }
+            }
+          }
+          keyboard = window->keyboardUp;
+        }
         if (keyboard) {
           char tmp[1];
           int rc;
@@ -535,11 +541,11 @@ processEventsAndTimeouts(void)
             break;
           }
         }
-	if (event.type == KeyPress) {
-	  special = window->special;
+        if (event.type == KeyPress) {
+          special = window->special;
         } else {
-	  special = window->specialUp;
-	}
+          special = window->specialUp;
+        }
         if (special) {
           KeySym ks;
           int key;
@@ -597,48 +603,48 @@ processEventsAndTimeouts(void)
           case XK_F11:   key = GLUT_KEY_F11; break;
           case XK_F12:   key = GLUT_KEY_F12; break;
           /* directional keys */
-	  case XK_KP_Left:
+          case XK_KP_Left:
           case XK_Left:  key = GLUT_KEY_LEFT; break;
-	  case XK_KP_Up: /* Introduced in X11R6. */
+          case XK_KP_Up: /* Introduced in X11R6. */
           case XK_Up:    key = GLUT_KEY_UP; break;
-	  case XK_KP_Right: /* Introduced in X11R6. */
+          case XK_KP_Right: /* Introduced in X11R6. */
           case XK_Right: key = GLUT_KEY_RIGHT; break;
-	  case XK_KP_Down: /* Introduced in X11R6. */
+          case XK_KP_Down: /* Introduced in X11R6. */
           case XK_Down:  key = GLUT_KEY_DOWN; break;
 /* *INDENT-ON* */
 
-	  case XK_KP_Prior: /* Introduced in X11R6. */
+          case XK_KP_Prior: /* Introduced in X11R6. */
           case XK_Prior:
             /* XK_Prior same as X11R6's XK_Page_Up */
             key = GLUT_KEY_PAGE_UP;
             break;
-	  case XK_KP_Next: /* Introduced in X11R6. */
+          case XK_KP_Next: /* Introduced in X11R6. */
           case XK_Next:
             /* XK_Next same as X11R6's XK_Page_Down */
             key = GLUT_KEY_PAGE_DOWN;
             break;
-	  case XK_KP_Home: /* Introduced in X11R6. */
+          case XK_KP_Home: /* Introduced in X11R6. */
           case XK_Home:
             key = GLUT_KEY_HOME;
             break;
 #ifdef __hpux
           case XK_Select:
 #endif
-	  case XK_KP_End: /* Introduced in X11R6. */
+          case XK_KP_End: /* Introduced in X11R6. */
           case XK_End:
             key = GLUT_KEY_END;
             break;
 #ifdef __hpux
           case XK_InsertChar:
 #endif
-	  case XK_KP_Insert: /* Introduced in X11R6. */
+          case XK_KP_Insert: /* Introduced in X11R6. */
           case XK_Insert:
             key = GLUT_KEY_INSERT;
             break;
 #ifdef __hpux
           case XK_DeleteChar:
 #endif
-	  case XK_KP_Delete: /* Introduced in X11R6. */
+          case XK_KP_Delete: /* Introduced in X11R6. */
             /* The Delete character is really an ASCII key. */
             __glutSetWindow(window);
             keyboard(127,  /* ASCII Delete character. */
@@ -792,8 +798,9 @@ processEventsAndTimeouts(void)
         }
         break;
       case ClientMessage:
-        if (event.xclient.data.l[0] == __glutWMDeleteWindow)
+        if (event.xclient.data.l[0] == __glutWMDeleteWindow) {
           exit(0);
+        }
         break;
       case DestroyNotify:
         purgeStaleWindow(event.xdestroywindow.window);
@@ -814,39 +821,40 @@ processEventsAndTimeouts(void)
          */
         parser = eventParserList;
         while (parser) {
-          if (parser->func(&event))
+          if (parser->func(&event)) {
             break;
+          }
           parser = parser->next;
         }
         break;
       }
     }
+#endif /* _WIN32 */
     if (__glutTimerList) {
       handleTimeouts();
     }
   }
   while (XPending(__glutDisplay));
-#endif /* _WIN32 */
 }
 
 static void
 waitForSomething(void)
 {
 #if defined(__vms) && ( __VMS_VER < 70000000 )
-  static struct timeval zerotime =
+  static GLUTtimeval zerotime =
   {0};
   unsigned int timer_efn;
-#define timer_id 'glut' /* random :-) number */
+# define timer_id 'glut' /* random :-) number */
   unsigned int wait_mask;
 #else
-  static struct timeval zerotime =
+  static GLUTtimeval zerotime =
   {0, 0};
-#if !defined(_WIN32)
+# ifndef _WIN32
   fd_set fds;
+# endif
 #endif
-#endif
-  struct timeval now, timeout, waittime;
-#if !defined(_WIN32)
+  GLUTtimeval now, timeout, waittime;
+#ifndef _WIN32
   int rc;
 #endif
 
@@ -891,10 +899,10 @@ waitForSomething(void)
   /* XXX There does not seem to be checking of "rc" in the code
      above.  Can any of the SYS$ routines above fail? */
 #else /* not vms6.2 or lower */
-#if !defined(_WIN32)
+# ifndef _WIN32
   FD_ZERO(&fds);
   FD_SET(__glutConnectionFD, &fds);
-#endif
+# endif
   timeout = __glutTimerList->timeout;
   GETTIMEOFDAY(&now);
   if (IS_AFTER(now, timeout)) {
@@ -902,14 +910,18 @@ waitForSomething(void)
   } else {
     waittime = zerotime;
   }
-#if !defined(_WIN32)
+# ifndef _WIN32
   rc = select(__glutConnectionFD + 1, &fds,
     NULL, NULL, &waittime);
-  if (rc < 0 && errno != EINTR)
+  if (rc < 0 && errno != EINTR) {
     __glutFatalError("select error.");
-#else
-  MsgWaitForMultipleObjects(0, NULL, FALSE, waittime.tv_sec*1000 + waittime.tv_usec/1000, QS_ALLEVENTS);
-#endif
+  }
+# else
+
+  MsgWaitForMultipleObjects(0, NULL, FALSE,
+    waittime.tv_sec*1000 + waittime.tv_usec/1000, QS_ALLINPUT);
+
+# endif
 #endif /* not vms6.2 or lower */
   /* Without considering the cause of select unblocking, check
      for pending X events and handle any timeouts (by calling
@@ -921,8 +933,9 @@ waitForSomething(void)
   immediatelyHandleXinput:
     processEventsAndTimeouts();
   } else {
-    if (__glutTimerList)
+    if (__glutTimerList) {
       handleTimeouts();
+    }
   }
 }
 
@@ -944,6 +957,33 @@ idleWait(void)
 
 static GLUTwindow **beforeEnd;
 
+#ifndef _WIN32
+/* http://standards.freedesktop.org/wm-spec/wm-spec-1.3.html */
+static void setNetWMFullscreen(GLUTwindow *window, int action)
+{
+    XEvent xev;
+
+    xev.xclient.type = ClientMessage;
+    xev.xclient.serial = 0;
+    xev.xclient.send_event = True;
+    xev.xclient.window = window->win;
+    xev.xclient.message_type = __glutNetWMState;
+    xev.xclient.format = 32;
+// Possible values for action
+#define _NET_WM_STATE_REMOVE  0
+#define _NET_WM_STATE_ADD     1
+#define _NET_WM_STATE_TOGGLE  2
+    xev.xclient.data.l[0] = action;
+    xev.xclient.data.l[1] = __glutNetWMStateFullscreen;
+    xev.xclient.data.l[2] = 0;
+    xev.xclient.data.l[3] = 0;
+    xev.xclient.data.l[4] = 0;
+    
+    XSendEvent(__glutDisplay, DefaultRootWindow(__glutDisplay), False, SubstructureRedirectMask | SubstructureNotifyMask, &xev);
+    //XSendEvent(__glutDisplay, DefaultRootWindow(__glutDisplay), False, 0, &xev);
+}
+#endif
+
 static GLUTwindow *
 processWindowWorkList(GLUTwindow * window)
 {
@@ -951,8 +991,6 @@ processWindowWorkList(GLUTwindow * window)
 
   if (window->prevWorkWin) {
     window->prevWorkWin = processWindowWorkList(window->prevWorkWin);
-	if (beforeEnd == 0)
-      beforeEnd = &window->prevWorkWin;
   } else {
     beforeEnd = &window->prevWorkWin;
   }
@@ -981,7 +1019,7 @@ processWindowWorkList(GLUTwindow * window)
      instructions in the common redisplay only case. */
   if (workMask & (GLUT_EVENT_MASK_WORK | GLUT_DEVICE_MASK_WORK |
       GLUT_CONFIGURE_WORK | GLUT_COLORMAP_WORK | GLUT_MAP_WORK)) {
-#if !defined(_WIN32)
+#ifndef _WIN32
     /* Be sure to set event mask BEFORE map window is done. */
     if (workMask & GLUT_EVENT_MASK_WORK) {
       long eventMask;
@@ -996,7 +1034,8 @@ processWindowWorkList(GLUTwindow * window)
 
         wa.do_not_propagate_mask = window->eventMask & GLUT_DONT_PROPAGATE_FILTER_MASK;
         if (window->eventMask & GLUT_HACK_STOP_PROPAGATE_MASK) {
-          wa.event_mask = child->eventMask | (window->eventMask & GLUT_HACK_STOP_PROPAGATE_MASK);
+          wa.event_mask =
+            child->eventMask | (window->eventMask & GLUT_HACK_STOP_PROPAGATE_MASK);
           attribMask |= CWEventMask;
         }
         do {
@@ -1009,9 +1048,10 @@ processWindowWorkList(GLUTwindow * window)
       if (window->parent && window->parent->eventMask & GLUT_HACK_STOP_PROPAGATE_MASK)
         eventMask |= (window->parent->eventMask & GLUT_HACK_STOP_PROPAGATE_MASK);
       XSelectInput(__glutDisplay, window->win, eventMask);
-      if (window->overlay)
+      if (window->overlay) {
         XSelectInput(__glutDisplay, window->overlay->win,
           window->eventMask & GLUT_OVERLAY_EVENT_FILTER_MASK);
+      }
     }
 #endif /* !_WIN32 */
     /* Be sure to set device mask BEFORE map window is done. */
@@ -1020,98 +1060,71 @@ processWindowWorkList(GLUTwindow * window)
     }
     /* Be sure to configure window BEFORE map window is done. */
     if (workMask & GLUT_CONFIGURE_WORK) {
-#if defined(_WIN32)
-        if ( workMask & GLUT_FULL_SCREEN_WORK ) {
-            DWORD s;
-            RECT r;
+#ifdef _WIN32
+      RECT changes;
+      POINT point = { 0, 0 };  /* Avoid possibly initialized warning. */
+      UINT flags = SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOOWNERZORDER
+        | SWP_NOSENDCHANGING | SWP_NOSIZE | SWP_NOZORDER;
 
-            GetWindowRect(GetDesktopWindow(), &r);
-            s = GetWindowLong(window->win, GWL_STYLE);
-            s &= ~WS_OVERLAPPEDWINDOW;
-            s |= WS_POPUP;
-            SetWindowLong(window->win, GWL_STYLE, s);
-            SetWindowPos(window->win, 
-                HWND_TOP, /* safer - a lot of people use windows atop a fullscreen GLUT window. */
-				//HWND_TOPMOST, /* is better, but no windows atop it */
-                r.left, r.top, 
-                r.right-r.left, r.bottom-r.top, 
-                SWP_FRAMECHANGED);
-            
-            /* This hack causes the window to go back to the right position
-            when it is taken out of fullscreen mode. */
-            {
-                POINT p;
+      GetClientRect(window->win, &changes);
+      
+      /* If this window is a toplevel window, translate the 0,0 client
+         coordinate into a screen coordinate for proper placement. */
+      if (!window->parent) {
+        point.x = 0;
+        point.y = 0;
+        ClientToScreen(window->win, &point);
+        changes.left = point.x;
+        changes.top = point.y;
+      }
+      if (window->desiredConfMask & (CWX | CWY)) {
+        changes.left = window->desiredX;
+        changes.top = window->desiredY;
+        flags &= ~SWP_NOMOVE;
+      }
+      if (window->desiredConfMask & (CWWidth | CWHeight)) {
+        changes.right = changes.left + window->desiredWidth;
+        changes.bottom = changes.top + window->desiredHeight;
+        flags &= ~SWP_NOSIZE;
+        /* XXX If overlay exists, resize the overlay here, ie.
+           if (window->overlay) ... */
+      }
+      if (window->desiredConfMask & CWStackMode) {
+        flags &= ~SWP_NOZORDER;
+        /* XXX Overlay support might require something special here. */
+      }
 
-                p.x = 0;
-                p.y = 0;
-                ClientToScreen(window->win, &p);
-                window->desiredConfMask |= CWX | CWY;
-                window->desiredX = p.x;
-                window->desiredY = p.y;
-            }
-        } else {
-            RECT changes;
-            POINT point;
-            UINT flags = SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOSENDCHANGING | SWP_NOSIZE | SWP_NOZORDER;
-            DWORD style;
-			
-            GetClientRect(window->win, &changes);
-            style = GetWindowLong(window->win, GWL_STYLE);
-            
-            /* Get rid of fullscreen mode, if it exists */
-            if ( style & WS_POPUP ) {
-                style &= ~WS_POPUP;
-                style |= WS_OVERLAPPEDWINDOW;
-                SetWindowLong(window->win, GWL_STYLE, style);
-                flags |= SWP_FRAMECHANGED;
-            }
+      /* Adjust the window rectangle because Win32 thinks that the x, y,
+         width & height are the WHOLE window (including decorations),
+         whereas GLUT treats the x, y, width & height as only the CLIENT
+         area of the window.  Only do this to top level windows
+         that are not in game mode (since game mode windows do
+         not have any decorations). */
+      if (!window->parent && window != __glutGameModeWindow) {
+        AdjustWindowRect(&changes,
+          WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+          FALSE);
+      }
 
-            /* If this window is a toplevel window, translate the 0,0 client
-            coordinate into a screen coordinate for proper placement. */
-            if (!window->parent) {
-                point.x = 0;
-                point.y = 0;
-                ClientToScreen(window->win, &point);
-                changes.left = point.x;
-                changes.top = point.y;
-            }
-            if (window->desiredConfMask & (CWX | CWY)) {
-                changes.left = window->desiredX;
-                changes.top = window->desiredY;
-                flags &= ~SWP_NOMOVE;
-            }
-            if (window->desiredConfMask & (CWWidth | CWHeight)) {
-                changes.right = changes.left + window->desiredWidth;
-                changes.bottom = changes.top + window->desiredHeight;
-                flags &= ~SWP_NOSIZE;
-                /* XXX If overlay exists, resize the overlay here, ie.
-                if (window->overlay) ... */
-            }
-            if (window->desiredConfMask & CWStackMode) {
-                flags &= ~SWP_NOZORDER;
-                /* XXX Overlay support might require something special here. */
-            }
-            
-            /* Adjust the window rectangle because Win32 thinks that the x, y,
-            width & height are the WHOLE window (including decorations),
-            whereas GLUT treats the x, y, width & height as only the CLIENT
-            area of the window.  Only do this to top level windows
-            that are not in game mode (since game mode windows do
-            not have any decorations). */
-            if (!window->parent && window != __glutGameModeWindow) {
-                AdjustWindowRect(&changes, style, FALSE);
-            }
-            
-            /* Do the repositioning, moving, and push/pop. */
-            SetWindowPos(window->win,
-                window->desiredStack == Above ? HWND_TOP : HWND_BOTTOM,
-                changes.left, changes.top,
-                changes.right - changes.left, changes.bottom - changes.top,
-                flags);
-            
-            /* Zero out the mask. */
-            window->desiredConfMask = 0;
-        }
+      /* Do the repositioning, moving, and push/pop. */
+      SetWindowPos(window->win,
+        window->desiredStack == Above ? HWND_TOP : HWND_NOTOPMOST,
+        changes.left, changes.top,
+        changes.right - changes.left, changes.bottom - changes.top,
+        flags);
+
+      /* Zero out the mask. */
+      window->desiredConfMask = 0;
+
+      /* This hack causes the window to go back to the right position
+         when it is taken out of fullscreen mode. */
+      if (workMask & GLUT_FULL_SCREEN_WORK) {
+        /* Only toplevel windows should have gone full screen. */
+        assert(!window->parent);
+        window->desiredConfMask |= CWX | CWY;
+        window->desiredX = point.x;
+        window->desiredY = point.y;
+      }
 #else /* !_WIN32 */
       XWindowChanges changes;
 
@@ -1120,19 +1133,25 @@ processWindowWorkList(GLUTwindow * window)
       if (window->desiredConfMask & (CWWidth | CWHeight)) {
         changes.width = window->desiredWidth;
         changes.height = window->desiredHeight;
-        if (window->overlay)
+        if (window->overlay) {
           XResizeWindow(__glutDisplay, window->overlay->win,
             window->desiredWidth, window->desiredHeight);
+        }
+
         if (__glutMotifHints != None) {
           if (workMask & GLUT_FULL_SCREEN_WORK) {
             MotifWmHints hints;
 
+            memset(&hints, 0, sizeof(hints));
             hints.flags = MWM_HINTS_DECORATIONS;
             hints.decorations = 0;  /* Absolutely no
                                        decorations. */
             XChangeProperty(__glutDisplay, window->win,
               __glutMotifHints, __glutMotifHints, 32,
               PropModeReplace, (unsigned char *) &hints, 4);
+            XChangeProperty(__glutDisplay, window->win,
+              __glutNetWMState, XA_ATOM, 32,
+              PropModeReplace, (unsigned char *) &__glutNetWMStateFullscreen, 1);
             if (workMask & GLUT_MAP_WORK) {
               /* Handle case where glutFullScreen is called
                  before the first time that the window is
@@ -1148,6 +1167,7 @@ processWindowWorkList(GLUTwindow * window)
                  requesting a fullscreen window. */
               XSizeHints hints;
 
+              memset(&hints, 0, sizeof(hints));
               hints.flags = USPosition | USSize;
               hints.x = 0;
               hints.y = 0;
@@ -1156,8 +1176,22 @@ processWindowWorkList(GLUTwindow * window)
               XSetWMNormalHints(__glutDisplay, window->win, &hints);
             }
           } else {
-            XDeleteProperty(__glutDisplay, window->win, __glutMotifHints);
+            MotifWmHints hints;
+
+            memset(&hints, 0, sizeof(hints));
+            hints.flags = 0;  /* No longer requestion no decorations. */
+            XChangeProperty(__glutDisplay, window->win,
+              __glutMotifHints, __glutMotifHints, 32,
+              PropModeReplace, (unsigned char *) &hints, 4);
+            setNetWMFullscreen(window, _NET_WM_STATE_REMOVE);
           }
+        }
+      }
+      if (__glutNetWMState != None && __glutNetWMStateFullscreen != None) {
+        if (workMask & GLUT_FULL_SCREEN_WORK) {
+            setNetWMFullscreen(window, _NET_WM_STATE_ADD);
+        } else {
+            setNetWMFullscreen(window, _NET_WM_STATE_REMOVE);
         }
       }
       if (window->desiredConfMask & CWStackMode) {
@@ -1176,7 +1210,7 @@ processWindowWorkList(GLUTwindow * window)
       window->desiredConfMask = 0;
 #endif
     }
-#if !defined(_WIN32)
+#ifndef _WIN32
     /* Be sure to establish the colormaps BEFORE map window is
        done. */
     if (workMask & GLUT_COLORMAP_WORK) {
@@ -1251,7 +1285,7 @@ processWindowWorkList(GLUTwindow * window)
         if (__glutMesaSwapHackSupport) {
           if (window->usedSwapBuffers) {
             if ((workMask & (GLUT_REPAIR_WORK | GLUT_REDISPLAY_WORK)) == GLUT_REPAIR_WORK) {
-	      SWAP_BUFFERS_WINDOW(window);
+              SWAP_BUFFERS_WINDOW(window);
               goto skippedDisplayCallback1;
             }
           }
@@ -1295,7 +1329,7 @@ processWindowWorkList(GLUTwindow * window)
       if (__glutMesaSwapHackSupport) {
         if (!window->overlay && window->usedSwapBuffers) {
           if ((workMask & (GLUT_REPAIR_WORK | GLUT_REDISPLAY_WORK)) == GLUT_REPAIR_WORK) {
-	    SWAP_BUFFERS_WINDOW(window);
+            SWAP_BUFFERS_WINDOW(window);
             goto skippedDisplayCallback2;
           }
         }
@@ -1334,38 +1368,47 @@ processWindowWorkList(GLUTwindow * window)
     /* Leave on work list. */
     return window;
   } else {
-	if (beforeEnd == &window->prevWorkWin)
-	  beforeEnd = 0;
     /* Remove current window from work list. */
     return window->prevWorkWin;
   }
 }
 
-/* CENTRY */
-void APIENTRY
-glutMainLoop(void)
-{
-#if !defined(_WIN32)
-  if (!__glutDisplay)
-    __glutFatalUsage("main loop entered with out proper initialization.");
+#ifndef _WIN32
+static  /* X11 implementations do not need this global. */
 #endif
-  if (!__glutWindowListSize)
-    __glutFatalUsage(
-      "main loop entered with no windows created.");
-  for (;;) {
-    if (__glutWindowWorkList) {
-      GLUTwindow *remainder, *work;
+void
+__glutProcessWindowWorkLists(void)
+{
+  if (__glutWindowWorkList) {
+    GLUTwindow *remainder, *work;
 
-      work = __glutWindowWorkList;
-      __glutWindowWorkList = NULL;
-      if (work) {
-        remainder = processWindowWorkList(work);
-        if (remainder) {
-          *beforeEnd = __glutWindowWorkList;
-          __glutWindowWorkList = remainder;
-        }
+    work = __glutWindowWorkList;
+    __glutWindowWorkList = NULL;
+    if (work) {
+      remainder = processWindowWorkList(work);
+      if (remainder) {
+        *beforeEnd = __glutWindowWorkList;
+        __glutWindowWorkList = remainder;
       }
     }
+  }
+}
+
+/* CENTRY */
+void GLUTAPIENTRY
+glutMainLoop(void)
+{
+#ifndef _WIN32
+  if (!__glutDisplay) {
+    __glutFatalUsage("main loop entered with out proper initialization.");
+  }
+#endif
+  if (!__glutWindowListSize) {
+    __glutFatalUsage(
+      "main loop entered with no windows created.");
+  }
+  for (;;) {
+    __glutProcessWindowWorkLists();
     if (__glutIdleFunc || __glutWindowWorkList) {
       idleWait();
     } else {
@@ -1374,13 +1417,7 @@ glutMainLoop(void)
       } else {
         processEventsAndTimeouts();
       }
-#if defined(_WIN32)
-	  // If there is no idle function, go to sleep for a millisecond (we 
-	  // still need to possibly service timers) or until there is some 
-	  // event in our queue.
-      MsgWaitForMultipleObjects(0, NULL, FALSE, 1, QS_ALLEVENTS);
-#endif
     }
- }
+  }
 }
 /* ENDCENTRY */

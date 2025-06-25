@@ -75,7 +75,7 @@ typedef void (GLUTCALLBACK *GLUTmenuStatusFCB) (int *, int *, int *);
 typedef void (GLUTCALLBACK *GLUTidleFCB) (void);
 
 /* Functions that set and return Fortran callback functions. */
-GLUTAPI void* APIENTRY __glutGetFCB(int which);
-GLUTAPI void APIENTRY __glutSetFCB(int which, void *func);
+GLUTAPI void* GLUTAPIENTRY __glutGetFCB(int which);
+GLUTAPI void GLUTAPIENTRY __glutSetFCB(int which, void *func);
 
 #endif  /* __glutf90_h__ */

@@ -66,6 +66,8 @@ class PathFinder:
     _PATH_NAME_WINDOWS_SDK_VERSION = "10.0.26100.0"
     # ----------------------------------------------------------------------
 
+    # ----------------------------------------------------------------------
+
     # the relative path name of the Windows SDK
     _PATH_NAME_NETFXSDK_BASE = "NETFXSDK"
     # ----------------------------------------------------------------------
@@ -89,6 +91,9 @@ class PathFinder:
 
     # Name of the Visual Studio Version (mostly for CMake)
     VISUAL_STUDIO_VERSION = "Visual Studio 17 2022"
+
+    # Name of the Visual Studio Version (mostly for CMake)
+    VISUAL_STUDIO_VERSION_NUM = "v143"
 
     # --------------------------------------------------------------------------
     # constructors

@@ -42,12 +42,20 @@ typedef unsigned short wchar_t;
 #  endif
 # endif
 
-#pragma warning (disable:4244)	/* Disable bogus conversion warnings. */
+#pragma warning (disable:4244)  /* Disable bogus conversion warnings. */
 #pragma warning (disable:4305)  /* VC++ 5.0 version of above warning. */
 
 #endif /* _WIN32 */
 
+#if defined(__APPLE__) && defined(__MACH__)
+/* Mac OS X places GL headers within OpenGL framework. */
+#include <OpenGL/gl.h>
+#include <OpenGL/glu.h>
+#else
+/* All other platforms put GL headers in the standard place. */
 #include <GL/gl.h>
+#include <GL/glu.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,12 +70,12 @@ typedef enum {
 
 /* Cube view enumerants. */
 enum {
-	SMAP_FRONT = 0,
-	SMAP_TOP = 1,
-	SMAP_BOTTOM = 2,
-	SMAP_LEFT = 3,
-	SMAP_RIGHT = 4,
-	SMAP_BACK = 5
+        SMAP_FRONT = 0,
+        SMAP_TOP = 1,
+        SMAP_BOTTOM = 2,
+        SMAP_LEFT = 3,
+        SMAP_RIGHT = 4,
+        SMAP_BACK = 5
 };
 
 typedef struct _SphereMap SphereMap;
@@ -92,7 +100,7 @@ extern void smapSetSphereMapOrigin(SphereMap *smap, GLint x, GLint y);
 extern void smapGetViewOrigin(SphereMap *smap, GLint *x, GLint *y);
 extern void smapGetSphereMapOrigin(SphereMap *smap, GLint *x, GLint *y);
 
-extern void smapSetEye(SphereMap *smap, GLfloat eyex, GLfloat eyey,	GLfloat eyez);
+extern void smapSetEye(SphereMap *smap, GLfloat eyex, GLfloat eyey,     GLfloat eyez);
 extern void smapSetEyeVector(SphereMap *smap, GLfloat *eye);
 extern void smapSetUp(SphereMap *smap, GLfloat upx, GLfloat upy, GLfloat upz);
 extern void smapSetUpVector(SphereMap *smap, GLfloat *up);

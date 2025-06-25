@@ -7,6 +7,9 @@
 
 /* molehill uses the GLU NURBS routines to draw some nice surfaces. */
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <GL/glut.h>
 
 GLfloat mat_red_diffuse[] = { 0.7, 0.0, 0.1, 1.0 };
@@ -20,6 +23,15 @@ GLfloat pts1[4][4][3], pts2[4][4][3];
 GLfloat pts3[4][4][3], pts4[4][4][3];
 GLUnurbsObj *nurb;
 int u, v;
+int oneFrame = 0;
+
+static void
+keyboard(unsigned char c, int x, int y)
+{
+  if (c == 27) {
+    exit(0);
+  }
+}
 
 static void 
 display(void)
@@ -27,12 +39,28 @@ display(void)
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glCallList(1);
   glFlush();
+  if (oneFrame) {
+    exit(0);
+  }
 }
+
+int mode = GLU_FILL;
 
 int 
 main(int argc, char **argv)
 {
+  int i;
+
   glutInit(&argc, argv);
+  for (i=1; i<argc; i++) {
+    if (!strcmp("-oneframe", argv[i])) {
+      oneFrame = 1;
+    } else
+    if (!strcmp("-wire", argv[i])) {
+      printf("wireframe mode\n");
+      mode = GLU_OUTLINE_POLYGON;
+    }
+  }
   glutCreateWindow("molehill");
   glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
   glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
@@ -43,7 +71,7 @@ main(int argc, char **argv)
   glEnable(GL_NORMALIZE);
   nurb = gluNewNurbsRenderer();
   gluNurbsProperty(nurb, GLU_SAMPLING_TOLERANCE, 25.0);
-  gluNurbsProperty(nurb, GLU_DISPLAY_MODE, GLU_FILL);
+  gluNurbsProperty(nurb, GLU_DISPLAY_MODE, mode);
 
   /* Build control points for NURBS mole hills. */
   for(u=0; u<4; u++) {
@@ -52,49 +80,49 @@ main(int argc, char **argv)
       pts1[u][v][0] = 2.0*((GLfloat)u);
       pts1[u][v][1] = 2.0*((GLfloat)v);
       if((u==1 || u == 2) && (v == 1 || v == 2))
-	/* Stretch up middle. */
-	pts1[u][v][2] = 6.0;
+        /* Stretch up middle. */
+        pts1[u][v][2] = 6.0;
       else
-	pts1[u][v][2] = 0.0;
+        pts1[u][v][2] = 0.0;
 
       /* Green. */
       pts2[u][v][0] = 2.0*((GLfloat)u - 3.0);
       pts2[u][v][1] = 2.0*((GLfloat)v - 3.0);
       if((u==1 || u == 2) && (v == 1 || v == 2))
-	if(u == 1 && v == 1) 
-	  /* Pull hard on single middle square. */
-	  pts2[u][v][2] = 15.0;
-	else
-	  /* Push down on other middle squares. */
-	  pts2[u][v][2] = -2.0;
+        if(u == 1 && v == 1) 
+          /* Pull hard on single middle square. */
+          pts2[u][v][2] = 15.0;
+        else
+          /* Push down on other middle squares. */
+          pts2[u][v][2] = -2.0;
       else
-	pts2[u][v][2] = 0.0;
+        pts2[u][v][2] = 0.0;
 
       /* Blue. */
       pts3[u][v][0] = 2.0*((GLfloat)u - 3.0);
       pts3[u][v][1] = 2.0*((GLfloat)v);
       if((u==1 || u == 2) && (v == 1 || v == 2))
-	if(u == 1 && v == 2)
-	  /* Pull up on single middple square. */
-	  pts3[u][v][2] = 11.0;
-	else
-	  /* Pull up slightly on other middle squares. */
-	  pts3[u][v][2] = 2.0;
+        if(u == 1 && v == 2)
+          /* Pull up on single middple square. */
+          pts3[u][v][2] = 11.0;
+        else
+          /* Pull up slightly on other middle squares. */
+          pts3[u][v][2] = 2.0;
       else
-	pts3[u][v][2] = 0.0;
+        pts3[u][v][2] = 0.0;
 
       /* Yellow. */
       pts4[u][v][0] = 2.0*((GLfloat)u);
       pts4[u][v][1] = 2.0*((GLfloat)v - 3.0);
       if((u==1 || u == 2 || u == 3) && (v == 1 || v == 2))
-	if(v == 1) 
-	  /* Push down front middle and right squares. */
-	  pts4[u][v][2] = -2.0;
-	else
-	  /* Pull up back middle and right squares. */
-	  pts4[u][v][2] = 5.0;
+        if(v == 1) 
+          /* Push down front middle and right squares. */
+          pts4[u][v][2] = -2.0;
+        else
+          /* Pull up back middle and right squares. */
+          pts4[u][v][2] = 5.0;
       else
-	pts4[u][v][2] = 0.0;
+        pts4[u][v][2] = 0.0;
     }
   }
   /* Stretch up red's far right corner. */
@@ -148,6 +176,7 @@ main(int argc, char **argv)
   glEndList();
 
   glutDisplayFunc(display);
+  glutKeyboardFunc(keyboard);
   glutMainLoop();
   return 0;             /* ANSI C requires main to return int. */
 }

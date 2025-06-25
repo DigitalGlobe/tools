@@ -1,24 +1,21 @@
 #ifndef __glutint_h__
 #define __glutint_h__
 
-/* Copyright (c) Mark J. Kilgard, 1994, 1997, 1998. */
+/* Copyright (c) Mark J. Kilgard, 1994, 1997, 1998, 2000, 2001. */
 
 /* This program is freely distributable without licensing fees 
    and is provided without guarantee or warrantee expressed or 
    implied. This program is -not- in the public domain. */
 
-#if defined(__CYGWIN32__)
-#include <sys/time.h>
-#endif
-
 #define SUPPORT_FORTRAN  /* With GLUT 3.7, everyone supports Fortran. */
 
-#if defined(_WIN32)
-#include "glutwin32.h"
+#ifdef _WIN32
+# include "glutwin32.h"
 #else
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <GL/glx.h>
+# include <X11/Xlib.h>
+# include <X11/Xutil.h>
+# define GLX_GLXEXT_LEGACY /* Request glext.h also include glxext.h */
+# include <GL/glx.h>
 #endif
 
 #define GLUT_BUILDING_LIB  /* Building the GLUT library itself. */
@@ -36,6 +33,12 @@
 # endif
 #endif
 
+/* Some Mesa versions define GLX_VERSION_1_2 without defining
+   GLX_VERSION_1_1. */
+#if defined(GLX_VERSION_1_2) && !defined(GLX_VERSION_1_1)
+# define GLX_VERSION_1_1 1
+#endif
+
 /* This must be done after <GL/gl.h> is included.  MESA is defined
    if the <GL/gl.h> is supplied by Brian Paul's Mesa library. */ 
 #if defined(MESA) && defined(_WIN32)
@@ -47,40 +50,38 @@ WINGDIAPI int WINAPI wglDescribePixelFormat(HDC hdc,int iPixelFormat,UINT nBytes
 WINGDIAPI int WINAPI wglGetPixelFormat(HDC hdc);
 WINGDIAPI BOOL WINAPI wglSetPixelFormat(HDC hdc, int iPixelFormat, PIXELFORMATDESCRIPTOR *ppfd);
 WINGDIAPI BOOL WINAPI wglSwapBuffers(HDC hdc);
-#define ChoosePixelFormat wglChoosePixelFormat
-#define DescribePixelFormat wglDescribePixelFormat
-#define GetPixelFormat wglGetPixelFormat
-#define SetPixelFormat wglSetPixelFormat
-#define SwapBuffers wglSwapBuffers
+# define ChoosePixelFormat wglChoosePixelFormat
+# define DescribePixelFormat wglDescribePixelFormat
+# define GetPixelFormat wglGetPixelFormat
+# define SetPixelFormat wglSetPixelFormat
+# define SwapBuffers wglSwapBuffers
 #endif
 
 /* Non-Win32 platforms need APIENTRY defined to nothing
    because all the GLUT routines have the APIENTRY prefix
    to make Win32 happy. */
 #ifndef APIENTRY
-#define APIENTRY
+# define APIENTRY
 #endif
 
 #ifdef SUPPORT_FORTRAN
-#include <GL/glutf90.h>
+# include <GL/glutf90.h>
 #endif
 
 #ifdef __vms
-#if ( __VMS_VER < 70000000 )
+# if ( __VMS_VER < 70000000 )
 struct timeval {
   __int64 val;
 };
 extern int sys$gettim(struct timeval *);
+# else
+#  include <time.h>
+# endif
 #else
-#include <time.h>
-#endif
-#else
-#include <sys/types.h>
-#if !defined(_WIN32)
-#include <sys/time.h>
-#else
-#include <winsock.h>
-#endif
+# include <sys/types.h>
+# if !defined(_WIN32)
+#  include <sys/time.h>
+# endif
 #endif
 #if defined(__vms) && ( __VMS_VER < 70000000 )
 
@@ -90,31 +91,35 @@ extern int sys$gettim(struct timeval *);
    ticks/ns, 10 ticks/us, 10,000 ticks/ms and 10,000,000
    ticks/second. */
 
-#define TICKS_PER_MILLISECOND 10000
-#define TICKS_PER_SECOND      10000000
+# define TICKS_PER_MILLISECOND 10000
+# define TICKS_PER_SECOND      10000000
 
-#define GETTIMEOFDAY(_x) (void) sys$gettim (_x);
+# define GETTIMEOFDAY(_x) (void) sys$gettim (_x);
 
-#define ADD_TIME(dest, src1, src2) { \
+# define ADD_TIME(dest, src1, src2) { \
   (dest).val = (src1).val + (src2).val; \
 }
 
-#define TIMEDELTA(dest, src1, src2) { \
+# define TIMEDELTA(dest, src1, src2) { \
   (dest).val = (src1).val - (src2).val; \
 }
 
-#define IS_AFTER(t1, t2) ((t2).val > (t1).val)
+# define IS_AFTER(t1, t2) ((t2).val > (t1).val)
 
-#define IS_AT_OR_AFTER(t1, t2) ((t2).val >= (t1).val)
+# define IS_AT_OR_AFTER(t1, t2) ((t2).val >= (t1).val)
 
 #else
-#if defined(SVR4) && !defined(sun)  /* Sun claims SVR4, but
-                                       wants 2 args. */
-#define GETTIMEOFDAY(_x) gettimeofday(_x)
-#else
-#define GETTIMEOFDAY(_x) gettimeofday(_x, NULL)
-#endif
-#define ADD_TIME(dest, src1, src2) { \
+# ifdef _WIN32
+#  define GETTIMEOFDAY(_x) gettimeofdayWIN32(_x)
+# else
+#  if defined(SVR4) && !defined(sun)  /* Sun claims SVR4, but
+                                         wants 2 args. */
+#   define GETTIMEOFDAY(_x) gettimeofday(_x)
+#  else
+#   define GETTIMEOFDAY(_x) gettimeofday(_x, NULL)
+#  endif
+# endif
+# define ADD_TIME(dest, src1, src2) { \
   if(((dest).tv_usec = \
     (src1).tv_usec + (src2).tv_usec) >= 1000000) { \
     (dest).tv_usec -= 1000000; \
@@ -126,7 +131,7 @@ extern int sys$gettim(struct timeval *);
     } \
   } \
 }
-#define TIMEDELTA(dest, src1, src2) { \
+# define TIMEDELTA(dest, src1, src2) { \
   if(((dest).tv_usec = (src1).tv_usec - (src2).tv_usec) < 0) { \
     (dest).tv_usec += 1000000; \
     (dest).tv_sec = (src1).tv_sec - (src2).tv_sec - 1; \
@@ -134,11 +139,11 @@ extern int sys$gettim(struct timeval *);
      (dest).tv_sec = (src1).tv_sec - (src2).tv_sec; \
   } \
 }
-#define IS_AFTER(t1, t2) \
+# define IS_AFTER(t1, t2) \
   (((t2).tv_sec > (t1).tv_sec) || \
   (((t2).tv_sec == (t1).tv_sec) && \
   ((t2).tv_usec > (t1).tv_usec)))
-#define IS_AT_OR_AFTER(t1, t2) \
+# define IS_AT_OR_AFTER(t1, t2) \
   (((t2).tv_sec > (t1).tv_sec) || \
   (((t2).tv_sec == (t1).tv_sec) && \
   ((t2).tv_usec >= (t1).tv_usec)))
@@ -163,10 +168,10 @@ extern int sys$gettim(struct timeval *);
 #define GLUT_REDISPLAY_WORK         (1 << 2)
 #define GLUT_CONFIGURE_WORK         (1 << 3)
 #define GLUT_COLORMAP_WORK          (1 << 4)
-#define GLUT_DEVICE_MASK_WORK	    (1 << 5)
-#define GLUT_FINISH_WORK	    (1 << 6)
-#define GLUT_DEBUG_WORK		    (1 << 7)
-#define GLUT_DUMMY_WORK		    (1 << 8)
+#define GLUT_DEVICE_MASK_WORK       (1 << 5)
+#define GLUT_FINISH_WORK            (1 << 6)
+#define GLUT_DEBUG_WORK             (1 << 7)
+#define GLUT_DUMMY_WORK             (1 << 8)
 #define GLUT_FULL_SCREEN_WORK       (1 << 9)
 #define GLUT_OVERLAY_REDISPLAY_WORK (1 << 10)
 #define GLUT_REPAIR_WORK            (1 << 11)
@@ -217,16 +222,16 @@ extern int sys$gettim(struct timeval *);
 #define NUM                     (NUM_CAPS + 0)
 #define RGBA_MODE               (NUM_CAPS + 1)
 #define CI_MODE                 (NUM_CAPS + 2)
-#define LUMINANCE_MODE		(NUM_CAPS + 3)
+#define LUMINANCE_MODE          (NUM_CAPS + 3)
 
-#define NONE			0
-#define EQ			1
-#define NEQ			2
-#define LTE			3
-#define GTE			4
-#define GT			5
-#define LT			6
-#define MIN			7
+#define NONE                    0
+#define EQ                      1
+#define NEQ                     2
+#define LTE                     3
+#define GTE                     4
+#define GT                      5
+#define LT                      6
+#define MIN                     7
 
 typedef struct _Criterion {
   int capability;
@@ -484,18 +489,16 @@ typedef struct _GLUTmenu GLUTmenu;
 typedef struct _GLUTmenuItem GLUTmenuItem;
 struct _GLUTmenu {
   int id;               /* small integer menu id (0-based) */
-#if defined(_WIN32)
-  HMENU win;            /* Win32 menu */
-#else
-  Window win;           /* X window for the menu */
-#endif
   GLUTselectCB select;  /*  function of menu */
   GLUTmenuItem *list;   /* list of menu entries */
   int num;              /* number of entries */
-#if !defined(_WIN32)
+#if defined(_WIN32)
+  HMENU hmenu;          /* Windows handle for menu */
+#else
+  Window win;           /* X window for the menu */
   Bool managed;         /* are the InputOnly windows size
                            validated? */
-  Bool searched;	/* help detect menu loops */
+  Bool searched;        /* help detect menu loops */
   int pixheight;        /* height of menu in pixels */
   int pixwidth;         /* width of menu in pixels */
 #endif
@@ -514,11 +517,6 @@ struct _GLUTmenu {
 };
 
 struct _GLUTmenuItem {
-#if defined(_WIN32)
-  HMENU win;            /* Win32 window for entry */
-#else
-  Window win;           /* InputOnly X window for entry */
-#endif
   GLUTmenu *menu;       /* menu entry belongs to */
   Bool isTrigger;       /* is a submenu trigger? */
   int value;            /* value to return for selecting this
@@ -526,6 +524,9 @@ struct _GLUTmenuItem {
                            (0-base) if submenu trigger */
 #if defined(_WIN32)
   UINT unique;          /* unique menu item id (Win32 only) */
+  HMENU hmenu;          /* Windows handle to menu */
+#else
+  Window win;           /* InputOnly X window for entry */
 #endif
   char *label;          /* __glutStrdup'ed label string */
   int len;              /* length of label string */
@@ -533,10 +534,16 @@ struct _GLUTmenuItem {
   GLUTmenuItem *next;   /* next menu entry on list for menu */
 };
 
+#ifdef _WIN32
+typedef struct timevalWIN32 GLUTtimeval;
+#else
+typedef struct timeval GLUTtimeval;
+#endif
+
 typedef struct _GLUTtimer GLUTtimer;
 struct _GLUTtimer {
   GLUTtimer *next;      /* list of timers */
-  struct timeval timeout;  /* time to be called */
+  GLUTtimeval timeout;  /* time to be called */
   GLUTtimerCB func;     /* timer  (value) */
   int value;            /*  return value */
 #ifdef SUPPORT_FORTRAN
@@ -595,6 +602,8 @@ typedef struct {
   SwapBuffers(window->hdc)
 #define SWAP_BUFFERS_LAYER(window) \
   SwapBuffers(window->renderDc)
+#define GET_CURRENT_CONTEXT() \
+  wglGetCurrentContext()
 #else
 #define MAKE_CURRENT_LAYER(window) \
   glXMakeCurrent(__glutDisplay, window->renderWin, window->renderCtx)
@@ -608,6 +617,8 @@ typedef struct {
   glXSwapBuffers(__glutDisplay, window->win)
 #define SWAP_BUFFERS_LAYER(window) \
   glXSwapBuffers(__glutDisplay, window->renderWin)
+#define GET_CURRENT_CONTEXT() \
+  glXGetCurrentContext()
 #endif
 
 /* private variables from glut_event.c */
@@ -658,6 +669,8 @@ extern int __glutScreen;
 extern int __glutScreenHeight;
 extern int __glutScreenWidth;
 extern Atom __glutMotifHints;
+extern Atom __glutNetWMState;
+extern Atom __glutNetWMStateFullscreen;
 extern unsigned int __glutModifierMask;
 #ifdef _WIN32
 extern void (__cdecl *__glutExitFunc)(int retval);
@@ -711,20 +724,21 @@ extern void __glutPutOnWorkList(GLUTwindow * window,
 extern void __glutRegisterEventParser(GLUTeventParser * parser);
 extern void __glutPostRedisplay(GLUTwindow * window, int layerMask);
 
+/* private routines from glut_ext.c */
+extern void __glutInvalidateExtensionStringCacheIfNeeded(GLXContext ctx);
+
 /* private routines from glut_init.c */
 #if !defined(_WIN32)
 extern void __glutOpenXConnection(char *display);
+extern void __glutInitTime(struct timeval *beginning);
 #else
 extern void __glutOpenWin32Connection(char *display);
+extern DWORD __glutInitTime(void);
 #endif
-extern void __glutInitTime(struct timeval *beginning);
 
 /* private routines for glut_menu.c (or win32_menu.c) */
 #if defined(_WIN32)
-extern GLUTmenu *__glutGetMenu(HMENU win);
 extern GLUTmenu *__glutGetMenuByNum(int menunum);
-extern GLUTmenuItem *__glutGetMenuItem(GLUTmenu * menu,
-  HMENU win, int *which);
 extern void __glutStartMenu(GLUTmenu * menu,
   GLUTwindow * window, int x, int y, int x_win, int y_win);
 extern void __glutFinishMenu(Window win, int x, int y);
@@ -748,7 +762,6 @@ extern XVisualInfo *__glutGetVisualInfo(unsigned int mode);
 extern void __glutSetWindow(GLUTwindow * window);
 extern void __glutReshapeFunc(GLUTreshapeCB reshapeFunc,
   int callingConvention);
-extern void GLUTCALLBACK __glutDefaultReshape(int, int);
 extern GLUTwindow *__glutCreateWindow(
   GLUTwindow * parent,
   int x, int y, int width, int height, int gamemode);
@@ -757,8 +770,16 @@ extern void __glutDestroyWindow(
   GLUTwindow * initialWindow);
 
 #if !defined(_WIN32)
+/* private variables from glut_fullscrn.c */
+void __glutMakeFullScreenAtoms();
+#endif
+
+#if defined(_WIN32)
 /* private routines from glut_glxext.c */
-extern int __glutIsSupportedByGLX(char *);
+extern int __glutIsSupportedByWGL(const char *);
+#else
+/* private routines from glut_glxext.c */
+extern int __glutIsSupportedByGLX(const char *);
 #endif
 
 /* private routines from glut_input.c */

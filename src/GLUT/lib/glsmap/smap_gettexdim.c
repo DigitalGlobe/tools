@@ -10,12 +10,12 @@
 void
 smapGetSphereMapTexDim(SphereMap *smap, GLsizei *texdim)
 {
-	*texdim = smap->smapTexDim;
+    *texdim = smap->smapTexDim;
 }
 
 void
 smapGetViewTexDim(SphereMap *smap, GLsizei *texdim)
 {
-	*texdim = smap->viewTexDim;
+    *texdim = smap->viewTexDim;
 }
 

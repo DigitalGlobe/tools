@@ -12,85 +12,85 @@
 enum { X = 0, Y = 1, Z = 2 };
 
 #define INITFACE(mesh) \
-	int steps = mesh->steps; \
-	int sqsteps = mesh->steps * mesh->steps
+    int steps = mesh->steps; \
+    int sqsteps = mesh->steps * mesh->steps
 
 #define FACE(side,y,x) \
-	mesh->face[(side)*sqsteps + (y)*steps + (x)]
+    mesh->face[(side)*sqsteps + (y)*steps + (x)]
 
 #define FACExy(side,i,j) \
-	(&FACE(side,i,j).x)
+    (&FACE(side,i,j).x)
 
 #define FACEst(side,i,j) \
-	(&FACE(side,i,j).s)
+    (&FACE(side,i,j).s)
 
 #define INITBACK(mesh) \
-	int allrings = mesh->rings + mesh->edgeExtend; \
-	int ringedspokes = allrings * mesh->steps
+    int allrings = mesh->rings + mesh->edgeExtend; \
+    int ringedspokes = allrings * mesh->steps
 
 #define BACK(edge,ring,spoke) \
-	mesh->back[(edge)*ringedspokes + (ring)*mesh->steps + (spoke)]
+    mesh->back[(edge)*ringedspokes + (ring)*mesh->steps + (spoke)]
 
 #define BACKxy(edge,ring,spoke) \
-	(&BACK(edge,ring,spoke).x)
+    (&BACK(edge,ring,spoke).x)
 
 #define BACKst(edge,ring,spoke) \
-	(&BACK(edge,ring,spoke).s)
+    (&BACK(edge,ring,spoke).s)
 
 typedef struct _STXY {
-	GLfloat s, t;
-	GLfloat x, y;
+    GLfloat s, t;
+    GLfloat x, y;
 } STXY;
 
 typedef struct _SphereMapMesh {
 
-	int refcnt;
+    int refcnt;
 
-	int steps;
-	int rings;
-	int edgeExtend;
+    int steps;
+    int rings;
+    int edgeExtend;
 
-	STXY *face;
-	STXY *back;
+    STXY *face;
+    STXY *back;
 
 } SphereMapMesh;
 
 struct _SphereMap {
 
-	/* Shared sphere map mesh vertex data. */
-	SphereMapMesh *mesh;
+    /* Shared sphere map mesh vertex data. */
+    SphereMapMesh *mesh;
 
-	/* Texture object ids. */
-	GLuint smapTexObj;
-	GLuint viewTexObjs[6];
-	GLuint viewTexObj;
+    /* Texture object ids. */
+    GLuint smapTexObj;
+    GLuint viewTexObjs[6];
+    GLuint viewTexObj;
 
-        /* Flags */
-        SphereMapFlags flags;
+    /* Flags */
+    SphereMapFlags flags;
 
-	/* Texture dimensions must be a power of two. */
-	int viewTexDim;  /* view texture dimension */
-	int smapTexDim;  /* sphere map texture dimension */
+    /* Texture dimensions must be a power of two. */
+    int viewTexDim;  /* view texture dimension */
+    int smapTexDim;  /* sphere map texture dimension */
 
-	/* Viewport origins for view and sphere map rendering. */
-	int viewOrigin[2];
-	int smapOrigin[2];
+    /* Viewport origins for view and sphere map rendering. */
+    int viewOrigin[2];
+    int smapOrigin[2];
 
-	/* Viewing vectors. */
-	GLfloat eye[3];
-	GLfloat up[3];
-	GLfloat obj[3];
+    /* Viewing vectors. */
+    GLfloat eye[3];
+    GLfloat up[3];
+    GLfloat obj[3];
 
-	/* Projection parameters. */
-	GLfloat viewNear;
-	GLfloat viewFar;
+    /* Projection parameters. */
+    GLfloat viewNear;
+    GLfloat viewFar;
 
-	/* Rendering callbacks. */
-	void (*positionLights)(int view, void *context);
-	void (*drawView)(int view, void *context);
+    /* Rendering callbacks. */
+    void (*positionLights)(int view, void *context);
+    void (*drawView)(int view, void *context);
 
-	/* Application specified callback data. */
-	void *context;
+    /* Application specified callback data. */
+    void *context;
 
 };
 

@@ -31,6 +31,12 @@
 #endif
 #endif
 
+/* EXT_texture_filter_anisotropic */
+#ifndef GL_EXT_texture_filter_anisotropic
+#define GL_TEXTURE_MAX_ANISOTROPY_EXT     0x84FE
+#define GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT 0x84FF
+#endif
+
 #ifndef M_PI
 #define M_PI            3.14159265358979323846
 #endif
@@ -42,6 +48,7 @@ static TexFont *txf;
 static int usePolygonOffset = 1;
 static int animation = 1;
 static int fullscreen = 0;
+static int hasTextureFilterAnisotropic;
 
 void
 idle(void)
@@ -127,7 +134,7 @@ cubeSideWithOpenGLcircle(void)
     if (usePolygonOffset) {
 #if defined(GL_EXT_polygon_offset) || defined(GL_VERSION_1_1)
       glEnable(GL_POLYGON_OFFSET_FILL);
-      glPolygonOffset(0.0, -3);
+      glPolygonOffset(-1.0, -1);
 #endif
     }
     glColor3f(0.2, 0.2, 0.9);
@@ -144,12 +151,12 @@ cubeSideWithOpenGLcircle(void)
 
     for (i=0; i<len; i++) {
       if (text[i] == 'L' && usePolygonOffset) {
-	/* Hack.  The "L" in OpenGL slightly overlaps the "G". Slightly
-	   raise the "L" so that it will overlap the "G" in the depth
-	   buffer to avoid a double blend.. */
-        glPolygonOffset(0.0, -4);
+        /* Hack.  The "L" in OpenGL slightly overlaps the "G". Slightly
+           raise the "L" so that it will overlap the "G" in the depth
+           buffer to avoid a double blend.. */
+        glPolygonOffset(-1.0, -2);
         txfRenderGlyph(txf, text[i]);
-        glPolygonOffset(0.0, -3);
+        glPolygonOffset(-1.0, -1);
       } else {
         txfRenderGlyph(txf, text[i]);
       }
@@ -176,7 +183,7 @@ cubeSideWithText(char *text, int len)
     if (usePolygonOffset) {
 #if defined(GL_EXT_polygon_offset) || defined(GL_VERSION_1_1)
       glEnable(GL_POLYGON_OFFSET_FILL);
-      glPolygonOffset(0.0, -3);
+      glPolygonOffset(-1.0, -1);
 #endif
     }
     glColor3f(0.2, 0.2, 0.9);
@@ -226,6 +233,13 @@ display(void)
   glPushMatrix();
     glRotatef(270.0, 0, 1, 0);
     glTranslatef(0.0, 0.0, 1.0);
+
+/* Disable VC warning: decimal digit terminates octal escape sequence */
+#if _MSC_VER > 1000
+#pragma warning( disable : 4125 )
+#endif
+
+
     str = "\033T\377\000\000\000\000\3773D";
     cubeSideWithText(str, 10);
   glPopMatrix();
@@ -269,7 +283,16 @@ int minifyMenu;
 void
 minifySelect(int value)
 {
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, value);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, value);
+  glutPostRedisplay();
+}
+
+int anisoMenu;
+
+void
+anisoSelect(int value)
+{
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, value);
   glutPostRedisplay();
 }
 
@@ -395,6 +418,8 @@ main(int argc, char **argv)
 
   txfEstablishTexture(txf, 1, GL_TRUE);
 
+  hasTextureFilterAnisotropic = glutExtensionSupported("GL_EXT_texture_filter_anisotropic");
+
   if (!fullscreen) {
     minifyMenu = glutCreateMenu(minifySelect);
     glutAddMenuEntry("Nearest", GL_NEAREST);
@@ -403,6 +428,18 @@ main(int argc, char **argv)
     glutAddMenuEntry("Linear mipmap nearest", GL_LINEAR_MIPMAP_NEAREST);
     glutAddMenuEntry("Nearest mipmap linear", GL_NEAREST_MIPMAP_LINEAR);
     glutAddMenuEntry("Linear mipmap linear", GL_LINEAR_MIPMAP_LINEAR);
+
+    if (hasTextureFilterAnisotropic) {
+      int maxAnisotropy = 1;
+
+      glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy);
+
+      anisoMenu = glutCreateMenu(anisoSelect);
+      glutAddMenuEntry("1.0", 1);
+      if (maxAnisotropy >= 2) glutAddMenuEntry("2.0", 2);
+      if (maxAnisotropy >= 4) glutAddMenuEntry("4.0", 4);
+      if (maxAnisotropy >= 8) glutAddMenuEntry("8.0", 8);
+    }
 
     alphaMenu = glutCreateMenu(alphaSelect);
     glutAddMenuEntry("Alpha testing", GL_ALPHA_TEST);
@@ -420,6 +457,9 @@ main(int argc, char **argv)
 
     glutCreateMenu(mainSelect);
     glutAddSubMenu("Filtering", minifyMenu);
+    if (hasTextureFilterAnisotropic) {
+      glutAddSubMenu("Max anisotropy", anisoMenu);
+    }
     glutAddSubMenu("Alpha", alphaMenu);
     glutAddSubMenu("Polygon Offset", polygonOffsetMenu);
     glutAddSubMenu("Animation", animationMenu);

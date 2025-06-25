@@ -27,13 +27,13 @@ SOFTWARE.
 #ifndef WFONT_INCLUDED
 #define WFONT_INCLUDED
 
-#define WFONT_MAGIC	0x813
+#define WFONT_MAGIC     0x813
 #define WFONT_MAGIC_PLUS 0x715
 #define WFONT_MAGIC_PEX 0x70686e74
 #define START_PROPS 0x100
 #define START_DISPATCH(_num_props)  (START_PROPS + 160 * _num_props)
 #define START_PATH(_num_ch_, _num_props)  (START_DISPATCH(_num_props) + sizeof(Dispatch) * _num_ch_)
-#define NUM_DISPATCH	128
+#define NUM_DISPATCH    128
 
 typedef struct {
   unsigned short x;

@@ -4,25 +4,25 @@
  * GLUT distribution version  $Revision: 1.8 $
  *
  * usage:
- *	surfgrid [-f]
+ *      surfgrid [-f]
  *
  * options:
- *	-f	run on full screen
+ *      -f      run on full screen
  *
  * keys:
- *	p	toggle polygon offset
+ *      p       toggle polygon offset
  *      F       increase polygon offset factor
  *      f       decrease polygon offset factor
  *      B       increase polygon offset bias
  *      b       decrease polygon offset bias
- *	g	toggle grid drawing
- *	s	toggle smooth/flat shading
- *	n	toggle whether to use GL evaluators or GLU nurbs
- *	u	decr number of segments in U direction
- *	U	incr number of segments in U direction
- *	v	decr number of segments in V direction
- *	V	incr number of segments in V direction
- *	escape	quit
+ *      g       toggle grid drawing
+ *      s       toggle smooth/flat shading
+ *      n       toggle whether to use GL evaluators or GLU nurbs
+ *      u       decr number of segments in U direction
+ *      U       incr number of segments in U direction
+ *      v       decr number of segments in V direction
+ *      V       incr number of segments in V direction
+ *      escape  quit
  */
 
 #include <stdio.h>
@@ -76,7 +76,11 @@ int showsurf = 1;
 int fullscreen = 0;
 float modelmatrix[16];
 float factor = 0.5;
+#if GL_VERSION_1_1
+int bias = 2;
+#else
 float bias = 0.002;
+#endif
 int usegments = 4;
 int vsegments = 4;
 
@@ -292,13 +296,18 @@ init(void)
   glEnable(GL_MAP2_VERTEX_4);
   glClearColor(0.25, 0.25, 0.5, 0.0);
 
-#if GL_EXT_polygon_offset
+#if GL_VERSION_1_1
+  glPolygonOffset(factor, bias);
+  glEnable(GL_POLYGON_OFFSET_FILL);
+#else
+# if GL_EXT_polygon_offset
   glPolygonOffsetEXT(factor, bias);
   glEnable(GL_POLYGON_OFFSET_EXT);
+# endif
 #endif
 
   nobj = gluNewNurbsRenderer();
-#ifdef GLU_VERSION_1_1  /* New GLU 1.1 interface. */
+#if GLU_VERSION_1_1  /* New GLU 1.1 interface. */
   gluNurbsProperty(nobj, GLU_SAMPLING_METHOD, GLU_DOMAIN_DISTANCE);
 #endif
 
@@ -321,8 +330,12 @@ drawmesh(void)
   for (j = 0; j < nv; j++) {
     for (i = 0; i < nu; i++) {
       p = torusbezierpts + (j * vp2p * vorder) + (i * up2p * uorder);
-#if GL_EXT_polygon_offset
+#ifdef GL_VERSION_1_1
+      glPolygonOffset(factor, bias);
+#else
+# if GL_EXT_polygon_offset
       glPolygonOffsetEXT(factor, bias);
+# endif
 #endif
       glMap2f(GL_MAP2_VERTEX_4, 0.0, 1.0, up2p, 3, 0.0, 1.0, vp2p, 3,
         (void *) p);
@@ -407,7 +420,16 @@ menu(int item)
 {
   switch (item) {
   case 'p':
-#if GL_EXT_polygon_offset
+#if GL_VERSION_1_1
+    if (glIsEnabled(GL_POLYGON_OFFSET_FILL)) {
+      glDisable(GL_POLYGON_OFFSET_FILL);
+      printf("disabling polygon offset\n");
+    } else {
+      glEnable(GL_POLYGON_OFFSET_FILL);
+      printf("enabling polygon offset\n");
+    }
+#else
+# if GL_EXT_polygon_offset
     if (glIsEnabled(GL_POLYGON_OFFSET_EXT)) {
       glDisable(GL_POLYGON_OFFSET_EXT);
       printf("disabling polygon offset\n");
@@ -415,6 +437,7 @@ menu(int item)
       glEnable(GL_POLYGON_OFFSET_EXT);
       printf("enabling polygon offset\n");
     }
+# endif
 #endif
     break;
   case 'F':
@@ -426,12 +449,22 @@ menu(int item)
     printf("factor: %8.4f\n", factor);
     break;
   case 'B':
+#if GL_VERSION_1_1
+    bias += 1;
+    printf("bias:  %d\n", bias);
+#else
     bias += 0.0001;
     printf("bias:  %8.4f\n", bias);
+#endif
     break;
   case 'b':
+#if GL_VERSION_1_1
+    bias -= 1;
+    printf("bias:  %d\n", bias);
+#else
     bias -= 0.0001;
     printf("bias:  %8.4f\n", bias);
+#endif
     break;
   case 'g':
     showgrid = !showgrid;
@@ -487,6 +520,19 @@ animate(void)
     glutPostRedisplay();
 }
 
+static int
+supportsOneDotOne(void)
+{
+  const char *version;
+  int major, minor;
+
+  version = (char *) glGetString(GL_VERSION);
+  if (sscanf(version, "%d.%d", &major, &minor) == 2) {
+    return major > 1 || minor >= 1;
+  }
+  return 0;            /* OpenGL version string malformed! */
+}
+
 int
 main(int argc, char **argv)
 {
@@ -516,8 +562,12 @@ main(int argc, char **argv)
 
   /* create a menu for the right mouse button */
   glutCreateMenu(menu);
-#if GL_EXT_polygon_offset
+#if GL_VERSION_1_1
   glutAddMenuEntry("p: toggle polygon offset", 'p');
+#else
+# if GL_EXT_polygon_offset
+  glutAddMenuEntry("p: toggle EXT polygon offset", 'p');
+# endif
 #endif
   glutAddMenuEntry("F: increase factor", 'F');
   glutAddMenuEntry("f: decrease factor", 'f');
@@ -542,14 +592,21 @@ main(int argc, char **argv)
   glutMotionFunc(move);
   glutIdleFunc(animate);
 
-#if GL_EXT_polygon_offset
+#if GL_VERSION_1_1
+  if (!supportsOneDotOne()) {
+    fprintf(stderr, "surfgrid: requires OpenGL 1.1 support to run.\n");
+    exit(1);
+  }
+#else
+# if GL_EXT_polygon_offset
   if (!glutExtensionSupported("GL_EXT_polygon_offset")) {
     printf("Warning: "
       "GL_EXT_polygon_offset not supported on this machine... "
       "trying anyway\n");
   }
-#else
+# else
   printf("Warning: not compiled with GL_EXT_polygon_offset support.\n");
+# endif
 #endif
 
   init();
@@ -563,7 +620,7 @@ float circleknots[] =
 void
 createlists(void)
 {
-#ifdef GLU_VERSION_1_1  /* New GLU 1.1 interface. */
+#if GLU_VERSION_1_1  /* New GLU 1.1 interface. */
   gluNurbsProperty(nobj, GLU_U_STEP, (usegments - 1) * 4);
   gluNurbsProperty(nobj, GLU_V_STEP, (vsegments - 1) * 4);
 

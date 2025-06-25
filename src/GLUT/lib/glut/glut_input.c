@@ -1,5 +1,5 @@
 
-/* Copyright (c) Mark J. Kilgard, 1994, 1997, 1998. */
+/* Copyright (c) Mark J. Kilgard, 1994, 1997, 1998, 2000, 2001. */
 
 /* This program is freely distributable without licensing fees
    and is provided without guarantee or warrantee expressed or
@@ -10,18 +10,50 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if !defined(_WIN32)
-#include <X11/Xlib.h>
-#if defined(__vms)
-#include <X11/XInput.h>
+/* At least some versions of Sun's makedepend command do not
+   properly handle "#if !defined(_WIN32)" so use "#ifndef _WIN32"
+   below. */
+#ifndef _WIN32
+# include <X11/Xlib.h>
+# if defined(__vms)
+#  include <X11/XInput.h>
+# else
+#  include <X11/extensions/XInput.h>
+# endif
+# include <X11/Xutil.h>
 #else
-#include <X11/extensions/XInput.h>
+# include <windows.h>
+# if !defined(__MINGW32__) && !defined(__CYGWIN32__)
+#  include <mmsystem.h>  /* Win32 Multimedia API header. */
+# else
+
+/* Cygnus B20.1 does not contain a version of <mmsystem.h> so
+   inline what we need. */
+typedef UINT MMRESULT;
+typedef struct {
+    DWORD dwSize;                /* size of structure */
+    DWORD dwFlags;               /* flags to indicate what to return */
+    DWORD dwXpos;                /* x position */
+    DWORD dwYpos;                /* y position */
+    DWORD dwZpos;                /* z position */
+    DWORD dwRpos;                /* rudder/4th axis position */
+    DWORD dwUpos;                /* 5th axis position */
+    DWORD dwVpos;                /* 6th axis position */
+    DWORD dwButtons;             /* button states */
+    DWORD dwButtonNumber;        /* current button number pressed */
+    DWORD dwPOV;                 /* point of view state */
+    DWORD dwReserved1;           /* reserved for communication between winmm & driver */
+    DWORD dwReserved2;           /* reserved for future expansion */
+} JOYINFOEX, FAR *LPJOYINFOEX;
+
+MMRESULT WINAPI joyGetPosEx(UINT uJoyID, LPJOYINFOEX pji);
+
+#define JOYERR_BASE            160
+#define JOYERR_NOERROR        (0)                  /* no error */
+#define JOYERR_PARMS          (JOYERR_BASE+5)      /* bad parameters */
+
+# endif
 #endif
-#include <X11/Xutil.h>
-#else
-#include <windows.h>
-#include <mmsystem.h>  /* Win32 Multimedia API header. */
-#endif /* !_WIN32 */
 
 #include "glutint.h"
 
@@ -44,9 +76,9 @@ typedef struct _Range {
   int range;
 } Range;
 
-#define NUM_SPACEBALL_AXIS	6
-#define NUM_TABLET_AXIS		2
-#define NUM_DIALS_AXIS		8
+#define NUM_SPACEBALL_AXIS      6
+#define NUM_TABLET_AXIS         2
+#define NUM_DIALS_AXIS          8
 
 Range __glutSpaceballRange[NUM_SPACEBALL_AXIS];
 Range __glutTabletRange[NUM_TABLET_AXIS];
@@ -120,12 +152,15 @@ queryTabletPos(GLUTwindow * window)
 #endif
     case ValuatorClass:
       v = (XValuatorState *) any;
-      if (v->num_valuators < 2)
+      if (v->num_valuators < 2) {
         goto end;
-      if (window->tabletPos[0] == -1)
+      }
+      if (window->tabletPos[0] == -1) {
         window->tabletPos[0] = normalizeTabletPos(0, v->valuators[0]);
-      if (window->tabletPos[1] == -1)
+      }
+      if (window->tabletPos[1] == -1) {
         window->tabletPos[1] = normalizeTabletPos(1, v->valuators[1]);
+      }
     }
     any = (XInputClass *) ((char *) any + any->length);
   }
@@ -150,10 +185,12 @@ tabletPosChange(GLUTwindow * window, int first, int count, int *data)
       break;
     }
   }
-  if (window->tabletPos[0] == -1 || window->tabletPos[1] == -1)
+  if (window->tabletPos[0] == -1 || window->tabletPos[1] == -1) {
     queryTabletPos(window);
-  if (genEvent)
+  }
+  if (genEvent) {
     window->tabletMotion(window->tabletPos[0], window->tabletPos[1]);
+  }
 }
 #endif /* !_WIN32 */
 
@@ -192,16 +229,18 @@ __glutProcessDeviceEvents(XEvent * event)
            all the first 6 axes.  Assume first 3 axes are XYZ
            translations; second 3 axes are XYZ rotations. */
         if (devmot->first_axis == 0 && devmot->axes_count == 6) {
-          if (window->spaceMotion)
+          if (window->spaceMotion) {
             window->spaceMotion(
               normalizeSpaceballDelta(0, devmot->axis_data[0]),
               normalizeSpaceballDelta(1, devmot->axis_data[1]),
               normalizeSpaceballDelta(2, devmot->axis_data[2]));
-          if (window->spaceRotate)
+          }
+          if (window->spaceRotate) {
             window->spaceRotate(
               normalizeSpaceballAngle(3, devmot->axis_data[3]),
               normalizeSpaceballAngle(4, devmot->axis_data[4]),
               normalizeSpaceballAngle(5, devmot->axis_data[5]));
+          }
         }
       }
       return 1;
@@ -261,20 +300,6 @@ __glutProcessDeviceEvents(XEvent * event)
   }
 #else
   {
-    JOYINFOEX info; 
-    JOYCAPS joyCaps; 
-
-    if (joyGetPosEx(JOYSTICKID1,&info) != JOYERR_NOERROR) { 
-      __glutHasJoystick = 1; 
-      joyGetDevCaps(JOYSTICKID1, &joyCaps, sizeof(joyCaps)); 
-      __glutNumJoystickButtons = joyCaps.wNumButtons; 
-      __glutNumJoystickAxes = joyCaps.wNumAxes; 
-    } else { 
-      __glutHasJoystick = 0; 
-      __glutNumJoystickButtons = 0; 
-      __glutNumJoystickAxes = 0; 
-    } 
-#if 0
     JOYINFOEX info;
     int njoyId = 0;
     int nConnected = 0;
@@ -289,12 +314,12 @@ __glutProcessDeviceEvents(XEvent * event)
         ++nConnected;  /* The count of connected joysticks. */
       }
     }
-#endif
   }
 #endif /* !_WIN32 */
   return 0;
 }
 
+#ifndef _WIN32
 static GLUTeventParser eventParser =
 {__glutProcessDeviceEvents, NULL};
 
@@ -303,11 +328,13 @@ addDeviceEventParser(void)
 {
   static Bool been_here = False;
 
-  if (been_here)
+  if (been_here) {
     return;
+  }
   been_here = True;
   __glutRegisterEventParser(&eventParser);
 }
+#endif
 
 static int
 probeDevices(void)
@@ -350,9 +377,12 @@ probeDevices(void)
       device = &device_info[i];
       any = (XAnyClassPtr) device->inputclassinfo;
 
+      v = NULL;
+      b = NULL;
+      btns = 0;
+      dials = 0;
+
       if (!__glutSpaceball && !strcmp(device->name, "spaceball")) {
-        v = NULL;
-        b = NULL;
         for (j = 0; j < device->num_classes; j++) {
 #if defined(__cplusplus) || defined(c_plusplus)
           switch (any->c_class) {
@@ -366,8 +396,9 @@ probeDevices(void)
           case ValuatorClass:
             v = (XValuatorInfoPtr) any;
             /* Sanity check: at least 6 valuators? */
-            if (v->num_axes < NUM_SPACEBALL_AXIS)
+            if (v->num_axes < NUM_SPACEBALL_AXIS) {
               goto skip_device;
+            }
             a = (XAxisInfoPtr) ((char *) v + sizeof(XValuatorInfo));
             for (k = 0; k < NUM_SPACEBALL_AXIS; k++, a++) {
               __glutSpaceballRange[k].min = a->min_value;
@@ -385,8 +416,6 @@ probeDevices(void)
           }
         }
       } else if (!__glutDials && !strcmp(device->name, "dial+buttons")) {
-        v = NULL;
-        b = NULL;
         for (j = 0; j < device->num_classes; j++) {
 #if defined(__cplusplus) || defined(c_plusplus)
           switch (any->c_class) {
@@ -400,8 +429,9 @@ probeDevices(void)
           case ValuatorClass:
             v = (XValuatorInfoPtr) any;
             /* Sanity check: at least 8 valuators? */
-            if (v->num_axes < NUM_DIALS_AXIS)
+            if (v->num_axes < NUM_DIALS_AXIS) {
               goto skip_device;
+            }
             dials = v->num_axes;
             __glutDialsResolution = (int *) malloc(sizeof(int) * dials);
             a = (XAxisInfoPtr) ((char *) v + sizeof(XValuatorInfo));
@@ -421,8 +451,6 @@ probeDevices(void)
           }
         }
       } else if (!__glutTablet && !strcmp(device->name, "tablet")) {
-        v = NULL;
-        b = NULL;
         for (j = 0; j < device->num_classes; j++) {
 #if defined(__cplusplus) || defined(c_plusplus)
           switch (any->c_class) {
@@ -436,8 +464,9 @@ probeDevices(void)
           case ValuatorClass:
             v = (XValuatorInfoPtr) any;
             /* Sanity check: exactly 2 valuators? */
-            if (v->num_axes != NUM_TABLET_AXIS)
+            if (v->num_axes != NUM_TABLET_AXIS) {
               goto skip_device;
+            }
             a = (XAxisInfoPtr) ((char *) v + sizeof(XValuatorInfo));
             for (k = 0; k < NUM_TABLET_AXIS; k++, a++) {
               __glutTabletRange[k].min = a->min_value;
@@ -587,7 +616,7 @@ __glutUpdateInputDeviceMask(GLUTwindow * window)
 }
 
 /* CENTRY */
-int APIENTRY
+int GLUTAPIENTRY
 glutDeviceGet(GLenum param)
 {
   probeDevices();

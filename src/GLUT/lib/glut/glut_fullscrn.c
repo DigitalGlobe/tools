@@ -8,7 +8,7 @@
 #include <stdio.h>  /* SunOS multithreaded assert() needs <stdio.h>.  Lame. */
 #include <assert.h>
 
-#if !defined(_WIN32)
+#ifndef _WIN32
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #endif
@@ -23,13 +23,9 @@
 
 #include "glutint.h"
 
-/* CENTRY */
-void APIENTRY 
-glutFullScreen(void)
-{
-  assert(!__glutCurrentWindow->parent);
-  IGNORE_IN_GAME_MODE();
 #if !defined(_WIN32)
+void __glutMakeFullScreenAtoms()
+{
   if (__glutMotifHints == None) {
     __glutMotifHints = XSGIFastInternAtom(__glutDisplay, "_MOTIF_WM_HINTS",
       SGI_XA__MOTIF_WM_HINTS, 0);
@@ -37,6 +33,29 @@ glutFullScreen(void)
       __glutWarning("Could not intern X atom for _MOTIF_WM_HINTS.");
     }
   }
+  if (__glutNetWMState == None) {
+    __glutNetWMState = XInternAtom(__glutDisplay, "_NET_WM_STATE", 0);
+    if (__glutNetWMState == None) {
+      __glutWarning("Could not intern X atom for _NET_WM_STATE.");
+    }
+  }
+  if (__glutNetWMStateFullscreen == None) {
+    __glutNetWMStateFullscreen = XInternAtom(__glutDisplay, "_NET_WM_STATE_FULLSCREEN", 0);
+    if (__glutNetWMStateFullscreen == None) {
+      __glutWarning("Could not intern X atom for _NET_WM_STATE_FULLSCREEN.");
+    }
+  }
+}
+#endif
+
+/* CENTRY */
+void GLUTAPIENTRY 
+glutFullScreen(void)
+{
+  assert(!__glutCurrentWindow->parent);
+  IGNORE_IN_GAME_MODE();
+#if !defined(_WIN32)
+  __glutMakeFullScreenAtoms();
 #endif
 
   __glutCurrentWindow->desiredX = 0;

@@ -8,10 +8,24 @@
 #ifndef __TEXFONT_H__
 #define __TEXFONT_H__
 
-#include <GL/gl.h>
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#undef WIN32_LEAN_AND_MEAN
+#endif
 
-#define TXF_FORMAT_BYTE		0
-#define TXF_FORMAT_BITMAP	1
+#ifdef  __cplusplus
+extern "C" {
+#endif
+
+#if defined(__APPLE__) && defined(__MACH__)
+#include <OpenGL/gl.h>
+#else
+#include <GL/gl.h>
+#endif
+
+#define TXF_FORMAT_BYTE         0
+#define TXF_FORMAT_BITMAP       1
 
 typedef struct {
   unsigned short c;       /* Potentially support 16-bit glyphs. */
@@ -52,10 +66,10 @@ typedef struct {
   TexGlyphVertexInfo **lut;
 } TexFont;
 
-extern char *txfErrorString(void);
+extern const char *txfErrorString(void);
 
 extern TexFont *txfLoadFont(
-  char *filename);
+  const char *filename);
 
 extern void txfUnloadFont(
   TexFont * txf);
@@ -70,7 +84,7 @@ extern void txfBindFontTexture(
 
 extern void txfGetStringMetrics(
   TexFont * txf,
-  char *string,
+  const char *string,
   int len,
   int *width,
   int *max_ascent,
@@ -82,12 +96,16 @@ extern void txfRenderGlyph(
 
 extern void txfRenderString(
   TexFont * txf,
-  char *string,
+  const char *string,
   int len);
 
 extern void txfRenderFancyString(
   TexFont * txf,
-  char *string,
+  const char *string,
   int len);
+
+#ifdef  __cplusplus
+}
+#endif
 
 #endif /* __TEXFONT_H__ */

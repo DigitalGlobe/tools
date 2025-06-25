@@ -1,5 +1,5 @@
 
-/* Copyright (c) Mark J. Kilgard, 1994, 1997. */
+/* Copyright (c) Mark J. Kilgard, 1994, 1997, 2001. */
 
 /* This program is freely distributable without licensing fees
    and is provided without guarantee or warrantee expressed or
@@ -9,7 +9,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#if !defined(_WIN32)
+#ifndef _WIN32
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #endif
@@ -61,16 +61,140 @@ static Bool synchronize = False;
 #include <float.h>  /* For masking floating point exceptions. */
 #endif
 
+/* WGL_ARB_extensions_string entry point */
+PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsStringARB = NULL;
+
+/* WGL_ARB_pixel_format entry points */
+PFNWGLGETPIXELFORMATATTRIBIVARBPROC wglGetPixelFormatAttribivARB = NULL;
+PFNWGLGETPIXELFORMATATTRIBFVARBPROC wglGetPixelFormatAttribfvARB = NULL;
+PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB = NULL;
+
+/* ARB_multisample entry point */
+PFNGLSAMPLECOVERAGEARBPROC glSampleCoverageARB = NULL;
+
+/* Variables to record what extensions the ICD supports. */
+int has_WGL_ARB_extensions_string = 0;
+int has_WGL_ARB_pixel_format = 0;
+int has_WGL_ARB_multisample = 0;
+int has_GL_ARB_multisample = 0;
+
+const static PIXELFORMATDESCRIPTOR pfd = {
+    sizeof(PIXELFORMATDESCRIPTOR),
+    1,
+    PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DEPTH_DONTCARE |  PFD_DOUBLEBUFFER_DONTCARE,
+    PFD_TYPE_RGBA,
+    0,
+    0, 0, 0, 0, 0, 0,
+    0, 0,
+    0, 0, 0, 0,
+    0, 0,
+    0,
+    PFD_MAIN_PLANE,
+    0,
+    0,
+    0,
+    0,
+};
+
+#define GET_EXTENSION_PROC(proc, type) \
+    proc = (type)wglGetProcAddress(#proc)
+
+/* To determine multisample support under Win32, we must create a fake
+   window first to negotiate the required wglGetProcAddress-returned
+   function pointers and determine what window system dependent OpenGL
+   extensions are supported.  Because wglGetProcAddress requires that we
+   are bound to an OpenGL rendering context, we must go through a lot
+   of effort to create a fake window and fake context in order to use
+   wglGetProcAddress.  Once we have queried the extensions and gotten
+   the function pointers we need, we destroy the fake window and fake
+   context we created. */
+static LRESULT CALLBACK
+__glutFakeWindowProc(HWND wnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    HDC dc;
+    HGLRC glrc;
+    int pixelFormat;
+
+    switch (msg) {
+    case WM_CREATE:
+        dc = GetDC(wnd);
+
+        /* Pick the most basic pixel format descriptor we can. */
+        pixelFormat = ChoosePixelFormat(dc, &pfd);
+        SetPixelFormat(dc, pixelFormat, &pfd);
+
+        /* Create an OpenGL rendering context and make it current. */
+        glrc = wglCreateContext(dc);
+        wglMakeCurrent(dc, glrc);
+
+        /* Now we are allowed to use wglGetProcAddress. */
+
+        GET_EXTENSION_PROC(wglGetExtensionsStringARB,
+          PFNWGLGETEXTENSIONSSTRINGARBPROC);
+
+        /* Make sure that the WGL_ARB_extensions_string extension is
+           really advertised (it is somewhat backward that we have to
+           wglGetProcAddress the routine that returns the WGL extension
+           string before we even check for the extension name). */
+        has_WGL_ARB_extensions_string =
+          __glutIsSupportedByWGL("WGL_ARB_extensions_string");
+        if (has_WGL_ARB_extensions_string) {
+
+          /* Check for WGL_ARB_pixel_format support. */
+          has_WGL_ARB_pixel_format =
+            __glutIsSupportedByWGL("WGL_ARB_pixel_format");
+          if (has_WGL_ARB_pixel_format) {
+            GET_EXTENSION_PROC(wglGetPixelFormatAttribivARB,
+              PFNWGLGETPIXELFORMATATTRIBIVARBPROC);
+            GET_EXTENSION_PROC(wglGetPixelFormatAttribfvARB,
+              PFNWGLGETPIXELFORMATATTRIBFVARBPROC);
+            GET_EXTENSION_PROC(wglChoosePixelFormatARB,
+              PFNWGLCHOOSEPIXELFORMATARBPROC);
+          }
+
+          /* Check for WGL_ARB_multisample support. */
+          has_WGL_ARB_multisample =
+            __glutIsSupportedByWGL("WGL_ARB_multisample");
+          has_GL_ARB_multisample =
+            glutExtensionSupported("GL_ARB_multisample");
+          if (has_WGL_ARB_multisample && has_GL_ARB_multisample) {
+            GET_EXTENSION_PROC(glSampleCoverageARB,
+              PFNGLSAMPLECOVERAGEARBPROC);
+          }
+          /* We called glutExtensionSupported, but now we are going to
+             destroy the context so we need to invalidate our pointer
+             to the extension string returned by glGetString. */
+          __glutInvalidateExtensionStringCacheIfNeeded(glrc);
+        }
+
+        /* Unbind from our context and delete the context once we have
+           gotten the WGL information we need. */
+        wglMakeCurrent(NULL, NULL);
+        wglDeleteContext(glrc);
+        ReleaseDC(wnd, dc);
+        break;
+
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        break;
+    }
+
+    return DefWindowProc(wnd, msg, wParam, lParam);
+}
+
 void
 __glutOpenWin32Connection(char* display)
 {
   static char *classname;
   WNDCLASS  wc;
   HINSTANCE hInstance = GetModuleHandle(NULL);
+  HWND wnd;
+  MSG msg;
   
   /* Make sure we register the window only once. */
-  if(classname)
+  if(classname) {
     return;
+  }
 
 #ifdef __BORLANDC__
   /* Under certain conditions (e.g. while rendering solid surfaces with
@@ -85,30 +209,34 @@ __glutOpenWin32Connection(char* display)
 
   classname = "GLUT";
 
-  /* Clear (important!) and then fill in the window class structure. */
+  /* Clear and then fill in the window class structure. */
   memset(&wc, 0, sizeof(WNDCLASS));
   wc.style         = CS_OWNDC;
-  wc.lpfnWndProc   = (WNDPROC)__glutWindowProc;
+  wc.lpfnWndProc   = (WNDPROC)__glutFakeWindowProc;
   wc.hInstance     = hInstance;
   wc.hIcon         = LoadIcon(hInstance, "GLUT_ICON");
   wc.hCursor       = LoadCursor(hInstance, IDC_ARROW);
   wc.hbrBackground = NULL;
   wc.lpszMenuName  = NULL;
-  wc.lpszClassName = classname;
+  wc.lpszClassName = "FAKE_GLUT";  /* Poor name choice. */
 
-  if(wc.hIcon == NULL) {
-    HINSTANCE hDLLInstance = LoadLibrary("glut32.dll");
-	if (hDLLInstance == NULL) {
-	  /* Fill in a default icon if one isn't specified as a resource. */
-	  wc.hIcon = LoadIcon(NULL, IDI_WINLOGO);
-	} else {
-	  wc.hIcon = LoadIcon(hDLLInstance, "GLUT_ICON");
-	}
+  /* Fill in a default icon if one isn't specified as a resource. */
+  if(!wc.hIcon) {
+    wc.hIcon = LoadIcon(NULL, IDI_WINLOGO);
   }
   
-  if(!RegisterClass(&wc)) {
-    __glutFatalError("RegisterClass() failed:"
-		     "Cannot register GLUT window class.");
+  /* Register fake window class. */
+  if(RegisterClass(&wc) == 0) {
+    __glutFatalError("RegisterClass1 failed: "
+                     "Cannot register fake GLUT window class.");
+  }
+
+  /* Register real window class. */
+  wc.lpfnWndProc   = (WNDPROC)__glutWindowProc;
+  wc.lpszClassName = classname;
+  if(RegisterClass(&wc) == 0) {
+    __glutFatalError("RegisterClass2 failed: "
+                     "Cannot register GLUT window class.");
   }
  
   __glutScreenWidth     = GetSystemMetrics(SM_CXSCREEN);
@@ -121,12 +249,29 @@ __glutOpenWin32Connection(char* display)
 
   /* Set the display to 1 -- we shouldn't be using this anywhere
      (except as an argument to X calls). */
-  __glutDisplay         = (Display*)1;
+  __glutDisplay = (Display*)1;
 
   /* There isn't any concept of multiple screens in Win32, therefore,
      we don't need to keep track of the screen we're on... it's always
      the same one. */
-  __glutScreen          = 0;
+  __glutScreen = 0;
+
+  /* Create fake window */
+  wnd = CreateWindow("FAKE_GLUT", "GLUT",
+      WS_OVERLAPPEDWINDOW,
+      40, 40,
+      40, 40,
+      NULL, NULL, hInstance, NULL);
+  if (!wnd) {
+    __glutFatalError("CreateWindow failed: "
+                     "Cannot create fake GLUT window.");
+  }
+  /* Destroy fake window */
+  DestroyWindow(wnd);
+  while (GetMessage(&msg, NULL, 0, 0)) {
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+  }
 }
 #else /* !_WIN32 */
 void
@@ -135,15 +280,18 @@ __glutOpenXConnection(char *display)
   int errorBase, eventBase;
 
   __glutDisplay = XOpenDisplay(display);
-  if (!__glutDisplay)
+  if (!__glutDisplay) {
     __glutFatalError("could not open display: %s",
       XDisplayName(display));
-  if (synchronize)
+  }
+  if (synchronize) {
     XSynchronize(__glutDisplay, True);
-  if (!glXQueryExtension(__glutDisplay, &errorBase, &eventBase))
+  }
+  if (!glXQueryExtension(__glutDisplay, &errorBase, &eventBase)) {
     __glutFatalError(
       "OpenGL GLX extension not supported by display: %s",
       XDisplayName(display));
+  }
   __glutScreen = DefaultScreen(__glutDisplay);
   __glutRoot = RootWindow(__glutDisplay, __glutScreen);
   __glutScreenWidth = DisplayWidth(__glutDisplay, __glutScreen);
@@ -155,6 +303,22 @@ __glutOpenXConnection(char *display)
 }
 #endif /* _WIN32 */
 
+#ifdef _WIN32
+DWORD
+__glutInitTime(void)
+{
+  static int beenhere = 0;
+  static DWORD genesis;
+
+  if (!beenhere) {
+    /* GetTickCount has 5 millisecond accuracy on Windows 98
+       and 10 millisecond accuracy on Windows NT 4.0. */
+    genesis = GetTickCount();
+    beenhere = 1;
+  }
+  return genesis;
+}
+#else /* !_WIN32 */
 void
 __glutInitTime(struct timeval *beginning)
 {
@@ -167,6 +331,7 @@ __glutInitTime(struct timeval *beginning)
   }
   *beginning = genesis;
 }
+#endif /* _WIN32 */
 
 static void
 removeArgs(int *argcp, char **argv, int numToRemove)
@@ -180,12 +345,14 @@ removeArgs(int *argcp, char **argv, int numToRemove)
   *argcp -= numToRemove;
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutInit(int *argcp, char **argv)
 {
   char *display = NULL;
   char *str, *geometry = NULL;
+#ifndef _WIN32
   struct timeval unused;
+#endif
   int i;
 
   if (__glutDisplay) {
@@ -203,12 +370,14 @@ glutInit(int *argcp, char **argv)
   /* Make private copy of command line arguments. */
   __glutArgc = *argcp;
   __glutArgv = (char **) malloc(__glutArgc * sizeof(char *));
-  if (!__glutArgv)
+  if (!__glutArgv) {
     __glutFatalError("out of memory.");
+  }
   for (i = 0; i < __glutArgc; i++) {
     __glutArgv[i] = __glutStrdup(argv[i]);
-    if (!__glutArgv[i])
+    if (!__glutArgv[i]) {
       __glutFatalError("out of memory.");
+    }
   }
 
   /* determine permanent program name */
@@ -242,18 +411,20 @@ glutInit(int *argcp, char **argv)
 #if defined(_WIN32)
       __glutWarning("-direct option not supported by Win32 GLUT.");
 #endif
-      if (!__glutTryDirect)
+      if (!__glutTryDirect) {
         __glutFatalError(
           "cannot force both direct and indirect rendering.");
+      }
       __glutForceDirect = GL_TRUE;
       removeArgs(argcp, &argv[1], 1);
     } else if (!strcmp(__glutArgv[i], "-indirect")) {
 #if defined(_WIN32)
       __glutWarning("-indirect option not supported by Win32 GLUT.");
 #endif
-      if (__glutForceDirect)
+      if (__glutForceDirect) {
         __glutFatalError(
           "cannot force both direct and indirect rendering.");
+      }
       __glutTryDirect = GL_FALSE;
       removeArgs(argcp, &argv[1], 1);
     } else if (!strcmp(__glutArgv[i], "-iconic")) {
@@ -292,39 +463,49 @@ glutInit(int *argcp, char **argv)
     if (WidthValue & flags) {
       /* Careful because X does not allow zero or negative
          width windows */
-      if (width > 0)
+      if (width > 0) {
         __glutInitWidth = width;
+      }
     }
     if (HeightValue & flags) {
       /* Careful because X does not allow zero or negative
          height windows */
-      if (height > 0)
+      if (height > 0) {
         __glutInitHeight = height;
+      }
     }
     glutInitWindowSize(__glutInitWidth, __glutInitHeight);
     if (XValue & flags) {
-      if (XNegative & flags)
+      if (XNegative & flags) {
         x = DisplayWidth(__glutDisplay, __glutScreen) +
           x - __glutSizeHints.width;
+      }
       /* Play safe: reject negative X locations */
-      if (x >= 0)
+      if (x >= 0) {
         __glutInitX = x;
+      }
     }
     if (YValue & flags) {
-      if (YNegative & flags)
+      if (YNegative & flags) {
         y = DisplayHeight(__glutDisplay, __glutScreen) +
           y - __glutSizeHints.height;
+      }
       /* Play safe: reject negative Y locations */
-      if (y >= 0)
+      if (y >= 0) {
         __glutInitY = y;
+      }
     }
     glutInitWindowPosition(__glutInitX, __glutInitY);
   }
+#ifdef _WIN32
+  (void) __glutInitTime();
+#else
   __glutInitTime(&unused);
+#endif
 }
 
 #ifdef _WIN32
-void APIENTRY 
+void GLUTAPIENTRY 
 __glutInitWithExit(int *argcp, char **argv, void (__cdecl *exitfunc)(int))
 {
   __glutExitFunc = exitfunc;
@@ -333,7 +514,7 @@ __glutInitWithExit(int *argcp, char **argv, void (__cdecl *exitfunc)(int))
 #endif
 
 /* CENTRY */
-void APIENTRY 
+void GLUTAPIENTRY 
 glutInitWindowPosition(int x, int y)
 {
   __glutInitX = x;
@@ -347,7 +528,7 @@ glutInitWindowPosition(int x, int y)
   }
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutInitWindowSize(int width, int height)
 {
   __glutInitWidth = width;
@@ -361,7 +542,7 @@ glutInitWindowSize(int width, int height)
   }
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutInitDisplayMode(unsigned int mask)
 {
   __glutDisplayMode = mask;

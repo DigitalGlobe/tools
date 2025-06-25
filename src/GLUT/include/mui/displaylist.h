@@ -38,8 +38,8 @@
 #define P_UISHADOW         343
 #define P_UILINESHADOW     344
 
-#define UI_FONT_BOLD	    1
-#define UI_FONT_NORMAL	    2
+#define UI_FONT_BOLD        1
+#define UI_FONT_NORMAL      2
 #define UI_FONT_FIXED_PITCH 3
 
 void uistartdraw(void);

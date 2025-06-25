@@ -15,6 +15,20 @@
 #include <GL/glut.h>
 #include "trackball.h"
 
+/* ARB_multisample */
+#ifndef GL_ARB_multisample
+/* GL_MULTISAMPLE_SGIS has the same value as GL_MULTISAMPLE_ARB */
+#define GL_MULTISAMPLE_ARB                0x809D
+#define GL_SAMPLE_ALPHA_TO_COVERAGE_ARB   0x809E
+#define GL_SAMPLE_ALPHA_TO_ONE_ARB        0x809F
+#define GL_SAMPLE_COVERAGE_ARB            0x80A0
+#define GL_SAMPLE_BUFFERS_ARB             0x80A8
+#define GL_SAMPLES_ARB                    0x80A9
+#define GL_SAMPLE_COVERAGE_VALUE_ARB      0x80AA
+#define GL_SAMPLE_COVERAGE_INVERT_ARB     0x80AB
+#define GL_MULTISAMPLE_BIT_ARB            0x20000000
+#endif
+
 typedef enum {
   RESERVED, BODY_SIDE, BODY_EDGE, BODY_WHOLE, ARM_SIDE, ARM_EDGE, ARM_WHOLE,
   LEG_SIDE, LEG_EDGE, LEG_WHOLE, EYE_SIDE, EYE_EDGE, EYE_WHOLE, DINOSAUR
@@ -60,11 +74,9 @@ extrudeSolidFromPolygon(GLfloat data[][2], unsigned int dataSize,
   if (tobj == NULL) {
     tobj = gluNewTess();  /* create and initialize a GLU
                              polygon tesselation object */
-    gluTessCallback(tobj, GLU_BEGIN, glBegin);
-    gluTessCallback(tobj, GLU_VERTEX, glVertex2fv);  /* semi-tricky 
-
-                                                      */
-    gluTessCallback(tobj, GLU_END, glEnd);
+    gluTessCallback(tobj, GLU_BEGIN, (void (CALLBACK*)()) glBegin);
+    gluTessCallback(tobj, GLU_VERTEX, (void (CALLBACK*)()) glVertex2fv);  /* semi-tricky */
+    gluTessCallback(tobj, GLU_END, (void (CALLBACK*)()) glEnd);
   }
   glNewList(side, GL_COMPILE);
   glShadeModel(GL_SMOOTH);  /* smooth minimizes seeing
@@ -270,15 +282,13 @@ controlLights(int value)
       glDisable(GL_LIGHT1);
     }
     break;
-#ifdef GL_MULTISAMPLE_SGIS
   case 3:
-    if (glIsEnabled(GL_MULTISAMPLE_SGIS)) {
-      glDisable(GL_MULTISAMPLE_SGIS);
+    if (glIsEnabled(GL_MULTISAMPLE_ARB)) {
+      glDisable(GL_MULTISAMPLE_ARB);
     } else {
-      glEnable(GL_MULTISAMPLE_SGIS);
+      glEnable(GL_MULTISAMPLE_ARB);
     }
     break;
-#endif
   case 4:
     glutFullScreen();
     break;
@@ -301,6 +311,16 @@ vis(int visible)
   }
 }
 
+void
+keyboard(unsigned char c, int x, int y)
+{
+  switch (c) {
+  case 27:
+    exit(0);
+    break;
+  }
+}
+
 int
 main(int argc, char **argv)
 {
@@ -313,6 +333,7 @@ main(int argc, char **argv)
   glutVisibilityFunc(vis);
   glutMouseFunc(mouse);
   glutMotionFunc(motion);
+  glutKeyboardFunc(keyboard);
   glutCreateMenu(controlLights);
   glutAddMenuEntry("Toggle right light", 1);
   glutAddMenuEntry("Toggle left light", 2);

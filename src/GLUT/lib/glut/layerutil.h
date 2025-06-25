@@ -9,7 +9,7 @@
 
 /* Based on XLayerUtil.h: Revision: 1.3 */
 
-#if !defined(_WIN32)
+#ifndef _WIN32
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xmd.h>
@@ -21,10 +21,10 @@
 #define TransparentMask       2
 
 /* layered visual info template flags */
-#define VisualLayerMask		0x200
-#define VisualTransparentType	0x400
-#define VisualTransparentValue	0x800
-#define VisualAllLayerMask	0xFFF
+#define VisualLayerMask         0x200
+#define VisualTransparentType   0x400
+#define VisualTransparentValue  0x800
+#define VisualAllLayerMask      0xFFF
 
 /* layered visual info structure */
 typedef struct _XLayerVisualInfo {

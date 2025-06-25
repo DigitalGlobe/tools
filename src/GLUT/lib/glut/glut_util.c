@@ -1,5 +1,5 @@
 
-/* Copyright (c) Mark J. Kilgard, 1994. */
+/* Copyright (c) Mark J. Kilgard, 1994, 2001. */
 
 /* This program is freely distributable without licensing fees
    and is provided without guarantee or warrantee expressed or
@@ -22,8 +22,9 @@ __glutStrdup(const char *string)
   char *copy;
 
   copy = (char*) malloc(strlen(string) + 1);
-  if (copy == NULL)
+  if (copy == NULL) {
     return NULL;
+  }
   strcpy(copy, string);
   return copy;
 }
@@ -42,7 +43,7 @@ __glutWarning(char *format,...)
 }
 
 /* CENTRY */
-void APIENTRY 
+void GLUTAPIENTRY 
 glutReportErrors(void)
 {
   GLenum error;

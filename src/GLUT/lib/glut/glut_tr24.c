@@ -2052,7 +2052,6 @@ static const BitmapCharRec * const chars[] = {
 };
 
 const BitmapFontRec glutBitmapTimesRoman24 = {
-"-adobe-times-medium-r-normal--24-240-75-75-p-124-iso8859-1",
 224,
 32,
 chars

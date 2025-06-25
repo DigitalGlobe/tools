@@ -355,7 +355,7 @@ nodupstring(char *s)
   return string;
 }
 
-void
+int
 main(int argc, char *argv[])
 {
   int texw, texh;
@@ -479,12 +479,12 @@ main(int argc, char *argv[])
           if (height > 0 && width > 0) {
             if (px + width + gap < texw) {
               foundWidthFit = 1;
-	      if (j != i) {
-		i--;  /* Step back so i loop increment leaves us at same character. */
-	      }
+              if (j != i) {
+                i--;  /* Step back so i loop increment leaves us at same character. */
+              }
               break;
             }
-	  }
+          }
           j++;
           getMetric(fontinfo, glist[j], &tgi);
           width = tgi.width;
@@ -520,10 +520,10 @@ main(int argc, char *argv[])
         tgi.x = px;
         tgi.y = py;
 
-	/* Advance by glyph width, remaining in the current line. */
+        /* Advance by glyph width, remaining in the current line. */
         px += width + gap;
       } else {
-	/* No texture image; assign invalid bogus texture coordinates. */
+        /* No texture image; assign invalid bogus texture coordinates. */
         tgi.x = -1;
         tgi.y = -1;
       }
@@ -557,4 +557,5 @@ main(int argc, char *argv[])
   }
   free(texarea);
   fclose(file);
+  return 0;             /* ANSI C requires main to return int. */
 }

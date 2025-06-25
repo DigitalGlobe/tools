@@ -13,6 +13,7 @@
 #include <process.h>  /* for getpid */
 #define random rand
 #define srandom srand
+#define getpid _getpid  // Win32 POSIX preference
 #endif
 #include <math.h>
 #include <GL/glut.h>
@@ -112,7 +113,7 @@ add_plane(void)
     if (planes[i].speed == 0) {
 
 #define SET_COLOR(r,g,b) \
-	planes[i].red=r; planes[i].green=g; planes[i].blue=b;
+        planes[i].red=r; planes[i].green=g; planes[i].blue=b;
 
       switch (random() % 6) {
       case 0:
@@ -205,11 +206,11 @@ keyboard(unsigned char ch, int x, int y)
   }
 }
 
-#define ADD_PLANE	1
-#define REMOVE_PLANE	2
-#define MOTION_ON	3
-#define MOTION_OFF	4
-#define QUIT		5
+#define ADD_PLANE       1
+#define REMOVE_PLANE    2
+#define MOTION_ON       3
+#define MOTION_OFF      4
+#define QUIT            5
 
 void
 menu(int item)

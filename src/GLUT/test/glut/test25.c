@@ -1,5 +1,5 @@
 
-/* Copyright (c) Mark J. Kilgard, 1997. */
+/* Copyright (c) Mark J. Kilgard, 1997, 2001. */
 
 /* This program is freely distributable without licensing fees 
    and is provided without guarantee or warrantee expressed or 
@@ -7,9 +7,18 @@
 
 /* This tests glutBitmapLength and glutStrokeLength. */
 
+/* NOTE: This test is changed for GLUT 3.8 and will not pass on
+   prior implementations that had a bug in glutStrokeLength. */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <GL/glut.h>
+
+/* Disable VC warning: 'unsigned char *' differs in indirection to
+   slightly different base types from 'char [53]' */
+#if _MSC_VER > 1000
+#pragma warning( disable : 4057 )
+#endif
 
 unsigned char *abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 char *null = "";
@@ -74,8 +83,8 @@ int stroke_lens[NUM_STROKE_FONTS] =
 };
 int stroke_abc_lens[NUM_STROKE_FONTS] =
 {
-  3683,
-  5408
+  3710,  // old implementation returned 3683
+  5447   // old implementation returned 5408
 };
 
 int

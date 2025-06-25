@@ -56,10 +56,10 @@ else # Try non-standard places vendor locations
     endif
   endif
 endif
-make Makefiles
+make -f Makefile Makefiles
 
 ## man subdirectory is not built by default
 ## uncomment line below to build its Makefiles
 #make SUBDIRS=man Makefiles
 
-make depend
+make -f Makefile depend

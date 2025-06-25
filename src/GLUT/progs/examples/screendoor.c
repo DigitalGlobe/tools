@@ -11,6 +11,7 @@
 #include <GL/glut.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #define TORUS           1
 #define TETRAHEDRON     2
@@ -40,8 +41,8 @@
 const GLubyte stippleMask[17][128] =
 {
   /* NOTE: 0% opaqueness is faster to set and probably faster to render with:
-	glDisable(GL_POLYGON_STIPPLE);
-	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); */
+        glDisable(GL_POLYGON_STIPPLE);
+        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE); */
   {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -198,6 +199,8 @@ const GLubyte stippleMask[17][128] =
     0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff},
 };
 
+int exitAfterOneFrame = 0;
+
 GLfloat angle = 20.0;
 
 int torusStipple = 4, icoStipple = 8, tetraStipple = 16;
@@ -272,6 +275,7 @@ display(void)
   glPopMatrix();
 
   glutSwapBuffers();
+  if (exitAfterOneFrame) exit(0);
 }
 
 void
@@ -341,9 +345,14 @@ createTransparencyMenu(void)
 int
 main(int argc, char **argv)
 {
-  int torusMenu, icoMenu, tetraMenu;
+  int torusMenu, icoMenu, tetraMenu, i;
 
   glutInit(&argc, argv);
+  for (i=1; i<argc; i++) {
+    if (!strcmp("-e", argv[i])) {
+      exitAfterOneFrame = 1;
+    }
+  }
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
   glutCreateWindow("screen door transparency");
   glutDisplayFunc(display);

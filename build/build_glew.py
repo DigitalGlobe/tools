@@ -46,7 +46,7 @@ class Program:
 
     # ----------------------------------------------------------------------
     # the base name of the library
-    _LIBNAME = "glew"
+    _LIBNAME = "glew32"
     _DEBUG_SUFFIX = "_d"
 
     # ----------------------------------------------------------------------
@@ -180,19 +180,16 @@ class Program:
 
         dllName = (
             f"{Program._LIBNAME}"
-            + f'{"64" if buildSettings.X64Specified() else "32"}'
             + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
             + f".dll"
         )
         libName = (
             f"{Program._LIBNAME}"
-            + f'{"64" if buildSettings.X64Specified() else "32"}'
             + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
             + f".lib"
         )
         pdbName = (
             f"{Program._LIBNAME}"
-            + f'{"64" if buildSettings.X64Specified() else "32"}'
             + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
             + f".pdb"
         )
@@ -201,7 +198,7 @@ class Program:
             os.path.join(
                 cmakeInstallPath,
                 "lib",
-                f"{Program._LIBNAME}{'64' if buildSettings.X64Specified() else '32'}{'' if (buildSettings.ReleaseSpecified()) else 'd'}.lib",
+                f"{Program._LIBNAME}{'' if (buildSettings.ReleaseSpecified()) else 'd'}.lib",
             ),
             os.path.join(sdkOutDir, libName),
         )
@@ -210,7 +207,7 @@ class Program:
             os.path.join(
                 cmakeInstallPath,
                 "bin",
-                f"{Program._LIBNAME}{'64' if buildSettings.X64Specified() else '32'}{'' if (buildSettings.ReleaseSpecified()) else 'd'}.dll",
+                f"{Program._LIBNAME}{'' if (buildSettings.ReleaseSpecified()) else 'd'}.dll",
             ),
             os.path.join(sdkOutDir, dllName),
         )
@@ -221,7 +218,7 @@ class Program:
                 os.path.join(
                     cmakeInstallPath,
                     "lib",
-                    f"{Program._LIBNAME}{'64' if buildSettings.X64Specified() else '32'}{'' if (buildSettings.ReleaseSpecified()) else 'd'}.pdb",
+                    f"{Program._LIBNAME}{'' if (buildSettings.ReleaseSpecified()) else 'd'}.pdb",
                 ),
                 os.path.join(sdkOutDir, pdbName),
             )

@@ -21,7 +21,6 @@ typedef struct {
 } BitmapCharRec, *BitmapCharPtr;
 
 typedef struct {
-  const char *name;
   const int num_chars;
   const int first;
   const BitmapCharRec * const *ch;

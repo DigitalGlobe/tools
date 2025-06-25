@@ -66,6 +66,7 @@ void charstr(char *s, int font)
 	case UI_FONT_NORMAL:
 	    f = GLUT_BITMAP_HELVETICA_12;
 	    break;
+        default:
 	case UI_FONT_FIXED_PITCH:
 	    f = GLUT_BITMAP_9_BY_15;
 	    break;

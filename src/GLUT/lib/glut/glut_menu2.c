@@ -1,5 +1,5 @@
 
-/* Copyright (c) Mark J. Kilgard, 1994, 1997. */
+/* Copyright (c) Mark J. Kilgard, 1994, 1997, 2001. */
 
 /* This program is freely distributable without licensing fees
    and is provided without guarantee or warrantee expressed or
@@ -25,26 +25,27 @@
 
 /* CENTRY */
 /* DEPRICATED, use glutMenuStatusFunc instead. */
-void APIENTRY 
+void GLUTAPIENTRY 
 glutMenuStateFunc(GLUTmenuStateCB menuStateFunc)
 {
   __glutMenuStatusFunc = (GLUTmenuStatusCB) menuStateFunc;
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutMenuStatusFunc(GLUTmenuStatusCB menuStatusFunc)
 {
   __glutMenuStatusFunc = menuStatusFunc;
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutDestroyMenu(int menunum)
 {
   GLUTmenu *menu = __glutGetMenuByNum(menunum);
   GLUTmenuItem *item, *next;
 
-  if (__glutMappedMenu)
+  if (__glutMappedMenu) {
     __glutMenuModificationError();
+  }
   assert(menu->id == menunum - 1);
   XDestroySubwindows(__glutDisplay, menu->win);
   XDestroyWindow(__glutDisplay, menu->win);
@@ -64,14 +65,15 @@ glutDestroyMenu(int menunum)
   free(menu);
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutChangeToMenuEntry(int num, const char *label, int value)
 {
   GLUTmenuItem *item;
   int i;
 
-  if (__glutMappedMenu)
+  if (__glutMappedMenu) {
     __glutMenuModificationError();
+  }
   i = __glutCurrentMenu->num;
   item = __glutCurrentMenu->list;
   while (item) {
@@ -91,14 +93,15 @@ glutChangeToMenuEntry(int num, const char *label, int value)
   __glutWarning("Current menu has no %d item.", num);
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutChangeToSubMenu(int num, const char *label, int menu)
 {
   GLUTmenuItem *item;
   int i;
 
-  if (__glutMappedMenu)
+  if (__glutMappedMenu) {
     __glutMenuModificationError();
+  }
   i = __glutCurrentMenu->num;
   item = __glutCurrentMenu->list;
   while (item) {
@@ -118,14 +121,15 @@ glutChangeToSubMenu(int num, const char *label, int menu)
   __glutWarning("Current menu has no %d item.", num);
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutRemoveMenuItem(int num)
 {
   GLUTmenuItem *item, **prev, *remaining;
   int pixwidth, i;
 
-  if (__glutMappedMenu)
+  if (__glutMappedMenu) {
     __glutMenuModificationError();
+  }
   i = __glutCurrentMenu->num;
   prev = &__glutCurrentMenu->list;
   item = __glutCurrentMenu->list;
@@ -169,11 +173,12 @@ glutRemoveMenuItem(int num)
   __glutWarning("Current menu has no %d item.", num);
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutDetachMenu(int button)
 {
-  if (__glutMappedMenu)
+  if (__glutMappedMenu) {
     __glutMenuModificationError();
+  }
   if (__glutCurrentWindow->menu[button] > 0) {
     __glutCurrentWindow->buttonUses--;
     __glutChangeWindowEventMask(ButtonPressMask | ButtonReleaseMask,

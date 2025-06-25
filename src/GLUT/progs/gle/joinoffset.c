@@ -16,17 +16,17 @@ int idx = 0;
 
 /* some utilities for filling that array */
 #define PSCALE 0.5
-#define PNT(x,y,z) { 			\
-   points[idx][0] = PSCALE * x; 	\
-   points[idx][1] = PSCALE * y; 	\
-   points[idx][2] = PSCALE * z;		\
-   idx ++;				\
+#define PNT(x,y,z) {                    \
+   points[idx][0] = PSCALE * x;         \
+   points[idx][1] = PSCALE * y;         \
+   points[idx][2] = PSCALE * z;         \
+   idx ++;                              \
 }
 
-#define COL(r,g,b) { 			\
-   colors[idx][0] = r; 			\
-   colors[idx][1] = g; 			\
-   colors[idx][2] = b;			\
+#define COL(r,g,b) {                    \
+   colors[idx][0] = r;                  \
+   colors[idx][1] = g;                  \
+   colors[idx][2] = b;                  \
 }
 
 /* the arrays in which we will store the contour */
@@ -35,10 +35,10 @@ double contour_points [NCONTOUR][2];
 int cidx = 0;
 
 /* some utilities for filling that array */
-#define C_PNT(x,y) { 			\
-   contour_points[cidx][0] = x;		\
-   contour_points[cidx][1] = y; 	\
-   cidx ++;				\
+#define C_PNT(x,y) {                    \
+   contour_points[cidx][0] = x;         \
+   contour_points[cidx][1] = y;         \
+   cidx ++;                             \
 }
 
 

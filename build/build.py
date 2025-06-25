@@ -227,7 +227,7 @@ class Program :
                 # self._build(Program._FILE_NAME_BUILD_GALIB)
                 # self._build(Program._FILE_NAME_BUILD_GEOS)
                 # self._build(Program._FILE_NAME_BUILD_GLEW)
-                self._build(Program._FILE_NAME_BUILD_GLUT)
+                # self._build(Program._FILE_NAME_BUILD_GLUT)
                 self._build(Program._FILE_NAME_BUILD_GOOGLETEST)
                 self._build(Program._FILE_NAME_BUILD_GSOAP)
                 self._build(Program._FILE_NAME_BUILD_HDF5)

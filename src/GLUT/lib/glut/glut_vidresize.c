@@ -7,21 +7,35 @@
 
 #include <stdlib.h>
 
-#if !defined(_WIN32)
-#include <GL/glx.h>
+#ifndef _WIN32
+# define GLX_GLXEXT_LEGACY /* Request glext.h also include glxext.h */
+# include <GL/glx.h>
 #endif
 
 #ifdef __sgi
-#include <dlfcn.h>
+# include <dlfcn.h>
 #endif
 
 #include "glutint.h"
+
+/* Some Mesa versions define GLX_VERSION_1_2 without defining
+   GLX_VERSION_1_1. */
+#if defined(GLX_VERSION_1_2) && !defined(GLX_VERSION_1_1)
+# define GLX_VERSION_1_1 1
+#endif
 
 /* Grumble.  The IRIX 6.3 and early IRIX 6.4 OpenGL headers
    support the video resize extension, but failed to define
    GLX_SGIX_video_resize. */
 #ifdef GLX_SYNC_FRAME_SGIX
-#define GLX_SGIX_video_resize 1
+# define GLX_SGIX_video_resize 1
+#endif
+
+/* Only SGI's InfiniteReality running IRIX supports the
+   GLX_SGIX_video_resize extension.  Just disable GLUT's
+   video resize sub-API for non-IRIX systems. */
+#ifndef irix
+# undef GLX_SGIX_video_resize
 #endif
 
 #if defined(GLX_VERSION_1_1) && defined(GLX_SGIX_video_resize)
@@ -52,7 +66,7 @@ catchXSGIvcErrors(Display * dpy, XErrorEvent * event)
 #endif
 
 /* CENTRY */
-int APIENTRY 
+int GLUTAPIENTRY 
 glutVideoResizeGet(GLenum param)
 {
 #if defined(GLX_VERSION_1_1) && defined(GLX_SGIX_video_resize)
@@ -159,7 +173,7 @@ glutVideoResizeGet(GLenum param)
   }
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutSetupVideoResizing(void)
 {
 #if defined(GLX_VERSION_1_1) && defined(GLX_SGIX_video_resize)
@@ -172,7 +186,7 @@ glutSetupVideoResizing(void)
     __glutFatalError("glutEstablishVideoResizing: video resizing not possible.\n");
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutStopVideoResizing(void)
 {
 #if defined(GLX_VERSION_1_1) && defined(GLX_SGIX_video_resize)
@@ -187,7 +201,7 @@ glutStopVideoResizing(void)
 }
 
 /* ARGSUSED */
-void APIENTRY 
+void GLUTAPIENTRY 
 glutVideoResize(int x, int y, int width, int height)
 {
 #if defined(GLX_VERSION_1_1) && defined(GLX_SGIX_video_resize)
@@ -206,7 +220,7 @@ glutVideoResize(int x, int y, int width, int height)
 }
 
 /* ARGSUSED */
-void APIENTRY 
+void GLUTAPIENTRY 
 glutVideoPan(int x, int y, int width, int height)
 {
 #if defined(GLX_VERSION_1_1) && defined(GLX_SGIX_video_resize)

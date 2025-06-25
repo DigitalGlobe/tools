@@ -51,7 +51,7 @@ void bcallback(muiObject *obj, enum muiReturnValue r)
 
 void maketestui(int win)
 {
-    muiNewUIList(win);	/* makes an MUI display list (number 1) */
+    muiNewUIList(win);  /* makes an MUI display list (number 1) */
     b1 = muiNewButton(10, 100, 10, 35);
     b2 = muiNewButton(10, 100, 40, 65);
     b3 = muiNewButton(10, 100, 70, 95);
@@ -68,9 +68,9 @@ int main(int argc, char **argv)
     if (argc > 1) mui_singlebuffered = 1;
     glutInitWindowSize(110, 105);
     if (mui_singlebuffered)
-	glutInitDisplayMode( GLUT_RGB | GLUT_SINGLE );
+        glutInitDisplayMode( GLUT_RGB | GLUT_SINGLE );
     else
-	glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE );
+        glutInitDisplayMode( GLUT_RGB | GLUT_DOUBLE );
 
     glutCreateWindow("1");
     muiInit();

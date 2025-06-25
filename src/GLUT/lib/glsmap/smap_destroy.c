@@ -14,21 +14,21 @@
 static void
 derefSphereMapMesh(SphereMapMesh *mesh)
 {
-	assert(mesh->refcnt > 0);
-	mesh->refcnt--;
-	if (mesh->refcnt == 0) {
-		if (mesh->face) {
-			assert(mesh->back ==
-				&(mesh->face[5*mesh->steps*mesh->steps]));
-			free(mesh->face);
-		}
-		free(mesh);
-	}
+    assert(mesh->refcnt > 0);
+    mesh->refcnt--;
+    if (mesh->refcnt == 0) {
+        if (mesh->face) {
+            assert(mesh->back ==
+                &(mesh->face[5*mesh->steps*mesh->steps]));
+            free(mesh->face);
+        }
+        free(mesh);
+    }
 }
 
 void
 smapDestroySphereMap(SphereMap *smap)
 {
-	derefSphereMapMesh(smap->mesh);
-	free(smap);
+    derefSphereMapMesh(smap->mesh);
+    free(smap);
 }

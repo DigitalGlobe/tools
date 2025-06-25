@@ -10,22 +10,22 @@
 void
 smapSetSphereMapTexObj(SphereMap *smap, GLuint texobj)
 {
-	smap->smapTexObj = texobj;
+    smap->smapTexObj = texobj;
 }
 
 void
 smapSetViewTexObj(SphereMap *smap, GLuint texobj)
 {
-	smap->viewTexObj = texobj;
+    smap->viewTexObj = texobj;
 }
 
 void
 smapSetViewTexObjs(SphereMap *smap, GLuint texobjs[6])
 {
-	int i;
+    int i;
 
-	for (i=0; i<6; i++) {
-		smap->viewTexObjs[i] = texobjs[i];
-	}
+    for (i=0; i<6; i++) {
+        smap->viewTexObjs[i] = texobjs[i];
+    }
 }
 

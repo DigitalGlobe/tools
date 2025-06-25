@@ -1,5 +1,5 @@
 
-/* Copyright (c) Mark J. Kilgard, 1994, 1997.  */
+/* Copyright (c) Mark J. Kilgard, 1994, 1997, 2001.  */
 
 /* This program is freely distributable without licensing fees
    and is provided without guarantee or warrantee expressed or
@@ -9,12 +9,18 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
-#if !defined(_WIN32)
+#ifndef _WIN32
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #endif
 
 #include "glutint.h"
+
+/* Some Mesa versions define GLX_VERSION_1_2 without defining
+   GLX_VERSION_1_1. */
+#if defined(GLX_VERSION_1_2) && !defined(GLX_VERSION_1_1)
+# define GLX_VERSION_1_1 1
+#endif
 
 GLUTwindow *__glutCurrentWindow = NULL;
 GLUTwindow **__glutWindowList = NULL;
@@ -92,8 +98,7 @@ __glutGetWindow(Window win)
   if (__glutWindowCache && (win == __glutWindowCache->win ||
       (__glutWindowCache->overlay && win ==
         __glutWindowCache->overlay->win))) {
-    return
-      __glutWindowCache;
+    return __glutWindowCache;
   }
   /* Otherwise scan the window list looking for the window ID. */
   for (i = 0; i < __glutWindowListSize; i++) {
@@ -117,8 +122,9 @@ __glutGetWindow(Window win)
     /* Scan through destroyed overlay window IDs for which no
        DestroyNotify has yet been received. */
     for (entry = __glutStaleWindowList; entry; entry = entry->next) {
-      if (entry->win == win)
+      if (entry->win == win) {
         return entry->window;
+      }
     }
   }
 #endif
@@ -126,7 +132,7 @@ __glutGetWindow(Window win)
 }
 
 /* CENTRY */
-int APIENTRY
+int GLUTAPIENTRY
 glutGetWindow(void)
 {
   if (__glutCurrentWindow) {
@@ -159,8 +165,9 @@ __glutSetWindow(GLUTwindow * window)
      longer latency because lots of OpenGL extension requests
      can queue up in the X protocol stream.  We accomplish this
      by posting GLUT_FINISH_WORK to be done. */
-  if (!__glutCurrentWindow->isDirect)
+  if (!__glutCurrentWindow->isDirect) {
     __glutPutOnWorkList(__glutCurrentWindow, GLUT_FINISH_WORK);
+  }
 #endif
 
   /* If debugging is enabled, we'll want to check this window
@@ -173,7 +180,7 @@ __glutSetWindow(GLUTwindow * window)
 }
 
 /* CENTRY */
-void APIENTRY
+void GLUTAPIENTRY
 glutSetWindow(int win)
 {
   GLUTwindow *window;
@@ -215,8 +222,9 @@ getUnusedWindowSlot(void)
     __glutWindowList = (GLUTwindow **)
       malloc(sizeof(GLUTwindow *));
   }
-  if (!__glutWindowList)
+  if (!__glutWindowList) {
     __glutFatalError("out of memory.");
+  }
   __glutWindowList[__glutWindowListSize - 1] = NULL;
   return __glutWindowListSize - 1;
 }
@@ -266,8 +274,9 @@ getVisualInfoCI(unsigned int mode)
     list[1] = bufSizeList[i];
     vi = glXChooseVisual(__glutDisplay,
       __glutScreen, list);
-    if (vi)
+    if (vi) {
       return vi;
+    }
   }
   return NULL;
 }
@@ -324,16 +333,28 @@ getVisualInfoRGB(unsigned int mode)
       list[n++] = 1;
     }
   }
-#if defined(GLX_VERSION_1_1) && defined(GLX_SGIS_multisample)
+
+/* GLX_SAMPLES_SGIS has the same value as GLX_SAMPLES_ARB. */
+# ifndef GLX_SAMPLES_ARB
+#  define GLX_SAMPLES_ARB                      100001
+# endif
+
   if (GLUT_WIND_IS_MULTISAMPLE(mode)) {
-    if (!__glutIsSupportedByGLX("GLX_SGIS_multisample"))
-      return NULL;
-    list[n++] = GLX_SAMPLES_SGIS;
-    /* XXX Is 4 a reasonable minimum acceptable number of
-       samples? */
-    list[n++] = 4;
-  }
+    if (
+#ifdef _WIN32
+        !has_WGL_ARB_multisample
+#else
+        !__glutIsSupportedByGLX("GLX_SGIS_multisample") &&
+        !__glutIsSupportedByGLX("GLX_ARB_multisample")
 #endif
+       )  {
+      return NULL;
+    }
+    /* Accept either the SGIS or ARB GLX multisample extensions. */
+    list[n++] = GLX_SAMPLES_ARB;
+    list[n++] = 2;
+  }
+
   list[n] = (int) None; /* terminate list */
 
   return glXChooseVisual(__glutDisplay,
@@ -344,13 +365,15 @@ XVisualInfo *
 __glutGetVisualInfo(unsigned int mode)
 {
   /* XXX GLUT_LUMINANCE not implemented for GLUT 3.0. */
-  if (GLUT_WIND_IS_LUMINANCE(mode))
+  if (GLUT_WIND_IS_LUMINANCE(mode)) {
     return NULL;
+  }
 
-  if (GLUT_WIND_IS_RGB(mode))
+  if (GLUT_WIND_IS_RGB(mode)) {
     return getVisualInfoRGB(mode);
-  else
+  } else {
     return getVisualInfoCI(mode);
+  }
 }
 
 XVisualInfo *
@@ -394,8 +417,8 @@ __glutDetermineVisual(
   return vis;
 }
 
-void GLUTCALLBACK
-__glutDefaultDisplay(void)
+static void GLUTCALLBACK
+defaultDisplay(void)
 {
   /* XXX Remove the warning after GLUT 3.0. */
   __glutWarning("The following is a new check for GLUT 3.0; update your code.");
@@ -404,7 +427,7 @@ __glutDefaultDisplay(void)
     __glutCurrentWindow->num + 1);
 }
 
-void GLUTCALLBACK
+static void GLUTCALLBACK
 __glutDefaultReshape(int width, int height)
 {
   GLUToverlay *overlay;
@@ -471,6 +494,7 @@ __glutCreateWindow(GLUTwindow * parent,
 #if defined(_WIN32)
   WNDCLASS wc;
   int style;
+  int pixelFormat;
 
   if (!GetClassInfo(GetModuleHandle(NULL), "GLUT", &wc)) {
     __glutOpenWin32Connection(NULL);
@@ -498,8 +522,6 @@ __glutCreateWindow(GLUTwindow * parent,
       "visual with necessary capabilities not found.");
   }
   __glutSetupColormap(window->vis, &window->colormap, &window->cmap);
-#else
-  window->cmap = 0;
 #endif
   window->eventMask = StructureNotifyMask | ExposureMask;
 
@@ -509,8 +531,9 @@ __glutCreateWindow(GLUTwindow * parent,
   wa.colormap = window->cmap;
   wa.event_mask = window->eventMask;
   if (parent) {
-    if (parent->eventMask & GLUT_HACK_STOP_PROPAGATE_MASK)
+    if (parent->eventMask & GLUT_HACK_STOP_PROPAGATE_MASK) {
       wa.event_mask |= GLUT_HACK_STOP_PROPAGATE_MASK;
+    }
     attribMask |= CWDontPropagate;
     wa.do_not_propagate_mask = parent->eventMask & GLUT_DONT_PROPAGATE_FILTER_MASK;
   } else {
@@ -554,9 +577,11 @@ __glutCreateWindow(GLUTwindow * parent,
     __glutFatalError(
       "pixel format with necessary capabilities not found.");
   }
-  if (!SetPixelFormat(window->hdc,
-      ChoosePixelFormat(window->hdc, window->vis),
-      window->vis)) {
+  pixelFormat = window->vis->num;
+  if (pixelFormat == 0) {
+    __glutFatalError("ChoosePixelFormat failed during window create.");
+  }
+  if (!SetPixelFormat(window->hdc, pixelFormat, &window->vis->pfd)) {
     __glutFatalError("SetPixelFormat failed during window create.");
   }
   __glutSetupColormap(window->vis, &window->colormap, &window->cmap);
@@ -565,7 +590,7 @@ __glutCreateWindow(GLUTwindow * parent,
     PostMessage(parent->win, WM_ACTIVATE, 0, 0);
   }
   window->renderDc = window->hdc;
-#else
+#else /* X Window System */
   window->win = XCreateWindow(__glutDisplay,
     parent == NULL ? __glutRoot : parent->win,
     x, y, width, height, 0,
@@ -580,8 +605,12 @@ __glutCreateWindow(GLUTwindow * parent,
   } else
 #endif
   {
+#ifdef _WIN32
+  window->ctx = wglCreateContext(window->hdc);
+#else
     window->ctx = glXCreateContext(__glutDisplay, window->vis,
       None, __glutTryDirect);
+#endif
   }
   if (!window->ctx) {
     __glutFatalError(
@@ -591,8 +620,9 @@ __glutCreateWindow(GLUTwindow * parent,
 #if !defined(_WIN32)
   window->isDirect = glXIsDirect(__glutDisplay, window->ctx);
   if (__glutForceDirect) {
-    if (!window->isDirect)
+    if (!window->isDirect) {
       __glutFatalError("direct rendering not possible.");
+    }
   }
 #endif
 
@@ -605,7 +635,7 @@ __glutCreateWindow(GLUTwindow * parent,
   }
   window->overlay = NULL;
   window->children = NULL;
-  window->display = __glutDefaultDisplay;
+  window->display = defaultDisplay;
   window->reshape = __glutDefaultReshape;
   window->mouse = NULL;
   window->motion = NULL;
@@ -684,16 +714,20 @@ __glutCreateWindow(GLUTwindow * parent,
     glDrawBuffer(GL_FRONT);
     glReadBuffer(GL_FRONT);
   }
-  #ifdef WIN32
-  if (gameMode) {
-	  glutFullScreen();
-  }
-  #endif
   return window;
 }
 
+#ifdef _WIN32
+int GLUTAPIENTRY
+__glutCreateWindowWithExit(const char *title, void (__cdecl *exitfunc)(int))
+{
+  __glutExitFunc = exitfunc;
+  return glutCreateWindow(title);
+}
+#endif
+
 /* CENTRY */
-int APIENTRY
+int GLUTAPIENTRY
 glutCreateWindow(const char *title)
 {
   static int firstWindow = 1;
@@ -716,7 +750,7 @@ glutCreateWindow(const char *title)
   textprop.value = (unsigned char *) title;
   textprop.encoding = XA_STRING;
   textprop.format = 8;
-  textprop.nitems = strlen(title);
+  textprop.nitems = (unsigned long)strlen(title);
 #if defined(_WIN32)
   SetWindowText(win, title);
   if (__glutIconic) {
@@ -739,16 +773,7 @@ glutCreateWindow(const char *title)
   return window->num + 1;
 }
 
-#ifdef _WIN32
-int APIENTRY
-__glutCreateWindowWithExit(const char *title, void (__cdecl *exitfunc)(int))
-{
-  __glutExitFunc = exitfunc;
-  return glutCreateWindow(title);
-}
-#endif
-
-int APIENTRY
+int GLUTAPIENTRY
 glutCreateSubWindow(int win, int x, int y, int width, int height)
 {
   GLUTwindow *window;
@@ -802,8 +827,11 @@ __glutDestroyWindow(GLUTwindow * window,
     UNMAKE_CURRENT();
     __glutCurrentWindow = NULL;
   }
+  /* Invalidate glutExtensionSupported string cache if needed. */
+  __glutInvalidateExtensionStringCacheIfNeeded(window->ctx);
   /* Begin tearing down window itself. */
   if (window->overlay) {
+    __glutInvalidateExtensionStringCacheIfNeeded(window->overlay->ctx);
     __glutFreeOverlayFunc(window->overlay);
   }
   XDestroyWindow(__glutDisplay, window->win);
@@ -822,8 +850,9 @@ __glutDestroyWindow(GLUTwindow * window,
   cleanStaleWindowList(window);
 #endif
   /* Remove window from the "get window cache" if it is there. */
-  if (__glutWindowCache == window)
+  if (__glutWindowCache == window) {
     __glutWindowCache = NULL;
+  }
 
   if (window->visAlloced) {
     /* Only free XVisualInfo* gotten from glXChooseVisual. */
@@ -840,7 +869,7 @@ __glutDestroyWindow(GLUTwindow * window,
 }
 
 /* CENTRY */
-void APIENTRY
+void GLUTAPIENTRY
 glutDestroyWindow(int win)
 {
   GLUTwindow *window = __glutWindowList[win - 1];
@@ -884,16 +913,17 @@ __glutChangeWindowEventMask(long eventMask, Bool add)
   }
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutDisplayFunc(GLUTdisplayCB displayFunc)
 {
   /* XXX Remove the warning after GLUT 3.0. */
-  if (!displayFunc)
+  if (!displayFunc) {
     __glutFatalError("NULL display callback not allowed in GLUT 3.0; update your code.");
+  }
   __glutCurrentWindow->display = displayFunc;
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutMouseFunc(GLUTmouseCB mouseFunc)
 {
   if (__glutCurrentWindow->mouse) {
@@ -915,7 +945,7 @@ glutMouseFunc(GLUTmouseCB mouseFunc)
   __glutCurrentWindow->mouse = mouseFunc;
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutMotionFunc(GLUTmotionCB motionFunc)
 {
   /* Hack.  Some window managers (4Dwm by default) will mask
@@ -946,7 +976,7 @@ glutMotionFunc(GLUTmotionCB motionFunc)
   __glutCurrentWindow->motion = motionFunc;
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutPassiveMotionFunc(GLUTpassiveCB passiveMotionFunc)
 {
   __glutChangeWindowEventMask(PointerMotionMask,
@@ -961,7 +991,7 @@ glutPassiveMotionFunc(GLUTpassiveCB passiveMotionFunc)
   __glutCurrentWindow->passive = passiveMotionFunc;
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutEntryFunc(GLUTentryCB entryFunc)
 {
   __glutChangeWindowEventMask(EnterWindowMask | LeaveWindowMask,
@@ -972,7 +1002,7 @@ glutEntryFunc(GLUTentryCB entryFunc)
   }
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutWindowStatusFunc(GLUTwindowStatusCB windowStatusFunc)
 {
   __glutChangeWindowEventMask(VisibilityChangeMask,
@@ -987,23 +1017,25 @@ glutWindowStatusFunc(GLUTwindowStatusCB windowStatusFunc)
 static void GLUTCALLBACK
 visibilityHelper(int status)
 {
-  if (status == GLUT_HIDDEN || status == GLUT_FULLY_COVERED)
+  if (status == GLUT_HIDDEN || status == GLUT_FULLY_COVERED) {
     __glutCurrentWindow->visibility(GLUT_NOT_VISIBLE);
-  else
+  } else {
     __glutCurrentWindow->visibility(GLUT_VISIBLE);
+  }
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutVisibilityFunc(GLUTvisibilityCB visibilityFunc)
 {
   __glutCurrentWindow->visibility = visibilityFunc;
-  if (visibilityFunc)
+  if (visibilityFunc) {
     glutWindowStatusFunc(visibilityHelper);
-  else
+  } else {
     glutWindowStatusFunc(NULL);
+  }
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutReshapeFunc(GLUTreshapeCB reshapeFunc)
 {
   if (reshapeFunc) {

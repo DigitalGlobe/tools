@@ -100,8 +100,10 @@ InstallManPageLong(glutTabletButtonFunc,$(MANDIR),glutTabletButtonFunc)
 InstallManPageLong(glutTabletMotionFunc,$(MANDIR),glutTabletMotionFunc)
 InstallManPageLong(glutTimerFunc,$(MANDIR),glutTimerFunc)
 InstallManPageLong(glutUseLayer,$(MANDIR),glutUseLayer)
+InstallManPageLong(glutVideoResizeGet,$(MANDIR),glutVideoResizeGet)
 InstallManPageLong(glutVisibilityFunc,$(MANDIR),glutVisibilityFunc)
 InstallManPageLong(glutWarpPointer,$(MANDIR),glutWarpPointer)
+InstallManPageLong(glutWindowStatusFunc,$(MANDIR),glutWindowStatusFunc)
 InstallManPageLong(glut,$(MANDIR),glut)
 
 InstallManPageAliases(glutSolidCone,$(MANDIR),glutWireCone)
@@ -125,7 +127,9 @@ InstallManPageAliases(glutMotionFunc,$(MANDIR),glutPassiveMotionFunc)
 InstallManPageAliases(glut,$(MANDIR),intro)
 
 InstallManPageAliases(glutBitmapWidth,$(MANDIR),glutBitmapLength)
+InstallManPageAliases(glutStrokeWidth,$(MANDIR),glutStrokeWidthf)
 InstallManPageAliases(glutStrokeWidth,$(MANDIR),glutStrokeLength)
+InstallManPageAliases(glutStrokeWidth,$(MANDIR),glutStrokeLengthf)
 
 InstallManPageAliases(glutEnterGameMode,$(MANDIR),glutLeaveGameMode)
 

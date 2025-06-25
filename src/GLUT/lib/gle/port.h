@@ -193,8 +193,15 @@ typedef double glePoint[2];
 #include <windows.h>
 #pragma warning (disable:4244)          /* disable bogus conversion warnings */
 #endif
+#if defined(__APPLE__) && defined(__MACH__)
+/* Mac OS X places GL headers within OpenGL framework. */
+#include <OpenGL/gl.h>
+#include <OpenGL/glu.h>
+#else
+/* All other platforms put GL headers in the standard place. */
 #include <GL/gl.h>
 #include <GL/glu.h>
+#endif
 
 /*
 #define	N3F_F(x) {					\

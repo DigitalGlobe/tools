@@ -48,9 +48,9 @@
 #define MAXOBJS 10000
 #define MAXSELECT 100
 #define MAXFEED 300
-#define	SOLID 1
-#define	LINE 2
-#define	POINT 3
+#define SOLID 1
+#define LINE 2
+#define POINT 3
 
 GLint windW = 300, windH = 300;
 
@@ -142,7 +142,7 @@ DoSelect(GLint x, GLint y)
   glSelectBuffer(MAXSELECT, selectBuf);
   glRenderMode(GL_SELECT);
   glInitNames();
-  glPushName(~0);
+  glPushName(~0U);
 
   glPushMatrix();
 
@@ -204,6 +204,7 @@ GrowTri(GLint h)
     case 1:
       oldV = objects[h].v2;
       break;
+    default:
     case 2:
       oldV = objects[h].v3;
       break;

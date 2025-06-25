@@ -6,6 +6,7 @@
    implied. This program is -not- in the public domain. */
 
 #include <string.h>
+#include <stdlib.h>
 #include <GL/glut.h>
 
 void *font = GLUT_STROKE_ROMAN;
@@ -60,6 +61,14 @@ display(void)
   glutSwapBuffers();
 }
 
+void
+keyboard(unsigned char c, int x, int y)
+{
+  if (c == 27) {
+    exit(0);
+  }
+}
+
 int
 main(int argc, char **argv)
 {
@@ -86,6 +95,7 @@ main(int argc, char **argv)
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glColor3f(1.0, 1.0, 1.0);
   glutDisplayFunc(display);
+  glutKeyboardFunc(keyboard);
   glutIdleFunc(tick);
   submenu = glutCreateMenu(selectMessage);
   glutAddMenuEntry("abc", 1);

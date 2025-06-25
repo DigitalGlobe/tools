@@ -1,5 +1,5 @@
 
-/* Copyright (c) Mark J. Kilgard, 1996. */
+/* Copyright (c) Mark J. Kilgard, 1996, 2001. */
 
 /* This program is freely distributable without licensing fees 
    and is provided without guarantee or warrantee expressed or 
@@ -27,15 +27,16 @@ void
 __glutDetermineMesaSwapHackSupport(void)
 {
   static int doneAlready = 0;
-  char *env, *vendor, *renderer;
+  const char *env, *vendor, *renderer;
 
-  if (doneAlready)
+  if (doneAlready) {
     return;
+  }
   env = getenv("MESA_SWAP_HACK");
   if (env) {
     if ((env[0] != 'n') && (env[0] != 'N')) {
-      vendor = (char *) glGetString(GL_VENDOR);
-      renderer = (char *) glGetString(GL_RENDERER);
+      vendor = (const char *) glGetString(GL_VENDOR);
+      renderer = (const char *) glGetString(GL_RENDERER);
 
       /* Old versions of X11 Mesa uses the renderer string
          "Mesa"; Brian plans to start using "Mesa X11" to
@@ -49,8 +50,9 @@ __glutDetermineMesaSwapHackSupport(void)
          string. */
 
       if (!strcmp(vendor, "Brian Paul") && (!strcmp(renderer, "Mesa") ||
-          !strncmp(renderer, MESA_X11, sizeof(MESA_X11) - 1)))
+          !strncmp(renderer, MESA_X11, sizeof(MESA_X11) - 1))) {
         __glutMesaSwapHackSupport = 1;
+      }
     }
   }
   doneAlready = 1;

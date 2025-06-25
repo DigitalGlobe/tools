@@ -1,5 +1,5 @@
 
-/* Copyright (c) Mark J. Kilgard, 1994. */
+/* Copyright (c) Mark J. Kilgard, 1994, 2001. */
 
 /* This program is freely distributable without licensing fees
    and is provided without guarantee or warrantee expressed or
@@ -8,7 +8,7 @@
 #include "glutint.h"
 #include "glutstroke.h"
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutStrokeCharacter(GLUTstrokeFont font, int c)
 {
   const StrokeCharRec *ch;
@@ -24,8 +24,9 @@ glutStrokeCharacter(GLUTstrokeFont font, int c)
   fontinfo = (StrokeFontPtr) font;
 #endif
 
-  if (c < 0 || c >= fontinfo->num_chars)
+  if (c < 0 || c >= fontinfo->num_chars) {
     return;
+  }
   ch = &(fontinfo->ch[c]);
   if (ch) {
     for (i = ch->num_strokes, stroke = ch->stroke;

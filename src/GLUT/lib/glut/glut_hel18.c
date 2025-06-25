@@ -1889,7 +1889,6 @@ static const BitmapCharRec * const chars[] = {
 };
 
 const BitmapFontRec glutBitmapHelvetica18 = {
-"-adobe-helvetica-medium-r-normal--18-180-75-75-p-98-iso8859-1",
 224,
 32,
 chars

@@ -1,5 +1,5 @@
 
-/* Copyright (c) Mark J. Kilgard, 1995, 1998. */
+/* Copyright (c) Mark J. Kilgard, 1995, 1998, 2001. */
 
 /* This program is freely distributable without licensing fees 
    and is provided without guarantee or warrantee expressed or 
@@ -7,13 +7,13 @@
 
 #include "glutint.h"
 
-#if !defined(_WIN32)
+#ifndef _WIN32
 #include <X11/Xatom.h>  /* For XA_CURSOR */
 #include <X11/cursorfont.h>
 #endif
 
 typedef struct _CursorTable {
-#if defined(_WIN32)
+#ifdef _WIN32
   char* glyph;
 #else
   int glyph;
@@ -23,30 +23,30 @@ typedef struct _CursorTable {
 /* *INDENT-OFF* */
 
 static CursorTable cursorTable[] = {
-  {XC_arrow, None},		  /* GLUT_CURSOR_RIGHT_ARROW */
-  {XC_top_left_arrow, None},	  /* GLUT_CURSOR_LEFT_ARROW */
-  {XC_hand1, None},		  /* GLUT_CURSOR_INFO */
-  {XC_pirate, None},		  /* GLUT_CURSOR_DESTROY */
-  {XC_question_arrow, None},	  /* GLUT_CURSOR_HELP */
-  {XC_exchange, None},		  /* GLUT_CURSOR_CYCLE */
-  {XC_spraycan, None},		  /* GLUT_CURSOR_SPRAY */
-  {XC_watch, None},		  /* GLUT_CURSOR_WAIT */
-  {XC_xterm, None},		  /* GLUT_CURSOR_TEXT */
-  {XC_crosshair, None},		  /* GLUT_CURSOR_CROSSHAIR */
-  {XC_sb_v_double_arrow, None},	  /* GLUT_CURSOR_UP_DOWN */
-  {XC_sb_h_double_arrow, None},	  /* GLUT_CURSOR_LEFT_RIGHT */
-  {XC_top_side, None},		  /* GLUT_CURSOR_TOP_SIDE */
-  {XC_bottom_side, None},	  /* GLUT_CURSOR_BOTTOM_SIDE */
-  {XC_left_side, None},		  /* GLUT_CURSOR_LEFT_SIDE */
-  {XC_right_side, None},	  /* GLUT_CURSOR_RIGHT_SIDE */
-  {XC_top_left_corner, None},	  /* GLUT_CURSOR_TOP_LEFT_CORNER */
-  {XC_top_right_corner, None},	  /* GLUT_CURSOR_TOP_RIGHT_CORNER */
+  {XC_arrow, None},               /* GLUT_CURSOR_RIGHT_ARROW */
+  {XC_top_left_arrow, None},      /* GLUT_CURSOR_LEFT_ARROW */
+  {XC_hand1, None},               /* GLUT_CURSOR_INFO */
+  {XC_pirate, None},              /* GLUT_CURSOR_DESTROY */
+  {XC_question_arrow, None},      /* GLUT_CURSOR_HELP */
+  {XC_exchange, None},            /* GLUT_CURSOR_CYCLE */
+  {XC_spraycan, None},            /* GLUT_CURSOR_SPRAY */
+  {XC_watch, None},               /* GLUT_CURSOR_WAIT */
+  {XC_xterm, None},               /* GLUT_CURSOR_TEXT */
+  {XC_crosshair, None},           /* GLUT_CURSOR_CROSSHAIR */
+  {XC_sb_v_double_arrow, None},   /* GLUT_CURSOR_UP_DOWN */
+  {XC_sb_h_double_arrow, None},   /* GLUT_CURSOR_LEFT_RIGHT */
+  {XC_top_side, None},            /* GLUT_CURSOR_TOP_SIDE */
+  {XC_bottom_side, None},         /* GLUT_CURSOR_BOTTOM_SIDE */
+  {XC_left_side, None},           /* GLUT_CURSOR_LEFT_SIDE */
+  {XC_right_side, None},          /* GLUT_CURSOR_RIGHT_SIDE */
+  {XC_top_left_corner, None},     /* GLUT_CURSOR_TOP_LEFT_CORNER */
+  {XC_top_right_corner, None},    /* GLUT_CURSOR_TOP_RIGHT_CORNER */
   {XC_bottom_right_corner, None}, /* GLUT_CURSOR_BOTTOM_RIGHT_CORNER */
   {XC_bottom_left_corner, None},  /* GLUT_CURSOR_BOTTOM_LEFT_CORNER */
 };
 /* *INDENT-ON* */
 
-#if !defined(_WIN32)
+#ifndef _WIN32
 static Cursor blankCursor = None;
 static Cursor fullCrosshairCusor = None;
 
@@ -86,16 +86,16 @@ getFullCrosshairCursor(void)
 static Cursor
 makeBlankCursor(void)
 {
-  static char data[1] =
-  {0};
+  static const char data[1] = {0};
   Cursor cursor;
   Pixmap blank;
   XColor dummy;
 
   blank = XCreateBitmapFromData(__glutDisplay, __glutRoot,
     data, 1, 1);
-  if (blank == None)
+  if (blank == None) {
     __glutFatalError("out of memory.");
+  }
   cursor = XCreatePixmapCursor(__glutDisplay, blank, blank,
     &dummy, &dummy, 0, 0);
   XFreePixmap(__glutDisplay, blank);
@@ -131,7 +131,7 @@ __glutSetCursor(GLUTwindow *window)
     /* Special cases. */
     switch (cursor) {
     case GLUT_CURSOR_INHERIT:
-#if defined(_WIN32)
+#ifdef _WIN32
       while (window->parent) {
         window = window->parent;
         if (window->cursor != GLUT_CURSOR_INHERIT) {
@@ -152,8 +152,9 @@ __glutSetCursor(GLUTwindow *window)
       xcursor = None;
 #endif
       break;
+    default:  /* So all cases are handled. */
     case GLUT_CURSOR_NONE:
-#if defined(_WIN32)
+#ifdef _WIN32
       xcursor = NULL;
 #else
       if (blankCursor == None) {
@@ -163,8 +164,8 @@ __glutSetCursor(GLUTwindow *window)
 #endif
       break;
     case GLUT_CURSOR_FULL_CROSSHAIR:
-#if defined(_WIN32)
-      xcursor = LoadCursor(NULL, IDC_CROSS);
+#ifdef _WIN32
+      xcursor = (Cursor)IDC_CROSS;
 #else
       if (fullCrosshairCusor == None) {
         fullCrosshairCusor = getFullCrosshairCursor();
@@ -180,7 +181,7 @@ __glutSetCursor(GLUTwindow *window)
 }
 
 /* CENTRY */
-void APIENTRY 
+void GLUTAPIENTRY 
 glutSetCursor(int cursor)
 {
 #ifdef _WIN32

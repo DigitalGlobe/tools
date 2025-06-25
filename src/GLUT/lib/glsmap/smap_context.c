@@ -10,11 +10,11 @@
 void
 smapSetContextData(SphereMap *smap, void *context)
 {
-	smap->context = context;
+    smap->context = context;
 }
 
 void
 smapGetContextData(SphereMap *smap, void **context)
 {
-	*context = smap->context;
+    *context = smap->context;
 }

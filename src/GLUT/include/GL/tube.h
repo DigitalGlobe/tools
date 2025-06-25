@@ -29,10 +29,6 @@ extern "C" {
 #define GLE_API_VERSION                228
 #endif
 
-#ifdef _WIN32
-#define OPENGL_10
-#endif
-
 /* some types */
 #define gleDouble double
 typedef gleDouble gleAffine[2][3];
@@ -54,57 +50,57 @@ typedef gleDouble gleAffine[2][3];
 #define TUBE_NORM_MASK       0xf00    /* mask bits */
 
 /* closed or open countours */
-#define TUBE_CONTOUR_CLOSED	0x1000
+#define TUBE_CONTOUR_CLOSED     0x1000
 
-#define GLE_TEXTURE_ENABLE	0x10000
-#define GLE_TEXTURE_STYLE_MASK	0xff
-#define GLE_TEXTURE_VERTEX_FLAT		1
-#define GLE_TEXTURE_NORMAL_FLAT		2
-#define GLE_TEXTURE_VERTEX_CYL		3
-#define GLE_TEXTURE_NORMAL_CYL		4
-#define GLE_TEXTURE_VERTEX_SPH		5
-#define GLE_TEXTURE_NORMAL_SPH		6
-#define GLE_TEXTURE_VERTEX_MODEL_FLAT	7
-#define GLE_TEXTURE_NORMAL_MODEL_FLAT	8
-#define GLE_TEXTURE_VERTEX_MODEL_CYL	9
-#define GLE_TEXTURE_NORMAL_MODEL_CYL	10
-#define GLE_TEXTURE_VERTEX_MODEL_SPH	11
-#define GLE_TEXTURE_NORMAL_MODEL_SPH	12
+#define GLE_TEXTURE_ENABLE      0x10000
+#define GLE_TEXTURE_STYLE_MASK  0xff
+#define GLE_TEXTURE_VERTEX_FLAT         1
+#define GLE_TEXTURE_NORMAL_FLAT         2
+#define GLE_TEXTURE_VERTEX_CYL          3
+#define GLE_TEXTURE_NORMAL_CYL          4
+#define GLE_TEXTURE_VERTEX_SPH          5
+#define GLE_TEXTURE_NORMAL_SPH          6
+#define GLE_TEXTURE_VERTEX_MODEL_FLAT   7
+#define GLE_TEXTURE_NORMAL_MODEL_FLAT   8
+#define GLE_TEXTURE_VERTEX_MODEL_CYL    9
+#define GLE_TEXTURE_NORMAL_MODEL_CYL    10
+#define GLE_TEXTURE_VERTEX_MODEL_SPH    11
+#define GLE_TEXTURE_NORMAL_MODEL_SPH    12
 
 #ifdef GL_32
 /* HACK for GL 3.2 -- needed because no way to tell if lighting is on.  */
-#define TUBE_LIGHTING_ON	0x80000000
+#define TUBE_LIGHTING_ON        0x80000000
 
-#define gleExtrusion		extrusion
-#define gleSetJoinStyle		setjoinstyle
-#define gleGetJoinStyle		getjoinstyle
-#define glePolyCone		polycone
-#define glePolyCylinder		polycylinder
-#define	gleSuperExtrusion	super_extrusion
-#define	gleTwistExtrusion	twist_extrusion
-#define	gleSpiral		spiral
-#define	gleLathe		lathe
-#define	gleHelicoid		helicoid
-#define	gleToroid		toroid
-#define	gleScrew		screw
+#define gleExtrusion            extrusion
+#define gleSetJoinStyle         setjoinstyle
+#define gleGetJoinStyle         getjoinstyle
+#define glePolyCone             polycone
+#define glePolyCylinder         polycylinder
+#define gleSuperExtrusion       super_extrusion
+#define gleTwistExtrusion       twist_extrusion
+#define gleSpiral               spiral
+#define gleLathe                lathe
+#define gleHelicoid             helicoid
+#define gleToroid               toroid
+#define gleScrew                screw
 
 #endif /* GL_32 */
 
 extern int gleGetJoinStyle (void);
-extern void gleSetJoinStyle (int style);	/* bitwise OR of flags */
+extern void gleSetJoinStyle (int style);        /* bitwise OR of flags */
 extern int gleGetNumSlices(void);
 extern void gleSetNumSlices(int slices);
 
 /* draw polyclinder, specified as a polyline */
-extern void glePolyCylinder (int npoints,	/* num points in polyline */
-                   gleDouble point_array[][3],	/* polyline vertces */
-                   float color_array[][3],	/* colors at polyline verts */
-                   gleDouble radius);		/* radius of polycylinder */
+extern void glePolyCylinder (int npoints,       /* num points in polyline */
+                   gleDouble point_array[][3],  /* polyline vertces */
+                   float color_array[][3],      /* colors at polyline verts */
+                   gleDouble radius);           /* radius of polycylinder */
 
 /* draw polycone, specified as a polyline with radii */
-extern void glePolyCone (int npoints,	 /* numpoints in poly-line */
-                   gleDouble point_array[][3],	/* polyline vertices */
-                   float color_array[][3],	/* colors at polyline verts */
+extern void glePolyCone (int npoints,    /* numpoints in poly-line */
+                   gleDouble point_array[][3],  /* polyline vertices */
+                   float color_array[][3],      /* colors at polyline verts */
                    gleDouble radius_array[]); /* cone radii at polyline verts */
 
 /* extrude arbitrary 2D contour along arbitrary 3D path */
@@ -141,50 +137,50 @@ extern void gleSpiral (int ncp,        /* number of contour points */
              gleDouble contour[][2],    /* 2D contour */
              gleDouble cont_normal[][2], /* 2D contour normals */
              gleDouble up[3],           /* up vector for contour */
-             gleDouble startRadius,	/* spiral starts in x-y plane */
+             gleDouble startRadius,     /* spiral starts in x-y plane */
              gleDouble drdTheta,        /* change in radius per revolution */
-             gleDouble startZ,		/* starting z value */
+             gleDouble startZ,          /* starting z value */
              gleDouble dzdTheta,        /* change in Z per revolution */
              gleDouble startXform[2][3], /* starting contour affine xform */
              gleDouble dXformdTheta[2][3], /* tangent change xform per revoln */
-             gleDouble startTheta,	/* start angle in x-y plane */
-             gleDouble sweepTheta);	/* degrees to spiral around */
+             gleDouble startTheta,      /* start angle in x-y plane */
+             gleDouble sweepTheta);     /* degrees to spiral around */
 
 /* lathe moves contour along helical path by helically shearing 3D space */
 extern void gleLathe (int ncp,        /* number of contour points */
              gleDouble contour[][2],    /* 2D contour */
              gleDouble cont_normal[][2], /* 2D contour normals */
              gleDouble up[3],           /* up vector for contour */
-             gleDouble startRadius,	/* spiral starts in x-y plane */
+             gleDouble startRadius,     /* spiral starts in x-y plane */
              gleDouble drdTheta,        /* change in radius per revolution */
-             gleDouble startZ,		/* starting z value */
+             gleDouble startZ,          /* starting z value */
              gleDouble dzdTheta,        /* change in Z per revolution */
              gleDouble startXform[2][3], /* starting contour affine xform */
              gleDouble dXformdTheta[2][3], /* tangent change xform per revoln */
-             gleDouble startTheta,	/* start angle in x-y plane */
-             gleDouble sweepTheta);	/* degrees to spiral around */
+             gleDouble startTheta,      /* start angle in x-y plane */
+             gleDouble sweepTheta);     /* degrees to spiral around */
 
 /* similar to spiral, except contour is a circle */
 extern void gleHelicoid (gleDouble rToroid, /* circle contour (torus) radius */
-             gleDouble startRadius,	/* spiral starts in x-y plane */
+             gleDouble startRadius,     /* spiral starts in x-y plane */
              gleDouble drdTheta,        /* change in radius per revolution */
-             gleDouble startZ,		/* starting z value */
+             gleDouble startZ,          /* starting z value */
              gleDouble dzdTheta,        /* change in Z per revolution */
              gleDouble startXform[2][3], /* starting contour affine xform */
              gleDouble dXformdTheta[2][3], /* tangent change xform per revoln */
-             gleDouble startTheta,	/* start angle in x-y plane */
-             gleDouble sweepTheta);	/* degrees to spiral around */
+             gleDouble startTheta,      /* start angle in x-y plane */
+             gleDouble sweepTheta);     /* degrees to spiral around */
 
 /* similar to lathe, except contour is a circle */
 extern void gleToroid (gleDouble rToroid, /* circle contour (torus) radius */
-             gleDouble startRadius,	/* spiral starts in x-y plane */
+             gleDouble startRadius,     /* spiral starts in x-y plane */
              gleDouble drdTheta,        /* change in radius per revolution */
-             gleDouble startZ,		/* starting z value */
+             gleDouble startZ,          /* starting z value */
              gleDouble dzdTheta,        /* change in Z per revolution */
              gleDouble startXform[2][3], /* starting contour affine xform */
              gleDouble dXformdTheta[2][3], /* tangent change xform per revoln */
-             gleDouble startTheta,	/* start angle in x-y plane */
-             gleDouble sweepTheta);	/* degrees to spiral around */
+             gleDouble startTheta,      /* start angle in x-y plane */
+             gleDouble sweepTheta);     /* degrees to spiral around */
 
 /* draws a screw shape */
 extern void gleScrew (int ncp,          /* number of contour points */

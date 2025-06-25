@@ -1,60 +1,61 @@
 
 /* Copyright (c) Nate Robins, 1997. */
-/* portions Copyright (c) Mark Kilgard, 1998. */
+/* portions Copyright (c) Mark Kilgard, 1998, 2001. */
 
 /* This program is freely distributable without licensing fees 
    and is provided without guarantee or warrantee expressed or 
    implied. This program is -not- in the public domain. */
 
+#include <assert.h>
+
 #include "glutint.h"
 
-/* global variable that must be set for some functions to operate
+/* Global variable that must be set for some functions to operate
    correctly. */
-HDC XHDC;
+HDC XHDC = 0;
 
 XVisualInfo*
 XGetVisualInfo(Display* display, long mask, XVisualInfo* template, int* nitems)
 {
-  /* KLUDGE: this function needs XHDC to be set to the HDC currently
-     being operated on before it is invoked! */
-
-  PIXELFORMATDESCRIPTOR* pfds = NULL;
+  XVisualInfo* xvis;
   int i, n;
 
-  n = DescribePixelFormat(XHDC, 1, 0, NULL);
+  /* This function needs XHDC to be set to the HDC currently
+     being operated on before it is invoked! */
+  assert(XHDC);
 
-  if (n > 0) {
-    pfds = (PIXELFORMATDESCRIPTOR*)malloc(sizeof(PIXELFORMATDESCRIPTOR) * n);
-    memset(pfds, 0, sizeof(PIXELFORMATDESCRIPTOR) * n);
-  }
- 
+  n = DescribePixelFormat(XHDC, 0, 0, NULL);
+  xvis = (XVisualInfo*)malloc(sizeof(XVisualInfo) * n);
+  memset(xvis, 0, sizeof(XVisualInfo) * n);
+  
   for (i = 0; i < n; i++) {
-    DescribePixelFormat(XHDC, i + 1, sizeof(PIXELFORMATDESCRIPTOR), &pfds[i]);
+    xvis[i].num = i+1;
+    DescribePixelFormat(XHDC, i + 1, sizeof(PIXELFORMATDESCRIPTOR), &xvis[i].pfd);
   }
 
   *nitems = n;
-  return pfds;
+  return xvis;
 }
 
 Colormap
 XCreateColormap(Display* display, Window root, Visual* visual, int alloc)
 {
-  /* KLUDGE: this function needs XHDC to be set to the HDC currently
-     being operated on before it is invoked! */
-
   PIXELFORMATDESCRIPTOR pfd;
   LOGPALETTE *logical;
   HPALETTE    palette;
   int n;
 
+  /* This function needs XHDC to be set to the HDC currently
+     being operated on before it is invoked! */
+  assert(XHDC);
+
   /* grab the pixel format */
   memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
   DescribePixelFormat(XHDC, GetPixelFormat(XHDC), 
-		      sizeof(PIXELFORMATDESCRIPTOR), &pfd);
+                      sizeof(PIXELFORMATDESCRIPTOR), &pfd);
 
   if (!(pfd.dwFlags & PFD_NEED_PALETTE ||
-      pfd.iPixelType == PFD_TYPE_COLORINDEX))
-  {
+        pfd.iPixelType == PFD_TYPE_COLORINDEX)) {
     return 0;
   }
 
@@ -63,7 +64,7 @@ XCreateColormap(Display* display, Window root, Visual* visual, int alloc)
   /* allocate a bunch of memory for the logical palette (assume 256
      colors in a Win32 palette */
   logical = (LOGPALETTE*)malloc(sizeof(LOGPALETTE) +
-				sizeof(PALETTEENTRY) * n);
+                                sizeof(PALETTEENTRY) * n);
   memset(logical, 0, sizeof(LOGPALETTE) + sizeof(PALETTEENTRY) * n);
 
   /* set the entries in the logical palette */
@@ -82,11 +83,11 @@ XCreateColormap(Display* display, Window root, Visual* visual, int alloc)
     /* fill in an RGBA color palette */
     for (i = 0; i < n; ++i) {
       logical->palPalEntry[i].peRed = 
-	(((i >> pfd.cRedShift)   & redMask)   * 255) / redMask;
+        (((i >> pfd.cRedShift)   & redMask)   * 255) / redMask;
       logical->palPalEntry[i].peGreen = 
-	(((i >> pfd.cGreenShift) & greenMask) * 255) / greenMask;
-	logical->palPalEntry[i].peBlue = 
-	(((i >> pfd.cBlueShift)  & blueMask)  * 255) / blueMask;
+        (((i >> pfd.cGreenShift) & greenMask) * 255) / greenMask;
+        logical->palPalEntry[i].peBlue = 
+        (((i >> pfd.cBlueShift)  & blueMask)  * 255) / blueMask;
       logical->palPalEntry[i].peFlags = 0;
     }
   }
@@ -102,8 +103,8 @@ XCreateColormap(Display* display, Window root, Visual* visual, int alloc)
 
 void
 XAllocColorCells(Display* display, Colormap colormap, Bool contig, 
-		 unsigned long plane_masks_return[], unsigned int nplanes,
-		 unsigned long pixels_return[], unsigned int npixels)
+                 unsigned long plane_masks_return[], unsigned int nplanes,
+                 unsigned long pixels_return[], unsigned int npixels)
 {
   /* NOP -- we did all the allocating in XCreateColormap! */
 }
@@ -156,9 +157,9 @@ XSetWindowColormap(Display* display, Window window, Colormap colormap)
 
 Bool
 XTranslateCoordinates(Display *display, Window src, Window dst, 
-		      int src_x, int src_y, 
-		      int* dest_x_return, int* dest_y_return,
-		      Window* child_return)
+                      int src_x, int src_y, 
+                      int* dest_x_return, int* dest_y_return,
+                      Window* child_return)
 {
   /* KLUDGE: this isn't really a translate coordinates into some other
   windows coordinate system...it only translates coordinates into the
@@ -180,9 +181,9 @@ XTranslateCoordinates(Display *display, Window src, Window dst,
 
 Status
 XGetGeometry(Display* display, Window window, Window* root_return, 
-	     int* x_return, int* y_return, 
-	     unsigned int* width_return, unsigned int* height_return,
-	     unsigned int *border_width_return, unsigned int* depth_return)
+             int* x_return, int* y_return, 
+             unsigned int* width_return, unsigned int* height_return,
+             unsigned int *border_width_return, unsigned int* depth_return)
 {
   /* KLUDGE: doesn't return the border_width or depth or root, x & y
      are in screen coordinates. */
@@ -237,8 +238,8 @@ DisplayHeightMM(Display* display, int screen)
 
 void
 XWarpPointer(Display* display, Window src, Window dst, 
-	     int src_x, int src_y, int src_width, int src_height,
-	     int dst_x, int dst_y)
+             int src_x, int src_y, int src_width, int src_height,
+             int dst_x, int dst_y)
 {
   /* KLUDGE: this isn't really a warp pointer into some other windows
   coordinate system...it only warps the pointer into the root window
@@ -265,7 +266,7 @@ XPending(Display* display)
 
 /* the following function was stolen from the X sources as indicated. */
 
-/* Copyright 	Massachusetts Institute of Technology  1985, 1986, 1987 */
+/* Copyright    Massachusetts Institute of Technology  1985, 1986, 1987 */
 /* $XConsortium: XParseGeom.c,v 11.18 91/02/21 17:23:05 rws Exp $ */
 
 /*
@@ -298,106 +299,123 @@ ReadInteger(char *string, char **NextString)
     register int Result = 0;
     int Sign = 1;
     
-    if (*string == '+')
-	string++;
-    else if (*string == '-')
-    {
-	string++;
-	Sign = -1;
+    if (*string == '+') {
+        string++;
+    } else if (*string == '-') {
+        string++;
+        Sign = -1;
     }
-    for (; (*string >= '0') && (*string <= '9'); string++)
-    {
-	Result = (Result * 10) + (*string - '0');
+    for (; (*string >= '0') && (*string <= '9'); string++) {
+        Result = (Result * 10) + (*string - '0');
     }
     *NextString = string;
-    if (Sign >= 0)
-	return (Result);
-    else
-	return (-Result);
+    if (Sign >= 0) {
+        return (Result);
+    } else {
+        return (-Result);
+    }
 }
 
-int XParseGeometry(char *string, int *x, int *y, unsigned int *width, unsigned int *height)
+int
+XParseGeometry(char *string, int *x, int *y,
+               unsigned int *width, unsigned int *height)
 {
-	int mask = NoValue;
-	register char *strind;
-	unsigned int tempWidth, tempHeight;
-	int tempX, tempY;
-	char *nextCharacter;
+        int mask = NoValue;
+        register char *strind;
+        /* Avoid warnings about potentially uninitialized variables. */
+        unsigned int tempWidth = 0, tempHeight = 0;
+        int tempX = 0, tempY = 0;
+        char *nextCharacter;
 
-	if ( (string == NULL) || (*string == '\0')) return(mask);
-	if (*string == '=')
-		string++;  /* ignore possible '=' at beg of geometry spec */
+        if ( (string == NULL) || (*string == '\0')) {
+            return(mask);
+        }
+        if (*string == '=') {
+            string++;  /* ignore possible '=' at beg of geometry spec */
+        }
 
-	strind = (char *)string;
-	if (*strind != '+' && *strind != '-' && *strind != 'x') {
-		tempWidth = ReadInteger(strind, &nextCharacter);
-		if (strind == nextCharacter) 
-		    return (0);
-		strind = nextCharacter;
-		mask |= WidthValue;
-	}
+        strind = (char *)string;
+        if (*strind != '+' && *strind != '-' && *strind != 'x') {
+                tempWidth = ReadInteger(strind, &nextCharacter);
+                if (strind == nextCharacter) {
+                    return (0);
+                }
+                strind = nextCharacter;
+                mask |= WidthValue;
+        }
 
-	if (*strind == 'x' || *strind == 'X') {	
-		strind++;
-		tempHeight = ReadInteger(strind, &nextCharacter);
-		if (strind == nextCharacter)
-		    return (0);
-		strind = nextCharacter;
-		mask |= HeightValue;
-	}
+        if (*strind == 'x' || *strind == 'X') { 
+                strind++;
+                tempHeight = ReadInteger(strind, &nextCharacter);
+                if (strind == nextCharacter) {
+                    return (0);
+                }
+                strind = nextCharacter;
+                mask |= HeightValue;
+        }
 
-	if ((*strind == '+') || (*strind == '-')) {
-		if (*strind == '-') {
-  			strind++;
-			tempX = -ReadInteger(strind, &nextCharacter);
-			if (strind == nextCharacter)
-			    return (0);
-			strind = nextCharacter;
-			mask |= XNegative;
+        if ((*strind == '+') || (*strind == '-')) {
+                if (*strind == '-') {
+                        strind++;
+                        tempX = -ReadInteger(strind, &nextCharacter);
+                        if (strind == nextCharacter) {
+                            return (0);
+                        }
+                        strind = nextCharacter;
+                        mask |= XNegative;
 
-		}
-		else
-		{	strind++;
-			tempX = ReadInteger(strind, &nextCharacter);
-			if (strind == nextCharacter)
-			    return(0);
-			strind = nextCharacter;
-		}
-		mask |= XValue;
-		if ((*strind == '+') || (*strind == '-')) {
-			if (*strind == '-') {
-				strind++;
-				tempY = -ReadInteger(strind, &nextCharacter);
-				if (strind == nextCharacter)
-			    	    return(0);
-				strind = nextCharacter;
-				mask |= YNegative;
+                }
+                else
+                {       strind++;
+                        tempX = ReadInteger(strind, &nextCharacter);
+                        if (strind == nextCharacter) {
+                            return(0);
+                        }
+                        strind = nextCharacter;
+                }
+                mask |= XValue;
+                if ((*strind == '+') || (*strind == '-')) {
+                        if (*strind == '-') {
+                                strind++;
+                                tempY = -ReadInteger(strind, &nextCharacter);
+                                if (strind == nextCharacter) {
+                                    return(0);
+                                }
+                                strind = nextCharacter;
+                                mask |= YNegative;
 
-			}
-			else
-			{
-				strind++;
-				tempY = ReadInteger(strind, &nextCharacter);
-				if (strind == nextCharacter)
-			    	    return(0);
-				strind = nextCharacter;
-			}
-			mask |= YValue;
-		}
-	}
-	
-	/* If strind isn't at the end of the string the it's an invalid
-		geometry specification. */
+                        }
+                        else
+                        {
+                                strind++;
+                                tempY = ReadInteger(strind, &nextCharacter);
+                                if (strind == nextCharacter) {
+                                    return(0);
+                                }
+                                strind = nextCharacter;
+                        }
+                        mask |= YValue;
+                }
+        }
+        
+        /* If strind isn't at the end of the string the it's an invalid
+                geometry specification. */
 
-	if (*strind != '\0') return (0);
+        if (*strind != '\0') {
+            return (0);
+        }
 
-	if (mask & XValue)
-	    *x = tempX;
- 	if (mask & YValue)
-	    *y = tempY;
-	if (mask & WidthValue)
+        if (mask & XValue) {
+            *x = tempX;
+        }
+        if (mask & YValue) {
+            *y = tempY;
+        }
+        if (mask & WidthValue) {
             *width = tempWidth;
-	if (mask & HeightValue)
+        }
+        if (mask & HeightValue) {
             *height = tempHeight;
-	return (mask);
+        }
+        return (mask);
 }

@@ -97,10 +97,10 @@ noFaultXAllocColor(Display * dpy, Colormap cmap, int cmapSize,
 static int
 ifSunCreator(void)
 {
-  char *xvendor, *glvendor, *renderer;
+  const char *xvendor, *glvendor, *renderer;
   int isSunCreator = 0; /* Until proven that it is. */
-  int savedDisplayMode;
-  char *savedDisplayString;
+  int savedDisplayMode = 0;
+  char *savedDisplayString = NULL;
   GLUTwindow *window;
 
 #define VENDOR_SUN "Sun Microsystems"
@@ -127,10 +127,11 @@ ifSunCreator(void)
       window = __glutCreateWindow(NULL, 0, 0, 1, 1, 0);
     }
 
-    glvendor = (char *) glGetString(GL_VENDOR);
+    glvendor = (const char *) glGetString(GL_VENDOR);
     if (!strncmp(glvendor, VENDOR_SUN, sizeof(VENDOR_SUN) - 1)) {
-      renderer = (char *) glGetString(GL_RENDERER);
-      if (!strncmp(renderer, RENDERER_CREATOR, sizeof(RENDERER_CREATOR) - 1)) {
+      renderer = (const char *) glGetString(GL_RENDERER);
+      if (!strncmp(renderer, RENDERER_CREATOR,
+                   sizeof(RENDERER_CREATOR) - 1)) {
         isSunCreator = 1;
       }
     }
@@ -154,7 +155,7 @@ menuVisualSetup(void)
   Bool presumablyMesa;
   int layer, nVisuals, i, dummy;
   unsigned long *placeHolders = NULL;
-  int numPlaceHolders;
+  int numPlaceHolders = 0;
   Bool allocateHigh;
 
   allocateHigh = ifSunCreator();
@@ -178,7 +179,8 @@ menuVisualSetup(void)
         visual = &overlayVisuals[i];
         if (visual->vinfo.colormap_size >= 3) {
           /* Compare visual IDs just to be safe. */
-          if (visual->vinfo.visual->visualid == DefaultVisual(__glutDisplay, __glutScreen)->visualid) {
+          if (visual->vinfo.visual->visualid ==
+              DefaultVisual(__glutDisplay, __glutScreen)->visualid) {
             /* Settle for default visual. */
             menuVisual = DefaultVisual(__glutDisplay, __glutScreen);
             menuDepth = DefaultDepth(__glutDisplay, __glutScreen);
@@ -216,8 +218,8 @@ menuVisualSetup(void)
           if (placeHolders) {
             /* Again for Sun's Creator graphics, do the actual
                read-write place-holder cell allocation. */
-            status = XAllocColorCells(__glutDisplay, menuColormap, False, 0, 0,
-              placeHolders, numPlaceHolders);
+            status = XAllocColorCells(__glutDisplay, menuColormap,
+              False, 0, 0, placeHolders, numPlaceHolders);
             if (!status) {
               XFreeColormap(__glutDisplay, menuColormap);
               free(placeHolders);
@@ -827,7 +829,7 @@ installMenuCallbacks(void)
   __glutGetMenuItem = getMenuItem;
 }
 
-int APIENTRY 
+int GLUTAPIENTRY 
 glutCreateMenu(GLUTselectCB selectFunc)
 {
   XSetWindowAttributes wa;
@@ -886,7 +888,7 @@ glutCreateMenu(GLUTselectCB selectFunc)
 }
 
 /* CENTRY */
-int APIENTRY 
+int GLUTAPIENTRY 
 glutGetMenu(void)
 {
   if (__glutCurrentMenu) {
@@ -896,7 +898,7 @@ glutGetMenu(void)
   }
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutSetMenu(int menuid)
 {
   GLUTmenu *menu;
@@ -936,7 +938,7 @@ __glutSetMenuItem(GLUTmenuItem * item, const char *label,
 }
 
 /* CENTRY */
-void APIENTRY 
+void GLUTAPIENTRY 
 glutAddMenuEntry(const char *label, int value)
 {
   XSetWindowAttributes wa;
@@ -964,7 +966,7 @@ glutAddMenuEntry(const char *label, int value)
   __glutCurrentMenu->list = entry;
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutAddSubMenu(const char *label, int menu)
 {
   XSetWindowAttributes wa;
@@ -993,7 +995,7 @@ glutAddSubMenu(const char *label, int menu)
   __glutCurrentMenu->list = submenu;
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutAttachMenu(int button)
 {
   if (__glutMappedMenu) {

@@ -27,6 +27,10 @@
 #include "intersect.h"
 #include "segment.h"
 
+#ifndef _WIN32
+# define CALLBACK
+#endif
+
 /* ============================================================ */
 /*
  * Algorithmic trivia:
@@ -99,9 +103,9 @@ void draw_angle_style_front_cap (int ncp,	/* number of contour points */
    N3F(bi);
 
    tobj = gluNewTess ();
-   gluTessCallback (tobj, GLU_BEGIN, glBegin);
-   gluTessCallback (tobj, GLU_VERTEX, glVertex3dv);
-   gluTessCallback (tobj, GLU_END, glEnd);
+   gluTessCallback (tobj, GLU_BEGIN, (void (CALLBACK*)()) glBegin);
+   gluTessCallback (tobj, GLU_VERTEX, (void (CALLBACK*)()) glVertex3dv);
+   gluTessCallback (tobj, GLU_END, (void (CALLBACK*)()) glEnd);
    gluBeginPolygon (tobj);
 
    for (j=0; j<ncp; j++) {
@@ -144,9 +148,9 @@ void draw_angle_style_back_cap (int ncp,	/* number of contour points */
    N3F (bi);
 
    tobj = gluNewTess ();
-   gluTessCallback (tobj, GLU_BEGIN, glBegin);
-   gluTessCallback (tobj, GLU_VERTEX, glVertex3dv);
-   gluTessCallback (tobj, GLU_END, glEnd);
+   gluTessCallback (tobj, GLU_BEGIN, (void (CALLBACK*)()) glBegin);
+   gluTessCallback (tobj, GLU_VERTEX, (void (CALLBACK*)()) glVertex3dv);
+   gluTessCallback (tobj, GLU_END, (void (CALLBACK*)()) glEnd);
    gluBeginPolygon (tobj);
 
    for (j=ncp-1; j>=0; j--) {

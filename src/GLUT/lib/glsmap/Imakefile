@@ -1,7 +1,12 @@
 
 /* Copyright (c) Mark J. Kilgard, 1998. */
 
-#define DoNormalLib YES
+#define DoNormalLib   YES
+#define DoSharedLib   NO
+#define DoDebugLib    NO
+#define DoProfileLib  NO
+
+#define SoRev 3.7
 
 #include <Library.tmpl>
 
@@ -24,9 +29,31 @@ LibraryObjectRule()
 #else
 /* XXX Very lame, you must be using pre-R5 config files!  This
    will probably do essentially what LibraryObjectRule does. */
+# if DoNormalLib
 NormalLibraryObjectRule()
+# endif
+# if DoSharedLib
+SharedLibraryObjectRule()
+# endif
+# if DoDebugLib
+DebuggedLibraryObjectRule()
+# endif
+# if DoProfileLib
+ProfiledLibraryObjectRule()
+# endif
 #endif
 
+#if DoNormalLib
 NormalLibraryTarget(glsmap,$(OBJS))
+#endif
+#if DoSharedLib
+SharedLibraryTarget(glsmap,SoRev,$(OBJS),.,.)
+#endif
+#if DoDebugLib
+DebuggedLibraryTarget(glsmap,$(OBJS))
+#endif
+#if DoProfileLib
+ProfiledLibraryTarget(glsmap,$(OBJS))
+#endif
 
 DependTarget()

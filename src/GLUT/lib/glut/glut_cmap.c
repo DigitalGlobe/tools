@@ -1,5 +1,5 @@
 
-/* Copyright (c) Mark J. Kilgard, 1994, 1996, 1997.  */
+/* Copyright (c) Mark J. Kilgard, 1994, 1996, 1997, 2001.  */
 
 /* This program is freely distributable without licensing fees
    and is provided without guarantee or warrantee expressed or
@@ -9,15 +9,15 @@
 #include <string.h>
 #include <stdio.h>  /* SunOS multithreaded assert() needs <stdio.h>.  Lame. */
 #include <assert.h>
-#if !defined(_WIN32)
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>  /* for XA_RGB_DEFAULT_MAP atom */
-#if defined(__vms)
-#include <Xmu/StdCmap.h>  /* for XmuLookupStandardColormap */
-#else
-#include <X11/Xmu/StdCmap.h>  /* for XmuLookupStandardColormap */
-#endif
+#ifndef _WIN32
+# include <X11/Xlib.h>
+# include <X11/Xutil.h>
+# include <X11/Xatom.h>  /* for XA_RGB_DEFAULT_MAP atom */
+# ifdef __vms
+#  include <Xmu/StdCmap.h>  /* for XmuLookupStandardColormap */
+# else
+#  include <X11/Xmu/StdCmap.h>  /* for XmuLookupStandardColormap */
+# endif
 #endif
 
 /* SGI optimization introduced in IRIX 6.3 to avoid X server
@@ -41,8 +41,9 @@ __glutAssociateNewColormap(XVisualInfo * vis)
   unsigned long pixels[255];
 
   cmap = (GLUTcolormap *) malloc(sizeof(GLUTcolormap));
-  if (!cmap)
+  if (!cmap) {
     __glutFatalError("out of memory.");
+  }
 #if defined(_WIN32)
   pixels[0] = 0;        /* avoid compilation warnings on win32 */
   cmap->visual = 0;
@@ -54,8 +55,9 @@ __glutAssociateNewColormap(XVisualInfo * vis)
   cmap->refcnt = 1;
   cmap->cells = (GLUTcolorcell *)
     malloc(sizeof(GLUTcolorcell) * cmap->size);
-  if (!cmap->cells)
+  if (!cmap->cells) {
     __glutFatalError("out of memory.");
+  }
   /* make all color cell entries be invalid */
   for (i = cmap->size - 1; i >= 0; i--) {
     cmap->cells[i].component[GLUT_RED] = -1.0;
@@ -122,7 +124,7 @@ void
 __glutSetupColormap(XVisualInfo * vi, GLUTcolormap ** colormap, Colormap * cmap)
 {
 #if defined(_WIN32)
-  if (vi->dwFlags & PFD_NEED_PALETTE || vi->iPixelType == PFD_TYPE_COLORINDEX) {
+  if (vi->pfd.dwFlags & PFD_NEED_PALETTE || vi->pfd.iPixelType == PFD_TYPE_COLORINDEX) {
     *colormap = associateColormap(vi);
     *cmap = (*colormap)->cmap;
   } else {
@@ -277,12 +279,14 @@ findColormaps(GLUTwindow * window,
 
   /* Do not allow more entries that maximum number of
      colormaps! */
-  if (num >= max)
+  if (num >= max) {
     return num;
+  }
   /* Is cmap for this window already on the list? */
   for (i = 0; i < num; i++) {
-    if (cmaplist[i] == window->cmap)
+    if (cmaplist[i] == window->cmap) {
       goto normalColormapAlreadyListed;
+    }
   }
   /* Not found on the list; add colormap and window. */
   winlist[num] = window->win;
@@ -293,11 +297,13 @@ normalColormapAlreadyListed:
 
   /* Repeat above but for the overlay colormap if there one. */
   if (window->overlay) {
-    if (num >= max)
+    if (num >= max) {
       return num;
+    }
     for (i = 0; i < num; i++) {
-      if (cmaplist[i] == window->overlay->cmap)
+      if (cmaplist[i] == window->overlay->cmap) {
         goto overlayColormapAlreadyListed;
+      }
     }
     winlist[num] = window->overlay->win;
     cmaplist[num] = window->overlay->cmap;
@@ -349,8 +355,9 @@ __glutEstablishColormapsProperty(GLUTwindow * window)
     /* XSetWMColormapWindows should always work unless the
        WM_COLORMAP_WINDOWS property cannot be intern'ed.  We
        check to be safe. */
-    if (status == False)
+    if (status == False) {
       __glutFatalError("XSetWMColormapWindows returned False.");
+    }
   }
   /* For portability reasons we don't use alloca for winlist
      and cmaplist, but we could. */

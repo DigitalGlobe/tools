@@ -28,6 +28,10 @@
 #include "intersect.h"
 #include "segment.h"
 
+#ifndef _WIN32
+# define CALLBACK
+#endif
+
 /* ============================================================ */
 /* 
  * The following routine is, in principle, very simple:
@@ -134,9 +138,9 @@ void draw_raw_style_end_cap (int ncp,		/* number of contour points */
    /* malloc the @#$%^&* array that OpenGL wants ! */
    pts = (double *) malloc (3*ncp*sizeof(double));
    tobj = gluNewTess ();
-   gluTessCallback (tobj, GLU_BEGIN, glBegin);
-   gluTessCallback (tobj, GLU_VERTEX, glVertex3dv);
-   gluTessCallback (tobj, GLU_END, glEnd);
+   gluTessCallback (tobj, GLU_BEGIN, (void (CALLBACK*)()) glBegin);
+   gluTessCallback (tobj, GLU_VERTEX, (void (CALLBACK*)()) glVertex3dv);
+   gluTessCallback (tobj, GLU_END, (void (CALLBACK*)()) glEnd);
    gluBeginPolygon (tobj);
 
       /* draw the loop counter clockwise for the front cap */
@@ -192,9 +196,9 @@ void draw_front_contour_cap (int ncp,	/* number of contour points */
 
 #ifdef OPENGL_10
    tobj = gluNewTess ();
-   gluTessCallback (tobj, GLU_BEGIN, glBegin);
-   gluTessCallback (tobj, GLU_VERTEX, glVertex3dv);
-   gluTessCallback (tobj, GLU_END, glEnd);
+   gluTessCallback (tobj, GLU_BEGIN, (void (CALLBACK*)()) glBegin);
+   gluTessCallback (tobj, GLU_VERTEX, (void (CALLBACK*)()) glVertex3dv);
+   gluTessCallback (tobj, GLU_END, (void (CALLBACK*)()) glEnd);
    gluBeginPolygon (tobj);
 
    for (j=0; j<ncp; j++) {
@@ -236,9 +240,9 @@ void draw_back_contour_cap (int ncp,	/* number of contour points */
 
 #ifdef OPENGL_10
    tobj = gluNewTess ();
-   gluTessCallback (tobj, GLU_BEGIN, glBegin);
-   gluTessCallback (tobj, GLU_VERTEX, glVertex3dv);
-   gluTessCallback (tobj, GLU_END, glEnd);
+   gluTessCallback (tobj, GLU_BEGIN, (void (CALLBACK*)()) glBegin);
+   gluTessCallback (tobj, GLU_VERTEX, (void (CALLBACK*)()) glVertex3dv);
+   gluTessCallback (tobj, GLU_END, (void (CALLBACK*)()) glEnd);
    gluBeginPolygon (tobj);
 
    /* draw the end cap */
@@ -749,9 +753,9 @@ void extrusion_raw_join (int ncp,		/* number of contour points */
    gleDouble yup[3];		/* alternate up vector */
    gleDouble nrmv[3];
    short no_norm, no_cols, no_xform;     /*booleans */
-   char *mem_anchor;
-   gleDouble *front_loop, *back_loop;  /* countour loops */
-   gleDouble *front_norm, *back_norm;  /* countour loops */
+   char *mem_anchor = NULL;
+   gleDouble *front_loop = NULL, *back_loop = NULL;  /* countour loops */
+   gleDouble *front_norm = NULL, *back_norm = NULL;  /* countour loops */
    gleDouble *tmp;
    
    nrmv[0] = nrmv[1] = 0.0;   /* used for drawing end caps */
@@ -940,7 +944,7 @@ void extrusion_raw_join (int ncp,		/* number of contour points */
    }
 
    /* free previously allocated memory, if any */
-   if (!no_xform) {
+   if (mem_anchor) {
       free (mem_anchor);
    }
 }

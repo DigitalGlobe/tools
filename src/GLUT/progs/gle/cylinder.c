@@ -21,17 +21,17 @@ float colors [NPTS][3];
 int idx = 0;
 
 /* some utilities for filling that array */
-#define PNT(x,y,z) { 			\
-   points[idx][0] = x; 			\
-   points[idx][1] = y; 			\
-   points[idx][2] = z;			\
-   idx ++;				\
+#define PNT(x,y,z) {                    \
+   points[idx][0] = x;                  \
+   points[idx][1] = y;                  \
+   points[idx][2] = z;                  \
+   idx ++;                              \
 }
 
-#define COL(r,g,b) { 			\
-   colors[idx][0] = r; 			\
-   colors[idx][1] = g; 			\
-   colors[idx][2] = b;			\
+#define COL(r,g,b) {                    \
+   colors[idx][0] = r;                  \
+   colors[idx][1] = g;                  \
+   colors[idx][2] = b;                  \
 }
 
 /* 

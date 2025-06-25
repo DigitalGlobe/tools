@@ -4,10 +4,12 @@
 #define IHaveSubdirs
 #define PassCDebugFlags
 
+#include "../Glut.cf"
+
 /* NOTE: The fglut directory is GLUT FORTRAN bindings which are */
 /* specific to IRIX 5.x.  See ../README.fortran */
 
-SUBDIRS = glut mui gle glsmap
+SUBDIRS = glut mui gle glsmap glcmap
 
 MakeSubdirs($(SUBDIRS))
 DependSubdirs($(SUBDIRS))

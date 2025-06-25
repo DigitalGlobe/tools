@@ -9,12 +9,9 @@
 #include <stdio.h>
 #include <GL/glut.h>
 
-/* Uses EXT_polygon_offset extension if available to better
-   render the fold outlines. */
-
-#if GL_EXT_polygon_offset
-int polygon_offset;
-#endif
+/* Uses OpenGL 1.1 polygon offset or EXT_polygon_offset extension if
+   available to better render the fold outlines. */
+int polygon_offset = 0;
 
 enum {
   FLAT,                 /* completely flat sheet of paper */
@@ -289,38 +286,38 @@ display(void)
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
   glColor3ub(67, 205, 128);
-#if GL_EXT_polygon_offset
   if (polygon_offset) {
+#ifdef GL_VERSION_1_1
+    glPolygonOffset(0.5, 0.0);
+    glEnable(GL_POLYGON_OFFSET_FILL);
+#else
+# if GL_EXT_polygon_offset
     glPolygonOffsetEXT(0.5, 0.0);
     glEnable(GL_POLYGON_OFFSET_EXT);
-  }
+# endif
 #endif
+  }
   draw_folded_plane();
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   glColor3ub(255, 255, 255);
-#if GL_EXT_polygon_offset
   if (polygon_offset) {
+#ifdef GL_VERSION_1_1
+    glPolygonOffset(0.5, 0);
+    glDisable(GL_POLYGON_OFFSET_FILL);
+#else
+# if GL_EXT_polygon_offset
     glPolygonOffsetEXT(0.0, 0.0);
-    /* XXX a bug in the unpatched IRIX 5.3 OpenGL posts
-       GL_INVALID_ENUM when GL_POLYGON_OFFSET_EXT is disabled;
-       please ignore it. */
     glDisable(GL_POLYGON_OFFSET_EXT);
+# endif
+#endif
   } else {
     glPushMatrix();
     glTranslatef(0, 0, .05);
   }
-#else
-  glPushMatrix();
-  glTranslatef(0, 0, .05);
-#endif
   draw_folded_plane();
-#if GL_EXT_polygon_offset
   if (!polygon_offset) {
     glPopMatrix();
   }
-#else
-  glPopMatrix();
-#endif
   glutSwapBuffers();
 }
 
@@ -363,6 +360,19 @@ menu(int value)
   }
 }
 
+static int
+supportsOneDotOne(void)
+{
+  const char *version;
+  int major, minor;
+
+  version = (char *) glGetString(GL_VERSION);
+  if (sscanf(version, "%d.%d", &major, &minor) == 2) {
+    return major > 1 || minor >= 1;
+  }
+  return 0;            /* OpenGL version string malformed! */
+}
+
 int
 main(int argc, char **argv)
 {
@@ -395,8 +405,12 @@ main(int argc, char **argv)
   glutAddMenuEntry("Toggle spinning", 3);
   glutAddMenuEntry("Quit", 666);
   glutAttachMenu(GLUT_RIGHT_BUTTON);
-#if GL_EXT_polygon_offset
+#ifdef GL_VERSION_1_1
+  polygon_offset = supportsOneDotOne();
+#else
+# if GL_EXT_polygon_offset
   polygon_offset = glutExtensionSupported("GL_EXT_polygon_offset");
+# endif
 #endif
   glutMainLoop();
   return 0;             /* ANSI C requires main to return int. */

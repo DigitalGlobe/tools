@@ -36,7 +36,8 @@ MANPAGES = glutAddMenuEntry.man glutAddSubMenu.man glutAttachMenu.man \
   glutStrokeCharacter.man glutStrokeWidth.man glutSwapBuffers.man \
   glutTabletButtonFunc.man glutTabletMotionFunc.man glutTimerFunc.man \
   glutUseLayer.man glutVisibilityFunc.man glut.man \
-  glutInitDisplayString.man glutReportErrors.man glutWarpPointer.man
+  glutInitDisplayString.man glutReportErrors.man glutWarpPointer.man \
+  glutWindowStatusFunc.man glutVideoResizeGet.man
 
 FORMATTED = $(MANPAGES:.man=.z)
 
@@ -70,6 +71,8 @@ install: $(FORMATTED)
 	$(INSTALL) -idb "$(IDB_TAG)" -lns glut.z -F $(IDB_PATH) intro.z
 	$(INSTALL) -idb "$(IDB_TAG)" -lns glutBitmapWidth.z -F $(IDB_PATH) glutBitmapLength.z
 	$(INSTALL) -idb "$(IDB_TAG)" -lns glutStrokeWidth.z -F $(IDB_PATH) glutStrokeLength.z
+	$(INSTALL) -idb "$(IDB_TAG)" -lns glutStrokeWidth.z -F $(IDB_PATH) glutStrokeLengthf.z
+	$(INSTALL) -idb "$(IDB_TAG)" -lns glutStrokeWidth.z -F $(IDB_PATH) glutStrokeWidthf.z
 	$(INSTALL) -idb "$(IDB_TAG)" -lns glutEnterGameMode.z -F $(IDB_PATH) glutLeaveGameMode.z
 	
 .man.z:

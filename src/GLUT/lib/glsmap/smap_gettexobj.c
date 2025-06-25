@@ -10,22 +10,22 @@
 void
 smapGetSphereMapTexObj(SphereMap *smap, GLuint *texobj)
 {
-	*texobj = smap->smapTexObj;
+    *texobj = smap->smapTexObj;
 }
 
 void
 smapGetViewTexObj(SphereMap *smap, GLuint *texobj)
 {
-	*texobj = smap->viewTexObj;
+    *texobj = smap->viewTexObj;
 }
 
 void
 smapGetViewTexObjs(SphereMap *smap, GLuint texobjs[6])
 {
-	int i;
+    int i;
 
-	for (i=0; i<6; i++) {
-		texobjs[i] = smap->viewTexObjs[i];
-	}
+    for (i=0; i<6; i++) {
+        texobjs[i] = smap->viewTexObjs[i];
+    }
 }
 

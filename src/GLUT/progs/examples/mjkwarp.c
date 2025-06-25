@@ -1,5 +1,5 @@
 
-/* Copyright (c) Mark J. Kilgard, 1994.  */
+/* Copyright (c) Mark J. Kilgard, 1994, 1999.  */
 
 /* This program is freely distributable without licensing fees 
    and is provided without guarantee or warrantee expressed or 
@@ -29,6 +29,15 @@ int interval = 100;
 #define SQUARES 2
 #define DRUM 3
 int mode = SQUARES;
+GLfloat lodBias = 0.0;
+
+#ifdef GL_EXT_texture_filter_anisotropic
+int hasTextureFilterAnisotropic = 0;
+int useTextureFilterAnisotropic = 0;
+#endif
+#ifdef GL_EXT_texture_lod_bias
+int hasTextureLodBias = 0;
+#endif
 
 void
 animate(int value)
@@ -120,7 +129,7 @@ redraw(void)
     for (i = 0; i < COLS; i++) {
       for (j = 0; j < ROWS; j++) {
 
-#define Z(x,y)	(((COLS-(x))*(x) + (ROWS-(y))*(y)) * amplitude) - 28.0
+#define Z(x,y)  (((COLS-(x))*(x) + (ROWS-(y))*(y)) * amplitude) - 28.0
 
         glPushMatrix();
         glTranslatef(i, j, 0);
@@ -245,6 +254,19 @@ menu_select(int value)
     if (scaling)
       animate(0);
     break;
+#ifdef GL_EXT_texture_filter_anisotropic
+  case 4:
+    useTextureFilterAnisotropic = !useTextureFilterAnisotropic;
+    if (useTextureFilterAnisotropic) {
+      glutSetWindowTitle("mjkwarp, anisotropic filtering");
+      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 4.0);
+    } else {
+      glutSetWindowTitle("mjkwarp, isotropic filtering");
+      glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 1.0);
+    }
+    glutPostRedisplay();
+    break;
+#endif
   case 3:
     mode++;
     if (mode > DRUM)
@@ -270,6 +292,53 @@ menu_select(int value)
   }
 }
 
+void
+keyboard(unsigned char c, int x, int y)
+{
+  switch (c) {
+  case 27:
+    exit(0);
+    break;
+  case ' ':
+    menu_select(1);
+    break;
+  case 's':
+  case 'S':
+    menu_select(2);
+    break;
+  case 'm':
+  case 'M':
+    menu_select(3);
+    break;
+#ifdef GL_EXT_texture_filter_anisotropic
+  case 'f':
+  case 'F':
+    menu_select(4);
+    break;
+#endif
+#ifdef GL_EXT_texture_lod_bias
+  case 'a':
+  case 'A':
+    lodBias += 0.95;
+  case '+':
+    lodBias += 0.05;
+    glTexEnvf(GL_TEXTURE_FILTER_CONTROL_EXT, GL_TEXTURE_LOD_BIAS_EXT, lodBias);
+    glutPostRedisplay();
+    printf("texture lod bias = %f\n", lodBias);
+    break;
+  case 'z':
+  case 'Z':
+    lodBias -= 0.95;
+  case '-':
+    lodBias -= 0.05;
+    glTexEnvf(GL_TEXTURE_FILTER_CONTROL_EXT, GL_TEXTURE_LOD_BIAS_EXT, lodBias);
+    glutPostRedisplay();
+    printf("texture lod bias = %f\n", lodBias);
+    break;
+#endif
+  }
+}
+
 int
 main(int argc, char **argv)
 {
@@ -278,7 +347,20 @@ main(int argc, char **argv)
   glutInit(&argc, argv);
   glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
   glutCreateWindow("mjkwarp");
+#ifdef GL_EXT_texture_filter_anisotropic
+  hasTextureFilterAnisotropic = glutExtensionSupported("GL_EXT_texture_filter_anisotropic");
+#endif
+#ifdef GL_EXT_texture_lod_bias
+  {
+    GLfloat maxLodBias;
+
+    hasTextureLodBias = glutExtensionSupported("GL_EXT_texture_lod_bias");
+    glGetFloatv(GL_MAX_TEXTURE_LOD_BIAS_EXT, &maxLodBias);
+    printf("max texture lod bias = %f\n", maxLodBias);
+  }
+#endif
   glutDisplayFunc(redraw);
+  glutKeyboardFunc(keyboard);
   glMatrixMode(GL_PROJECTION);
   gluPerspective( /* field of view in degree */ 40.0,
   /* aspect ratio */ 1.0,
@@ -316,6 +398,19 @@ main(int argc, char **argv)
   glutAddMenuEntry("30/sec", 33);
   glutAddMenuEntry("60/sec", 16);
   glutCreateMenu(menu_select);
+#ifdef GL_EXT_texture_filter_anisotropic
+  if (hasTextureFilterAnisotropic) {
+    glutAddMenuEntry("Toggle anisotropic filtering", 4);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  }
+#endif
+#ifdef GL_EXT_texture_lod_bias
+  if (hasTextureLodBias) {
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  }
+#endif
   glutAddMenuEntry("Toggle spinning", 1);
   glutAddMenuEntry("Toggle scaling", 2);
   glutAddMenuEntry("Switch mode", 3);

@@ -129,11 +129,11 @@ ortho(void)
 GLuint
 pick(int x, int y)
 {
-  int hits;
+  GLint hits;
 
   (void) glRenderMode(GL_SELECT);
   glInitNames();
-  glPushName(~0);
+  glPushName(~0U);
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
   glLoadIdentity();
@@ -148,7 +148,7 @@ pick(int x, int y)
   if (hits) {
 #ifdef DEBUG
     {
-      unsigned int i;
+      int i;
       GLint names;
       GLuint *ptr;
 
@@ -175,7 +175,7 @@ pick(int x, int y)
 #endif
     return selectBuffer[3];
   } else {
-    return ~0;
+    return ~0U;
   }
 }
 
@@ -206,7 +206,7 @@ mouse(int button, int state, int x, int y)
     if (state == GLUT_DOWN) {
       selectedPoint = pick(x, y);
     } else {
-      selectedPoint = -1;
+      selectedPoint = ~0U;
     }
   }
 }

@@ -213,6 +213,16 @@ main_menu_select(int value)
   glutPostRedisplay();
 }
 
+void
+keyboard(unsigned char c, int x, int y)
+{
+  switch (c) {
+  case 27:
+    exit(0);
+    break;
+  }
+}
+
 int 
 main(int argc, char **argv)
 {
@@ -223,6 +233,7 @@ main(int argc, char **argv)
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
   glutCreateWindow("Lighting Laboratory");
   glutDisplayFunc(display);
+  glutKeyboardFunc(keyboard);
 
 #define LIGHT_MENU_ENTRIES() \
     glutAddMenuEntry("Disable", LIGHT_OFF); \

@@ -52,6 +52,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <GL/glut.h>
+#include <GL/glext.h>  // for EXT_abgr extension
 
 GLenum doubleBuffer;
 GLubyte ubImage[65536];

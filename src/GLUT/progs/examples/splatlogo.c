@@ -89,7 +89,8 @@ mouse(int button, int state, int x, int y)
       if (numSplats < MAX_SPLATS) {
         splatConfig.x = x;
         splatConfig.y = winHeight - y;
-	renderSplat(&splatConfig);
+        renderSplat(&splatConfig);
+        glFlush();
         splatList[numSplats] = splatConfig;
         numSplats++;
       } else {

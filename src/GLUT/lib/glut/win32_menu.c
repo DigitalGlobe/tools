@@ -22,20 +22,20 @@ void (GLUTCALLBACK *__glutMenuStatusFunc) (int, int, int);
 GLUTmenu *__glutMappedMenu;
 GLUTwindow *__glutMenuWindow;
 GLUTmenuItem *__glutItemSelected;
-unsigned __glutMenuButton;
+unsigned int __glutMenuButton;
 
 static GLUTmenu **menuList = NULL;
 static int menuListSize = 0;
 static UINT uniqueMenuHandler = 1;
 
 /* DEPRICATED, use glutMenuStatusFunc instead. */
-void APIENTRY
+void GLUTAPIENTRY
 glutMenuStateFunc(GLUTmenuStateCB menuStateFunc)
 {
   __glutMenuStatusFunc = (GLUTmenuStatusCB) menuStateFunc;
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutMenuStatusFunc(GLUTmenuStatusCB menuStatusFunc)
 {
   __glutMenuStatusFunc = menuStatusFunc;
@@ -94,17 +94,17 @@ __glutFinishMenu(Window win, int x, int y)
 }
 
 static void
-mapMenu(GLUTmenu * menu, int x, int y)
+mapMenu(GLUTmenu * menu, GLUTwindow * window, int x, int y)
 {
-  TrackPopupMenu(menu->win, TPM_LEFTALIGN |
-    (__glutMenuButton == TPM_RIGHTBUTTON) ? 
-    TPM_RIGHTBUTTON : TPM_LEFTBUTTON,
-    x, y, 0, __glutCurrentWindow->win, NULL);
+  TrackPopupMenu(menu->hmenu, TPM_LEFTALIGN |
+                              (__glutMenuButton == TPM_RIGHTBUTTON ? 
+                               TPM_RIGHTBUTTON : TPM_LEFTBUTTON),
+    x, y, 0, window->win, NULL);
 }
 
 void
 __glutStartMenu(GLUTmenu * menu, GLUTwindow * window,
-		int x, int y, int x_win, int y_win)
+                int x, int y, int x_win, int y_win)
 {
   assert(__glutMappedMenu == NULL);
   __glutMappedMenu = menu;
@@ -115,7 +115,7 @@ __glutStartMenu(GLUTmenu * menu, GLUTwindow * window,
     __glutSetWindow(window);
     __glutMenuStatusFunc(GLUT_MENU_IN_USE, x_win, y_win);
   }
-  mapMenu(menu, x, y);
+  mapMenu(menu, window, x, y);
 }
 
 GLUTmenuItem *
@@ -143,48 +143,22 @@ __glutGetUniqueMenuItem(GLUTmenu * menu, UINT unique)
   return NULL;
 }
 
-GLUTmenuItem *
-__glutGetMenuItem(GLUTmenu * menu, HMENU win, int *which)
-{
-  GLUTmenuItem *item;
-  int i;
-
-  i = menu->num;
-  item = menu->list;
-  while (item) {
-    if (item->win == win) {
-      *which = i;
-      return item;
-    }
-    if (item->isTrigger) {
-      GLUTmenuItem *subitem;
-
-      subitem = __glutGetMenuItem(menuList[item->value],
-        win, which);
-      if (subitem) {
-        return subitem;
-      }
-    }
-    i--;
-    item = item->next;
-  }
-  return NULL;
-}
-
+#if 0
 GLUTmenu *
-__glutGetMenu(HMENU win)
+__glutGetMenu(Window win)
 {
   GLUTmenu *menu;
 
   menu = __glutMappedMenu;
   while (menu) {
-    if (win == menu->win) {
+    if (win == menu->hmenu) {
       return menu;
     }
     menu = menu->cascade;
   }
   return NULL;
 }
+#endif
 
 GLUTmenu *
 __glutGetMenuByNum(int menunum)
@@ -232,7 +206,7 @@ menuModificationError(void)
   __glutFatalError("menu manipulation not allowed while menus in use.");
 }
 
-int APIENTRY
+int GLUTAPIENTRY
 glutCreateMenu(GLUTselectCB selectFunc)
 {
   GLUTmenu *menu;
@@ -254,47 +228,55 @@ glutCreateMenu(GLUTselectCB selectFunc)
   menu->cascade = NULL;
   menu->highlighted = NULL;
   menu->anchor = NULL;
-  menu->win = CreatePopupMenu();
+  menu->hmenu = CreatePopupMenu();
   menuList[menuid] = menu;
   __glutSetMenu(menu);
   return menuid + 1;
 }
 
-int APIENTRY
+int GLUTAPIENTRY
 __glutCreateMenuWithExit(GLUTselectCB selectFunc, void (__cdecl *exitfunc)(int))
 {
   __glutExitFunc = exitfunc;
   return glutCreateMenu(selectFunc);
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutDestroyMenu(int menunum)
 {
   GLUTmenu *menu = __glutGetMenuByNum(menunum);
   GLUTmenuItem *item, *next;
+  int lastItem = menu->num-1;
 
   if (__glutMappedMenu) {
     menuModificationError();
   }
   assert(menu->id == menunum - 1);
-  DestroyMenu(menu->win);
-  menuList[menunum - 1] = NULL;
-  /* free all menu entries */
+  /* Free all menu items (bottom to top)... */
   item = menu->list;
   while (item) {
     assert(item->menu == menu);
     next = item->next;
     free(item->label);
     free(item);
+    /* Remove the item from the menu. */
+    RemoveMenu(menu->hmenu, lastItem, MF_BYPOSITION);
+    lastItem--;
     item = next;
   }
+  /* DestroyMenu is recursive so that's why we removed all
+     the items with RemoveMenu in the loop above.  */
+  DestroyMenu(menu->hmenu);
+  /* Null the menu's slot in the menu list. */
+  menuList[menunum - 1] = NULL;
+  /* If this menu is the current menu, make the current menu NULL. */
   if (__glutCurrentMenu == menu) {
     __glutCurrentMenu = NULL;
   }
   free(menu);
 }
 
-int APIENTRY
+int GLUTAPIENTRY
 glutGetMenu(void)
 {
   if (__glutCurrentMenu) {
@@ -304,7 +286,7 @@ glutGetMenu(void)
   }
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutSetMenu(int menuid)
 {
   GLUTmenu *menu;
@@ -323,7 +305,7 @@ glutSetMenu(int menuid)
 
 static void
 setMenuItem(GLUTmenuItem * item, const char *label,
-	    int value, Bool isTrigger)
+            int value, Bool isTrigger)
 {
   GLUTmenu *menu;
 
@@ -337,13 +319,13 @@ setMenuItem(GLUTmenuItem * item, const char *label,
   item->value = value;
   item->unique = uniqueMenuHandler++;
   if (isTrigger) {
-    AppendMenu(menu->win, MF_POPUP, (UINT)item->win, label);
+    AppendMenu(menu->hmenu, MF_POPUP, (UINT_PTR)item->hmenu, label);
   } else {
-    AppendMenu(menu->win, MF_STRING, item->unique, label);
+    AppendMenu(menu->hmenu, MF_STRING, item->unique, label);
   }
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutAddMenuEntry(const char *label, int value)
 {
   GLUTmenuItem *entry;
@@ -362,7 +344,7 @@ glutAddMenuEntry(const char *label, int value)
   __glutCurrentMenu->list = entry;
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutAddSubMenu(const char *label, int menu)
 {
   GLUTmenuItem *submenu;
@@ -379,7 +361,7 @@ glutAddSubMenu(const char *label, int menu)
   submenu->menu = __glutCurrentMenu;
   popupmenu = __glutGetMenuByNum(menu);
   if (popupmenu) {
-    submenu->win = popupmenu->win;
+    submenu->hmenu = popupmenu->hmenu;
   }
   setMenuItem(submenu, label, /* base 0 */ menu - 1, TRUE);
   __glutCurrentMenu->num++;
@@ -387,121 +369,126 @@ glutAddSubMenu(const char *label, int menu)
   __glutCurrentMenu->list = submenu;
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutChangeToMenuEntry(int num, const char *label, int value)
 {
-	GLUTmenuItem *item;
-	int i;
-	
-	if (__glutMappedMenu) {
-		menuModificationError();
-	}
-	i = __glutCurrentMenu->num;
-	item = __glutCurrentMenu->list;
-	while (item) {
-		if (i == num) {
-			if (item->isTrigger) {
-				/* If changing a submenu trigger to a menu entry, we
-				need to account for submenus.  */
-				item->menu->submenus--;
-			}
-			
-			free(item->label);
-			item->label = strdup(label);
-			if (!item->label) __glutFatalError("out of memory");
-			item->isTrigger = FALSE;
-			item->len = (int) strlen(label);
-			item->value = value;
-			item->unique = uniqueMenuHandler++;
-			
-			RemoveMenu(__glutCurrentMenu->win, (UINT) i - 1, MF_BYPOSITION);
-			InsertMenu(__glutCurrentMenu->win, (UINT) i - 1, MF_BYPOSITION | MFT_STRING, item->unique, label);
-			
-			return;
-		}
-		i--;
-		item = item->next;
-	}
-	__glutWarning("Current menu has no %d item.", num);
+  GLUTmenuItem *item;
+  int i;
+
+  if (__glutMappedMenu) {
+    menuModificationError();
+  }
+  i = __glutCurrentMenu->num;
+  item = __glutCurrentMenu->list;
+  while (item) {
+    if (i == num) {
+      if (item->isTrigger) {
+        /* If changing a submenu trigger to a menu entry, we
+           need to account for submenus.  */
+        item->menu->submenus--;
+        /* Nuke the Win32 menu. */
+        DestroyMenu(item->hmenu);               
+      }
+      free(item->label);
+
+      item->label = __glutStrdup(label);
+      if (!item->label) {
+        __glutFatalError("out of memory");
+      }
+      item->isTrigger = FALSE;
+      item->len = (int) strlen(label);
+      item->value = value;
+      item->unique = uniqueMenuHandler++;
+      ModifyMenu(__glutCurrentMenu->hmenu, (UINT) i - 1,
+        MF_BYPOSITION | MFT_STRING, item->unique, label);
+
+      return;
+    }
+    i--;
+    item = item->next;
+  }
+  __glutWarning("Current menu has no %d item.", num);
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutChangeToSubMenu(int num, const char *label, int menu)
 {
-	GLUTmenu *popupmenu;
-	GLUTmenuItem *item;
-	int i;
-	
-	if (__glutMappedMenu) {
-		menuModificationError();
-	}
-	i = __glutCurrentMenu->num;
-	item = __glutCurrentMenu->list;
-	while (item) {
-		if (i == num) {
-			if (!item->isTrigger) {
-				/* If changing a menu entry to as submenu trigger, we
-				need to account for submenus.  */
-				item->menu->submenus++;
-			}
-			free(item->label);
-			
-			item->label = strdup(label);
-			if (!item->label)
-				__glutFatalError("out of memory");
-			item->isTrigger = TRUE;
-			item->len = (int) strlen(label);
-			item->value = menu - 1;
-			item->unique = uniqueMenuHandler++;
-			popupmenu = __glutGetMenuByNum(menu);
-			if (popupmenu)
-				item->win = popupmenu->win;
-			
-			RemoveMenu(__glutCurrentMenu->win, (UINT) i - 1, MF_BYPOSITION);
-			InsertMenu(__glutCurrentMenu->win, (UINT) i - 1, MF_BYPOSITION | MFT_STRING | MF_POPUP, (UINT)item->win, label);
-			
-			return;
-		}
-		i--;
-		item = item->next;
-	}
-	__glutWarning("Current menu has no %d item.", num);
+  GLUTmenu *popupmenu;
+  GLUTmenuItem *item;
+  int i;
+
+  if (__glutMappedMenu) {
+    menuModificationError();
+  }
+  i = __glutCurrentMenu->num;
+  item = __glutCurrentMenu->list;
+  while (item) {
+    if (i == num) {
+      if (!item->isTrigger) {
+        /* If changing a menu entry to as submenu trigger, we
+           need to account for submenus.  */
+        item->menu->submenus++;
+      }
+      free(item->label);
+      
+      item->label = __glutStrdup(label);
+      if (!item->label) {
+        __glutFatalError("out of memory");
+      }
+      item->isTrigger = TRUE;
+      item->len = (int) strlen(label);
+      item->value = menu - 1;
+      item->unique = uniqueMenuHandler++;
+      popupmenu = __glutGetMenuByNum(menu);
+      if (popupmenu) {
+        item->hmenu = popupmenu->hmenu;
+      } else {
+        item->hmenu = CreatePopupMenu();
+      }
+      ModifyMenu(__glutCurrentMenu->hmenu, (UINT_PTR) i - 1,
+        MF_BYPOSITION | MF_POPUP, (UINT_PTR) item->hmenu, label);
+      return;
+    }
+    i--;
+    item = item->next;
+  }
+  __glutWarning("Current menu has no %d item.", num);
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutRemoveMenuItem(int num)
 {
-	GLUTmenuItem *item, **prev;
-	int i;
-	
-	if (__glutMappedMenu) {
-		menuModificationError();
-	}
-	i = __glutCurrentMenu->num;
-	prev = &__glutCurrentMenu->list;
-	item = __glutCurrentMenu->list;
-	while (item) {
-		if (i == num) {
-			/* Found the menu item in list to remove. */
-			__glutCurrentMenu->num--;
-			
-			/* Patch up menu's item list. */
-			*prev = item->next;
-			
-			RemoveMenu(__glutCurrentMenu->win, (UINT) i - 1, MF_BYPOSITION);
-			
-			free(item->label);
-			free(item);
-			return;
-		}
-		i--;
-		prev = &item->next;
-		item = item->next;
-	}
-	__glutWarning("Current menu has no %d item.", num);
+  GLUTmenuItem *item, **prev;
+  int i;
+
+  if (__glutMappedMenu) {
+    menuModificationError();
+  }
+  i = __glutCurrentMenu->num;
+  prev = &__glutCurrentMenu->list;
+  item = __glutCurrentMenu->list;
+  while (item) {
+    if (i == num) {
+      /* Found the menu item in list to remove. */
+      __glutCurrentMenu->num--;
+
+      /* Patch up menu's item list. */
+      *prev = item->next;
+
+      RemoveMenu(__glutCurrentMenu->hmenu, (UINT) i - 1, MF_BYPOSITION);
+
+      free(item->label);
+      free(item);
+      return;
+    }
+    i--;
+    prev = &item->next;
+    item = item->next;
+  }
+  __glutWarning("Current menu has no %d item.", num);
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutAttachMenu(int button)
 {
   if (__glutCurrentWindow == __glutGameModeWindow) {
@@ -517,7 +504,7 @@ glutAttachMenu(int button)
   __glutCurrentWindow->menu[button] = __glutCurrentMenu->id + 1;
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutDetachMenu(int button)
 {
   if (__glutMappedMenu) {

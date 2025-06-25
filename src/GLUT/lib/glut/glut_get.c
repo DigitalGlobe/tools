@@ -1,5 +1,5 @@
 
-/* Copyright (c) Mark J. Kilgard, 1994, 1997, 1998. */
+/* Copyright (c) Mark J. Kilgard, 1994, 1997, 1998, 2001. */
 
 /* This program is freely distributable without licensing fees
    and is provided without guarantee or warrantee expressed or
@@ -10,7 +10,7 @@
 #include "glutint.h"
 
 /* CENTRY */
-int APIENTRY 
+int GLUTAPIENTRY 
 glutGet(GLenum param)
 {
   Window win, root;
@@ -134,17 +134,30 @@ glutGet(GLenum param)
       return num;
     }
   case GLUT_WINDOW_NUM_SAMPLES:
-#if defined(GLX_VERSION_1_1) && defined(GLX_SGIS_multisample)
-    if (__glutIsSupportedByGLX("GLX_SGIS_multisample")) {
-      GET_CONFIG(GLX_SAMPLES_SGIS);
+#if _WIN32
+    if (__glutIsSupportedByWGL("WGL_ARB_multisample")) {
+      /* Note that WGL_SAMPLES_ARB is not the same as GLX_SAMPLES_ARB
+         and GLX_SAMPLES_SGIS. */
+      GET_CONFIG(WGL_SAMPLES_ARB);
       return value;
     } else {
       return 0;
     }
 #else
-    /* Independent of GLX server support, multisampling not
-       supported by GLX client-side. */
-    return 0;
+
+/* GLX_SAMPLES_SGIS has the same value as GLX_SAMPLES_ARB. */
+# ifndef GLX_SAMPLES_ARB
+#  define GLX_SAMPLES_ARB                      100001
+# endif
+
+    /* Multisample for GLX (either SGIS or ARB version). */
+    if (__glutIsSupportedByGLX("GLX_SGIS_multisample") ||
+        __glutIsSupportedByGLX("GLX_ARB_multisample")) {
+      GET_CONFIG(GLX_SAMPLES_ARB);
+      return value;
+    } else {
+      return 0;
+    }
 #endif
   case GLUT_WINDOW_STEREO:
     GET_CONFIG(GLX_STEREO);
@@ -178,24 +191,39 @@ glutGet(GLenum param)
       ReleaseDC(GetDesktopWindow(), XHDC);
 #endif
       if (vi) {
-        if (visAlloced)
+        if (visAlloced) {
           XFree(vi);
+        }
         return 1;
       }
       return 0;
     }
   case GLUT_ELAPSED_TIME:
     {
+#ifdef _WIN32
+      /* The Unix case below actually would work for Win32, but the
+         Win32 gettimeofday emulation routine has a resolution of about 10
+         millisecond on Windows NT 4.0 and 50 millisecond on Windows 98.
+         So use the higher resolution GetTickCount timer. */
+      DWORD beginning, now;
+
+      beginning = __glutInitTime();
+      /* GetTickCount has 5 millisecond accuracy on Windows 98
+         and 10 millisecond accuracy on Windows NT 4.0. */
+      now = GetTickCount();
+      return (int) (now - beginning);
+#else
       struct timeval elapsed, beginning, now;
 
       __glutInitTime(&beginning);
       GETTIMEOFDAY(&now);
       TIMEDELTA(elapsed, now, beginning);
       /* Return elapsed milliseconds. */
-#if defined(__vms) && ( __VMS_VER < 70000000 )
+# if defined(__vms) && ( __VMS_VER < 70000000 )
       return (int) (elapsed.val / TICKS_PER_MILLISECOND);
-#else
+# else
       return (int) ((elapsed.tv_sec * 1000) + (elapsed.tv_usec / 1000));
+# endif
 #endif
     }
   case GLUT_WINDOW_FORMAT_ID:

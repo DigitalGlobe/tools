@@ -30,36 +30,36 @@ float brand_colors [HNUM][3];
 
 #define TSCALE  4.0
 
-#define BPTS(x,y,z) {				\
-   brand_points[i][0] = TSCALE * (x);		\
-   brand_points[i][1] = TSCALE * (y);		\
-   brand_points[i][2] = TSCALE * (z);		\
-   i++;						\
+#define BPTS(x,y,z) {                           \
+   brand_points[i][0] = TSCALE * (x);           \
+   brand_points[i][1] = TSCALE * (y);           \
+   brand_points[i][2] = TSCALE * (z);           \
+   i++;                                         \
 }
 
-#define BCOLS(r,g,b) {				\
-   brand_colors[i][0] = (r);		 	\
-   brand_colors[i][1] = (g);			\
-   brand_colors[i][2] = (b);			\
-   i++;						\
+#define BCOLS(r,g,b) {                          \
+   brand_colors[i][0] = (r);                    \
+   brand_colors[i][1] = (g);                    \
+   brand_colors[i][2] = (b);                    \
+   i++;                                         \
 }
 
 #define NUMPOINTS 18
 double tspine[NUMPOINTS][3];
 float tcolors [NUMPOINTS][3];
 
-#define TPTS(x,y) {				\
-   tspine[i][0] = TSCALE * (x);		\
-   tspine[i][1] = TSCALE * (y);		\
-   tspine[i][2] = TSCALE * (0.0);		\
-   i++;						\
+#define TPTS(x,y) {                             \
+   tspine[i][0] = TSCALE * (x);         \
+   tspine[i][1] = TSCALE * (y);         \
+   tspine[i][2] = TSCALE * (0.0);               \
+   i++;                                         \
 }
 
-#define TCOLS(r,g,b) {				\
-   tcolors[i][0] = (r);				\
-   tcolors[i][1] = (g);				\
-   tcolors[i][2] = (b);				\
-   i++;						\
+#define TCOLS(r,g,b) {                          \
+   tcolors[i][0] = (r);                         \
+   tcolors[i][1] = (g);                         \
+   tcolors[i][2] = (b);                         \
+   i++;                                         \
 }
 
 /* =========================================================== */
@@ -71,7 +71,7 @@ void init_spine (void)
    float r, g, b;
 
    i=0;
-   TPTS (-1.5, 2.0);	/* panhandle */
+   TPTS (-1.5, 2.0);    /* panhandle */
    TPTS (-0.75, 2.0);
    TPTS (-0.75, 1.38);
    TPTS (-0.5, 1.25);
@@ -79,15 +79,15 @@ void init_spine (void)
    TPTS (1.0, 0.62);
    TPTS (1.12, 0.1);
    TPTS (0.5, -0.5);
-   TPTS (0.2, -1.12);	/* corpus */
-   TPTS (0.3, -1.5);	/* brownsville */
+   TPTS (0.2, -1.12);   /* corpus */
+   TPTS (0.3, -1.5);    /* brownsville */
    TPTS (-0.25, -1.45);
    TPTS (-1.06, -0.3);
    TPTS (-1.38, -0.3);
    TPTS (-1.65, -0.6);
    TPTS (-2.5, 0.5);   /* midland */
    TPTS (-1.5, 0.5);
-   TPTS (-1.5, 2.0);	/* panhandle */
+   TPTS (-1.5, 2.0);    /* panhandle */
    TPTS (-0.75, 2.0);
 
    ir = ig = ib = 0;
@@ -119,19 +119,19 @@ void init_spine (void)
 /* =========================================================== */
 
 #define SCALE 0.8
-#define BORDER(x,y) {						\
-   double ax, ay, alen;						\
-   texas_xsection[i][0] = SCALE * (x);				\
-   texas_xsection[i][1] = SCALE * (y);				\
-   if (i!=0) {							\
-      ax = texas_xsection[i][0] - texas_xsection[i-1][0];		\
-      ay = texas_xsection[i][1] - texas_xsection[i-1][1];		\
-      alen = 1.0 / sqrt (ax*ax + ay*ay);			\
-      ax *= alen;   ay *= alen;					\
-      texas_normal [i-1][0] = - ay;				\
-      texas_normal [i-1][1] = ax;				\
-   }								\
-   i++;								\
+#define BORDER(x,y) {                                           \
+   double ax, ay, alen;                                         \
+   texas_xsection[i][0] = SCALE * (x);                          \
+   texas_xsection[i][1] = SCALE * (y);                          \
+   if (i!=0) {                                                  \
+      ax = texas_xsection[i][0] - texas_xsection[i-1][0];               \
+      ay = texas_xsection[i][1] - texas_xsection[i-1][1];               \
+      alen = 1.0 / sqrt (ax*ax + ay*ay);                        \
+      ax *= alen;   ay *= alen;                                 \
+      texas_normal [i-1][0] = - ay;                             \
+      texas_normal [i-1][1] = ax;                               \
+   }                                                            \
+   i++;                                                         \
 }
 
 #define NUM_TEXAS_PTS (17)
@@ -152,15 +152,15 @@ void init_xsection (void)
    BORDER (1.0, 0.62);
    BORDER (1.12, 0.1);
    BORDER (0.5, -0.5);
-   BORDER (0.2, -1.12);	/* corpus */
-   BORDER (0.3, -1.5);	/* brownsville */
+   BORDER (0.2, -1.12); /* corpus */
+   BORDER (0.3, -1.5);  /* brownsville */
    BORDER (-0.25, -1.45);
    BORDER (-1.06, -0.3);
    BORDER (-1.38, -0.3);
    BORDER (-1.65, -0.6);
    BORDER (-2.5, 0.5);   /* midland */
    BORDER (-1.5, 0.5);
-   BORDER (-1.5, 2.0);	/* panhandle */
+   BORDER (-1.5, 2.0);  /* panhandle */
    BORDER (-0.75, 2.0);
 }
 

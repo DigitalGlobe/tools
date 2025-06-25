@@ -1,5 +1,5 @@
 
-/* Copyright (c) Mark J. Kilgard, 1994. */
+/* Copyright (c) Mark J. Kilgard, 1994, 1999. */
 
 /**
  * (c) Copyright 1993, Silicon Graphics, Inc.
@@ -39,17 +39,63 @@
  */
 
 /* Demonstrates texture environment modes and internal image formats.
-   Requires the GL_EXT_texture extension.  */
+   Requires the OpenGL 1.1 or the EXT_texture extension.  Also tests the
+   EXT_texture_env_add extension if supported. */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <GL/glut.h>
 
+#if !GL_EXT_texture
+# if defined(GL_VERSION_1_1)
+#  define GL_EXT_texture 1
+#  define GL_REPLACE_EXT GL_REPLACE
+#  define GL_LUMINANCE4_EXT GL_LUMINANCE4
+#  define GL_LUMINANCE8_EXT GL_LUMINANCE8
+#  define GL_LUMINANCE12_EXT GL_LUMINANCE12
+#  define GL_LUMINANCE16_EXT GL_LUMINANCE16
+#  define GL_ALPHA4_EXT GL_ALPHA4
+#  define GL_ALPHA8_EXT GL_ALPHA8
+#  define GL_ALPHA12_EXT GL_ALPHA12
+#  define GL_ALPHA16_EXT GL_ALPHA16
+#  define GL_INTENSITY_EXT GL_INTENSITY
+#  define GL_INTENSITY4_EXT GL_INTENSITY4
+#  define GL_INTENSITY8_EXT GL_INTENSITY8
+#  define GL_INTENSITY12_EXT GL_INTENSITY12
+#  define GL_INTENSITY16_EXT GL_INTENSITY16
+#  define GL_LUMINANCE4_ALPHA4_EXT GL_LUMINANCE4_ALPHA4
+#  define GL_LUMINANCE6_ALPHA2_EXT GL_LUMINANCE6_ALPHA2
+#  define GL_LUMINANCE8_ALPHA8_EXT GL_LUMINANCE8_ALPHA8
+#  define GL_LUMINANCE12_ALPHA4_EXT GL_LUMINANCE12_ALPHA4
+#  define GL_LUMINANCE12_ALPHA12_EXT GL_LUMINANCE12_ALPHA12
+#  define GL_LUMINANCE16_ALPHA16_EXT GL_LUMINANCE16_ALPHA16
+#  define GL_RGB4_EXT GL_RGB4
+#  define GL_RGB5_EXT GL_RGB5
+#  define GL_RGB8_EXT GL_RGB8
+#  define GL_RGB10_EXT GL_RGB10
+#  define GL_RGB12_EXT GL_RGB12
+#  define GL_RGB16_EXT GL_RGB16
+#  define GL_RGBA2_EXT GL_RGBA2
+#  define GL_RGBA4_EXT GL_RGBA4
+#  define GL_RGBA8_EXT GL_RGBA8
+#  define GL_RGBA12_EXT GL_RGBA12
+#  define GL_RGBA16_EXT GL_RGBA16
+#  define GL_RGB5_A1_EXT GL_RGB5_A1
+#  define GL_RGB10_A2_EXT GL_RGB10_A2
+#  define GL_TEXTURE_RED_SIZE_EXT GL_TEXTURE_RED_SIZE
+#  define GL_TEXTURE_GREEN_SIZE_EXT GL_TEXTURE_GREEN_SIZE
+#  define GL_TEXTURE_BLUE_SIZE_EXT GL_TEXTURE_BLUE_SIZE
+#  define GL_TEXTURE_ALPHA_SIZE_EXT GL_TEXTURE_ALPHA_SIZE
+#  define GL_TEXTURE_LUMINANCE_SIZE_EXT GL_TEXTURE_LUMINANCE_SIZE
+#  define GL_TEXTURE_INTENSITY_SIZE_EXT GL_TEXTURE_INTENSITY_SIZE
+# endif
+#endif
+
 #undef max
 #undef min
-#define max(a,b)	((a) >= (b) ? (a) : (b))
-#define min(a,b)	((a) <= (b) ? (a) : (b))
+#define max(a,b)        ((a) >= (b) ? (a) : (b))
+#define min(a,b)        ((a) <= (b) ? (a) : (b))
 /* *INDENT-OFF* */
 GLfloat lightCheck[4] = {0.7, 0.7, 0.7, 1.0};
 GLfloat darkCheck[4] = {0.3, 0.3, 0.3, 1.0};
@@ -61,6 +107,9 @@ GLfloat labelLevelColor0[4] = {0.8, 0.8, 0.1, 1.0};
 GLfloat labelLevelColor1[4] = {0.0, 0.0, 0.0, 1.0};
 /* *INDENT-ON* */
 
+GLboolean exitAfterOneFrame = GL_FALSE;
+GLboolean drawText = GL_TRUE;
+GLboolean useQuads = GL_TRUE;
 GLboolean doubleBuffered = GL_FALSE;
 GLboolean drawBackground = GL_FALSE;
 GLboolean drawBlended = GL_TRUE;
@@ -80,7 +129,7 @@ struct formatInfo {
 };
 
 #define NUM_LUMINANCE_FORMATS \
-	    (sizeof(luminanceFormats) / sizeof(luminanceFormats[0]))
+            (sizeof(luminanceFormats) / sizeof(luminanceFormats[0]))
 struct formatInfo luminanceFormats[] =
 {
   {GL_LUMINANCE, 1, "LUMINANCE"},
@@ -93,7 +142,7 @@ struct formatInfo luminanceFormats[] =
 };
 
 #define NUM_ALPHA_FORMATS \
-	    (sizeof(alphaFormats) / sizeof(alphaFormats[0]))
+            (sizeof(alphaFormats) / sizeof(alphaFormats[0]))
 struct formatInfo alphaFormats[] =
 {
   {GL_ALPHA, GL_ALPHA, "ALPHA"},
@@ -107,7 +156,7 @@ struct formatInfo alphaFormats[] =
 
 #if GL_EXT_texture
 #define NUM_INTENSITY_FORMATS \
-	    (sizeof(intensityFormats) / sizeof(intensityFormats[0]))
+            (sizeof(intensityFormats) / sizeof(intensityFormats[0]))
 struct formatInfo intensityFormats[] =
 {
   {GL_INTENSITY_EXT, GL_INTENSITY_EXT, "INTENSITY"},
@@ -119,7 +168,7 @@ struct formatInfo intensityFormats[] =
 #endif
 
 #define NUM_LUMINANCE_ALPHA_FORMATS \
-	    (sizeof(luminanceAlphaFormats) / sizeof(luminanceAlphaFormats[0]))
+            (sizeof(luminanceAlphaFormats) / sizeof(luminanceAlphaFormats[0]))
 struct formatInfo luminanceAlphaFormats[] =
 {
   {GL_LUMINANCE_ALPHA, 2, "LUMINANCE_ALPHA"},
@@ -134,12 +183,14 @@ struct formatInfo luminanceAlphaFormats[] =
 };
 
 #define NUM_RGB_FORMATS \
-	    (sizeof(rgbFormats) / sizeof(rgbFormats[0]))
+            (sizeof(rgbFormats) / sizeof(rgbFormats[0]))
 struct formatInfo rgbFormats[] =
 {
   {GL_RGB, 3, "RGB"},
 #if GL_EXT_texture
+#ifdef GL_RGB2_EXT  /* OpenGL 1.1 does not support this. */
   {GL_RGB, GL_RGB2_EXT, "RGB2"},
+#endif
   {GL_RGB, GL_RGB4_EXT, "RGB4"},
   {GL_RGB, GL_RGB5_EXT, "RGB5"},
   {GL_RGB, GL_RGB8_EXT, "RGB8"},
@@ -150,7 +201,7 @@ struct formatInfo rgbFormats[] =
 };
 
 #define NUM_RGBA_FORMATS \
-	    (sizeof(rgbaFormats) / sizeof(rgbaFormats[0]))
+            (sizeof(rgbaFormats) / sizeof(rgbaFormats[0]))
 struct formatInfo rgbaFormats[] =
 {
   {GL_RGBA, 4, "RGBA"},
@@ -171,7 +222,7 @@ struct baseFormatInfo {
 };
 
 #define NUM_BASE_FORMATS \
-	    (sizeof(baseFormats) / sizeof(baseFormats[0]))
+            (sizeof(baseFormats) / sizeof(baseFormats[0]))
 int baseFormat;
 struct baseFormatInfo baseFormats[] =
 {
@@ -186,7 +237,7 @@ struct baseFormatInfo baseFormats[] =
 };
 
 #define NUM_ENV_COLORS \
-	    (sizeof(envColors) / sizeof(envColors[0]))
+            (sizeof(envColors) / sizeof(envColors[0]))
 int envColor;
 GLfloat envColors[][4] =
 {
@@ -202,8 +253,6 @@ struct envModeInfo {
   char *name;
 };
 
-#define NUM_ENV_MODES \
-	    (sizeof(envModes) / sizeof(envModes[0]))
 struct envModeInfo envModes[] =
 {
 #if GL_EXT_texture
@@ -212,7 +261,12 @@ struct envModeInfo envModes[] =
   {GL_MODULATE, "MODULATE"},
   {GL_BLEND, "BLEND"},
   {GL_DECAL, "DECAL"},
+#if GL_EXT_texture_env_add
+  {GL_ADD, "ADD"},
+#endif
 };
+
+int numEnvModes = (sizeof(envModes) / sizeof(envModes[0]));
 
 void
 checkErrors(void)
@@ -226,11 +280,13 @@ checkErrors(void)
 static void
 drawString(char *string, GLfloat x, GLfloat y, GLfloat color[4])
 {
-  glColor4fv(color);
-  glRasterPos2f(x, y);
-  while (*string) {
-    glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_10, *string);
-    string++;
+  if (drawText) {
+    glColor4fv(color);
+    glRasterPos2f(x, y);
+    while (*string) {
+      glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_10, *string);
+      string++;
+    }
   }
 }
 
@@ -285,6 +341,9 @@ keyboard(unsigned char c, int x, int y)
   switch (c) {
   case 'c':
     envColor = ++envColor % (int) NUM_ENV_COLORS;
+    break;
+  case 'q':
+    useQuads = !useQuads;
     break;
   case 'g':
     drawBackground = !drawBackground;
@@ -405,15 +464,15 @@ loadTexture(int width, int height, struct formatInfo *format)
       if (luminanceSize > 0) {
         /** 
          ** +-----+-----+
-	 ** |     |     |
-	 ** |  W  | LG  |
-	 ** |     |     |
-	 ** +-----+-----+
-	 ** |     |     |
-	 ** | DG  |  B  |
-	 ** |     |     |
-	 ** +-----+-----+
-	 **/
+         ** |     |     |
+         ** |  W  | LG  |
+         ** |     |     |
+         ** +-----+-----+
+         ** |     |     |
+         ** | DG  |  B  |
+         ** |     |     |
+         ** +-----+-----+
+         **/
         if (i > height / 2) {
           if (j < width / 2) {
             p[0] = 0xff;
@@ -432,15 +491,15 @@ loadTexture(int width, int height, struct formatInfo *format)
       if (rgbSize > 0) {
         /**
          ** +-----+-----+
-	 ** |     |     |
-	 ** |  R  |  G  |
          ** |     |     |
-	 ** +-----+-----+
-	 ** |     |     |
+         ** |  R  |  G  |
+         ** |     |     |
+         ** +-----+-----+
+         ** |     |     |
          ** |  Y  |  B  |
-	 ** |     |     |
-	 ** +-----+-----+
-	 **/
+         ** |     |     |
+         ** +-----+-----+
+         **/
         if (i > height / 2) {
           if (j < width / 2) {
             p[0] = 0xff;
@@ -467,15 +526,15 @@ loadTexture(int width, int height, struct formatInfo *format)
       if (alphaSize > 0) {
         /**
          ** +-----------+
-	 ** |     W     |
-	 ** |  +-----+  |
-         ** |  |     |  |
-	 ** |  |  B  |  |
-	 ** |  |     |  |
+         ** |     W     |
          ** |  +-----+  |
-	 ** |           |
-	 ** +-----------+
-	 **/
+         ** |  |     |  |
+         ** |  |  B  |  |
+         ** |  |     |  |
+         ** |  +-----+  |
+         ** |           |
+         ** +-----------+
+         **/
         int i2 = i - height / 2;
         int j2 = j - width / 2;
         int h8 = height / 8;
@@ -512,7 +571,11 @@ drawCheck(int w, int h, GLfloat lightCheck[4], GLfloat darkCheck[4])
     GLfloat x0 = -1.0 + i * dw;
     GLfloat x1 = x0 + dw;
 
-    glBegin(GL_QUAD_STRIP);
+    if (useQuads) {
+      glBegin(GL_QUAD_STRIP);
+    } else {
+      glBegin(GL_TRIANGLE_STRIP);
+    }
     for (j = 0; j <= h; ++j) {
       GLfloat y = -1.0 + j * dh;
 
@@ -568,7 +631,11 @@ drawSample(int x, int y, int w, int h,
   if (drawTextured) {
     glEnable(GL_TEXTURE_2D);
   }
-  glBegin(GL_QUADS);
+  if (useQuads) {
+    glBegin(GL_QUADS);
+  } else {
+    glBegin(GL_TRIANGLE_STRIP);
+  }
   glColor4f(1.0, 0.0, 0.0, 1.0);
   glTexCoord2f(0.0, 0.0);
   glVertex2f(-0.8, -0.8);
@@ -644,7 +711,7 @@ drawSample(int x, int y, int w, int h,
 static void
 display(void)
 {
-  int numX = NUM_ENV_MODES, numY = NUM_BASE_FORMATS;
+  int numX = numEnvModes, numY = NUM_BASE_FORMATS;
   float xBase = (float) winWidth * 0.01;
   float xOffset = (winWidth - xBase) / numX;
   float xSize = max(xOffset - xBase, 1);
@@ -672,7 +739,7 @@ display(void)
     }
 
     format = &baseFormats[i].format[baseFormats[i].current];
-    for (j = 0; j < NUM_ENV_MODES; ++j) {
+    for (j = 0; j < numEnvModes; ++j) {
       struct envModeInfo *envMode;
 
       envMode = &envModes[j];
@@ -690,6 +757,20 @@ display(void)
   }
 
   checkErrors();
+  if (exitAfterOneFrame) exit(0);
+}
+
+static int
+supportsOneDotOne(void)
+{
+  const char *version;
+  int major, minor;
+
+  version = (char *) glGetString(GL_VERSION);
+  if (sscanf(version, "%d.%d", &major, &minor) == 2) {
+    return major > 1 || minor >= 1;
+  }
+  return 0;            /* OpenGL version string malformed! */
 }
 
 static void
@@ -701,8 +782,14 @@ usage(char *name)
   fprintf(stderr, "    Tests texture environments and internal formats\n");
   fprintf(stderr, "\n");
   fprintf(stderr, "  Options:\n");
-  fprintf(stderr, "    -sb  single buffered\n");
-  fprintf(stderr, "    -db  double buffered\n");
+  fprintf(stderr, "    -sb      single buffered\n");
+  fprintf(stderr, "    -db      double buffered\n");
+  fprintf(stderr, "    -g       toggle background\n");
+  fprintf(stderr, "    -c       advance texture color\n");
+  fprintf(stderr, "    -e       exit after one frame\n");
+  fprintf(stderr, "    -b       toggle blending\n");
+  fprintf(stderr, "    -s       toggle smooth shading\n");
+  fprintf(stderr, "    -notext  do not render bitmap text\n");
   fprintf(stderr, "\n");
 }
 
@@ -711,12 +798,27 @@ main(int argc, char *argv[])
 {
   int i;
 
+  glutInitWindowSize(winWidth, winHeight);
   glutInit(&argc, argv);
   for (i = 1; i < argc; ++i) {
     if (!strcmp("-sb", argv[i])) {
       doubleBuffered = GL_FALSE;
     } else if (!strcmp("-db", argv[i])) {
       doubleBuffered = GL_TRUE;
+    } else if (!strcmp("-c", argv[i])) {
+      envColor = ++envColor % (int) NUM_ENV_COLORS;
+    } else if (!strcmp("-g", argv[i])) {
+      drawBackground = !drawBackground;
+    } else if (!strcmp("-s", argv[i])) {
+      drawSmooth = !drawSmooth;
+    } else if (!strcmp("-notext", argv[i])) {
+      drawText = GL_FALSE;
+    } else if (!strcmp("-b", argv[i])) {
+      drawBlended = !drawBlended;
+    } else if (!strcmp("-t", argv[i])) {
+      useQuads = !useQuads;
+    } else if (!strcmp("-e", argv[i])) {
+      exitAfterOneFrame = GL_TRUE;
     } else {
       usage(argv[0]);
       exit(1);
@@ -728,6 +830,11 @@ main(int argc, char *argv[])
   printf("         the GL_EXT_texture extension!\n");
   printf("         Skipping GL_EXT_texture functionality...\n");
 #endif
+#if !GL_EXT_texture_env_add
+  printf("WARNING: client-side OpenGL implementation lacks\n");
+  printf("         the GL_EXT_texture_env_add extension!\n");
+  printf("         Skipping GL_EXT_texture_env_add functionality...\n");
+#endif
 
   if (doubleBuffered) {
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE);
@@ -735,13 +842,21 @@ main(int argc, char *argv[])
     glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE);
   }
 
-  glutInitWindowSize(winWidth, winHeight);
   glutCreateWindow("Texture Environment Test");
 
-  if (!glutExtensionSupported("GL_EXT_texture")) {
-    fprintf(stderr, "missing extension: GL_EXT_texture\n");
-    exit(1);
+  if (!supportsOneDotOne()) {
+    if (!glutExtensionSupported("GL_EXT_texture")) {
+      fprintf(stderr, "missing extension: GL_EXT_texture\n");
+      exit(1);
+    }
   }
+#if GL_EXT_texture_env_add
+  if (!glutExtensionSupported("GL_EXT_texture_env_add")) {
+    fprintf(stderr, "missing extension: GL_EXT_texture_env_add\n");
+    /* Do not test the GL_ADD mode. */
+    numEnvModes--;
+  }
+#endif
   initialize();
 
   glutDisplayFunc(display);

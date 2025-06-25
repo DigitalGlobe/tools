@@ -1,5 +1,5 @@
 
-/* Copyright (c) Mark J. Kilgard, 1994. */
+/* Copyright (c) Mark J. Kilgard, 1994, 2001. */
 
 /**
 (c) Copyright 1993, Silicon Graphics, Inc.
@@ -49,7 +49,7 @@ OpenGL(TM) is a trademark of Silicon Graphics, Inc.
 /* Rim, body, lid, and bottom data must be reflected in x and
    y; handle and spout data across the y axis only.  */
 
-static int patchdata[][16] =
+static const int patchdata[][16] =
 {
     /* rim */
   {102, 103, 104, 105, 4, 5, 6, 7, 8, 9, 10, 11,
@@ -80,7 +80,7 @@ static int patchdata[][16] =
 };
 /* *INDENT-OFF* */
 
-static float cpdata[][3] =
+static const float cpdata[][3] =
 {
     {0.2, 0, 2.7}, {0.2, -0.112, 2.7}, {0.112, -0.2, 2.7}, {0,
     -0.2, 2.7}, {1.3375, 0, 2.53125}, {1.3375, -0.749, 2.53125},
@@ -125,7 +125,7 @@ static float cpdata[][3] =
     {0.84, -1.5, 0.075}
 };
 
-static float tex[2][2][2] =
+static const float tex[2][2][2] =
 {
   { {0, 0},
     {1, 0}},
@@ -156,18 +156,22 @@ teapot(GLint grid, GLdouble scale, GLenum type)
         for (l = 0; l < 3; l++) {
           p[j][k][l] = cpdata[patchdata[i][j * 4 + k]][l];
           q[j][k][l] = cpdata[patchdata[i][j * 4 + (3 - k)]][l];
-          if (l == 1)
+          if (l == 1) {
             q[j][k][l] *= -1.0;
+          }
           if (i < 6) {
             r[j][k][l] =
               cpdata[patchdata[i][j * 4 + (3 - k)]][l];
-            if (l == 0)
+            if (l == 0) {
               r[j][k][l] *= -1.0;
+            }
             s[j][k][l] = cpdata[patchdata[i][j * 4 + k]][l];
-            if (l == 0)
+            if (l == 0) {
               s[j][k][l] *= -1.0;
-            if (l == 1)
+            }
+            if (l == 1) {
               s[j][k][l] *= -1.0;
+            }
           }
         }
       }
@@ -195,13 +199,13 @@ teapot(GLint grid, GLdouble scale, GLenum type)
 }
 
 /* CENTRY */
-void APIENTRY 
+void GLUTAPIENTRY 
 glutSolidTeapot(GLdouble scale)
 {
   teapot(7, scale, GL_FILL);
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutWireTeapot(GLdouble scale)
 {
   teapot(10, scale, GL_LINE);

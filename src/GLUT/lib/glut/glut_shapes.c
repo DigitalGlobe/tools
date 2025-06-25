@@ -1,5 +1,5 @@
 
-/* Copyright (c) Mark J. Kilgard, 1994, 1997. */
+/* Copyright (c) Mark J. Kilgard, 1994, 1997, 2001. */
 
 /**
 (c) Copyright 1993, Silicon Graphics, Inc.
@@ -60,12 +60,13 @@ static void
 initQuadObj(void)
 {
   quadObj = gluNewQuadric();
-  if (!quadObj)
+  if (!quadObj) {
     __glutFatalError("out of memory.");
+  }
 }
 
 /* CENTRY */
-void APIENTRY
+void GLUTAPIENTRY
 glutWireSphere(GLdouble radius, GLint slices, GLint stacks)
 {
   QUAD_OBJ_INIT();
@@ -77,7 +78,7 @@ glutWireSphere(GLdouble radius, GLint slices, GLint stacks)
   gluSphere(quadObj, radius, slices, stacks);
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutSolidSphere(GLdouble radius, GLint slices, GLint stacks)
 {
   QUAD_OBJ_INIT();
@@ -89,7 +90,7 @@ glutSolidSphere(GLdouble radius, GLint slices, GLint stacks)
   gluSphere(quadObj, radius, slices, stacks);
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutWireCone(GLdouble base, GLdouble height,
   GLint slices, GLint stacks)
 {
@@ -102,7 +103,7 @@ glutWireCone(GLdouble base, GLdouble height,
   gluCylinder(quadObj, base, 0.0, height, slices, stacks);
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutSolidCone(GLdouble base, GLdouble height,
   GLint slices, GLint stacks)
 {
@@ -120,7 +121,7 @@ glutSolidCone(GLdouble base, GLdouble height,
 static void
 drawBox(GLfloat size, GLenum type)
 {
-  static GLfloat n[6][3] =
+  static const GLfloat n[6][3] =
   {
     {-1.0, 0.0, 0.0},
     {0.0, 1.0, 0.0},
@@ -129,7 +130,7 @@ drawBox(GLfloat size, GLenum type)
     {0.0, 0.0, 1.0},
     {0.0, 0.0, -1.0}
   };
-  static GLint faces[6][4] =
+  static const GLint faces[6][4] =
   {
     {0, 1, 2, 3},
     {3, 2, 6, 7},
@@ -160,13 +161,13 @@ drawBox(GLfloat size, GLenum type)
 }
 
 /* CENTRY */
-void APIENTRY
+void GLUTAPIENTRY
 glutWireCube(GLdouble size)
 {
   drawBox(size, GL_LINE_LOOP);
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutSolidCube(GLdouble size)
 {
   drawBox(size, GL_QUADS);
@@ -175,48 +176,79 @@ glutSolidCube(GLdouble size)
 /* ENDCENTRY */
 
 static void
+quadloop(GLfloat r, GLfloat R, GLint nsides, GLfloat sideDelta,
+  GLfloat cosTheta, GLfloat sinTheta,
+  GLfloat cosTheta1, GLfloat sinTheta1)
+{
+  GLfloat dist, phi;
+  int j;
+
+  glBegin(GL_QUAD_STRIP);
+
+  dist = R + r;
+  glNormal3f(cosTheta1, -sinTheta1, 0);
+  glVertex3f(cosTheta1 * dist, -sinTheta1 * dist, 0);
+  glNormal3f(cosTheta, -sinTheta, 0);
+  glVertex3f(cosTheta * dist, -sinTheta * dist, 0);
+
+  phi = sideDelta;
+  for (j = nsides-2; j >= 0; j--) {
+    GLfloat cosPhi, sinPhi;
+
+    cosPhi = cos(phi);
+    sinPhi = sin(phi);
+    dist = R + r * cosPhi;
+
+    glNormal3f(cosTheta1 * cosPhi, -sinTheta1 * cosPhi, sinPhi);
+    glVertex3f(cosTheta1 * dist, -sinTheta1 * dist, r * sinPhi);
+    glNormal3f(cosTheta * cosPhi, -sinTheta * cosPhi, sinPhi);
+    glVertex3f(cosTheta * dist, -sinTheta * dist,  r * sinPhi);
+    phi += sideDelta;
+  }
+
+  /* Repeat first two vertices to seam up each quad strip loop so no cracks. */
+  dist = R + r;
+  glNormal3f(cosTheta1, -sinTheta1, 0);
+  glVertex3f(cosTheta1 * dist, -sinTheta1 * dist, 0);
+  glNormal3f(cosTheta, -sinTheta, 0);
+  glVertex3f(cosTheta * dist, -sinTheta * dist, 0);
+
+  glEnd();
+}
+
+static void
 doughnut(GLfloat r, GLfloat R, GLint nsides, GLint rings)
 {
-  int i, j;
-  GLfloat theta, phi, theta1;
+  const GLfloat ringDelta = 2.0 * M_PI / rings;
+  const GLfloat sideDelta = 2.0 * M_PI / nsides;
+
+  GLfloat theta, theta1;
   GLfloat cosTheta, sinTheta;
   GLfloat cosTheta1, sinTheta1;
-  GLfloat ringDelta, sideDelta;
-
-  ringDelta = 2.0 * M_PI / rings;
-  sideDelta = 2.0 * M_PI / nsides;
+  int i;
 
   theta = 0.0;
   cosTheta = 1.0;
   sinTheta = 0.0;
-  for (i = rings - 1; i >= 0; i--) {
+  for (i = rings - 2; i >= 0; i--) {
     theta1 = theta + ringDelta;
     cosTheta1 = cos(theta1);
     sinTheta1 = sin(theta1);
-    glBegin(GL_QUAD_STRIP);
-    phi = 0.0;
-    for (j = nsides; j >= 0; j--) {
-      GLfloat cosPhi, sinPhi, dist;
 
-      phi += sideDelta;
-      cosPhi = cos(phi);
-      sinPhi = sin(phi);
-      dist = R + r * cosPhi;
+    quadloop(r, R, nsides, sideDelta, cosTheta, sinTheta, cosTheta1, sinTheta1);
 
-      glNormal3f(cosTheta1 * cosPhi, -sinTheta1 * cosPhi, sinPhi);
-      glVertex3f(cosTheta1 * dist, -sinTheta1 * dist, r * sinPhi);
-      glNormal3f(cosTheta * cosPhi, -sinTheta * cosPhi, sinPhi);
-      glVertex3f(cosTheta * dist, -sinTheta * dist,  r * sinPhi);
-    }
-    glEnd();
     theta = theta1;
     cosTheta = cosTheta1;
     sinTheta = sinTheta1;
   }
+
+  cosTheta1 = 1.0;
+  sinTheta1 = 0.0;
+  quadloop(r, R, nsides, sideDelta, cosTheta, sinTheta, cosTheta1, sinTheta1);
 }
 
 /* CENTRY */
-void APIENTRY
+void GLUTAPIENTRY
 glutWireTorus(GLdouble innerRadius, GLdouble outerRadius,
   GLint nsides, GLint rings)
 {
@@ -226,7 +258,7 @@ glutWireTorus(GLdouble innerRadius, GLdouble outerRadius,
   glPopAttrib();
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutSolidTorus(GLdouble innerRadius, GLdouble outerRadius,
   GLint nsides, GLint rings)
 {
@@ -349,13 +381,13 @@ dodecahedron(GLenum type)
 }
 
 /* CENTRY */
-void APIENTRY
+void GLUTAPIENTRY
 glutWireDodecahedron(void)
 {
   dodecahedron(GL_LINE_LOOP);
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutSolidDodecahedron(void)
 {
   dodecahedron(GL_TRIANGLE_FAN);
@@ -383,7 +415,7 @@ recorditem(GLfloat * n1, GLfloat * n2, GLfloat * n3,
 }
 
 static void
-subdivide(GLfloat * v0, GLfloat * v1, GLfloat * v2,
+subdivide(const GLfloat * v0, const GLfloat * v1, const GLfloat * v2,
   GLenum shadeType)
 {
   int depth;
@@ -420,10 +452,10 @@ subdivide(GLfloat * v0, GLfloat * v1, GLfloat * v2,
 }
 
 static void
-drawtriangle(int i, GLfloat data[][3], int ndx[][3],
+drawtriangle(int i, const GLfloat data[][3], const int ndx[][3],
   GLenum shadeType)
 {
-  GLfloat *x0, *x1, *x2;
+  const GLfloat *x0, *x1, *x2;
 
   x0 = data[ndx[i][0]];
   x1 = data[ndx[i][1]];
@@ -433,7 +465,7 @@ drawtriangle(int i, GLfloat data[][3], int ndx[][3],
 
 /* octahedron data: The octahedron produced is centered at the
    origin and has radius 1.0 */
-static GLfloat odata[6][3] =
+static const GLfloat odata[6][3] =
 {
   {1.0, 0.0, 0.0},
   {-1.0, 0.0, 0.0},
@@ -443,7 +475,7 @@ static GLfloat odata[6][3] =
   {0.0, 0.0, -1.0}
 };
 
-static int ondex[8][3] =
+static const int ondex[8][3] =
 {
   {0, 4, 2},
   {1, 2, 4},
@@ -466,13 +498,13 @@ octahedron(GLenum shadeType)
 }
 
 /* CENTRY */
-void APIENTRY
+void GLUTAPIENTRY
 glutWireOctahedron(void)
 {
   octahedron(GL_LINE_LOOP);
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutSolidOctahedron(void)
 {
   octahedron(GL_TRIANGLES);
@@ -486,7 +518,7 @@ glutSolidOctahedron(void)
 #define X .525731112119133606
 #define Z .850650808352039932
 
-static GLfloat idata[12][3] =
+static const GLfloat idata[12][3] =
 {
   {-X, 0, Z},
   {X, 0, Z},
@@ -502,7 +534,7 @@ static GLfloat idata[12][3] =
   {-Z, -X, 0}
 };
 
-static int index[20][3] =
+static const int index[20][3] =
 {
   {0, 4, 1},
   {0, 9, 4},
@@ -537,13 +569,13 @@ icosahedron(GLenum shadeType)
 }
 
 /* CENTRY */
-void APIENTRY
+void GLUTAPIENTRY
 glutWireIcosahedron(void)
 {
   icosahedron(GL_LINE_LOOP);
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutSolidIcosahedron(void)
 {
   icosahedron(GL_TRIANGLES);
@@ -555,7 +587,7 @@ glutSolidIcosahedron(void)
 
 #define T       1.73205080756887729
 
-static GLfloat tdata[4][3] =
+static const GLfloat tdata[4][3] =
 {
   {T, T, T},
   {T, -T, -T},
@@ -563,7 +595,7 @@ static GLfloat tdata[4][3] =
   {-T, -T, T}
 };
 
-static int tndex[4][3] =
+static const int tndex[4][3] =
 {
   {0, 1, 3},
   {2, 1, 0},
@@ -581,13 +613,13 @@ tetrahedron(GLenum shadeType)
 }
 
 /* CENTRY */
-void APIENTRY
+void GLUTAPIENTRY
 glutWireTetrahedron(void)
 {
   tetrahedron(GL_LINE_LOOP);
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutSolidTetrahedron(void)
 {
   tetrahedron(GL_TRIANGLES);

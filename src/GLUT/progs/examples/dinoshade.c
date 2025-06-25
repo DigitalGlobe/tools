@@ -1,5 +1,5 @@
 
-/* Copyright (c) Mark J. Kilgard, 1994, 1997.  */
+/* Copyright (c) Mark J. Kilgard, 1994, 1997, 2000.  */
 
 /* This program is freely distributable without licensing fees 
    and is provided without guarantee or warrantee expressed or 
@@ -119,12 +119,12 @@ makeFloorTexture(void)
   for (t = 0; t < 16; t++) {
     for (s = 0; s < 16; s++) {
       if (circles[t][s] == 'x') {
-	/* Nice green. */
+        /* Nice green. */
         loc[0] = 0x1f;
         loc[1] = 0x8f;
         loc[2] = 0x1f;
       } else {
-	/* Light gray. */
+        /* Light gray. */
         loc[0] = 0xaa;
         loc[1] = 0xaa;
         loc[2] = 0xaa;
@@ -230,9 +230,9 @@ extrudeSolidFromPolygon(GLfloat data[][2], unsigned int dataSize,
   if (tobj == NULL) {
     tobj = gluNewTess();  /* create and initialize a GLU
                              polygon tesselation object */
-    gluTessCallback(tobj, GLU_BEGIN, glBegin);
-    gluTessCallback(tobj, GLU_VERTEX, glVertex2fv);  /* semi-tricky */
-    gluTessCallback(tobj, GLU_END, glEnd);
+    gluTessCallback(tobj, GLU_BEGIN, (void (CALLBACK*)()) glBegin);
+    gluTessCallback(tobj, GLU_VERTEX, (void (CALLBACK*)()) glVertex2fv);  /* semi-tricky */
+    gluTessCallback(tobj, GLU_END, (void (CALLBACK*)()) glEnd);
   }
   glNewList(side, GL_COMPILE);
   glShadeModel(GL_SMOOTH);  /* smooth minimizes seeing
@@ -362,7 +362,7 @@ static GLfloat floorShadow[4][4];
 static void
 redraw(void)
 {
-  int start, end;
+  int start = 0, end;
 
   if (reportSpeed) {
     start = glutGet(GLUT_ELAPSED_TIME);
@@ -399,12 +399,12 @@ redraw(void)
     if (renderReflection) {
       if (stencilReflection) {
         /* We can eliminate the visual "artifact" of seeing the "flipped"
-  	   dinosaur underneath the floor by using stencil.  The idea is
-	   draw the floor without color or depth update but so that 
-	   a stencil value of one is where the floor will be.  Later when
-	   rendering the dinosaur reflection, we will only update pixels
-	   with a stencil value of 1 to make sure the reflection only
-	   lives on the floor, not below the floor. */
+           dinosaur underneath the floor by using stencil.  The idea is
+           draw the floor without color or depth update but so that 
+           a stencil value of one is where the floor will be.  Later when
+           rendering the dinosaur reflection, we will only update pixels
+           with a stencil value of 1 to make sure the reflection only
+           lives on the floor, not below the floor. */
 
         /* Don't update color or depth. */
         glDisable(GL_DEPTH_TEST);
@@ -433,11 +433,11 @@ redraw(void)
            (the Y=0 plane) to make a relection. */
         glScalef(1.0, -1.0, 1.0);
 
-	/* Reflect the light position. */
+        /* Reflect the light position. */
         glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
 
         /* To avoid our normals getting reversed and hence botched lighting
-	   on the reflection, turn on normalize.  */
+           on the reflection, turn on normalize.  */
         glEnable(GL_NORMALIZE);
         glCullFace(GL_FRONT);
 
@@ -471,9 +471,9 @@ redraw(void)
 
     if (renderShadow) {
       if (stencilShadow) {
-	/* Draw the floor with stencil value 3.  This helps us only 
-	   draw the shadow once per floor pixel (and only on the
-	   floor pixels). */
+        /* Draw the floor with stencil value 3.  This helps us only 
+           draw the shadow once per floor pixel (and only on the
+           floor pixels). */
         glEnable(GL_STENCIL_TEST);
         glStencilFunc(GL_ALWAYS, 3, 0xffffffff);
         glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -500,32 +500,32 @@ redraw(void)
       if (stencilShadow) {
 
         /* Now, only render where stencil is set above 2 (ie, 3 where
-	   the top floor is).  Update stencil with 2 where the shadow
-	   gets drawn so we don't redraw (and accidently reblend) the
-	   shadow). */
+           the top floor is).  Update stencil with 2 where the shadow
+           gets drawn so we don't redraw (and accidently reblend) the
+           shadow). */
         glStencilFunc(GL_LESS, 2, 0xffffffff);  /* draw if ==1 */
         glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
       }
 
       /* To eliminate depth buffer artifacts, we use polygon offset
-	 to raise the depth of the projected shadow slightly so
-	 that it does not depth buffer alias with the floor. */
+         to raise the depth of the projected shadow slightly so
+         that it does not depth buffer alias with the floor. */
       if (offsetShadow) {
-	switch (polygonOffsetVersion) {
-	case EXTENSION:
-#ifdef GL_EXT_polygon_offset
-	  glEnable(GL_POLYGON_OFFSET_EXT);
-	  break;
+        switch (polygonOffsetVersion) {
+#if defined(GL_EXT_polygon_offset) && !defined(GL_VERSION_1_1)
+        case EXTENSION:
+          glEnable(GL_POLYGON_OFFSET_EXT);
+          break;
 #endif
 #ifdef GL_VERSION_1_1
-	case ONE_DOT_ONE:
+        case ONE_DOT_ONE:
           glEnable(GL_POLYGON_OFFSET_FILL);
-	  break;
+          break;
 #endif
-	case MISSING:
-	  /* Oh well. */
-	  break;
-	}
+        case MISSING:
+          /* Oh well. */
+          break;
+        }
       }
 
       /* Render 50% black shadow color on top of whatever the
@@ -536,7 +536,7 @@ redraw(void)
       glColor4f(0.0, 0.0, 0.0, 0.5);
 
       glPushMatrix();
-	/* Project the shadow. */
+        /* Project the shadow. */
         glMultMatrixf((GLfloat *) floorShadow);
         drawDinosaur();
       glPopMatrix();
@@ -545,21 +545,21 @@ redraw(void)
       glEnable(GL_LIGHTING);
 
       if (offsetShadow) {
-	switch (polygonOffsetVersion) {
-#ifdef GL_EXT_polygon_offset
-	case EXTENSION:
-	  glDisable(GL_POLYGON_OFFSET_EXT);
-	  break;
+        switch (polygonOffsetVersion) {
+#if defined(GL_EXT_polygon_offset) && !defined(GL_VERSION_1_1)
+        case EXTENSION:
+          glDisable(GL_POLYGON_OFFSET_EXT);
+          break;
 #endif
 #ifdef GL_VERSION_1_1
-	case ONE_DOT_ONE:
+        case ONE_DOT_ONE:
           glDisable(GL_POLYGON_OFFSET_FILL);
-	  break;
+          break;
 #endif
-	case MISSING:
-	  /* Oh well. */
-	  break;
-	}
+        case MISSING:
+          /* Oh well. */
+          break;
+        }
       }
       if (stencilShadow) {
         glDisable(GL_STENCIL_TEST);
@@ -576,18 +576,18 @@ redraw(void)
       glRotatef(lightAngle * -180.0 / M_PI, 0, 1, 0);
       glRotatef(atan(lightHeight/12) * 180.0 / M_PI, 0, 0, 1);
       glBegin(GL_TRIANGLE_FAN);
-	glVertex3f(0, 0, 0);
-	glVertex3f(2, 1, 1);
-	glVertex3f(2, -1, 1);
-	glVertex3f(2, -1, -1);
-	glVertex3f(2, 1, -1);
-	glVertex3f(2, 1, 1);
+        glVertex3f(0, 0, 0);
+        glVertex3f(2, 1, 1);
+        glVertex3f(2, -1, 1);
+        glVertex3f(2, -1, -1);
+        glVertex3f(2, 1, -1);
+        glVertex3f(2, 1, 1);
       glEnd();
       /* Draw a white line from light direction. */
       glColor3f(1.0, 1.0, 1.0);
       glBegin(GL_LINES);
-	glVertex3f(0, 0, 0);
-	glVertex3f(5, 0, 0);
+        glVertex3f(0, 0, 0);
+        glVertex3f(5, 0, 0);
       glEnd();
       glEnable(GL_CULL_FACE);
     } else {
@@ -773,8 +773,9 @@ supportsOneDotOne(void)
   int major, minor;
 
   version = (char *) glGetString(GL_VERSION);
-  if (sscanf(version, "%d.%d", &major, &minor) == 2)
-    return major >= 1 && minor >= 1;
+  if (sscanf(version, "%d.%d", &major, &minor) == 2) {
+    return major > 1 || minor >= 1;
+  }
   return 0;            /* OpenGL version string malformed! */
 }
 
@@ -846,7 +847,7 @@ main(int argc, char **argv)
   } else
 #endif
   {
-#ifdef GL_EXT_polygon_offset
+#if defined(GL_EXT_polygon_offset) && !defined(GL_VERSION_1_1)
   /* check for the polygon offset extension */
   if (glutExtensionSupported("GL_EXT_polygon_offset")) {
     polygonOffsetVersion = EXTENSION;

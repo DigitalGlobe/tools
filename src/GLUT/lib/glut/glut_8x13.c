@@ -2065,7 +2065,6 @@ static const BitmapCharRec * const chars[] = {
 };
 
 const BitmapFontRec glutBitmap8By13 = {
-"-misc-fixed-medium-r-normal--13-120-75-75-C-80-iso8859-1",
 256,
 0,
 chars

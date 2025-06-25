@@ -8,25 +8,25 @@
 #include "glsmapint.h"
 
 void smapGetEye(SphereMap *smap,
-	GLfloat *eyex, GLfloat *eyey, GLfloat *eyez)
+    GLfloat *eyex, GLfloat *eyey, GLfloat *eyez)
 {
-	*eyex = smap->eye[X];
-	*eyey = smap->eye[Y];
-	*eyez = smap->eye[Z];
+    *eyex = smap->eye[X];
+    *eyey = smap->eye[Y];
+    *eyez = smap->eye[Z];
 }
 
 void smapGetUp(SphereMap *smap,
-	GLfloat *upx, GLfloat *upy, GLfloat *upz)
+    GLfloat *upx, GLfloat *upy, GLfloat *upz)
 {
-	*upx = smap->up[X];
-	*upy = smap->up[Y];
-	*upz = smap->up[Z];
+    *upx = smap->up[X];
+    *upy = smap->up[Y];
+    *upz = smap->up[Z];
 }
 
 void smapGetObject(SphereMap *smap,
-	GLfloat *objx, GLfloat *objy, GLfloat *objz)
+    GLfloat *objx, GLfloat *objy, GLfloat *objz)
 {
-	*objx = smap->obj[X];
-	*objy = smap->obj[Y];
-	*objz = smap->obj[Z];
+    *objx = smap->obj[X];
+    *objy = smap->obj[Y];
+    *objz = smap->obj[Z];
 }

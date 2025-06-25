@@ -9,18 +9,18 @@
 
 void
 smapSetNearFar(SphereMap *smap,
-			   GLfloat viewNear, GLfloat viewFar)
+               GLfloat viewNear, GLfloat viewFar)
 {
-	/* Curse Intel for "near" and "far" keywords. */
-	smap->viewNear = viewNear;
-	smap->viewFar = viewFar;
+    /* Curse Intel for "near" and "far" keywords. */
+    smap->viewNear = viewNear;
+    smap->viewFar = viewFar;
 }
 
 void
 smapGetNearFar(SphereMap *smap,
-			   GLfloat *viewNear, GLfloat *viewFar)
+               GLfloat *viewNear, GLfloat *viewFar)
 {
-	/* Curse Intel for "near" and "far" keywords. */
+    /* Curse Intel for "near" and "far" keywords. */
         *viewNear = smap->viewNear;
-	*viewFar = smap->viewFar;
+    *viewFar = smap->viewFar;
 }

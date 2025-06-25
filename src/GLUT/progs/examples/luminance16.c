@@ -53,49 +53,49 @@ main(int argc, char **argv)
       pts1[u][v][0] = 2.0*((GLfloat)u);
       pts1[u][v][1] = 2.0*((GLfloat)v);
       if((u==1 || u == 2) && (v == 1 || v == 2))
-	/* Stretch up middle. */
-	pts1[u][v][2] = 6.0;
+        /* Stretch up middle. */
+        pts1[u][v][2] = 6.0;
       else
-	pts1[u][v][2] = 0.0;
+        pts1[u][v][2] = 0.0;
 
       /* Green. */
       pts2[u][v][0] = 2.0*((GLfloat)u - 3.0);
       pts2[u][v][1] = 2.0*((GLfloat)v - 3.0);
       if((u==1 || u == 2) && (v == 1 || v == 2))
-	if(u == 1 && v == 1) 
-	  /* Pull hard on single middle square. */
-	  pts2[u][v][2] = 15.0;
-	else
-	  /* Push down on other middle squares. */
-	  pts2[u][v][2] = -2.0;
+        if(u == 1 && v == 1) 
+          /* Pull hard on single middle square. */
+          pts2[u][v][2] = 15.0;
+        else
+          /* Push down on other middle squares. */
+          pts2[u][v][2] = -2.0;
       else
-	pts2[u][v][2] = 0.0;
+        pts2[u][v][2] = 0.0;
 
       /* Blue. */
       pts3[u][v][0] = 2.0*((GLfloat)u - 3.0);
       pts3[u][v][1] = 2.0*((GLfloat)v);
       if((u==1 || u == 2) && (v == 1 || v == 2))
-	if(u == 1 && v == 2)
-	  /* Pull up on single middple square. */
-	  pts3[u][v][2] = 11.0;
-	else
-	  /* Pull up slightly on other middle squares. */
-	  pts3[u][v][2] = 2.0;
+        if(u == 1 && v == 2)
+          /* Pull up on single middple square. */
+          pts3[u][v][2] = 11.0;
+        else
+          /* Pull up slightly on other middle squares. */
+          pts3[u][v][2] = 2.0;
       else
-	pts3[u][v][2] = 0.0;
+        pts3[u][v][2] = 0.0;
 
       /* Yellow. */
       pts4[u][v][0] = 2.0*((GLfloat)u);
       pts4[u][v][1] = 2.0*((GLfloat)v - 3.0);
       if((u==1 || u == 2 || u == 3) && (v == 1 || v == 2))
-	if(v == 1) 
-	  /* Push down front middle and right squares. */
-	  pts4[u][v][2] = -2.0;
-	else
-	  /* Pull up back middle and right squares. */
-	  pts4[u][v][2] = 5.0;
+        if(v == 1) 
+          /* Push down front middle and right squares. */
+          pts4[u][v][2] = -2.0;
+        else
+          /* Pull up back middle and right squares. */
+          pts4[u][v][2] = 5.0;
       else
-	pts4[u][v][2] = 0.0;
+        pts4[u][v][2] = 0.0;
     }
   }
   /* Stretch up red's far right corner. */

@@ -15,9 +15,14 @@
 #include <stdio.h>
 #include <string.h>
 #ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
+#if defined(__APPLE__) && defined(__MACH__)
+#include <OpenGL/glu.h>
+#else
 #include <GL/glu.h>
+#endif
 #include "TexFont.h"
 
 #if 0
@@ -95,19 +100,18 @@ getTCVI(TexFont * txf, int c)
     isprint(c) ? c : ' ', c);
   abort();
   /* NOTREACHED */
-  return NULL;
 }
 
 static char *lastError;
 
-char *
+const char *
 txfErrorString(void)
 {
   return lastError;
 }
 
 TexFont *
-txfLoadFont(char *filename)
+txfLoadFont(const char *filename)
 {
   TexFont *txf;
   FILE *file;
@@ -117,7 +121,7 @@ txfLoadFont(char *filename)
   int min_glyph, max_glyph;
   int endianness, swap, format, stride, width, height;
   int i, j;
-  unsigned long got;
+  size_t got;
 
   txf = NULL;
   file = fopen(filename, "rb");
@@ -131,6 +135,7 @@ txfLoadFont(char *filename)
     goto error;
   }
   /* For easy cleanup in error case. */
+  txf->texobj = 0;
   txf->tgi = NULL;
   txf->tgvi = NULL;
   txf->lut = NULL;
@@ -463,7 +468,7 @@ txfUnloadFont(
 void
 txfGetStringMetrics(
   TexFont * txf,
-  char *string,
+  const char *string,
   int len,
   int *width,
   int *max_ascent,
@@ -521,7 +526,7 @@ txfRenderGlyph(TexFont * txf, int c)
 void
 txfRenderString(
   TexFont * txf,
-  char *string,
+  const char *string,
   int len)
 {
   int i;
@@ -538,7 +543,7 @@ enum {
 void
 txfRenderFancyString(
   TexFont * txf,
-  char *string,
+  const char *string,
   int len)
 {
   TexGlyphVertexInfo *tgvi;

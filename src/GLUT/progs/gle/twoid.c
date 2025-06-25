@@ -35,23 +35,23 @@ double toid1_twists [NUM_TOID1_PTS];
 
 #define TSCALE (6.0)
 
-#define TPTS(x,y) {				\
-   toid1_points[i][0] = TSCALE * (x);		\
-   toid1_points[i][1] = TSCALE * (y);		\
-   toid1_points[i][2] = TSCALE * (0.0);		\
-   i++;						\
+#define TPTS(x,y) {                             \
+   toid1_points[i][0] = TSCALE * (x);           \
+   toid1_points[i][1] = TSCALE * (y);           \
+   toid1_points[i][2] = TSCALE * (0.0);         \
+   i++;                                         \
 }
 
-#define TCOLS(r,g,b) {				\
-   toid1_colors[i][0] = (r);			\
-   toid1_colors[i][1] = (g);			\
-   toid1_colors[i][2] = (b);			\
-   i++;						\
+#define TCOLS(r,g,b) {                          \
+   toid1_colors[i][0] = (r);                    \
+   toid1_colors[i][1] = (g);                    \
+   toid1_colors[i][2] = (b);                    \
+   i++;                                         \
 }
 
-#define TXZERO() {				\
-   toid1_twists[i] = 0.0;			\
-   i++;						\
+#define TXZERO() {                              \
+   toid1_twists[i] = 0.0;                       \
+   i++;                                         \
 }
 
 void init_toid1_line (void)
@@ -83,19 +83,19 @@ void init_toid1_line (void)
 /* =========================================================== */
 
 #define SCALE 0.6
-#define TWIST(x,y) {						\
-   double ax, ay, alen;						\
-   twistation[i][0] = SCALE * (x);				\
-   twistation[i][1] = SCALE * (y);				\
-   if (i!=0) {							\
-      ax = twistation[i][0] - twistation[i-1][0];		\
-      ay = twistation[i][1] - twistation[i-1][1];		\
-      alen = 1.0 / sqrt (ax*ax + ay*ay);			\
-      ax *= alen;   ay *= alen;					\
-      twist_normal [i-1][0] = - ay;				\
-      twist_normal [i-1][1] = ax;				\
-   }								\
-   i++;								\
+#define TWIST(x,y) {                                            \
+   double ax, ay, alen;                                         \
+   twistation[i][0] = SCALE * (x);                              \
+   twistation[i][1] = SCALE * (y);                              \
+   if (i!=0) {                                                  \
+      ax = twistation[i][0] - twistation[i-1][0];               \
+      ay = twistation[i][1] - twistation[i-1][1];               \
+      alen = 1.0 / sqrt (ax*ax + ay*ay);                        \
+      ax *= alen;   ay *= alen;                                 \
+      twist_normal [i-1][0] = - ay;                             \
+      twist_normal [i-1][1] = ax;                               \
+   }                                                            \
+   i++;                                                         \
 }
 
 #define NUM_TWIS_PTS (20)
@@ -129,14 +129,14 @@ void init_tripples (void)
    
 /* =========================================================== */
 
-#define V3F(x,y,z) {					\
-	float vvv[3]; 					\
-	vvv[0] = x; vvv[1] = y; vvv[2] = z; v3f (vvv); 	\
+#define V3F(x,y,z) {                                    \
+        float vvv[3];                                   \
+        vvv[0] = x; vvv[1] = y; vvv[2] = z; v3f (vvv);  \
 }
 
-#define N3F(x,y,z) {					\
-	float nnn[3]; 					\
-	nnn[0] = x; nnn[1] = y; nnn[2] = z; n3f (nnn); 	\
+#define N3F(x,y,z) {                                    \
+        float nnn[3];                                   \
+        nnn[0] = x; nnn[1] = y; nnn[2] = z; n3f (nnn);  \
 }
 
 /* =========================================================== */

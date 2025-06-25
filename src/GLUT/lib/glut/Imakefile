@@ -1,7 +1,12 @@
 
-/* Copyright (c) Mark J. Kilgard, 1994. */
+/* Copyright (c) Mark J. Kilgard, 1994, 1998. */
 
-#define DoNormalLib YES
+#define DoNormalLib   YES
+#define DoSharedLib   NO
+#define DoDebugLib    NO
+#define DoProfileLib  NO
+
+#define SoRev 3.7
 
 #include <Library.tmpl>
 
@@ -24,6 +29,7 @@ SRCS = \
 	glut_dstr.c \
 	glut_event.c \
 	glut_ext.c \
+	glut_fbc.c \
 	glut_fullscrn.c \
 	glut_gamemode.c \
 	glut_get.c \
@@ -72,6 +78,7 @@ OBJS = \
 	glut_dstr.o \
 	glut_event.o \
 	glut_ext.o \
+	glut_fbc.o \
 	glut_fullscrn.o \
 	glut_gamemode.o \
 	glut_get.o \
@@ -113,10 +120,32 @@ LibraryObjectRule()
 #else
 /* XXX Very lame, you must be using pre-R5 config files!  This
    will probably do essentially what LibraryObjectRule does. */
+# if DoNormalLib
 NormalLibraryObjectRule()
+# endif
+# if DoSharedLib
+SharedLibraryObjectRule()
+# endif
+# if DoDebugLib
+DebuggedLibraryObjectRule()
+# endif
+# if DoProfileLib
+ProfiledLibraryObjectRule()
+# endif
 #endif
 
+#if DoNormalLib
 NormalLibraryTarget(glut,$(OBJS))
+#endif
+#if DoSharedLib
+SharedLibraryTarget(glut,SoRev,$(OBJS),.,.)
+#endif
+#if DoDebugLib
+DebuggedLibraryTarget(glut,$(OBJS))
+#endif
+#if DoProfileLib
+ProfiledLibraryTarget(glut,$(OBJS))
+#endif
 
 /* I've gotten too many complaints from people (mostly Linux users)
    trying to build GLUT that have problems using lex and yacc to

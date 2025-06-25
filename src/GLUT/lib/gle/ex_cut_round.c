@@ -29,6 +29,9 @@
 #include "intersect.h"
 #include "segment.h"
 
+#ifndef _WIN32
+# define CALLBACK
+#endif
 
 #ifdef NONCONCAVE_CAPS
 
@@ -107,9 +110,9 @@ static void draw_cut_style_cap_callback (int iloop,
 #ifdef OPENGL_10
    GLUtriangulatorObj *tobj;
    tobj = gluNewTess ();
-   gluTessCallback (tobj, GLU_BEGIN, glBegin);
-   gluTessCallback (tobj, GLU_VERTEX, glVertex3dv);
-   gluTessCallback (tobj, GLU_END, glEnd);
+   gluTessCallback (tobj, GLU_BEGIN, (void (CALLBACK*)()) glBegin);
+   gluTessCallback (tobj, GLU_VERTEX, (void (CALLBACK*)()) glVertex3dv);
+   gluTessCallback (tobj, GLU_END, (void (CALLBACK*)()) glEnd);
 #endif /* OPENGL_10 */
 
    if (face_color != NULL) C3F (face_color);
@@ -312,7 +315,7 @@ static void draw_fillets_and_join_plain
                                   int frontwards)))
 {
    int istop;
-   int icnt, icnt_prev, iloop;
+   int icnt = 0, icnt_prev = 0, iloop = 0;
    double *cap_loop;
    gleDouble sect[3];
    gleDouble tmp_vec[3];
@@ -329,8 +332,6 @@ static void draw_fillets_and_join_plain
     * But if the first point is trimmed, keep going until one
     * is found that is not trimmed, and start join there.  */
 
-   icnt = 0;
-   iloop = 0;
    if (!is_trimmed[0]) {
       if (__TUBE_CUT_JOIN) {
          VEC_SUM (tmp_vec, trimmed_loop[0], bis_vector);
@@ -529,7 +530,7 @@ void draw_fillets_and_join_n_norms
                                   int frontwards)))
 {
    int istop;
-   int icnt, icnt_prev, iloop;
+   int icnt = 0, icnt_prev = 0, iloop = 0;
    double *cap_loop, *norm_loop;
    gleDouble sect[3];
    gleDouble tmp_vec[3];
@@ -547,8 +548,6 @@ void draw_fillets_and_join_n_norms
     * But if the first point is trimmed, keep going until one
     * is found that is not trimmed, and start join there.  */
 
-   icnt = 0;
-   iloop = 0;
    if (!is_trimmed[0]) {
       if (__TUBE_CUT_JOIN) {
          VEC_SUM (tmp_vec, trimmed_loop[0], bis_vector);
@@ -774,11 +773,11 @@ void extrusion_round_or_cut_join (int ncp,	/* number of contour points */
    gleDouble *front_cap, *back_cap;	/* arrays containing the end caps */
    gleDouble *front_loop, *back_loop; /* arrays containing the tube ends */
    double *front_norm, *back_norm; /* arrays containing normal vecs */
-   double *norm_loop, *tmp; /* normal vectors, cast into 3d from 2d */
+   double *norm_loop = 0, *tmp; /* normal vectors, cast into 3d from 2d */
    int *front_is_trimmed, *back_is_trimmed;   /* T or F */
    float *front_color, *back_color;  /* pointers to segment colors */
    void ((*cap_callback) (int,double [][3],float [3],gleDouble [3], gleDouble [3], double [][3],int));  /* function callback to draw cap */
-   void ((*tmp_cap_callback) (int,double [][3],float [3],gleDouble [3], gleDouble [3], double [][3],int));  /* function callback to draw cap */
+   void ((*tmp_cap_callback) (int,double [][3],float [3],gleDouble [3], gleDouble [3], double [][3],int)) = 0;  /* function callback to draw cap */
 
    int join_style_is_cut;      /* TRUE if join style is cut */
    double dot;                  /* partial dot product */

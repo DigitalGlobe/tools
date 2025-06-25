@@ -25,19 +25,19 @@
 /* =========================================================== */
 
 #define SCALE 3.33333
-#define CONTOUR(x,y) {					\
-   double ax, ay, alen;					\
-   contour[i][0] = SCALE * (x);				\
-   contour[i][1] = SCALE * (y);				\
-   if (i!=0) {						\
-      ax = contour[i][0] - contour[i-1][0];		\
-      ay = contour[i][1] - contour[i-1][1];		\
-      alen = 1.0 / sqrt (ax*ax + ay*ay);		\
-      ax *= alen;   ay *= alen;				\
-      norms [i-1][0] = ay;				\
-      norms [i-1][1] = -ax;				\
-   }							\
-   i++;							\
+#define CONTOUR(x,y) {                                  \
+   double ax, ay, alen;                                 \
+   contour[i][0] = SCALE * (x);                         \
+   contour[i][1] = SCALE * (y);                         \
+   if (i!=0) {                                          \
+      ax = contour[i][0] - contour[i-1][0];             \
+      ay = contour[i][1] - contour[i-1][1];             \
+      alen = 1.0 / sqrt (ax*ax + ay*ay);                \
+      ax *= alen;   ay *= alen;                         \
+      norms [i-1][0] = ay;                              \
+      norms [i-1][1] = -ax;                             \
+   }                                                    \
+   i++;                                                 \
 }
 
 #define NUM_PTS (25)

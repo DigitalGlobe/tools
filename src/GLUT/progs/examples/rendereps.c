@@ -192,7 +192,7 @@ static char *gouraudtriangleEPS[] =
   "array astore 12 index 12 index 9 index gouraudtriangle 17 index 16 index",
   "15 index 19 index 18 index 17 index 6 array astore 10 index 12 index 14",
   "index gouraudtriangle 18 {pop} repeat } { aload pop 5 3 roll aload pop 7 3",
-  "roll aload pop 9 3 roll 4 index 6 index 4 index add add 3 div 10 1 roll 7",
+  "roll aload pop 9 3 roll 8 index 6 index 4 index add add 3 div 10 1 roll 7",
   "index 5 index 3 index add add 3 div 10 1 roll 6 index 4 index 2 index add",
   "add 3 div 10 1 roll 9 {pop} repeat 3 array astore triangle } ifelse } bd",
   NULL
@@ -208,8 +208,8 @@ spewPrimitiveEPS(FILE * file, GLfloat * loc)
   GLfloat dx, dy, dr, dg, db, absR, absG, absB, colormax;
   int steps;
   Feedback3Dcolor *vertex;
-  GLfloat xstep, ystep, rstep, gstep, bstep;
-  GLfloat xnext, ynext, rnext, gnext, bnext, distance;
+  GLfloat xstep = 0, ystep = 0, rstep = 0, gstep = 0, bstep = 0;
+  GLfloat xnext = 0, ynext = 0, rnext = 0, gnext = 0, bnext = 0, distance;
 
   token = *loc;
   loc++;
@@ -520,6 +520,7 @@ spewWireFrameEPS(FILE * file, int doSort, GLint size, GLfloat * buffer, char *cr
      fragment. */
   fputs("% the gouraudtriangle PostScript fragement below is free\n", file);
   fputs("% written by Frederic Delhoume (delhoume@ilog.fr)\n", file);
+  fputs("% bug fixed by Charles Warren (cww@cfdrc.com)\n", file);
   fprintf(file, "/threshold %g def\n", EPS_GOURAUD_THRESHOLD);
   for (i = 0; gouraudtriangleEPS[i]; i++) {
     fprintf(file, "%s\n", gouraudtriangleEPS[i]);
@@ -589,8 +590,17 @@ choice(int value)
     glutSetCursor(GLUT_CURSOR_INHERIT);
     break;
   case 2:
+#ifdef _WIN32
+    printf("Win32 lacks ghostview launching\n");
+#else
     /* Try to start GNU "ghostview" to preview the EPS. */
-    system("ghostview render.eps &");
+    {
+      int rc = system("ghostview render.eps &");
+      if (rc != 0) {
+        printf("system returned %d launching ghostview\n", rc);
+      }
+    }
+#endif
     break;
   case 3:
     glutSetCursor(GLUT_CURSOR_WAIT);

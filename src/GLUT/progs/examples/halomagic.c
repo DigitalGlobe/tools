@@ -125,12 +125,12 @@ makeFloorTexture(void)
   for (t = 0; t < 16; t++) {
     for (s = 0; s < 16; s++) {
       if (circles[t][s] == 'x') {
-	/* Nice blue. */
+        /* Nice blue. */
         loc[0] = 0x1f;
         loc[1] = 0x1f;
         loc[2] = 0x8f;
       } else {
-	/* Light gray. */
+        /* Light gray. */
         loc[0] = 0xca;
         loc[1] = 0xca;
         loc[2] = 0xca;
@@ -236,9 +236,9 @@ extrudeSolidFromPolygon(GLfloat data[][2], unsigned int dataSize,
   if (tobj == NULL) {
     tobj = gluNewTess();  /* create and initialize a GLU
                              polygon tesselation object */
-    gluTessCallback(tobj, GLU_BEGIN, glBegin);
-    gluTessCallback(tobj, GLU_VERTEX, glVertex2fv);  /* semi-tricky */
-    gluTessCallback(tobj, GLU_END, glEnd);
+    gluTessCallback(tobj, GLU_BEGIN, (void (CALLBACK*)()) glBegin);
+    gluTessCallback(tobj, GLU_VERTEX, (void (CALLBACK*)()) glVertex2fv);  /* semi-tricky */
+    gluTessCallback(tobj, GLU_END, (void (CALLBACK*)()) glEnd);
   }
   glNewList(side, GL_COMPILE);
   glShadeModel(GL_SMOOTH);  /* smooth minimizes seeing
@@ -461,7 +461,7 @@ static GLfloat floorShadow[4][4];
 static void
 redraw(void)
 {
-  int start, end;
+  int start = 0, end;
 
   if (reportSpeed) {
     start = glutGet(GLUT_ELAPSED_TIME);
@@ -500,12 +500,12 @@ redraw(void)
     if (renderReflection) {
       if (stencilReflection) {
         /* We can eliminate the visual "artifact" of seeing the "flipped"
-  	   model underneath the floor by using stencil.  The idea is
-	   draw the floor without color or depth update but so that 
-	   a stencil value of one is where the floor will be.  Later when
-	   rendering the model reflection, we will only update pixels
-	   with a stencil value of 1 to make sure the reflection only
-	   lives on the floor, not below the floor. */
+           model underneath the floor by using stencil.  The idea is
+           draw the floor without color or depth update but so that 
+           a stencil value of one is where the floor will be.  Later when
+           rendering the model reflection, we will only update pixels
+           with a stencil value of 1 to make sure the reflection only
+           lives on the floor, not below the floor. */
 
         /* Don't update color or depth. */
         glDisable(GL_DEPTH_TEST);
@@ -515,7 +515,7 @@ redraw(void)
         glEnable(GL_STENCIL_TEST);
         glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
         glStencilFunc(GL_ALWAYS, 1, 0x1);
-	glStencilMask(0x1);
+        glStencilMask(0x1);
 
         /* Now render floor; floor pixels just get their stencil set to 1. */
         drawFloor();
@@ -535,20 +535,20 @@ redraw(void)
            (the Y=0 plane) to make a relection. */
         glScalef(1.0, -1.0, 1.0);
 
-	/* Reflect the light position. */
+        /* Reflect the light position. */
         glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
 
         /* To avoid our normals getting reversed and hence botched lighting
-	   on the reflection, turn on normalize.  */
+           on the reflection, turn on normalize.  */
         glEnable(GL_NORMALIZE);
         glCullFace(GL_FRONT);
 
         /* Draw the reflected model. */
-	glPushMatrix();
-	  glTranslatef(0, 8.01, 0);
+        glPushMatrix();
+          glTranslatef(0, 8.01, 0);
           drawModel();
-	glPopMatrix();
-	drawPillar();
+        glPopMatrix();
+        drawPillar();
 
         /* Disable noramlize again and re-enable back face culling. */
         glDisable(GL_NORMALIZE);
@@ -577,7 +577,7 @@ redraw(void)
 
     if (renderShadow && stencilShadow) {
      /* Draw the floor with stencil value 2.  This helps us only 
-	draw the shadow once per floor pixel (and only on the
+        draw the shadow once per floor pixel (and only on the
         floor pixels). */
       glEnable(GL_STENCIL_TEST);
       glStencilFunc(GL_ALWAYS, 0x2, 0x2);
@@ -600,9 +600,9 @@ redraw(void)
       drawPillar();
 
       if (haloScale > 1.0) {
-	/* If halo effect is enabled, draw the model with its stencil set to 6
-	   (arbitary value); later, we'll make sure not to update pixels tagged
-	   as 6. */
+        /* If halo effect is enabled, draw the model with its stencil set to 6
+           (arbitary value); later, we'll make sure not to update pixels tagged
+           as 6. */
         glEnable(GL_STENCIL_TEST);
         glStencilFunc(GL_ALWAYS, 0x0, 0x4);
         glStencilMask(0x4);
@@ -624,34 +624,34 @@ redraw(void)
       if (stencilShadow) {
 
         /* Now, only render where stencil is set above 5 (ie, 6 where
-	   the top floor is).  Update stencil with 2 where the shadow
-	   gets drawn so we don't redraw (and accidently reblend) the
-	   shadow). */
-	glEnable(GL_STENCIL_TEST);
+           the top floor is).  Update stencil with 2 where the shadow
+           gets drawn so we don't redraw (and accidently reblend) the
+           shadow). */
+        glEnable(GL_STENCIL_TEST);
         glStencilFunc(GL_NOTEQUAL, 0x0, 0x2);
         glStencilMask(0x2);
         glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
       }
 
       /* To eliminate depth buffer artifacts, we use polygon offset
-	 to raise the depth of the projected shadow slightly so
-	 that it does not depth buffer alias with the floor. */
+         to raise the depth of the projected shadow slightly so
+         that it does not depth buffer alias with the floor. */
       if (offsetShadow) {
-	switch (polygonOffsetVersion) {
-	case EXTENSION:
-#ifdef GL_EXT_polygon_offset
-	  glEnable(GL_POLYGON_OFFSET_EXT);
-	  break;
+        switch (polygonOffsetVersion) {
+#if defined(GL_EXT_polygon_offset) && !defined(GL_VERSION_1_1)
+        case EXTENSION:
+          glEnable(GL_POLYGON_OFFSET_EXT);
+          break;
 #endif
 #ifdef GL_VERSION_1_1
-	case ONE_DOT_ONE:
+        case ONE_DOT_ONE:
           glEnable(GL_POLYGON_OFFSET_FILL);
-	  break;
+          break;
 #endif
-	case MISSING:
-	  /* Oh well. */
-	  break;
-	}
+        case MISSING:
+          /* Oh well. */
+          break;
+        }
       }
 
       /* Render 50% black shadow color on top of whatever the
@@ -662,34 +662,34 @@ redraw(void)
       glColor4f(0.0, 0.0, 0.0, 0.5);
 
       glPushMatrix();
-	/* Project the shadow. */
+        /* Project the shadow. */
         glMultMatrixf((GLfloat *) floorShadow);
-	glPushMatrix();
+        glPushMatrix();
           glTranslatef(0, 8.01, 0);
           drawModel();
-	glPopMatrix();
-	drawPillar();
+        glPopMatrix();
+        drawPillar();
       glPopMatrix();
 
       glDisable(GL_BLEND);
       glEnable(GL_LIGHTING);
 
       if (offsetShadow) {
-	switch (polygonOffsetVersion) {
-#ifdef GL_EXT_polygon_offset
-	case EXTENSION:
-	  glDisable(GL_POLYGON_OFFSET_EXT);
-	  break;
+        switch (polygonOffsetVersion) {
+#if defined(GL_EXT_polygon_offset) && !defined(GL_VERSION_1_1)
+        case EXTENSION:
+          glDisable(GL_POLYGON_OFFSET_EXT);
+          break;
 #endif
 #ifdef GL_VERSION_1_1
-	case ONE_DOT_ONE:
+        case ONE_DOT_ONE:
           glDisable(GL_POLYGON_OFFSET_FILL);
-	  break;
+          break;
 #endif
-	case MISSING:
-	  /* Oh well. */
-	  break;
-	}
+        case MISSING:
+          /* Oh well. */
+          break;
+        }
       }
       if (stencilShadow) {
         glDisable(GL_STENCIL_TEST);
@@ -707,18 +707,18 @@ redraw(void)
         glRotatef(lightAngle * -180.0 / M_PI, 0, 1, 0);
         glRotatef(atan(lightHeight/12) * 180.0 / M_PI, 0, 0, 1);
         glBegin(GL_TRIANGLE_FAN);
-  	  glVertex3f(0, 0, 0);
-	  glVertex3f(2, 1, 1);
-	  glVertex3f(2, -1, 1);
-	  glVertex3f(2, -1, -1);
-	  glVertex3f(2, 1, -1);
-	  glVertex3f(2, 1, 1);
+          glVertex3f(0, 0, 0);
+          glVertex3f(2, 1, 1);
+          glVertex3f(2, -1, 1);
+          glVertex3f(2, -1, -1);
+          glVertex3f(2, 1, -1);
+          glVertex3f(2, 1, 1);
         glEnd();
         /* Draw a white line from light direction. */
         glColor3f(1.0, 1.0, 1.0);
         glBegin(GL_LINES);
-	  glVertex3f(0.1, 0, 0);
-	  glVertex3f(5, 0, 0);
+          glVertex3f(0.1, 0, 0);
+          glVertex3f(5, 0, 0);
         glEnd();
         glEnable(GL_CULL_FACE);
       } else {
@@ -736,21 +736,21 @@ redraw(void)
       glDisable(GL_LIGHTING);
 
       if (blendedHalo) {
-	/* If we are doing a nice blended halo, enable blending and
-	   make sure we only blend a halo pixel once and that we do
-	   not draw to pixels tagged as 6 (where the model is). */
-	glEnable(GL_BLEND);
-	glEnable(GL_STENCIL_TEST);
-	glColor4f(0.8, 0.8, 0.0, 0.3);  /* 30% sorta yellow. */
+        /* If we are doing a nice blended halo, enable blending and
+           make sure we only blend a halo pixel once and that we do
+           not draw to pixels tagged as 6 (where the model is). */
+        glEnable(GL_BLEND);
+        glEnable(GL_STENCIL_TEST);
+        glColor4f(0.8, 0.8, 0.0, 0.3);  /* 30% sorta yellow. */
         glStencilFunc(GL_EQUAL, 0x4, 0x4);
         glStencilMask(0x4);
         glStencilOp(GL_KEEP, GL_KEEP, GL_INVERT);
       } else {
-	/* Be cheap; no blending.  Just draw yellow halo but not updating
-	   pixels where the model is.  We don't update stencil at all. */
+        /* Be cheap; no blending.  Just draw yellow halo but not updating
+           pixels where the model is.  We don't update stencil at all. */
         glDisable(GL_BLEND);
-	glEnable(GL_STENCIL_TEST);
-	glColor3f(0.5, 0.5, 0.0);  /* Half yellow. */
+        glEnable(GL_STENCIL_TEST);
+        glColor3f(0.5, 0.5, 0.0);  /* Half yellow. */
         glStencilFunc(GL_EQUAL, 0x4, 0x4);
         glStencilMask(0x4);
         glStencilOp(GL_KEEP, GL_KEEP, GL_INVERT);
@@ -974,8 +974,9 @@ supportsOneDotOne(void)
   int major, minor;
 
   version = (char *) glGetString(GL_VERSION);
-  if (sscanf(version, "%d.%d", &major, &minor) == 2)
-    return major >= 1 && minor >= 1;
+  if (sscanf(version, "%d.%d", &major, &minor) == 2) {
+    return major > 1 || minor >= 1;
+  }
   return 0;            /* OpenGL version string malformed! */
 }
 
@@ -1050,7 +1051,7 @@ main(int argc, char **argv)
   } else
 #endif
   {
-#ifdef GL_EXT_polygon_offset
+#if defined(GL_EXT_polygon_offset) && !defined(GL_VERSION_1_1)
   /* check for the polygon offset extension */
   if (glutExtensionSupported("GL_EXT_polygon_offset")) {
     polygonOffsetVersion = EXTENSION;

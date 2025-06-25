@@ -10,24 +10,24 @@
 void
 smapSetEyeVector(SphereMap *smap, GLfloat *eye)
 {
-	smap->eye[X] = eye[X];
-	smap->eye[Y] = eye[Y];
-	smap->eye[Z] = eye[Z];
+    smap->eye[X] = eye[X];
+    smap->eye[Y] = eye[Y];
+    smap->eye[Z] = eye[Z];
 }
 
 void
 smapSetUpVector(SphereMap *smap, GLfloat *up)
 {
-	smap->up[X] = up[X];
-	smap->up[Y] = up[Y];
-	smap->up[Z] = up[Z];
+    smap->up[X] = up[X];
+    smap->up[Y] = up[Y];
+    smap->up[Z] = up[Z];
 }
 
 void
 smapSetObjectVector(SphereMap *smap, GLfloat *obj)
 {
-	smap->obj[X] = obj[X];
-	smap->obj[Y] = obj[Y];
-	smap->obj[Z] = obj[Z];
+    smap->obj[X] = obj[X];
+    smap->obj[Y] = obj[Y];
+    smap->obj[Z] = obj[Z];
 }
 

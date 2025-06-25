@@ -54,9 +54,9 @@
 
 #define BUFSIZE 512
 
-#define TORUS		1
-#define TETRAHEDRON	2
-#define ICOSAHEDRON	3
+#define TORUS           1
+#define TETRAHEDRON     2
+#define ICOSAHEDRON     3
 
 GLuint selectBuf[BUFSIZE];
 
@@ -242,7 +242,7 @@ locate(int value)
     if (mouse_state == GLUT_ENTERED) {
       (void) glRenderMode(GL_SELECT);
       glInitNames();
-      glPushName(-1);
+      glPushName(~0U);
 
       glMatrixMode(GL_PROJECTION);
       glPushMatrix();

@@ -67,11 +67,9 @@ extrudeSolidFromPolygon(GLfloat data[][2], unsigned int dataSize,
   if (tobj == NULL) {
     tobj = gluNewTess();  /* create and initialize a GLU
                              polygon * * tesselation object */
-    gluTessCallback(tobj, GLU_BEGIN, glBegin);
-    gluTessCallback(tobj, GLU_VERTEX, glVertex2fv);  /* semi-tricky 
-
-                                                      */
-    gluTessCallback(tobj, GLU_END, glEnd);
+    gluTessCallback(tobj, GLU_BEGIN, (void (CALLBACK*)()) glBegin);
+    gluTessCallback(tobj, GLU_VERTEX, (void (CALLBACK*)()) glVertex2fv);  /* semi-tricky */
+    gluTessCallback(tobj, GLU_END, (void (CALLBACK*)()) glEnd);
   }
   glNewList(side, GL_COMPILE);
   glShadeModel(GL_SMOOTH);  /* smooth minimizes seeing
@@ -187,8 +185,8 @@ redraw(void)
     recalcModelView();
 
   glClear(GL_COLOR_BUFFER_BIT | 
-	  GL_DEPTH_BUFFER_BIT | 
-	  GL_STENCIL_BUFFER_BIT);
+          GL_DEPTH_BUFFER_BIT | 
+          GL_STENCIL_BUFFER_BIT);
 
   /* Draw the real scene in the left viewport... */
   glViewport(0, 0, W / 2, H);

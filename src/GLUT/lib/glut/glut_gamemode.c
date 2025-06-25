@@ -1,5 +1,5 @@
 
-/* Copyright (c) Mark J. Kilgard, 1998. */
+/* Copyright (c) Mark J. Kilgard, 1998, 2000, 2001. */
 
 /* This program is freely distributable without licensing fees 
    and is provided without guarantee or warrantee expressed or 
@@ -15,14 +15,6 @@
 #ifndef _WIN32
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
-
-/* SGI optimization introduced in IRIX 6.3 to avoid X server
-   round trips for interning common X atoms. */
-#if defined(_SGI_EXTRA_PREDEFINES) && !defined(NO_FAST_ATOMS)
-#include <X11/SGIFastAtom.h>
-#else
-#define XSGIFastInternAtom(dpy,string,fast_name,how) XInternAtom(dpy,string,how)
-#endif
 #endif  /* not _WIN32 */
 
 int __glutDisplaySettingsChanged = 0;
@@ -31,14 +23,15 @@ static int ndmodes = -1;
 GLUTwindow *__glutGameModeWindow = NULL;
     
 #ifdef TEST
-static char *compstr[] =
+static const char *compstr[] =
 {
   "none", "=", "!=", "<=", ">=", ">", "<", "~"
 };
-static char *capstr[] =
+static const char *capstr[] =
 {
   "width", "height", "bpp", "hertz", "num"
 };
+static int verbose = 1;
 #endif
 
 void
@@ -55,7 +48,7 @@ __glutCloseDownGameMode(void)
   __glutGameModeWindow = NULL;
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutLeaveGameMode(void)
 {
   if (__glutGameModeWindow == NULL) {
@@ -119,12 +112,13 @@ initGameModeSupport(void)
       dmodes[i].cap[DM_HEIGHT] = dm.dmPelsHeight;
       dmodes[i].cap[DM_PIXEL_DEPTH] = dm.dmBitsPerPel;
       if (dm.dmDisplayFrequency == 0) {
- 	/* Guess a reasonable guess. */
-	/* Lame Windows 95 version of EnumDisplaySettings. */
+        /* Guess a reasonable guess. */
+        /* Lame Windows 95 version of EnumDisplaySettings. */
         dmodes[i].cap[DM_HERTZ] = 60;
       } else {
-	dmodes[i].cap[DM_HERTZ] = dm.dmDisplayFrequency;
+        dmodes[i].cap[DM_HERTZ] = dm.dmDisplayFrequency;
       }
+      dmodes[i].cap[DM_NUM] = i+1;
       i++;
     }
     mode++;
@@ -158,11 +152,9 @@ findMatch(DisplayMode * dmodes, int ndmodes,
 {
   DisplayMode *found;
   int *bestScore, *thisScore;
-  int i, j, numok, result, worse, better;
+  int i, j, worse, better;
 
   found = NULL;
-  numok = 1;            /* "num" capability is indexed from 1,
-                           not 0. */
 
   /* XXX alloca canidate. */
   bestScore = (int *) malloc(ncriteria * sizeof(int));
@@ -186,19 +178,16 @@ findMatch(DisplayMode * dmodes, int ndmodes,
       better = 0;
 
       for (j = 0; j < ncriteria; j++) {
-        int cap, cvalue, dvalue;
+        int cap, cvalue, dvalue, result = 0;
 
         cap = criteria[j].capability;
         cvalue = criteria[j].value;
-        if (cap == NUM) {
-          dvalue = numok;
-        } else {
-          dvalue = dmodes[i].cap[cap];
-        }
+        dvalue = dmodes[i].cap[cap];
 #ifdef TEST
-        if (verbose)
-          printf("  %s %s %d to %d\n",
-            capstr[cap], compstr[criteria[j].comparison], cvalue, dvalue);
+        if (verbose) {
+          printf("  %s %s %d to %d (%d)\n",
+            capstr[cap], compstr[criteria[j].comparison], cvalue, dvalue, cap);
+        }
 #endif
         switch (criteria[j].comparison) {
         case EQ:
@@ -232,8 +221,10 @@ findMatch(DisplayMode * dmodes, int ndmodes,
         }
 
 #ifdef TEST
-        if (verbose)
-          printf("                result=%d   score=%d   bestScore=%d\n", result, thisScore[j], bestScore[j]);
+        if (verbose) {
+          printf("                result=%d   score=%d   bestScore=%d\n",
+            result, thisScore[j], bestScore[j]);
+        }
 #endif
 
         if (result) {
@@ -260,7 +251,6 @@ findMatch(DisplayMode * dmodes, int ndmodes,
           bestScore[j] = thisScore[j];
         }
       }
-      numok++;
 
     nextDM:;
 
@@ -283,7 +273,7 @@ findMatch(DisplayMode * dmodes, int ndmodes,
  * NOTE that @ before : is not parsed.
  */
 static int
-specialCaseParse(char *word, Criterion * criterion, int mask)
+specialCaseParse(char *word, Criterion * criterion, int mask, int *requestedMask)
 {
   char *xstr, *response;
   int got;
@@ -309,13 +299,14 @@ specialCaseParse(char *word, Criterion * criterion, int mask)
       width = (int) strtol(word, &response, 0);
       if (response == word || response[0] != 'x') {
         /* Not a valid number OR needs to be followed by 'x'. */
-	return -1;
+        return -1;
       }
       height = (int) strtol(&xstr[1], &response, 0);
       if (response == &xstr[1]) {
         /* Not a valid number. */
-	return -1;
+        return -1;
       }
+      *requestedMask |= (1 << DM_HEIGHT) | (1 << DM_WIDTH);
       criterion[0].capability = DM_WIDTH;
       criterion[0].comparison = EQ;
       criterion[0].value = width;
@@ -323,13 +314,13 @@ specialCaseParse(char *word, Criterion * criterion, int mask)
       criterion[1].comparison = EQ;
       criterion[1].value = height;
       got = specialCaseParse(response,
-        &criterion[2], 1 << DM_WIDTH);
+        &criterion[2], 1 << DM_WIDTH, requestedMask);
       if (got >= 0) {
         return got + 2;
       } else {
         return -1;
       }
-    }	
+    }   
     return -1;
   case ':':
     /* The :BPP case. */
@@ -341,11 +332,12 @@ specialCaseParse(char *word, Criterion * criterion, int mask)
       /* Not a valid number. */
       return -1;
     }
+    *requestedMask |= (1 << DM_PIXEL_DEPTH);
     criterion[0].capability = DM_PIXEL_DEPTH;
     criterion[0].comparison = EQ;
     criterion[0].value = bpp;
     got = specialCaseParse(response,
-      &criterion[1], (1 << DM_WIDTH) | (1 << DM_PIXEL_DEPTH));
+      &criterion[1], (1 << DM_WIDTH) | (1 << DM_PIXEL_DEPTH), requestedMask);
     if (got >= 0) {
       return got + 1;
     } else {
@@ -361,16 +353,15 @@ specialCaseParse(char *word, Criterion * criterion, int mask)
       /* Not a valid number. */
       return -1;
     }
+    if (*response != '\0') {
+      /* Must be the end of the string. */
+      return -1;
+    }
+    *requestedMask |= (1 << DM_HERTZ);
     criterion[0].capability = DM_HERTZ;
     criterion[0].comparison = EQ;
     criterion[0].value = hertz;
-    got = specialCaseParse(response,
-      &criterion[1], ~DM_HERTZ);
-    if (got >= 0) {
-      return got + 1;
-    } else {
-      return -1;
-    }
+    return 1;
   case '\0':
     return 0;
   }
@@ -379,10 +370,10 @@ specialCaseParse(char *word, Criterion * criterion, int mask)
 
 /* This routine is based on similiar code in glut_dstr.c */
 static int
-parseCriteria(char *word, Criterion * criterion)
+parseCriteria(char *word, Criterion * criterion, int *requestedMask)
 {
   char *cstr, *vstr, *response;
-  int comparator, value;
+  int comparator, value = 0;
 
   cstr = strpbrk(word, "=><!~");
   if (cstr) {
@@ -440,6 +431,7 @@ parseCriteria(char *word, Criterion * criterion)
       if (comparator == NONE) {
         return -1;
       } else {
+        *requestedMask |= (1 << DM_PIXEL_DEPTH);
         criterion[0].comparison = comparator;
         criterion[0].value = value;
         return 1;
@@ -452,6 +444,7 @@ parseCriteria(char *word, Criterion * criterion)
       if (comparator == NONE) {
         return -1;
       } else {
+        *requestedMask |= (1 << DM_HEIGHT);
         criterion[0].comparison = comparator;
         criterion[0].value = value;
         return 1;
@@ -462,6 +455,7 @@ parseCriteria(char *word, Criterion * criterion)
       if (comparator == NONE) {
         return -1;
       } else {
+        *requestedMask |= (1 << DM_HERTZ);
         criterion[0].comparison = comparator;
         criterion[0].value = value;
         return 1;
@@ -486,6 +480,7 @@ parseCriteria(char *word, Criterion * criterion)
       if (comparator == NONE) {
         return -1;
       } else {
+        *requestedMask |= (1 << DM_WIDTH);
         criterion[0].comparison = comparator;
         criterion[0].value = value;
         return 1;
@@ -494,18 +489,21 @@ parseCriteria(char *word, Criterion * criterion)
     return -1;
   }
   if (comparator == NONE) {
-    return specialCaseParse(word, criterion, 0);
+    return specialCaseParse(word, criterion, 0, requestedMask);
   }
   return -1;
 }
 
 /* This routine is based on similiar code in glut_dstr.c */
 static Criterion *
-parseDisplayString(const char *display, int *ncriteria)
+parseGameModeString(const char *display, int *ncriteria, int *requestedMask)
 {
   Criterion *criteria = NULL;
   int n, parsed;
   char *copy, *word;
+
+  /* Initially nothing requested. */
+  *requestedMask = 0;
 
   copy = __glutStrdup(display);
   /* Attempt to estimate how many criteria entries should be
@@ -516,10 +514,10 @@ parseDisplayString(const char *display, int *ncriteria)
     n++;
     word = strtok(NULL, " \t");
   }
-  /* Allocate number of words of criteria.  A word
-     could contain as many as four criteria in the
-     worst case.  Example: 800x600:16@60 */
-  criteria = (Criterion *) malloc(4 * n * sizeof(Criterion));
+  /* Allocate number of words of criteria.  A word could contain as
+     many as four criteria in the worst case.  Example: 800x600:16@60.
+     Also add four extra criteria for extra default queries. */
+  criteria = (Criterion *) malloc((4*n + 4) * sizeof(Criterion));
   if (!criteria) {
     __glutFatalError("out of memory.");
   }
@@ -530,7 +528,7 @@ parseDisplayString(const char *display, int *ncriteria)
   n = 0;
   word = strtok(copy, " \t");
   while (word) {
-    parsed = parseCriteria(word, &criteria[n]);
+    parsed = parseCriteria(word, &criteria[n], requestedMask);
     if (parsed >= 0) {
       n += parsed;
     } else {
@@ -544,25 +542,93 @@ parseDisplayString(const char *display, int *ncriteria)
   return criteria;
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutGameModeString(const char *string)
 {
   Criterion *criteria;
-  int ncriteria;
+  int ncriteria[4], requestedMask, queries = 1;
+#if _WIN32
+  int bpp, width, height, hertz, n;
+#endif
 
   initGameModeSupport();
-  criteria = parseDisplayString(string, &ncriteria);
-  currentDm = findMatch(dmodes, ndmodes, criteria, ncriteria);
+#if _WIN32
+  XHDC = GetDC(GetDesktopWindow());
+  bpp = GetDeviceCaps(XHDC, BITSPIXEL);
+  /* Note that Windows 95 and 98 systems always return zero
+     for VREFRESH so be prepared to ignore values of hertz
+     that are too low. */
+  hertz = GetDeviceCaps(XHDC, VREFRESH);
+  width = GetSystemMetrics(SM_CXSCREEN);
+  height = GetSystemMetrics(SM_CYSCREEN);
+#endif
+  criteria = parseGameModeString(string, &ncriteria[0], &requestedMask);
+
+#if _WIN32
+  /* Build an extra set of default queries.  If no pixel depth is
+     explicitly specified, prefer a display mode that doesn't change
+     the display mode.  Likewise for the width and height.  Likewise for
+     the display frequency. */
+  n = ncriteria[0];
+  if (!(requestedMask & (1 << DM_PIXEL_DEPTH))) {
+    criteria[n].capability = DM_PIXEL_DEPTH;
+    criteria[n].comparison = EQ;
+    criteria[n].value = bpp;
+    n += 1;
+    ncriteria[queries] = n;
+    queries++;
+  }
+  if (!(requestedMask & ((1<<DM_WIDTH) | (1<<DM_HEIGHT)) )) {
+    criteria[n].capability = DM_WIDTH;
+    criteria[n].comparison = EQ;
+    criteria[n].value = width;
+    criteria[n].capability = DM_HEIGHT;
+    criteria[n].comparison = EQ;
+    criteria[n].value = height;
+    n += 2;
+    ncriteria[queries] = n;
+    queries++;
+  }
+  /* Assume a display frequency of less than 50 is to be ignored. */
+  if (hertz >= 50) {
+    if (!(requestedMask & (1 << DM_HERTZ))) {
+      criteria[n].capability = DM_HERTZ;
+      criteria[n].comparison = EQ;
+      criteria[n].value = hertz;
+      n += 1;
+      ncriteria[queries] = n;
+      queries++;
+    }
+  }
+#endif
+
+  /* Perform multiple queries until one succeeds or no more queries. */
+  do {
+    queries--;
+    currentDm = findMatch(dmodes, ndmodes, criteria, ncriteria[queries]);
+  } while((currentDm == NULL) && (queries > 0));
+
   free(criteria);
 }
 
-int APIENTRY
+int GLUTAPIENTRY
 glutEnterGameMode(void)
 {
   GLUTwindow *window;
   int width, height;
   Window win;
+  /* Initialize GLUT since glutInit may not have been called. */
+#if defined(_WIN32)
+  WNDCLASS wc;
 
+  if (!GetClassInfo(GetModuleHandle(NULL), "GLUT", &wc)) {
+    __glutOpenWin32Connection(NULL);
+  }
+#else
+  if (!__glutDisplay) {
+    __glutOpenXConnection(NULL);
+  }
+#endif
   if (__glutMappedMenu) {
     __glutFatalUsage("entering game mode not allowed while menus in use");
   }
@@ -588,6 +654,11 @@ glutEnterGameMode(void)
     LONG status;
     static int registered = 0;
 
+/* The Cygnus B20.1 tools do not have this defined. */
+#ifndef CDS_FULLSCREEN
+#define CDS_FULLSCREEN 0x00000004
+#endif
+
     status = ChangeDisplaySettings(&currentDm->devmode,
       CDS_FULLSCREEN);
     if (status == DISP_CHANGE_SUCCESSFUL) {
@@ -610,13 +681,7 @@ glutEnterGameMode(void)
   win = window->win;
 
 #if !defined(_WIN32)
-  if (__glutMotifHints == None) {
-    __glutMotifHints = XSGIFastInternAtom(__glutDisplay, "_MOTIF_WM_HINTS",
-      SGI_XA__MOTIF_WM_HINTS, 0);
-    if (__glutMotifHints == None) {
-      __glutWarning("Could not intern X atom for _MOTIF_WM_HINTS.");
-    }
-  }
+  __glutMakeFullScreenAtoms();
 
   /* Game mode window is a toplevel window. */
   XSetWMProtocols(__glutDisplay, win, &__glutWMDeleteWindow, 1);
@@ -650,7 +715,7 @@ glutEnterGameMode(void)
   return window->num + 1;
 }
 
-int APIENTRY
+int GLUTAPIENTRY
 glutGameModeGet(GLenum mode)
 {
   switch (mode) {

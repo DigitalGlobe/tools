@@ -1,4 +1,3 @@
-#include <stdio.h>
 /*
  * (c) Copyright 1993, 1994, Silicon Graphics, Inc.
  * ALL RIGHTS RESERVED
@@ -53,6 +52,7 @@
 #if defined(_WIN32)
 #pragma warning (disable:4244)          /* disable bogus conversion warnings */
 #endif
+#include <stdio.h>
 #include <math.h>
 #include "trackball.h"
 

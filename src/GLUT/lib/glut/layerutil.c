@@ -1,5 +1,5 @@
 
-/* Copyright (c) Mark J. Kilgard, 1993, 1994. */
+/* Copyright (c) Mark J. Kilgard, 1993, 1994, 2001. */
 
 /* This program is freely distributable without licensing fees
    and is provided without guarantee or warrantee expressed or
@@ -54,19 +54,22 @@ findServerOverlayVisualsInfo(Display * dpy)
             (unsigned char **) &overlayInfoPerScreen[i]);
           if (status != Success ||
             actualType != overlayVisualsAtom ||
-            actualFormat != 32 || sizeData < 4)
+            actualFormat != 32 || sizeData < 4) {
             numOverlaysPerScreen[i] = 0;
-          else
+          } else {
             /* Four 32-bit quantities per
                SERVER_OVERLAY_VISUALS entry. */
             numOverlaysPerScreen[i] = sizeData / 4;
+          }
         }
         layersRead = True;
       } else {
-        if (overlayInfoPerScreen != NULL)
+        if (overlayInfoPerScreen != NULL) {
           free(overlayInfoPerScreen);
-        if (numOverlaysPerScreen != NULL)
+        }
+        if (numOverlaysPerScreen != NULL) {
           free(numOverlaysPerScreen);
+        }
       }
     }
   }
@@ -104,8 +107,9 @@ __glutXGetLayerVisualInfo(Display * dpy, long lvinfo_mask,
 
   vinfo = XGetVisualInfo(dpy, lvinfo_mask & VisualAllMask,
     &lvinfo_template->vinfo, nitems_return);
-  if (vinfo == NULL)
+  if (vinfo == NULL) {
     return NULL;
+  }
   numVisuals = *nitems_return;
   findServerOverlayVisualsInfo(dpy);
   layerInfo = (XLayerVisualInfo *)
@@ -122,33 +126,42 @@ __glutXGetLayerVisualInfo(Display * dpy, long lvinfo_mask,
 
     overlayInfo = NULL;
     if (layersRead) {
-      for (j = 0; j < numOverlaysPerScreen[screen]; j++)
+      for (j = 0; j < numOverlaysPerScreen[screen]; j++) {
         if (pVinfo->visualid ==
           overlayInfoPerScreen[screen][j].overlay_visual) {
           overlayInfo = &overlayInfoPerScreen[screen][j];
           break;
         }
+      }
     }
-    if (lvinfo_mask & VisualLayerMask)
+    if (lvinfo_mask & VisualLayerMask) {
       if (overlayInfo == NULL) {
-        if (lvinfo_template->layer != 0)
+        if (lvinfo_template->layer != 0) {
           continue;
-      } else if (lvinfo_template->layer != overlayInfo->layer)
+        }
+      } else if (lvinfo_template->layer != overlayInfo->layer) {
         continue;
-    if (lvinfo_mask & VisualTransparentType)
+      }
+    }
+    if (lvinfo_mask & VisualTransparentType) {
       if (overlayInfo == NULL) {
-        if (lvinfo_template->type != None)
+        if (lvinfo_template->type != None) {
           continue;
+        }
       } else if (lvinfo_template->type !=
-        overlayInfo->transparent_type)
+        overlayInfo->transparent_type) {
         continue;
-    if (lvinfo_mask & VisualTransparentValue)
-      if (overlayInfo == NULL)
+      }
+    }
+    if (lvinfo_mask & VisualTransparentValue) {
+      if (overlayInfo == NULL) {
         /* Non-overlay visuals have no sense of
            TransparentValue. */
         continue;
-      else if (lvinfo_template->value != overlayInfo->value)
+      } else if (lvinfo_template->value != overlayInfo->value) {
         continue;
+      }
+    }
     layerInfo[count].vinfo = *pVinfo;
     if (overlayInfo == NULL) {
       layerInfo[count].layer = 0;
@@ -166,8 +179,9 @@ __glutXGetLayerVisualInfo(Display * dpy, long lvinfo_mask,
   if (count == 0) {
     XFree(layerInfo);
     return NULL;
-  } else
+  } else {
     return layerInfo;
+  }
 }
 
 #if 0                   /* Unused by GLUT. */
@@ -195,7 +209,8 @@ __glutXMatchLayerVisualInfo(Display * dpy, int screen,
   if (lvinfo != NULL && nitems > 0) {
     *lvinfo_return = *lvinfo;
     return 1;
-  } else
+  } else {
     return 0;
+  }
 }
 #endif

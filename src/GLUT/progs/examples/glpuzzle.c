@@ -34,10 +34,10 @@ struct puzzlelist {
   struct puzzlelist *next;
 };
 
-static char convert[PIECES + 1] =
+static const char convert[PIECES + 1] =
 {0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 4};
 
-static unsigned char colors[PIECES + 1][3] =
+static const unsigned char colors[PIECES + 1][3] =
 {
   {0, 0, 0},
   {255, 255, 127},
@@ -751,7 +751,7 @@ selectPiece(int mousex, int mousey)
   glInitNames();
 
   /* Because LoadName() won't work with no names on the stack */
-  glPushName(-1);
+  glPushName(~0U);
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();

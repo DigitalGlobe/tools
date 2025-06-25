@@ -71,9 +71,9 @@ extrudeSolidFromPolygon(GLfloat data[][2], unsigned int dataSize,
   if (tobj == NULL) {
     tobj = gluNewTess();  /* create and initialize a GLU
                              polygon tesselation object */
-    gluTessCallback(tobj, GLU_BEGIN, glBegin);
-    gluTessCallback(tobj, GLU_VERTEX, glVertex2fv);  /* semi-tricky */
-    gluTessCallback(tobj, GLU_END, glEnd);
+    gluTessCallback(tobj, GLU_BEGIN, (void (CALLBACK*)()) glBegin);
+    gluTessCallback(tobj, GLU_VERTEX, (void (CALLBACK*)()) glVertex2fv);  /* semi-tricky */
+    gluTessCallback(tobj, GLU_END, (void (CALLBACK*)()) glEnd);
   }
   glNewList(side, GL_COMPILE);
   glShadeModel(GL_SMOOTH);  /* smooth minimizes seeing
@@ -193,12 +193,12 @@ redraw(void)
     if (useStencil) {
      
       /* We can eliminate the visual "artifact" of seeing the "flipped"
-	 dinosaur underneath the floor by using stencil.  The idea is
-	 draw the floor without color or depth update but so that 
-	 a stencil value of one is where the floor will be.  Later when
-	 rendering the dinosaur reflection, we will only update pixels
-	 with a stencil value of 1 to make sure the reflection only
-	 lives on the floor, not below the floor. */
+         dinosaur underneath the floor by using stencil.  The idea is
+         draw the floor without color or depth update but so that 
+         a stencil value of one is where the floor will be.  Later when
+         rendering the dinosaur reflection, we will only update pixels
+         with a stencil value of 1 to make sure the reflection only
+         lives on the floor, not below the floor. */
 
       /* Don't update color or depth. */
       glDisable(GL_DEPTH_TEST);
@@ -232,11 +232,11 @@ redraw(void)
       glLightfv(GL_LIGHT1, GL_POSITION, lightOnePosition);
 
       /* XXX Ugh, unfortunately the back face culling reverses when we reflect
-	 the dinosaur.  Easy solution is just disable back face culling for
-	 rendering the reflection.  Also, the normals for lighting get screwed
-	 up by the scale; enabled normalize to ensure normals are still
-	 properly normalized despite the scaling.  We could have fixed the
-	 dinosaur rendering code, but this is more expedient. */
+         the dinosaur.  Easy solution is just disable back face culling for
+         rendering the reflection.  Also, the normals for lighting get screwed
+         up by the scale; enabled normalize to ensure normals are still
+         properly normalized despite the scaling.  We could have fixed the
+         dinosaur rendering code, but this is more expedient. */
       glEnable(GL_NORMALIZE);
       glCullFace(GL_FRONT);
 
@@ -256,7 +256,7 @@ redraw(void)
 
     if (useStencil) {
       /* Don't want to be using stenciling for drawing the actual dinosaur
-	 (not its reflection) and the floor. */
+         (not its reflection) and the floor. */
       glDisable(GL_STENCIL_TEST);
     }
 

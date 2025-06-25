@@ -795,7 +795,7 @@ menuFunc(int value)
 #define REPORTSTART(text)                          \
         printf("\n" text "\n");                    \
         textPtr[0] = (char *)malloc(strlen(text)+1); \
-	strcpy(textPtr[0], text);                  \
+        strcpy(textPtr[0], text);                  \
         textCount = 1;
 
 #define REPORTEND                                  \
@@ -808,15 +808,15 @@ menuFunc(int value)
        {                                           \
           char str[100], str2[100];                \
           int s, len;                              \
-          sprintf(str, # name);                    \
+          strcpy(str, # name);                     \
           len = (int) strlen(# name);              \
           for(s = 0 ; s < INDENT-len; s++)         \
             strcat(str, " ");                      \
           sprintf(str2, ": %d\n",glutGet(name));   \
-	  strcat(str, str2);                       \
-	  printf(str);                             \
-	  textPtr[textCount] = stralloc(str);      \
- 	  textCount++;                             \
+          strcat(str, str2);                       \
+          printf("%s", str);                       \
+          textPtr[textCount] = stralloc(str);      \
+          textCount++;                             \
        }
 
   case 700:
@@ -866,17 +866,17 @@ menuFunc(int value)
         {                                        \
           char str[100], str2[100];              \
           int len, s;                            \
-          sprintf(str, # name);                  \
+          strcpy(str, # name);                   \
           len = (int) strlen(# name);            \
           for(s = 0 ; s < INDENT-len; s++)       \
             strcat(str, " ");                    \
           sprintf(str2, ": %d\n",                \
-	     glutDeviceGet(name));               \
-	  strcat(str, str2);                     \
-	  printf(str);                           \
-	  textPtr[textCount] = stralloc(str);    \
- 	  textCount++;                           \
-	}
+             glutDeviceGet(name));               \
+          strcat(str, str2);                     \
+          printf("%s", str);                     \
+          textPtr[textCount] = stralloc(str);    \
+          textCount++;                           \
+        }
 
   case 701:
     REPORTSTART("glutDeviceGet():");
@@ -899,17 +899,17 @@ menuFunc(int value)
         {                                        \
           char str[100], str2[100];              \
           int len, s;                            \
-          sprintf(str, # name);                  \
+          strcpy(str, # name);                   \
           len = (int) strlen(# name);            \
           for(s = 0 ; s < INDENT-len; s++)       \
             strcat(str, " ");                    \
           sprintf(str2, ": %s\n",                \
-	     glutExtensionSupported(# name)?     \
-	       "yes": "no");                     \
-	  strcat(str, str2);                     \
-	  printf(str);                           \
-	  textPtr[textCount] = stralloc(str);    \
- 	  textCount++;                           \
+             glutExtensionSupported(# name)?     \
+               "yes": "no");                     \
+          strcat(str, str2);                     \
+          printf("%s", str);                     \
+          textPtr[textCount] = stralloc(str);    \
+          textCount++;                           \
         }
 
   case 702:
@@ -1021,22 +1021,22 @@ redefineShapes(int shape)
   int i;
 
 #define C3                \
-   	 switch(i)        \
-	 {                \
-	     case 0:      \
-	     case 3:      \
-	       C1;        \
-	       break;     \
-	                  \
-	     case 1:      \
-	     case 2:      \
-	     case 4:      \
-	     case 6:      \
-	     case 7:      \
-	       C2;        \
-	       break;     \
-	 }                \
-	 currentShape = shape
+         switch(i)        \
+         {                \
+             case 0:      \
+             case 3:      \
+               C1;        \
+               break;     \
+                          \
+             case 1:      \
+             case 2:      \
+             case 4:      \
+             case 6:      \
+             case 7:      \
+               C2;        \
+               break;     \
+         }                \
+         currentShape = shape
 
   for (i = 0; i < MAXWIN; i++) {
     if (winId[i]) {
@@ -1764,24 +1764,23 @@ makeWindow(int index)
 
   case 6:              /* color index window  */
   case 7:              /* color index window  */
+
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_INDEX | GLUT_DEPTH);
-	 if (glutGet(GLUT_DISPLAY_MODE_POSSIBLE)) {
-		 glutInitWindowPosition(pos[index][0], pos[index][1]);
-		 glutInitWindowSize(size[index][0], size[index][1]);
-		 winId[index] = glutCreateWindow(" ");
-		 PR("Window %d id = %d \n", index, winId[index]);
+    glutInitWindowPosition(pos[index][0], pos[index][1]);
+    glutInitWindowSize(size[index][0], size[index][1]);
+    winId[index] = glutCreateWindow(" ");
+    PR("Window %d id = %d \n", index, winId[index]);
 
-		 gfxInit(index);
+    gfxInit(index);
 
-		 addCallbacks();
+    addCallbacks();
 
-		 sprintf(str, "window %d (color index)", index);
-		 glutSetWindowTitle(str);
-		 sprintf(str, "icon %d", index);
-		 glutSetIconTitle(str);
-		 glutSetMenu(menu1);
-		 glutAttachMenu(GLUT_RIGHT_BUTTON);
-	 }
+    sprintf(str, "window %d (color index)", index);
+    glutSetWindowTitle(str);
+    sprintf(str, "icon %d", index);
+    glutSetIconTitle(str);
+    glutSetMenu(menu1);
+    glutAttachMenu(GLUT_RIGHT_BUTTON);
     break;
 
   }
@@ -2050,8 +2049,8 @@ autoDemo(int value)
 #define STEP(a, b)  \
     case a:         \
         action(a);  \
-	glutTimerFunc(AUTODELAY * b, autoDemo, next(a); \
-	break;
+        glutTimerFunc(AUTODELAY * b, autoDemo, next(a); \
+        break;
 
   static int index = 0;
   static int count = 0;
@@ -2303,11 +2302,11 @@ checkArgs(int argc, char *argv[])
 
 #if 0
 #define NEXT argp++;      \
-	    if(argp >= argc) \
-	    {                \
-	       Usage();      \
-	       Exit(1);      \
-	    }
+            if(argp >= argc) \
+            {                \
+               Usage();      \
+               Exit(1);      \
+            }
 #endif
 
   argp = 1;

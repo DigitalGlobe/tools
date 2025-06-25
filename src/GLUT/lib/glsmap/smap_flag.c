@@ -10,11 +10,11 @@
 void
 smapSetFlags(SphereMap *smap, SphereMapFlags flags)
 {
-	smap->flags = flags;
+    smap->flags = flags;
 }
 
 void
 smapGetFlags(SphereMap *smap, SphereMapFlags *flags)
 {
-	*flags = smap->flags;
+    *flags = smap->flags;
 }

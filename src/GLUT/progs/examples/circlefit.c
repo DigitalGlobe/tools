@@ -70,7 +70,7 @@ CircleFit(int N, Point2 * P, double *pa, double *pb, double *pr)
   const int maxIterations = 256;
   const double tolerance = 1e-06;
 
-  double a, b, r;
+  double a, b, r = 0;
 
   /* compute the average of the data points */
   int i, j;

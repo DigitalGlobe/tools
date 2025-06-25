@@ -1,5 +1,5 @@
 
-/* Copyright (c) Mark J. Kilgard, 1994.  */
+/* Copyright (c) Mark J. Kilgard, 1994, 2001.  */
 
 /* This program is freely distributable without licensing fees
    and is provided without guarantee or warrantee expressed or
@@ -10,7 +10,7 @@
 #include <string.h>
 #include <assert.h>
 
-#if !defined(_WIN32)
+#ifndef _WIN32
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>  /* for XA_STRING atom */
@@ -19,41 +19,41 @@
 #include "glutint.h"
 
 /* CENTRY */
-void APIENTRY 
+void GLUTAPIENTRY 
 glutSetWindowTitle(const char *title)
 {
   XTextProperty textprop;
 
   assert(!__glutCurrentWindow->parent);
   IGNORE_IN_GAME_MODE();
+  /* Ok that "cast discards `const' from pointer target type" below. */
   textprop.value = (unsigned char *) title;
   textprop.encoding = XA_STRING;
   textprop.format = 8;
-  textprop.nitems = strlen(title);
+  textprop.nitems = (unsigned long)strlen(title);
   XSetWMName(__glutDisplay,
     __glutCurrentWindow->win, &textprop);
   XFlush(__glutDisplay);
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutSetIconTitle(const char *title)
 {
-#if !defined(_WIN32)
   XTextProperty textprop;
 
   assert(!__glutCurrentWindow->parent);
   IGNORE_IN_GAME_MODE();
+  /* Ok that "cast discards `const' from pointer target type" below. */
   textprop.value = (unsigned char *) title;
   textprop.encoding = XA_STRING;
   textprop.format = 8;
-  textprop.nitems = strlen(title);
+  textprop.nitems = (unsigned long)strlen(title);
   XSetWMIconName(__glutDisplay,
     __glutCurrentWindow->win, &textprop);
   XFlush(__glutDisplay);
-#endif
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutPositionWindow(int x, int y)
 {
   IGNORE_IN_GAME_MODE();
@@ -63,12 +63,13 @@ glutPositionWindow(int x, int y)
   __glutPutOnWorkList(__glutCurrentWindow, GLUT_CONFIGURE_WORK);
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutReshapeWindow(int w, int h)
 {
   IGNORE_IN_GAME_MODE();
-  if (w <= 0 || h <= 0)
+  if (w <= 0 || h <= 0) {
     __glutWarning("glutReshapeWindow: non-positive width or height not allowed");
+  }
 
   __glutCurrentWindow->desiredWidth = w;
   __glutCurrentWindow->desiredHeight = h;
@@ -76,7 +77,7 @@ glutReshapeWindow(int w, int h)
   __glutPutOnWorkList(__glutCurrentWindow, GLUT_CONFIGURE_WORK);
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutPopWindow(void)
 {
   IGNORE_IN_GAME_MODE();
@@ -85,7 +86,7 @@ glutPopWindow(void)
   __glutPutOnWorkList(__glutCurrentWindow, GLUT_CONFIGURE_WORK);
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutPushWindow(void)
 {
   IGNORE_IN_GAME_MODE();
@@ -94,7 +95,7 @@ glutPushWindow(void)
   __glutPutOnWorkList(__glutCurrentWindow, GLUT_CONFIGURE_WORK);
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutIconifyWindow(void)
 {
   IGNORE_IN_GAME_MODE();
@@ -103,7 +104,7 @@ glutIconifyWindow(void)
   __glutPutOnWorkList(__glutCurrentWindow, GLUT_MAP_WORK);
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutShowWindow(void)
 {
   IGNORE_IN_GAME_MODE();
@@ -111,7 +112,7 @@ glutShowWindow(void)
   __glutPutOnWorkList(__glutCurrentWindow, GLUT_MAP_WORK);
 }
 
-void APIENTRY 
+void GLUTAPIENTRY 
 glutHideWindow(void)
 {
   IGNORE_IN_GAME_MODE();

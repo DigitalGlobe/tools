@@ -25,32 +25,32 @@ double beam_twists [NUM_BEAM_PTS];
 
 #define TSCALE (6.0)
 
-#define TPTS(x,y,z) {				\
-   beam_spine[i][0] = TSCALE * (x);		\
-   beam_spine[i][1] = TSCALE * (y);		\
-   beam_spine[i][2] = TSCALE * (z);		\
-   i++;						\
+#define TPTS(x,y,z) {                           \
+   beam_spine[i][0] = TSCALE * (x);             \
+   beam_spine[i][1] = TSCALE * (y);             \
+   beam_spine[i][2] = TSCALE * (z);             \
+   i++;                                         \
 }
 
-#define TXZERO() {				\
-   beam_twists[i] = 0.0;			\
+#define TXZERO() {                              \
+   beam_twists[i] = 0.0;                        \
 }
 /* =========================================================== */
 
 #define SCALE 0.1
-#define XSECTION(x,y) {					\
-   double ax, ay, alen;					\
-   xsection[i][0] = SCALE * (x);			\
-   xsection[i][1] = SCALE * (y);			\
-   if (i!=0) {						\
-      ax = xsection[i][0] - xsection[i-1][0];		\
-      ay = xsection[i][1] - xsection[i-1][1];		\
-      alen = 1.0 / sqrt (ax*ax + ay*ay);		\
-      ax *= alen;   ay *= alen;				\
-      xnormal [i-1][0] = - ay;				\
-      xnormal [i-1][1] = ax;				\
-   }							\
-   i++;							\
+#define XSECTION(x,y) {                                 \
+   double ax, ay, alen;                                 \
+   xsection[i][0] = SCALE * (x);                        \
+   xsection[i][1] = SCALE * (y);                        \
+   if (i!=0) {                                          \
+      ax = xsection[i][0] - xsection[i-1][0];           \
+      ay = xsection[i][1] - xsection[i-1][1];           \
+      alen = 1.0 / sqrt (ax*ax + ay*ay);                \
+      ax *= alen;   ay *= alen;                         \
+      xnormal [i-1][0] = - ay;                          \
+      xnormal [i-1][1] = ax;                            \
+   }                                                    \
+   i++;                                                 \
 }
 
 #define NUM_XSECTION_PTS (12)

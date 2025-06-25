@@ -1,5 +1,5 @@
 
-/* Copyright (c) Mark J. Kilgard, 1996, 1997.  */
+/* Copyright (c) Mark J. Kilgard, 1996, 1997, 2001.  */
 
 /* This program is freely distributable without licensing fees
    and is provided without guarantee or warrantee expressed or
@@ -10,19 +10,27 @@
 #include <string.h>
 #include <assert.h>
 
-#if !defined(_WIN32)
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>  /* for XA_RGB_DEFAULT_MAP atom */
-#if defined (__vms)
-#include <Xmu/StdCmap.h>  /* for XmuLookupStandardColormap */
-#else
-#include <X11/Xmu/StdCmap.h>  /* for XmuLookupStandardColormap */
-#endif
+#ifndef _WIN32
+# include <X11/Xlib.h>
+# include <X11/Xutil.h>
+# include <X11/Xatom.h>  /* for XA_RGB_DEFAULT_MAP atom */
+# if defined (__vms)
+#  include <Xmu/StdCmap.h>  /* for XmuLookupStandardColormap */
+# else
+#  include <X11/Xmu/StdCmap.h>  /* for XmuLookupStandardColormap */
+# endif
 #endif /* !_WIN32 */
 
 #include "glutint.h"
 #include "layerutil.h"
+
+/* Some Mesa versions define GLX_VERSION_1_2 without defining
+   GLX_VERSION_1_1. */
+#if defined(GLX_VERSION_1_2) && !defined(GLX_VERSION_1_1)
+# define GLX_VERSION_1_1 1
+#endif
+
+#if !defined(_WIN32)
 
 static Criterion requiredOverlayCriteria[] =
 {
@@ -33,11 +41,15 @@ static Criterion requiredOverlayCriteria[] =
   {RGBA, EQ, 0},
   {BUFFER_SIZE, GTE, 1}
 };
-static int numRequiredOverlayCriteria = sizeof(requiredOverlayCriteria) / sizeof(Criterion);
+static const int numRequiredOverlayCriteria =
+  sizeof(requiredOverlayCriteria) / sizeof(Criterion);
 static int requiredOverlayCriteriaMask =
-(1 << LEVEL) | (1 << TRANSPARENT) | (1 << XSTATICGRAY) | (1 << RGBA) | (1 << CI_MODE);
+  (1 << LEVEL) |
+  (1 << TRANSPARENT) |
+  (1 << XSTATICGRAY) |
+  (1 << RGBA) |
+  (1 << CI_MODE);
 
-#if !defined(_WIN32)
 static int
 checkOverlayAcceptability(XVisualInfo * vi, unsigned int mode)
 {
@@ -45,53 +57,69 @@ checkOverlayAcceptability(XVisualInfo * vi, unsigned int mode)
 
   /* Must support OpenGL. */
   glXGetConfig(__glutDisplay, vi, GLX_USE_GL, &value);
-  if (!value)
+  if (!value) {
     return 1;
+  }
 
   /* Must be color index. */
   glXGetConfig(__glutDisplay, vi, GLX_RGBA, &value);
-  if (value)
+  if (value) {
     return 1;
+  }
 
   /* Must match single/double buffering request. */
   glXGetConfig(__glutDisplay, vi, GLX_DOUBLEBUFFER, &value);
-  if (GLUT_WIND_IS_DOUBLE(mode) != (value != 0))
+  if (GLUT_WIND_IS_DOUBLE(mode) != (value != 0)) {
     return 1;
+  }
 
   /* Must match mono/stereo request. */
   glXGetConfig(__glutDisplay, vi, GLX_STEREO, &value);
-  if (GLUT_WIND_IS_STEREO(mode) != (value != 0))
+  if (GLUT_WIND_IS_STEREO(mode) != (value != 0)) {
     return 1;
+  }
 
   /* Alpha and accumulation buffers incompatible with color
      index. */
-  if (GLUT_WIND_HAS_ALPHA(mode) || GLUT_WIND_HAS_ACCUM(mode))
+  if (GLUT_WIND_HAS_ALPHA(mode) || GLUT_WIND_HAS_ACCUM(mode)) {
     return 1;
+  }
 
   /* Look for depth buffer if requested. */
   glXGetConfig(__glutDisplay, vi, GLX_DEPTH_SIZE, &value);
-  if (GLUT_WIND_HAS_DEPTH(mode) && (value <= 0))
+  if (GLUT_WIND_HAS_DEPTH(mode) && (value <= 0)) {
     return 1;
+  }
 
   /* Look for stencil buffer if requested. */
   glXGetConfig(__glutDisplay, vi, GLX_STENCIL_SIZE, &value);
-  if (GLUT_WIND_HAS_STENCIL(mode) && (value <= 0))
+  if (GLUT_WIND_HAS_STENCIL(mode) && (value <= 0)) {
     return 1;
+  }
 
-#if defined(GLX_VERSION_1_1) && defined(GLX_SGIS_multisample)
+#if !defined(_WIN32)
+
+/* GLX_SAMPLES_SGIS has the same value as GLX_SAMPLES_ARB. */
+# ifndef GLX_SAMPLES_ARB
+#  define GLX_SAMPLES_ARB                      100001
+# endif
+
   /* XXX Multisampled overlay color index??  Pretty unlikely. */
   /* Look for multisampling if requested. */
-  if (__glutIsSupportedByGLX("GLX_SGIS_multisample"))
-    glXGetConfig(__glutDisplay, vi, GLX_SAMPLES_SGIS, &value);
-  else
+  if (__glutIsSupportedByGLX("GLX_SGIS_multisample") ||
+      __glutIsSupportedByGLX("GLX_ARB_multisample")) {
+    glXGetConfig(__glutDisplay, vi, GLX_SAMPLES_ARB, &value);
+  } else {
     value = 0;
-  if (GLUT_WIND_IS_MULTISAMPLE(mode) && (value <= 0))
+  }
+  if (GLUT_WIND_IS_MULTISAMPLE(mode) && (value <= 0)) {
     return 1;
+  }
+
 #endif
 
   return 0;
 }
-#endif
 
 static XVisualInfo *
 getOverlayVisualInfoCI(unsigned int mode)
@@ -255,16 +283,16 @@ static XVisualInfo *
 getOverlayVisualInfo(unsigned int mode)
 {
   /* XXX GLUT_LUMINANCE not implemented for GLUT 3.0. */
-  if (GLUT_WIND_IS_LUMINANCE(mode))
+  if (GLUT_WIND_IS_LUMINANCE(mode)) {
     return NULL;
+  }
 
-  if (GLUT_WIND_IS_RGB(mode))
+  if (GLUT_WIND_IS_RGB(mode)) {
     return getOverlayVisualInfoRGB(mode);
-  else
+  } else {
     return getOverlayVisualInfoCI(mode);
+  }
 }
-
-#if !defined(_WIN32)
 
 /* The GLUT overlay can come and go, and the overlay window has
    a distinct X window ID.  Logically though, GLUT treats the
@@ -286,21 +314,22 @@ addStaleWindow(GLUTwindow * window, Window win)
   GLUTstale *entry;
 
   entry = (GLUTstale *) malloc(sizeof(GLUTstale));
-  if (!entry)
+  if (!entry) {
     __glutFatalError("out of memory");
+  }
   entry->window = window;
   entry->win = win;
   entry->next = __glutStaleWindowList;
   __glutStaleWindowList = entry;
 }
 
-#endif
-
 void
 __glutFreeOverlay(GLUToverlay * overlay)
 {
-  if (overlay->visAlloced)
+  __glutInvalidateExtensionStringCacheIfNeeded(overlay->ctx);
+  if (overlay->visAlloced) {
     XFree(overlay->vis);
+  }
   XDestroyWindow(__glutDisplay, overlay->win);
   glXDestroyContext(__glutDisplay, overlay->ctx);
   if (overlay->colormap) {
@@ -351,10 +380,16 @@ determineOverlayVisual(int *treatAsSingle, Bool * visAlloced, void **fbc)
   }
 }
 
+#endif  /* !defined(_WIN32) */
+
 /* CENTRY */
-void APIENTRY
+void GLUTAPIENTRY
 glutEstablishOverlay(void)
 {
+#if defined(_WIN32)
+  /* No support for overlays in current GLUT Win32 implementation. */
+  __glutFatalError("This GLUT implementation for Win32 lacks overlay support.");
+#else
   GLUToverlay *overlay;
   GLUTwindow *window;
   XSetWindowAttributes wa;
@@ -381,8 +416,9 @@ glutEstablishOverlay(void)
     __glutFreeOverlay(window->overlay);
   }
   overlay = (GLUToverlay *) malloc(sizeof(GLUToverlay));
-  if (!overlay)
+  if (!overlay) {
     __glutFatalError("out of memory.");
+  }
 
   overlay->vis = determineOverlayVisual(&overlay->treatAsSingle,
     &overlay->visAlloced, (void **) &fbc);
@@ -396,8 +432,12 @@ glutEstablishOverlay(void)
   } else
 #endif
   {
+#ifdef _WIN32
+    window->ctx = wglCreateContext(window->hdc);
+#else
     overlay->ctx = glXCreateContext(__glutDisplay, overlay->vis,
       None, __glutTryDirect);
+#endif
   }
   if (!overlay->ctx) {
     __glutFatalError(
@@ -452,32 +492,38 @@ glutEstablishOverlay(void)
     glDrawBuffer(GL_FRONT);
     glReadBuffer(GL_FRONT);
   }
+#endif
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutRemoveOverlay(void)
 {
+#if defined(_WIN32)
+  /* No support for overlays in current GLUT Win32 implementation. */
+#else
   GLUTwindow *window = __glutCurrentWindow;
   GLUToverlay *overlay = __glutCurrentWindow->overlay;
 
-  if (!window->overlay)
+  if (!window->overlay) {
     return;
+  }
 
   /* If using overlay, switch to the normal layer. */
   if (window->renderWin == overlay->win) {
     glutUseLayer(GLUT_NORMAL);
   }
-#if !defined(_WIN32)
+# if !defined(_WIN32)
   addStaleWindow(window, overlay->win);
-#endif
+# endif
   __glutFreeOverlay(overlay);
   window->overlay = NULL;
-#if !defined(_WIN32)
+# if !defined(_WIN32)
   __glutPutOnWorkList(__glutToplevelOf(window), GLUT_COLORMAP_WORK);
+# endif
 #endif
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutUseLayer(GLenum layer)
 {
   GLUTwindow *window = __glutCurrentWindow;
@@ -507,7 +553,7 @@ glutUseLayer(GLenum layer)
   __glutSetWindow(window);
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutPostOverlayRedisplay(void)
 {
   __glutPostRedisplay(__glutCurrentWindow, GLUT_OVERLAY_REDISPLAY_WORK);
@@ -517,13 +563,13 @@ glutPostOverlayRedisplay(void)
    glutSetWindow call (entailing an expensive OpenGL context
    switch), particularly useful when multiple windows need
    redisplays posted at the same times. */
-void APIENTRY
+void GLUTAPIENTRY
 glutPostWindowOverlayRedisplay(int win)
 {
   __glutPostRedisplay(__glutWindowList[win - 1], GLUT_OVERLAY_REDISPLAY_WORK);
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutOverlayDisplayFunc(GLUTdisplayCB displayFunc)
 {
   if (!__glutCurrentWindow->overlay) {
@@ -533,7 +579,7 @@ glutOverlayDisplayFunc(GLUTdisplayCB displayFunc)
   __glutCurrentWindow->overlay->display = displayFunc;
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutHideOverlay(void)
 {
   if (!__glutCurrentWindow->overlay) {
@@ -544,7 +590,7 @@ glutHideOverlay(void)
   __glutCurrentWindow->overlay->shownState = 0;
 }
 
-void APIENTRY
+void GLUTAPIENTRY
 glutShowOverlay(void)
 {
   if (!__glutCurrentWindow->overlay) {
@@ -555,22 +601,25 @@ glutShowOverlay(void)
   __glutCurrentWindow->overlay->shownState = 1;
 }
 
-int APIENTRY
+int GLUTAPIENTRY
 glutLayerGet(GLenum param)
 {
   switch (param) {
   case GLUT_OVERLAY_POSSIBLE:
     {
+#if !defined(_WIN32)
       XVisualInfo *vi;
       Bool dummy, visAlloced;
       void *fbc;
 
       vi = determineOverlayVisual(&dummy, &visAlloced, &fbc);
       if (vi) {
-        if (visAlloced)
+        if (visAlloced) {
           XFree(vi);
+        }
         return 1;
       }
+#endif
       return 0;
     }
   case GLUT_LAYER_IN_USE:

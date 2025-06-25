@@ -1,5 +1,5 @@
 
-/* Copyright (c) Mark J. Kilgard, 1997. */
+/* Copyright (c) Mark J. Kilgard, 1997, 2001. */
 
 /* This program is freely distributable without licensing fees
    and is provided without guarantee or warrantee expressed or
@@ -10,6 +10,12 @@
 #include <stdio.h>
 #include <string.h>
 #include "glutint.h"
+
+/* Some Mesa versions define GLX_VERSION_1_2 without defining
+   GLX_VERSION_1_1. */
+#if defined(GLX_VERSION_1_2) && !defined(GLX_VERSION_1_1)
+# define GLX_VERSION_1_1 1
+#endif
 
 /* glxcaps matches the criteria macros listed in glutint.h, but
    only list the first set (those that correspond to GLX visual
@@ -34,6 +40,9 @@ static int glxcap[NUM_GLXCAPS] =
   GLX_LEVEL,
 };
 
+static FrameBufferMode *fbmodes = NULL;
+static int nfbmodes = 0;
+
 #ifdef TEST
 
 #if !defined(_WIN32)
@@ -46,11 +55,11 @@ char *__glutDisplayString = NULL;
 #endif
 static int verbose = 0;
 
-static char *compstr[] =
+static const char *compstr[] =
 {
   "none", "=", "!=", "<=", ">=", ">", "<", "~"
 };
-static char *capstr[] =
+static const char *capstr[] =
 {
   "rgba", "bufsize", "double", "stereo", "auxbufs", "red", "green", "blue", "alpha",
   "depth", "stencil", "acred", "acgreen", "acblue", "acalpha", "level", "xvisual",
@@ -72,6 +81,13 @@ printCriteria(Criterion * criteria, int ncriteria)
 }
 
 #endif /* TEST */
+
+static int multisample = 0;
+static int visual_info = 0;
+static int visual_rating = 0;
+#if defined(GLX_VERSION_1_1) && defined(GLX_SGIX_fbconfig)
+static int fbconfig = 0;
+#endif
 
 static int isMesaGLX = -1;
 
@@ -97,11 +113,23 @@ determineMesaGLX(void)
   /* Recent versions for Mesa should support GLX 1.1 and
      therefore glXGetClientString.  If we get into this case,
      we would be compiling against a true OpenGL not supporting
-     GLX 1.1, and the resulting compiled library won't work well
+     GLX 1.1, and the resulting compiled library won't work well 
      with Mesa then. */
 #endif
   return 0;
 }
+
+/* babcock@cs.montana.edu reported that DEC UNIX (OSF1) V4.0
+   564 for Alpha did not properly define
+   GLX_TRANSPARENT_TYPE_EXT in <GL/glx.h> despite claiming to
+   support GLX_EXT_visual_info. */
+#ifndef GLX_TRANSPARENT_TYPE_EXT
+# define GLX_TRANSPARENT_TYPE_EXT 0x23
+#endif
+
+#ifndef GLX_TRANSPARENT_INDEX_EXT
+# define GLX_TRANSPARENT_INDEX_EXT 0x8009
+#endif
 
 static XVisualInfo **
 getMesaVisualList(int *n)
@@ -111,8 +139,9 @@ getMesaVisualList(int *n)
   int i, x, cnt;
 
   vlist = (XVisualInfo **) malloc((32 + 16) * sizeof(XVisualInfo *));
-  if (!vlist)
+  if (!vlist) {
     __glutFatalError("out of memory.");
+  }
 
   cnt = 0;
   for (i = 0; i < 32; i++) {
@@ -205,12 +234,12 @@ getMesaVisualList(int *n)
       x++;
       attribs[x] = 1;
       x++;
-#if defined(GLX_TRANSPARENT_TYPE_EXT) && defined(GLX_TRANSPARENT_INDEX_EXT)
-      attribs[x] = GLX_TRANSPARENT_TYPE_EXT;
-      x++;
-      attribs[x] = GLX_TRANSPARENT_INDEX_EXT;
-      x++;
-#endif
+      if (visual_info) {
+        attribs[x] = GLX_TRANSPARENT_TYPE_EXT;
+        x++;
+        attribs[x] = GLX_TRANSPARENT_INDEX_EXT;
+        x++;
+      }
     }
     attribs[x] = None;
     x++;
@@ -232,17 +261,30 @@ loadVisuals(int *nitems_return)
   XVisualInfo *vinfo, **vlist, template;
   FrameBufferMode *fbmodes, *mode;
   int n, i, j, rc, glcapable;
-#if defined(GLX_VERSION_1_1) && defined(GLX_SGIS_multisample)
-  int multisample;
-#endif
-#if defined(GLX_VERSION_1_1) && defined(GLX_EXT_visual_info)
-  int visual_info;
-#endif
-#if defined(GLX_VERSION_1_1) && defined(GLX_EXT_visual_rating)
-  int visual_rating;
-#endif
-#if defined(GLX_VERSION_1_1) && defined(GLX_SGIX_fbconfig)
-  int fbconfig;
+
+  /* First, query for various window system dependent extensions. */
+#ifdef _WIN32
+  /* Be very careful to support multisampling under Win32 only if
+     everything required appears in good order. */
+  if (wglGetExtensionsStringARB &&
+      has_WGL_ARB_extensions_string &&
+      has_WGL_ARB_pixel_format &&
+      wglGetPixelFormatAttribivARB &&
+      wglGetPixelFormatAttribfvARB) {
+
+    multisample = has_GL_ARB_multisample &&
+                  has_WGL_ARB_multisample &&
+                  glSampleCoverageARB;
+  }
+#else
+  /* Query for GLX extensions. */
+  multisample = __glutIsSupportedByGLX("GLX_SGIS_multisample") ||
+                __glutIsSupportedByGLX("GLX_ARB_multisample");
+  visual_info = __glutIsSupportedByGLX("GLX_EXT_visual_info");
+  visual_rating = __glutIsSupportedByGLX("GLX_EXT_visual_rating");
+# if defined(GLX_VERSION_1_1) && defined(GLX_SGIX_fbconfig)
+  fbconfig = __glutIsSupportedByGLX("GLX_SGIX_fbconfig");
+# endif
 #endif
 
   isMesaGLX = determineMesaGLX();
@@ -268,30 +310,17 @@ loadVisuals(int *nitems_return)
        pointer returned by glXChooseVisual so we could not just
        copy the returned structure.) */
     vlist = (XVisualInfo **) malloc(n * sizeof(XVisualInfo *));
-    if (!vlist)
+    if (!vlist) {
       __glutFatalError("out of memory.");
+    }
     for (i = 0; i < n; i++) {
       vlist[i] = &vinfo[i];
     }
   }
 
-#if defined(GLX_VERSION_1_1) && defined(GLX_SGIS_multisample)
-  multisample = __glutIsSupportedByGLX("GLX_SGIS_multisample");
-#endif
-#if defined(GLX_VERSION_1_1) && defined(GLX_EXT_visual_info)
-  visual_info = __glutIsSupportedByGLX("GLX_EXT_visual_info");
-#endif
-#if defined(GLX_VERSION_1_1) && defined(GLX_EXT_visual_rating)
-  visual_rating = __glutIsSupportedByGLX("GLX_EXT_visual_rating");
-#endif
-#if defined(GLX_VERSION_1_1) && defined(GLX_SGIX_fbconfig)
-  fbconfig = __glutIsSupportedByGLX("GLX_SGIX_fbconfig");
-#endif
-
   fbmodes = (FrameBufferMode *) malloc(n * sizeof(FrameBufferMode));
-  if (fbmodes == NULL) {
-    *nitems_return = -1;
-    return NULL;
+  if (!fbmodes) {
+    __glutFatalError("out of memory.");
   }
   for (i = 0; i < n; i++) {
     mode = &fbmodes[i];
@@ -310,7 +339,7 @@ loadVisuals(int *nitems_return)
         }
       }
 #if defined(_WIN32)
-      mode->cap[XVISUAL] = ChoosePixelFormat(XHDC, vlist[i]);
+      mode->cap[XVISUAL] = vlist[i]->num;
 #else
       mode->cap[XVISUAL] = (int) vlist[i]->visualid;
 #endif
@@ -321,11 +350,11 @@ loadVisuals(int *nitems_return)
       mode->cap[XTRUECOLOR] = 0;
       mode->cap[XDIRECTCOLOR] = 0;
 #if !defined(_WIN32)
-#if defined(__cplusplus) || defined(c_plusplus)
+# if defined(__cplusplus) || defined(c_plusplus)
       switch (vlist[i]->c_class) {
-#else
+# else
       switch (vlist[i]->class) {
-#endif
+# endif
       case StaticGray:
         mode->cap[XSTATICGRAY] = 1;
         break;
@@ -346,20 +375,70 @@ loadVisuals(int *nitems_return)
         break;
       }
 #endif
-#if defined(GLX_VERSION_1_1) && defined(GLX_EXT_visual_rating)
-      if (visual_rating) {
-        int rating;
 
 /* babcock@cs.montana.edu reported that DEC UNIX (OSF1) V4.0
    564 for Alpha did not properly define GLX_VISUAL_CAVEAT_EXT
    in <GL/glx.h> despite claiming to support
    GLX_EXT_visual_rating. */
-#ifndef GLX_VISUAL_CAVEAT_EXT
-#define GLX_VISUAL_CAVEAT_EXT 0x20
-#endif
+# ifndef GLX_VISUAL_CAVEAT_EXT
+# define GLX_VISUAL_CAVEAT_EXT              0x20
+# endif
+
+/* IRIX 5.3 for the R10K Indigo2 may have shipped without this
+   properly defined in /usr/include/GL/glxtokens.h */
+# ifndef GLX_NON_CONFORMANT_VISUAL_EXT
+# define GLX_NON_CONFORMANT_VISUAL_EXT      0x800D
+# endif
+
+# ifndef GLX_SLOW_VISUAL_EXT
+# define GLX_SLOW_VISUAL_EXT                0x8001
+# endif
+
+/* Defined by GLX_EXT_visual_info but also used by
+   GLX_EXT_visual_rating. */
+# ifndef GLX_NONE_EXT
+# define GLX_NONE_EXT                       0x8000
+# endif
+
+#ifdef _WIN32
+      {
+        int rating;
+
+        /* We emulate the GLX_VISUAL_CAVEAT_EXT support in GLUT's Win32
+           implementation of glXGetConfig.  Under Win32, we want to
+           consider a visual (really a PFD) slow if it is "generic"
+           and not "accelerated".  See win32_glx.c for more info. */
+        rc = glXGetConfig(__glutDisplay,
+          vlist[i], GLX_VISUAL_CAVEAT_EXT, &rating);
+        if (rc != 0) {
+          mode->cap[SLOW] = 0;
+        } else {
+          switch (rating) {
+          case GLX_SLOW_VISUAL_EXT:
+            mode->cap[SLOW] = 1;
+            break;
+            break;
+          case GLX_NONE_EXT:
+            mode->cap[SLOW] = 0;
+            break;
+          case GLX_NON_CONFORMANT_VISUAL_EXT:
+          default:
+            /* Should never happen the way win32_glx.c's glXGetConfig
+               is implemented. */
+            assert(0);
+            break;
+          }
+        }
+      }
+      mode->cap[CONFORMANT] = 1;
+#else
+      /* Visual rating for GLX. */
+
+      if (visual_rating) {
+        int rating;
 
         rc = glXGetConfig(__glutDisplay,
-	  vlist[i], GLX_VISUAL_CAVEAT_EXT, &rating);
+          vlist[i], GLX_VISUAL_CAVEAT_EXT, &rating);
         if (rc != 0) {
           mode->cap[SLOW] = 0;
           mode->cap[CONFORMANT] = 1;
@@ -369,43 +448,33 @@ loadVisuals(int *nitems_return)
             mode->cap[SLOW] = 1;
             mode->cap[CONFORMANT] = 1;
             break;
-
-/* IRIX 5.3 for the R10K Indigo2 may have shipped without this
-   properly defined in /usr/include/GL/glxtokens.h */
-#ifndef GLX_NON_CONFORMANT_VISUAL_EXT
-#define GLX_NON_CONFORMANT_VISUAL_EXT   0x800D
-#endif
-
           case GLX_NON_CONFORMANT_VISUAL_EXT:
             mode->cap[SLOW] = 0;
             mode->cap[CONFORMANT] = 0;
             break;
           case GLX_NONE_EXT:
-          default:     /* XXX Hopefully this is a good default
-                           assumption. */
+          default:  /* XXX Hopefully this is a good default
+                       assumption. */
             mode->cap[SLOW] = 0;
             mode->cap[CONFORMANT] = 1;
             break;
           }
         }
       } else {
-        mode->cap[TRANSPARENT] = 0;
+        mode->cap[SLOW] = 0;
+        mode->cap[CONFORMANT] = 1;
       }
+#endif /* not _WIN32 */
+
+#if _WIN32
+      /* Win32 implementation of GLUT does not support overlays and
+         transparency. */
+      mode->cap[TRANSPARENT] = 0;
 #else
-      mode->cap[SLOW] = 0;
-      mode->cap[CONFORMANT] = 1;
-#endif
-#if defined(GLX_VERSION_1_1) && defined(GLX_EXT_visual_info)
+      /* Visual info for GLX. */
+
       if (visual_info) {
         int transparent;
-
-/* babcock@cs.montana.edu reported that DEC UNIX (OSF1) V4.0
-   564 for Alpha did not properly define
-   GLX_TRANSPARENT_TYPE_EXT in <GL/glx.h> despite claiming to
-   support GLX_EXT_visual_info. */
-#ifndef GLX_TRANSPARENT_TYPE_EXT
-#define GLX_TRANSPARENT_TYPE_EXT 0x23
-#endif
 
         rc = glXGetConfig(__glutDisplay,
           vlist[i], GLX_TRANSPARENT_TYPE_EXT, &transparent);
@@ -417,23 +486,40 @@ loadVisuals(int *nitems_return)
       } else {
         mode->cap[TRANSPARENT] = 0;
       }
-#else
-      mode->cap[TRANSPARENT] = 0;
-#endif
-#if defined(GLX_VERSION_1_1) && defined(GLX_SGIS_multisample)
+#endif /* not _WIN32 */
+
+#ifdef _WIN32
       if (multisample) {
-        rc = glXGetConfig(__glutDisplay,
-	  vlist[i], GLX_SAMPLES_SGIS, &mode->cap[SAMPLES]);
-        if (rc != 0) {
+        static const int attribs[] = { WGL_SAMPLES_ARB };
+
+        rc = wglGetPixelFormatAttribivARB(XHDC, i, 0, 1, attribs, &mode->cap[SAMPLES]);
+        if (rc == 0) {
           mode->cap[SAMPLES] = 0;
         }
       } else {
         mode->cap[SAMPLES] = 0;
       }
 #else
-      mode->cap[SAMPLES] = 0;
-#endif
+
+/* GLX_SAMPLES_SGIS has the same value as GLX_SAMPLES_ARB. */
+# ifndef GLX_SAMPLES_ARB
+#  define GLX_SAMPLES_ARB                      100001
+# endif
+
+      /* Multisample for GLX (either SGIS or ARB version). */
+      if (multisample) {
+        rc = glXGetConfig(__glutDisplay,
+          vlist[i], GLX_SAMPLES_ARB, &mode->cap[SAMPLES]);
+        if (rc != 0) {
+          mode->cap[SAMPLES] = 0;
+        }
+      } else {
+        mode->cap[SAMPLES] = 0;
+      }
+#endif /* not _WIN32 */
     } else {
+      /* Not GL capable so check for fbconfig support... */
+
 #if defined(GLX_VERSION_1_1) && defined(GLX_SGIX_fbconfig)
       if (fbconfig) {
         GLXFBConfigSGIX fbc;
@@ -442,25 +528,25 @@ loadVisuals(int *nitems_return)
         fbc = glXGetFBConfigFromVisualSGIX(__glutDisplay, vlist[i]);
         if (fbc) {
           rc = glXGetFBConfigAttribSGIX(__glutDisplay, fbc,
-	    GLX_FBCONFIG_ID_SGIX, &fbconfigID);
+            GLX_FBCONFIG_ID_SGIX, &fbconfigID);
           if ((rc == 0) && (fbconfigID != None)) {
             rc = glXGetFBConfigAttribSGIX(__glutDisplay, fbc,
-	      GLX_DRAWABLE_TYPE_SGIX, &drawType);
+              GLX_DRAWABLE_TYPE_SGIX, &drawType);
             if ((rc == 0) && (drawType & GLX_WINDOW_BIT_SGIX)) {
               rc = glXGetFBConfigAttribSGIX(__glutDisplay, fbc,
-	        GLX_RENDER_TYPE_SGIX, &renderType);
+                GLX_RENDER_TYPE_SGIX, &renderType);
               if ((rc == 0) && (renderType & GLX_RGBA_BIT_SGIX)) {
                 mode->fbc = fbc;
                 mode->valid = 1;  /* Assume the best until
                                      proven otherwise. */
 
-		assert(glxcap[0] == GLX_RGBA);
+                assert(glxcap[0] == GLX_RGBA);
                 mode->cap[0] = 1;
 
                 /* Start with "j = 1" to skip the GLX_RGBA attribute. */
                 for (j = 1; j < NUM_GLXCAPS; j++) {
                   rc = glXGetFBConfigAttribSGIX(__glutDisplay,
-		    fbc, glxcap[j], &mode->cap[j]);
+                    fbc, glxcap[j], &mode->cap[j]);
                   if (rc != 0) {
                     mode->valid = 0;
                   }
@@ -497,20 +583,11 @@ loadVisuals(int *nitems_return)
                   mode->cap[XDIRECTCOLOR] = 1;
                   break;
                 }
-#if defined(GLX_VERSION_1_1) && defined(GLX_EXT_visual_rating)
                 if (visual_rating) {
                   int rating;
 
-/* babcock@cs.montana.edu reported that DEC UNIX (OSF1) V4.0
-   564 for Alpha did not properly define GLX_VISUAL_CAVEAT_EXT
-   in <GL/glx.h> despite claiming to support
-   GLX_EXT_visual_rating. */
-#ifndef GLX_VISUAL_CAVEAT_EXT
-#define GLX_VISUAL_CAVEAT_EXT 0x20
-#endif
-
                   rc = glXGetFBConfigAttribSGIX(__glutDisplay,
-		    fbc, GLX_VISUAL_CAVEAT_EXT, &rating);
+                    fbc, GLX_VISUAL_CAVEAT_EXT, &rating);
                   if (rc != 0) {
                     mode->cap[SLOW] = 0;
                     mode->cap[CONFORMANT] = 1;
@@ -520,13 +597,6 @@ loadVisuals(int *nitems_return)
                       mode->cap[SLOW] = 1;
                       mode->cap[CONFORMANT] = 1;
                       break;
-
-/* IRIX 5.3 for the R10K Indigo2 may have shipped without this
-   properly defined in /usr/include/GL/glxtokens.h */
-#ifndef GLX_NON_CONFORMANT_VISUAL_EXT
-#define GLX_NON_CONFORMANT_VISUAL_EXT   0x800D
-#endif
-
                     case GLX_NON_CONFORMANT_VISUAL_EXT:
                       mode->cap[SLOW] = 0;
                       mode->cap[CONFORMANT] = 0;
@@ -540,26 +610,15 @@ loadVisuals(int *nitems_return)
                     }
                   }
                 } else {
-                  mode->cap[TRANSPARENT] = 0;
+                  mode->cap[SLOW] = 0;
+                  mode->cap[CONFORMANT] = 1;
                 }
-#else
-                mode->cap[SLOW] = 0;
-                mode->cap[CONFORMANT] = 1;
-#endif
-#if defined(GLX_VERSION_1_1) && defined(GLX_EXT_visual_info)
+
                 if (visual_info) {
                   int transparent;
 
-/* babcock@cs.montana.edu reported that DEC UNIX (OSF1) V4.0
-   564 for Alpha did not properly define
-   GLX_TRANSPARENT_TYPE_EXT in <GL/glx.h> despite claiming to
-   support GLX_EXT_visual_info. */
-#ifndef GLX_TRANSPARENT_TYPE_EXT
-#define GLX_TRANSPARENT_TYPE_EXT 0x23
-#endif
-
                   rc = glXGetFBConfigAttribSGIX(__glutDisplay,
-		    fbc, GLX_TRANSPARENT_TYPE_EXT, &transparent);
+                    fbc, GLX_TRANSPARENT_TYPE_EXT, &transparent);
                   if (rc != 0) {
                     mode->cap[TRANSPARENT] = 0;
                   } else {
@@ -568,22 +627,15 @@ loadVisuals(int *nitems_return)
                 } else {
                   mode->cap[TRANSPARENT] = 0;
                 }
-#else
-                mode->cap[TRANSPARENT] = 0;
-#endif
-#if defined(GLX_VERSION_1_1) && defined(GLX_SGIS_multisample)
                 if (multisample) {
                   rc = glXGetFBConfigAttribSGIX(__glutDisplay,
-		    fbc, GLX_SAMPLES_SGIS, &mode->cap[SAMPLES]);
+                    fbc, GLX_SAMPLES_ARB, &mode->cap[SAMPLES]);
                   if (rc != 0) {
                     mode->cap[SAMPLES] = 0;
                   }
                 } else {
                   mode->cap[SAMPLES] = 0;
                 }
-#else
-                mode->cap[SAMPLES] = 0;
-#endif
 
               } else {
                 /* Fbconfig is not RGBA; GLUT only uses RGBA
@@ -630,7 +682,7 @@ findMatch(FrameBufferMode * fbmodes, int nfbmodes,
 {
   FrameBufferMode *found;
   int *bestScore, *thisScore;
-  int i, j, numok, result, worse, better;
+  int i, j, numok, worse, better;
 
   found = NULL;
   numok = 1;            /* "num" capability is indexed from 1,
@@ -638,8 +690,9 @@ findMatch(FrameBufferMode * fbmodes, int nfbmodes,
 
   /* XXX alloca canidate. */
   bestScore = (int *) malloc(ncriteria * sizeof(int));
-  if (!bestScore)
+  if (!bestScore) {
     __glutFatalError("out of memory.");
+  }
   for (j = 0; j < ncriteria; j++) {
     /* Very negative number. */
     bestScore[j] = -32768;
@@ -647,15 +700,17 @@ findMatch(FrameBufferMode * fbmodes, int nfbmodes,
 
   /* XXX alloca canidate. */
   thisScore = (int *) malloc(ncriteria * sizeof(int));
-  if (!thisScore)
+  if (!thisScore) {
     __glutFatalError("out of memory.");
+  }
 
   for (i = 0; i < nfbmodes; i++) {
     if (fbmodes[i].valid) {
 #ifdef TEST
 #if !defined(_WIN32)
-      if (verbose)
+      if (verbose) {
         printf("Visual 0x%x\n", fbmodes[i].vi->visualid);
+      }
 #endif
 #endif
 
@@ -663,7 +718,7 @@ findMatch(FrameBufferMode * fbmodes, int nfbmodes,
       better = 0;
 
       for (j = 0; j < ncriteria; j++) {
-        int cap, cvalue, fbvalue;
+        int cap, cvalue, fbvalue, result = 0;
 
         cap = criteria[j].capability;
         cvalue = criteria[j].value;
@@ -673,9 +728,10 @@ findMatch(FrameBufferMode * fbmodes, int nfbmodes,
           fbvalue = fbmodes[i].cap[cap];
         }
 #ifdef TEST
-        if (verbose)
+        if (verbose) {
           printf("  %s %s %d to %d\n",
             capstr[cap], compstr[criteria[j].comparison], cvalue, fbvalue);
+        }
 #endif
         switch (criteria[j].comparison) {
         case EQ:
@@ -709,20 +765,21 @@ findMatch(FrameBufferMode * fbmodes, int nfbmodes,
         }
 
 #ifdef TEST
-        if (verbose)
+        if (verbose) {
           printf("                result=%d   score=%d   bestScore=%d\n", result, thisScore[j], bestScore[j]);
+        }
 #endif
 
         if (result) {
           if (better || thisScore[j] > bestScore[j]) {
-			better = 1;
+            better = 1;
           } else if (thisScore[j] == bestScore[j]) {
             /* Keep looking. */
           } else {
             goto nextFBM;
           }
         } else {
-			if (cap == NUM) {
+          if (cap == NUM) {
             worse = 1;
           } else {
             goto nextFBM;
@@ -749,7 +806,7 @@ findMatch(FrameBufferMode * fbmodes, int nfbmodes,
 #if defined(GLX_VERSION_1_1) && defined(GLX_SGIX_fbconfig)
     *fbc = found->fbc;
 #endif
-	return found->vi;
+    return found->vi;
   } else {
     return NULL;
   }
@@ -811,6 +868,7 @@ parseCriteria(char *word, Criterion * criterion, int *mask,
     *cstr = '\0';
   } else {
     comparator = NONE;
+    value = 0;
   }
   switch (word[0]) {
   case 'a':
@@ -1238,6 +1296,41 @@ parseModeString(char *mode, int *ncriteria, Bool * allowDoubleAsSingle,
   }
   n = nRequired;
 
+  /* Requirements for undesignated "slow" and "conformant" criteria are
+     higher priority than requested criteria.  This avoids "slow"
+     visuals if possible. */
+#ifdef _WIN32
+  /* Windows infers "slow" Pixel Format Descriptors by detecting the 
+     PFD is supported by Microsoft's software rasterizer. */
+  if (!(mask & (1 << SLOW))) {
+    /* Prefer visuals that are NOT slow (ie, fast) to visuals that are slow. */
+    criteria[n].capability = SLOW;
+    criteria[n].comparison = MIN;
+    criteria[n].value = 0;
+    n++;
+  }
+#else
+  /* GLX has the GLX_EXT_visual_rating and GLX_EXT_visual_info extensions
+     for determining conformant, slow, and transparent visuals. */
+  if (visual_rating) {
+    if (!(mask & (1 << SLOW))) {
+      /* Prefer visuals that are NOT slow (ie, fast) to visuals that are slow. */
+      criteria[n].capability = SLOW;
+      criteria[n].comparison = MIN;
+      criteria[n].value = 0;
+      n++;
+    }
+  }
+  if (visual_info) {
+    if (!(mask & (1 << TRANSPARENT))) {
+      criteria[n].capability = TRANSPARENT;
+      criteria[n].comparison = EQ;
+      criteria[n].value = 0;
+      n++;
+    }
+  }
+#endif  /* not _WIN32 */
+
   word = strtok(copy, " \t");
   while (word) {
     parsed = parseCriteria(word, &criteria[n], &mask, allowDoubleAsSingle);
@@ -1249,17 +1342,22 @@ parseModeString(char *mode, int *ncriteria, Bool * allowDoubleAsSingle,
     word = strtok(NULL, " \t");
   }
 
-#if defined(GLX_VERSION_1_1) && defined(GLX_SGIS_multisample)
-  if (__glutIsSupportedByGLX("GLX_SGIS_multisample")) {
+  if (multisample) {
     if (!(mask & (1 << SAMPLES))) {
       criteria[n].capability = SAMPLES;
       criteria[n].comparison = EQ;
       criteria[n].value = 0;
       n++;
+      if (!(mask & (1 << CONFORMANT))) {
+        criteria[n].capability = CONFORMANT;
+        criteria[n].comparison = EQ;
+        criteria[n].value = 1;
+        n++;
+      }
     } else {
       /* Multisample visuals are marked nonconformant.  If
-         multisampling was requeste and no conformant
-         preference was set, assume that we will settle for a
+         multisampling is requested and no conformant
+         preference is set, assume that we will settle for a
          non-conformant visual to get multisampling. */
       if (!(mask & (1 << CONFORMANT))) {
         criteria[n].capability = CONFORMANT;
@@ -1270,33 +1368,6 @@ parseModeString(char *mode, int *ncriteria, Bool * allowDoubleAsSingle,
       }
     }
   }
-#endif
-#if defined(GLX_VERSION_1_1) && defined(GLX_EXT_visual_info)
-  if (__glutIsSupportedByGLX("GLX_EXT_visual_info")) {
-    if (!(mask & (1 << TRANSPARENT))) {
-      criteria[n].capability = TRANSPARENT;
-      criteria[n].comparison = EQ;
-      criteria[n].value = 0;
-      n++;
-    }
-  }
-#endif
-#if defined(GLX_VERSION_1_1) && defined(GLX_EXT_visual_rating)
-  if (__glutIsSupportedByGLX("GLX_EXT_visual_rating")) {
-    if (!(mask & (1 << SLOW))) {
-      criteria[n].capability = SLOW;
-      criteria[n].comparison = EQ;
-      criteria[n].value = 0;
-      n++;
-    }
-    if (!(mask & (1 << CONFORMANT))) {
-      criteria[n].capability = CONFORMANT;
-      criteria[n].comparison = EQ;
-      criteria[n].value = 1;
-      n++;
-    }
-  }
-#endif
   if (!(mask & (1 << ACCUM_RED_SIZE))) {
     criteria[n].capability = ACCUM_RED_SIZE;
     criteria[n].comparison = MIN;
@@ -1338,6 +1409,7 @@ parseModeString(char *mode, int *ncriteria, Bool * allowDoubleAsSingle,
     mask |= (1 << RGBA_MODE);
   }
 #if !defined(_WIN32)
+  /* X11 has the notion of visual types which Win32 does not have. */
   if (!(mask & (1 << XSTATICGRAY))) {
     assert(isMesaGLX != -1);
     if ((mask & (1 << RGBA_MODE)) && !isMesaGLX) {
@@ -1346,8 +1418,8 @@ parseModeString(char *mode, int *ncriteria, Bool * allowDoubleAsSingle,
          other code in GLUT) to handle any type of RGBA visual
          reasonably. */
       if (mask & (1 << LUMINANCE_MODE)) {
-	/* If RGBA luminance was requested, actually go for
-	   a StaticGray visual. */
+        /* If RGBA luminance was requested, actually go for
+           a StaticGray visual. */
         criteria[n].capability = XSTATICGRAY;
       } else {
         criteria[n].capability = XTRUECOLOR;
@@ -1415,9 +1487,6 @@ parseModeString(char *mode, int *ncriteria, Bool * allowDoubleAsSingle,
   return criteria;
 }
 
-static FrameBufferMode *fbmodes = NULL;
-static int nfbmodes = 0;
-
 static XVisualInfo *
 getVisualInfoFromString(char *string, Bool * treatAsSingle,
   Criterion * requiredCriteria, int nRequired, int requiredMask, void **fbc)
@@ -1427,16 +1496,6 @@ getVisualInfoFromString(char *string, Bool * treatAsSingle,
   Bool allowDoubleAsSingle;
   int ncriteria, i;
 
-  /* In WIN32, after changing display settings, the visuals might change.
-  (e.g. if entering game mode with a different bitdepth!)
-  Therefore, reload the visuals each time they are queried. */
-#ifdef WIN32
-  if (fbmodes) {
-	  free(fbmodes);
-	  fbmodes = NULL;
-	  nfbmodes = 0;
-  }
-#endif
   if (!fbmodes) {
     fbmodes = loadVisuals(&nfbmodes);
   }
@@ -1473,13 +1532,8 @@ getVisualInfoFromString(char *string, Bool * treatAsSingle,
   free(criteria);
 
   if (visinfo) {
-#if defined(_WIN32)
-    /* We could have a valid pixel format for drawing to a
-       bitmap. However, we don't want to draw into a bitmap, we
-       need one that can be used with a window, so make sure
-       that this is true. */
-    if (!(visinfo->dwFlags & PFD_DRAW_TO_WINDOW))
-      return NULL;
+#ifdef _WIN32
+    assert(visinfo->pfd.dwFlags & PFD_DRAW_TO_WINDOW);
 #endif
     return visinfo;
   } else {
@@ -1488,7 +1542,7 @@ getVisualInfoFromString(char *string, Bool * treatAsSingle,
 }
 
 /* CENTRY */
-void APIENTRY
+void GLUTAPIENTRY
 glutInitDisplayString(const char *string)
 {
 #ifdef _WIN32
@@ -1501,8 +1555,9 @@ glutInitDisplayString(const char *string)
   }
   if (string) {
     __glutDisplayString = __glutStrdup(string);
-    if (!__glutDisplayString)
+    if (!__glutDisplayString) {
       __glutFatalError("out of memory.");
+    }
   } else {
     __glutDisplayString = NULL;
   }
@@ -1554,16 +1609,21 @@ main(int argc, char **argv)
   }
   __glutDisplay = dpy;
   __glutScreen = DefaultScreen(__glutDisplay);
+#else
+  XHDC = GetDC(GetDesktopWindow());
 #endif
   while (!feof(stdin)) {
-    if (tty)
+    if (tty) {
       printf("dstr> ");
+    }
     str = gets(buffer);
     if (str) {
       printf("\n");
       if (!strcmp("v", str)) {
         verbose = 1 - verbose;
         printf("verbose = %d\n\n", verbose);
+      } else if (!strcmp("quit", str)) {
+        exit(0);
       } else if (!strcmp("s", str)) {
         showconfig = 1 - showconfig;
         printf("showconfig = %d\n\n", showconfig);
@@ -1580,10 +1640,11 @@ main(int argc, char **argv)
         }
         if (vinfo) {
           printf("\n");
-          if (!tty)
+          if (!tty) {
             printf("Display string: %s", str);
+          }
 #ifdef _WIN32
-          printf("Visual = 0x%x\n", 0);
+          printf("Visual = 0x%x\n", ChoosePixelFormat(XHDC, vinfo));
 #else
           printf("Visual = 0x%x%s\n", vinfo->visualid, fbc ? " (needs FBC)" : "");
 #endif
@@ -1594,7 +1655,7 @@ main(int argc, char **argv)
             int glxCapable, bufferSize, level, renderType, doubleBuffer,
               stereo, auxBuffers, redSize, greenSize, blueSize,
               alphaSize, depthSize, stencilSize, acRedSize, acGreenSize,
-              acBlueSize, acAlphaSize;
+              acBlueSize, acAlphaSize, rating;
 
             glXGetConfig(dpy, vinfo, GLX_BUFFER_SIZE, &bufferSize);
             glXGetConfig(dpy, vinfo, GLX_LEVEL, &level);
@@ -1612,6 +1673,7 @@ main(int argc, char **argv)
             glXGetConfig(dpy, vinfo, GLX_ACCUM_GREEN_SIZE, &acGreenSize);
             glXGetConfig(dpy, vinfo, GLX_ACCUM_BLUE_SIZE, &acBlueSize);
             glXGetConfig(dpy, vinfo, GLX_ACCUM_ALPHA_SIZE, &acAlphaSize);
+            glXGetConfig(dpy, vinfo, GLX_VISUAL_CAVEAT_EXT, &rating);
             printf("RGBA = (%d, %d, %d, %d)\n", redSize, greenSize, blueSize, alphaSize);
             printf("acc  = (%d, %d, %d, %d)\n", acRedSize, acGreenSize, acBlueSize, acAlphaSize);
             printf("db   = %d\n", doubleBuffer);
@@ -1622,6 +1684,7 @@ main(int argc, char **argv)
             printf("rgba = %d\n", renderType);
             printf("z    = %d\n", depthSize);
             printf("s    = %d\n", stencilSize);
+            printf("rate = %s\n", rating == GLX_SLOW_VISUAL_EXT ? "slow" : "fast");
           }
         } else {
           printf("\n");

@@ -36,4 +36,4 @@
  */
 
 void    drawpartvs(VSlider *, int);
-void	adjustvsthumb(muiObject *, double, double);
+void    adjustvsthumb(muiObject *, double, double);

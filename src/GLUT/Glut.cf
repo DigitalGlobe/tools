@@ -1,21 +1,34 @@
-XCOMM Copyright (c) Mark J. Kilgard, 1994, 1997, 1998.
+XCOMM Copyright (c) Mark J. Kilgard, 1994, 1997, 1998, 2005.
 XCOMM Glut.cf - GLUT distribution Imakefile configuration info
 
-/* LINUX USERS: Remove the "/* " characters in the #define line
-   below this comment in order to use Linux shared objects. */
-/* #define UseSharedObjects 1 /**/
+/* MESA USERS: Remove the "/* " characters in the two #define
+   lines below this comment and change the "#define MesaDir" line
+   to match the top-level directory of your Mesa source tree.
 
-/* MESA USERS: Remove the "/* " characters in the #define line
-   below this comment and change the "#define MesaDir" line to
-   match the top-level directory of your Mesa source tree. */
+   If you have installed Mesa's libraries and headers correctly
+   (say with the Mesa RPMs), you can build GLUT using your installed
+   Mesa libraries and headers by simply NOT uncommenting the MesaDir
+   line below. */
+
 /* #define UseMesa 1 /**/
-#define MesaDir /usr/Mesa-3.0    /* UPDATE ME! */
+/* #define MesaDir /usr/src/Mesa-3.0    /* UPDATE ME! */
+
+#if 0
+/* Linux users are assumed to be using Mesa. */
+#ifdef LinuxArchitecture
+#ifndef UseMesa
+#define UseMesa 1
+#endif
+#endif
+#endif
 
 #ifdef UseMesa
-XCOMM using Mesa (the freeware OpenGL implementation) by Brian Paul
+XCOMM using Mesa (the Open Source OpenGL implementation by Brian Paul)
+#ifdef MesaDir
 MESA_DIR = MesaDir
 MESA_INCLUDE = -I$(MESA_DIR)/include
 MESA_LIB = -L$(MESA_DIR)/lib
+#endif
 MESAGL = $(MESA_LIB) -lMesaGL
 MESAGLU = $(MESA_LIB) -lMesaGLU
 #endif
@@ -28,6 +41,11 @@ MESAGLU = $(MESA_LIB) -lMesaGLU
 #define SaberProgramTarget(program,srclist,objlist,locallibs,syslibs)
 #endif
 
+#ifdef HasGnuMake
+XCOMM Avoid issue where GNUmakefile can take precedence for spawned makes
+MFLAGS += -f Makefile
+#endif
+
 #ifdef SunArchitecture
 
 /*
@@ -36,7 +54,7 @@ MESAGLU = $(MESA_LIB) -lMesaGLU
  * OpenGL implementation, assuming your OGLHOME and OPENWINHOME
  * environment variables are set correctly.
  */
-EXTRA_INCLUDES = -I$(TOP)/include -I$(OGLHOME)/include -I$(OPENWINHOME)/include $(MESA_INCLUDE)
+EXTRA_INCLUDES = -I$(TOP)/include -I$(OGLHOME)/include -I$(OPENWINHOME)/include $(MESA_INCLUDE) $(LOCAL_INCLUDES)
 #ifdef UseMesa
 OPENGL = $(MESAGL)
 GLU = $(MESAGLU)
@@ -73,9 +91,9 @@ GLSMAP_LIBS = $(GLSMAP) $(GLUT) $(GLU) $(OPENGL) $(XMULIB) $(XILIB) $(XLIB) Math
  * the contents of that file instead of the definitions here.
  */
 #include <OpenGL.tmpl>
-EXTRA_INCLUDES = GLUTInclude $(MESA_INCLUDE)
+EXTRA_INCLUDES = GLUTInclude $(MESA_INCLUDE) $(LOCAL_INCLUDES)
 #else
-EXTRA_INCLUDES = -I$(TOP)/include $(MESA_INCLUDE)
+EXTRA_INCLUDES = -I$(TOP)/include $(MESA_INCLUDE) $(LOCAL_INCLUDES)
 #endif
 
 INVENTOR = -lInventor
@@ -105,9 +123,10 @@ GLSMAP_DEPLIBS = $(DEPGLSMAP) $(DEPGLUTLIB) $(DEPGLULIB) $(DEPGLLIB) $(DEPXMULIB
 /* Nate Robbins (E&S) reports that HP does not have its Xmu.h header in
    the standard place. */
 XMU_HEADERS = /usr/contrib/X11R5/include/
-EXTRA_INCLUDES = -I$(TOP)/include -I$(XMU_HEADERS) $(MESA_INCLUDE)
+EXTRA_INCLUDES = -I$(TOP)/include -I$(XMU_HEADERS) $(MESA_INCLUDE) $(LOCAL_INCLUDES)
 #else
-EXTRA_INCLUDES = -I$(TOP)/include $(MESA_INCLUDE)
+EXTRA_INCLUDES = -I$(TOP)/include $(MESA_INCLUDE) -I$(ROOT)/usr/include $(LOCAL_INCLUDES)
+LDPRELIBS = -L$(ROOT)/usr/lib -L$(USRLIBDIR)
 #endif
 
 GLUT_DEPLIBS = $(DEPGLUT) $(DEPXMULIB) $(DEPXLIB)
@@ -132,23 +151,6 @@ GLSMAP_LIBS = $(GLSMAP) $(GLUT) $(GLU) $(OPENGL) $(XMULIB) $(XILIB) $(XLIB) Math
 #endif
 #endif
 
-#ifdef UseSharedObjects
-# for Linux shared objects
-
-#ifndef AlphaArchitecture
-DEPGLUT = $(TOP)/lib/glut/libglut.so /* from PFM 6/31/96 */
-GLUT = $(TOP)/lib/glut/libglut.so /* from PFM 6/31/96 */
-#endif
-DEPMUI = $(TOP)/lib/mui/libmui.so
-MUI = $(TOP)/lib/mui/libmui.so
-DEPGLE = $(TOP)/lib/gle/libgle.so
-GLE = $(TOP)/lib/gle/libgle.so
-DEPGLSMAP = $(TOP)/lib/glsmap/libglsmap.so
-GLSMAP = $(TOP)/lib/glsmap/libglsmap.so
-
-#else
-# for static objects
-
 #ifndef AlphaArchitecture
 DEPGLUT = $(TOP)/lib/glut/libglut.a
 GLUT = $(TOP)/lib/glut/libglut.a
@@ -160,9 +162,7 @@ GLE = $(TOP)/lib/gle/libgle.a
 DEPGLSMAP = $(TOP)/lib/glsmap/libglsmap.a
 GLSMAP = $(TOP)/lib/glsmap/libglsmap.a
 
-#endif
-
-CXXEXTRA_INCLUDES = -I/usr/include/CC $(EXTRA_INCLUDES) $(MESA_INCLUDE)
+CXXEXTRA_INCLUDES = -I/usr/include/CC $(EXTRA_INCLUDES) $(MESA_INCLUDE) $(LOCAL_INCLUDES)
 GLUT_INVENTOR_DEPLIBS = $(GLUT_DEPLIBS)
 GLUT_INVENTOR_LIBS = $(INVENTOR) $(GLUT_LIBS)
 

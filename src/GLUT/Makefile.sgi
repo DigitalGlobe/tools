@@ -35,8 +35,8 @@ DIST = README NOTICE README.glut2 README.fortran README.xinput \
        include adainclude glutdefs README.win README.mui \
        glutmake.bat glutwin32.mak Makefile.win Portability.txt
 
-DIST_NAME = glut-3.7
-ZIP_NAME = glut37
+DIST_NAME = glut-3.8
+ZIP_NAME = glut38
 ZIP_DATA_NAME = glutdata
 
 glut.tar.gz :
