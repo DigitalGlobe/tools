@@ -29,16 +29,12 @@ class Program:
     DESCRIPTION = "Builds the googletest library."
 
     # ----------------------------------------------------------------------
-    # ----------------------------------------------------------------------
     # the name of the path that will contain intermediary build files
     _PATH_NAME_BUILD = "googletest"
     # ----------------------------------------------------------------------
     # the name of the path that contains the source code
     _PATH_NAME_SOURCE = "..\\src\\googletest"
     # ----------------------------------------------------------------------
-
-    # the name of the path that contains the cmake files
-    _PATH_NAME_CMAKE_SOURCE = "."
 
     _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
