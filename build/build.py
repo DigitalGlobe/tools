@@ -230,7 +230,7 @@ class Program :
                 # self._build(Program._FILE_NAME_BUILD_GLUT)
                 # self._build(Program._FILE_NAME_BUILD_GOOGLETEST)
                 # self._build(Program._FILE_NAME_BUILD_GSOAP)
-                self._build(Program._FILE_NAME_BUILD_KDIS)
+                # self._build(Program._FILE_NAME_BUILD_KDIS)
                 self._build(Program._FILE_NAME_BUILD_LASZIP)
                 self._build(Program._FILE_NAME_BUILD_LIBGIST)
                 self._build(Program._FILE_NAME_BUILD_LIBICONV)
