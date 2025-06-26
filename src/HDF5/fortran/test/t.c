@@ -9,21 +9,18 @@
  * COPYRIGHT
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * Copyright by The HDF Group.                                               *
- * Copyright by the Board of Trustees of the University of Illinois.         *
  * All rights reserved.                                                      *
  *                                                                           *
  * This file is part of HDF5.  The full HDF5 copyright notice, including     *
  * terms governing use, modification, and redistribution, is contained in    *
- * the files COPYING and Copyright.html.  COPYING can be found at the root   *
- * of the source code distribution tree; Copyright.html can be found at the  *
- * root level of an installed copy of the electronic HDF5 document set and   *
- * is linked from the top-level documents page.  It can also be found at     *
- * http://hdfgroup.org/HDF5/doc/Copyright.html.  If you do not have          *
- * access to either file, you may request a copy from help@hdfgroup.org.     *
+ * the COPYING file, which can be found at the root of the source code       *
+ * distribution tree, or in https://www.hdfgroup.org/licenses.               *
+ * If you do not have access to either file, you may request a copy from     *
+ * help@hdfgroup.org.                                                        *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *
  ******
-*/
+ */
 
 #include "t.h"
 #include "H5Eprivate.h"
@@ -37,39 +34,36 @@
  *              full_name - buffer to return full name
  *              full_namelen - name length
  * Returns:     0 on success, -1 on failure
- * Programmer:  Elena Pourmal
- *              Friday, September 13, 2002
- * Modifications:
  *---------------------------------------------------------------------------*/
 int_f
-nh5_fixname_c(_fcd base_name, size_t_f *base_namelen, hid_t_f* fapl, _fcd full_name, size_t_f *full_namelen)
+nh5_fixname_c(_fcd base_name, size_t_f *base_namelen, hid_t_f *fapl, _fcd full_name, size_t_f *full_namelen)
 {
-     char *c_base_name = NULL;
-     char *c_full_name = NULL;
-     int_f ret_value = 0;
+    char *c_base_name = NULL;
+    char *c_full_name = NULL;
+    int_f ret_value   = 0;
 
-     /*
-      * Convert FORTRAN name to C name
-      */
-     if(NULL == (c_base_name = (char *)HD5f2cstring(base_name, (size_t)*base_namelen)))
-         HGOTO_DONE(FAIL)
-     if(NULL == (c_full_name = (char *)HDmalloc((size_t)*full_namelen + 1)))
-         HGOTO_DONE(FAIL)
+    /*
+     * Convert FORTRAN name to C name
+     */
+    if (NULL == (c_base_name = (char *)HD5f2cstring(base_name, (size_t)*base_namelen)))
+        HGOTO_DONE(FAIL);
+    if (NULL == (c_full_name = (char *)malloc((size_t)*full_namelen + 1)))
+        HGOTO_DONE(FAIL);
 
-     /*
-      * Call h5_fixname function.
-      */
-     if(NULL == h5_fixname(c_base_name, (hid_t)*fapl, c_full_name, (size_t)*full_namelen + 1))
-         HGOTO_DONE(FAIL)
-     HD5packFstring(c_full_name, _fcdtocp(full_name), (size_t)*full_namelen);
+    /*
+     * Call h5_fixname function.
+     */
+    if (NULL == h5_fixname(c_base_name, (hid_t)*fapl, c_full_name, (size_t)*full_namelen + 1))
+        HGOTO_DONE(FAIL);
+    HD5packFstring(c_full_name, _fcdtocp(full_name), (size_t)*full_namelen);
 
 done:
-     if(c_base_name)
-        HDfree(c_base_name);
-     if(c_full_name)
-        HDfree(c_full_name);
+    if (c_base_name)
+        free(c_base_name);
+    if (c_full_name)
+        free(c_full_name);
 
-     return ret_value;
+    return ret_value;
 }
 
 /*----------------------------------------------------------------------------
@@ -79,45 +73,43 @@ done:
  *              base_namelen - name length
  *              fapl - file access property list
  * Returns:     0 on success, -1 on failure
- * Programmer:  Elena Pourmal
- *              Thursday, September 19, 2002
- * Modifications:
  *---------------------------------------------------------------------------*/
 int_f
-nh5_cleanup_c(_fcd base_name, size_t_f *base_namelen, hid_t_f* fapl)
+nh5_cleanup_c(_fcd base_name, size_t_f *base_namelen, hid_t_f *fapl)
 {
-     char filename[1024];
-     int ret_value = -1;
-     char *c_base_name[1];
-     hid_t c_fapl;
+    char  filename[1024];
+    int   ret_value = -1;
+    char *c_base_name[1];
+    hid_t c_fapl;
 
-     /*
-      * Define ifile access property list
-      */
-     c_fapl = (hid_t)*fapl;
-     /*c_fapl = H5Pcreate(H5P_FILE_ACCESS);*/
-     /*
-      * Convert FORTRAN name to C name
-      */
-     c_base_name[0] = (char *)HD5f2cstring(base_name, (size_t)*base_namelen);
-     if (c_base_name[0] == NULL) goto DONE;
+    /*
+     * Define ifile access property list
+     */
+    c_fapl = (hid_t)*fapl;
+    /*c_fapl = H5Pcreate(H5P_FILE_ACCESS);*/
+    /*
+     * Convert FORTRAN name to C name
+     */
+    c_base_name[0] = (char *)HD5f2cstring(base_name, (size_t)*base_namelen);
+    if (c_base_name[0] == NULL)
+        goto DONE;
 
-     /*
-      * Call h5_cleanup function.
-      */
-     /*if (h5_cleanup(c_base_name, c_fapl) != 0) {
-     ret_value = 0;
-     goto DONE;
-     }
+    /*
+     * Call h5_cleanup function.
+     */
+    /*if (h5_cleanup(c_base_name, c_fapl) != 0) {
+    ret_value = 0;
+    goto DONE;
+    }
 */
-     h5_fixname(c_base_name[0], c_fapl, filename, sizeof(filename));
-     HDremove(filename);
-     ret_value =0;
+    h5_fixname(c_base_name[0], c_fapl, filename, sizeof(filename));
+    HDremove(filename);
+    ret_value = 0;
 
 DONE:
-     if (NULL != c_base_name[0]) HDfree(c_base_name[0]);
-     return ret_value;
-
+    if (NULL != c_base_name[0])
+        free(c_base_name[0]);
+    return ret_value;
 }
 
 /*----------------------------------------------------------------------------
@@ -128,15 +120,12 @@ DONE:
  *              up as exit(0).
  * Inputs:      status - status for exit() to return
  * Returns:     none
- * Programmer:  Quincey Koziol
- *              Tuesday, December 14, 2004
- * Modifications:
  *---------------------------------------------------------------------------*/
 void
 nh5_exit_c(int_f *status)
 {
-    HDexit((int)*status);
-}   /* h5_exit_c */
+    exit((int)*status);
+} /* h5_exit_c */
 
 /*----------------------------------------------------------------------------
  * Name:        h5_env_nocleanup_c
@@ -145,15 +134,11 @@ nh5_exit_c(int_f *status)
  * Output:      status:  1 - HDF5_NOCLEANUP is set
  *                       0 - HDF5_NOCLEANUP is not set
  * Returns:     none
- * Programmer:  M.S. Breitenfeld
- *              September 30, 2008
- * Modifications:
  *---------------------------------------------------------------------------*/
 void
 nh5_env_nocleanup_c(int_f *status)
 {
-  *status = (int_f)0;
-  if (HDgetenv("HDF5_NOCLEANUP"))
-    *status = (int_f)1;
-}   /* h5_env_nocleanup_c */
-
+    *status = (int_f)0;
+    if (getenv(HDF5_NOCLEANUP))
+        *status = (int_f)1;
+} /* h5_env_nocleanup_c */

@@ -9,25 +9,26 @@
 ! COPYRIGHT
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 !   Copyright by The HDF Group.                                               *
-!   Copyright by the Board of Trustees of the University of Illinois.         *
 !   All rights reserved.                                                      *
 !                                                                             *
 !   This file is part of HDF5.  The full HDF5 copyright notice, including     *
 !   terms governing use, modification, and redistribution, is contained in    *
-!   the files COPYING and Copyright.html.  COPYING can be found at the root   *
-!   of the source code distribution tree; Copyright.html can be found at the  *
-!   root level of an installed copy of the electronic HDF5 document set and   *
-!   is linked from the top-level documents page.  It can also be found at     *
-!   http://hdfgroup.org/HDF5/doc/Copyright.html.  If you do not have          *
-!   access to either file, you may request a copy from help@hdfgroup.org.     *
+!   the COPYING file, which can be found at the root of the source code       *
+!   distribution tree, or in https://www.hdfgroup.org/licenses.               *
+!   If you do not have access to either file, you may request a copy from     *
+!   help@hdfgroup.org.                                                        *
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 !
 ! CONTAINS SUBROUTINES
-!  attribute_test 
+!  attribute_test
 !
 !
 !*****
 MODULE TH5A
+
+     USE HDF5 ! This module contains all necessary modules
+     USE TH5_MISC
+     USE TH5_MISC_GEN
 
 CONTAINS
     SUBROUTINE attribute_test(cleanup, total_error)
@@ -36,9 +37,6 @@ CONTAINS
 !   h5acreate_f,  h5awrite_f, h5aclose_f,h5aread_f, h5aopen_name_f,
 !   h5aget_name_f,h5aget_space_f, h5aget_type_f,
 !
-
-     USE HDF5 ! This module contains all necessary modules
-     USE TH5_MISC
      IMPLICIT NONE
      LOGICAL, INTENT(IN)  :: cleanup
      INTEGER, INTENT(INOUT) :: total_error
@@ -82,7 +80,7 @@ CONTAINS
      INTEGER(HID_T) :: atype5_id      !Integer Attribute Datatype identifier
      INTEGER(HSIZE_T), DIMENSION(1) :: adims = (/2/) ! Attribute dimension
      INTEGER(HSIZE_T), DIMENSION(1) :: adims2 = (/1/) ! Attribute dimension
-     INTEGER     ::   arank = 1                      ! Attribure rank
+     INTEGER     ::   arank = 1                      ! Attribute rank
      INTEGER(SIZE_T) :: attrlen    ! Length of the attribute string
 
      INTEGER(HID_T) :: attr_space     !Returned String Attribute Space identifier
@@ -102,11 +100,10 @@ CONTAINS
      CHARACTER(LEN=35), DIMENSION(2) ::  aread_data ! Buffer to put read back
                                                ! string attr data
      CHARACTER ::  attr_character_data = 'A'
-     REAL(KIND=Fortran_DOUBLE),  DIMENSION(1) ::  attr_double_data = 3.459D0
+     REAL(KIND=Fortran_DOUBLE),  DIMENSION(1) ::  attr_double_data = 3.459_Fortran_DOUBLE
      REAL,         DIMENSION(1) ::  attr_real_data = 4.0
      INTEGER,      DIMENSION(1) ::  attr_integer_data = 5
      INTEGER(HSIZE_T), DIMENSION(7) :: data_dims
-
 
      CHARACTER :: aread_character_data ! variable to put read back Character attr data
      INTEGER, DIMENSION(1)  :: aread_integer_data ! variable to put read back integer attr data
@@ -309,7 +306,7 @@ CONTAINS
      !
      CALL h5aget_storage_size_f(attr_id, attr_storage, error)
      CALL check("h5aget_storage_size_f",error,total_error)
-!     CALL VERIFY("h5aget_storage_size_f",attr_storage,*SizeOf(attr_storage),total_error)
+!     CALL verify("h5aget_storage_size_f",attr_storage,*SizeOf(attr_storage),total_error)
      CALL h5aget_storage_size_f(attr2_id, attr_storage, error)
      CALL check("h5aget_storage_size_f",error,total_error)
 !     CALL verify("h5aget_storage_size_f",attr_storage,1,total_error)
@@ -377,48 +374,48 @@ CONTAINS
      ! Open file
      !
      CALL h5fopen_f(fix_filename, H5F_ACC_RDWR_F, file_id, error)
-     CALL check("h5open_f",error,total_error)
+     CALL check("h5fopen_f",error,total_error)
      !
      ! Reopen dataset
      !
      CALL h5dopen_f(file_id, dsetname, dset_id, error)
      CALL check("h5dopen_f",error,total_error)
      !
-     !open the String attrbute by name
+     !open the String attribute by name
      !
      CALL h5aopen_name_f(dset_id, aname, attr_id, error)
      CALL check("h5aopen_name_f",error,total_error)
 
      !
-     !open the CHARACTER attrbute by name
+     !open the CHARACTER attribute by name
      !
      CALL h5aopen_name_f(dset_id, aname2, attr2_id, error)
      CALL check("h5aopen_name_f",error,total_error)
       !
-     !open the DOUBLE attrbute by name
+     !open the DOUBLE attribute by name
      !
      CALL h5aopen_name_f(dset_id, aname3, attr3_id, error)
      CALL check("h5aopen_name_f",error,total_error)
      !
-     !open the REAL attrbute by name
+     !open the REAL attribute by name
      !
      CALL h5aopen_name_f(dset_id, aname4, attr4_id, error)
      CALL check("h5aopen_name_f",error,total_error)
 
      !
-     !open the INTEGER attrbute by name
+     !open the INTEGER attribute by name
      !
      CALL h5aopen_name_f(dset_id, aname5, attr5_id, error)
-     CALL check("h5aopen_idx_f",error,total_error)
+     CALL check("h5aopen_name_f",error,total_error)
 
      !
-     !open the NULL attrbute by name
+     !open the NULL attribute by name
      !
      CALL h5aopen_name_f(dset_id, aname6, attr6_id, error)
-     CALL check("h5aopen_idx_f",error,total_error)
+     CALL check("h5aopen_name_f",error,total_error)
 
      !
-     !get the attrbute name
+     !get the attribute name
      !
      CALL h5aget_name_f(attr5_id, name_size, attr_name, error)
      CALL check("h5aget_name_f",error,total_error)
@@ -430,44 +427,44 @@ CONTAINS
      END IF
 
      !
-     !get the STRING attrbute space
+     !get the STRING attribute space
      !
      CALL h5aget_space_f(attr_id, attr_space, error)
      CALL check("h5aget_space_f",error,total_error)
      !
-     !get other attrbute space
+     !get other attribute space
      !
      CALL h5aget_space_f(attr2_id, attr2_space, error)
      CALL check("h5aget_space_f",error,total_error)
      !
-     !get the string attrbute datatype
+     !get the string attribute datatype
      !
      CALL h5aget_type_f(attr_id, attr_type, error)
      CALL check("h5aget_type_f",error,total_error)
      !
-     !get the character attrbute datatype
+     !get the character attribute datatype
      !
      CALL h5aget_type_f(attr2_id, attr2_type, error)
      CALL check("h5aget_type_f",error,total_error)
      !
-     !get the double attrbute datatype
+     !get the double attribute datatype
      !
      CALL h5aget_type_f(attr3_id, attr3_type, error)
      CALL check("h5aget_type_f",error,total_error)
      !
-     !get the real attrbute datatype
+     !get the real attribute datatype
      !
      CALL h5aget_type_f(attr4_id, attr4_type, error)
      CALL check("h5aget_type_f",error,total_error)
 
      !
-     !get the integer attrbute datatype
+     !get the integer attribute datatype
      !
      CALL h5aget_type_f(attr5_id, attr5_type, error)
      CALL check("h5aget_type_f",error,total_error)
 
      !
-     !get the null attrbute datatype
+     !get the null attribute datatype
      !
      CALL h5aget_type_f(attr6_id, attr6_type, error)
      CALL check("h5aget_type_f",error,total_error)
@@ -498,7 +495,7 @@ CONTAINS
      CALL check("h5aread_f",error,total_error)
 
      IF ( (aread_data(1) .NE. attr_data(1)) .OR. (aread_data(2) .NE. attr_data(2)) ) THEN
-         WRITE(*,*) "Read back string attrbute is wrong", aread_data(1), aread_data(2)
+         WRITE(*,*) "Read back string attribute is wrong", aread_data(1), aread_data(2)
          total_error = total_error + 1
      END IF
 
@@ -508,7 +505,7 @@ CONTAINS
      CALL h5aread_f(attr2_id, H5T_NATIVE_CHARACTER, aread_character_data, data_dims, error)
      CALL check("h5aread_f",error,total_error)
      IF (aread_character_data .NE. 'A' ) THEN
-         WRITE(*,*) "Read back character attrbute is wrong ",aread_character_data
+         WRITE(*,*) "Read back character attribute is wrong ",aread_character_data
          total_error = total_error + 1
      END IF
      !
@@ -517,21 +514,15 @@ CONTAINS
      data_dims(1) = 1
      CALL h5aread_f(attr3_id, H5T_NATIVE_DOUBLE, aread_double_data, data_dims, error)
      CALL check("h5aread_f",error,total_error)
+     CALL VERIFY("Read back double attribute is wrong", aread_double_data(1),3.459_Fortran_DOUBLE,total_error)
 
-     IF( .NOT.dreal_eq( REAL(aread_double_data(1),dp), 3.459_dp) )THEN
-        WRITE(*,*) "Read back double attrbute is wrong", aread_double_data(1)
-        total_error = total_error + 1
-     ENDIF
      !
      !read the real attribute data back to memory
      !
      data_dims(1) = 1
      CALL h5aread_f(attr4_id, H5T_NATIVE_REAL, aread_real_data, data_dims, error)
      CALL check("h5aread_f",error,total_error)
-     IF( .NOT.dreal_eq( REAL(aread_real_data(1),dp), 4.0_dp) )THEN
-        WRITE(*,*) "Read back real attrbute is wrong", aread_real_data(1)
-        total_error = total_error + 1
-     ENDIF
+     CALL VERIFY("Read back real attribute is wrong", aread_real_data(1),4.0,total_error)
      !
      !read the Integer attribute data back to memory
      !
@@ -539,7 +530,7 @@ CONTAINS
      CALL h5aread_f(attr5_id, H5T_NATIVE_INTEGER, aread_integer_data, data_dims, error)
      CALL check("h5aread_f",error,total_error)
      IF (aread_integer_data(1) .NE. 5 ) THEN
-         WRITE(*,*) "Read back integer attrbute is wrong ", aread_integer_data
+         WRITE(*,*) "Read back integer attribute is wrong ", aread_integer_data
          total_error = total_error + 1
      END IF
      !
@@ -549,7 +540,7 @@ CONTAINS
      CALL h5aread_f(attr6_id, H5T_NATIVE_INTEGER, aread_null_data, data_dims, error)
      CALL check("h5aread_f",error,total_error)
      IF (aread_null_data(1) .NE. 7 ) THEN
-         WRITE(*,*) "Read back null attrbute is wrong ", aread_null_data
+         WRITE(*,*) "Read back null attribute is wrong ", aread_null_data
          total_error = total_error + 1
      END IF
 
@@ -584,8 +575,6 @@ CONTAINS
        WRITE(*,*) "got number of attributes wrong", num_attrs
        total_error = total_error +1
      END IF
-
-
 
      CALL h5sclose_f(attr_space, error)
      CALL check("h5sclose_f",error,total_error)

@@ -1,16 +1,13 @@
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 !   Copyright by The HDF Group.                                               *
-!   Copyright by the Board of Trustees of the University of Illinois.         *
 !   All rights reserved.                                                      *
 !                                                                             *
 !   This file is part of HDF5.  The full HDF5 copyright notice, including     *
 !   terms governing use, modification, and redistribution, is contained in    *
-!   the files COPYING and Copyright.html.  COPYING can be found at the root   *
-!   of the source code distribution tree; Copyright.html can be found at the  *
-!   root level of an installed copy of the electronic HDF5 document set and   *
-!   is linked from the top-level documents page.  It can also be found at     *
-!   http://hdfgroup.org/HDF5/doc/Copyright.html.  If you do not have          *
-!   access to either file, you may request a copy from help@hdfgroup.org.     *
+!   the COPYING file, which can be found at the root of the source code       *
+!   distribution tree, or in https://www.hdfgroup.org/licenses.               *
+!   If you do not have access to either file, you may request a copy from     *
+!   help@hdfgroup.org.                                                        *
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
 
@@ -20,17 +17,17 @@
 
 SUBROUTINE multiple_dset_write(length, do_collective, do_chunk, mpi_size, mpi_rank, nerrors)
   USE HDF5
+  USE MPI
   USE TH5_MISC
+
   IMPLICIT NONE
-  INCLUDE 'mpif.h'
 
   INTEGER, INTENT(in) :: length                     ! array length
   LOGICAL, INTENT(in) :: do_collective              ! use collective I/O
   LOGICAL, INTENT(in) :: do_chunk                   ! use chunking
-  INTEGER, INTENT(in) :: mpi_size                   ! number of processes in the group of communicator
-  INTEGER, INTENT(in) :: mpi_rank                   ! rank of the calling process in the communicator
+  INTEGER(KIND=MPI_INTEGER_KIND), INTENT(in) :: mpi_size ! number of processes in the group of communicator
+  INTEGER(KIND=MPI_INTEGER_KIND), INTENT(in) :: mpi_rank ! rank of the calling process in the communicator
   INTEGER, INTENT(inout) :: nerrors                 ! number of errors
-  INTEGER :: mpierror                               ! MPI hdferror flag
   INTEGER :: hdferror                               ! HDF hdferror flag
   INTEGER(hsize_t), DIMENSION(1) :: dims            ! dataset dimensions
   INTEGER(hsize_t), DIMENSION(1) :: cdims           ! chunk dimensions
@@ -219,30 +216,30 @@ SUBROUTINE multiple_dset_write(length, do_collective, do_chunk, mpi_size, mpi_ra
   CALL check("h5pcreate_f", hdferror, nerrors)
 
   CALL h5pset_fapl_mpio_f(fapl_id, MPI_COMM_WORLD, MPI_INFO_NULL, hdferror)
-  CALL check("h5pcreate_f", hdferror, nerrors)
+  CALL check("h5pset_fapl_mpio_f", hdferror, nerrors)
 
   CALL h5fopen_f(filename, H5F_ACC_RDWR_F, file_id, hdferror, access_prp = fapl_id)
-  CALL check("h5pcreate_f", hdferror, nerrors)
+  CALL check("h5fopen_f", hdferror, nerrors)
 
   CALL h5screate_simple_f(1, dims, fspace_id, hdferror)
-  CALL check("h5pcreate_f", hdferror, nerrors)
+  CALL check("h5screate_simple_f", hdferror, nerrors)
 
   CALL h5screate_simple_f(1, dims, mspace_id, hdferror)
-  CALL check("h5pcreate_f", hdferror, nerrors)
+  CALL check("h5screate_simple_f", hdferror, nerrors)
 
   !//////////////////////////////////////////////////////////
   ! select hyperslab in memory
   !//////////////////////////////////////////////////////////
 
   CALL h5sselect_hyperslab_f(mspace_id, H5S_SELECT_SET_F, start, counti, hdferror)
-  CALL check("h5pcreate_f", hdferror, nerrors)
+  CALL check("h5sselect_hyperslab_f", hdferror, nerrors)
 
   !//////////////////////////////////////////////////////////
   ! select hyperslab in the file
   !//////////////////////////////////////////////////////////
 
   CALL h5sselect_hyperslab_f(fspace_id, H5S_SELECT_SET_F, start, counti, hdferror)
-  CALL check("h5pcreate_f", hdferror, nerrors)
+  CALL check("h5sselect_hyperslab_f", hdferror, nerrors)
 
   !//////////////////////////////////////////////////////////
   ! create a property list for collective dataset read
@@ -253,7 +250,7 @@ SUBROUTINE multiple_dset_write(length, do_collective, do_chunk, mpi_size, mpi_ra
 
   IF (do_collective) THEN
      CALL h5pset_dxpl_mpio_f(dxpl_id, H5FD_MPIO_COLLECTIVE_F, hdferror)
-     CALL check("h5pcreate_f", hdferror, nerrors)
+     CALL check("h5pset_dxpl_mpio_f", hdferror, nerrors)
   ENDIF
 
   !//////////////////////////////////////////////////////////
@@ -267,11 +264,11 @@ SUBROUTINE multiple_dset_write(length, do_collective, do_chunk, mpi_size, mpi_ra
 
      ! create this dataset
      CALL h5dopen_f(file_id, dsetname, dset_id, hdferror)
-     CALL check("h5pcreate_f", hdferror, nerrors)
+     CALL check("h5dopen_f", hdferror, nerrors)
 
      ! read this dataset
      CALL h5dread_f(dset_id,H5T_NATIVE_INTEGER,rbuf,dims,hdferror,file_space_id=fspace_id,mem_space_id=mspace_id,xfer_prp=dxpl_id)
-     CALL check("h5pcreate_f", hdferror, nerrors)
+     CALL check("h5dread_f", hdferror, nerrors)
 
      ! close this dataset
      CALL h5dclose_f(dset_id, hdferror)
@@ -297,20 +294,19 @@ SUBROUTINE multiple_dset_write(length, do_collective, do_chunk, mpi_size, mpi_ra
   !//////////////////////////////////////////////////////////
 
   CALL h5pclose_f(fapl_id, hdferror)
-  CALL check("h5pcreate_f", hdferror, nerrors)
+  CALL check("h5pclose_f", hdferror, nerrors)
 
   CALL h5pclose_f(dxpl_id, hdferror)
-  CALL check("h5pcreate_f", hdferror, nerrors)
+  CALL check("h5pclose_f", hdferror, nerrors)
 
   CALL h5sclose_f(fspace_id, hdferror)
-  CALL check("h5pcreate_f", hdferror, nerrors)
+  CALL check("h5sclose_f", hdferror, nerrors)
 
   CALL h5sclose_f(mspace_id, hdferror)
-  CALL check("h5pcreate_f", hdferror, nerrors)
+  CALL check("h5sclose_f", hdferror, nerrors)
 
   CALL h5fclose_f(file_id, hdferror)
-  CALL check("h5pcreate_f", hdferror, nerrors)
-
+  CALL check("h5fclose_f", hdferror, nerrors)
 
   DEALLOCATE(wbuf)
   DEALLOCATE(rbuf)

@@ -1,28 +1,47 @@
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 !   Copyright by The HDF Group.                                               *
-!   Copyright by the Board of Trustees of the University of Illinois.         *
 !   All rights reserved.                                                      *
 !                                                                             *
 !   This file is part of HDF5.  The full HDF5 copyright notice, including     *
 !   terms governing use, modification, and redistribution, is contained in    *
-!   the files COPYING and Copyright.html.  COPYING can be found at the root   *
-!   of the source code distribution tree; Copyright.html can be found at the  *
-!   root level of an installed copy of the electronic HDF5 document set and   *
-!   is linked from the top-level documents page.  It can also be found at     *
-!   http://hdfgroup.org/HDF5/doc/Copyright.html.  If you do not have          *
-!   access to either file, you may request a copy from help@hdfgroup.org.     *
+!   the COPYING file, which can be found at the root of the source code       *
+!   distribution tree, or in https://www.hdfgroup.org/licenses.               *
+!   If you do not have access to either file, you may request a copy from     *
+!   help@hdfgroup.org.                                                        *
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 !
 !
 ! This file contains the FORTRAN90 tests for H5LT
 !
 
-program image_test
+MODULE TSTIMAGE
 
-call make_image1()
+CONTAINS
 
-end program image_test
+!-------------------------------------------------------------------------
+! test_begin
+!-------------------------------------------------------------------------
 
+subroutine test_begin(string)
+character(len=*), intent(in) :: string
+write(*, fmt = '(14a)', advance = 'no') string
+write(*, fmt = '(40x,a)', advance = 'no') ' '
+end subroutine test_begin
+
+!-------------------------------------------------------------------------
+! passed
+!-------------------------------------------------------------------------
+
+subroutine passed()
+write(*, fmt = '(6a)')  'PASSED'
+end subroutine passed
+
+END MODULE TSTIMAGE
+
+
+MODULE TSTIMAGE_TESTS
+
+CONTAINS
 
 !-------------------------------------------------------------------------
 ! make_image1
@@ -32,6 +51,7 @@ subroutine make_image1()
 
 use h5im ! module of H5IM
 use hdf5 ! module of HDF5 library
+USE TSTIMAGE ! module for testing image support routines
 
 implicit none
 
@@ -41,12 +61,12 @@ character(len=4), parameter :: dsetname2 = "img2"    ! dataset name
 character(len=15), parameter :: il ="INTERLACE_PIXEL"! dataset name
 integer(hid_t) :: file_id                            ! file identifier
 integer(hsize_t), parameter :: width  = 500          ! width of image
-integer(hsize_t), parameter :: height = 200          ! height of image
+integer(hsize_t), parameter :: height = 270          ! height of image
 integer, parameter :: pal_entries = 9                ! palette number of entries
-integer, dimension(width*height) :: buf1             ! data buffer
-integer, dimension(width*height) :: bufr1            ! data buffer
-integer, dimension(width*height*3) :: buf2           ! data buffer
-integer, dimension(width*height*3) :: bufr2          ! data buffer
+integer, dimension(:), allocatable :: buf1           ! data buffer
+integer, dimension(:), allocatable :: bufr1          ! data buffer
+integer, dimension(:), allocatable :: buf2           ! data buffer
+integer, dimension(:), allocatable :: bufr2          ! data buffer
 integer(hsize_t) :: widthr                           ! width of image
 integer(hsize_t) :: heightr                          ! height of image
 integer(hsize_t) :: planesr                          ! color planes
@@ -78,6 +98,12 @@ integer, dimension(pal_entries*3) :: pal_data_in = (/&
  252,168,0,&    ! orange
  252,0,0/)      ! red
 
+! allocate arrays
+!
+allocate(buf1(width * height))
+allocate(bufr1(width * height))
+allocate(buf2(width * height * 3))
+allocate(bufr2(width * height * 3))
 
 ! create an 8bit image of 9 values divided evenly by the array
 !
@@ -315,25 +341,29 @@ call h5fclose_f(file_id, errcode)
 !
 call h5close_f(errcode)
 
+! deallocate arrays
+!
+deallocate(buf1)
+deallocate(bufr1)
+deallocate(buf2)
+deallocate(bufr2)
+
 !
 ! end function.
 !
 end subroutine make_image1
 
-!-------------------------------------------------------------------------
-! test_begin
-!-------------------------------------------------------------------------
+END MODULE TSTIMAGE_TESTS
 
-subroutine test_begin(string)
-character(len=*), intent(in) :: string
-write(*, fmt = '(14a)', advance = 'no') string
-write(*, fmt = '(40x,a)', advance = 'no') ' '
-end subroutine test_begin
 
-!-------------------------------------------------------------------------
-! passed
-!-------------------------------------------------------------------------
+program image_test
 
-subroutine passed()
-write(*, fmt = '(6a)')  'PASSED'
-end subroutine passed
+USE TSTIMAGE_TESTS ! module for testing dataset routines
+
+IMPLICIT NONE
+
+call make_image1()
+
+end program image_test
+
+

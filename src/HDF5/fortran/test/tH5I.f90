@@ -9,17 +9,14 @@
 ! COPYRIGHT
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 !   Copyright by The HDF Group.                                               *
-!   Copyright by the Board of Trustees of the University of Illinois.         *
 !   All rights reserved.                                                      *
 !                                                                             *
 !   This file is part of HDF5.  The full HDF5 copyright notice, including     *
 !   terms governing use, modification, and redistribution, is contained in    *
-!   the files COPYING and Copyright.html.  COPYING can be found at the root   *
-!   of the source code distribution tree; Copyright.html can be found at the  *
-!   root level of an installed copy of the electronic HDF5 document set and   *
-!   is linked from the top-level documents page.  It can also be found at     *
-!   http://hdfgroup.org/HDF5/doc/Copyright.html.  If you do not have          *
-!   access to either file, you may request a copy from help@hdfgroup.org.     *
+!   the COPYING file, which can be found at the root of the source code       *
+!   distribution tree, or in https://www.hdfgroup.org/licenses.               *
+!   If you do not have access to either file, you may request a copy from     *
+!   help@hdfgroup.org.                                                        *
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 !
 ! CONTAINS SUBROUTINES
@@ -28,14 +25,16 @@
 !*****
 MODULE TH5I
 
+  USE HDF5 ! This module contains all necessary modules
+  USE TH5_MISC
+  USE TH5_MISC_GEN
+
 CONTAINS
 
     SUBROUTINE identifier_test(cleanup, total_error)
 
 !   This subroutine tests following functionalities: h5iget_type_f
 
-   USE HDF5 ! This module contains all necessary modules
-   USE TH5_MISC
 
      IMPLICIT NONE
      LOGICAL, INTENT(IN)  :: cleanup
@@ -87,21 +86,21 @@ CONTAINS
      ! check that the ID is not valid
      dtype = -1
      CALL H5Iis_valid_f(dtype, tri_ret, error)
-     CALL check("H5Iis_valid_f", error, total_error) 
-     CALL VerifyLogical("H5Iis_valid_f", tri_ret, .FALSE., total_error)
-     
+     CALL check("H5Iis_valid_f", error, total_error)
+     CALL verify("H5Iis_valid_f", tri_ret, .FALSE., total_error)
+
      ! Create a datatype id
      CALL H5Tcopy_f(H5T_NATIVE_INTEGER,dtype,error)
-     CALL check("H5Tcopy_f", error, total_error) 
-     
+     CALL check("H5Tcopy_f", error, total_error)
+
      ! Check that the ID is valid
      CALL H5Iis_valid_f(dtype, tri_ret, error)
-     CALL check("H5Iis_valid_f", error, total_error) 
-     CALL VerifyLogical("H5Tequal_f", tri_ret, .TRUE., total_error)
-     
+     CALL check("H5Iis_valid_f", error, total_error)
+     CALL verify("H5Tequal_f", tri_ret, .TRUE., total_error)
+
      CALL H5Tclose_f(dtype, error)
-     CALL check("H5Tclose_f", error, total_error) 
-  
+     CALL check("H5Tclose_f", error, total_error)
+
      !
      ! Create a new file using default properties.
      !
@@ -246,7 +245,7 @@ CONTAINS
      CALL h5sclose_f(dspace_id, error)
      CALL check("h5sclose_f",error,total_error)
      !
-     ! Close the dataype.
+     ! Close the datatype.
      !
      CALL h5tclose_f(atype_id, error)
      CALL check("h5tclose_f",error,total_error)
@@ -309,9 +308,12 @@ CONTAINS
      ! Clear the error stack from the file close failure
      CALL h5eset_auto_f(1, error)
      CALL h5eclear_f(error)
+     CALL check("h5eclear_f",error,total_error)
+     CALL h5eclear_f(error, H5P_DEFAULT_F)
+     CALL check("h5eclear_f",error,total_error)
 
-      if(cleanup) CALL h5_cleanup_f(filename, H5P_DEFAULT_F, error)
-          CALL check("h5_cleanup_f", error, total_error)
+     IF(cleanup) CALL h5_cleanup_f(filename, H5P_DEFAULT_F, error)
+     CALL check("h5_cleanup_f", error, total_error)
 
      RETURN
      END SUBROUTINE identifier_test

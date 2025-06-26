@@ -1,48 +1,58 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * Copyright by The HDF Group.                                               *
- * Copyright by the Board of Trustees of the University of Illinois.         *
  * All rights reserved.                                                      *
  *                                                                           *
  * This file is part of HDF5.  The full HDF5 copyright notice, including     *
  * terms governing use, modification, and redistribution, is contained in    *
- * the files COPYING and Copyright.html.  COPYING can be found at the root   *
- * of the source code distribution tree; Copyright.html can be found at the  *
- * root level of an installed copy of the electronic HDF5 document set and   *
- * is linked from the top-level documents page.  It can also be found at     *
- * http://hdfgroup.org/HDF5/doc/Copyright.html.  If you do not have          *
- * access to either file, you may request a copy from help@hdfgroup.org.     *
+ * the COPYING file, which can be found at the root of the source code       *
+ * distribution tree, or in https://www.hdfgroup.org/licenses.               *
+ * If you do not have access to either file, you may request a copy from     *
+ * help@hdfgroup.org.                                                        *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /*-------------------------------------------------------------------------
  *
  * Created:             H5MMprivate.h
- *                      Jul 10 1997
- *                      Robb Matzke <matzke@llnl.gov>
  *
- * Purpose:             Private header for memory management.
- *
- * Modifications:
+ * Purpose:             Private header for memory management
  *
  *-------------------------------------------------------------------------
  */
-#ifndef _H5MMprivate_H
-#define _H5MMprivate_H
+#ifndef H5MMprivate_H
+#define H5MMprivate_H
 
 #include "H5MMpublic.h"
 
 /* Private headers needed by this file */
 #include "H5private.h"
 
-#define H5MM_free(Z)	HDfree(Z)
+/* Uncomment this macro to enable some extra memory checks
+ *
+ * This can also be defined at configure time, which we do in debug builds
+ * by default.
+ */
+/* #define H5MM_DEBUG */
+
+#define H5MM_calloc(Z) calloc(1, Z)
+#define H5MM_free(Z)   free(Z)
+#define H5MM_malloc(Z) malloc(Z)
+
+#ifndef H5MM_DEBUG
+#define H5MM_memcpy(D, S, N) memcpy(D, S, N)
+#endif /* !H5MM_DEBUG */
 
 /*
  * Library prototypes...
  */
-H5_DLL void *H5MM_malloc(size_t size);
-H5_DLL void *H5MM_calloc(size_t size);
 H5_DLL void *H5MM_realloc(void *mem, size_t size);
-H5_DLL char *H5MM_xstrdup(const char *s);
-H5_DLL char *H5MM_strdup(const char *s);
+H5_DLL char *H5MM_xstrdup(const char *s) H5_ATTR_MALLOC;
+H5_DLL char *H5MM_strdup(const char *s) H5_ATTR_MALLOC;
+H5_DLL char *H5MM_strndup(const char *s, size_t n) H5_ATTR_MALLOC;
 H5_DLL void *H5MM_xfree(void *mem);
+H5_DLL void *H5MM_xfree_const(const void *mem);
 
+#ifdef H5MM_DEBUG
+H5_DLL void *H5MM_memcpy(void *dest, const void *src, size_t n);
 #endif
+
+#endif /* H5MMprivate_H */

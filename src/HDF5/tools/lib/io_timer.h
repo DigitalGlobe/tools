@@ -1,35 +1,20 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * Copyright by The HDF Group.                                               *
- * Copyright by the Board of Trustees of the University of Illinois.         *
  * All rights reserved.                                                      *
  *                                                                           *
  * This file is part of HDF5.  The full HDF5 copyright notice, including     *
  * terms governing use, modification, and redistribution, is contained in    *
- * the files COPYING and Copyright.html.  COPYING can be found at the root   *
- * of the source code distribution tree; Copyright.html can be found at the  *
- * root level of an installed copy of the electronic HDF5 document set and   *
- * is linked from the top-level documents page.  It can also be found at     *
- * http://hdfgroup.org/HDF5/doc/Copyright.html.  If you do not have          *
- * access to either file, you may request a copy from help@hdfgroup.org.     *
+ * the COPYING file, which can be found at the root of the source code       *
+ * distribution tree, or in https://www.hdfgroup.org/licenses.               *
+ * If you do not have access to either file, you may request a copy from     *
+ * help@hdfgroup.org.                                                        *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-#ifndef IO_TIMER__
-#define IO_TIMER__
+#ifndef IO_TIMER
+#define IO_TIMER
 
-#include "hdf5.h"
+#include "H5private.h"
 
-#if defined(H5_TIME_WITH_SYS_TIME)
-#   include <sys/time.h>
-#   include <time.h>
-#elif defined(H5_HAVE_SYS_TIME_H)
-#   include <sys/time.h>
-#else
-#   include <time.h>
-#endif
-
-#ifdef H5_HAVE_WINSOCK2_H
-#  include <winsock2.h>
-#endif /* H5_HAVE_WINSOCK2_H */
 /* The different types of timers we can have */
 typedef enum timer_type_ {
     HDF5_FILE_OPENCLOSE,
@@ -50,34 +35,35 @@ typedef enum timer_type_ {
 } timer_type;
 
 typedef enum clock_type_ {
-    SYS_CLOCK = 0,   /* Use system clock to measure time     */
-    MPI_CLOCK = 1    /* Use MPI clock to measure time        */
+    SYS_CLOCK = 0, /* Use system clock to measure time     */
+    MPI_CLOCK = 1  /* Use MPI clock to measure time        */
 } clock_type;
 
 /* Miscellaneous identifiers */
 enum {
-    TSTART,          /* Start a specified timer              */
-    TSTOP            /* Stop a specified timer               */
+    TSTART, /* Start a specified timer              */
+    TSTOP   /* Stop a specified timer               */
 };
 
 /* The performance time structure */
 typedef struct io_time_t {
-    clock_type type;
-    double total_time[NUM_TIMERS];
-    double mpi_timer[NUM_TIMERS];
+    clock_type     type;
+    double         total_time[NUM_TIMERS];
+    double         mpi_timer[NUM_TIMERS];
     struct timeval sys_timer[NUM_TIMERS];
 } io_time_t;
 
-/* External function declarations */
 #ifdef __cplusplus
 extern "C" {
-#endif  /* __cplusplus */
-H5TOOLS_DLL io_time_t   *io_time_new(clock_type t);
-H5TOOLS_DLL void         io_time_destroy(io_time_t *pt);
-H5TOOLS_DLL io_time_t   *set_time(io_time_t *pt, timer_type t, int start_stop);
-H5TOOLS_DLL double       get_time(io_time_t *pt, timer_type t);
+#endif
+
+H5TOOLS_DLL io_time_t *io_time_new(clock_type t);
+H5TOOLS_DLL void       io_time_destroy(io_time_t *pt);
+H5TOOLS_DLL io_time_t *io_time_set(io_time_t *pt, timer_type t, int start_stop);
+H5TOOLS_DLL double     io_time_get(io_time_t *pt, timer_type t);
+
 #ifdef __cplusplus
 }
-#endif  /* __cplusplus */
+#endif
 
-#endif  /* IO_TIMER__ */
+#endif /* IO_TIMER */

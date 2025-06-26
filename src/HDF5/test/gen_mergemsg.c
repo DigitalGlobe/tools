@@ -1,22 +1,16 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * Copyright by The HDF Group.                                               *
- * Copyright by the Board of Trustees of the University of Illinois.         *
  * All rights reserved.                                                      *
  *                                                                           *
  * This file is part of HDF5.  The full HDF5 copyright notice, including     *
  * terms governing use, modification, and redistribution, is contained in    *
- * the files COPYING and Copyright.html.  COPYING can be found at the root   *
- * of the source code distribution tree; Copyright.html can be found at the  *
- * root level of an installed copy of the electronic HDF5 document set and   *
- * is linked from the top-level documents page.  It can also be found at     *
- * http://hdfgroup.org/HDF5/doc/Copyright.html.  If you do not have          *
- * access to either file, you may request a copy from help@hdfgroup.org.     *
+ * the COPYING file, which can be found at the root of the source code       *
+ * distribution tree, or in https://www.hdfgroup.org/licenses.               *
+ * If you do not have access to either file, you may request a copy from     *
+ * help@hdfgroup.org.                                                        *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /*
- * Programmer:  Quincey Koziol <koziol@ncsa.uiuc.edu>
- *              Friday, June 30, 2006
- *
  *  This program creates an object with fragmented object header messages
  *  that will be merged when the object is read from the file.  This program
  *  needs to be compiled against the 1.6.5 or earlier version of the library
@@ -27,25 +21,26 @@
 #include <stdio.h>
 #include "hdf5.h"
 
-#define FILENAME        "mergemsg.h5"
-#define GROUP1          "grp1"
-#define GROUP2          "grp2"
-#define GROUP3          "grp3"
-#define ATTR1           "__111111111111__"
-#define ATTR1_LEN       11
-#define ATTR2           "__222222222__"
-#define ATTR2_LEN       11
-#define ATTR3           "__333333333__"
-#define ATTR3_LEN       1
+#define FILENAME  "mergemsg.h5"
+#define GROUP1    "grp1"
+#define GROUP2    "grp2"
+#define GROUP3    "grp3"
+#define ATTR1     "__111111111111__"
+#define ATTR1_LEN 11
+#define ATTR2     "__222222222__"
+#define ATTR2_LEN 11
+#define ATTR3     "__333333333__"
+#define ATTR3_LEN 1
 
-int main()
+int
+main(void)
 {
-    hid_t fid;          /* File ID */
-    hid_t gid, gid2, gid3;      /* Group IDs */
-    hid_t aid;          /* Attribute ID */
-    hid_t sid;          /* Dataspace ID */
-    hid_t tid;          /* Datatype ID */
-    herr_t ret;         /* Generic return value */
+    hid_t  fid;             /* File ID */
+    hid_t  gid, gid2, gid3; /* Group IDs */
+    hid_t  aid;             /* Attribute ID */
+    hid_t  sid;             /* Dataspace ID */
+    hid_t  tid;             /* Datatype ID */
+    herr_t ret;             /* Generic return value */
 
     /* Create file */
     fid = H5Fcreate(FILENAME, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -71,7 +66,6 @@ int main()
     ret = H5Fclose(fid);
     assert(ret >= 0);
 
-
     /* Re-open file */
     fid = H5Fopen(FILENAME, H5F_ACC_RDWR, H5P_DEFAULT);
     assert(fid > 0);
@@ -84,7 +78,7 @@ int main()
     sid = H5Screate(H5S_SCALAR);
     assert(sid > 0);
 
-    /* Create dataype for attribute */
+    /* Create datatype for attribute */
     tid = H5Tcopy(H5T_C_S1);
     assert(tid > 0);
     ret = H5Tset_size(tid, ATTR1_LEN);
@@ -110,7 +104,7 @@ int main()
     sid = H5Screate(H5S_SCALAR);
     assert(sid > 0);
 
-    /* Create dataype for attribute */
+    /* Create datatype for attribute */
     tid = H5Tcopy(H5T_C_S1);
     assert(tid > 0);
     ret = H5Tset_size(tid, ATTR2_LEN);
@@ -140,7 +134,6 @@ int main()
     ret = H5Fclose(fid);
     assert(ret >= 0);
 
-
     /* Re-open file */
     fid = H5Fopen(FILENAME, H5F_ACC_RDWR, H5P_DEFAULT);
     assert(fid > 0);
@@ -169,9 +162,6 @@ int main()
     ret = H5Fclose(fid);
     assert(ret >= 0);
 
-
-
-
     /* Re-open file */
     fid = H5Fopen(FILENAME, H5F_ACC_RDWR, H5P_DEFAULT);
     assert(fid > 0);
@@ -184,7 +174,7 @@ int main()
     sid = H5Screate(H5S_SCALAR);
     assert(sid > 0);
 
-    /* Create dataype for attribute */
+    /* Create datatype for attribute */
     tid = H5Tcopy(H5T_C_S1);
     assert(tid > 0);
     ret = H5Tset_size(tid, ATTR3_LEN);
@@ -214,8 +204,6 @@ int main()
     ret = H5Fclose(fid);
     assert(ret >= 0);
 
-
-
     /* Re-open file */
     fid = H5Fopen(FILENAME, H5F_ACC_RDWR, H5P_DEFAULT);
     assert(fid > 0);
@@ -232,7 +220,7 @@ int main()
     sid = H5Screate(H5S_SCALAR);
     assert(sid > 0);
 
-    /* Create dataype for attribute */
+    /* Create datatype for attribute */
     tid = H5Tcopy(H5T_C_S1);
     assert(tid > 0);
     ret = H5Tset_size(tid, ATTR2_LEN);
@@ -261,7 +249,6 @@ int main()
     /* Close file */
     ret = H5Fclose(fid);
     assert(ret >= 0);
-
 
     /* Re-open file */
     fid = H5Fopen(FILENAME, H5F_ACC_RDWR, H5P_DEFAULT);
@@ -283,7 +270,6 @@ int main()
     ret = H5Fclose(fid);
     assert(ret >= 0);
 
-
     /* Re-open file */
     fid = H5Fopen(FILENAME, H5F_ACC_RDWR, H5P_DEFAULT);
     assert(fid > 0);
@@ -296,7 +282,7 @@ int main()
     sid = H5Screate(H5S_SCALAR);
     assert(sid > 0);
 
-    /* Create dataype for attribute */
+    /* Create datatype for attribute */
     tid = H5Tcopy(H5T_C_S1);
     assert(tid > 0);
     ret = H5Tset_size(tid, ATTR2_LEN);
@@ -326,7 +312,5 @@ int main()
     ret = H5Fclose(fid);
     assert(ret >= 0);
 
-    return(0);
+    return (0);
 }
-
-

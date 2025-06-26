@@ -1,76 +1,78 @@
+#
+# Copyright by The HDF Group.
+# All rights reserved.
+#
+# This file is part of HDF5.  The full HDF5 copyright notice, including
+# terms governing use, modification, and redistribution, is contained in
+# the COPYING file, which can be found at the root of the source code
+# distribution tree, or in https://www.hdfgroup.org/licenses.
+# If you do not have access to either file, you may request a copy from
+# help@hdfgroup.org.
+#
 # This is the CMakeCache file.
 
-########################
+#########################
 # EXTERNAL cache entries
-########################
+#########################
 
-set (BUILD_SHARED_LIBS OFF CACHE BOOL "Build Shared Libraries" FORCE)
-
-set (BUILD_TESTING ON CACHE BOOL "Build HDF5 Unit Testing" FORCE)
+set (CMAKE_INSTALL_FRAMEWORK_PREFIX "Library/Frameworks" CACHE STRING "Frameworks installation directory" FORCE)
 
 set (HDF_PACKAGE_EXT "" CACHE STRING "Name of HDF package extension" FORCE)
 
-set (HDF5_BUILD_CPP_LIB ON CACHE BOOL "Build HDF5 C++ Library" FORCE)
+set (HDF_PACKAGE_NAMESPACE "hdf5::" CACHE STRING "Name for HDF package namespace (can be empty)" FORCE)
 
-set (HDF5_BUILD_EXAMPLES ON CACHE BOOL "Build HDF5 Library Examples" FORCE)
+set (HDF5_BUILD_CPP_LIB ON CACHE BOOL "Build C++ support" FORCE)
 
 set (HDF5_BUILD_FORTRAN ON CACHE BOOL "Build FORTRAN support" FORCE)
-
-set (HDF5_ENABLE_F2003 ON CACHE BOOL "Enable FORTRAN 2003 Standard" FORCE)
 
 set (HDF5_BUILD_HL_LIB ON CACHE BOOL "Build HIGH Level HDF5 Library" FORCE)
 
 set (HDF5_BUILD_TOOLS ON CACHE BOOL "Build HDF5 Tools" FORCE)
 
-set (HDF5_BUILD_GENERATORS OFF CACHE BOOL "Build Test Generators" FORCE)
+set (HDF5_BUILD_EXAMPLES ON CACHE BOOL "Build HDF5 Library Examples" FORCE)
 
 set (HDF5_ENABLE_Z_LIB_SUPPORT ON CACHE BOOL "Enable Zlib Filters" FORCE)
 
-set (HDF5_ENABLE_SZIP_SUPPORT ON CACHE BOOL "Use SZip Filter" FORCE)
+set (HDF5_ENABLE_SZIP_SUPPORT OFF CACHE BOOL "Use SZip Filter" FORCE)
 
-set (HDF5_ENABLE_SZIP_ENCODING ON CACHE BOOL "Use SZip Encoding" FORCE)
+set (HDF5_ENABLE_SZIP_ENCODING OFF CACHE BOOL "Use SZip Encoding" FORCE)
 
-set (HDF5_ENABLE_HSIZET ON CACHE BOOL "Enable datasets larger than memory" FORCE)
+set (MPIEXEC_MAX_NUMPROCS "4" CACHE STRING "Minimum number of processes for HDF parallel tests" FORCE)
 
-set (HDF5_ENABLE_UNSUPPORTED OFF CACHE BOOL "Enable unsupported combinations of configuration options" FORCE)
-
-set (HDF5_ENABLE_DEPRECATED_SYMBOLS ON CACHE BOOL "Enable deprecated public API symbols" FORCE)
-
-set (HDF5_ENABLE_DIRECT_VFD OFF CACHE BOOL "Build the Direct I/O Virtual File Driver" FORCE)
-
-set (HDF5_ENABLE_PARALLEL OFF CACHE BOOL "Enable parallel build (requires MPI)" FORCE)
-
-set (MPIEXEC_MAX_NUMPROCS "3" CACHE STRING "Minimum number of processes for HDF parallel tests" FORCE)
-
-set (HDF5_BUILD_PARALLEL_ALL OFF CACHE BOOL "Build Parallel Programs" FORCE)
-
-set (HDF5_ENABLE_COVERAGE OFF CACHE BOOL "Enable code coverage for Libraries and Programs" FORCE)
-
-set (HDF5_ENABLE_USING_MEMCHECKER ON CACHE BOOL "Indicate that a memory checker is used" FORCE)
-
-set (HDF5_DISABLE_COMPILER_WARNINGS OFF CACHE BOOL "Disable compiler warnings" FORCE)
-
-set (HDF5_USE_FOLDERS ON CACHE BOOL "Enable folder grouping of projects in IDEs." FORCE)
-
-set (HDF5_USE_16_API_DEFAULT OFF CACHE BOOL "Use the HDF5 1.6.x API by default" FORCE)
-
-set (HDF5_ENABLE_THREADSAFE OFF CACHE BOOL "(WINDOWS)Enable Threadsafety" FORCE)
-
-set (HDF5_PACKAGE_EXTLIBS OFF CACHE BOOL "(WINDOWS)CPACK - include external libraries" FORCE)
+set (HDF5_USING_ANALYSIS_TOOL ON CACHE BOOL "Indicate that an analysis checker is used" FORCE)
 
 set (HDF5_NO_PACKAGES ON CACHE BOOL "CPACK - Disable packaging" FORCE)
 
-set (HDF5_ALLOW_EXTERNAL_SUPPORT "NO" CACHE STRING "Allow External Library Building (NO SVN TGZ)" FORCE)
-set_property (CACHE HDF5_ALLOW_EXTERNAL_SUPPORT PROPERTY STRINGS NO SVN TGZ)
+set (HDF_TEST_EXPRESS "2" CACHE STRING "Control testing framework (0-3)" FORCE)
 
-set (ZLIB_TGZ_NAME "ZLib.tar.gz" CACHE STRING "Use ZLib from compressed file" FORCE)
+set (HDF5_MINGW_STATIC_GCC_LIBS ON CACHE BOOL "Statically link libgcc/libstdc++" FORCE)
 
-set (SZIP_TGZ_NAME "SZip.tar.gz" CACHE STRING "Use SZip from compressed file" FORCE)
+set (HDF5_ALLOW_EXTERNAL_SUPPORT "TGZ" CACHE STRING "Allow External Library Building (NO GIT TGZ)" FORCE)
+set_property (CACHE HDF5_ALLOW_EXTERNAL_SUPPORT PROPERTY STRINGS NO GIT TGZ)
+
+########################
+# compression options
+########################
+set (ZLIB_PACKAGE_NAME "zlib" CACHE STRING "Name of ZLIB package" FORCE)
+set (ZLIB_TGZ_NAME "zlib-1.3.1.tar.gz" CACHE STRING "Use HDF5_ZLib from compressed file" FORCE)
+set (ZLIB_TGZ_ORIGPATH "https://github.com/madler/zlib/releases/download/v1.3.1" CACHE STRING "Use ZLIB from original location" FORCE)
+set (ZLIB_USE_LOCALCONTENT ON CACHE BOOL "Use local file for ZLIB FetchContent" FORCE)
+set (ZLIB_GIT_URL "https://github.com/madler/zlib.git" CACHE STRING "Use ZLIB from  GitHub repository" FORCE)
+set (ZLIB_GIT_BRANCH "develop" CACHE STRING "" FORCE)
+
+set (ZLIBNG_PACKAGE_NAME "zlib-ng" CACHE STRING "Name of ZLIBNG package" FORCE)
+set (ZLIBNG_TGZ_NAME "2.2.2.tar.gz" CACHE STRING "Use HDF5_ZLib from compressed file" FORCE)
+set (ZLIBNG_TGZ_ORIGPATH "https://github.com/zlib-ng/zlib-ng/archive/refs/tags" CACHE STRING "Use ZLIBNG from original location" FORCE)
+set (ZLIBNG_GIT_URL "https://github.com/zlib-ng/zlib-ng.git" CACHE STRING "Use ZLIBNG from  GitHub repository" FORCE)
+set (ZLIBNG_GIT_BRANCH "develop" CACHE STRING "" FORCE)
+
+set (LIBAEC_PACKAGE_NAME "libaec" CACHE STRING "Name of AEC SZIP package" FORCE)
+set (LIBAEC_TGZ_NAME "libaec-1.1.3.tar.gz" CACHE STRING "Use SZip AEC from compressed file" FORCE)
+set (LIBAEC_TGZ_ORIGPATH "https://github.com/MathisRosenhauer/libaec/releases/download/v1.1.3" CACHE STRING "Use LIBAEC from original location" FORCE)
+set (LIBAEC_USE_LOCALCONTENT ON CACHE BOOL "Use local file for LIBAEC FetchContent" FORCE)
+set (LIBAEC_GIT_URL "https://github.com/MathisRosenhauer/libaec.git" CACHE STRING "Use LIBAEC from  GitHub repository" FORCE)
+set (LIBAEC_GIT_BRANCH "v1.1.3" CACHE STRING "" FORCE)
 
 set (CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build Debug" FORCE)
 
-set (CTEST_BUILD_CONFIGURATION "Debug" CACHE STRING "Build Debug" FORCE)
-
-set (ZLIB_PACKAGE_NAME "zlib" CACHE STRING "Name of ZLIB package" FORCE)
-
-set (SZIP_PACKAGE_NAME "szip" CACHE STRING "Name of SZIP package" FORCE)
+set (CTEST_CONFIGURATION_TYPE "Debug" CACHE STRING "Build Debug" FORCE)

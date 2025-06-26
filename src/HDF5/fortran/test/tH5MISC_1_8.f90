@@ -9,27 +9,26 @@
 ! COPYRIGHT
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 !   Copyright by The HDF Group.                                               *
-!   Copyright by the Board of Trustees of the University of Illinois.         *
 !   All rights reserved.                                                      *
 !                                                                             *
 !   This file is part of HDF5.  The full HDF5 copyright notice, including     *
 !   terms governing use, modification, and redistribution, is contained in    *
-!   the files COPYING and Copyright.html.  COPYING can be found at the root   *
-!   of the source code distribution tree; Copyright.html can be found at the  *
-!   root level of an installed copy of the electronic HDF5 document set and   *
-!   is linked from the top-level documents page.  It can also be found at     *
-!   http://hdfgroup.org/HDF5/doc/Copyright.html.  If you do not have          *
-!   access to either file, you may request a copy from help@hdfgroup.org.     *
+!   the COPYING file, which can be found at the root of the source code       *
+!   distribution tree, or in https://www.hdfgroup.org/licenses.               *
+!   If you do not have access to either file, you may request a copy from     *
+!   help@hdfgroup.org.                                                        *
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 !
 !*****
 MODULE TH5MISC_1_8
 
+  USE HDF5 ! This module contains all necessary modules
+  USE TH5_MISC
+  USE TH5_MISC_GEN
+
 CONTAINS
 
 SUBROUTINE dtransform(cleanup, total_error)
-  USE HDF5 ! This module contains all necessary modules
-  USE TH5_MISC
 
   IMPLICIT NONE
   LOGICAL, INTENT(IN)  :: cleanup
@@ -57,22 +56,22 @@ SUBROUTINE dtransform(cleanup, total_error)
 
   CALL H5Pget_data_transform_f(dxpl_id_c_to_f, ptrgetTest, error, size=size)
   CALL check("dtransform.H5Pget_data_transform_f",  error, total_error)
-  CALL VerifyString("dtransform.H5Pget_data_transform_f", c_to_f, ptrgetTest, total_error)
-  CALL VERIFY("dtransform.H5Pget_data_transform_f", INT(size),15, total_error)
+  CALL verify("dtransform.H5Pget_data_transform_f", c_to_f, ptrgetTest, total_error)
+  CALL verify("dtransform.H5Pget_data_transform_f", INT(size),15, total_error)
 
 ! check case when receiving buffer to small
 
   CALL H5Pget_data_transform_f(dxpl_id_c_to_f, ptrgetTest_small, error, size=size)
   CALL check("dtransform.H5Pget_data_transform_f",  error, total_error)
-  CALL VerifyString("dtransform.H5Pget_data_transform_f", c_to_f(1:7), ptrgetTest_small, total_error)
-  CALL VERIFY("dtransform.H5Pget_data_transform_f", INT(size),15, total_error)
+  CALL verify("dtransform.H5Pget_data_transform_f", c_to_f(1:7), ptrgetTest_small, total_error)
+  CALL verify("dtransform.H5Pget_data_transform_f", INT(size),15, total_error)
 
 ! check case when receiving buffer to big
 
   CALL H5Pget_data_transform_f(dxpl_id_c_to_f, ptrgetTest_big, error, size=size)
   CALL check("dtransform.H5Pget_data_transform_f",  error, total_error)
-  CALL VerifyString("dtransform.H5Pget_data_transform_f", c_to_f(1:15), ptrgetTest_big(1:15), total_error)
-  CALL VERIFY("dtransform.H5Pget_data_transform_f", INT(size), 15, total_error)
+  CALL verify("dtransform.H5Pget_data_transform_f", c_to_f(1:15), ptrgetTest_big(1:15), total_error)
+  CALL verify("dtransform.H5Pget_data_transform_f", INT(size), 15, total_error)
 
   CALL H5Fclose_f(file_id, error)
   CALL check("H5Fclose_f", error, total_error)
@@ -92,24 +91,21 @@ END SUBROUTINE dtransform
 
 SUBROUTINE test_genprop_basic_class(total_error)
 
-  USE HDF5 ! This module contains all necessary modules
-  USE TH5_MISC
-
   IMPLICIT NONE
   INTEGER, INTENT(INOUT) :: total_error
 
-  INTEGER(HID_T) :: cid1    ! Generic Property class ID 
-  INTEGER(HID_T) :: cid2    ! Generic Property class ID 
+  INTEGER(HID_T) :: cid1    ! Generic Property class ID
+  INTEGER(HID_T) :: cid2    ! Generic Property class ID
 
   CHARACTER(LEN=7) :: CLASS1_NAME = "Class 1"
-  CHARACTER(LEN=7)  :: name              !  Name of class 
-  CHARACTER(LEN=10) :: name_big          !  Name of class bigger buffer 
+  CHARACTER(LEN=7)  :: name              !  Name of class
+  CHARACTER(LEN=10) :: name_big          !  Name of class bigger buffer
   CHARACTER(LEN=4)  :: name_small        !  Name of class smaller buffer
   INTEGER :: error
   INTEGER :: size
   LOGICAL :: flag
 
-  ! Output message about test being performed 
+  ! Output message about test being performed
 
   !WRITE(*,*) "Testing Basic Generic Property List Class Creation Functionality"
 
@@ -117,17 +113,17 @@ SUBROUTINE test_genprop_basic_class(total_error)
 
   cid1 = 456
   CALL H5Pget_class_name_f(cid1, name, size, error)
-  CALL VERIFY("H5Pget_class_name", error, -1, error)
+  CALL verify("H5Pget_class_name", error, -1, error)
 
-  !  Create a new generic class, derived from the root of the class hierarchy 
+  !  Create a new generic class, derived from the root of the class hierarchy
   CALL H5Pcreate_class_f(H5P_ROOT_F, CLASS1_NAME, cid1, error)
   CALL check("H5Pcreate_class", error, total_error)
 
-  !  Check class name 
+  !  Check class name
   CALL H5Pget_class_name_f(cid1, name, size, error)
   CALL check("H5Pget_class_name", error, total_error)
-  CALL VERIFY("H5Pget_class_name", size,7,error)
-  CALL verifystring("H5Pget_class_name", name, CLASS1_NAME, error)
+  CALL verify("H5Pget_class_name", size,7,error)
+  CALL verify("H5Pget_class_name", name, CLASS1_NAME, error)
   IF(error.NE.0)THEN
      WRITE(*,*) 'Class names do not match! name=',name, 'CLASS1_NAME=',CLASS1_NAME
      total_error = total_error + 1
@@ -136,8 +132,8 @@ SUBROUTINE test_genprop_basic_class(total_error)
   !  Check class name smaller buffer
   CALL H5Pget_class_name_f(cid1, name_small, size, error)
   CALL check("H5Pget_class_name", error, total_error)
-  CALL VERIFY("H5Pget_class_name", size,7,error)
-  CALL verifystring("H5Pget_class_name", name_small(1:4), CLASS1_NAME(1:4), error)
+  CALL verify("H5Pget_class_name", size,7,error)
+  CALL verify("H5Pget_class_name", name_small(1:4), CLASS1_NAME(1:4), error)
   IF(error.NE.0)THEN
      WRITE(*,*) 'Class names do not match! name=',name_small(1:4), 'CLASS1_NAME=',CLASS1_NAME(1:4)
      total_error = total_error + 1
@@ -146,34 +142,34 @@ SUBROUTINE test_genprop_basic_class(total_error)
   !  Check class name bigger buffer
   CALL H5Pget_class_name_f(cid1, name_big, size, error)
   CALL check("H5Pget_class_name", error, total_error)
-  CALL VERIFY("H5Pget_class_name", size,7,error)
-  CALL verifystring("H5Pget_class_name", TRIM(name_big), TRIM(CLASS1_NAME), error)
+  CALL verify("H5Pget_class_name", size,7,error)
+  CALL verify("H5Pget_class_name", TRIM(name_big), TRIM(CLASS1_NAME), error)
   IF(error.NE.0)THEN
      WRITE(*,*) 'Class names do not match! name=',TRIM(name_small), 'CLASS1_NAME=',TRIM(CLASS1_NAME)
      total_error = total_error + 1
   ENDIF
 
-  !  Check class parent 
+  !  Check class parent
   CALL H5Pget_class_parent_f(cid1, cid2, error)
   CALL check("H5Pget_class_parent_f", error, total_error)
 
-  !  Verify class parent correct 
+  !  Verify class parent correct
   CALL H5Pequal_f(cid2, H5P_ROOT_F, flag, error)
   CALL check("H5Pequal_f", error, total_error)
-  CALL verifylogical("H5Pequal_f", flag, .TRUE., total_error)
+  CALL verify("H5Pequal_f", flag, .TRUE., total_error)
 
 
-  !  Make certain false postives aren't being returned 
+  !  Make certain false positives aren't being returned
   CALL H5Pequal_f(cid2, H5P_FILE_CREATE_F, flag, error)
   CALL check("H5Pequal_f", error, total_error)
-  CALL verifylogical("H5Pequal_f", flag, .FALSE., total_error)
+  CALL verify("H5Pequal_f", flag, .FALSE., total_error)
 
-  ! Close parent class 
+  ! Close parent class
   CALL H5Pclose_class_f(cid2, error)
   CALL check("H5Pclose_class_f", error, total_error)
 
 
-  ! Close class 
+  ! Close class
   CALL H5Pclose_class_f(cid1, error)
   CALL check("H5Pclose_class_f", error, total_error)
 
@@ -187,21 +183,20 @@ SUBROUTINE test_h5s_encode(total_error)
 !**
 !***************************************************************
 
-  USE HDF5 ! This module contains all necessary modules
-  USE TH5_MISC
   IMPLICIT NONE
   INTEGER, INTENT(INOUT) :: total_error
 
-  INTEGER(hid_t) :: sid1, sid3!	 Dataspace ID		
+  INTEGER(hid_t) :: sid1, sid3!	 Dataspace ID
   INTEGER(hid_t) :: decoded_sid1, decoded_sid3
-  INTEGER :: rank    ! LOGICAL rank of dataspace	
-  INTEGER(size_t) :: sbuf_size=0, scalar_size=0
+  INTEGER(hid_t) :: fapl    ! File access property
+  INTEGER :: rank    ! LOGICAL rank of dataspace
+  INTEGER(size_t) :: new_size = 0, old_size = 0, orig_size=0, scalar_size=0
 
 ! Make sure the size is large
   CHARACTER(LEN=288) :: sbuf
   CHARACTER(LEN=288) :: scalar_buf
 
-  INTEGER(hsize_t) :: n !  Number of dataspace elements 
+  INTEGER(hsize_t) :: n !  Number of dataspace elements
 
   INTEGER(hsize_t), DIMENSION(1:3) :: start = (/0, 0, 0/)
   INTEGER(hsize_t), DIMENSION(1:3) :: stride = (/2, 5, 3/)
@@ -221,7 +216,7 @@ SUBROUTINE test_h5s_encode(total_error)
   !-------------------------------------------------------------------------
   ! * Test encoding and decoding of simple dataspace and hyperslab selection.
   ! *-------------------------------------------------------------------------
-  ! 
+  !
 
   CALL H5Screate_simple_f(SPACE1_RANK, dims1, sid1, error)
   CALL check("H5Screate_simple", error, total_error)
@@ -231,30 +226,48 @@ SUBROUTINE test_h5s_encode(total_error)
   CALL check("h5sselect_hyperslab_f", error, total_error)
 
 
-  ! Encode simple data space in a buffer 
+  ! Encode simple data space in a buffer
 
-  !         First find the buffer size
-  CALL H5Sencode_f(sid1, sbuf, sbuf_size, error)
-  CALL check("H5Sencode", error, total_error)
+  ! Find the buffer size without fapl
+  CALL H5Sencode_f(sid1, sbuf, orig_size, error)
+  CALL check("H5Sencode_f", error, total_error)
+  CALL verify("H5Sencode_f", INT(orig_size), 279, total_error)
 
+  ! Create file access property list
+  CALL h5pcreate_f(H5P_FILE_ACCESS_F, fapl, error)
+  CALL check("h5pcreate_f", error, total_error)
 
-  !  Try decoding bogus buffer 
+  ! Find the buffer size with fapl (default old format)
+  CALL H5Sencode_f(sid1, sbuf, old_size, error, fapl)
+  CALL check("H5Sencode_f", error, total_error)
+  CALL verify("H5Sencode_f", INT(old_size), 279, total_error)
 
+  ! Set fapl to latest file format
+  CALL H5Pset_libver_bounds_f(fapl, H5F_LIBVER_LATEST_F, H5F_LIBVER_LATEST_F, error)
+  CALL check("H5Pset_libver_bounds_f",error, total_error)
+
+  ! Find the buffer size with fapl set to latest format
+  CALL H5Sencode_f(sid1, sbuf, new_size, error, fapl)
+  CALL check("H5Sencode_f", error, total_error)
+  CALL verify("H5Sencode_f", INT(new_size), 101, total_error)
+
+  !  Try decoding bogus buffer
   CALL H5Sdecode_f(sbuf, decoded_sid1, error)
-  CALL VERIFY("H5Sdecode", error, -1, total_error)
+  CALL verify("H5Sdecode", error, -1, total_error)
 
-  CALL H5Sencode_f(sid1, sbuf, sbuf_size, error)
-  CALL check("H5Sencode", error, total_error)
+  !  Encode according to the latest file format
+  CALL H5Sencode_f(sid1, sbuf, new_size, error, fapl)
+  CALL check("H5Sencode_f", error, total_error)
 
-  !  Decode from the dataspace buffer and return an object handle 
+  !  Decode from the dataspace buffer and return an object handle
   CALL H5Sdecode_f(sbuf, decoded_sid1, error)
   CALL check("H5Sdecode", error, total_error)
 
 
-  !  Verify the decoded dataspace 
+  !  Verify the decoded dataspace
   CALL h5sget_simple_extent_npoints_f(decoded_sid1, n, error)
   CALL check("h5sget_simple_extent_npoints_f", error, total_error)
-  CALL VERIFY("h5sget_simple_extent_npoints_f", INT(n), INT(SPACE1_DIM1 * SPACE1_DIM2 * SPACE1_DIM3), &
+  CALL verify("h5sget_simple_extent_npoints_f", INT(n), INT(SPACE1_DIM1 * SPACE1_DIM2 * SPACE1_DIM3), &
        total_error)
 
   !
@@ -269,13 +282,13 @@ SUBROUTINE test_h5s_encode(total_error)
   ! -------------------------------------------------------------------------
   !  * Test encoding and decoding of scalar dataspace.
   !  *-------------------------------------------------------------------------
-  !  
-  !  Create scalar dataspace 
+  !
+  !  Create scalar dataspace
 
   CALL H5Screate_f(H5S_SCALAR_F, sid3, error)
   CALL check("H5Screate_f",error, total_error)
 
-  !  Encode scalar data space in a buffer 
+  !  Encode scalar data space in a buffer
 
   !        First find the buffer size
   CALL H5Sencode_f(sid3, scalar_buf, scalar_size, error)
@@ -287,26 +300,26 @@ SUBROUTINE test_h5s_encode(total_error)
   CALL check("H5Sencode_f", error, total_error)
 
 
-  !  Decode from the dataspace buffer and return an object handle 
+  !  Decode from the dataspace buffer and return an object handle
 
   CALL H5Sdecode_f(scalar_buf, decoded_sid3, error)
   CALL check("H5Sdecode_f", error, total_error)
 
 
-  !  Verify extent type 
+  !  Verify extent type
 
   CALL H5Sget_simple_extent_type_f(decoded_sid3, space_type, error)
   CALL check("H5Sget_simple_extent_type_f", error, total_error)
-  CALL VERIFY("H5Sget_simple_extent_type_f", space_type, H5S_SCALAR_F, total_error)
+  CALL verify("H5Sget_simple_extent_type_f", space_type, H5S_SCALAR_F, total_error)
 
-  !  Verify decoded dataspace 
+  !  Verify decoded dataspace
   CALL h5sget_simple_extent_npoints_f(decoded_sid3, n, error)
   CALL check("h5sget_simple_extent_npoints_f", error, total_error)
-  CALL VERIFY("h5sget_simple_extent_npoints_f", INT(n), 1, total_error)
+  CALL verify("h5sget_simple_extent_npoints_f", INT(n), 1, total_error)
 
   CALL H5Sget_simple_extent_ndims_f(decoded_sid3, rank, error)
   CALL CHECK("H5Sget_simple_extent_ndims_f", error, total_error)
-  CALL VERIFY("H5Sget_simple_extent_ndims_f", rank, 0, total_error )
+  CALL verify("H5Sget_simple_extent_ndims_f", rank, 0, total_error )
 
   CALL h5sclose_f(sid3, error)
   CALL check("h5sclose_f", error, total_error)
@@ -324,19 +337,11 @@ END SUBROUTINE test_h5s_encode
 !
 ! Return:      Success:        0
 !              Failure:        >0
-!
-! Programmer:  M. Scot Breitenfeld
-!              Decemeber 11, 2010
-!
-! Modifications:
-!
 !-------------------------------------------------------------------------
 !
 
 SUBROUTINE test_scaleoffset(cleanup, total_error )
 
-  USE HDF5
-  USE TH5_MISC
   IMPLICIT NONE
   LOGICAL, INTENT(IN)  :: cleanup
   INTEGER, INTENT(INOUT) :: total_error
@@ -347,7 +352,7 @@ SUBROUTINE test_scaleoffset(cleanup, total_error )
   INTEGER(hsize_t), DIMENSION(1:2) :: chunk_dim = (/2, 5/)
   INTEGER, DIMENSION(1:2,1:5) :: orig_data
   INTEGER, DIMENSION(1:2,1:5) :: new_data
-  INTEGER(hsize_t), DIMENSION(1:2) :: start  ! Start of hyperslab 
+  INTEGER(hsize_t), DIMENSION(1:2) :: start  ! Start of hyperslab
   INTEGER(hsize_t), DIMENSION(1:2) :: stride ! Stride of hyperslab
   INTEGER(hsize_t), DIMENSION(1:2) :: count  ! BLOCK count
   INTEGER(hsize_t), DIMENSION(1:2) :: BLOCK  ! BLOCK sizes
@@ -378,11 +383,11 @@ SUBROUTINE test_scaleoffset(cleanup, total_error )
   CALL H5Screate_simple_f(2, dims, space, error)
   CALL CHECK(" H5Screate_simple_f", error, total_error)
 
-  ! Create the dataset property list  
+  ! Create the dataset property list
   CALL H5Pcreate_f(H5P_DATASET_CREATE_F, dc, error)
   CALL CHECK(" H5Pcreate_f", error, total_error)
 
-  ! Set fill value 
+  ! Set fill value
   fillval = 10000
   CALL H5Pset_fill_value_f(dc, H5T_NATIVE_INTEGER, fillval, error)
   CALL CHECK(" H5Pset_fill_value_f", error, total_error)
@@ -390,10 +395,10 @@ SUBROUTINE test_scaleoffset(cleanup, total_error )
   ! Set up to use scaleoffset filter, let library calculate minbits
   CALL H5Pset_chunk_f(dc, 2, chunk_dim, error)
   CALL CHECK(" H5Pset_chunk_f", error, total_error)
-  
+
   CALL H5Pset_scaleoffset_f(dc, H5Z_SO_INT_F, H5Z_SO_INT_MINBITS_DEFAULT_F, error)
   CALL CHECK(" H5Pset_scaleoffset_f", error, total_error)
-  
+
   ! Create the dataset
   CALL H5Dcreate_f(file, "scaleoffset_int", datatype, &
        space, dataset, error, dc)
@@ -405,7 +410,7 @@ SUBROUTINE test_scaleoffset(cleanup, total_error )
 
   ! Select hyperslab for data to write, using 1x5 blocks,
   ! (1,1) stride and (1,1) count starting at the position (0,0)
-     
+
   start(1:2) = (/0,0/)
   stride(1:2) = (/1,1/)
   COUNT(1:2) = (/1,1/)
@@ -429,21 +434,21 @@ SUBROUTINE test_scaleoffset(cleanup, total_error )
   ! STEP 1: Test scaleoffset by setting up a chunked dataset and writing
   ! to it.
   !----------------------------------------------------------------------
-  
-  ! Only data in the hyperslab will be written, other value should be fill value 
+
+  ! Only data in the hyperslab will be written, other value should be fill value
   CALL H5Dwrite_f(dataset, H5T_NATIVE_INTEGER, orig_data, dims, error, mspace, mspace, H5P_DEFAULT_F)
   CALL CHECK(" H5Dwrite_f", error, total_error)
 
   !----------------------------------------------------------------------
   ! STEP 2: Try to read the data we just wrote.
   !----------------------------------------------------------------------
-     
+
   ! Read the dataset back
-  
+
   CALL H5Dread_f(dataset, H5T_NATIVE_INTEGER, new_data, dims, error, mspace, mspace, H5P_DEFAULT_F)
   CALL CHECK(" H5Dread_f", error, total_error)
 
-  ! Check that the values read are the same as the values written 
+  ! Check that the values read are the same as the values written
   DO j = 1, INT(dims(2))
      IF(new_data(1,j) .NE. orig_data(1,j))THEN
         total_error = total_error + 1
@@ -470,5 +475,69 @@ SUBROUTINE test_scaleoffset(cleanup, total_error )
   CALL check("h5_cleanup_f", error, total_error)
 
 END SUBROUTINE test_scaleoffset
+
+SUBROUTINE test_freelist(total_error)
+
+  IMPLICIT NONE
+  INTEGER, INTENT(INOUT) :: total_error
+
+  INTEGER(hid_t) ::   sid
+  INTEGER(hsize_t), DIMENSION(1:1) :: dims = (/8/)
+  INTEGER(hsize_t), DIMENSION(1:1,1:4) :: coord
+  INTEGER(size_t) :: reg_size_start ! Initial amount of regular memory allocated
+  INTEGER(size_t) :: arr_size_start ! Initial amount of array memory allocated
+  INTEGER(size_t) :: blk_size_start ! Initial amount of block memory allocated
+  INTEGER(size_t) :: fac_size_start ! Initial amount of factory memory allocated
+  INTEGER(size_t) :: reg_size_final ! Final amount of regular memory allocated
+  INTEGER(size_t) :: arr_size_final ! Final amount of array memory allocated
+  INTEGER(size_t) :: blk_size_final ! Final amount of BLOCK memory allocated
+  INTEGER(size_t) :: fac_size_final ! Final amount of factory memory allocated
+  INTEGER :: error
+
+  coord(1,1:4) = (/3,4,5,6/)
+
+  ! Create dataspace
+  ! (Allocates array free-list nodes)
+  CALL h5screate_simple_f(1, dims, sid, error)
+  CALL CHECK("h5screate_simple_f", error, total_error)
+
+  ! Select sequence of 4 points
+  CALL h5sselect_elements_f(sid, H5S_SELECT_SET_F, 1, 4_size_t, coord, error)
+  CALL CHECK("h5sselect_elements_f", error, total_error)
+
+  ! Close dataspace
+  CALL h5sclose_f(sid, error)
+  CALL CHECK("h5sclose_f", error, total_error)
+
+  ! Retrieve initial free list values
+  CALL h5get_free_list_sizes_f(reg_size_start, arr_size_start, blk_size_start, fac_size_start, error)
+  CALL check("h5get_free_list_sizes_f", error, total_error)
+
+  IF(reg_size_start.LT.0 .OR. &
+     arr_size_start.LT.0 .OR. &
+     blk_size_start.LT.0 .OR. &
+     fac_size_start.LT.0 &
+     )THEN
+     CALL check("h5get_free_list_sizes_f", -1, total_error)
+  ENDIF
+
+  CALL h5garbage_collect_f(error)
+  CALL check("h5garbage_collect_f", error, total_error)
+
+  ! Retrieve initial free list values
+  CALL h5get_free_list_sizes_f(reg_size_final, arr_size_final, blk_size_final, fac_size_final, error)
+  CALL check("h5get_free_list_sizes_f", error, total_error)
+
+  ! All the free list values should be <= previous values
+  IF( reg_size_final .GT. reg_size_start) &
+       CALL check("h5get_free_list_sizes_f: reg_size_final > reg_size_start", -1, total_error)
+  IF( arr_size_final .GT. arr_size_start) &
+       CALL check("h5get_free_list_sizes_f: arr_size_final > arr_size_start", -1, total_error)
+  IF( blk_size_final .GT. blk_size_start) &
+       CALL check("h5get_free_list_sizes_f: blk_size_final > blk_size_start", -1, total_error)
+  IF( fac_size_final .GT. fac_size_start) &
+       CALL check("h5get_free_list_sizes_f: fac_size_final > fac_size_start", -1, total_error)
+
+END SUBROUTINE test_freelist
 
 END MODULE TH5MISC_1_8

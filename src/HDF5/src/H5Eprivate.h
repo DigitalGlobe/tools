@@ -1,47 +1,63 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * Copyright by The HDF Group.                                               *
- * Copyright by the Board of Trustees of the University of Illinois.         *
  * All rights reserved.                                                      *
  *                                                                           *
  * This file is part of HDF5.  The full HDF5 copyright notice, including     *
  * terms governing use, modification, and redistribution, is contained in    *
- * the files COPYING and Copyright.html.  COPYING can be found at the root   *
- * of the source code distribution tree; Copyright.html can be found at the  *
- * root level of an installed copy of the electronic HDF5 document set and   *
- * is linked from the top-level documents page.  It can also be found at     *
- * http://hdfgroup.org/HDF5/doc/Copyright.html.  If you do not have          *
- * access to either file, you may request a copy from help@hdfgroup.org.     *
+ * the COPYING file, which can be found at the root of the source code       *
+ * distribution tree, or in https://www.hdfgroup.org/licenses.               *
+ * If you do not have access to either file, you may request a copy from     *
+ * help@hdfgroup.org.                                                        *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /*
  *  Header file for error values, etc.
  */
-#ifndef _H5Eprivate_H
-#define _H5Eprivate_H
+#ifndef H5Eprivate_H
+#define H5Eprivate_H
 
 #include "H5Epublic.h"
 
 /* Private headers needed by this file */
 #include "H5private.h"
 
-/* Typedef for error stack (defined in H5Epkg.h) */
-typedef struct H5E_t H5E_t;
+/*
+ * When one needs to temporarily disable recording errors while trying
+ * something that's likely or expected to fail.  The code to try can be nested
+ * between these macros like:
+ *
+ *     H5E_PAUSE_ERRORS {
+ *        ...stuff here that's likely to fail...
+ *      } H5E_RESUME_ERRORS
+ *
+ * Warning: don't break, return, or longjmp() from the block of code or
+ *        the error reporting won't be properly restored!
+ *
+ */
+#define H5E_PAUSE_ERRORS H5E_pause_stack();
+
+#define H5E_RESUME_ERRORS H5E_resume_stack();
 
 /*
  * HERROR macro, used to facilitate error reporting between a FUNC_ENTER()
  * and a FUNC_LEAVE() within a function body.  The arguments are the major
  * error number, the minor error number, and a description of the error.
  */
-#define HERROR(maj_id, min_id, ...) H5E_printf_stack(NULL, __FILE__, FUNC, __LINE__, H5E_ERR_CLS_g, maj_id, min_id, __VA_ARGS__)
+#define HERROR(maj_id, min_id, ...)                                                                          \
+    do {                                                                                                     \
+        H5E_printf_stack(__FILE__, __func__, __LINE__, maj_id, min_id, __VA_ARGS__);                         \
+    } while (0)
 
 /*
  * HCOMMON_ERROR macro, used by HDONE_ERROR and HGOTO_ERROR
  * (Shouldn't need to be used outside this header file)
  */
-#define HCOMMON_ERROR(maj, min, ...)  				              \
-   HERROR(maj, min, __VA_ARGS__);					      \
-   err_occurred = TRUE;                                                       \
-   err_occurred = err_occurred;         /* Shut GCC warnings up! */
+#define HCOMMON_ERROR(maj, min, ...)                                                                         \
+    do {                                                                                                     \
+        HERROR(maj, min, __VA_ARGS__);                                                                       \
+        err_occurred = true;                                                                                 \
+        err_occurred = err_occurred; /* Shut GCC warnings up! */                                             \
+    } while (0)
 
 /*
  * HDONE_ERROR macro, used to facilitate error reporting between a
@@ -52,10 +68,11 @@ typedef struct H5E_t H5E_t;
  * (This macro can also be used to push an error and set the return value
  *      without jumping to any labels)
  */
-#define HDONE_ERROR(maj, min, ret_val, ...) {				      \
-   HCOMMON_ERROR(maj, min, __VA_ARGS__);					      \
-   ret_value = ret_val;                                                       \
-}
+#define HDONE_ERROR(maj, min, ret_val, ...)                                                                  \
+    do {                                                                                                     \
+        HCOMMON_ERROR(maj, min, __VA_ARGS__);                                                                \
+        ret_value = ret_val;                                                                                 \
+    } while (0)
 
 /*
  * HGOTO_ERROR macro, used to facilitate error reporting between a
@@ -64,10 +81,22 @@ typedef struct H5E_t H5E_t;
  * error string.  The return value is assigned to a variable `ret_value' and
  * control branches to the `done' label.
  */
-#define HGOTO_ERROR(maj, min, ret_val, ...) {				      \
-   HCOMMON_ERROR(maj, min, __VA_ARGS__);					      \
-   HGOTO_DONE(ret_val)						              \
-}
+#define HGOTO_ERROR(maj, min, ret_val, ...)                                                                  \
+    do {                                                                                                     \
+        HCOMMON_ERROR(maj, min, __VA_ARGS__);                                                                \
+        HGOTO_DONE(ret_val);                                                                                 \
+    } while (0)
+
+/*
+ * HGOTO_ERROR_TAG macro, used like HGOTO_ERROR between H5_BEGIN_TAG and
+ * H5_END_TAG statements.  Resets the metadata tag before leaving the function.
+ */
+#define HGOTO_ERROR_TAG(maj, min, ret_val, ...)                                                              \
+    do {                                                                                                     \
+        H5AC_tag(prv_tag, NULL);                                                                             \
+        HCOMMON_ERROR(maj, min, __VA_ARGS__);                                                                \
+        HGOTO_DONE(ret_val);                                                                                 \
+    } while (0)
 
 /*
  * HGOTO_DONE macro, used to facilitate normal return between a FUNC_ENTER()
@@ -75,16 +104,21 @@ typedef struct H5E_t H5E_t;
  * value which is assigned to the `ret_value' variable.	 Control branches to
  * the `done' label.
  */
-#define HGOTO_DONE(ret_val) {ret_value = ret_val; goto done;}
+#define HGOTO_DONE(ret_val)                                                                                  \
+    do {                                                                                                     \
+        ret_value = ret_val;                                                                                 \
+        goto done;                                                                                           \
+    } while (0)
 
-/* Library-private functions defined in H5E package */
-H5_DLL herr_t H5E_init(void);
-H5_DLL herr_t H5E_push_stack(H5E_t *estack, const char *file, const char *func,
-    unsigned line, hid_t cls_id, hid_t maj_id, hid_t min_id, const char *desc);
-H5_DLL herr_t H5E_printf_stack(H5E_t *estack, const char *file, const char *func,
-    unsigned line, hid_t cls_id, hid_t maj_id, hid_t min_id, const char *fmt, ...);
-H5_DLL herr_t H5E_clear_stack(H5E_t *estack);
-H5_DLL herr_t H5E_dump_api_stack(int is_api);
+/*
+ * HGOTO_DONE_TAG macro, used like HGOTO_DONE between H5_BEGIN_TAG and
+ * H5_END_TAG statements.  Resets the metadata tag before leaving the function.
+ */
+#define HGOTO_DONE_TAG(ret_val)                                                                              \
+    do {                                                                                                     \
+        H5AC_tag(prv_tag, NULL);                                                                             \
+        HGOTO_DONE(ret_val);                                                                                 \
+    } while (0)
 
 /*
  * Macros handling system error messages as described in C standard.
@@ -94,36 +128,82 @@ H5_DLL herr_t H5E_dump_api_stack(int is_api);
 /* Retrieve the error code description string and push it onto the error
  * stack.
  */
-#define	HSYS_DONE_ERROR(majorcode, minorcode, retcode, str) {		      \
-    int myerrno = errno;							      \
-    HDONE_ERROR(majorcode, minorcode, retcode, "%s, errno = %d, error message = '%s'", str, myerrno, HDstrerror(myerrno));			      \
-}
-#define	HSYS_GOTO_ERROR(majorcode, minorcode, retcode, str) {		      \
-    int myerrno = errno;							      \
-    HGOTO_ERROR(majorcode, minorcode, retcode, "%s, errno = %d, error message = '%s'", str, myerrno, HDstrerror(myerrno));			      \
-}
+#ifndef H5_HAVE_WIN32_API
+#define HSYS_DONE_ERROR(majorcode, minorcode, retcode, str)                                                  \
+    {                                                                                                        \
+        int myerrno = errno;                                                                                 \
+        /* Other projects may rely on the description format to get the errno and any changes should be      \
+         * considered as an API change                                                                       \
+         */                                                                                                  \
+        HDONE_ERROR(majorcode, minorcode, retcode, "%s, errno = %d, error message = '%s'", str, myerrno,     \
+                    strerror(myerrno));                                                                      \
+    }
+#define HSYS_GOTO_ERROR(majorcode, minorcode, retcode, str)                                                  \
+    {                                                                                                        \
+        int myerrno = errno;                                                                                 \
+        /* Other projects may rely on the description format to get the errno and any changes should be      \
+         * considered as an API change                                                                       \
+         */                                                                                                  \
+        HGOTO_ERROR(majorcode, minorcode, retcode, "%s, errno = %d, error message = '%s'", str, myerrno,     \
+                    strerror(myerrno));                                                                      \
+    }
+#else /* H5_HAVE_WIN32_API */
+/* On Windows we also emit the result of GetLastError(). This call returns a DWORD, which is always a
+ * 32-bit unsigned type. Note that on Windows, either errno or GetLastError() (but probably not both) will
+ * be useful depending on whether a C/POSIX or Win32 call failed. The other value will likely be zero,
+ * though I wouldn't count on that.
+ */
+#define HSYS_DONE_ERROR(majorcode, minorcode, retcode, str)                                                  \
+    {                                                                                                        \
+        int   myerrno   = errno;                                                                             \
+        DWORD win_error = GetLastError();                                                                    \
+        /* Other projects may rely on the description format to get the errno and any changes should be      \
+         * considered as an API change                                                                       \
+         */                                                                                                  \
+        HDONE_ERROR(majorcode, minorcode, retcode,                                                           \
+                    "%s, errno = %d, error message = '%s', Win32 GetLastError() = %" PRIu32 "", str,         \
+                    myerrno, strerror(myerrno), win_error);                                                  \
+    }
+#define HSYS_GOTO_ERROR(majorcode, minorcode, retcode, str)                                                  \
+    {                                                                                                        \
+        int   myerrno   = errno;                                                                             \
+        DWORD win_error = GetLastError();                                                                    \
+        /* Other projects may rely on the description format to get the errno and any changes should be      \
+         * considered as an API change                                                                       \
+         */                                                                                                  \
+        HGOTO_ERROR(majorcode, minorcode, retcode,                                                           \
+                    "%s, errno = %d, error message = '%s', Win32 GetLastError() = %" PRIu32 "", str,         \
+                    myerrno, strerror(myerrno), win_error);                                                  \
+    }
+#endif /* H5_HAVE_WIN32_API */
 
 #ifdef H5_HAVE_PARALLEL
 /*
  * MPI error handling macros.
  */
 
-extern	char	H5E_mpi_error_str[MPI_MAX_ERROR_STRING];
-extern	int	H5E_mpi_error_str_len;
+extern char H5E_mpi_error_str[MPI_MAX_ERROR_STRING];
+extern int  H5E_mpi_error_str_len;
 
-#define	HMPI_ERROR(mpierr){						      \
-    MPI_Error_string(mpierr, H5E_mpi_error_str, &H5E_mpi_error_str_len);      \
-    HERROR(H5E_INTERNAL, H5E_MPIERRSTR, "%s", H5E_mpi_error_str);                   \
-}
-#define	HMPI_DONE_ERROR(retcode, str, mpierr){				      \
-    HMPI_ERROR(mpierr);							      \
-    HDONE_ERROR(H5E_INTERNAL, H5E_MPI, retcode, str);			      \
-}
-#define	HMPI_GOTO_ERROR(retcode, str, mpierr){				      \
-    HMPI_ERROR(mpierr);							      \
-    HGOTO_ERROR(H5E_INTERNAL, H5E_MPI, retcode, str);			      \
-}
+#define HMPI_DONE_ERROR(retcode, str, mpierr)                                                                \
+    {                                                                                                        \
+        MPI_Error_string(mpierr, H5E_mpi_error_str, &H5E_mpi_error_str_len);                                 \
+        HDONE_ERROR(H5E_INTERNAL, H5E_MPI, retcode, "%s: MPI error string is '%s'", str, H5E_mpi_error_str); \
+    }
+#define HMPI_GOTO_ERROR(retcode, str, mpierr)                                                                \
+    {                                                                                                        \
+        MPI_Error_string(mpierr, H5E_mpi_error_str, &H5E_mpi_error_str_len);                                 \
+        HGOTO_ERROR(H5E_INTERNAL, H5E_MPI, retcode, "%s: MPI error string is '%s'", str, H5E_mpi_error_str); \
+    }
 #endif /* H5_HAVE_PARALLEL */
 
-#endif /* _H5Eprivate_H */
+/* Library-private functions defined in H5E package */
+H5_DLL herr_t H5E_init(void);
+H5_DLL herr_t H5E_printf_stack(const char *file, const char *func, unsigned line, hid_t maj_idx,
+                               hid_t min_idx, const char *fmt, ...) H5_ATTR_FORMAT(printf, 6, 7);
+H5_DLL herr_t H5E_clear_stack(void);
+H5_DLL herr_t H5E_dump_api_stack(void);
+H5_DLL void   H5E_pause_stack(void);
+H5_DLL void   H5E_resume_stack(void);
 
+#endif /* H5Eprivate_H */

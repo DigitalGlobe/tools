@@ -1,22 +1,16 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * Copyright by The HDF Group.                                               *
- * Copyright by the Board of Trustees of the University of Illinois.         *
  * All rights reserved.                                                      *
  *                                                                           *
  * This file is part of HDF5.  The full HDF5 copyright notice, including     *
  * terms governing use, modification, and redistribution, is contained in    *
- * the files COPYING and Copyright.html.  COPYING can be found at the root   *
- * of the source code distribution tree; Copyright.html can be found at the  *
- * root level of an installed copy of the electronic HDF5 document set and   *
- * is linked from the top-level documents page.  It can also be found at     *
- * http://hdfgroup.org/HDF5/doc/Copyright.html.  If you do not have          *
- * access to either file, you may request a copy from help@hdfgroup.org.     *
+ * the COPYING file, which can be found at the root of the source code       *
+ * distribution tree, or in https://www.hdfgroup.org/licenses.               *
+ * If you do not have access to either file, you may request a copy from     *
+ * help@hdfgroup.org.                                                        *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /*
- * Programmer:  Quincey Koziol <koziol@ncsa.uiuc.edu>
- *              Thursday, May 27, 2004
- *
  * Purpose:	Create two datasets (one for version 1 and one for version 2 of
  *      the layout message), which should have dimensions too large to
  *      represent in version 1 & 2 of the storage layout message.
@@ -32,11 +26,10 @@
 #include "hdf5.h"
 
 #define TESTFILE   "tlayouto.h5"
-#define SPACE_RANK       2
-#define SPACE_DIM0       (8*1024*1024*1024ULL)
-#define SPACE_DIM1       ((256*1024*1024ULL)+1ULL)
+#define SPACE_RANK 2
+#define SPACE_DIM0 (8 * 1024 * 1024 * 1024ULL)
+#define SPACE_DIM1 ((256 * 1024 * 1024ULL) + 1ULL)
 
-
 /*-------------------------------------------------------------------------
  * Function:	main
  *
@@ -46,44 +39,39 @@
  *
  *		Failure:
  *
- * Programmer:	Quincey Koziol
- *              Friday, January  3, 2003
- *
- * Modifications:
- *
  *-------------------------------------------------------------------------
  */
 int
 main(void)
 {
-    hid_t	file, space, dset, dcpl;
-    herr_t      ret;
-    unsigned rank=SPACE_RANK;    /* Rank of dataspace */
-    hsize_t big_dims[SPACE_RANK]={SPACE_DIM0,SPACE_DIM1};      /* Large dimensions */
+    hid_t    file, space, dset, dcpl;
+    herr_t   ret;
+    unsigned rank                 = SPACE_RANK;               /* Rank of dataspace */
+    hsize_t  big_dims[SPACE_RANK] = {SPACE_DIM0, SPACE_DIM1}; /* Large dimensions */
 
     /* Create the file */
     file = H5Fcreate(TESTFILE, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-    if(file<0)
+    if (file < 0)
         printf("file<0!\n");
 
     /* Create the dataspace (for dataset) */
-    space = H5Screate_simple(rank,big_dims,NULL);
-    if(space<0)
+    space = H5Screate_simple(rank, big_dims, NULL);
+    if (space < 0)
         printf("space<0!\n");
 
     /* Create a dataset creation property list */
     dcpl = H5Pcreate(H5P_DATASET_CREATE);
-    if(dcpl<0)
+    if (dcpl < 0)
         printf("dcpl<0!\n");
 
     /* Make certain that the dataset's storage doesn't get allocated :-) */
-    ret = H5Pset_alloc_time(dcpl,H5D_ALLOC_TIME_LATE);
-    if(ret<0)
+    ret = H5Pset_alloc_time(dcpl, H5D_ALLOC_TIME_LATE);
+    if (ret < 0)
         printf("H5Pset_alloc_time() failed!\n");
 
     /* Create the dataset with deferred storage allocation */
     dset = H5Dcreate2(file, "Dataset", H5T_NATIVE_INT, space, H5P_DEFAULT, dcpl, H5P_DEFAULT);
-    if(dset<0)
+    if (dset < 0)
         printf("dset<0!\n");
 
     H5Dclose(dset);
@@ -93,4 +81,3 @@ main(void)
 
     return 0;
 }
-

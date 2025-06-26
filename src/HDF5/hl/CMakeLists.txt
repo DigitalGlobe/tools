@@ -1,32 +1,26 @@
-cmake_minimum_required (VERSION 3.1.0)
-PROJECT (HDF5_HL C CXX)
+cmake_minimum_required (VERSION 3.18)
+project (HDF5_HL C)
 
 #-----------------------------------------------------------------------------
-# Apply Definitions to compiler in this directory and below
+# Option to use new-style references with dimension scale APIs
 #-----------------------------------------------------------------------------
-add_definitions (${HDF_EXTRA_C_FLAGS})
-
+option (HDF5_DIMENSION_SCALES_NEW_REF  "Use new-style references with dimension scale APIs" OFF)
+if (HDF5_DIMENSION_SCALES_NEW_REF)
+  set (H5_DIMENSION_SCALES_WITH_NEW_REF 1)
+endif ()
 
 #-----------------------------------------------------------------------------
 # List Source files
 #-----------------------------------------------------------------------------
-INCLUDE_DIRECTORIES (${HDF5_HL_SOURCE_DIR}/src )
 
-add_subdirectory (${HDF5_HL_SOURCE_DIR}/src ${HDF5_HL_BINARY_DIR}/src)
+add_subdirectory (src)
 
-#-- Build the High level Tools
+# Build HDF5 Tools
 if (HDF5_BUILD_TOOLS)
-  add_subdirectory (${HDF5_HL_SOURCE_DIR}/tools ${HDF5_HL_BINARY_DIR}/tools)
-endif (HDF5_BUILD_TOOLS)
-
-#-- Add High Level Examples
-if (HDF5_BUILD_EXAMPLES)
-  add_subdirectory (${HDF5_HL_SOURCE_DIR}/examples ${HDF5_HL_BINARY_DIR}/examples)
-endif (HDF5_BUILD_EXAMPLES)
+  add_subdirectory (tools)
+endif ()
 
 #-- Build the Unit testing if requested
-if (NOT HDF5_EXTERNALLY_CONFIGURED)
-  if (BUILD_TESTING)
-    add_subdirectory (${HDF5_HL_SOURCE_DIR}/test ${HDF5_HL_BINARY_DIR}/test)
-  endif (BUILD_TESTING)
-endif (NOT HDF5_EXTERNALLY_CONFIGURED)
+if (NOT HDF5_EXTERNALLY_CONFIGURED AND BUILD_TESTING AND HDF5_TEST_SERIAL)
+  add_subdirectory (test)
+endif ()

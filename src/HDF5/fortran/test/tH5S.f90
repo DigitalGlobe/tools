@@ -9,17 +9,14 @@
 ! COPYRIGHT
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 !   Copyright by The HDF Group.                                               *
-!   Copyright by the Board of Trustees of the University of Illinois.         *
 !   All rights reserved.                                                      *
 !                                                                             *
 !   This file is part of HDF5.  The full HDF5 copyright notice, including     *
 !   terms governing use, modification, and redistribution, is contained in    *
-!   the files COPYING and Copyright.html.  COPYING can be found at the root   *
-!   of the source code distribution tree; Copyright.html can be found at the  *
-!   root level of an installed copy of the electronic HDF5 document set and   *
-!   is linked from the top-level documents page.  It can also be found at     *
-!   http://hdfgroup.org/HDF5/doc/Copyright.html.  If you do not have          *
-!   access to either file, you may request a copy from help@hdfgroup.org.     *
+!   the COPYING file, which can be found at the root of the source code       *
+!   distribution tree, or in https://www.hdfgroup.org/licenses.               *
+!   If you do not have access to either file, you may request a copy from     *
+!   help@hdfgroup.org.                                                        *
 ! * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 !
 ! NOTES
@@ -35,12 +32,14 @@
 !*****
 MODULE TH5S
 
+  USE HDF5 ! This module contains all necessary modules
+  USE TH5_MISC
+  USE TH5_MISC_GEN
+
 CONTAINS
 
         SUBROUTINE dataspace_basic_test(cleanup, total_error)
 
-        USE HDF5 ! This module contains all necessary modules
-        USE TH5_MISC
 
           IMPLICIT NONE
           LOGICAL, INTENT(IN)  :: cleanup
@@ -151,7 +150,7 @@ CONTAINS
           CALL h5sget_simple_extent_dims_f(space2_id, dimsout, maxdimsout, error)
               CALL check("h5sget_simple_extent_dims_f", error, total_error)
           IF ((dimsout(1) .NE. dims1(1)) .OR. (dimsout(2) .NE. dims1(2)) ) THEN
-              write(*,*)"error occured, copied dims not same"
+              write(*,*)"error occurred, copied dims not same"
           END IF
 
           !
@@ -159,14 +158,14 @@ CONTAINS
           !
           CALL h5sget_simple_extent_ndims_f(space2_id, rank2, error)
               CALL check("h5sget_simple_extent_ndims_f", error, total_error)
-          IF (rank2 .NE. rank1) write(*,*)"error occured, copied ranks not same"
+          IF (rank2 .NE. rank1) write(*,*)"error occurred, copied ranks not same"
 
           !
           !get the copied space's number of elements.
           !
           CALL h5sget_simple_extent_npoints_f(space2_id, npoints, error)
               CALL check("h5sget_simple_extent_npoints_f", error, total_error)
-          IF (npoints .NE. 24) write(*,*)"error occured, number of elements not correct"
+          IF (npoints .NE. 24) write(*,*)"error occurred, number of elements not correct"
 
 
           !
@@ -176,14 +175,14 @@ CONTAINS
               CALL check("h5sget_simple_extent_type_f", error, total_error)
           IF (classtype .NE. 1) write(*,*)"class type not H5S_SIMPLE_f"
 
-          ! 
+          !
           !set the copied space to none before extend the dimensions.
           !
           CALL h5sset_extent_none_f(space2_id, error)
               CALL check("h5sset_extent_none_f", error, total_error)
 
           !
-          !set the copied space to dim2 size. 
+          !set the copied space to dim2 size.
           !
           CALL h5sset_extent_simple_f(space2_id, rank2, dims2, maxdims2, error)
               CALL check("h5sset_extent_simple_f", error, total_error)
@@ -194,7 +193,7 @@ CONTAINS
           CALL h5sget_simple_extent_dims_f(space2_id, dimsout, maxdimsout, error)
               CALL check("h5sget_simple_extent_dims_f", error, total_error)
           IF ((dimsout(1) .NE. dims2(1)) .OR. (dimsout(2) .NE. dims2(2)) ) THEN
-              write(*,*)"error occured, copied dims not same"
+              write(*,*)"error occurred, copied dims not same"
           END IF
 
           !
@@ -235,8 +234,8 @@ CONTAINS
           do i = 1, 4
               do j = 1, 6
                   IF (data1_out(i,j) .NE. data1_in(i, j)) THEN
-                      write(*, *) "dataset test error occured"
-                      write(*,*) "data read is not the same as the data writen"
+                      write(*, *) "dataset test error occurred"
+                      write(*,*) "data read is not the same as the data written"
                   END IF
               end do
           end do
@@ -256,8 +255,8 @@ CONTAINS
           do i = 1, 6
               do j = 1, 6
                   IF (data2_out(i,j) .NE. data2_in(i, j)) THEN
-                      write(*, *) "dataset test error occured"
-                      write(*,*) "data read is not the same as the data writen"
+                      write(*, *) "dataset test error occurred"
+                      write(*,*) "data read is not the same as the data written"
                   END IF
               end do
           end do

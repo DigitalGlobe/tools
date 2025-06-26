@@ -1,49 +1,66 @@
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  * Copyright by The HDF Group.                                               *
- * Copyright by the Board of Trustees of the University of Illinois.         *
  * All rights reserved.                                                      *
  *                                                                           *
  * This file is part of HDF5.  The full HDF5 copyright notice, including     *
  * terms governing use, modification, and redistribution, is contained in    *
- * the files COPYING and Copyright.html.  COPYING can be found at the root   *
- * of the source code distribution tree; Copyright.html can be found at the  *
- * root level of an installed copy of the electronic HDF5 document set and   *
- * is linked from the top-level documents page.  It can also be found at     *
- * http://hdfgroup.org/HDF5/doc/Copyright.html.  If you do not have          *
- * access to either file, you may request a copy from help@hdfgroup.org.     *
+ * the COPYING file, which can be found at the root of the source code       *
+ * distribution tree, or in https://www.hdfgroup.org/licenses.               *
+ * If you do not have access to either file, you may request a copy from     *
+ * help@hdfgroup.org.                                                        *
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /*
- * Programmer:  Scott Wegner <swegner@hdfgroup.org>
- *				Based on code by Robb Matzke
- *              Thursday, May 24 2007
+ * Purpose:	The public header file for the Windows virtual file driver (VFD)
  *
- * Purpose:	The public header file for the windows driver.
+ *          This VFD uses no Win32 API calls directly (though it may be
+ *          rewritten to do so in the future). It is currently defined to
+ *          be the sec2 VFD.
  */
 #ifndef H5FDwindows_H
 #define H5FDwindows_H
 
-#include "H5Ipublic.h"
-#include "H5FDsec2.h"
-
-#define H5FD_WINDOWS	(H5FD_windows_init())
+/** Initializer for the Windows VFD */
+#define H5FD_WINDOWS (H5FD_sec2_init())
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
-/* The code behind the windows VFD has been removed and the windows
- * VFD initialization has been redirected to the SEC2 driver.  The
- * "Windows" VFD was actually identical to the SEC2 driver code
- * (a planned Win32 API driver never happened) so this change
- * should be transparent to users.
+/**
+ * \ingroup FAPL
+ *
+ * \brief Sets the Windows I/O driver
+ *
+ * \fapl_id
+ * \returns \herr_t
+ *
+ * \details H5Pset_fapl_windows() sets the default HDF5 Windows I/O driver on
+ *          Windows systems.
+ *
+ *          Since the HDF5 library uses this driver, #H5FD_WINDOWS, by default
+ *          on Windows systems, it is not normally necessary for a user
+ *          application to call H5Pset_fapl_windows(). While it is not
+ *          recommended, there may be times when a user chooses to set a
+ *          different HDF5 driver, such as the standard I/O driver (#H5FD_STDIO)
+ *          or the sec2 driver (#H5FD_SEC2), in a Windows
+ *          application. H5Pset_fapl_windows() is provided so that the
+ *          application can return to the Windows I/O driver when the time
+ *          comes.
+ *
+ *          Only the Windows driver is tested on Windows systems; other drivers
+ *          are used at the application's and the user's risk.
+ *
+ *          Furthermore, the Windows driver is tested and available only on
+ *          Windows systems; it is not available on non-Windows systems.
+ *
+ * \since 1.8.0
+ *
  */
-#define H5FD_windows_init H5FD_sec2_init
-#define H5FD_windows_term H5FD_sec2_term
 H5_DLL herr_t H5Pset_fapl_windows(hid_t fapl_id);
 
 #ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
-#endif
+#endif /* H5FDwindows_H */

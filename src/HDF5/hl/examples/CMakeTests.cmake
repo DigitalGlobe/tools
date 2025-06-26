@@ -1,3 +1,14 @@
+#
+# Copyright by The HDF Group.
+# All rights reserved.
+#
+# This file is part of HDF5.  The full HDF5 copyright notice, including
+# terms governing use, modification, and redistribution, is contained in
+# the COPYING file, which can be found at the root of the source code
+# distribution tree, or in https://www.hdfgroup.org/licenses.
+# If you do not have access to either file, you may request a copy from
+# help@hdfgroup.org.
+#
 
 ##############################################################################
 ##############################################################################
@@ -11,21 +22,12 @@ set (HDF5_TEST_FILES
 )
 
 foreach (h5_file ${HDF5_TEST_FILES})
-  set (dest "${PROJECT_BINARY_DIR}/${h5_file}")
-  #message (STATUS " Copying ${h5_file}")
-  add_custom_command (
-      TARGET     hl_ex_ex_ds1
-      POST_BUILD
-      COMMAND    ${CMAKE_COMMAND}
-      ARGS       -E copy_if_different ${PROJECT_SOURCE_DIR}/${h5_file} ${dest}
-  )
-endforeach (h5_file ${HDF5_TEST_FILES})
+  HDFTEST_COPY_FILE("${PROJECT_SOURCE_DIR}/${h5_file}" "${PROJECT_BINARY_DIR}/${h5_file}" "hl_ex_ex_ds1_files")
+endforeach ()
+add_custom_target(hl_ex_ex_ds1_files ALL COMMENT "Copying files needed by hl_ex_ex_ds1 tests" DEPENDS ${hl_ex_ex_ds1_files_list})
 
-  # Remove any output file left over from previous test run
-  add_test (
-      NAME HL_ex-clear-objects
-      COMMAND    ${CMAKE_COMMAND}
-          -E remove 
+# Remove any output file left over from previous test run
+set (HL_EX_CLEANFILES
     ex_lite1.h5
     ex_lite2.h5
     ex_lite3.h5
@@ -45,16 +47,47 @@ endforeach (h5_file ${HDF5_TEST_FILES})
     ex_table_11.h5
     ex_table_12.h5
     ex_ds1.h5
-  )
-  if (NOT "${last_test}" STREQUAL "")
-    set_tests_properties (HL_ex-clear-objects PROPERTIES DEPENDS ${last_test})
-  endif (NOT "${last_test}" STREQUAL "")
-  set (last_test "HL_ex-clear-objects")
+)
+add_test (
+    NAME HL_ex-clear-objects
+    COMMAND    ${CMAKE_COMMAND}
+        -E remove ${HL_EX_CLEANFILES}
+)
+set_tests_properties (HL_ex-clear-objects PROPERTIES
+    FIXTURES_SETUP clear_HL_ex
+    WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+)
+add_test (
+    NAME HL_ex-clean-objects
+    COMMAND    ${CMAKE_COMMAND}
+        -E remove ${HL_EX_CLEANFILES}
+)
+set_tests_properties (HL_ex-clean-objects PROPERTIES
+    FIXTURES_CLEANUP clear_HL_ex
+    WORKING_DIRECTORY ${PROJECT_BINARY_DIR}
+)
 
 foreach (example ${examples})
-  add_test (NAME HL_ex_${example} COMMAND $<TARGET_FILE:hl_ex_${example}>)
-    if (NOT "${last_test}" STREQUAL "")
-      set_tests_properties (HL_ex_${example} PROPERTIES DEPENDS ${last_test})
-    endif (NOT "${last_test}" STREQUAL "")
-    set (last_test "HL_ex_${example}")
-endforeach (example ${examples})
+  if (HDF5_USING_ANALYSIS_TOOL)
+    add_test (NAME HL_ex_${example} COMMAND ${CMAKE_CROSSCOMPILING_EMULATOR} $<TARGET_FILE:hl_ex_${example}>)
+  else ()
+    add_test (NAME HL_ex_${example} COMMAND "${CMAKE_COMMAND}"
+        -D "TEST_EMULATOR=${CMAKE_CROSSCOMPILING_EMULATOR}"
+        -D "TEST_PROGRAM=$<TARGET_FILE:hl_ex_${example}>"
+        -D "TEST_ARGS:STRING="
+        -D "TEST_EXPECT=0"
+        -D "TEST_SKIP_COMPARE=TRUE"
+        -D "TEST_OUTPUT=hl_ex_${example}.txt"
+        #-D "TEST_REFERENCE=hl_ex_${example}.out"
+        -D "TEST_FOLDER=${PROJECT_BINARY_DIR}"
+        -P "${HDF_RESOURCES_DIR}/runTest.cmake"
+    )
+  endif ()
+  if (last_test)
+    set_tests_properties (HL_ex_${example} PROPERTIES
+        DEPENDS ${last_test}
+        FIXTURES_REQUIRED clear_HL_ex
+    )
+  endif ()
+  set (last_test "HL_ex_${example}")
+endforeach ()
