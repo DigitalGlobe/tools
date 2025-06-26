@@ -9,14 +9,14 @@
 
   PROGRAMMERS:
 
-    martin.isenburg@rapidlasso.com  -  http://rapidlasso.com
+    info@rapidlasso.de  -  https://rapidlasso.de
 
   COPYRIGHT:
 
-    (c) 2005-2013, martin isenburg, rapidlasso - tools to catch reality
+    (c) 2007-2022, rapidlasso GmbH - fast tools to catch reality
 
     This is free software; you can redistribute and/or modify it under the
-    terms of the GNU Lesser General Licence as published by the Free Software
+    terms of the Apache Public License 2.0 published by the Apache Software
     Foundation. See the COPYING file for more information.
 
     This software is distributed WITHOUT ANY WARRANTY and without even the
@@ -29,6 +29,7 @@
 ===============================================================================
 */
 #include "integercompressor.hpp"
+#include "lasmessage.hpp"
 
 #define COMPRESS_ONLY_K
 #undef COMPRESS_ONLY_K
@@ -37,13 +38,13 @@
 #undef CREATE_HISTOGRAMS
 
 #include <stdlib.h>
-#include <assert.h>
+#include <cassert>
 
 #ifdef CREATE_HISTOGRAMS
 #include <math.h>
 #endif
 
-IntegerCompressor::IntegerCompressor(EntropyEncoder* enc, U32 bits, U32 contexts, U32 bits_high, U32 range)
+IntegerCompressor::IntegerCompressor(ArithmeticEncoder* enc, U32 bits, U32 contexts, U32 bits_high, U32 range)
 {
   assert(enc);
   this->enc = enc;
@@ -105,7 +106,7 @@ IntegerCompressor::IntegerCompressor(EntropyEncoder* enc, U32 bits, U32 contexts
 #endif
 }
 
-IntegerCompressor::IntegerCompressor(EntropyDecoder* dec, U32 bits, U32 contexts, U32 bits_high, U32 range)
+IntegerCompressor::IntegerCompressor(ArithmeticDecoder* dec, U32 bits, U32 contexts, U32 bits_high, U32 range)
 {
   assert(dec);
   this->enc = 0;
@@ -170,8 +171,8 @@ IntegerCompressor::~IntegerCompressor()
 #ifndef COMPRESS_ONLY_K
   if (mCorrector)
   {
-    if (enc) enc->destroyBitModel(mCorrector[0]);
-    else     dec->destroyBitModel(mCorrector[0]);
+    if (enc) enc->destroyBitModel((ArithmeticBitModel*)mCorrector[0]);
+    else     dec->destroyBitModel((ArithmeticBitModel*)mCorrector[0]);
     for (i = 1; i <= corr_bits; i++)
     {
       if (enc) enc->destroySymbolModel(mCorrector[i]);
@@ -205,12 +206,12 @@ IntegerCompressor::~IntegerCompressor()
           entropy -= log(prob)*prob/log(2.0);
         }
       }
-      fprintf(stderr, "k: %d number: %d different: %d entropy: %lg raw: %1.1f\n",k,number,different,entropy, (float)(k?k:1));
+      LASMessage(LAS_INFO, "k: %d number: %d different: %d entropy: %lg raw: %1.1f",k,number,different,entropy, (float)(k?k:1));
       total_number += number;
       total_entropy += (entropy*number);
       total_raw += ((k?k:1)*number);
     }  
-    fprintf(stderr, "TOTAL: number: %d entropy: %lg raw: %lg\n",total_number,total_entropy/total_number,total_raw/total_number);
+    LASMessage(LAS_INFO, "TOTAL: number: %d entropy: %lg raw: %lg",total_number,total_entropy/total_number,total_raw/total_number);
   }
 #endif
 }
@@ -224,14 +225,14 @@ void IntegerCompressor::initCompressor()
   // maybe create the models
   if (mBits == 0)
   {
-    mBits = new EntropyModel*[contexts];
+    mBits = new ArithmeticModel*[contexts];
     for (i = 0; i < contexts; i++)
     {
       mBits[i] = enc->createSymbolModel(corr_bits+1);
     }
 #ifndef COMPRESS_ONLY_K
-    mCorrector = new EntropyModel*[corr_bits+1];
-    mCorrector[0] = (EntropyModel*)enc->createBitModel();
+    mCorrector = new ArithmeticModel*[corr_bits+1];
+    mCorrector[0] = (ArithmeticModel*)enc->createBitModel();
     for (i = 1; i <= corr_bits; i++)
     {
       if (i <= bits_high)
@@ -252,7 +253,7 @@ void IntegerCompressor::initCompressor()
     enc->initSymbolModel(mBits[i]);
   }
 #ifndef COMPRESS_ONLY_K
-  enc->initBitModel(mCorrector[0]);
+  enc->initBitModel((ArithmeticBitModel*)mCorrector[0]);
   for (i = 1; i <= corr_bits; i++)
   {
     enc->initSymbolModel(mCorrector[i]);
@@ -280,23 +281,23 @@ void IntegerCompressor::initDecompressor()
   // maybe create the models
   if (mBits == 0)
   {
-    mBits = new EntropyModel*[contexts];
+    mBits = new ArithmeticModel*[contexts];
     for (i = 0; i < contexts; i++)
     {
-      mBits[i] = (EntropyModel*)dec->createSymbolModel(corr_bits+1);
+      mBits[i] = dec->createSymbolModel(corr_bits+1);
     }
 #ifndef COMPRESS_ONLY_K
-    mCorrector = new EntropyModel*[corr_bits+1];
-    mCorrector[0] = (EntropyModel*)dec->createBitModel();
+    mCorrector = new ArithmeticModel*[corr_bits+1];
+    mCorrector[0] = (ArithmeticModel*)dec->createBitModel();
     for (i = 1; i <= corr_bits; i++)
     {
       if (i <= bits_high)
       {
-        mCorrector[i] = (EntropyModel*)dec->createSymbolModel(1<<i);
+        mCorrector[i] = dec->createSymbolModel(1<<i);
       }
       else
       {
-        mCorrector[i] = (EntropyModel*)dec->createSymbolModel(1<<bits_high);
+        mCorrector[i] = dec->createSymbolModel(1<<bits_high);
       }
     }
 #endif
@@ -308,7 +309,7 @@ void IntegerCompressor::initDecompressor()
     dec->initSymbolModel(mBits[i]);
   }
 #ifndef COMPRESS_ONLY_K
-  dec->initBitModel(mCorrector[0]);
+  dec->initBitModel((ArithmeticBitModel*)mCorrector[0]);
   for (i = 1; i <= corr_bits; i++)
   {
     dec->initSymbolModel(mCorrector[i]);
@@ -360,7 +361,7 @@ else
 }
 */
 
-void IntegerCompressor::writeCorrector(I32 c, EntropyModel* mBits)
+void IntegerCompressor::writeCorrector(I32 c, ArithmeticModel* mBits)
 {
   U32 c1;
 
@@ -458,12 +459,12 @@ void IntegerCompressor::writeCorrector(I32 c, EntropyModel* mBits)
   else // then c is 0 or 1
   {
     assert((c == 0) || (c == 1));
-    enc->encodeBit(mCorrector[0],c);
+    enc->encodeBit((ArithmeticBitModel*)mCorrector[0],c);
   }
 #endif // COMPRESS_ONLY_K
 }
 
-I32 IntegerCompressor::readCorrector(EntropyModel* mBits)
+I32 IntegerCompressor::readCorrector(ArithmeticModel* mBits)
 {
   I32 c;
 
@@ -540,7 +541,7 @@ I32 IntegerCompressor::readCorrector(EntropyModel* mBits)
   }
   else // then c is either 0 or 1
   {
-    c = dec->decodeBit(mCorrector[0]);
+    c = dec->decodeBit((ArithmeticBitModel*)mCorrector[0]);
   }
 #endif // COMPRESS_ONLY_K
 

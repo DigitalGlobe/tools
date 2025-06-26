@@ -9,14 +9,14 @@
 
   PROGRAMMERS:
 
-    martin.isenburg@rapidlasso.com  -  http://rapidlasso.com
+    info@rapidlasso.de  -  https://rapidlasso.de
 
   COPYRIGHT:
 
-    (c) 2007-2012, martin isenburg, rapidlasso - fast tools to catch reality
+    (c) 2007-2022, rapidlasso GmbH - fast tools to catch reality
 
     This is free software; you can redistribute and/or modify it under the
-    terms of the GNU Lesser General Licence as published by the Free Software
+    terms of the Apache Public License 2.0 published by the Apache Software
     Foundation. See the COPYING file for more information.
 
     This software is distributed WITHOUT ANY WARRANTY and without even the
@@ -24,6 +24,13 @@
   
   CHANGE HISTORY:
   
+    23 September 2020 -- rare fix for bit-corrupted LAZ files where chunk table is zeroed
+    28 August 2017 -- moving 'context' from global development hack to interface  
+    18 July 2017 -- bug fix for spatial-indexed reading of native compressed LAS 1.4 
+    19 April 2017 -- support for selective decompression for new LAS 1.4 points 
+    23 August 2016 -- layering of items for selective decompression in LAS 1.4 
+    6 September 2014 -- removed inheritance of EntropyEncoder and EntropyDecoder
+    24 August 2014 -- delay read of chunk table until first read() or seek() is called
     6 October 2011 -- large file support & reading with missing chunk table
     9 May 2011 -- the chunked compressor now allows variable chunk sizes
     25 April 2011 -- added chunked laszip for random access decompression
@@ -35,20 +42,21 @@
   
 ===============================================================================
 */
-#ifndef LAS_READ_POINT_H
-#define LAS_READ_POINT_H
+#ifndef LAS_READ_POINT_HPP
+#define LAS_READ_POINT_HPP
 
 #include "mydefs.hpp"
 #include "laszip.hpp"
+#include "laszip_decompress_selective_v3.hpp"
 #include "bytestreamin.hpp"
 
 class LASreadItem;
-class EntropyDecoder;
+class ArithmeticDecoder;
 
 class LASreadPoint
 {
 public:
-  LASreadPoint();
+  LASreadPoint(U32 decompress_selective=LASZIP_DECOMPRESS_SELECTIVE_ALL);
   ~LASreadPoint();
 
   // should only be called *once*
@@ -57,7 +65,11 @@ public:
   BOOL init(ByteStreamIn* instream);
   BOOL seek(const U32 current, const U32 target);
   BOOL read(U8* const * point);
+  BOOL check_end();
   BOOL done();
+
+  inline const CHAR* error() const { return last_error; };
+  inline const CHAR* warning() const { return last_warning; };
 
 private:
   ByteStreamIn* instream;
@@ -65,7 +77,8 @@ private:
   LASreadItem** readers;
   LASreadItem** readers_raw;
   LASreadItem** readers_compressed;
-  EntropyDecoder* dec;
+  ArithmeticDecoder* dec;
+  BOOL layered_las14_compression;
   // used for chunking
   U32 chunk_size;
   U32 chunk_count;
@@ -74,12 +87,18 @@ private:
   U32 tabled_chunks;
   I64* chunk_starts;
   U32* chunk_totals;
+  BOOL init_dec();
   BOOL read_chunk_table();
   U32 search_chunk_table(const U32 index, const U32 lower, const U32 upper);
+  // used for selective decompression (new LAS 1.4 point types only)
+  U32 decompress_selective;
   // used for seeking
   I64 point_start;
   U32 point_size;
   U8** seek_point;
+  // used for error and warning reporting
+  CHAR* last_error;
+  CHAR* last_warning;
 };
 
 #endif

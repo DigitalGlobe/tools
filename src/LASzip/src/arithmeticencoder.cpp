@@ -2,34 +2,40 @@
 ===============================================================================
 
   FILE:  arithmeticencoder.cpp
-  
+
   CONTENTS:
-      
+
     A modular C++ wrapper for an adapted version of Amir Said's FastAC Code.
     see: http://www.cipr.rpi.edu/~said/FastAC.html
 
   PROGRAMMERS:
 
-    martin.isenburg@rapidlasso.com  -  http://rapidlasso.com
+    info@rapidlasso.de  -  https://rapidlasso.de
 
   COPYRIGHT:
 
-    (c) 2005-2012, martin isenburg, rapidlasso - fast tools to catch reality
+    (c) 2007-2022, rapidlasso GmbH - fast tools to catch reality
 
     This is free software; you can redistribute and/or modify it under the
-    terms of the GNU Lesser General Licence as published by the Free Software
+    terms of the Apache Public License 2.0 published by the Apache Software
     Foundation. See the COPYING file for more information.
 
     This software is distributed WITHOUT ANY WARRANTY and without even the
     implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-  
+
   CHANGE HISTORY:
-  
+
     see header file
-  
+
 ===============================================================================
 */
 
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//                                                                           -
+//                       ****************************                        -
+//                        ARITHMETIC CODING EXAMPLES                         -
+//                       ****************************                        -
+//                                                                           -
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //                                                                           -
 // Fast arithmetic coding implementation                                     -
@@ -45,15 +51,35 @@
 //                                 =========                                 -
 //                                                                           -
 // The only purpose of this program is to demonstrate the basic principles   -
-// of arithmetic coding. It is provided as is, without any express or        -
-// implied warranty, without even the warranty of fitness for any particular -
-// purpose, or that the implementations are correct.                         -
+// of arithmetic coding. The original version of this code can be found in   -
+// Digital Signal Compression: Principles and Practice                       -
+// (Cambridge University Press, 2011, ISBN: 9780511984655)                   -
 //                                                                           -
-// Permission to copy and redistribute this code is hereby granted, provided -
-// that this warning and copyright notices are not removed or altered.       -
-//                                                                           -
-// Copyright (c) 2004 by Amir Said (said@ieee.org) &                         -
+// Copyright (c) 2019 by Amir Said (said@ieee.org) &                         -
 //                       William A. Pearlman (pearlw@ecse.rpi.edu)           -
+//                                                                           -
+// Redistribution and use in source and binary forms, with or without        -
+// modification, are permitted provided that the following conditions are    -
+// met:                                                                      -
+//                                                                           -
+// 1. Redistributions of source code must retain the above copyright notice, -
+// this list of conditions and the following disclaimer.                     -
+//                                                                           -
+// 2. Redistributions in binary form must reproduce the above copyright      -
+// notice, this list of conditions and the following disclaimer in the       -
+// documentation and/or other materials provided with the distribution.      -
+//                                                                           -
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS       -
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED -
+// TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A           -
+// PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER -
+// OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,  -
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,       -
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR        -
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF    -
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING      -
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS        -
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.              -
 //                                                                           -
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //                                                                           -
@@ -70,11 +96,9 @@
 #include "arithmeticencoder.hpp"
 
 #include <string.h>
-#include <assert.h>
+#include <cassert>
 
 #include <stdio.h>
-
-FILE* file = 0;
 
 #include "arithmeticmodel.hpp"
 
@@ -104,6 +128,8 @@ BOOL ArithmeticEncoder::init(ByteStreamOut* outstream)
 
 void ArithmeticEncoder::done()
 {
+  if (outstream == 0) return;
+
   U32 init_base = base;                 // done encoding: set final data bytes
   BOOL another_byte = TRUE;
 
@@ -125,7 +151,7 @@ void ArithmeticEncoder::done()
     assert(outbyte < outbuffer + AC_BUFFER_SIZE);
     outstream->putBytes(outbuffer + AC_BUFFER_SIZE, AC_BUFFER_SIZE);
   }
-  U32 buffer_size = outbyte - outbuffer;
+  U32 buffer_size = (U32)(outbyte - outbuffer);
   if (buffer_size) outstream->putBytes(outbuffer, buffer_size);
 
   // write two or three zero bytes to be in sync with the decoder's byte reads
@@ -136,47 +162,42 @@ void ArithmeticEncoder::done()
   outstream = 0;
 }
 
-EntropyModel* ArithmeticEncoder::createBitModel()
+ArithmeticBitModel* ArithmeticEncoder::createBitModel()
 {
   ArithmeticBitModel* m = new ArithmeticBitModel();
-  return (EntropyModel*)m;
+  return m;
 }
 
-void ArithmeticEncoder::initBitModel(EntropyModel* model)
+void ArithmeticEncoder::initBitModel(ArithmeticBitModel* m)
 {
-  ArithmeticBitModel* m = (ArithmeticBitModel*)model;
   m->init();
 }
 
-void ArithmeticEncoder::destroyBitModel(EntropyModel* model)
+void ArithmeticEncoder::destroyBitModel(ArithmeticBitModel* m)
 {
-  ArithmeticBitModel* m = (ArithmeticBitModel*)model;
   delete m;
 }
 
-EntropyModel* ArithmeticEncoder::createSymbolModel(U32 n)
+ArithmeticModel* ArithmeticEncoder::createSymbolModel(U32 n)
 {
   ArithmeticModel* m = new ArithmeticModel(n, true);
-  return (EntropyModel*)m;
+  return m;
 }
 
-void ArithmeticEncoder::initSymbolModel(EntropyModel* model, U32* table)
+void ArithmeticEncoder::initSymbolModel(ArithmeticModel* m, U32* table)
 {
-  ArithmeticModel* m = (ArithmeticModel*)model;
   m->init(table);
 }
 
-void ArithmeticEncoder::destroySymbolModel(EntropyModel* model)
+void ArithmeticEncoder::destroySymbolModel(ArithmeticModel* m)
 {
-  ArithmeticModel* m = (ArithmeticModel*)model;
   delete m;
 }
 
-void ArithmeticEncoder::encodeBit(EntropyModel* model, U32 sym)
+void ArithmeticEncoder::encodeBit(ArithmeticBitModel* m, U32 sym)
 {
-  assert(model && (sym <= 1));
+  assert(m && (sym <= 1));
 
-  ArithmeticBitModel* m = (ArithmeticBitModel*)model;
   U32 x = m->bit_0_prob * (length >> BM__LengthShift);       // product l x p0
                                                             // update interval
   if (sym == 0) {
@@ -194,11 +215,10 @@ void ArithmeticEncoder::encodeBit(EntropyModel* model, U32 sym)
   if (--m->bits_until_update == 0) m->update();       // periodic model update
 }
 
-void ArithmeticEncoder::encodeSymbol(EntropyModel* model, U32 sym)
+void ArithmeticEncoder::encodeSymbol(ArithmeticModel* m, U32 sym)
 {
-  assert(model);
-  ArithmeticModel* m = (ArithmeticModel*)model;
-  assert(sym <= m->last_symbol);
+  assert(m && (sym <= m->last_symbol));
+
   U32 x, init_base = base;
                                                            // compute products
   if (sym == m->last_symbol) {
@@ -266,26 +286,26 @@ void ArithmeticEncoder::writeShort(U16 sym)
   if (length < AC__MinLength) renorm_enc_interval();        // renormalization
 }
 
-inline void ArithmeticEncoder::writeInt(U32 sym)
+void ArithmeticEncoder::writeInt(U32 sym)
 {
   writeShort((U16)(sym & 0xFFFF)); // lower 16 bits
   writeShort((U16)(sym >> 16));    // UPPER 16 bits
 }
 
-inline void ArithmeticEncoder::writeFloat(F32 sym) /* danger in float reinterpretation */
+void ArithmeticEncoder::writeFloat(F32 sym) /* danger in float reinterpretation */
 {
   U32I32F32 u32i32f32;
   u32i32f32.f32 = sym;
   writeInt(u32i32f32.u32);
 }
 
-inline void ArithmeticEncoder::writeInt64(U64 sym)
+void ArithmeticEncoder::writeInt64(U64 sym)
 {
   writeInt((U32)(sym & 0xFFFFFFFF)); // lower 32 bits
   writeInt((U32)(sym >> 32));        // UPPER 32 bits
 }
 
-inline void ArithmeticEncoder::writeDouble(F64 sym) /* danger in float reinterpretation */
+void ArithmeticEncoder::writeDouble(F64 sym) /* danger in float reinterpretation */
 {
   U64I64F64 u64i64f64;
   u64i64f64.f64 = sym;
@@ -307,8 +327,8 @@ inline void ArithmeticEncoder::propagate_carry()
     else
       p--;
     assert(outbuffer <= p);
-    assert(p < endbuffer);    
-    assert(outbyte < endbuffer);    
+    assert(p < endbuffer);
+    assert(outbyte < endbuffer);
   }
   ++*p;
 }
@@ -327,6 +347,7 @@ inline void ArithmeticEncoder::renorm_enc_interval()
 
 inline void ArithmeticEncoder::manage_outbuffer()
 {
+  assert(outstream);
   if (outbyte == endbuffer) outbyte = outbuffer;
   outstream->putBytes(outbyte, AC_BUFFER_SIZE);
   endbyte = outbyte + AC_BUFFER_SIZE;

@@ -2,34 +2,40 @@
 ===============================================================================
 
   FILE:  arithmeticdecoder.cpp
-  
+
   CONTENTS:
-      
+
     A modular C++ wrapper for an adapted version of Amir Said's FastAC Code.
     see: http://www.cipr.rpi.edu/~said/FastAC.html
 
   PROGRAMMERS:
 
-    martin.isenburg@rapidlasso.com  -  http://rapidlasso.com
+    info@rapidlasso.de  -  https://rapidlasso.de
 
   COPYRIGHT:
 
-    (c) 2005-2012, martin isenburg, rapidlasso - tools to catch reality
+    (c) 2007-2022, rapidlasso GmbH - fast tools to catch reality
 
     This is free software; you can redistribute and/or modify it under the
-    terms of the GNU Lesser General Licence as published by the Free Software
+    terms of the Apache Public License 2.0 published by the Apache Software
     Foundation. See the COPYING file for more information.
 
     This software is distributed WITHOUT ANY WARRANTY and without even the
     implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-  
+
   CHANGE HISTORY:
-  
+
     see header file
-  
+
 ===============================================================================
 */
 
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+//                                                                           -
+//                       ****************************                        -
+//                        ARITHMETIC CODING EXAMPLES                         -
+//                       ****************************                        -
+//                                                                           -
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //                                                                           -
 // Fast arithmetic coding implementation                                     -
@@ -45,15 +51,35 @@
 //                                 =========                                 -
 //                                                                           -
 // The only purpose of this program is to demonstrate the basic principles   -
-// of arithmetic coding. It is provided as is, without any express or        -
-// implied warranty, without even the warranty of fitness for any particular -
-// purpose, or that the implementations are correct.                         -
+// of arithmetic coding. The original version of this code can be found in   -
+// Digital Signal Compression: Principles and Practice                       -
+// (Cambridge University Press, 2011, ISBN: 9780511984655)                   -
 //                                                                           -
-// Permission to copy and redistribute this code is hereby granted, provided -
-// that this warning and copyright notices are not removed or altered.       -
-//                                                                           -
-// Copyright (c) 2004 by Amir Said (said@ieee.org) &                         -
+// Copyright (c) 2019 by Amir Said (said@ieee.org) &                         -
 //                       William A. Pearlman (pearlw@ecse.rpi.edu)           -
+//                                                                           -
+// Redistribution and use in source and binary forms, with or without        -
+// modification, are permitted provided that the following conditions are    -
+// met:                                                                      -
+//                                                                           -
+// 1. Redistributions of source code must retain the above copyright notice, -
+// this list of conditions and the following disclaimer.                     -
+//                                                                           -
+// 2. Redistributions in binary form must reproduce the above copyright      -
+// notice, this list of conditions and the following disclaimer in the       -
+// documentation and/or other materials provided with the distribution.      -
+//                                                                           -
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS       -
+// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED -
+// TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A           -
+// PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER -
+// OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,  -
+// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,       -
+// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR        -
+// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF    -
+// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING      -
+// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS        -
+// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.              -
 //                                                                           -
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //                                                                           -
@@ -70,7 +96,7 @@
 #include "arithmeticdecoder.hpp"
 
 #include <string.h>
-#include <assert.h>
+#include <cassert>
 
 #include "arithmeticmodel.hpp"
 
@@ -79,15 +105,18 @@ ArithmeticDecoder::ArithmeticDecoder()
   instream = 0;
 }
 
-BOOL ArithmeticDecoder::init(ByteStreamIn* instream)
+BOOL ArithmeticDecoder::init(ByteStreamIn* instream, BOOL really_init)
 {
   if (instream == 0) return FALSE;
   this->instream = instream;
   length = AC__MaxLength;
-  value = (instream->getByte() << 24);
-  value |= (instream->getByte() << 16);
-  value |= (instream->getByte() << 8);
-  value |= (instream->getByte());
+  if (really_init)
+  {
+    value = (instream->getByte() << 24);
+    value |= (instream->getByte() << 16);
+    value |= (instream->getByte() << 8);
+    value |= (instream->getByte());
+  }
   return TRUE;
 }
 
@@ -96,45 +125,42 @@ void ArithmeticDecoder::done()
   instream = 0;
 }
 
-EntropyModel* ArithmeticDecoder::createBitModel()
+ArithmeticBitModel* ArithmeticDecoder::createBitModel()
 {
   ArithmeticBitModel* m = new ArithmeticBitModel();
-  return (EntropyModel*)m;
+  return m;
 }
 
-void ArithmeticDecoder::initBitModel(EntropyModel* model)
+void ArithmeticDecoder::initBitModel(ArithmeticBitModel* m)
 {
-  ArithmeticBitModel* m = (ArithmeticBitModel*)model;
   m->init();
 }
 
-void ArithmeticDecoder::destroyBitModel(EntropyModel* model)
+void ArithmeticDecoder::destroyBitModel(ArithmeticBitModel* m)
 {
-  ArithmeticBitModel* m = (ArithmeticBitModel*)model;
   delete m;
 }
 
-EntropyModel* ArithmeticDecoder::createSymbolModel(U32 n)
+ArithmeticModel* ArithmeticDecoder::createSymbolModel(U32 n)
 {
-  ArithmeticModel* m = new ArithmeticModel(n, false);
-  return (EntropyModel*)m;
+  ArithmeticModel* m = new ArithmeticModel(n, FALSE);
+  return m;
 }
 
-void ArithmeticDecoder::initSymbolModel(EntropyModel* model, U32 *table)
+void ArithmeticDecoder::initSymbolModel(ArithmeticModel* m, U32 *table)
 {
-  ArithmeticModel* m = (ArithmeticModel*)model;
   m->init(table);
 }
 
-void ArithmeticDecoder::destroySymbolModel(EntropyModel* model)
+void ArithmeticDecoder::destroySymbolModel(ArithmeticModel* m)
 {
-  ArithmeticModel* m = (ArithmeticModel*)model;
   delete m;
 }
 
-U32 ArithmeticDecoder::decodeBit(EntropyModel* model)
+U32 ArithmeticDecoder::decodeBit(ArithmeticBitModel* m)
 {
-  ArithmeticBitModel* m = (ArithmeticBitModel*)model;
+  assert(m);
+
   U32 x = m->bit_0_prob * (length >> BM__LengthShift);       // product l x p0
   U32 sym = (value >= x);                                          // decision
                                                     // update & shift interval
@@ -153,9 +179,8 @@ U32 ArithmeticDecoder::decodeBit(EntropyModel* model)
   return sym;                                         // return data bit value
 }
 
-U32 ArithmeticDecoder::decodeSymbol(EntropyModel* model)
+U32 ArithmeticDecoder::decodeSymbol(ArithmeticModel* m)
 {
-  ArithmeticModel* m = (ArithmeticModel*)model;
   U32 n, sym, x, y = length;
 
   if (m->decoder_table) {             // use table look-up for faster decoding
@@ -202,6 +227,8 @@ U32 ArithmeticDecoder::decodeSymbol(EntropyModel* model)
   ++m->symbol_count[sym];
   if (--m->symbols_until_update == 0) m->update();    // periodic model update
 
+  assert(sym < m->symbols);
+
   return sym;
 }
 
@@ -211,6 +238,11 @@ U32 ArithmeticDecoder::readBit()
   value -= length * sym;                                    // update interval
 
   if (length < AC__MinLength) renorm_dec_interval();        // renormalization
+
+  if (sym >= 2)
+  {
+    throw 4711;
+  }
 
   return sym;
 }
@@ -232,6 +264,11 @@ U32 ArithmeticDecoder::readBits(U32 bits)
 
   if (length < AC__MinLength) renorm_dec_interval();        // renormalization
 
+  if (sym >= (1u<<bits))
+  {
+    throw 4711;
+  }
+
   return sym;
 }
 
@@ -242,7 +279,10 @@ U8 ArithmeticDecoder::readByte()
 
   if (length < AC__MinLength) renorm_dec_interval();        // renormalization
 
-  assert(sym < (1<<8));
+  if (sym >= (1u<<8))
+  {
+    throw 4711;
+  }
 
   return (U8)sym;
 }
@@ -254,33 +294,36 @@ U16 ArithmeticDecoder::readShort()
 
   if (length < AC__MinLength) renorm_dec_interval();        // renormalization
 
-  assert(sym < (1<<16));
+  if (sym >= (1u<<16))
+  {
+    throw 4711;
+  }
 
   return (U16)sym;
 }
 
-inline U32 ArithmeticDecoder::readInt()
+U32 ArithmeticDecoder::readInt()
 {
   U32 lowerInt = readShort();
   U32 upperInt = readShort();
   return (upperInt<<16)|lowerInt;
 }
 
-inline F32 ArithmeticDecoder::readFloat() /* danger in float reinterpretation */
+F32 ArithmeticDecoder::readFloat() /* danger in float reinterpretation */
 {
   U32I32F32 u32i32f32;
   u32i32f32.u32 = readInt();
   return u32i32f32.f32;
 }
 
-inline U64 ArithmeticDecoder::readInt64()
+U64 ArithmeticDecoder::readInt64()
 {
   U64 lowerInt = readInt();
   U64 upperInt = readInt();
   return (upperInt<<32)|lowerInt;
 }
 
-inline F64 ArithmeticDecoder::readDouble() /* danger in float reinterpretation */
+F64 ArithmeticDecoder::readDouble() /* danger in float reinterpretation */
 {
   U64I64F64 u64i64f64;
   u64i64f64.u64 = readInt64();
@@ -289,7 +332,6 @@ inline F64 ArithmeticDecoder::readDouble() /* danger in float reinterpretation *
 
 ArithmeticDecoder::~ArithmeticDecoder()
 {
-
 }
 
 inline void ArithmeticDecoder::renorm_dec_interval()

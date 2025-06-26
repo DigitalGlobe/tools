@@ -9,14 +9,14 @@
  
   PROGRAMMERS:
 
-    martin.isenburg@rapidlasso.com  -  http://rapidlasso.com
+    info@rapidlasso.de  -  https://rapidlasso.de
 
   COPYRIGHT:
 
-    (c) 2005-2013, martin isenburg, rapidlasso - tools to catch reality
+    (c) 2007-2022, rapidlasso GmbH - fast tools to catch reality
 
     This is free software; you can redistribute and/or modify it under the
-    terms of the GNU Lesser General Licence as published by the Free Software
+    terms of the Apache Public License 2.0 published by the Apache Software
     Foundation. See the COPYING file for more information.
 
     This software is distributed WITHOUT ANY WARRANTY and without even the
@@ -24,13 +24,26 @@
   
   CHANGE HISTORY:
   
-    10 January 2011 -- licensing change for LGPL release and liblas integration
+    28 October 2015 -- adding DLL bindings via 'COMPILE_AS_DLL' and 'USE_AS_DLL'
+    10 January 2011 -- licensing change for LGPL release and libLAS integration
     13 July 2005 -- created after returning with many mosquito bites from OBX
   
 ===============================================================================
 */
 #ifndef MYDEFS_HPP
 #define MYDEFS_HPP
+
+#ifndef _WIN32
+#define LASLIB_DLL
+#else  // _WIN32
+#ifdef COMPILE_AS_DLL
+#define LASLIB_DLL __declspec(dllexport)
+#elif USE_AS_DLL
+#define LASLIB_DLL __declspec(dllimport)
+#else
+#define LASLIB_DLL
+#endif
+#endif // _WIN32
 
 typedef char               CHAR;
 
@@ -53,7 +66,7 @@ typedef long long          I64;
 typedef float              F32;
 typedef double             F64;
 
-#if defined(_MSC_VER) && (_MSC_VER < 1300)
+#if defined(_MSC_VER) || defined (__MINGW32__)
 typedef int                BOOL;
 #else
 typedef bool               BOOL;
@@ -61,6 +74,7 @@ typedef bool               BOOL;
 
 typedef union U32I32F32 { U32 u32; I32 i32; F32 f32; } U32I32F32;
 typedef union U64I64F64 { U64 u64; I64 i64; F64 f64; } U64I64F64;
+typedef union I64U32I32F32 { I64 i64; U32 u32[2]; I32 i32[2]; F32 f32[2]; } I64U32I32F32;
 
 #define F32_MAX            +2.0e+37f
 #define F32_MIN            -2.0e+37f
@@ -70,14 +84,17 @@ typedef union U64I64F64 { U64 u64; I64 i64; F64 f64; } U64I64F64;
 
 #define U8_MIN             ((U8)0x0)  // 0
 #define U8_MAX             ((U8)0xFF) // 255
+#define U8_MAX_MINUS_ONE   ((U8)0xFE) // 254
 #define U8_MAX_PLUS_ONE    0x0100     // 256
 
 #define U16_MIN            ((U16)0x0)    // 0
 #define U16_MAX            ((U16)0xFFFF) // 65535
+#define U16_MAX_MINUS_ONE  ((U16)0xFFFE) // 65534
 #define U16_MAX_PLUS_ONE   0x00010000    // 65536
 
 #define U32_MIN            ((U32)0x0)            // 0
 #define U32_MAX            ((U32)0xFFFFFFFF)     // 4294967295
+#define U32_MAX_MINUS_ONE  ((U32)0xFFFFFFFE)     // 4294967294
 #if defined(WIN32)            // 64 byte unsigned int constant under Windows 
 #define U32_MAX_PLUS_ONE   0x0000000100000000    // 4294967296
 #else                         // 64 byte unsigned int constant elsewhere ... 
@@ -107,17 +124,27 @@ typedef union U64I64F64 { U64 u64; I64 i64; F64 f64; } U64I64F64;
 #define I32_CLAMP(n)    (((n) <= I32_MIN) ? I32_MIN : (((n) >= I32_MAX) ? I32_MAX : ((I32)(n))))
 #define U32_CLAMP(n)    (((n) <= U32_MIN) ? U32_MIN : (((n) >= U32_MAX) ? U32_MAX : ((U32)(n))))
 
-#define I8_QUANTIZE(n) (((n) >= 0) ? (I8)((n)+0.5f) : (I8)((n)-0.5f))
-#define U8_QUANTIZE(n) (((n) >= 0) ? (U8)((n)+0.5f) : (U8)(0))
+#define I8_QUANTIZE(n) (((n) >= 0) ? (I8)((n)+0.5) : (I8)((n)-0.5))
+#define U8_QUANTIZE(n) (((n) >= 0) ? (U8)((n)+0.5) : (U8)(0))
 
-#define I16_QUANTIZE(n) (((n) >= 0) ? (I16)((n)+0.5f) : (I16)((n)-0.5f))
-#define U16_QUANTIZE(n) (((n) >= 0) ? (U16)((n)+0.5f) : (U16)(0))
+#define I16_QUANTIZE(n) (((n) >= 0) ? (I16)((n)+0.5) : (I16)((n)-0.5))
+#define U16_QUANTIZE(n) (((n) >= 0) ? (U16)((n)+0.5) : (U16)(0))
 
-#define I32_QUANTIZE(n) (((n) >= 0) ? (I32)((n)+0.5f) : (I32)((n)-0.5f))
-#define U32_QUANTIZE(n) (((n) >= 0) ? (U32)((n)+0.5f) : (U32)(0))
+#define I32_QUANTIZE(n) (((n) >= 0) ? (I32)((n)+0.5) : (I32)((n)-0.5))
+#define U32_QUANTIZE(n) (((n) >= 0) ? (U32)((n)+0.5) : (U32)(0))
 
-#define I64_QUANTIZE(n) (((n) >= 0) ? (I64)((n)+0.5f) : (I64)((n)-0.5f))
-#define U64_QUANTIZE(n) (((n) >= 0) ? (U64)((n)+0.5f) : (U64)(0))
+#define I64_QUANTIZE(n) (((n) >= 0) ? (I64)((n)+0.5) : (I64)((n)-0.5))
+#define U64_QUANTIZE(n) (((n) >= 0) ? (U64)((n)+0.5) : (U64)(0))
+
+#define I8_CLAMP_QUANTIZE(n)     (((n) <= I8_MIN) ? I8_MIN : (((n) >= I8_MAX) ? I8_MAX : (I8_QUANTIZE(n))))
+#define U8_CLAMP_QUANTIZE(n)     (((n) <= U8_MIN) ? U8_MIN : (((n) >= U8_MAX) ? U8_MAX : (U8_QUANTIZE(n))))
+
+#define I16_CLAMP_QUANTIZE(n)    (((n) <= I16_MIN) ? I16_MIN : (((n) >= I16_MAX) ? I16_MAX : (I16_QUANTIZE(n))))
+#define U16_CLAMP_QUANTIZE(n)    (((n) <= U16_MIN) ? U16_MIN : (((n) >= U16_MAX) ? U16_MAX : (U16_QUANTIZE(n))))
+
+#define I32_CLAMP_QUANTIZE(n)    (((n) <= I32_MIN) ? I32_MIN : (((n) >= I32_MAX) ? I32_MAX : (I32_QUANTIZE(n))))
+#define U32_CLAMP_QUANTIZE(n)    (((n) <= U32_MIN) ? U32_MIN : (((n) >= U32_MAX) ? U32_MAX : (U32_QUANTIZE(n))))
+
 
 #define I16_FLOOR(n) ((((I16)(n)) > (n)) ? (((I16)(n))-1) : ((I16)(n)))
 #define I32_FLOOR(n) ((((I32)(n)) > (n)) ? (((I32)(n))-1) : ((I32)(n)))
@@ -127,15 +154,18 @@ typedef union U64I64F64 { U64 u64; I64 i64; F64 f64; } U64I64F64;
 #define I32_CEIL(n) ((((I32)(n)) < (n)) ? (((I32)(n))+1) : ((I32)(n)))
 #define I64_CEIL(n) ((((I64)(n)) < (n)) ? (((I64)(n))+1) : ((I64)(n)))
 
-#define I8_FITS_IN_RANGE(n) (((n) >= I8_MIN) || ((n) <= I8_MAX) ? TRUE : FALSE)
-#define U8_FITS_IN_RANGE(n) (((n) >= U8_MIN) || ((n) <= U8_MAX) ? TRUE : FALSE)
-#define I16_FITS_IN_RANGE(n) (((n) >= I16_MIN) || ((n) <= I16_MAX) ? TRUE : FALSE)
-#define U16_FITS_IN_RANGE(n) (((n) >= U16_MIN) || ((n) <= U16_MAX) ? TRUE : FALSE)
+#define I8_FITS_IN_RANGE(n) (((n) >= I8_MIN) && ((n) <= I8_MAX) ? TRUE : FALSE)
+#define U8_FITS_IN_RANGE(n) (((n) >= U8_MIN) && ((n) <= U8_MAX) ? TRUE : FALSE)
+#define I16_FITS_IN_RANGE(n) (((n) >= I16_MIN) && ((n) <= I16_MAX) ? TRUE : FALSE)
+#define U16_FITS_IN_RANGE(n) (((n) >= U16_MIN) && ((n) <= U16_MAX) ? TRUE : FALSE)
+#define I32_FITS_IN_RANGE(n) (((n) >= I32_MIN) && ((n) <= I32_MAX) ? TRUE : FALSE)
+#define U32_FITS_IN_RANGE(n) (((n) >= U32_MIN) && ((n) <= U32_MAX) ? TRUE : FALSE)
 
 #define F32_IS_FINITE(n) ((F32_MIN < (n)) && ((n) < F32_MAX))
 #define F64_IS_FINITE(n) ((F64_MIN < (n)) && ((n) < F64_MAX))
 
 #define U32_ZERO_BIT_0(n) (((n)&(U32)0xFFFFFFFE))
+#define U32_ZERO_BIT_0_1(n) (((n)&(U32)0xFFFFFFFC))
 
 #ifndef FALSE
 #define FALSE   0
@@ -152,7 +182,7 @@ typedef union U64I64F64 { U64 u64; I64 i64; F64 f64; } U64I64F64;
 inline BOOL IS_LITTLE_ENDIAN()
 {
   const U32 i = 1;
-  return (*((U8*)&i) == 1);
+  return (*((const U8*)&i) == 1);
 }
 
 #define ENDIANSWAP16(n) \
@@ -165,14 +195,14 @@ inline BOOL IS_LITTLE_ENDIAN()
 	  ((((U32) n) >>  8) & 0x0000FF00) |	\
 	  ((((U32) n) >> 24) & 0x000000FF) )
 
-inline void ENDIAN_SWAP_16(U8* field)
+inline void ENDIAN_SWAP_16_(U8* field)
 {
   U8 help = field[0];
   field[0] = field[1];
   field[1] = help;
 }
 
-inline void ENDIAN_SWAP_32(U8* field)
+inline void ENDIAN_SWAP_32_(U8* field)
 {
   U8 help;
   help = field[0];
@@ -183,7 +213,7 @@ inline void ENDIAN_SWAP_32(U8* field)
   field[2] = help;
 }
 
-inline void ENDIAN_SWAP_64(U8* field)
+inline void ENDIAN_SWAP_64_(U8* field)
 {
   U8 help;
   help = field[0];
@@ -225,5 +255,25 @@ inline void ENDIAN_SWAP_64(const U8* from, U8* to)
   to[6] = from[1];
   to[7] = from[0];
 }
+
+#if defined(_MSC_VER)
+#include <windows.h>
+wchar_t* UTF8toUTF16(const char* utf8);
+#endif
+
+// 32bit/64bit detection
+#ifdef _WIN64
+#define IS64 true
+#elif _WIN32
+#define IS64 false
+#else
+#define IS64 true
+#endif
+
+#ifdef _WIN32
+#define DIRECTORY_SLASH '\\'
+#else
+#define DIRECTORY_SLASH '/'
+#endif
 
 #endif

@@ -27,8 +27,8 @@ if test $# -eq 0; then
 	usage 1 1>&2
 fi
 
-case $1 in 
-  --libs) 
+case $1 in
+  --libs)
     echo $LIBS
     ;;
 
@@ -55,7 +55,7 @@ case $1 in
   --cxxflags)
     echo @CMAKE_CXX_FLAGS@ @CXXFLAGS@
     ;;
-    
+
   --version)
     echo @VERSION@
     ;;

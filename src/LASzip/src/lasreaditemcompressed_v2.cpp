@@ -9,14 +9,14 @@
   
   PROGRAMMERS:
 
-    martin.isenburg@rapidlasso.com  -  http://rapidlasso.com
+    info@rapidlasso.de  -  https://rapidlasso.de
 
   COPYRIGHT:
 
-    (c) 2007-2012, martin isenburg, rapidlasso - fast tools to catch reality
+    (c) 2007-2022, rapidlasso GmbH - fast tools to catch reality
 
     This is free software; you can redistribute and/or modify it under the
-    terms of the GNU Lesser General Licence as published by the Free Software
+    terms of the Apache Public License 2.0 published by the Apache Software
     Foundation. See the COPYING file for more information.
 
     This software is distributed WITHOUT ANY WARRANTY and without even the
@@ -31,7 +31,7 @@
 
 #include "lasreaditemcompressed_v2.hpp"
 
-#include <assert.h>
+#include <cassert>
 #include <string.h>
 
 struct LASpoint10
@@ -50,7 +50,7 @@ struct LASpoint10
   U16 point_source_ID;
 };
 
-LASreadItemCompressed_POINT10_v2::LASreadItemCompressed_POINT10_v2(EntropyDecoder* dec)
+LASreadItemCompressed_POINT10_v2::LASreadItemCompressed_POINT10_v2(ArithmeticDecoder* dec)
 {
   U32 i;
 
@@ -95,7 +95,7 @@ LASreadItemCompressed_POINT10_v2::~LASreadItemCompressed_POINT10_v2()
   delete ic_z;
 }
 
-BOOL LASreadItemCompressed_POINT10_v2::init(const U8* item)
+BOOL LASreadItemCompressed_POINT10_v2::init(const U8* item, U32& context)
 {
   U32 i;
 
@@ -134,7 +134,7 @@ BOOL LASreadItemCompressed_POINT10_v2::init(const U8* item)
   return TRUE;
 }
 
-inline void LASreadItemCompressed_POINT10_v2::read(U8* item)
+inline void LASreadItemCompressed_POINT10_v2::read(U8* item, U32& context)
 {
   U32 r, n, m, l;
   U32 k_bits;
@@ -250,7 +250,7 @@ inline void LASreadItemCompressed_POINT10_v2::read(U8* item)
 
 #define LASZIP_GPSTIME_MULTI_TOTAL (LASZIP_GPSTIME_MULTI - LASZIP_GPSTIME_MULTI_MINUS + 6) 
 
-LASreadItemCompressed_GPSTIME11_v2::LASreadItemCompressed_GPSTIME11_v2(EntropyDecoder* dec)
+LASreadItemCompressed_GPSTIME11_v2::LASreadItemCompressed_GPSTIME11_v2(ArithmeticDecoder* dec)
 {
   /* set decoder */
   assert(dec);
@@ -268,7 +268,7 @@ LASreadItemCompressed_GPSTIME11_v2::~LASreadItemCompressed_GPSTIME11_v2()
   delete ic_gpstime;
 }
 
-BOOL LASreadItemCompressed_GPSTIME11_v2::init(const U8* item)
+BOOL LASreadItemCompressed_GPSTIME11_v2::init(const U8* item, U32& context)
 {
   /* init state */
   last = 0, next = 0;
@@ -287,14 +287,14 @@ BOOL LASreadItemCompressed_GPSTIME11_v2::init(const U8* item)
   ic_gpstime->initDecompressor();
 
   /* init last item */
-  last_gpstime[0].u64 = *((U64*)item);
+  last_gpstime[0].u64 = *((const U64*)item);
   last_gpstime[1].u64 = 0;
   last_gpstime[2].u64 = 0;
   last_gpstime[3].u64 = 0;
   return TRUE;
 }
 
-inline void LASreadItemCompressed_GPSTIME11_v2::read(U8* item)
+inline void LASreadItemCompressed_GPSTIME11_v2::read(U8* item, U32& context)
 {
   I32 multi;
   if (last_gpstime_diff[last] == 0) // if the last integer difference was zero
@@ -319,7 +319,7 @@ inline void LASreadItemCompressed_GPSTIME11_v2::read(U8* item)
     else if (multi > 2) // we switch to another sequence
     {
       last = (last+multi-2)&3;
-      read(item);
+      read(item, context);
     }
   }
   else
@@ -393,7 +393,7 @@ inline void LASreadItemCompressed_GPSTIME11_v2::read(U8* item)
     else if (multi >=  LASZIP_GPSTIME_MULTI_CODE_FULL)
     {
       last = (last+multi-LASZIP_GPSTIME_MULTI_CODE_FULL)&3;
-      read(item);
+      read(item, context);
     }
   }
   *((I64*)item) = last_gpstime[last].i64;
@@ -405,7 +405,7 @@ inline void LASreadItemCompressed_GPSTIME11_v2::read(U8* item)
 ===============================================================================
 */
 
-LASreadItemCompressed_RGB12_v2::LASreadItemCompressed_RGB12_v2(EntropyDecoder* dec)
+LASreadItemCompressed_RGB12_v2::LASreadItemCompressed_RGB12_v2(ArithmeticDecoder* dec)
 {
   /* set decoder */
   assert(dec);
@@ -432,7 +432,7 @@ LASreadItemCompressed_RGB12_v2::~LASreadItemCompressed_RGB12_v2()
   dec->destroySymbolModel(m_rgb_diff_5);
 }
 
-BOOL LASreadItemCompressed_RGB12_v2::init(const U8* item)
+BOOL LASreadItemCompressed_RGB12_v2::init(const U8* item, U32& context)
 {
   /* init state */
 
@@ -450,7 +450,7 @@ BOOL LASreadItemCompressed_RGB12_v2::init(const U8* item)
   return TRUE;
 }
 
-inline void LASreadItemCompressed_RGB12_v2::read(U8* item)
+inline void LASreadItemCompressed_RGB12_v2::read(U8* item, U32& context)
 {
   U8 corr;
   I32 diff = 0;
@@ -530,7 +530,7 @@ inline void LASreadItemCompressed_RGB12_v2::read(U8* item)
 ===============================================================================
 */
 
-LASreadItemCompressed_BYTE_v2::LASreadItemCompressed_BYTE_v2(EntropyDecoder* dec, U32 number)
+LASreadItemCompressed_BYTE_v2::LASreadItemCompressed_BYTE_v2(ArithmeticDecoder* dec, U32 number)
 {
   U32 i;
 
@@ -541,7 +541,7 @@ LASreadItemCompressed_BYTE_v2::LASreadItemCompressed_BYTE_v2(EntropyDecoder* dec
   this->number = number;
 
   /* create models and integer compressors */
-  m_byte = new EntropyModel*[number];
+  m_byte = new ArithmeticModel*[number];
   for (i = 0; i < number; i++)
   {
     m_byte[i] = dec->createSymbolModel(256);
@@ -562,7 +562,7 @@ LASreadItemCompressed_BYTE_v2::~LASreadItemCompressed_BYTE_v2()
   delete [] last_item;
 }
 
-BOOL LASreadItemCompressed_BYTE_v2::init(const U8* item)
+BOOL LASreadItemCompressed_BYTE_v2::init(const U8* item, U32& context)
 {
   U32 i;
   /* init state */
@@ -578,7 +578,7 @@ BOOL LASreadItemCompressed_BYTE_v2::init(const U8* item)
   return TRUE;
 }
 
-inline void LASreadItemCompressed_BYTE_v2::read(U8* item)
+inline void LASreadItemCompressed_BYTE_v2::read(U8* item, U32& context)
 {
   U32 i;
   I32 value;
