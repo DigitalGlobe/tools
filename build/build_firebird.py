@@ -31,9 +31,6 @@ class Program:
 
     _PATH_NAME_INSTALLATION_DIR_X86 = "..\\..\\firebird\\x86"
     _PATH_NAME_INSTALLATION_DIR_X64 = "..\\..\\firebird\\x64"
-    # ----------------------------------------------------------------------
-    # The path to the sed.exe executable
-    _PATH_SED_EXECUTABLE = "D:\\Users\\tim.tisler\\Apps\\GnuWin32\\bin"
 
     # ----------------------------------------------------------------------
     # the name of the path that will contain intermediary build files
@@ -87,7 +84,7 @@ class Program:
         )
 
         systemManager.appendToPathEnvironmentVariable(
-            Program._PATH_SED_EXECUTABLE
+            pathFinder.PATH_SED_EXECUTABLE
         )
 
         vcVars = pathFinder.getVCVARSFileName(buildSettings.X64Specified())

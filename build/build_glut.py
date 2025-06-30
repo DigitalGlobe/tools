@@ -45,8 +45,6 @@ class Program:
     # the name of the distribution path for all include files
     _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\glut"
     # ----------------------------------------------------------------------
-    # The path to the sed.exe executable
-    _PATH_SED_EXECUTABLE = "D:\\Users\\tim.tisler\\Apps\\GnuWin32\\bin"
 
     def __init__(self):
 
@@ -75,7 +73,7 @@ class Program:
         )
 
         systemManager.appendToPathEnvironmentVariable(
-            Program._PATH_SED_EXECUTABLE
+            pathFinder.PATH_SED_EXECUTABLE
         )
 
         # get the paths
@@ -108,7 +106,7 @@ class Program:
 
         # modify the vcxproj to work with our version of vscode
         sedCommandLine = (
-            f"{os.path.join(Program._PATH_SED_EXECUTABLE, "sed.exe")} "
+            f"{os.path.join(pathFinder.PATH_SED_EXECUTABLE, "sed.exe")} "
             + f"-i.bak s/^<PlatformToolset^>v110/^<PlatformToolset^>{pathFinder.VISUAL_STUDIO_VERSION_NUM}/g "
             + f"{Program._FILE_NAME_SOLUTION}"
         )

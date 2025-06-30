@@ -4,8 +4,9 @@
 #
 # ------------------------------------------------------------------------------
 
+import ctypes
+from ctypes import wintypes
 import os
-
 
 # ------------------------------------------------------------------------------
 # The PathFinder class represents finders that locate the paths of build
@@ -95,6 +96,9 @@ class PathFinder:
     # Name of the Visual Studio Version (mostly for CMake)
     VISUAL_STUDIO_VERSION_NUM = "v143"
 
+    # The path to the sed.exe executable
+    PATH_SED_EXECUTABLE = "D:\\Users\\tim.tisler\\Apps\\GnuWin32\\bin"
+
     # --------------------------------------------------------------------------
     # constructors
 
@@ -110,6 +114,23 @@ class PathFinder:
 
     # --------------------------------------------------------------------------
     # public methods
+
+    def getShortPath(self, longPath):
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        _GetShortPathNameW = kernel32.GetShortPathNameW
+        _GetShortPathNameW.argtypes = [wintypes.LPCWSTR, wintypes.LPWSTR, wintypes.DWORD]
+        _GetShortPathNameW.restype = wintypes.DWORD
+
+        output_buf_size = len(longPath)
+        while True:
+            output_buf = ctypes.create_unicode_buffer(output_buf_size)
+            needed = _GetShortPathNameW(longPath, output_buf, output_buf_size)
+            if needed == 0:
+                raise ctypes.WinError(ctypes.get_last_error())
+            elif output_buf_size >= needed:
+                return output_buf.value
+            else:
+                output_buf_size = needed
 
     # ----------------------------------------------------------------------
     # Gets the path of the MSBuild executable file.
