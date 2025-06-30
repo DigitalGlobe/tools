@@ -31,6 +31,10 @@
 #undef	HAVE_COPYSIGN_PROTOS
 #endif // ultrix
 
+#ifdef __APPLE__
+#undef HAVE_VALUES_H
+#endif
+
 #endif // UNIX
 
 #ifdef WIN32

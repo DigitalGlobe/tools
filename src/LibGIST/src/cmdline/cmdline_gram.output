@@ -1,0 +1,960 @@
+Terminals which are not used:
+
+   ERROR
+   ONLY
+   EVALSPLIT
+   EVALPENALTY
+
+
+Grammar
+
+  Number, Line, Rule
+    1  46 commands -> /* empty */
+    2  47 commands -> commands command
+    3  54 command -> CREATE ID ID NL
+    4  61 command -> CREATE ID ID ID FLOATCONST NL
+    5  69 command -> WRITE LOADFILE ID ID NL
+    6  76 command -> OPEN ID NL
+    7  82 command -> CLOSE ID NL
+    8  88 command -> CHECK ID NL
+    9  94 command -> SELECT ID opt_k opt_ioparam STRCONST NL
+   10 101 command -> INSERT ID STRCONST STRCONST NL
+   11 109 command -> DELETE ID STRCONST NL
+   12 116 command -> QUIT NL
+   13 121 command -> DUMP ID dump_page NL
+   14 127 command -> SPLIT ID INTCONST NL
+   15 133 command -> SET ECHO_TOKEN INTCONST NL
+   16 138 command -> SET STRUCT ID INTCONST NL
+   17 144 command -> CREATEANL ID ID ID INTCONST FLOATCONST NL
+   18 152 command -> OPENANL ID NL
+   19 158 command -> CLOSEANL ID NL
+   20 164 command -> SPLITSTATS ID opt_id NL
+   21 171 command -> WKLDSTATS ID NL
+   22 177 command -> PENALTYSTATS ID ID opt_id NL
+   23 185 command -> ANLINFO ID NL
+   24 191 command -> PREDINFO ID INTCONST INTCONST NL
+   25 197 command -> HELP NL
+   26 202 command -> error NL
+   27 207 command -> NL
+   28 211 dump_page -> /* empty */
+   29 212 dump_page -> INTCONST
+   30 216 opt_id -> /* empty */
+   31 217 opt_id -> ID
+   32 221 opt_k -> /* empty */
+   33 222 opt_k -> INTCONST
+   34 226 opt_ioparam -> /* empty */
+   35 227 opt_ioparam -> IOPARAM
+
+
+Terminals, with rules where they appear
+
+$ (-1)
+error (256) 26
+ID (257) 3 4 5 6 7 8 9 10 11 13 14 16 17 18 19 20 21 22 23 24 31
+STRCONST (258) 9 10 11
+INTCONST (259) 14 15 16 17 24 29 33
+IOPARAM (260) 35
+FLOATCONST (261) 4 17
+CREATE (262) 3 4
+INSERT (263) 10
+OPEN (264) 6
+CLOSE (265) 7
+QUIT (266) 12
+SELECT (267) 9
+DELETE (268) 11
+NL (269) 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
+    25 26 27
+ERROR (270)
+CHECK (271) 8
+SPLIT (272) 14
+HELP (273) 25
+DUMP (274) 13
+ONLY (275)
+SET (276) 15 16
+STRUCT (277) 16
+WRITE (278) 5
+ECHO_TOKEN (279) 15
+EVALSPLIT (280)
+EVALPENALTY (281)
+LOADFILE (282) 5
+PREDINFO (283) 24
+CREATEANL (284) 17
+OPENANL (285) 18
+CLOSEANL (286) 19
+WKLDSTATS (287) 21
+SPLITSTATS (288) 20
+PENALTYSTATS (289) 22
+ANLINFO (290) 23
+
+
+Nonterminals, with rules where they appear
+
+commands (37)
+    on left: 1 2, on right: 2
+command (38)
+    on left: 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23
+    24 25 26 27, on right: 2
+dump_page (39)
+    on left: 28 29, on right: 13
+opt_id (40)
+    on left: 30 31, on right: 20 22
+opt_k (41)
+    on left: 32 33, on right: 9
+opt_ioparam (42)
+    on left: 34 35, on right: 9
+
+
+state 0
+
+    $default	reduce using rule 1 (commands)
+
+    commands	go to state 1
+
+
+
+state 1
+
+    commands  ->  commands . command   (rule 2)
+
+    $   	go to state 99
+    error	shift, and go to state 2
+    CREATE	shift, and go to state 3
+    INSERT	shift, and go to state 4
+    OPEN	shift, and go to state 5
+    CLOSE	shift, and go to state 6
+    QUIT	shift, and go to state 7
+    SELECT	shift, and go to state 8
+    DELETE	shift, and go to state 9
+    NL  	shift, and go to state 10
+    CHECK	shift, and go to state 11
+    SPLIT	shift, and go to state 12
+    HELP	shift, and go to state 13
+    DUMP	shift, and go to state 14
+    SET 	shift, and go to state 15
+    WRITE	shift, and go to state 16
+    PREDINFO	shift, and go to state 17
+    CREATEANL	shift, and go to state 18
+    OPENANL	shift, and go to state 19
+    CLOSEANL	shift, and go to state 20
+    WKLDSTATS	shift, and go to state 21
+    SPLITSTATS	shift, and go to state 22
+    PENALTYSTATS	shift, and go to state 23
+    ANLINFO	shift, and go to state 24
+
+    command	go to state 25
+
+
+
+state 2
+
+    command  ->  error . NL   (rule 26)
+
+    NL  	shift, and go to state 26
+
+
+
+state 3
+
+    command  ->  CREATE . ID ID NL   (rule 3)
+    command  ->  CREATE . ID ID ID FLOATCONST NL   (rule 4)
+
+    ID  	shift, and go to state 27
+
+
+
+state 4
+
+    command  ->  INSERT . ID STRCONST STRCONST NL   (rule 10)
+
+    ID  	shift, and go to state 28
+
+
+
+state 5
+
+    command  ->  OPEN . ID NL   (rule 6)
+
+    ID  	shift, and go to state 29
+
+
+
+state 6
+
+    command  ->  CLOSE . ID NL   (rule 7)
+
+    ID  	shift, and go to state 30
+
+
+
+state 7
+
+    command  ->  QUIT . NL   (rule 12)
+
+    NL  	shift, and go to state 31
+
+
+
+state 8
+
+    command  ->  SELECT . ID opt_k opt_ioparam STRCONST NL   (rule 9)
+
+    ID  	shift, and go to state 32
+
+
+
+state 9
+
+    command  ->  DELETE . ID STRCONST NL   (rule 11)
+
+    ID  	shift, and go to state 33
+
+
+
+state 10
+
+    command  ->  NL .   (rule 27)
+
+    $default	reduce using rule 27 (command)
+
+
+
+state 11
+
+    command  ->  CHECK . ID NL   (rule 8)
+
+    ID  	shift, and go to state 34
+
+
+
+state 12
+
+    command  ->  SPLIT . ID INTCONST NL   (rule 14)
+
+    ID  	shift, and go to state 35
+
+
+
+state 13
+
+    command  ->  HELP . NL   (rule 25)
+
+    NL  	shift, and go to state 36
+
+
+
+state 14
+
+    command  ->  DUMP . ID dump_page NL   (rule 13)
+
+    ID  	shift, and go to state 37
+
+
+
+state 15
+
+    command  ->  SET . ECHO_TOKEN INTCONST NL   (rule 15)
+    command  ->  SET . STRUCT ID INTCONST NL   (rule 16)
+
+    STRUCT	shift, and go to state 38
+    ECHO_TOKEN	shift, and go to state 39
+
+
+
+state 16
+
+    command  ->  WRITE . LOADFILE ID ID NL   (rule 5)
+
+    LOADFILE	shift, and go to state 40
+
+
+
+state 17
+
+    command  ->  PREDINFO . ID INTCONST INTCONST NL   (rule 24)
+
+    ID  	shift, and go to state 41
+
+
+
+state 18
+
+    command  ->  CREATEANL . ID ID ID INTCONST FLOATCONST NL   (rule 17)
+
+    ID  	shift, and go to state 42
+
+
+
+state 19
+
+    command  ->  OPENANL . ID NL   (rule 18)
+
+    ID  	shift, and go to state 43
+
+
+
+state 20
+
+    command  ->  CLOSEANL . ID NL   (rule 19)
+
+    ID  	shift, and go to state 44
+
+
+
+state 21
+
+    command  ->  WKLDSTATS . ID NL   (rule 21)
+
+    ID  	shift, and go to state 45
+
+
+
+state 22
+
+    command  ->  SPLITSTATS . ID opt_id NL   (rule 20)
+
+    ID  	shift, and go to state 46
+
+
+
+state 23
+
+    command  ->  PENALTYSTATS . ID ID opt_id NL   (rule 22)
+
+    ID  	shift, and go to state 47
+
+
+
+state 24
+
+    command  ->  ANLINFO . ID NL   (rule 23)
+
+    ID  	shift, and go to state 48
+
+
+
+state 25
+
+    commands  ->  commands command .   (rule 2)
+
+    $default	reduce using rule 2 (commands)
+
+
+
+state 26
+
+    command  ->  error NL .   (rule 26)
+
+    $default	reduce using rule 26 (command)
+
+
+
+state 27
+
+    command  ->  CREATE ID . ID NL   (rule 3)
+    command  ->  CREATE ID . ID ID FLOATCONST NL   (rule 4)
+
+    ID  	shift, and go to state 49
+
+
+
+state 28
+
+    command  ->  INSERT ID . STRCONST STRCONST NL   (rule 10)
+
+    STRCONST	shift, and go to state 50
+
+
+
+state 29
+
+    command  ->  OPEN ID . NL   (rule 6)
+
+    NL  	shift, and go to state 51
+
+
+
+state 30
+
+    command  ->  CLOSE ID . NL   (rule 7)
+
+    NL  	shift, and go to state 52
+
+
+
+state 31
+
+    command  ->  QUIT NL .   (rule 12)
+
+    $default	reduce using rule 12 (command)
+
+
+
+state 32
+
+    command  ->  SELECT ID . opt_k opt_ioparam STRCONST NL   (rule 9)
+
+    INTCONST	shift, and go to state 53
+
+    $default	reduce using rule 32 (opt_k)
+
+    opt_k	go to state 54
+
+
+
+state 33
+
+    command  ->  DELETE ID . STRCONST NL   (rule 11)
+
+    STRCONST	shift, and go to state 55
+
+
+
+state 34
+
+    command  ->  CHECK ID . NL   (rule 8)
+
+    NL  	shift, and go to state 56
+
+
+
+state 35
+
+    command  ->  SPLIT ID . INTCONST NL   (rule 14)
+
+    INTCONST	shift, and go to state 57
+
+
+
+state 36
+
+    command  ->  HELP NL .   (rule 25)
+
+    $default	reduce using rule 25 (command)
+
+
+
+state 37
+
+    command  ->  DUMP ID . dump_page NL   (rule 13)
+
+    INTCONST	shift, and go to state 58
+
+    $default	reduce using rule 28 (dump_page)
+
+    dump_page	go to state 59
+
+
+
+state 38
+
+    command  ->  SET STRUCT . ID INTCONST NL   (rule 16)
+
+    ID  	shift, and go to state 60
+
+
+
+state 39
+
+    command  ->  SET ECHO_TOKEN . INTCONST NL   (rule 15)
+
+    INTCONST	shift, and go to state 61
+
+
+
+state 40
+
+    command  ->  WRITE LOADFILE . ID ID NL   (rule 5)
+
+    ID  	shift, and go to state 62
+
+
+
+state 41
+
+    command  ->  PREDINFO ID . INTCONST INTCONST NL   (rule 24)
+
+    INTCONST	shift, and go to state 63
+
+
+
+state 42
+
+    command  ->  CREATEANL ID . ID ID INTCONST FLOATCONST NL   (rule 17)
+
+    ID  	shift, and go to state 64
+
+
+
+state 43
+
+    command  ->  OPENANL ID . NL   (rule 18)
+
+    NL  	shift, and go to state 65
+
+
+
+state 44
+
+    command  ->  CLOSEANL ID . NL   (rule 19)
+
+    NL  	shift, and go to state 66
+
+
+
+state 45
+
+    command  ->  WKLDSTATS ID . NL   (rule 21)
+
+    NL  	shift, and go to state 67
+
+
+
+state 46
+
+    command  ->  SPLITSTATS ID . opt_id NL   (rule 20)
+
+    ID  	shift, and go to state 68
+
+    $default	reduce using rule 30 (opt_id)
+
+    opt_id	go to state 69
+
+
+
+state 47
+
+    command  ->  PENALTYSTATS ID . ID opt_id NL   (rule 22)
+
+    ID  	shift, and go to state 70
+
+
+
+state 48
+
+    command  ->  ANLINFO ID . NL   (rule 23)
+
+    NL  	shift, and go to state 71
+
+
+
+state 49
+
+    command  ->  CREATE ID ID . NL   (rule 3)
+    command  ->  CREATE ID ID . ID FLOATCONST NL   (rule 4)
+
+    ID  	shift, and go to state 72
+    NL  	shift, and go to state 73
+
+
+
+state 50
+
+    command  ->  INSERT ID STRCONST . STRCONST NL   (rule 10)
+
+    STRCONST	shift, and go to state 74
+
+
+
+state 51
+
+    command  ->  OPEN ID NL .   (rule 6)
+
+    $default	reduce using rule 6 (command)
+
+
+
+state 52
+
+    command  ->  CLOSE ID NL .   (rule 7)
+
+    $default	reduce using rule 7 (command)
+
+
+
+state 53
+
+    opt_k  ->  INTCONST .   (rule 33)
+
+    $default	reduce using rule 33 (opt_k)
+
+
+
+state 54
+
+    command  ->  SELECT ID opt_k . opt_ioparam STRCONST NL   (rule 9)
+
+    IOPARAM	shift, and go to state 75
+
+    $default	reduce using rule 34 (opt_ioparam)
+
+    opt_ioparam	go to state 76
+
+
+
+state 55
+
+    command  ->  DELETE ID STRCONST . NL   (rule 11)
+
+    NL  	shift, and go to state 77
+
+
+
+state 56
+
+    command  ->  CHECK ID NL .   (rule 8)
+
+    $default	reduce using rule 8 (command)
+
+
+
+state 57
+
+    command  ->  SPLIT ID INTCONST . NL   (rule 14)
+
+    NL  	shift, and go to state 78
+
+
+
+state 58
+
+    dump_page  ->  INTCONST .   (rule 29)
+
+    $default	reduce using rule 29 (dump_page)
+
+
+
+state 59
+
+    command  ->  DUMP ID dump_page . NL   (rule 13)
+
+    NL  	shift, and go to state 79
+
+
+
+state 60
+
+    command  ->  SET STRUCT ID . INTCONST NL   (rule 16)
+
+    INTCONST	shift, and go to state 80
+
+
+
+state 61
+
+    command  ->  SET ECHO_TOKEN INTCONST . NL   (rule 15)
+
+    NL  	shift, and go to state 81
+
+
+
+state 62
+
+    command  ->  WRITE LOADFILE ID . ID NL   (rule 5)
+
+    ID  	shift, and go to state 82
+
+
+
+state 63
+
+    command  ->  PREDINFO ID INTCONST . INTCONST NL   (rule 24)
+
+    INTCONST	shift, and go to state 83
+
+
+
+state 64
+
+    command  ->  CREATEANL ID ID . ID INTCONST FLOATCONST NL   (rule 17)
+
+    ID  	shift, and go to state 84
+
+
+
+state 65
+
+    command  ->  OPENANL ID NL .   (rule 18)
+
+    $default	reduce using rule 18 (command)
+
+
+
+state 66
+
+    command  ->  CLOSEANL ID NL .   (rule 19)
+
+    $default	reduce using rule 19 (command)
+
+
+
+state 67
+
+    command  ->  WKLDSTATS ID NL .   (rule 21)
+
+    $default	reduce using rule 21 (command)
+
+
+
+state 68
+
+    opt_id  ->  ID .   (rule 31)
+
+    $default	reduce using rule 31 (opt_id)
+
+
+
+state 69
+
+    command  ->  SPLITSTATS ID opt_id . NL   (rule 20)
+
+    NL  	shift, and go to state 85
+
+
+
+state 70
+
+    command  ->  PENALTYSTATS ID ID . opt_id NL   (rule 22)
+
+    ID  	shift, and go to state 68
+
+    $default	reduce using rule 30 (opt_id)
+
+    opt_id	go to state 86
+
+
+
+state 71
+
+    command  ->  ANLINFO ID NL .   (rule 23)
+
+    $default	reduce using rule 23 (command)
+
+
+
+state 72
+
+    command  ->  CREATE ID ID ID . FLOATCONST NL   (rule 4)
+
+    FLOATCONST	shift, and go to state 87
+
+
+
+state 73
+
+    command  ->  CREATE ID ID NL .   (rule 3)
+
+    $default	reduce using rule 3 (command)
+
+
+
+state 74
+
+    command  ->  INSERT ID STRCONST STRCONST . NL   (rule 10)
+
+    NL  	shift, and go to state 88
+
+
+
+state 75
+
+    opt_ioparam  ->  IOPARAM .   (rule 35)
+
+    $default	reduce using rule 35 (opt_ioparam)
+
+
+
+state 76
+
+    command  ->  SELECT ID opt_k opt_ioparam . STRCONST NL   (rule 9)
+
+    STRCONST	shift, and go to state 89
+
+
+
+state 77
+
+    command  ->  DELETE ID STRCONST NL .   (rule 11)
+
+    $default	reduce using rule 11 (command)
+
+
+
+state 78
+
+    command  ->  SPLIT ID INTCONST NL .   (rule 14)
+
+    $default	reduce using rule 14 (command)
+
+
+
+state 79
+
+    command  ->  DUMP ID dump_page NL .   (rule 13)
+
+    $default	reduce using rule 13 (command)
+
+
+
+state 80
+
+    command  ->  SET STRUCT ID INTCONST . NL   (rule 16)
+
+    NL  	shift, and go to state 90
+
+
+
+state 81
+
+    command  ->  SET ECHO_TOKEN INTCONST NL .   (rule 15)
+
+    $default	reduce using rule 15 (command)
+
+
+
+state 82
+
+    command  ->  WRITE LOADFILE ID ID . NL   (rule 5)
+
+    NL  	shift, and go to state 91
+
+
+
+state 83
+
+    command  ->  PREDINFO ID INTCONST INTCONST . NL   (rule 24)
+
+    NL  	shift, and go to state 92
+
+
+
+state 84
+
+    command  ->  CREATEANL ID ID ID . INTCONST FLOATCONST NL   (rule 17)
+
+    INTCONST	shift, and go to state 93
+
+
+
+state 85
+
+    command  ->  SPLITSTATS ID opt_id NL .   (rule 20)
+
+    $default	reduce using rule 20 (command)
+
+
+
+state 86
+
+    command  ->  PENALTYSTATS ID ID opt_id . NL   (rule 22)
+
+    NL  	shift, and go to state 94
+
+
+
+state 87
+
+    command  ->  CREATE ID ID ID FLOATCONST . NL   (rule 4)
+
+    NL  	shift, and go to state 95
+
+
+
+state 88
+
+    command  ->  INSERT ID STRCONST STRCONST NL .   (rule 10)
+
+    $default	reduce using rule 10 (command)
+
+
+
+state 89
+
+    command  ->  SELECT ID opt_k opt_ioparam STRCONST . NL   (rule 9)
+
+    NL  	shift, and go to state 96
+
+
+
+state 90
+
+    command  ->  SET STRUCT ID INTCONST NL .   (rule 16)
+
+    $default	reduce using rule 16 (command)
+
+
+
+state 91
+
+    command  ->  WRITE LOADFILE ID ID NL .   (rule 5)
+
+    $default	reduce using rule 5 (command)
+
+
+
+state 92
+
+    command  ->  PREDINFO ID INTCONST INTCONST NL .   (rule 24)
+
+    $default	reduce using rule 24 (command)
+
+
+
+state 93
+
+    command  ->  CREATEANL ID ID ID INTCONST . FLOATCONST NL   (rule 17)
+
+    FLOATCONST	shift, and go to state 97
+
+
+
+state 94
+
+    command  ->  PENALTYSTATS ID ID opt_id NL .   (rule 22)
+
+    $default	reduce using rule 22 (command)
+
+
+
+state 95
+
+    command  ->  CREATE ID ID ID FLOATCONST NL .   (rule 4)
+
+    $default	reduce using rule 4 (command)
+
+
+
+state 96
+
+    command  ->  SELECT ID opt_k opt_ioparam STRCONST NL .   (rule 9)
+
+    $default	reduce using rule 9 (command)
+
+
+
+state 97
+
+    command  ->  CREATEANL ID ID ID INTCONST FLOATCONST . NL   (rule 17)
+
+    NL  	shift, and go to state 98
+
+
+
+state 98
+
+    command  ->  CREATEANL ID ID ID INTCONST FLOATCONST NL .   (rule 17)
+
+    $default	reduce using rule 17 (command)
+
+
+
+state 99
+
+    $   	go to state 100
+
+
+
+state 100
+
+    $default	accept
+
+

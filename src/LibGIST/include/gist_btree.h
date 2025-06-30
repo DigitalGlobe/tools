@@ -2,12 +2,12 @@
 // Copyright (c) 1997, Regents of the University of California
 // $Id: gist_btree.h,v 1.20 2000/03/10 01:39:02 mashah Exp $
 
+#ifndef GIST_BTREE_H
+#define GIST_BTREE_H
+
 #ifdef __GNUG__
 #pragma interface "gist_btree.h"
 #endif
-
-#ifndef GIST_BTREE_H
-#define GIST_BTREE_H
 
 #include "gist_p.h"		// for keyrec_t
 #include "gist_query.h"		// for gist_query_t
@@ -16,7 +16,7 @@
 #endif
 
 // VCPORT_B
-#ifndef WIN32
+#if !(defined WIN32) && (__GNUG__!=3)
 class ostream;
 #endif
 // VCPORT_E
@@ -40,7 +40,10 @@ public:
     };
 
     // val1 and val2 must have been allocated with new()
-    bt_query_t(bt_oper oper, void *val1, void *val2);
+    bt_query_t::bt_query_t(bt_oper oper, void *val1, void *val2) : 
+	    oper(oper), val1(val1), val2(val2) {}
+
+    //bt_query_t(bt_oper oper, void *val1, void *val2);
     // delete()s val1 and val2
     ~bt_query_t();
 

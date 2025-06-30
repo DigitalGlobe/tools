@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/bin/perl
 #
 # runtests [-load] [-nodiff] [-noinsert] [<#test>]
 # Copyright (c) 1997, 1998, Regents of the University of California

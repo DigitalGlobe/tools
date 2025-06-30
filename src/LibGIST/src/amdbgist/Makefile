@@ -34,7 +34,11 @@ CLASSES = $(JSRCS:.java=.class)
 
 OBJS = $(CSRCS:.cc=.o)
 
-SHLIB = ../../lib/libamdb.so
+ifdef SHLIB_SUFFIX
+  SHLIB = ../../lib/libamdb.${SHLIB_SUFFIX}
+else
+  SHLIB = ../../lib/libamdb.so
+endif
 
 all: $(CLASSES) $(SHLIB)
 

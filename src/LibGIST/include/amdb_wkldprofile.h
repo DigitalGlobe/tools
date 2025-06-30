@@ -16,7 +16,7 @@
 #include "vec_t.h"		// for vec_t
 
 // VCPORT_B
-#ifndef WIN32
+#if !(defined WIN32) && (__GNUG__!=3)
 class ostream;
 #endif
 // VCPORT_E

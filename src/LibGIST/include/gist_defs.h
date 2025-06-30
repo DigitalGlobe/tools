@@ -75,6 +75,10 @@ typedef int rc_t;
     if (_e) return _e;	\
 }
 
+#if (__GNUG__==3)
+using namespace std;
+#endif
+
 // VCPORT_B
 #ifdef WIN32
 using namespace std;

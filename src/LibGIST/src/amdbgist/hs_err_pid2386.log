@@ -1,0 +1,53 @@
+
+An unexpected exception has been detected in native code outside the VM.
+Unexpected Signal : 11 occurred at PC=0x400070F8
+Function=[Unknown.]
+Library=(N/A)
+
+NOTE: We are unable to locate the function name symbol for the error
+      just occurred. Please refer to release documentation for possible
+      reason and solutions.
+
+
+Current Java thread:
+
+Dynamic libraries:
+08048000-0804d000 r-xp 00000000 03:01 229959     /usr/java/j2sdk1.4.0_03/bin/javah
+0804d000-0804f000 rw-p 00004000 03:01 229959     /usr/java/j2sdk1.4.0_03/bin/javah
+40000000-40011000 r-xp 00000000 03:01 131078     /lib/ld-2.2.5.so
+40011000-40012000 rw-p 00010000 03:01 131078     /lib/ld-2.2.5.so
+4001a000-40027000 r-xp 00000000 03:01 458759     /lib/i686/libpthread-0.9.so
+40027000-4002e000 rw-p 0000d000 03:01 458759     /lib/i686/libpthread-0.9.so
+4002e000-40030000 r-xp 00000000 03:01 131089     /lib/libdl-2.2.5.so
+40030000-40031000 rw-p 00001000 03:01 131089     /lib/libdl-2.2.5.so
+40031000-40148000 r-xp 00000000 03:01 458755     /lib/i686/libc-2.2.5.so
+40148000-4014d000 rw-p 00117000 03:01 458755     /lib/i686/libc-2.2.5.so
+40151000-40418000 r-xp 00000000 03:01 672769     /usr/java/j2sdk1.4.0_03/jre/lib/i386/client/libjvm.so
+40418000-40582000 rw-p 002c6000 03:01 672769     /usr/java/j2sdk1.4.0_03/jre/lib/i386/client/libjvm.so
+40596000-405a7000 r-xp 00000000 03:01 131093     /lib/libnsl-2.2.5.so
+405a7000-405a8000 rw-p 00011000 03:01 131093     /lib/libnsl-2.2.5.so
+405aa000-405e3000 r-xp 00000000 03:01 327962     /usr/lib/libstdc++-3-libc6.2-2-2.10.0.so
+405e3000-405f4000 rw-p 00039000 03:01 327962     /usr/lib/libstdc++-3-libc6.2-2-2.10.0.so
+405f6000-40618000 r-xp 00000000 03:01 458757     /lib/i686/libm-2.2.5.so
+40618000-40619000 rw-p 00021000 03:01 458757     /lib/i686/libm-2.2.5.so
+40619000-40622000 r-xp 00000000 03:01 607481     /usr/java/j2sdk1.4.0_03/jre/lib/i386/native_threads/libhpi.so
+40622000-40623000 rw-p 00008000 03:01 607481     /usr/java/j2sdk1.4.0_03/jre/lib/i386/native_threads/libhpi.so
+40623000-40634000 r-xp 00000000 03:01 49892      /usr/java/j2sdk1.4.0_03/jre/lib/i386/libverify.so
+40634000-40636000 rw-p 00010000 03:01 49892      /usr/java/j2sdk1.4.0_03/jre/lib/i386/libverify.so
+40636000-40659000 r-xp 00000000 03:01 49880      /usr/java/j2sdk1.4.0_03/jre/lib/i386/libjava.so
+40659000-4065a000 rw-p 00022000 03:01 49880      /usr/java/j2sdk1.4.0_03/jre/lib/i386/libjava.so
+4065c000-40671000 r-xp 00000000 03:01 49893      /usr/java/j2sdk1.4.0_03/jre/lib/i386/libzip.so
+40671000-40673000 rw-p 00014000 03:01 49893      /usr/java/j2sdk1.4.0_03/jre/lib/i386/libzip.so
+40673000-41cf2000 r--s 00000000 03:01 246456     /usr/java/j2sdk1.4.0_03/jre/lib/rt.jar
+41d34000-41d4b000 r--s 00000000 03:01 246457     /usr/java/j2sdk1.4.0_03/jre/lib/sunrsasign.jar
+41d4b000-41dba000 r--s 00000000 03:01 246450     /usr/java/j2sdk1.4.0_03/jre/lib/jsse.jar
+41dba000-41dcd000 r--s 00000000 03:01 246449     /usr/java/j2sdk1.4.0_03/jre/lib/jce.jar
+41dcd000-4204e000 r--s 00000000 03:01 246438     /usr/java/j2sdk1.4.0_03/jre/lib/charsets.jar
+
+Local Time = Thu Jul 10 22:45:30 2003
+Elapsed Time = 0
+#
+# The exception above was detected in native code outside the VM
+#
+# Java VM: Java HotSpot(TM) Client VM (1.4.0_03-b04 mixed mode)
+#

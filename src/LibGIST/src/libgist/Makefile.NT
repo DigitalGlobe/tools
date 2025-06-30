@@ -8,13 +8,19 @@ DEST = $(GISTHOME)/lib
 LIBRARY = $(DEST)/libgist.lib
 
 SRCS = gist_file.cc \
-	gist_p.cc \
-	gist_htab.cc \
-	vec_t.cc \
-	gist.cc \
-	gist_unordered.cc \
-	gist_unorderedn.cc
-       
+			gist_file.cc \
+			gist_p.cc \
+			gist_htab.cc \
+			vec_t.cc \
+			gist.cc \
+			gist_unordered.cc \
+			gist_unorderedn.cc \
+			gist_query.cc \
+			gist_cursor.cc \
+			gist_cursorext.cc \
+			gist_ustk.cc \
+			gist_support.cc
+
 OBJS = $(SRCS:.cc=.obj)
 
 # change the following lines to reflect local paths

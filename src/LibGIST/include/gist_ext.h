@@ -11,9 +11,14 @@ class gist_p;
 
 // VCPORT_B
 #ifndef WIN32
+#if (__GNUG__!=3)
 class ostream;
 #endif
-// VCPORT_E
+#else
+#include <iostream>
+using namespace std;
+#endif
+// VCPORT_D
 
 class gist_query_t;
 class gist_cursorext_t;
@@ -52,7 +57,7 @@ public:
  * to implement a specific node layout. Also, every page contains a BP
  * (slot index: gist_p::bpSlot), except for the root page.
  *
- * The subclass implementation must guarantee that 
+ * The subclass implementation must guarantee that
  *
  * - every entry (consisting of some key data and a data/child
  *   pointer) on the page is stored as a keyrec_t (with keyrec_t as a
@@ -75,7 +80,7 @@ public:
  * - the information to reconstruct a full key need not be stored in a
  *   single entry, as long as getKey() can reconstruct the key given
  *   the associated slot index
- * 
+ *
  * In order to implement logical undo of data item insertion and
  * deletion in Shore, we need to be able to associate extension
  * objects with log records and access those extension objects at
@@ -107,7 +112,7 @@ public:
     // ID of the particular extension object at hand
     const gist_ext_ids myId;
     const char* myName;
-    // array of extension objects 
+    // array of extension objects
     static gist_ext_t *gist_ext_list[gist_numext];
 
 
@@ -194,13 +199,13 @@ public:
 	bool& twoGoesRight)
 	= 0;
 
-    // Computes BP of the predicates contained on the page plus one or two 
+    // Computes BP of the predicates contained on the page plus one or two
     // extra predicates added to the page.
     // - 'bp' must point to a buffer of size gist_p::max_tup_sz (or
     //   larger).
     // - 'bpIsValid' indicates whether or not 'bp' contains a
-    //   valid instance of the BP type, i.e., one that represents the 
-    //   current contents of 'page. If 'bpIsValid', only pred1/-2 need to be 
+    //   valid instance of the BP type, i.e., one that represents the
+    //   current contents of 'page. If 'bpIsValid', only pred1/-2 need to be
     //   added to it. If '!bpIsValid', the BP must be generated from scratch
     //   for all of the predicates on the page (plus pred1/-2). The latter is required
     //   for bulk-loading (for the most recently constructed page, for which
@@ -208,8 +213,8 @@ public:
     //   deletion," i.e., we cannot (in general) apply some update
     //   operation to the old BP that is guaranteed to result in an
     //   adequately accurate BP).
-    // - 'pred1' and 'pred2' are the extra predicates added to the page (and, if 
-    //   the BP is valid, those predicates would not be included in 'bp'). Either 
+    // - 'pred1' and 'pred2' are the extra predicates added to the page (and, if
+    //   the BP is valid, those predicates would not be included in 'bp'). Either
     //   one can be empty (pred.size() == 0).
     // - 'bpChanged' indicates whether the output 'bp' is different
     //   from the input 'bp'.  'bpChanged' is only meaningful if
@@ -259,7 +264,7 @@ public:
     // - 'query': output parameter, which does *not* point to allocated
     //   memory. The reason is that a query is a possibly complex data
     //   structure that cannot easily be laid out sequentially in memory. Allocation
-    //   is therefore best done by a constructor. 
+    //   is therefore best done by a constructor.
 
     typedef rc_t (*ParseFct)(const char* str, void* out, int& len);
     ParseFct parsePred; // parses string and returns leaf-level predicate and  its length
@@ -267,7 +272,7 @@ public:
 
     typedef rc_t (*ParseQueryFct)(const char* str, gist_query_t*& query);
     ParseQueryFct parseQuery; // parses string and returns query
-        
+
     gist_ext_t::gist_ext_t(
         gist_ext_ids id,
 	const char *name,
@@ -285,4 +290,3 @@ public:
 };
 
 #endif // GIST_EXT_H
-

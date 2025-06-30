@@ -30,7 +30,7 @@ class gist_query_t;
 class gist_penalty_t;
 
 // VCPORT_B
-#ifndef WIN32
+#if !(defined WIN32) && (__GNUG__!=3)
 class istream;
 #endif
 // VCPORT_E

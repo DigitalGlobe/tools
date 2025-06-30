@@ -7,9 +7,8 @@ DEST = $(GISTHOME)/lib
 
 LIBRARY = $(DEST)/libbtree.lib
 
-SRCS = gist_btree.cc \
-	gist_ubtree.cc
-       
+SRCS = gist_btree.cc
+
 OBJS = $(SRCS:.cc=.obj)
 
 # change the following lines to reflect local paths

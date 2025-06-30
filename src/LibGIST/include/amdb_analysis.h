@@ -28,7 +28,7 @@ class amdb_splitstats;
 class amdb_penaltystats;
 
 // VCPORT_B
-#ifndef WIN32
+#if !(defined WIN32) && (__GNUG__ !=3)
 class istream;
 class ostream;
 #endif

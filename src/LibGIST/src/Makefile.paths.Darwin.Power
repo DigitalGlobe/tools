@@ -1,0 +1,27 @@
+# Makefile.paths
+# Copyright (c) 1997, Regents of the University of California
+# $Id: $
+
+
+#
+# amdb is currently built with javasoft JDK-1.1.6.
+# This is broken for Darwin; need to revisit.
+#
+JDKINSTALL = /Library/Java/Home
+HAVEJDK:=$(shell test -d ${JDKINSTALL}/include && echo true)
+JFCINSTALL = ${JDKINSTALL}/swing
+JDKINCS = -I$(JDKINSTALL)/include -I$(JDKINSTALL)/include/linux
+
+# 
+# system-specific settings (binaries, paths, etc.)
+#
+
+# Darwin
+GPPINCL = /usr/include
+GPPLIBS = /usr/lib
+CC = /usr/bin/g++
+LDFLAGS = -dynamiclib -g -L$(LIBDIR) -undefined define_a_way
+
+LINKER = $(CC) $(LDFLAGS)
+
+SHLIB_SUFFIX=jnilib

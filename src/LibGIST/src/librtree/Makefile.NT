@@ -7,11 +7,23 @@ DEST = $(GISTHOME)/lib
 
 LIBRARY = $(DEST)/librtree.lib
 
-SRCS = gist_rtree.cc \
-	rt_point.cc \
-	rt_query.cc \
-	rt_rect.cc
-       
+SRCS = gist_rrtree.cc \
+			gist_rstartree.cc \
+			gist_rtpred.cc \
+			gist_rtpred_point.cc \
+			gist_rtpred_rect.cc \
+			gist_rtpred_rr.cc \
+			gist_rtpred_sphere.cc \
+			gist_rtpred_sr.cc \
+			gist_rtpred_ss.cc \
+			gist_rtree.cc \
+			gist_rtreecext.cc \
+			gist_sptree.cc \
+			gist_srtree.cc \
+			gist_sstree.cc \
+			gist_ball.cc
+
+
 OBJS = $(SRCS:.cc=.obj)
 
 # change the following lines to reflect local paths

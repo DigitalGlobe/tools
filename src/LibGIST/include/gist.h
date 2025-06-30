@@ -30,7 +30,7 @@ class gist_lstk;
 class gist_ustk;
 
 // VCPORT_B
-#ifndef WIN32
+#if !(defined WIN32) && (__GNUG__!=3)
 class ostream;
 class ofstream;
 class istrstream;
@@ -44,7 +44,7 @@ class amdb_wkldprofile;
 class amdb_treemap;
 
 // VCPORT_B
-#ifndef WIN32
+#if !(defined WIN32) && (__GNUG__!=3)
 class ifstream;
 #endif
 // VCPORT_E
@@ -219,8 +219,6 @@ public:
 	const int		    rightEntries[],
 	int			    numRight);
 
-#endif
-
     // RID for index entry plus color index
     struct DisplayPredInfo {
         shpid_t node;
@@ -233,8 +231,6 @@ public:
 	DisplayPredInfo(shpid_t node, int slot, int level, int color) :
 	    node(node), slot(slot), level(level), color(color) {}
     };
-
-#ifdef AMDB
 
     // get display-relevant information about predicates in subtree
     rc_t			getPredInfo(

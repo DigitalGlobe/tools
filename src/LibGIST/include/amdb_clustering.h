@@ -15,7 +15,9 @@
 
 // VCPORT_B
 #ifndef WIN32
+#if (__GNUG__!=3)
 class ostream;
+#endif
 #endif
 // VCPORT_E
 

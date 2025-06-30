@@ -5,7 +5,7 @@
 #
 # amdb is currently built with javasoft JDK-1.1.6.
 #
-JDKINSTALL = /usr/local/lib/jdk118
+JDKINSTALL = ${JAVA_HOME}
 HAVEJDK:=$(shell test -d ${JDKINSTALL}/include && echo true)
 JFCINSTALL = ${JDKINSTALL}/swing
 JDKINCS = -I$(JDKINSTALL)/include -I$(JDKINSTALL)/include/linux

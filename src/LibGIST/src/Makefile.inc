@@ -3,7 +3,8 @@
 # $Id: Makefile.inc,v 1.33 1999/12/14 06:06:37 marcel Exp $
 
 SYSTEM = $(shell uname -s)
-ARCH = $(shell uname -m)
+ARCHNAME = $(shell uname -m)
+ARCH = $(word 1, $(ARCHNAME))
 
 include $(LIBGISTHOME)/src/Makefile.paths.$(SYSTEM).$(ARCH)
 
@@ -31,7 +32,7 @@ LIBDIR = $(LIBGISTHOME)/lib
 INCS = -I$(GPPINCL) -I$(LIBGISTHOME)/include 
 ifeq (${AMDB},true)
 ifeq (${HAVEJDK},true)
-CFLAGS+= -fpic -D_REENTRANT
+# CFLAGS+= -fpic -D_REENTRANT
 INCS+= $(JDKINCS)
 else
 INCS+= -I$(LIBGISTHOME)/include/jdk
