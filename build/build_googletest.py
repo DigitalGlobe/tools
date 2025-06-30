@@ -197,13 +197,13 @@ class Program:
             os.path.join(cmakeInstallPath, "lib"),
             sdkOutDir,
             "*.lib",
-            suffix=Program._DEBUG_SUFFIX
+            suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX
         )
         systemManager.distributeFiles(
             os.path.join(cmakeInstallPath, "bin"),
             sdkOutDir,
             "*.dll",
-            suffix=Program._DEBUG_SUFFIX,
+            suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX,
         )
         if not buildSettings.ReleaseSpecified():
             systemManager.distributeFiles(
