@@ -30,12 +30,6 @@ class Program:
     DESCRIPTION = "Builds the APR library."
 
     # ----------------------------------------------------------------------
-    # the name of the dynamic solution file
-    _FILE_NAME_SOLUTION = "gen_test_char.vcxproj"
-    _FILE_NAME_SOLUTION_2 = "libapr-1.vcxproj"
-    _FILE_NAME_SOLUTION_3 = "apr-1.vcxproj"
-
-    # ----------------------------------------------------------------------
     # the name of the path that will contain intermediary build files
     _PATH_NAME_BUILD = "APR"
     # ----------------------------------------------------------------------
@@ -43,8 +37,6 @@ class Program:
     _PATH_NAME_SOURCE = "..\\src\\APR"
     # ----------------------------------------------------------------------
 
-    # the name of the path that contains the cmake files
-    _PATH_NAME_CMAKE_SOURCE = "."
 
     _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
