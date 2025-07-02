@@ -1,0 +1,157 @@
+# Augment Guidelines for Third-Party Libraries Build System
+
+## Project Overview
+This is a comprehensive build automation system for third-party C/C++ libraries used by the Signature Analyst application. The system manages the compilation of 40+ libraries across multiple architectures (x86/x64) and configurations (debug/release) on Windows using Visual Studio.
+
+## Architecture & Key Components
+
+### Core Build System Modules
+- **`BuildSettingSet.py`** - Manages build configuration settings (architecture, debug/release)
+- **`SystemManager.py`** - Handles system environment setup, path management, and build operations
+- **`PathFinder.py`** - Locates Visual Studio tools, Windows SDK paths, and build dependencies
+- **`XmlUtils.py`** - Utilities for XML manipulation and MSBuild project modifications
+- **`build.py`** - Master orchestration script that builds all libraries in dependency order
+
+### Build Script Structure
+Each library has a dedicated `build_<library>.py` script following a consistent pattern:
+
+```python
+# Standard imports
+import glob, os, sys
+from BuildSettingSet import *
+from PathFinder import *
+from SystemManager import *
+from XmlUtils import *
+
+class Program:
+    # Constants section
+    DESCRIPTION = "Builds the <Library> library."
+    _PATH_NAME_BUILD = "<library>"
+    _PATH_NAME_SOURCE = "..\\src\\<Library>"
+    _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
+    _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
+    
+    def main(self):
+        # Standard initialization pattern
+        systemManager = SystemManager()
+        pathFinder = PathFinder()
+        buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
+        
+        # Environment setup
+        systemManager.initializeIncludeEnvironmentVariable(buildSettings.X64Specified())
+        systemManager.initializeLibraryEnvironmentVariable(buildSettings.X64Specified())
+        
+        # Build logic here
+```
+
+## Coding Standards & Conventions
+
+### File Organization
+- **Header Comments**: Every file starts with a header block containing filename and summary
+- **Import Organization**: Standard library imports first, then local module imports
+- **Constants**: All constants use `_UPPER_CASE` with descriptive prefixes
+- **Class Structure**: Single `Program` class per build script with consistent method organization
+
+### Naming Conventions
+- **Files**: `build_<library>.py` format for build scripts
+- **Constants**: `_PATH_NAME_*`, `_FILE_NAME_*`, `_LIBNAME*` patterns
+- **Variables**: `camelCase` for local variables, `snake_case` for some system variables
+- **Methods**: `camelCase` with descriptive names
+
+### Error Handling Patterns
+```python
+# Standard error handling pattern
+result = systemManager.execute(commandLine)
+if result != 0:
+    sys.exit(-1)
+
+# Print commands before execution for debugging
+print("cmake: " + cmakeCommandLine)
+cmakeResult = systemManager.execute(cmakeCommandLine)
+```
+
+### Path Management
+- Use `os.path.join()` for cross-platform path construction
+- Relative paths from build directory: `"..\\src\\<Library>"`
+- SDK output paths: `"..\\sdk\\{x86|x64}\\{lib|bin}"`
+- Always use `systemManager.getCurrentRelativePathName()` for path resolution
+
+## Build Process Patterns
+
+### Standard Build Flow
+1. **Environment Setup**: Initialize include/library paths and Visual Studio environment
+2. **Path Resolution**: Get source, build, and output directory paths
+3. **Directory Management**: Clean and create build directories
+4. **Source Preparation**: Copy source to build area
+5. **Build Execution**: Run appropriate build tool (MSBuild, CMake, etc.)
+6. **Output Distribution**: Copy built artifacts to SDK directory structure
+
+### Configuration Handling
+```python
+conf = "Release" if buildSettings.ReleaseSpecified() else "Debug"
+platform = "x64" if buildSettings.X64Specified() else "Win32"
+```
+
+### Build Tool Integration
+- **MSBuild**: Use `pathFinder.getMSBuildFileName()` for tool location
+- **CMake**: Use `pathFinder.getCMakeFileName()` for CMake builds
+- **Custom**: Some libraries use custom build processes with XML manipulation
+
+## Development Guidelines
+
+### Adding New Libraries
+1. Create `build_<library>.py` following the standard template
+2. Add constants for paths and library names
+3. Implement build-specific logic in `main()` method
+4. Add library to dependency chain in `build.py`
+5. Test all four configurations (x86/x64 × debug/release)
+
+### Modifying Existing Builds
+- Always test changes across all configurations
+- Preserve existing error handling patterns
+- Update path constants if directory structure changes
+- Maintain backward compatibility where possible
+
+### Environment Dependencies
+- Visual Studio 2015+ required
+- Python 3.5.2+ required
+- Windows 10+ 64-bit required
+- Appropriate Windows SDK versions
+
+### Testing & Validation
+- Each build script should handle all four configuration combinations
+- Verify output artifacts are placed in correct SDK directories
+- Test dependency chains when modifying build order
+- Validate include file distribution for header-only libraries
+
+## Common Patterns to Follow
+
+### Directory Operations
+```python
+systemManager.removeDirectory(buildPathName)
+systemManager.copyDirectory(sourcePathName, buildPathName)
+systemManager.changeDirectory(buildPathName)
+systemManager.makeDirectory(cmakeBuildPath)
+```
+
+### File Distribution
+```python
+systemManager.distributeFiles(srcPath, destPath, "*.lib")
+systemManager.distributeFiles(srcPath, destPath, "*.dll")
+if not buildSettings.ReleaseSpecified():
+    systemManager.distributeFiles(srcPath, destPath, "*.pdb")
+```
+
+### Command Execution
+```python
+print("Command: " + commandLine)  # Always log commands
+result = systemManager.execute(commandLine)
+if result != 0:
+    sys.exit(-1)  # Consistent error handling
+```
+
+## Maintenance Notes
+- Keep Visual Studio and Windows SDK version constants updated in `PathFinder.py`
+- Monitor for deprecated build tools and update accordingly
+- Maintain library version compatibility across the ecosystem
+- Document any custom build modifications in library-specific comments
