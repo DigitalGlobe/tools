@@ -1,10 +1,73 @@
 Third-Party Libraries for Signature Analyst<p>[![Gitter](https://badges.gitter.im/DigitalGlobe/tools.svg)](https://gitter.im/DigitalGlobe/tools?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ===================
 
+## Project Overview
+
+This is a **Third-Party Libraries Build System** for the **Signature Analyst** application, originally developed by DigitalGlobe (now part of Maxar). The project is a comprehensive build automation system designed to compile and manage dozens of third-party C/C++ libraries on Windows.
+
+### Key Features
+
+- **Multi-Architecture Support**: Builds both 32-bit (x86) and 64-bit (x64) versions of all libraries
+- **Multi-Configuration**: Supports both debug and release builds for each architecture
+- **Dependency Management**: Automatically handles build order based on library dependencies
+- **Comprehensive Library Collection**: Includes 40+ essential C/C++ libraries for geospatial, graphics, networking, and data processing
+
+### Supported Libraries
+
+The build system compiles an extensive collection of libraries including:
+
+**Core Libraries:**
+- Boost, APR, CURL, OpenCV, Qt
+- Crypto++, OpenSSL, ZLib
+- GDAL, GEOS, PROJ.4 (geospatial libraries)
+- HDF5, LibTIFF, LibPNG, LibJPEG (data formats)
+
+**Specialized Libraries:**
+- OpenSceneGraph (3D graphics)
+- Log4cxx (logging)
+- GoogleTest (testing)
+- Firebird (database)
+- And many more...
+
+### Build System Architecture
+
+The build system uses several key Python modules:
+
+- **`BuildSettingSet.py`** - Manages build configuration settings (x86/x64, debug/release)
+- **`SystemManager.py`** - Handles system environment setup, path management, and build operations
+- **`PathFinder.py`** - Locates Visual Studio tools, Windows SDK paths, and other build dependencies
+- **`build.py`** - Master build script that orchestrates building all libraries
+
+## Requirements
+
 This repository contains the third-party libraries ("tools") that the Signature Analysis application uses.  Building these third-party libraries requires the following versions of the following applications running on 64-bit Microsoft Windows 10 or greater:
 
  - *Microsoft Visual Studio 2015* or greater
  - *Python 3.5.2* or greater
+
+## Usage
+
+### Build Individual Library
+To build a specific library, use its corresponding build script with architecture and configuration parameters:
+
+```bash
+# Examples for building CURL library
+python build_curl.py x86 debug    # 32-bit Debug
+python build_curl.py x86 release  # 32-bit Release
+python build_curl.py x64 debug    # 64-bit Debug
+python build_curl.py x64 release  # 64-bit Release
+```
+
+### Build All Libraries
+To build all libraries in all configurations:
+
+```bash
+python build.py
+```
+
+This will automatically build all libraries in the correct dependency order, creating all four configurations (x86/x64 × debug/release) for each library.
+
+## Directory Structure
 
 This repository contains the following directories.
 
