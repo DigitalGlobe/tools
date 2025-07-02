@@ -1,0 +1,25 @@
+add_subdirectory(domviewer)
+add_subdirectory(engine)
+add_subdirectory(gpx)
+add_subdirectory(gx)
+
+find_package(CURL)
+if(NOT CURL_FOUND)
+  message(WARNING "Examples in hellonet directory are not built because curl was not found")
+else()
+  add_subdirectory(hellonet)
+endif()
+
+add_subdirectory(helloworld)
+
+add_subdirectory(java)
+add_subdirectory(kml)
+# add_subdirectory(perl)
+# add_subdirectory(php)
+add_subdirectory(python)
+#add_subdirectory(ruby)
+add_subdirectory(regionator)
+# add_subdirectory(wxregionator)
+# add_subdirectory(wxviewer)
+add_subdirectory(xsd)
+
