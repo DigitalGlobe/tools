@@ -174,7 +174,7 @@ public:
     static inline int calcUpDownDist(T a_up, T a_down, T b_up, T b_down)
     {
         return calcDist<T>(a_down, b_down) - calcDist<T>(a_up, b_up);
-    };
+    }
 
     template <typename T, typename WT>
     static inline WT calcWeight(double dist, const float *h,
@@ -296,7 +296,7 @@ public:
     static inline int calcUpDownDist(T a_up, T a_down, T b_up, T b_down)
     {
         return calcUpDownDist_<T>::f(a_up, a_down, b_up, b_down);
-    };
+    }
 
     template <typename T, typename WT>
     static inline WT calcWeight(double dist, const float *h,
@@ -397,7 +397,7 @@ template <typename ET, typename IT, typename EW> struct incWithWeight_<Vec<ET, 4
 template <typename T, typename IT, typename WT>
 static inline void incWithWeight(IT* estimation, IT* weights_sum, WT weight, T p)
 {
-    return incWithWeight_<T, IT, WT>::f(estimation, weights_sum, weight, p);
+    incWithWeight_<T, IT, WT>::f(estimation, weights_sum, weight, p);
 }
 
 template <typename IT, typename UIT, int nc, int nw> struct divByWeightsSum_
@@ -434,7 +434,7 @@ template <typename IT, typename UIT, int n> struct divByWeightsSum_<IT, UIT, n, 
 template <typename IT, typename UIT, int nc, int nw>
 static inline void divByWeightsSum(IT* estimation, IT* weights_sum)
 {
-    return divByWeightsSum_<IT, UIT, nc, nw>::f(estimation, weights_sum);
+    divByWeightsSum_<IT, UIT, nc, nw>::f(estimation, weights_sum);
 }
 
 template <typename T, typename IT> struct saturateCastFromArray_

@@ -42,16 +42,7 @@
 
 #include "test_precomp.hpp"
 
-using namespace cv;
-using namespace std;
-
-#include <string>
-#include <iostream>
-#include <fstream>
-#include <functional>
-#include <iterator>
-#include <limits>
-#include <numeric>
+namespace opencv_test { namespace {
 
 class CV_Affine3D_EstTest : public cvtest::BaseTest
 {
@@ -101,7 +92,7 @@ bool CV_Affine3D_EstTest::test4Points()
     fpts.ptr<Point3f>()[2] = Point3f( rngIn(1,2), rngIn(3,4), rngIn(5, 6) );
     fpts.ptr<Point3f>()[3] = Point3f( rngIn(3,4), rngIn(1,2), rngIn(5, 6) );
 
-    transform(fpts.ptr<Point3f>(), fpts.ptr<Point3f>() + 4, tpts.ptr<Point3f>(), WrapAff(aff));
+    std::transform(fpts.ptr<Point3f>(), fpts.ptr<Point3f>() + 4, tpts.ptr<Point3f>(), WrapAff(aff));
 
     Mat aff_est;
     vector<uchar> outliers;
@@ -144,11 +135,11 @@ bool CV_Affine3D_EstTest::testNPoints()
     Mat tpts(1, n, CV_32FC3);
 
     randu(fpts, Scalar::all(0), Scalar::all(100));
-    transform(fpts.ptr<Point3f>(), fpts.ptr<Point3f>() + n, tpts.ptr<Point3f>(), WrapAff(aff));
+    std::transform(fpts.ptr<Point3f>(), fpts.ptr<Point3f>() + n, tpts.ptr<Point3f>(), WrapAff(aff));
 
     /* adding noise*/
-    transform(tpts.ptr<Point3f>() + m, tpts.ptr<Point3f>() + n, tpts.ptr<Point3f>() + m, bind2nd(plus<Point3f>(), shift_outl));
-    transform(tpts.ptr<Point3f>() + m, tpts.ptr<Point3f>() + n, tpts.ptr<Point3f>() + m, Noise(noise_level));
+    std::transform(tpts.ptr<Point3f>() + m, tpts.ptr<Point3f>() + n, tpts.ptr<Point3f>() + m,
+        [=] (const Point3f& pt) -> Point3f { return Noise(noise_level)(pt + shift_outl); });
 
     Mat aff_est;
     vector<uchar> outl;
@@ -169,8 +160,8 @@ bool CV_Affine3D_EstTest::testNPoints()
         return false;
     }
 
-    bool outl_good = count(outl.begin(), outl.end(), 1) == m &&
-        m == accumulate(outl.begin(), outl.begin() + m, 0);
+    bool outl_good = std::count(outl.begin(), outl.end(), 1) == m &&
+        m == std::accumulate(outl.begin(), outl.begin() + m, 0);
 
     if (!outl_good)
     {
@@ -194,4 +185,41 @@ void CV_Affine3D_EstTest::run( int /* start_from */)
     ts->set_failed_test_info(cvtest::TS::OK);
 }
 
-TEST(Calib3d_EstimateAffineTransform, accuracy) { CV_Affine3D_EstTest test; test.safe_run(); }
+TEST(Calib3d_EstimateAffine3D, accuracy) { CV_Affine3D_EstTest test; test.safe_run(); }
+
+TEST(Calib3d_EstimateAffine3D, regression_16007)
+{
+    std::vector<cv::Point3f> m1, m2;
+    m1.push_back(Point3f(1.0f, 0.0f, 0.0f)); m2.push_back(Point3f(1.0f, 1.0f, 0.0f));
+    m1.push_back(Point3f(1.0f, 0.0f, 1.0f)); m2.push_back(Point3f(1.0f, 1.0f, 1.0f));
+    m1.push_back(Point3f(0.5f, 0.0f, 0.5f)); m2.push_back(Point3f(0.5f, 1.0f, 0.5f));
+    m1.push_back(Point3f(2.5f, 0.0f, 2.5f)); m2.push_back(Point3f(2.5f, 1.0f, 2.5f));
+    m1.push_back(Point3f(2.0f, 0.0f, 1.0f)); m2.push_back(Point3f(2.0f, 1.0f, 1.0f));
+
+    cv::Mat m3D, inl;
+    int res = cv::estimateAffine3D(m1, m2, m3D, inl);
+    EXPECT_EQ(1, res);
+}
+
+TEST(Calib3d_EstimateAffine3D, umeyama_3_pt)
+{
+    std::vector<cv::Vec3d> points =   {{{0.80549149, 0.8225781, 0.79949521},
+                                        {0.28906756, 0.57158557, 0.9864789},
+                                        {0.58266182, 0.65474983, 0.25078834}}};
+    cv::Mat R =   (cv::Mat_<double>(3,3) << 0.9689135, -0.0232753, 0.2463025,
+                                            0.0236362,  0.9997195, 0.0014915,
+                                            -0.2462682, 0.0043765, 0.9691918);
+    cv::Vec3d t(1., 2., 3.);
+    cv::Affine3d transform(R, t);
+    std::vector<cv::Vec3d> transformed_points(points.size());
+    std::transform(points.begin(), points.end(), transformed_points.begin(), [transform](const cv::Vec3d v){return transform * v;});
+    double scale;
+    cv::Mat trafo_est = estimateAffine3D(points, transformed_points, &scale);
+    Mat R_est(trafo_est(Rect(0, 0, 3, 3)));
+    EXPECT_LE(cvtest::norm(R_est, R, NORM_INF), 1e-6);
+    Vec3d t_est = trafo_est.col(3);
+    EXPECT_LE(cvtest::norm(t_est, t, NORM_INF), 1e-6);
+    EXPECT_NEAR(scale, 1.0, 1e-6);
+}
+
+}} // namespace

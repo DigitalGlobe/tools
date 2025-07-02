@@ -44,9 +44,9 @@
 namespace cv
 {
 
-struct KeypointResponseGreaterThanThreshold
+struct KeypointResponseGreaterThanOrEqualToThreshold
 {
-    KeypointResponseGreaterThanThreshold(float _value) :
+    KeypointResponseGreaterThanOrEqualToThreshold(float _value) :
     value(_value)
     {
     }
@@ -77,13 +77,13 @@ void KeyPointsFilter::retainBest(std::vector<KeyPoint>& keypoints, int n_points)
             return;
         }
         //first use nth element to partition the keypoints into the best and worst.
-        std::nth_element(keypoints.begin(), keypoints.begin() + n_points, keypoints.end(), KeypointResponseGreater());
-        //this is the boundary response, and in the case of FAST may be ambigous
+        std::nth_element(keypoints.begin(), keypoints.begin() + n_points - 1, keypoints.end(), KeypointResponseGreater());
+        //this is the boundary response, and in the case of FAST may be ambiguous
         float ambiguous_response = keypoints[n_points - 1].response;
         //use std::partition to grab all of the keypoints with the boundary response.
         std::vector<KeyPoint>::const_iterator new_end =
         std::partition(keypoints.begin() + n_points, keypoints.end(),
-                       KeypointResponseGreaterThanThreshold(ambiguous_response));
+                       KeypointResponseGreaterThanOrEqualToThreshold(ambiguous_response));
         //resize the keypoints, given this new end point. nth_element and partition reordered the points inplace
         keypoints.resize(new_end - keypoints.begin());
     }
@@ -96,7 +96,9 @@ struct RoiPredicate
 
     bool operator()( const KeyPoint& keyPt ) const
     {
-        return !r.contains( keyPt.pt );
+        // workaround for https://github.com/opencv/opencv/issues/26016
+        // To keep its behaviour, keyPt.pt casts to Point_<int>.
+        return !r.contains( Point_<int>(keyPt.pt) );
     }
 
     Rect r;
@@ -148,18 +150,45 @@ public:
     {
         return mask.at<uchar>( (int)(key_pt.pt.y + 0.5f), (int)(key_pt.pt.x + 0.5f) ) == 0;
     }
+    MaskPredicate& operator=(const MaskPredicate&) = delete;
+    // To avoid -Wdeprecated-copy warning, copy constructor is needed.
+    MaskPredicate(const MaskPredicate&) = default;
 
 private:
     const Mat mask;
-    MaskPredicate& operator=(const MaskPredicate&);
 };
 
 void KeyPointsFilter::runByPixelsMask( std::vector<KeyPoint>& keypoints, const Mat& mask )
 {
+    CV_INSTRUMENT_REGION();
+
     if( mask.empty() )
         return;
 
     keypoints.erase(std::remove_if(keypoints.begin(), keypoints.end(), MaskPredicate(mask)), keypoints.end());
+}
+/*
+ * Remove objects from some image and a vector by mask for pixels of this image
+ */
+template <typename T>
+void runByPixelsMask2(std::vector<KeyPoint> &keypoints, std::vector<T> &removeFrom, const Mat &mask)
+{
+    if (mask.empty())
+        return;
+
+    MaskPredicate maskPredicate(mask);
+    removeFrom.erase(std::remove_if(removeFrom.begin(), removeFrom.end(),
+                                    [&](const T &x)
+                                    {
+                                        auto index = &x - &removeFrom.front();
+                                        return maskPredicate(keypoints[index]);
+                                    }),
+                    removeFrom.end());
+    keypoints.erase(std::remove_if(keypoints.begin(), keypoints.end(), maskPredicate), keypoints.end());
+}
+void KeyPointsFilter::runByPixelsMask2VectorPoint(std::vector<KeyPoint> &keypoints, std::vector<std::vector<Point> > &removeFrom, const Mat &mask)
+{
+    runByPixelsMask2(keypoints, removeFrom, mask);
 }
 
 struct KeyPoint_LessThan
@@ -219,6 +248,46 @@ void KeyPointsFilter::removeDuplicated( std::vector<KeyPoint>& keypoints )
         }
     }
     keypoints.resize(j);
+}
+
+struct KeyPoint12_LessThan
+{
+    bool operator()(const KeyPoint &kp1, const KeyPoint &kp2) const
+    {
+        if( kp1.pt.x != kp2.pt.x )
+            return kp1.pt.x < kp2.pt.x;
+        if( kp1.pt.y != kp2.pt.y )
+            return kp1.pt.y < kp2.pt.y;
+        if( kp1.size != kp2.size )
+            return kp1.size > kp2.size;
+        if( kp1.angle != kp2.angle )
+            return kp1.angle < kp2.angle;
+        if( kp1.response != kp2.response )
+            return kp1.response > kp2.response;
+        if( kp1.octave != kp2.octave )
+            return kp1.octave > kp2.octave;
+        return kp1.class_id > kp2.class_id;
+    }
+};
+
+void KeyPointsFilter::removeDuplicatedSorted( std::vector<KeyPoint>& keypoints )
+{
+    int i, j, n = (int)keypoints.size();
+
+    if (n < 2) return;
+
+    std::sort(keypoints.begin(), keypoints.end(), KeyPoint12_LessThan());
+
+    for( i = 0, j = 1; j < n; ++j )
+    {
+        const KeyPoint& kp1 = keypoints[i];
+        const KeyPoint& kp2 = keypoints[j];
+        if( kp1.pt.x != kp2.pt.x || kp1.pt.y != kp2.pt.y ||
+            kp1.size != kp2.size || kp1.angle != kp2.angle ) {
+            keypoints[++i] = keypoints[j];
+        }
+    }
+    keypoints.resize(i + 1);
 }
 
 }

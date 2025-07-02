@@ -1,3 +1,7 @@
+// This file is part of OpenCV project.
+// It is subject to the license terms in the LICENSE file found in the top-level directory
+// of this distribution and at http://opencv.org/license.html.
+
 //////////////////////////////////////////////////////////////////////////////////////////
 /////////////////// tests for matrix operations and math functions ///////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -5,9 +9,9 @@
 #include "test_precomp.hpp"
 #include <float.h>
 #include <math.h>
+#include "opencv2/core/softfloat.hpp"
 
-using namespace cv;
-using namespace std;
+namespace opencv_test { namespace {
 
 /// !!! NOTE !!! These tests happily avoid overflow cases & out-of-range arguments
 /// so that output arrays contain neigher Inf's nor Nan's.
@@ -130,7 +134,9 @@ double Core_PowTest::get_success_error_level( int test_case_idx, int i, int j )
     if( depth < CV_32F )
         return power == cvRound(power) && power >= 0 ? 0 : 1;
     else
-        return Base::get_success_error_level( test_case_idx, i, j );
+    {
+        return depth != CV_64F ? Base::get_success_error_level( test_case_idx, i, j ) : DBL_EPSILON*1024*1.11;
+    }
 }
 
 
@@ -471,8 +477,9 @@ class Core_DotProductTest : public Core_MatrixTest
 public:
     Core_DotProductTest();
 protected:
-    void run_func();
-    void prepare_to_validation( int test_case_idx );
+    void run_func() CV_OVERRIDE;
+    void prepare_to_validation( int test_case_idx ) CV_OVERRIDE;
+    double get_success_error_level( int test_case_idx, int i, int j ) CV_OVERRIDE;
 };
 
 
@@ -492,6 +499,15 @@ void Core_DotProductTest::prepare_to_validation( int )
     test_mat[REF_OUTPUT][0].at<Scalar>(0,0) = Scalar(cvtest::crossCorr( test_mat[INPUT][0], test_mat[INPUT][1] ));
 }
 
+double Core_DotProductTest::get_success_error_level( int test_case_idx, int i, int j )
+{
+#ifdef __riscv
+    const int depth = test_mat[i][j].depth();
+    if (depth == CV_64F)
+        return 2.5e-5;
+#endif
+    return Core_MatrixTest::get_success_error_level( test_case_idx, i, j );
+}
 
 ///////// crossproduct //////////
 
@@ -520,7 +536,7 @@ void Core_CrossProductTest::get_test_array_types_and_sizes( int,
     RNG& rng = ts->get_rng();
     int depth = cvtest::randInt(rng) % 2 + CV_32F;
     int cn = cvtest::randInt(rng) & 1 ? 3 : 1, type = CV_MAKETYPE(depth, cn);
-    CvSize sz;
+    Size sz;
 
     types[INPUT][0] = types[INPUT][1] = types[OUTPUT][0] = types[REF_OUTPUT][0] = type;
 
@@ -543,7 +559,7 @@ void Core_CrossProductTest::run_func()
 
 void Core_CrossProductTest::prepare_to_validation( int )
 {
-    CvScalar a(0), b(0), c(0);
+    cv::Scalar a, b, c;
 
     if( test_mat[INPUT][0].rows > 1 )
     {
@@ -589,7 +605,7 @@ void Core_CrossProductTest::prepare_to_validation( int )
     }
     else
     {
-        cvSet1D( test_array[REF_OUTPUT][0], 0, c );
+        cvSet1D( test_array[REF_OUTPUT][0], 0, cvScalar(c) );
     }
 }
 
@@ -890,7 +906,7 @@ double Core_TransformTest::get_success_error_level( int test_case_idx, int i, in
 
 void Core_TransformTest::run_func()
 {
-    CvMat _m = test_mat[INPUT][1], _shift = test_mat[INPUT][2];
+    CvMat _m = cvMat(test_mat[INPUT][1]), _shift = cvMat(test_mat[INPUT][2]);
     cvTransform( test_array[INPUT][0], test_array[OUTPUT][0], &_m, _shift.data.ptr ? &_shift : 0);
 }
 
@@ -902,6 +918,60 @@ void Core_TransformTest::prepare_to_validation( int )
 
     cvtest::transform( test_mat[INPUT][0], test_mat[REF_OUTPUT][0], transmat, shift );
 }
+
+class Core_TransformLargeTest : public Core_TransformTest
+{
+public:
+    typedef Core_MatrixTest Base;
+protected:
+    void get_test_array_types_and_sizes(int test_case_idx, vector<vector<Size> >& sizes, vector<vector<int> >& types);
+};
+
+void Core_TransformLargeTest::get_test_array_types_and_sizes(int test_case_idx, vector<vector<Size> >& sizes, vector<vector<int> >& types)
+{
+    RNG& rng = ts->get_rng();
+    int bits = cvtest::randInt(rng);
+    int depth, dst_cn, mat_cols, mattype;
+    Base::get_test_array_types_and_sizes(test_case_idx, sizes, types);
+    for (unsigned int j = 0; j < sizes.size(); j++)
+    {
+        for (unsigned int i = 0; i < sizes[j].size(); i++)
+        {
+            sizes[j][i].width *= 4;
+        }
+    }
+
+    mat_cols = CV_MAT_CN(types[INPUT][0]);
+    depth = CV_MAT_DEPTH(types[INPUT][0]);
+    dst_cn = cvtest::randInt(rng) % 4 + 1;
+    types[OUTPUT][0] = types[REF_OUTPUT][0] = CV_MAKETYPE(depth, dst_cn);
+
+    mattype = depth < CV_32S ? CV_32F : depth == CV_64F ? CV_64F : bits & 1 ? CV_32F : CV_64F;
+    types[INPUT][1] = mattype;
+    types[INPUT][2] = CV_MAKETYPE(mattype, dst_cn);
+
+    scale = 1. / ((cvtest::randInt(rng) % 4) * 50 + 1);
+
+    if (bits & 2)
+    {
+        sizes[INPUT][2] = Size(0, 0);
+        mat_cols += (bits & 4) != 0;
+    }
+    else if (bits & 4)
+        sizes[INPUT][2] = Size(1, 1);
+    else
+    {
+        if (bits & 8)
+            sizes[INPUT][2] = Size(dst_cn, 1);
+        else
+            sizes[INPUT][2] = Size(1, dst_cn);
+        types[INPUT][2] &= ~CV_MAT_CN_MASK;
+    }
+    diagMtx = (bits & 16) != 0;
+
+    sizes[INPUT][1] = Size(mat_cols, dst_cn);
+}
+
 
 
 ///////////////// PerspectiveTransform /////////////////////
@@ -950,7 +1020,7 @@ double Core_PerspectiveTransformTest::get_success_error_level( int test_case_idx
 
 void Core_PerspectiveTransformTest::run_func()
 {
-    CvMat _m = test_mat[INPUT][1];
+    CvMat _m = cvMat(test_mat[INPUT][1]);
     cvPerspectiveTransform( test_array[INPUT][0], test_array[OUTPUT][0], &_m );
 }
 
@@ -960,7 +1030,7 @@ static void cvTsPerspectiveTransform( const CvArr* _src, CvArr* _dst, const CvMa
     int i, j, cols;
     int cn, depth, mat_depth;
     CvMat astub, bstub, *a, *b;
-    double mat[16];
+    double mat[16] = {0.0};
 
     a = cvGetMat( _src, &astub, 0, 0 );
     b = cvGetMat( _dst, &bstub, 0, 0 );
@@ -979,7 +1049,7 @@ static void cvTsPerspectiveTransform( const CvArr* _src, CvArr* _dst, const CvMa
     }
     else
     {
-        assert( mat_depth == CV_64F );
+        CV_Assert( mat_depth == CV_64F );
         for( i = 0; i < transmat->rows; i++ )
             for( j = 0; j < cols; j++ )
                 mat[i*cols + j] = ((double*)(transmat->data.ptr + transmat->step*i))[j];
@@ -1005,7 +1075,7 @@ static void cvTsPerspectiveTransform( const CvArr* _src, CvArr* _dst, const CvMa
                     buf[j] = ((double*)src)[j];
                 break;
             default:
-                assert(0);
+                CV_Assert(0);
         }
 
         switch( cn )
@@ -1035,7 +1105,7 @@ static void cvTsPerspectiveTransform( const CvArr* _src, CvArr* _dst, const CvMa
                 }
                 break;
             default:
-                assert(0);
+                CV_Assert(0);
         }
 
         switch( depth )
@@ -1049,7 +1119,7 @@ static void cvTsPerspectiveTransform( const CvArr* _src, CvArr* _dst, const CvMa
                     ((double*)dst)[j] = buf[j];
                 break;
             default:
-                assert(0);
+                CV_Assert(0);
         }
     }
 }
@@ -1057,7 +1127,7 @@ static void cvTsPerspectiveTransform( const CvArr* _src, CvArr* _dst, const CvMa
 
 void Core_PerspectiveTransformTest::prepare_to_validation( int )
 {
-    CvMat transmat = test_mat[INPUT][1];
+    CvMat transmat = cvMat(test_mat[INPUT][1]);
     cvTsPerspectiveTransform( test_array[INPUT][0], test_array[REF_OUTPUT][0], &transmat );
 }
 
@@ -1227,9 +1297,9 @@ int Core_CovarMatrixTest::prepare_test_case( int test_case_idx )
         if( single_matrix )
         {
             if( !are_images )
-                *((CvMat*)_hdr_data) = test_mat[INPUT][0];
+                *((CvMat*)_hdr_data) = cvMat(test_mat[INPUT][0]);
             else
-                *((IplImage*)_hdr_data) = test_mat[INPUT][0];
+                *((IplImage*)_hdr_data) = cvIplImage(test_mat[INPUT][0]);
             temp_hdrs[0] = _hdr_data;
         }
         else
@@ -1244,9 +1314,9 @@ int Core_CovarMatrixTest::prepare_test_case( int test_case_idx )
                     part = test_mat[INPUT][0].col(i);
 
                 if( !are_images )
-                    *((CvMat*)ptr) = part;
+                    *((CvMat*)ptr) = cvMat(part);
                 else
-                    *((IplImage*)ptr) = part;
+                    *((IplImage*)ptr) = cvIplImage(part);
 
                 temp_hdrs[i] = ptr;
             }
@@ -1398,8 +1468,8 @@ static double cvTsLU( CvMat* a, CvMat* b=NULL, CvMat* x=NULL, int* rank=0 )
     double *a0 = a->data.db, *b0 = b ? b->data.db : 0;
     double *x0 = x ? x->data.db : 0;
     double t, det = 1.;
-    assert( CV_MAT_TYPE(a->type) == CV_64FC1 &&
-           (!b || CV_ARE_TYPES_EQ(a,b)) && (!x || CV_ARE_TYPES_EQ(a,x)));
+    CV_Assert( CV_MAT_TYPE(a->type) == CV_64FC1 &&
+               (!b || CV_ARE_TYPES_EQ(a,b)) && (!x || CV_ARE_TYPES_EQ(a,x)));
 
     for( i = 0; i < Nm; i++ )
     {
@@ -1454,7 +1524,7 @@ static double cvTsLU( CvMat* a, CvMat* b=NULL, CvMat* x=NULL, int* rank=0 )
 
     if( x )
     {
-        assert( b );
+        CV_Assert( b );
 
         for( i = N-1; i >= 0; i-- )
         {
@@ -1479,7 +1549,7 @@ static double cvTsLU( CvMat* a, CvMat* b=NULL, CvMat* x=NULL, int* rank=0 )
 void Core_DetTest::prepare_to_validation( int )
 {
     test_mat[INPUT][0].convertTo(test_mat[TEMP][0], test_mat[TEMP][0].type());
-    CvMat temp0 = test_mat[TEMP][0];
+    CvMat temp0 = cvMat(test_mat[TEMP][0]);
     test_mat[REF_OUTPUT][0].at<Scalar>(0,0) = cvRealScalar(cvTsLU(&temp0, 0, 0));
 }
 
@@ -1616,7 +1686,7 @@ void Core_InvertTest::prepare_to_validation( int )
     Mat& temp1 = test_mat[TEMP][1];
     Mat& dst0 = test_mat[REF_OUTPUT][0];
     Mat& dst = test_mat[OUTPUT][0];
-    CvMat _input = input;
+    CvMat _input = cvMat(input);
     double ratio = 0, det = cvTsSVDet( &_input, &ratio );
     double threshold = (input.depth() == CV_32F ? FLT_EPSILON : DBL_EPSILON)*1000;
 
@@ -1673,7 +1743,7 @@ void Core_SolveTest::get_test_array_types_and_sizes( int test_case_idx, vector<v
     RNG& rng = ts->get_rng();
     int bits = cvtest::randInt(rng);
     Base::get_test_array_types_and_sizes( test_case_idx, sizes, types );
-    CvSize in_sz = sizes[INPUT][0];
+    CvSize in_sz = cvSize(sizes[INPUT][0]);
     if( in_sz.width > in_sz.height )
         in_sz = cvSize(in_sz.height, in_sz.width);
     Base::get_test_array_types_and_sizes( test_case_idx, sizes, types );
@@ -1753,14 +1823,14 @@ void Core_SolveTest::prepare_to_validation( int )
             Mat& temp1 = test_mat[TEMP][1];
             cvtest::convert(input, temp1, temp1.type());
             dst = Scalar::all(0);
-            CvMat _temp1 = temp1;
+            CvMat _temp1 = cvMat(temp1);
             double det = cvTsLU( &_temp1, 0, 0 );
             dst0 = Scalar::all(det != 0);
             return;
         }
 
         double threshold = (input.type() == CV_32F ? FLT_EPSILON : DBL_EPSILON)*1000;
-        CvMat _input = input;
+        CvMat _input = cvMat(input);
         double ratio = 0, det = cvTsSVDet( &_input, &ratio );
         if( det < threshold || ratio < threshold )
         {
@@ -2045,7 +2115,7 @@ void Core_SVBkSbTest::get_test_array_types_and_sizes( int test_case_idx, vector<
     int bits = cvtest::randInt(rng);
     Base::get_test_array_types_and_sizes( test_case_idx, sizes, types );
     int min_size, i, m, n;
-    CvSize b_size;
+    cv::Size b_size;
 
     min_size = MIN( sizes[INPUT][0].width, sizes[INPUT][0].height );
 
@@ -2062,7 +2132,7 @@ void Core_SVBkSbTest::get_test_array_types_and_sizes( int test_case_idx, vector<
     n = sizes[INPUT][0].width;
 
     sizes[INPUT][1] = Size(0,0);
-    b_size = Size(m,m);
+    b_size = cvSize(m, m);
     if( have_b )
     {
         sizes[INPUT][1].height = sizes[INPUT][0].height;
@@ -2114,7 +2184,7 @@ int Core_SVBkSbTest::prepare_test_case( int test_case_idx )
             cvtest::copy( temp, input );
         }
 
-        CvMat _input = input;
+        CvMat _input = cvMat(input);
         cvSVD( &_input, test_array[TEMP][0], test_array[TEMP][1], test_array[TEMP][2], flags );
     }
 
@@ -2150,7 +2220,7 @@ void Core_SVBkSbTest::prepare_to_validation( int )
     Size w_size = compact ? Size(min_size,min_size) : Size(m,n);
     Mat& w = test_mat[TEMP][0];
     Mat wdb( w_size.height, w_size.width, CV_64FC1 );
-    CvMat _w = w, _wdb = wdb;
+    CvMat _w = cvMat(w), _wdb = cvMat(wdb);
     // use exactly the same threshold as in icvSVD... ,
     // so the changes in the library and here should be synchronized.
     double threshold = cv::sum(w)[0]*(DBL_EPSILON*2);//(is_float ? FLT_EPSILON*10 : DBL_EPSILON*2);
@@ -2365,7 +2435,7 @@ static void checkRoot(Mat& r, T re, T im)
 {
     for (int i = 0; i < r.cols*r.rows; i++)
     {
-        Vec<T, 2> v = *(Vec<T, 2>*)r.ptr(i);
+        Vec<T, 2>& v = *(Vec<T, 2>*)r.ptr(i);
         if (fabs(re - v[0]) < 1e-6 && fabs(im - v[1]) < 1e-6)
         {
             v[0] = std::numeric_limits<T>::quiet_NaN();
@@ -2375,6 +2445,179 @@ static void checkRoot(Mat& r, T re, T im)
     }
     GTEST_NONFATAL_FAILURE_("Can't find root") << "(" << re << ", " << im << ")";
 }
+
+TEST(Core_SolveCubicConstant, accuracy)
+{
+    {
+        const std::vector<double> coeffs{0., 0., 0., 1.};
+        std::vector<double> roots;
+        const auto num_roots = solveCubic(coeffs, roots);
+
+        EXPECT_EQ(num_roots, 0);
+    }
+
+    {
+        const std::vector<double> coeffs{0., 0., 0., 0.};
+        std::vector<double> roots;
+        const auto num_roots = solveCubic(coeffs, roots);
+
+        EXPECT_EQ(num_roots, -1);
+    }
+}
+
+TEST(Core_SolveCubicLinear, accuracy)
+{
+    const std::vector<double> coeffs{0., 0., 2., -2.};
+    std::vector<double> roots;
+    const auto num_roots = solveCubic(coeffs, roots);
+
+    EXPECT_EQ(num_roots, 1);
+    EXPECT_EQ(roots[0], 1.);
+}
+
+TEST(Core_SolveCubicQuadratic, accuracy)
+{
+    {
+        const std::vector<double> coeffs{0., 2., -4., 4.};
+        std::vector<double> roots;
+        const auto num_roots = solveCubic(coeffs, roots);
+
+        EXPECT_EQ(num_roots, 0);
+    }
+
+    {
+        const std::vector<double> coeffs{0., 2., -4., 2.};
+        std::vector<double> roots;
+        const auto num_roots = solveCubic(coeffs, roots);
+
+        EXPECT_EQ(num_roots, 1);
+        EXPECT_EQ(roots[0], 1.);
+    }
+
+    {
+        const std::vector<double> coeffs{0., 2., -6., 4.};
+        std::vector<double> roots;
+        const auto num_roots = solveCubic(coeffs, roots);
+
+        EXPECT_EQ(num_roots, 2);
+        EXPECT_EQ(roots[0], 2.);
+        EXPECT_EQ(roots[1], 1.);
+    }
+}
+
+TEST(Core_SolveCubicCubic, accuracy)
+{
+    {
+        const std::vector<double> coeffs{2., -6., 6., -2.};
+        std::vector<double> roots;
+        const auto num_roots = solveCubic(coeffs, roots);
+
+        EXPECT_EQ(num_roots, 1);
+        EXPECT_EQ(roots[0], 1.);
+    }
+
+    {
+        const std::vector<double> coeffs{2., -10., 24., -16.};
+        std::vector<double> roots;
+        const auto num_roots = solveCubic(coeffs, roots);
+
+        EXPECT_EQ(num_roots, 1);
+        EXPECT_NEAR(roots[0], 1., 1e-8);
+    }
+
+    {
+        const std::vector<double> coeffs{2., -10., 16., -8.};
+        std::vector<double> roots;
+        const auto num_roots = solveCubic(coeffs, roots);
+
+        EXPECT_TRUE(num_roots == 2 || num_roots == 3);
+        EXPECT_NEAR(roots[0], 1., 1e-8);
+        EXPECT_NEAR(roots[1], 2., 1e-8);
+        if (num_roots == 3)
+        {
+            EXPECT_NEAR(roots[2], 2., 1e-8);
+        }
+    }
+
+    {
+        const std::vector<double> coeffs{2., -12., 22., -12.};
+        std::vector<double> roots;
+        const auto num_roots = solveCubic(coeffs, roots);
+
+        EXPECT_EQ(num_roots, 3);
+        EXPECT_NEAR(roots[0], 1., 1e-8);
+        EXPECT_NEAR(roots[1], 3., 1e-8);
+        EXPECT_NEAR(roots[2], 2., 1e-8);
+    }
+}
+
+TEST(Core_SolveCubicNormalizedCubic, accuracy)
+{
+    {
+        const std::vector<double> coeffs{-3., 3., -1.};
+        std::vector<double> roots;
+        const auto num_roots = solveCubic(coeffs, roots);
+
+        EXPECT_EQ(num_roots, 1);
+        EXPECT_EQ(roots[0], 1.);
+    }
+
+    {
+        const std::vector<double> coeffs{-5., 12., -8.};
+        std::vector<double> roots;
+        const auto num_roots = solveCubic(coeffs, roots);
+
+        EXPECT_EQ(num_roots, 1);
+        EXPECT_NEAR(roots[0], 1., 1e-8);
+    }
+
+    {
+        const std::vector<double> coeffs{-5., 8., -4.};
+        std::vector<double> roots;
+        const auto num_roots = solveCubic(coeffs, roots);
+
+        EXPECT_TRUE(num_roots == 2 || num_roots == 3);
+        EXPECT_NEAR(roots[0], 1., 1e-8);
+        EXPECT_NEAR(roots[1], 2., 1e-8);
+        if (num_roots == 3)
+        {
+            EXPECT_NEAR(roots[2], 2., 1e-8);
+        }
+    }
+
+    {
+        const std::vector<double> coeffs{-6., 11., -6.};
+        std::vector<double> roots;
+        const auto num_roots = solveCubic(coeffs, roots);
+
+        EXPECT_EQ(num_roots, 3);
+        EXPECT_NEAR(roots[0], 1., 1e-8);
+        EXPECT_NEAR(roots[1], 3., 1e-8);
+        EXPECT_NEAR(roots[2], 2., 1e-8);
+    }
+}
+
+TEST(Core_SolveCubic, regression_27323)
+{
+    {
+        const std::vector<double> coeffs{2e-13, 1, -2, 1};
+        std::vector<double> roots;
+        const auto num_roots = solveCubic(coeffs, roots);
+
+        EXPECT_EQ(num_roots, 1);
+        EXPECT_EQ(roots[0], -5e12 - 2.);
+    }
+
+    {
+        const std::vector<double> coeffs{5e12, -1e13, 5e12};
+        std::vector<double> roots;
+        const auto num_roots = solveCubic(coeffs, roots);
+
+        EXPECT_EQ(num_roots, 1);
+        EXPECT_EQ(roots[0], -5e12 - 2.);
+    }
+}
+
 TEST(Core_SolvePoly, regression_5599)
 {
     // x^4 - x^2 = 0, roots: 1, -1, 0, 0
@@ -2519,7 +2762,7 @@ TEST(Core_CheckRange_INT_MAX, accuracy)
 TEST(Core_CheckRange_INT_MAX1, accuracy)
 {
     cv::Mat m(3, 3, CV_32SC1, cv::Scalar(INT_MAX));
-    ASSERT_TRUE( cv::checkRange(m, true, 0, 0, INT_MAX+1.0f) );
+    ASSERT_TRUE( cv::checkRange(m, true, 0, 0, (float)((double)INT_MAX+1.0f)) );
     ASSERT_TRUE( cv::checkRange(m) );
 }
 
@@ -2690,6 +2933,7 @@ TEST(Core_Invert, accuracy) { Core_InvertTest test; test.safe_run(); }
 TEST(Core_Mahalanobis, accuracy) { Core_MahalanobisTest test; test.safe_run(); }
 TEST(Core_MulTransposed, accuracy) { Core_MulTransposedTest test; test.safe_run(); }
 TEST(Core_Transform, accuracy) { Core_TransformTest test; test.safe_run(); }
+TEST(Core_TransformLarge, accuracy) { Core_TransformLargeTest test; test.safe_run(); }
 TEST(Core_PerspectiveTransform, accuracy) { Core_PerspectiveTransformTest test; test.safe_run(); }
 TEST(Core_Pow, accuracy) { Core_PowTest test; test.safe_run(); }
 TEST(Core_SolveLinearSystem, accuracy) { Core_SolveTest test; test.safe_run(); }
@@ -2748,20 +2992,22 @@ public:
 protected:
     void run(int inVariant)
     {
+        RNG& rng = ts->get_rng();
         int i, iter = 0, N = 0, N0 = 0, K = 0, dims = 0;
         Mat labels;
-        try
+
         {
-            RNG& rng = theRNG();
             const int MAX_DIM=5;
             int MAX_POINTS = 100, maxIter = 100;
             for( iter = 0; iter < maxIter; iter++ )
             {
                 ts->update_context(this, iter, true);
                 dims = rng.uniform(inVariant == MAT_1_N_CDIM ? 2 : 1, MAX_DIM+1);
-                N = rng.uniform(1, MAX_POINTS+1);
+                N = rng.uniform(2, MAX_POINTS+1);
                 N0 = rng.uniform(1, MAX(N/10, 2));
                 K = rng.uniform(1, N+1);
+
+                Mat centers;
 
                 if (inVariant == VECTOR)
                 {
@@ -2775,7 +3021,7 @@ protected:
                         data[i] = data0[rng.uniform(0, N0)];
 
                     kmeans(data, K, labels, TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS, 30, 0),
-                           5, KMEANS_PP_CENTERS);
+                           5, KMEANS_PP_CENTERS, centers);
                 }
                 else
                 {
@@ -2820,27 +3066,23 @@ protected:
                     }
 
                     kmeans(data, K, labels, TermCriteria(TermCriteria::MAX_ITER+TermCriteria::EPS, 30, 0),
-                           5, KMEANS_PP_CENTERS);
+                           5, KMEANS_PP_CENTERS, centers);
                 }
+
+                ASSERT_EQ(centers.rows, K);
+                ASSERT_EQ(labels.rows, N);
 
                 Mat hist(K, 1, CV_32S, Scalar(0));
                 for( i = 0; i < N; i++ )
                 {
                     int l = labels.at<int>(i);
-                    CV_Assert(0 <= l && l < K);
+                    ASSERT_GE(l, 0);
+                    ASSERT_LT(l, K);
                     hist.at<int>(l)++;
                 }
                 for( i = 0; i < K; i++ )
-                    CV_Assert( hist.at<int>(i) != 0 );
+                    ASSERT_GT(hist.at<int>(i), 0);
             }
-        }
-        catch(...)
-        {
-            ts->printf(cvtest::TS::LOG,
-                       "context: iteration=%d, N=%d, N0=%d, K=%d\n",
-                       iter, N, N0, K);
-            std::cout << labels << std::endl;
-            ts->set_failed_test_info(cvtest::TS::FAIL_MISMATCH);
         }
     }
 };
@@ -2858,6 +3100,65 @@ TEST_P(Core_KMeans_InputVariants, singular)
 }
 
 INSTANTIATE_TEST_CASE_P(AllVariants, Core_KMeans_InputVariants, KMeansInputVariant::all());
+
+TEST(Core_KMeans, compactness)
+{
+    const int N = 1024;
+    const int attempts = 4;
+    const TermCriteria crit = TermCriteria(TermCriteria::COUNT, 5, 0); // low number of iterations
+    cvtest::TS& ts = *cvtest::TS::ptr();
+    for (int K = 1; K <= N; K *= 2)
+    {
+        Mat data(N, 1, CV_32FC2);
+        cvtest::randUni(ts.get_rng(), data, Scalar(-200, -200), Scalar(200, 200));
+        Mat labels, centers;
+        double compactness = kmeans(data, K, labels, crit, attempts, KMEANS_PP_CENTERS, centers);
+        centers = centers.reshape(2);
+        EXPECT_EQ(labels.rows, N);
+        EXPECT_EQ(centers.rows, K);
+        EXPECT_GE(compactness, 0.0);
+        double expected = 0.0;
+        for (int i = 0; i < N; ++i)
+        {
+            int l = labels.at<int>(i);
+            Point2f d = data.at<Point2f>(i) - centers.at<Point2f>(l);
+            expected += d.x * d.x + d.y * d.y;
+        }
+        EXPECT_NEAR(expected, compactness, expected * 1e-8);
+        if (K == N)
+        {
+            EXPECT_DOUBLE_EQ(compactness, 0.0);
+        }
+    }
+}
+
+TEST(Core_KMeans, bad_input)
+{
+    const int N = 100;
+    const int attempts = 4;
+    const TermCriteria crit = TermCriteria(TermCriteria::COUNT, 5, 0); // low number of iterations
+    const int K = 3;
+    Mat data(N, 1, CV_32FC2);
+    cv::randu(data, Scalar(-200, -200), Scalar(200, 200));
+    {
+        SCOPED_TRACE("Huge value");
+        data.at<Vec2f>(10, 0) = Vec2f(1e20f, 0);
+        Mat labels, centers;
+        EXPECT_ANY_THROW(kmeans(data, K, labels, crit, attempts, KMEANS_PP_CENTERS, centers));
+    }
+    {
+        SCOPED_TRACE("Negative value");
+        data.at<Vec2f>(10, 0) = Vec2f(0, -1e20f);
+        Mat labels, centers;
+        EXPECT_ANY_THROW(kmeans(data, K, labels, crit, attempts, KMEANS_PP_CENTERS, centers));
+    }
+    {
+        SCOPED_TRACE("NaN");
+        data.at<Vec2f>(10, 0) = Vec2f(0, std::numeric_limits<float>::quiet_NaN());
+        Mat labels, centers;
+        EXPECT_ANY_THROW(kmeans(data, K, labels, crit, attempts, KMEANS_PP_CENTERS, centers));
+    }
+}
 
 TEST(CovariationMatrixVectorOfMat, accuracy)
 {
@@ -2900,7 +3201,7 @@ TEST(CovariationMatrixVectorOfMatWithMean, accuracy)
     cv::randu(src,cv::Scalar(-128), cv::Scalar(128));
     cv::Mat goldMean;
 
-    cv::reduce(src,goldMean,0 ,CV_REDUCE_AVG, CV_32F);
+    cv::reduce(src, goldMean, 0, REDUCE_AVG, CV_32F);
 
     cv::calcCovarMatrix(src,gold,goldMean,singleMatFlags,CV_32F);
 
@@ -2977,4 +3278,929 @@ TEST(Core_Pow, special)
     }
 }
 
+TEST(Core_Cholesky, accuracy64f)
+{
+    const int n = 5;
+    Mat A(n, n, CV_64F), refA;
+    Mat mean(1, 1, CV_64F);
+    *mean.ptr<double>() = 10.0;
+    Mat dev(1, 1, CV_64F);
+    *dev.ptr<double>() = 10.0;
+    RNG rng(10);
+    rng.fill(A, RNG::NORMAL, mean, dev);
+    A = A*A.t();
+    A.copyTo(refA);
+    Cholesky(A.ptr<double>(), A.step, n, NULL, 0, 0);
+
+   for (int i = 0; i < A.rows; i++)
+       for (int j = i + 1; j < A.cols; j++)
+           A.at<double>(i, j) = 0.0;
+   EXPECT_LE(cvtest::norm(refA, A*A.t(), CV_RELATIVE_L2), FLT_EPSILON);
+}
+
+TEST(Core_QR_Solver, accuracy64f)
+{
+    int m = 20, n = 18;
+    Mat A(m, m, CV_64F);
+    Mat B(m, n, CV_64F);
+    Mat mean(1, 1, CV_64F);
+    *mean.ptr<double>() = 10.0;
+    Mat dev(1, 1, CV_64F);
+    *dev.ptr<double>() = 10.0;
+    RNG rng(10);
+    rng.fill(A, RNG::NORMAL, mean, dev);
+    rng.fill(B, RNG::NORMAL, mean, dev);
+    A = A*A.t();
+    Mat solutionQR;
+
+    //solve system with square matrix
+    solve(A, B, solutionQR, DECOMP_QR);
+    EXPECT_LE(cvtest::norm(A*solutionQR, B, CV_RELATIVE_L2), FLT_EPSILON);
+
+    A = Mat(m, n, CV_64F);
+    B = Mat(m, n, CV_64F);
+    rng.fill(A, RNG::NORMAL, mean, dev);
+    rng.fill(B, RNG::NORMAL, mean, dev);
+
+    //solve normal system
+    solve(A, B, solutionQR, DECOMP_QR | DECOMP_NORMAL);
+    EXPECT_LE(cvtest::norm(A.t()*(A*solutionQR), A.t()*B, CV_RELATIVE_L2), FLT_EPSILON);
+
+    //solve overdeterminated system as a least squares problem
+    Mat solutionSVD;
+    solve(A, B, solutionQR, DECOMP_QR);
+    solve(A, B, solutionSVD, DECOMP_SVD);
+    EXPECT_LE(cvtest::norm(solutionQR, solutionSVD, CV_RELATIVE_L2), FLT_EPSILON);
+
+    //solve system with singular matrix
+    A = Mat(10, 10, CV_64F);
+    B = Mat(10, 1, CV_64F);
+    rng.fill(A, RNG::NORMAL, mean, dev);
+    rng.fill(B, RNG::NORMAL, mean, dev);
+    for (int i = 0; i < A.cols; i++)
+      A.at<double>(0, i) = A.at<double>(1, i);
+    ASSERT_FALSE(solve(A, B, solutionQR, DECOMP_QR));
+}
+
+TEST(Core_Solve, regression_11888)
+{
+    cv::Matx<float, 3, 2> A(
+        2, 1,
+        3, 1,
+        6, 1
+    );
+    cv::Vec<float, 3> b(4, 5, 7);
+    cv::Matx<float, 2, 1> xQR = A.solve(b, DECOMP_QR);
+    cv::Matx<float, 2, 1> xSVD = A.solve(b, DECOMP_SVD);
+    EXPECT_LE(cvtest::norm(xQR, xSVD, NORM_L2 | NORM_RELATIVE), 0.001);
+    cv::Matx<float, 2, 3> iA = A.inv(DECOMP_SVD);
+    EXPECT_LE(cvtest::norm(iA*A, Matx<float, 2, 2>::eye(), NORM_L2), 1e-3);
+    EXPECT_ANY_THROW({
+       /*cv::Matx<float, 2, 1> xLU =*/ A.solve(b, DECOMP_LU);
+       std::cout << "FATAL ERROR" << std::endl;
+    });
+}
+
+TEST(Core_Solve, Matx_2_2)
+{
+    cv::Matx<float, 2, 2> A(
+        2, 1,
+        1, 1
+    );
+    cv::Vec<float, 2> b(4, 5);
+    cv::Matx<float, 2, 1> xLU = A.solve(b, DECOMP_LU);
+    cv::Matx<float, 2, 1> xQR = A.solve(b, DECOMP_QR);
+    cv::Matx<float, 2, 1> xSVD = A.solve(b, DECOMP_SVD);
+    EXPECT_LE(cvtest::norm(xQR, xSVD, NORM_L2 | NORM_RELATIVE), 1e-3);
+    EXPECT_LE(cvtest::norm(xQR, xLU, NORM_L2 | NORM_RELATIVE), 1e-3);
+    cv::Matx<float, 2, 2> iA = A.inv(DECOMP_SVD);
+    EXPECT_LE(cvtest::norm(iA*A, Matx<float, 2, 2>::eye(), NORM_L2), 1e-3);
+}
+TEST(Core_Solve, Matx_3_3)
+{
+    cv::Matx<float, 3, 3> A(
+        2, 1, 0,
+        0, 1, 1,
+        1, 0, 1
+    );
+    cv::Vec<float, 3> b(4, 5, 6);
+    cv::Matx<float, 3, 1> xLU = A.solve(b, DECOMP_LU);
+    cv::Matx<float, 3, 1> xQR = A.solve(b, DECOMP_QR);
+    cv::Matx<float, 3, 1> xSVD = A.solve(b, DECOMP_SVD);
+    EXPECT_LE(cvtest::norm(xQR, xSVD, NORM_L2 | NORM_RELATIVE), 1e-3);
+    EXPECT_LE(cvtest::norm(xQR, xLU, NORM_L2 | NORM_RELATIVE), 1e-3);
+    cv::Matx<float, 3, 3> iA = A.inv(DECOMP_SVD);
+    EXPECT_LE(cvtest::norm(iA*A, Matx<float, 3, 3>::eye(), NORM_L2), 1e-3);
+}
+
+TEST(Core_Solve, Matx_4_4)
+{
+    cv::Matx<float, 4, 4> A(
+        2, 1, 0, 4,
+        0, 1, 1, 3,
+        1, 0, 1, 2,
+        2, 2, 0, 1
+    );
+    cv::Vec<float, 4> b(4, 5, 6, 7);
+    cv::Matx<float, 4, 1> xLU = A.solve(b, DECOMP_LU);
+    cv::Matx<float, 4, 1> xQR = A.solve(b, DECOMP_QR);
+    cv::Matx<float, 4, 1> xSVD = A.solve(b, DECOMP_SVD);
+    EXPECT_LE(cvtest::norm(xQR, xSVD, NORM_L2 | NORM_RELATIVE), 1e-3);
+    EXPECT_LE(cvtest::norm(xQR, xLU, NORM_L2 | NORM_RELATIVE), 1e-3);
+    cv::Matx<float, 4, 4> iA = A.inv(DECOMP_SVD);
+    EXPECT_LE(cvtest::norm(iA*A, Matx<float, 4, 4>::eye(), NORM_L2), 1e-3);
+}
+
+softdouble naiveExp(softdouble x)
+{
+    int exponent = x.getExp();
+    int sign = x.getSign() ? -1 : 1;
+    if(sign < 0 && exponent >= 10) return softdouble::inf();
+    softdouble mantissa = x.getFrac();
+    //Taylor series for mantissa
+    uint64 fac[20] = {1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800,
+                    39916800, 479001600, 6227020800, 87178291200, 1307674368000,
+                    20922789888000, 355687428096000, 6402373705728000, 121645100408832000,
+                    2432902008176640000};
+    softdouble sum = softdouble::one();
+    // 21! > (2 ** 64)
+    for(int i = 20; i > 0; i--)
+        sum += pow(mantissa, softdouble(i))/softdouble(fac[i-1]);
+    if(exponent >= 0)
+    {
+        exponent = (1 << exponent);
+        return pow(sum, softdouble(exponent*sign));
+    }
+    else
+    {
+        if(sign < 0) sum = softdouble::one()/sum;
+        exponent = -exponent;
+        for(int j = 0; j < exponent; j++)
+            sum = sqrt(sum);
+        return sum;
+    }
+}
+
+static float makeFP32(int sign, int exponent, int significand)
+{
+    Cv32suf x;
+    x.u = (unsigned)(((sign & 1) << 31) | ((exponent&255) << 23) | (significand & 0x7fffff));
+    return x.f;
+}
+
+static float makeRandomFP32(RNG& rng, int sign, int exprange)
+{
+    if( sign == -1 )
+        sign = rng() % 2;
+    int exponent = rng() % exprange;
+    int significand = rng() % (1 << 23);
+    return makeFP32(sign, exponent, significand);
+}
+
+TEST(Core_SoftFloat, exp32)
+{
+    //special cases
+    EXPECT_TRUE(exp( softfloat::nan()).isNaN());
+    EXPECT_TRUE(exp( softfloat::inf()).isInf());
+    EXPECT_EQ  (exp(-softfloat::inf()), softfloat::zero());
+
+    //ln(FLT_MAX) ~ 88.722
+    const softfloat ln_max(88.722f);
+    vector<softfloat> inputs;
+    RNG rng(0);
+    inputs.push_back(softfloat::zero());
+    inputs.push_back(softfloat::one());
+    inputs.push_back(softfloat::min());
+    for(int i = 0; i < 50000; i++)
+    {
+        float x = makeRandomFP32(rng, -1, 10+127 //bigger exponent will produce inf
+                                 );
+        if(softfloat(x) > ln_max)
+            x = rng.uniform(0.0f, (float)ln_max);
+        inputs.push_back(softfloat(x));
+    }
+
+    for(size_t i = 0; i < inputs.size(); i++)
+    {
+        softfloat x(inputs[i]);
+        softfloat y = exp(x);
+        ASSERT_TRUE(!y.isNaN());
+        ASSERT_TRUE(!y.isInf());
+        ASSERT_GE(y, softfloat::zero());
+        softfloat ygood = naiveExp(x);
+        softfloat diff = abs(ygood - y);
+        const softfloat eps = softfloat::eps();
+        if(diff > eps)
+        {
+            ASSERT_LE(diff/max(abs(y), abs(ygood)), eps);
+        }
+    }
+}
+
+TEST(Core_SoftFloat, exp64)
+{
+    //special cases
+    EXPECT_TRUE(exp( softdouble::nan()).isNaN());
+    EXPECT_TRUE(exp( softdouble::inf()).isInf());
+    EXPECT_EQ  (exp(-softdouble::inf()), softdouble::zero());
+
+    //ln(DBL_MAX) ~ 709.7827
+    const softdouble ln_max(709.7827);
+    vector<softdouble> inputs;
+    RNG rng(0);
+    inputs.push_back(softdouble::zero());
+    inputs.push_back(softdouble::one());
+    inputs.push_back(softdouble::min());
+    for(int i = 0; i < 50000; i++)
+    {
+        Cv64suf x;
+        uint64 sign = rng() % 2;
+        uint64 exponent = rng() % (10 + 1023); //bigger exponent will produce inf
+        uint64 mantissa = (((long long int)((unsigned int)(rng)) << 32 ) | (unsigned int)(rng)) & ((1LL << 52) - 1);
+        x.u = (sign << 63) | (exponent << 52) | mantissa;
+        if(softdouble(x.f) > ln_max)
+            x.f = rng.uniform(0.0, (double)ln_max);
+        inputs.push_back(softdouble(x.f));
+    }
+
+    for(size_t i = 0; i < inputs.size(); i++)
+    {
+        softdouble x(inputs[i]);
+        softdouble y = exp(x);
+        ASSERT_TRUE(!y.isNaN());
+        ASSERT_TRUE(!y.isInf());
+        ASSERT_GE(y, softdouble::zero());
+        softdouble ygood = naiveExp(x);
+        softdouble diff = abs(ygood - y);
+        const softdouble eps = softdouble::eps();
+        if(diff > eps)
+        {
+            ASSERT_LE(diff/max(abs(y), abs(ygood)), softdouble(8192)*eps);
+        }
+    }
+}
+
+TEST(Core_SoftFloat, log32)
+{
+    const int nValues = 50000;
+    RNG rng(0);
+    //special cases
+    EXPECT_TRUE(log(softfloat::nan()).isNaN());
+    for(int i = 0; i < nValues; i++)
+    {
+        softfloat x32(makeRandomFP32(rng, 1, 255));
+        ASSERT_TRUE(log(x32).isNaN());
+    }
+    EXPECT_TRUE(log(softfloat::zero()).isInf());
+
+    vector<softfloat> inputs;
+
+    inputs.push_back(softfloat::one());
+    inputs.push_back(softfloat(exp(softfloat::one())));
+    inputs.push_back(softfloat::min());
+    inputs.push_back(softfloat::max());
+    for(int i = 0; i < nValues; i++)
+    {
+        inputs.push_back(softfloat(makeRandomFP32(rng, 0, 255)));
+    }
+
+    for(size_t i = 0; i < inputs.size(); i++)
+    {
+        softfloat x(inputs[i]);
+        softfloat y = log(x);
+        ASSERT_TRUE(!y.isNaN());
+        ASSERT_TRUE(!y.isInf());
+        softfloat ex = exp(y);
+        softfloat diff = abs(ex - x);
+        // 88 is approx estimate of max exp() argument
+        ASSERT_TRUE(!ex.isInf() || (y > softfloat(88)));
+        const softfloat eps2 = softfloat().setExp(-17);
+        if(!ex.isInf() && diff > softfloat::eps())
+        {
+            ASSERT_LT(diff/max(abs(ex), x), eps2);
+        }
+    }
+}
+
+TEST(Core_SoftFloat, log64)
+{
+    const int nValues = 50000;
+    RNG rng(0);
+    //special cases
+    EXPECT_TRUE(log(softdouble::nan()).isNaN());
+    for(int i = 0; i < nValues; i++)
+    {
+        Cv64suf x;
+        uint64 sign = 1;
+        uint64 exponent = rng() % 2047;
+        uint64 mantissa = (((long long int)((unsigned int)(rng)) << 32 ) | (unsigned int)(rng)) & ((1LL << 52) - 1);
+        x.u = (sign << 63) | (exponent << 52) | mantissa;
+        softdouble x64(x.f);
+        ASSERT_TRUE(log(x64).isNaN());
+    }
+    EXPECT_TRUE(log(softdouble::zero()).isInf());
+
+    vector<softdouble> inputs;
+    inputs.push_back(softdouble::one());
+    inputs.push_back(exp(softdouble::one()));
+    inputs.push_back(softdouble::min());
+    inputs.push_back(softdouble::max());
+    for(int i = 0; i < nValues; i++)
+    {
+        Cv64suf x;
+        uint64 sign = 0;
+        uint64 exponent = rng() % 2047;
+        uint64 mantissa = (((long long int)((unsigned int)(rng)) << 32 ) | (unsigned int)(rng)) & ((1LL << 52) - 1);
+        x.u = (sign << 63) | (exponent << 52) | mantissa;
+        inputs.push_back(softdouble(x.f));
+    }
+
+    for(size_t i = 0; i < inputs.size(); i++)
+    {
+        softdouble x(inputs[i]);
+        softdouble y = log(x);
+        ASSERT_TRUE(!y.isNaN());
+        ASSERT_TRUE(!y.isInf());
+        softdouble ex = exp(y);
+        softdouble diff = abs(ex - x);
+        // 700 is approx estimate of max exp() argument
+        ASSERT_TRUE(!ex.isInf() || (y > softdouble(700)));
+        const softdouble eps2 = softdouble().setExp(-41);
+        if(!ex.isInf() && diff > softdouble::eps())
+        {
+            ASSERT_LT(diff/max(abs(ex), x), eps2);
+        }
+    }
+}
+
+TEST(Core_SoftFloat, cbrt32)
+{
+    vector<softfloat> inputs;
+    RNG rng(0);
+    inputs.push_back(softfloat::zero());
+    inputs.push_back(softfloat::one());
+    inputs.push_back(softfloat::max());
+    inputs.push_back(softfloat::min());
+    for(int i = 0; i < 50000; i++)
+    {
+        inputs.push_back(softfloat(makeRandomFP32(rng, -1, 255)));
+    }
+
+    for(size_t i = 0; i < inputs.size(); i++)
+    {
+        softfloat x(inputs[i]);
+        softfloat y = cbrt(x);
+        ASSERT_TRUE(!y.isNaN());
+        ASSERT_TRUE(!y.isInf());
+        softfloat cube = y*y*y;
+        softfloat diff = abs(x - cube);
+        const softfloat eps = softfloat::eps();
+        if(diff > eps)
+        {
+            ASSERT_LT(diff/max(abs(x), abs(cube)), softfloat(4)*eps);
+        }
+    }
+}
+
+TEST(Core_SoftFloat, pow32)
+{
+    const softfloat zero = softfloat::zero(), one = softfloat::one();
+    const softfloat  inf = softfloat::inf(),  nan = softfloat::nan();
+    const size_t nValues = 5000;
+    RNG rng(0);
+    //x ** nan == nan
+    for(size_t i = 0; i < nValues; i++)
+    {
+        Cv32suf x;
+        x.u = rng();
+        ASSERT_TRUE(pow(softfloat(x.f), nan).isNaN());
+    }
+    //x ** inf check
+    for(size_t i = 0; i < nValues; i++)
+    {
+        Cv32suf x;
+        x.u = rng();
+        softfloat x32(x.f);
+        softfloat ax = abs(x32);
+        if(x32.isNaN())
+        {
+            ASSERT_TRUE(pow(x32, inf).isNaN());
+        }
+        if(ax > one)
+        {
+            ASSERT_TRUE(pow(x32,  inf).isInf());
+            ASSERT_EQ  (pow(x32, -inf), zero);
+        }
+        if(ax < one && ax > zero)
+        {
+            ASSERT_TRUE(pow(x32, -inf).isInf());
+            ASSERT_EQ  (pow(x32,  inf), zero);
+        }
+    }
+    //+-1 ** inf
+    EXPECT_TRUE(pow( one, inf).isNaN());
+    EXPECT_TRUE(pow(-one, inf).isNaN());
+
+    // x ** 0 == 1
+    for(size_t i = 0; i < nValues; i++)
+    {
+        Cv32suf x;
+        x.u = rng();
+        ASSERT_EQ(pow(softfloat(x.f), zero), one);
+    }
+
+    // x ** 1 == x
+    for(size_t i = 0; i < nValues; i++)
+    {
+        Cv32suf x;
+        x.u = rng();
+        softfloat x32(x.f);
+        softfloat val = pow(x32, one);
+        // don't compare val and x32 directly because x != x if x is nan
+        ASSERT_EQ(val.v, x32.v);
+    }
+
+    // nan ** y == nan, if y != 0
+    for(size_t i = 0; i < nValues; i++)
+    {
+        unsigned u = rng();
+        softfloat x32 = softfloat::fromRaw(u);
+        x32 = (x32 != softfloat::zero()) ? x32 : softfloat::min();
+        ASSERT_TRUE(pow(nan, x32).isNaN());
+    }
+    // nan ** 0 == 1
+    EXPECT_EQ(pow(nan, zero), one);
+
+    // inf ** y == 0, if y < 0
+    // inf ** y == inf, if y > 0
+    for(size_t i = 0; i < nValues; i++)
+    {
+        float x = makeRandomFP32(rng, 0, 255);
+        softfloat x32 = softfloat(x);
+        ASSERT_TRUE(pow( inf, x32).isInf());
+        ASSERT_TRUE(pow(-inf, x32).isInf());
+        ASSERT_EQ(pow( inf, -x32), zero);
+        ASSERT_EQ(pow(-inf, -x32), zero);
+    }
+
+    // x ** y ==   (-x) ** y, if y % 2 == 0
+    // x ** y == - (-x) ** y, if y % 2 == 1
+    // x ** y == nan, if x < 0 and y is not integer
+    for(size_t i = 0; i < nValues; i++)
+    {
+        softfloat x32(makeRandomFP32(rng, 1, 255));
+        softfloat y32(makeRandomFP32(rng, -1, 23+127 //bigger exponent produces integer numbers only
+                                     ));
+        int yi = cvRound(y32);
+        if(y32 != softfloat(yi))
+            ASSERT_TRUE(pow(x32, y32).isNaN());
+        else if(yi % 2)
+            ASSERT_EQ(pow(-x32, y32), -pow(x32, y32));
+        else
+            ASSERT_EQ(pow(-x32, y32),  pow(x32, y32));
+    }
+
+    // (0 ** 0) == 1
+    EXPECT_EQ(pow(zero, zero), one);
+
+    // 0 ** y == inf, if y < 0
+    // 0 ** y == 0, if y > 0
+    for(size_t i = 0; i < nValues; i++)
+    {
+        softfloat x32(makeRandomFP32(rng, 0, 255));
+        ASSERT_TRUE(pow(zero, -x32).isInf());
+        if(x32 != one)
+        {
+            ASSERT_EQ(pow(zero, x32), zero);
+        }
+    }
+}
+
+TEST(Core_SoftFloat, pow64)
+{
+    const softdouble zero = softdouble::zero(), one = softdouble::one();
+    const softdouble  inf = softdouble::inf(),  nan = softdouble::nan();
+
+    const size_t nValues = 5000;
+    RNG rng(0);
+
+    //x ** nan == nan
+    for(size_t i = 0; i < nValues; i++)
+    {
+        Cv64suf x;
+        x.u = ((long long int)((unsigned int)(rng)) << 32 ) | (unsigned int)(rng);
+        ASSERT_TRUE(pow(softdouble(x.f), nan).isNaN());
+    }
+    //x ** inf check
+    for(size_t i = 0; i < nValues; i++)
+    {
+        Cv64suf x;
+        x.u = ((long long int)((unsigned int)(rng)) << 32 ) | (unsigned int)(rng);
+        softdouble x64(x.f);
+        softdouble ax = abs(x64);
+        if(x64.isNaN())
+        {
+            ASSERT_TRUE(pow(x64, inf).isNaN());
+        }
+        if(ax > one)
+        {
+            ASSERT_TRUE(pow(x64, inf).isInf());
+            ASSERT_EQ(pow(x64, -inf), zero);
+        }
+        if(ax < one && ax > zero)
+        {
+            ASSERT_TRUE(pow(x64, -inf).isInf());
+            ASSERT_EQ(pow(x64, inf), zero);
+        }
+    }
+    //+-1 ** inf
+    EXPECT_TRUE(pow( one, inf).isNaN());
+    EXPECT_TRUE(pow(-one, inf).isNaN());
+
+    // x ** 0 == 1
+    for(size_t i = 0; i < nValues; i++)
+    {
+        Cv64suf x;
+        x.u = ((long long int)((unsigned int)(rng)) << 32 ) | (unsigned int)(rng);
+        ASSERT_EQ(pow(softdouble(x.f), zero), one);
+    }
+
+    // x ** 1 == x
+    for(size_t i = 0; i < nValues; i++)
+    {
+        Cv64suf x;
+        x.u = ((long long int)((unsigned int)(rng)) << 32 ) | (unsigned int)(rng);
+        softdouble x64(x.f);
+        softdouble val = pow(x64, one);
+        // don't compare val and x64 directly because x != x if x is nan
+        ASSERT_EQ(val.v, x64.v);
+    }
+
+    // nan ** y == nan, if y != 0
+    for(size_t i = 0; i < nValues; i++)
+    {
+        uint64 u = ((long long int)((unsigned int)(rng)) << 32 ) | (unsigned int)(rng);
+        softdouble x64 = softdouble::fromRaw(u);
+        x64 = (x64 != softdouble::zero()) ? x64 : softdouble::min();
+        ASSERT_TRUE(pow(nan, x64).isNaN());
+    }
+    // nan ** 0 == 1
+    EXPECT_EQ(pow(nan, zero), one);
+
+    // inf ** y == 0, if y < 0
+    // inf ** y == inf, if y > 0
+    for(size_t i = 0; i < nValues; i++)
+    {
+        Cv64suf x;
+        uint64 sign = 0;
+        uint64 exponent = rng() % 2047;
+        uint64 mantissa = (((long long int)((unsigned int)(rng)) << 32 ) | (unsigned int)(rng)) & ((1LL << 52) - 1);
+        x.u = (sign << 63) | (exponent << 52) | mantissa;
+        softdouble x64(x.f);
+        ASSERT_TRUE(pow( inf, x64).isInf());
+        ASSERT_TRUE(pow(-inf, x64).isInf());
+        ASSERT_EQ(pow( inf, -x64), zero);
+        ASSERT_EQ(pow(-inf, -x64), zero);
+    }
+
+    // x ** y ==   (-x) ** y, if y % 2 == 0
+    // x ** y == - (-x) ** y, if y % 2 == 1
+    // x ** y == nan, if x < 0 and y is not integer
+    for(size_t i = 0; i < nValues; i++)
+    {
+        Cv64suf x;
+        uint64 sign = 1;
+        uint64 exponent = rng() % 2047;
+        uint64 mantissa = (((long long int)((unsigned int)(rng)) << 32 ) | (unsigned int)(rng)) & ((1LL << 52) - 1);
+        x.u = (sign << 63) | (exponent << 52) | mantissa;
+        softdouble x64(x.f);
+        Cv64suf y;
+        sign = rng() % 2;
+        //bigger exponent produces integer numbers only
+        //exponent = rng() % (52 + 1023);
+        //bigger exponent is too big
+        exponent = rng() % (23 + 1023);
+        mantissa = (((long long int)((unsigned int)(rng)) << 32 ) | (unsigned int)(rng)) & ((1LL << 52) - 1);
+        y.u = (sign << 63) | (exponent << 52) | mantissa;
+        softdouble y64(y.f);
+        uint64 yi = cvRound(y64);
+        if(y64 != softdouble(yi))
+            ASSERT_TRUE(pow(x64, y64).isNaN());
+        else if(yi % 2)
+            ASSERT_EQ(pow(-x64, y64), -pow(x64, y64));
+        else
+            ASSERT_EQ(pow(-x64, y64),  pow(x64, y64));
+    }
+
+    // (0 ** 0) == 1
+    EXPECT_EQ(pow(zero, zero), one);
+
+    // 0 ** y == inf, if y < 0
+    // 0 ** y == 0, if y > 0
+    for(size_t i = 0; i < nValues; i++)
+    {
+        Cv64suf x;
+        uint64 sign = 0;
+        uint64 exponent = rng() % 2047;
+        uint64 mantissa = (((long long int)((unsigned int)(rng)) << 32 ) | (unsigned int)(rng)) & ((1LL << 52) - 1);
+        x.u = (sign << 63) | (exponent << 52) | mantissa;
+        softdouble x64(x.f);
+
+        ASSERT_TRUE(pow(zero, -x64).isInf());
+        if(x64 != one)
+        {
+            ASSERT_EQ(pow(zero, x64), zero);
+        }
+    }
+}
+
+TEST(Core_SoftFloat, sincos64)
+{
+    static const softdouble
+            two = softdouble(2), three = softdouble(3),
+            half = softdouble::one()/two,
+            zero = softdouble::zero(), one = softdouble::one(),
+            pi = softdouble::pi(), piby2 = pi/two, eps = softdouble::eps(),
+            sin45 = sqrt(two)/two, sin60 = sqrt(three)/two;
+
+    softdouble vstdAngles[] =
+    //x, sin(x), cos(x)
+    {
+            zero,              zero,   one,
+            pi/softdouble(6),  half, sin60,
+            pi/softdouble(4), sin45, sin45,
+            pi/three, sin60,  half,
+    };
+    vector<softdouble> stdAngles;
+    stdAngles.assign(vstdAngles, vstdAngles + 3*4);
+
+    static const softdouble stdEps = eps.setExp(-39);
+    const size_t nStdValues = 5000;
+    for(size_t i = 0; i < nStdValues; i++)
+    {
+        for(size_t k = 0; k < stdAngles.size()/3; k++)
+        {
+            softdouble x = stdAngles[k*3] + pi*softdouble(2*((int)i-(int)nStdValues/2));
+            softdouble s = stdAngles[k*3+1];
+            softdouble c = stdAngles[k*3+2];
+            ASSERT_LE(abs(sin(x) - s), stdEps);
+            ASSERT_LE(abs(cos(x) - c), stdEps);
+            //sin(x+pi/2) = cos(x)
+            ASSERT_LE(abs(sin(x + piby2) - c), stdEps);
+            //sin(x+pi) = -sin(x)
+            ASSERT_LE(abs(sin(x + pi) + s), stdEps);
+            //cos(x+pi/2) = -sin(x)
+            ASSERT_LE(abs(cos(x+piby2) + s), stdEps);
+            //cos(x+pi) = -cos(x)
+            ASSERT_LE(abs(cos(x+pi) + c), stdEps);
+        }
+    }
+
+    // sin(x) is NaN iff x ix NaN or Inf
+    EXPECT_TRUE(sin(softdouble::inf()).isNaN());
+    EXPECT_TRUE(sin(softdouble::nan()).isNaN());
+
+    vector<int> exponents;
+    exponents.push_back(0);
+    for(int i = 1; i < 52; i++)
+    {
+        exponents.push_back( i);
+        exponents.push_back(-i);
+    }
+    exponents.push_back(256); exponents.push_back(-256);
+    exponents.push_back(512); exponents.push_back(-512);
+    exponents.push_back(1022); exponents.push_back(-1022);
+
+    vector<softdouble> inputs;
+    RNG rng(0);
+
+    static const size_t nValues = 1 << 18;
+    for(size_t i = 0; i < nValues; i++)
+    {
+        softdouble x;
+        uint64 mantissa = (((long long int)((unsigned int)(rng)) << 32 ) | (unsigned int)(rng)) & ((1LL << 52) - 1);
+        x.v = mantissa;
+        x = x.setSign((rng() % 2) != 0);
+        x = x.setExp(exponents[rng() % exponents.size()]);
+        inputs.push_back(x);
+    }
+
+    for(size_t i = 0; i < inputs.size(); i++)
+    {
+        softdouble x = inputs[i];
+
+        int xexp = x.getExp();
+        softdouble randEps = eps.setExp(std::max(xexp-52, -46));
+        softdouble sx = sin(x);
+        softdouble cx = cos(x);
+        ASSERT_FALSE(sx.isInf()); ASSERT_FALSE(cx.isInf());
+        ASSERT_FALSE(sx.isNaN()); ASSERT_FALSE(cx.isNaN());
+        ASSERT_LE(abs(sx), one); ASSERT_LE(abs(cx), one);
+        ASSERT_LE(abs((sx*sx + cx*cx) - one), eps);
+        ASSERT_LE(abs(sin(x*two) - two*sx*cx), randEps);
+        ASSERT_LE(abs(cos(x*two) - (cx*cx - sx*sx)), randEps);
+        ASSERT_LE(abs(sin(-x) + sx), eps);
+        ASSERT_LE(abs(cos(-x) - cx), eps);
+        ASSERT_LE(abs(sin(x + piby2) - cx), randEps);
+        ASSERT_LE(abs(sin(x + pi) + sx), randEps);
+        ASSERT_LE(abs(cos(x+piby2) + sx), randEps);
+        ASSERT_LE(abs(cos(x+pi) + cx), randEps);
+    }
+}
+
+TEST(Core_SoftFloat, CvRound)
+{
+    struct
+    {
+        uint64_t inVal;
+        int64_t out64;
+        int32_t out32;
+    } _values[] =
+    {
+        { 0x0123456789abcdefU,                     0,             0 }, // 3.51270056408850369812238561681E-303
+        { 0x0000000000000000U,                     0,             0 }, // 0
+        { 0x8000000000000000U,                     0,             0 }, // -0
+        { 0x000123456789abcdU,                     0,             0 }, // 1.5822747438273385725152200433E-309
+        { 0x800123456789abcdU,                     0,             0 }, // -1.5822747438273385725152200433E-309
+        { 0x7ff0000000000000U,             INT64_MAX,     INT32_MAX }, // +inf
+        { 0xfff0000000000000U,             INT64_MIN,     INT32_MIN }, // -inf
+        { 0x7ff0000000000001U,             INT64_MAX,     INT32_MAX }, // nan(casts to maximum value)
+        { 0xfff0000000000001U,             INT64_MAX,     INT32_MAX }, // nan(casts to maximum value)
+        { 0x7ffa5a5a5a5a5a5aU,             INT64_MAX,     INT32_MAX }, // nan(casts to maximum value)
+        { 0xfffa5a5a5a5a5a5aU,             INT64_MAX,     INT32_MAX }, // nan(casts to maximum value)
+        { 0x7fe123456789abcdU,             INT64_MAX,     INT32_MAX }, // 9.627645455595956656406699747E307
+        { 0xffe123456789abcdU,             INT64_MIN,     INT32_MIN }, // -9.627645455595956656406699747E307
+        { 0x43ffffffffffffffU,             INT64_MAX,     INT32_MAX }, // (2^53-1)*2^12
+        { 0xc3ffffffffffffffU,             INT64_MIN,     INT32_MIN }, // -(2^53-1)*2^12
+        { 0x43f0000000000000U,             INT64_MAX,     INT32_MAX }, // 2^64
+        { 0xc3f0000000000000U,             INT64_MIN,     INT32_MIN }, // -2^64
+        { 0x43efffffffffffffU,             INT64_MAX,     INT32_MAX }, // (2^53-1)*2^11
+        { 0xc3efffffffffffffU,             INT64_MIN,     INT32_MIN }, // -(2^53-1)*2^11
+        { 0x43e0000000000000U,             INT64_MAX,     INT32_MAX }, // 2^63
+        { 0xc3e0000000000000U, -0x7fffffffffffffff-1,     INT32_MIN }, // -2^63
+        { 0x43dfffffffffffffU,    0x7ffffffffffffc00,     INT32_MAX }, // (2^53-1)*2^10
+        { 0xc3dfffffffffffffU,   -0x7ffffffffffffc00,     INT32_MIN }, // -(2^53-1)*2^10
+        { 0x433fffffffffffffU,      0x1fffffffffffff,     INT32_MAX }, // (2^53-1)
+        { 0xc33fffffffffffffU,     -0x1fffffffffffff,     INT32_MIN }, // -(2^53-1)
+        { 0x432fffffffffffffU,      0x10000000000000,     INT32_MAX }, // (2^52-1) + 0.5
+        { 0xc32fffffffffffffU,     -0x10000000000000,     INT32_MIN }, // -(2^52-1) - 0.5
+        { 0x431fffffffffffffU,       0x8000000000000,     INT32_MAX }, // (2^51-1) + 0.75
+        { 0xc31fffffffffffffU,      -0x8000000000000,     INT32_MIN }, // -(2^51-1) - 0.75
+        { 0x431ffffffffffffeU,       0x8000000000000,     INT32_MAX }, // (2^51-1) + 0.5
+        { 0xc31ffffffffffffeU,      -0x8000000000000,     INT32_MIN }, // -(2^51-1) - 0.5
+        { 0x431ffffffffffffdU,       0x7ffffffffffff,     INT32_MAX }, // (2^51-1) + 0.25
+        { 0xc31ffffffffffffdU,      -0x7ffffffffffff,     INT32_MIN }, // -(2^51-1) - 0.25
+
+        { 0x41f0000000000000U,           0x100000000,     INT32_MAX }, // 2^32 = 4294967296
+        { 0xc1f0000000000000U,          -0x100000000,     INT32_MIN }, // -2^32 = -4294967296
+        { 0x41efffffffffffffU,           0x100000000,     INT32_MAX }, // 4294967295.99999952316284179688
+        { 0xc1efffffffffffffU,          -0x100000000,     INT32_MIN }, // -4294967295.99999952316284179688
+        { 0x41effffffff00000U,           0x100000000,     INT32_MAX }, // (2^32-1) + 0.5 = 4294967295.5
+        { 0xc1effffffff00000U,          -0x100000000,     INT32_MIN }, // -(2^32-1) - 0.5 = -4294967295.5
+        { 0x41efffffffe00000U,          0xffffffffll,     INT32_MAX }, // (2^32-1)
+        { 0xc1efffffffe00000U,         -0xffffffffll,     INT32_MIN }, // -(2^32-1)
+        { 0x41e0000000000000U,          0x80000000ll,     INT32_MAX }, // 2^31 = 2147483648
+        { 0xc1e0000000000000U,         -0x80000000ll, -0x7fffffff-1 }, // -2^31 = -2147483648
+        { 0x41dfffffffffffffU,          0x80000000ll,     INT32_MAX }, // 2147483647.99999976158142089844
+        { 0xc1dfffffffffffffU,         -0x80000000ll, -0x7fffffff-1 }, // -2147483647.99999976158142089844
+
+        { 0x41dffffffff00000U,          0x80000000ll,     INT32_MAX }, // (2^31-1) + 0.75
+        { 0xc1dffffffff00000U,         -0x80000000ll, -0x7fffffff-1 }, // -(2^31-1) - 0.75
+        { 0x41dfffffffe00001U,          0x80000000ll,     INT32_MAX }, // (2^31-1) + 0.5 + 2^-22
+        { 0xc1dfffffffe00001U,         -0x80000000ll, -0x7fffffff-1 }, // -(2^31-1) - 0.5 - 2^-22
+        { 0x41dfffffffe00000U,          0x80000000ll,     INT32_MAX }, // (2^31-1) + 0.5
+        { 0xc1dfffffffe00000U,         -0x80000000ll, -0x7fffffff-1 }, // -(2^31-1) - 0.5
+        { 0x41dfffffffdfffffU,            0x7fffffff,    0x7fffffff }, // (2^31-1) + 0.5 - 2^-22
+        { 0xc1dfffffffdfffffU,           -0x7fffffff,   -0x7fffffff }, // -(2^31-1) - 0.5 + 2^-22
+        { 0x41dfffffffd00000U,            0x7fffffff,    0x7fffffff }, // (2^31-1) + 0.25
+        { 0xc1dfffffffd00000U,           -0x7fffffff,   -0x7fffffff }, // -(2^31-1) - 0.25
+        { 0x41dfffffffc00000U,            0x7fffffff,    0x7fffffff }, // (2^31-1)
+        { 0xc1dfffffffc00000U,           -0x7fffffff,   -0x7fffffff }, // -(2^31-1)
+        { 0x41d0000000000000U,            0x40000000,    0x40000000 }, // 2^30 = 2147483648
+        { 0xc1d0000000000000U,           -0x40000000,   -0x40000000 }, // -2^30 = -2147483648
+
+        { 0x4006000000000000U,                     3,             3 }, // 2.75
+        { 0xc006000000000000U,                    -3,            -3 }, // -2.75
+        { 0x4004000000000001U,                     3,             3 }, // 2.5 + 2^-51
+        { 0xc004000000000001U,                    -3,            -3 }, // -2.5 - 2^-51
+        { 0x4004000000000000U,                     2,             2 }, // 2.5
+        { 0xc004000000000000U,                    -2,            -2 }, // -2.5
+        { 0x4003ffffffffffffU,                     2,             2 }, // 2.5 - 2^-51
+        { 0xc003ffffffffffffU,                    -2,            -2 }, // -2.5 + 2^-51
+        { 0x4002000000000000U,                     2,             2 }, // 2.25
+        { 0xc002000000000000U,                    -2,            -2 }, // -2.25
+
+        { 0x3ffc000000000000U,                     2,             2 }, // 1.75
+        { 0xbffc000000000000U,                    -2,            -2 }, // -1.75
+        { 0x3ff8000000000001U,                     2,             2 }, // 1.5 + 2^-52
+        { 0xbff8000000000001U,                    -2,            -2 }, // -1.5 - 2^-52
+        { 0x3ff8000000000000U,                     2,             2 }, // 1.5
+        { 0xbff8000000000000U,                    -2,            -2 }, // -1.5
+        { 0x3ff7ffffffffffffU,                     1,             1 }, // 1.5 - 2^-52
+        { 0xbff7ffffffffffffU,                    -1,            -1 }, // -1.5 + 2^-52
+        { 0x3ff4000000000000U,                     1,             1 }, // 1.25
+        { 0xbff4000000000000U,                    -1,            -1 }, // -1.25
+
+        { 0x3fe8000000000000U,                     1,             1 }, // 0.75
+        { 0xbfe8000000000000U,                    -1,            -1 }, // -0.75
+        { 0x3fe0000000000001U,                     1,             1 }, // 0.5 + 2^-53
+        { 0xbfe0000000000001U,                    -1,            -1 }, // -0.5 - 2^-53
+        { 0x3fe0000000000000U,                     0,             0 }, // 0.5
+        { 0xbfe0000000000000U,                     0,             0 }, // -0.5
+
+        { 0x3fd8000000000000U,                     0,             0 }, // 0.375
+        { 0xbfd8000000000000U,                     0,             0 }, // -0.375
+        { 0x3fd0000000000000U,                     0,             0 }, // 0.25
+        { 0xbfd0000000000000U,                     0,             0 }, // -0.25
+
+        { 0x0ff123456789abcdU,                     0,             0 }, // 6.89918601543515033558134828315E-232
+        { 0x8ff123456789abcdU,                     0,             0 }  // -6.89918601543515033558134828315E-232
+    };
+    struct testvalues
+    {
+        softdouble inVal;
+        int64_t out64;
+        int32_t out32;
+    } *values = (testvalues*)_values;
+
+    for (int i = 0, maxi = sizeof(_values) / sizeof(_values[0]); i < maxi; i++)
+    {
+        EXPECT_EQ(values[i].out64, cvRound64(values[i].inVal));
+        EXPECT_EQ(values[i].out64, saturate_cast<int64_t>(values[i].inVal));
+        EXPECT_EQ((uint64_t)(values[i].out64), saturate_cast<uint64_t>(values[i].inVal));
+        EXPECT_EQ(values[i].out32, cvRound(values[i].inVal));
+        EXPECT_EQ(values[i].out32, saturate_cast<int32_t>(values[i].inVal));
+        EXPECT_EQ((uint32_t)(values[i].out32), saturate_cast<uint32_t>(values[i].inVal));
+    }
+}
+
+template<typename T>
+static void checkRounding(T in, int outCeil, int outFloor)
+{
+    EXPECT_EQ(outCeil,cvCeil(in));
+    EXPECT_EQ(outFloor,cvFloor(in));
+
+    /* cvRound is not expected to be IEEE compliant. The implementation
+       should round to one of the above. */
+    EXPECT_TRUE((cvRound(in) == outCeil) || (cvRound(in) == outFloor));
+}
+
+TEST(Core_FastMath, InlineRoundingOps)
+{
+    struct
+    {
+        double in;
+        int outCeil;
+        int outFloor;
+    } values[] =
+    {
+        // Values are chosen to convert to binary float 32/64 exactly
+        { 1.0, 1, 1 },
+        { 1.5, 2, 1 },
+        { -1.5, -1, -2}
+    };
+
+    for (int i = 0, maxi = sizeof(values) / sizeof(values[0]); i < maxi; i++)
+    {
+        checkRounding<double>(values[i].in, values[i].outCeil, values[i].outFloor);
+        checkRounding<float>((float)values[i].in, values[i].outCeil, values[i].outFloor);
+    }
+}
+
+TEST(Core_FastMath, InlineNaN)
+{
+    EXPECT_EQ( cvIsNaN((float) NAN), 1);
+    EXPECT_EQ( cvIsNaN((float) -NAN), 1);
+    EXPECT_EQ( cvIsNaN(0.0f), 0);
+    EXPECT_EQ( cvIsNaN((double) NAN), 1);
+    EXPECT_EQ( cvIsNaN((double) -NAN), 1);
+    EXPECT_EQ( cvIsNaN(0.0), 0);
+
+    // Regression: check the +/-Inf cases
+    Cv64suf suf;
+    suf.u = 0x7FF0000000000000UL;
+    EXPECT_EQ( cvIsNaN(suf.f), 0);
+    suf.u = 0xFFF0000000000000UL;
+    EXPECT_EQ( cvIsNaN(suf.f), 0);
+}
+
+TEST(Core_FastMath, InlineIsInf)
+{
+    // Assume HUGE_VAL is infinity. Strictly speaking, may not always be true.
+    EXPECT_EQ( cvIsInf((float) HUGE_VAL), 1);
+    EXPECT_EQ( cvIsInf((float) -HUGE_VAL), 1);
+    EXPECT_EQ( cvIsInf(0.0f), 0);
+    EXPECT_EQ( cvIsInf((double) HUGE_VAL), 1);
+    EXPECT_EQ( cvIsInf((double) -HUGE_VAL), 1);
+    EXPECT_EQ( cvIsInf(0.0), 0);
+
+    // Regression: check the cases of 0x7FF00000xxxxxxxx
+    Cv64suf suf;
+    suf.u = 0x7FF0000000000001UL;
+    EXPECT_EQ( cvIsInf(suf.f), 0);
+    suf.u = 0x7FF0000012345678UL;
+    EXPECT_EQ( cvIsInf(suf.f), 0);
+}
+
+}} // namespace
 /* End of file. */

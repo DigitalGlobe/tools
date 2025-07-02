@@ -56,7 +56,7 @@
 
 #ifdef HAVE_OPENCL
 
-namespace cvtest {
+namespace opencv_test {
 namespace ocl {
 
 enum
@@ -113,11 +113,101 @@ PARAM_TEST_CASE(WarpTestBase, MatType, Interpolation, bool, bool)
     }
 };
 
+PARAM_TEST_CASE(WarpTest_cols4_Base, MatType, Interpolation, bool, bool)
+{
+    int type, interpolation;
+    Size dsize;
+    bool useRoi, mapInverse;
+    int depth;
+
+    TEST_DECLARE_INPUT_PARAMETER(src);
+    TEST_DECLARE_OUTPUT_PARAMETER(dst);
+
+    virtual void SetUp()
+    {
+        type = GET_PARAM(0);
+        interpolation = GET_PARAM(1);
+        mapInverse = GET_PARAM(2);
+        useRoi = GET_PARAM(3);
+        depth = CV_MAT_DEPTH(type);
+
+        if (mapInverse)
+            interpolation |= WARP_INVERSE_MAP;
+    }
+
+    void random_roi()
+    {
+        dsize = randomSize(1, MAX_VALUE);
+        dsize.width = ((dsize.width >> 2) + 1) * 4;
+
+        Size roiSize = randomSize(1, MAX_VALUE);
+        Border srcBorder = randomBorder(0, useRoi ? MAX_VALUE : 0);
+        randomSubMat(src, src_roi, roiSize, srcBorder, type, -MAX_VALUE, MAX_VALUE);
+
+        Border dstBorder = randomBorder(0, useRoi ? MAX_VALUE : 0);
+        randomSubMat(dst, dst_roi, dsize, dstBorder, type, -MAX_VALUE, MAX_VALUE);
+
+        UMAT_UPLOAD_INPUT_PARAMETER(src);
+        UMAT_UPLOAD_OUTPUT_PARAMETER(dst);
+    }
+
+    void Near(double threshold = 0.0)
+    {
+        if (depth < CV_32F)
+            EXPECT_MAT_N_DIFF(dst_roi, udst_roi, cvRound(dst_roi.total()*threshold));
+        else
+            OCL_EXPECT_MATS_NEAR_RELATIVE(dst, threshold);
+    }
+};
+
+/////warpAffine
+
+typedef WarpTestBase WarpAffine;
+
 /////warpAffine
 
 typedef WarpTestBase WarpAffine;
 
 OCL_TEST_P(WarpAffine, Mat)
+{
+    for (int j = 0; j < test_loop_times; j++)
+    {
+        double eps = depth < CV_32F ? 0.04 : 0.06;
+        random_roi();
+
+        Mat M = getRotationMatrix2D(Point2f(src_roi.cols / 2.0f, src_roi.rows / 2.0f),
+            rng.uniform(-180.f, 180.f), rng.uniform(0.4f, 2.0f));
+
+        OCL_OFF(cv::warpAffine(src_roi, dst_roi, M, dsize, interpolation));
+        OCL_ON(cv::warpAffine(usrc_roi, udst_roi, M, dsize, interpolation));
+
+        Near(eps);
+    }
+}
+
+OCL_TEST_P(WarpAffine, inplace_25853) // when src and dst are the same variable, ocl on/off should produce consistent and correct results
+{
+    for (int j = 0; j < test_loop_times; j++)
+    {
+        double eps = depth < CV_32F ? 0.04 : 0.06;
+        random_roi();
+
+        Mat M = getRotationMatrix2D(Point2f(src_roi.cols / 2.0f, src_roi.rows / 2.0f),
+            rng.uniform(-180.f, 180.f), rng.uniform(0.4f, 2.0f));
+
+        OCL_OFF(cv::warpAffine(src_roi, src_roi, M, dsize, interpolation));
+        OCL_ON(cv::warpAffine(usrc_roi, usrc_roi, M, dsize, interpolation));
+
+        dst_roi = src_roi.clone();
+        udst_roi = usrc_roi.clone();
+
+        Near(eps);
+    }
+}
+
+typedef WarpTest_cols4_Base WarpAffine_cols4;
+
+OCL_TEST_P(WarpAffine_cols4, Mat)
 {
     for (int j = 0; j < test_loop_times; j++)
     {
@@ -161,6 +251,30 @@ OCL_TEST_P(WarpPerspective, Mat)
     }
 }
 
+typedef WarpTest_cols4_Base WarpPerspective_cols4;
+
+OCL_TEST_P(WarpPerspective_cols4, Mat)
+{
+    for (int j = 0; j < test_loop_times; j++)
+    {
+        double eps = depth < CV_32F ? 0.03 : 0.06;
+        random_roi();
+
+        float cols = static_cast<float>(src_roi.cols), rows = static_cast<float>(src_roi.rows);
+        float cols2 = cols / 2.0f, rows2 = rows / 2.0f;
+        Point2f sp[] = { Point2f(0.0f, 0.0f), Point2f(cols, 0.0f), Point2f(0.0f, rows), Point2f(cols, rows) };
+        Point2f dp[] = { Point2f(rng.uniform(0.0f, cols2), rng.uniform(0.0f, rows2)),
+            Point2f(rng.uniform(cols2, cols), rng.uniform(0.0f, rows2)),
+            Point2f(rng.uniform(0.0f, cols2), rng.uniform(rows2, rows)),
+            Point2f(rng.uniform(cols2, cols), rng.uniform(rows2, rows)) };
+        Mat M = getPerspectiveTransform(sp, dp);
+
+        OCL_OFF(cv::warpPerspective(src_roi, dst_roi, M, dsize, interpolation));
+        OCL_ON(cv::warpPerspective(usrc_roi, udst_roi, M, dsize, interpolation));
+
+        Near(eps);
+    }
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //// resize
@@ -195,7 +309,7 @@ PARAM_TEST_CASE(Resize, MatType, double, double, Interpolation, bool, int)
         dstRoiSize.width = cvRound(srcRoiSize.width * fx);
         dstRoiSize.height = cvRound(srcRoiSize.height * fy);
 
-        if (dstRoiSize.area() == 0)
+        if (dstRoiSize.empty())
         {
             random_roi();
             return;
@@ -210,28 +324,42 @@ PARAM_TEST_CASE(Resize, MatType, double, double, Interpolation, bool, int)
         UMAT_UPLOAD_INPUT_PARAMETER(src);
         UMAT_UPLOAD_OUTPUT_PARAMETER(dst);
     }
-
-    void Near(double threshold = 0.0)
-    {
-        OCL_EXPECT_MATS_NEAR(dst, threshold);
-    }
 };
 
+#if defined(__aarch64__) || defined(__arm__)
+const int integerEps = 3;
+#else
+const int integerEps = 1;
+#endif
 OCL_TEST_P(Resize, Mat)
 {
     for (int j = 0; j < test_loop_times; j++)
     {
         int depth = CV_MAT_DEPTH(type);
-        double eps = depth <= CV_32S ? 1 : 5e-2;
+        double eps = depth <= CV_32S ? integerEps : 5e-2;
 
         random_roi();
 
         OCL_OFF(cv::resize(src_roi, dst_roi, Size(), fx, fy, interpolation));
         OCL_ON(cv::resize(usrc_roi, udst_roi, Size(), fx, fy, interpolation));
 
-        Near(eps);
+        OCL_EXPECT_MAT_N_DIFF(dst, eps);
     }
 }
+
+OCL_TEST(Resize, overflow_21198)
+{
+    Mat src(Size(600, 600), CV_16UC3, Scalar::all(32768));
+    UMat src_u;
+    src.copyTo(src_u);
+
+    Mat dst;
+    cv::resize(src, dst, Size(1024, 1024), 0, 0, INTER_LINEAR);
+    UMat dst_u;
+    cv::resize(src_u, dst_u, Size(1024, 1024), 0, 0, INTER_LINEAR);
+    EXPECT_LE(cv::norm(dst_u, dst, NORM_INF), 1.0f);
+}
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 // remap
@@ -289,11 +417,6 @@ PARAM_TEST_CASE(Remap, MatDepth, Channels, std::pair<MatType, MatType>, BorderTy
         if (noType != map2Type)
             UMAT_UPLOAD_INPUT_PARAMETER(map2);
     }
-
-    void Near(double threshold = 0.0)
-    {
-        OCL_EXPECT_MATS_NEAR(dst, threshold);
-    }
 };
 
 typedef Remap Remap_INTER_NEAREST;
@@ -307,7 +430,7 @@ OCL_TEST_P(Remap_INTER_NEAREST, Mat)
         OCL_OFF(cv::remap(src_roi, dst_roi, map1_roi, map2_roi, INTER_NEAREST, borderType, val));
         OCL_ON(cv::remap(usrc_roi, udst_roi, umap1_roi, umap2_roi, INTER_NEAREST, borderType, val));
 
-        Near(1.0);
+        OCL_EXPECT_MAT_N_DIFF(dst, 1.0);
     }
 }
 
@@ -320,17 +443,114 @@ OCL_TEST_P(Remap_INTER_LINEAR, Mat)
         random_roi();
 
         double eps = 2.0;
-#ifdef ANDROID
+#ifdef __ANDROID__
         // TODO investigate accuracy
         if (cv::ocl::Device::getDefault().isNVidia())
             eps = 8.0;
+#elif defined(__arm__)
+        eps = 8.0;
 #endif
 
         OCL_OFF(cv::remap(src_roi, dst_roi, map1_roi, map2_roi, INTER_LINEAR, borderType, val));
         OCL_ON(cv::remap(usrc_roi, udst_roi, umap1_roi, umap2_roi, INTER_LINEAR, borderType, val));
 
-        Near(eps);
+        OCL_EXPECT_MAT_N_DIFF(dst, eps);
     }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////
+// remap relative
+
+PARAM_TEST_CASE(RemapRelative, MatDepth, Channels, Interpolation, BorderType, bool)
+{
+    int srcType;
+    int interpolation;
+    int borderType;
+    bool useFixedPoint;
+
+    Scalar val;
+
+    TEST_DECLARE_INPUT_PARAMETER(map1);
+    TEST_DECLARE_INPUT_PARAMETER(map2);
+    TEST_DECLARE_OUTPUT_PARAMETER(dst);
+
+    UMat uSrc;
+    UMat uMapRelativeX32F;
+    UMat uMapRelativeY32F;
+    UMat uMapAbsoluteX32F;
+    UMat uMapAbsoluteY32F;
+    UMat uMapRelativeX16S;
+    UMat uMapRelativeY16S;
+    UMat uMapAbsoluteX16S;
+    UMat uMapAbsoluteY16S;
+
+    virtual void SetUp()
+    {
+        srcType = CV_MAKE_TYPE(GET_PARAM(0), GET_PARAM(1));
+        interpolation = GET_PARAM(2);
+        borderType = GET_PARAM(3);
+        useFixedPoint = GET_PARAM(4);
+
+        const int nChannels = CV_MAT_CN(srcType);
+        const cv::Size size(127, 61);
+        cv::Mat data64FC1(1, size.area()*nChannels, CV_64FC1);
+        data64FC1.forEach<double>([&](double& pixel, const int* position) {pixel = static_cast<double>(position[1]);});
+
+        cv::Mat src;
+        data64FC1.reshape(nChannels, size.height).convertTo(src, srcType);
+
+        cv::Mat mapRelativeX32F(size, CV_32FC1);
+        mapRelativeX32F.setTo(cv::Scalar::all(-0.25));
+
+        cv::Mat mapRelativeY32F(size, CV_32FC1);
+        mapRelativeY32F.setTo(cv::Scalar::all(-0.25));
+
+        cv::Mat mapAbsoluteX32F = mapRelativeX32F.clone();
+        mapAbsoluteX32F.forEach<float>([&](float& pixel, const int* position) {
+            pixel += static_cast<float>(position[1]);
+            });
+
+        cv::Mat mapAbsoluteY32F = mapRelativeY32F.clone();
+        mapAbsoluteY32F.forEach<float>([&](float& pixel, const int* position) {
+            pixel += static_cast<float>(position[0]);
+            });
+
+        OCL_ON(src.copyTo(uSrc));
+        OCL_ON(mapRelativeX32F.copyTo(uMapRelativeX32F));
+        OCL_ON(mapRelativeY32F.copyTo(uMapRelativeY32F));
+        OCL_ON(mapAbsoluteX32F.copyTo(uMapAbsoluteX32F));
+        OCL_ON(mapAbsoluteY32F.copyTo(uMapAbsoluteY32F));
+
+        if (useFixedPoint)
+        {
+            const bool nninterpolation = (interpolation == cv::INTER_NEAREST) || (interpolation == cv::INTER_NEAREST_EXACT);
+            OCL_ON(cv::convertMaps(uMapAbsoluteX32F, uMapAbsoluteY32F, uMapAbsoluteX16S, uMapAbsoluteY16S, CV_16SC2, nninterpolation));
+            OCL_ON(cv::convertMaps(uMapRelativeX32F, uMapRelativeY32F, uMapRelativeX16S, uMapRelativeY16S, CV_16SC2, nninterpolation));
+        }
+    }
+};
+
+OCL_TEST_P(RemapRelative, Mat)
+{
+    cv::UMat uDstAbsolute;
+    cv::UMat uDstRelative;
+    if (useFixedPoint)
+    {
+        OCL_ON(cv::remap(uSrc, uDstAbsolute, uMapAbsoluteX16S, uMapAbsoluteY16S, interpolation, borderType));
+        OCL_ON(cv::remap(uSrc, uDstRelative, uMapRelativeX16S, uMapRelativeY16S, interpolation | WARP_RELATIVE_MAP, borderType));
+    }
+    else
+    {
+        OCL_ON(cv::remap(uSrc, uDstAbsolute, uMapAbsoluteX32F, uMapAbsoluteY32F, interpolation, borderType));
+        OCL_ON(cv::remap(uSrc, uDstRelative, uMapRelativeX32F, uMapRelativeY32F, interpolation | WARP_RELATIVE_MAP, borderType));
+    }
+
+    cv::Mat dstAbsolute;
+    OCL_ON(uDstAbsolute.copyTo(dstAbsolute));
+    cv::Mat dstRelative;
+    OCL_ON(uDstRelative.copyTo(dstRelative));
+
+    EXPECT_MAT_NEAR(dstAbsolute, dstRelative, dstAbsolute.depth() == CV_32F ? 1e-3 : 1.0);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -341,8 +561,20 @@ OCL_INSTANTIATE_TEST_CASE_P(ImgprocWarp, WarpAffine, Combine(
                             Bool(),
                             Bool()));
 
+OCL_INSTANTIATE_TEST_CASE_P(ImgprocWarp, WarpAffine_cols4, Combine(
+                            Values((MatType)CV_8UC1),
+                            Values((Interpolation)INTER_NEAREST, (Interpolation)INTER_LINEAR, (Interpolation)INTER_CUBIC),
+                            Bool(),
+                            Bool()));
+
 OCL_INSTANTIATE_TEST_CASE_P(ImgprocWarp, WarpPerspective, Combine(
                             Values(CV_8UC1, CV_8UC3, CV_8UC4, CV_32FC1, CV_32FC3, CV_32FC4),
+                            Values((Interpolation)INTER_NEAREST, (Interpolation)INTER_LINEAR, (Interpolation)INTER_CUBIC),
+                            Bool(),
+                            Bool()));
+
+OCL_INSTANTIATE_TEST_CASE_P(ImgprocWarp, WarpPerspective_cols4, Combine(
+                            Values((MatType)CV_8UC1),
                             Values((Interpolation)INTER_NEAREST, (Interpolation)INTER_LINEAR, (Interpolation)INTER_CUBIC),
                             Bool(),
                             Bool()));
@@ -352,6 +584,14 @@ OCL_INSTANTIATE_TEST_CASE_P(ImgprocWarp, Resize, Combine(
                             Values(0.5, 1.5, 2.0, 0.2),
                             Values(0.5, 1.5, 2.0, 0.2),
                             Values((Interpolation)INTER_NEAREST, (Interpolation)INTER_LINEAR),
+                            Bool(),
+                            Values(1, 16)));
+
+OCL_INSTANTIATE_TEST_CASE_P(ImgprocWarpLinearExact, Resize, Combine(
+                            Values(CV_8UC1, CV_8UC4, CV_16UC2),
+                            Values(0.5, 1.5, 2.0, 0.2),
+                            Values(0.5, 1.5, 2.0, 0.2),
+                            Values((Interpolation)INTER_LINEAR_EXACT),
                             Bool(),
                             Values(1, 16)));
 
@@ -390,6 +630,20 @@ OCL_INSTANTIATE_TEST_CASE_P(ImgprocWarp, Remap_INTER_NEAREST, Combine(
                                    (BorderType)BORDER_REFLECT_101),
                             Bool()));
 
-} } // namespace cvtest::ocl
+OCL_INSTANTIATE_TEST_CASE_P(ImgprocWarp, RemapRelative, Combine(
+                            Values(CV_8U, CV_16U, CV_32F, CV_64F),
+                            Values(1, 3, 4),
+                            Values((Interpolation)INTER_NEAREST,
+                                   (Interpolation)INTER_LINEAR,
+                                   (Interpolation)INTER_CUBIC,
+                                   (Interpolation)INTER_LANCZOS4),
+                            Values((BorderType)BORDER_CONSTANT,
+                                   (BorderType)BORDER_REPLICATE,
+                                   (BorderType)BORDER_WRAP,
+                                   (BorderType)BORDER_REFLECT,
+                                   (BorderType)BORDER_REFLECT_101),
+                            Bool()));
+
+} } // namespace opencv_test::ocl
 
 #endif // HAVE_OPENCL

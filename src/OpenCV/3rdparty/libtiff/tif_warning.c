@@ -1,5 +1,3 @@
-/* $Header: /cvs/maptools/cvsroot/libtiff/libtiff/tif_warning.c,v 1.3 2010-03-10 18:56:49 bfriesen Exp $ */
-
 /*
  * Copyright (c) 1988-1997 Sam Leffler
  * Copyright (c) 1991-1997 Silicon Graphics, Inc.
@@ -31,51 +29,77 @@
 
 TIFFErrorHandlerExt _TIFFwarningHandlerExt = NULL;
 
-TIFFErrorHandler
-TIFFSetWarningHandler(TIFFErrorHandler handler)
+TIFFErrorHandler TIFFSetWarningHandler(TIFFErrorHandler handler)
 {
     TIFFErrorHandler prev = _TIFFwarningHandler;
     _TIFFwarningHandler = handler;
     return (prev);
 }
 
-TIFFErrorHandlerExt
-TIFFSetWarningHandlerExt(TIFFErrorHandlerExt handler)
+TIFFErrorHandlerExt TIFFSetWarningHandlerExt(TIFFErrorHandlerExt handler)
 {
     TIFFErrorHandlerExt prev = _TIFFwarningHandlerExt;
     _TIFFwarningHandlerExt = handler;
     return (prev);
 }
 
-void
-TIFFWarning(const char* module, const char* fmt, ...)
+void TIFFWarning(const char *module, const char *fmt, ...)
 {
     va_list ap;
-    va_start(ap, fmt);
     if (_TIFFwarningHandler)
+    {
+        va_start(ap, fmt);
         (*_TIFFwarningHandler)(module, fmt, ap);
+        va_end(ap);
+    }
     if (_TIFFwarningHandlerExt)
+    {
+        va_start(ap, fmt);
         (*_TIFFwarningHandlerExt)(0, module, fmt, ap);
-    va_end(ap);
+        va_end(ap);
+    }
 }
 
-void
-TIFFWarningExt(thandle_t fd, const char* module, const char* fmt, ...)
+void TIFFWarningExt(thandle_t fd, const char *module, const char *fmt, ...)
 {
     va_list ap;
-    va_start(ap, fmt);
     if (_TIFFwarningHandler)
+    {
+        va_start(ap, fmt);
         (*_TIFFwarningHandler)(module, fmt, ap);
+        va_end(ap);
+    }
     if (_TIFFwarningHandlerExt)
+    {
+        va_start(ap, fmt);
         (*_TIFFwarningHandlerExt)(fd, module, fmt, ap);
-    va_end(ap);
+        va_end(ap);
+    }
 }
 
-
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 8
- * fill-column: 78
- * End:
- */
+void TIFFWarningExtR(TIFF *tif, const char *module, const char *fmt, ...)
+{
+    va_list ap;
+    if (tif && tif->tif_warnhandler)
+    {
+        va_start(ap, fmt);
+        int stop = (*tif->tif_warnhandler)(tif, tif->tif_warnhandler_user_data,
+                                           module, fmt, ap);
+        va_end(ap);
+        if (stop)
+            return;
+    }
+    if (_TIFFwarningHandler)
+    {
+        va_start(ap, fmt);
+        (*_TIFFwarningHandler)(module, fmt, ap);
+        va_end(ap);
+    }
+    if (_TIFFwarningHandlerExt)
+    {
+        va_start(ap, fmt);
+        (*_TIFFwarningHandlerExt)(tif ? tif->tif_clientdata : 0, module, fmt,
+                                  ap);
+        va_end(ap);
+    }
+}

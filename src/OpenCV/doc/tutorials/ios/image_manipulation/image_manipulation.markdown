@@ -1,6 +1,16 @@
 OpenCV iOS - Image Processing {#tutorial_image_manipulation}
 =============================
 
+@tableofcontents
+
+@prev_tutorial{tutorial_hello}
+@next_tutorial{tutorial_video_processing}
+
+|    |    |
+| -: | :- |
+| Original author | Charu Hans |
+| Compatibility | OpenCV >= 3.0 |
+
 Goal
 ----
 
@@ -12,7 +22,7 @@ Introduction
 In *OpenCV* all the image processing operations are usually carried out on the *Mat* structure. In
 iOS however, to render an image on screen it have to be an instance of the *UIImage* class. To
 convert an *OpenCV Mat* to an *UIImage* we use the *Core Graphics* framework available in iOS. Below
-is the code needed to covert back and forth between Mat's and UIImage's.
+is the code needed to convert back and forth between Mat's and UIImage's.
 @code{.m}
 - (cv::Mat)cvMatFromUIImage:(UIImage *)image
 {
@@ -115,8 +125,4 @@ Output
 Check out an instance of running code with more Image Effects on
 [YouTube](http://www.youtube.com/watch?v=Ko3K_xdhJ1I) .
 
-\htmlonly
-<div align="center">
-<iframe width="560" height="350" src="http://www.youtube.com/embed/Ko3K_xdhJ1I" frameborder="0" allowfullscreen></iframe>
-</div>
-\endhtmlonly
+@youtube{Ko3K_xdhJ1I}

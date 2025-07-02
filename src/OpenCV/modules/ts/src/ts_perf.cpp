@@ -1,10 +1,12 @@
 #include "precomp.hpp"
 
+#include "ts_tags.hpp"
+
 #include <map>
 #include <iostream>
 #include <fstream>
 
-#if defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64
+#if defined _WIN32
 #ifndef NOMINMAX
 #define NOMINMAX
 #endif
@@ -15,15 +17,15 @@
 #include "opencv2/core/cuda.hpp"
 #endif
 
-#ifdef ANDROID
+#ifdef __ANDROID__
 # include <sys/time.h>
 #endif
 
+using namespace cvtest;
 using namespace perf;
 
 int64 TestBase::timeLimitDefault = 0;
-unsigned int TestBase::iterationsLimitDefault = (unsigned int)(-1);
-int64 TestBase::_timeadjustment = 0;
+unsigned int TestBase::iterationsLimitDefault = UINT_MAX;
 
 // Item [0] will be considered the default implementation.
 static std::vector<std::string> available_impls;
@@ -37,26 +39,31 @@ static double       param_max_outliers;
 static double       param_max_deviation;
 static unsigned int param_min_samples;
 static unsigned int param_force_samples;
-static uint64       param_seed;
 static double       param_time_limit;
-static int          param_threads;
 static bool         param_write_sanity;
 static bool         param_verify_sanity;
 #ifdef CV_COLLECT_IMPL_DATA
 static bool         param_collect_impl;
 #endif
+#ifdef ENABLE_INSTRUMENTATION
+static int          param_instrument;
+#endif
+
+namespace cvtest {
 extern bool         test_ipp_check;
+}
 
 #ifdef HAVE_CUDA
 static int          param_cuda_device;
 #endif
 
-#ifdef ANDROID
+#ifdef __ANDROID__
 static int          param_affinity_mask;
 static bool         log_power_checkpoints;
 
 #include <sys/syscall.h>
 #include <pthread.h>
+#include <cerrno>
 static void setCurrentThreadAffinityMask(int mask)
 {
     pid_t pid=gettid();
@@ -64,7 +71,7 @@ static void setCurrentThreadAffinityMask(int mask)
     if (syscallres)
     {
         int err=errno;
-        err=err;//to avoid warnings about unused variables
+        CV_UNUSED(err);
         LOGE("Error in the syscall setaffinity: mask=%d=0x%x err=%d=0x%x", mask, mask, err, err);
     }
 }
@@ -185,18 +192,18 @@ void Regression::init(const std::string& testSuitName, const std::string& ext)
         return;
     }
 
-#ifndef WINRT
-    const char *data_path_dir = getenv("OPENCV_TEST_DATA_PATH");
-#else
-    const char *data_path_dir = OPENCV_TEST_DATA_PATH;
-#endif
+    const std::string data_path_dir = utils::getConfigurationParameterString("OPENCV_TEST_DATA_PATH");
+
+    cvtest::addDataSearchSubDirectory("");
+    cvtest::addDataSearchSubDirectory(testSuitName);
+
     const char *path_separator = "/";
 
-    if (data_path_dir)
+    if (!data_path_dir.empty())
     {
-        int len = (int)strlen(data_path_dir)-1;
+        int len = (int)data_path_dir.size()-1;
         if (len < 0) len = 0;
-        std::string path_base = (data_path_dir[0] == 0 ? std::string(".") : std::string(data_path_dir))
+        std::string path_base = (data_path_dir[0] == 0 ? std::string(".") : data_path_dir)
                 + (data_path_dir[len] == '/' || data_path_dir[len] == '\\' ? "" : path_separator)
                 + "perf"
                 + path_separator;
@@ -222,7 +229,7 @@ void Regression::init(const std::string& testSuitName, const std::string& ext)
             storageOutPath += ext;
         }
     }
-    catch(cv::Exception&)
+    catch(const cv::Exception&)
     {
         LOGE("Failed to open sanity data for reading: %s", storageInPath.c_str());
     }
@@ -584,11 +591,11 @@ Regression& Regression::operator() (const std::string& name, cv::InputArray arra
     // exit if current test is already failed
     if(::testing::UnitTest::GetInstance()->current_test_info()->result()->Failed()) return *this;
 
-    if(!array.empty() && array.depth() == CV_USRTYPE1)
+    /*if(!array.empty() && array.depth() == CV_USRTYPE1)
     {
         ADD_FAILURE() << "  Can not check regression for CV_USRTYPE1 data type for " << name;
         return *this;
-    }
+    }*/
 
     std::string nodename = getCurrentTestNodeName();
 
@@ -612,7 +619,7 @@ Regression& Regression::operator() (const std::string& name, cv::InputArray arra
         }
         else if(param_verify_sanity)
         {
-            ADD_FAILURE() << "  No regression data for " << name << " argument";
+            ADD_FAILURE() << "  No regression data for " << name << " argument, test node: " << nodename;
         }
     }
     else
@@ -727,7 +734,210 @@ public:
     }
 };
 
+#ifdef ENABLE_INSTRUMENTATION
+static void printShift(cv::instr::InstrNode *pNode, cv::instr::InstrNode* pRoot)
+{
+    // Print empty line for a big tree nodes
+    if(pNode->m_pParent)
+    {
+        int parendIdx = pNode->m_pParent->findChild(pNode);
+        if(parendIdx > 0 && pNode->m_pParent->m_childs[parendIdx-1]->m_childs.size())
+        {
+            printShift(pNode->m_pParent->m_childs[parendIdx-1]->m_childs[0], pRoot);
+            printf("\n");
+        }
+    }
 
+    // Check if parents have more childes
+    std::vector<cv::instr::InstrNode*> cache;
+    cv::instr::InstrNode *pTmpNode = pNode;
+    while(pTmpNode->m_pParent && pTmpNode->m_pParent != pRoot)
+    {
+        cache.push_back(pTmpNode->m_pParent);
+        pTmpNode = pTmpNode->m_pParent;
+    }
+    for(int i = (int)cache.size()-1; i >= 0; i--)
+    {
+        if(cache[i]->m_pParent)
+        {
+            if(cache[i]->m_pParent->findChild(cache[i]) == (int)cache[i]->m_pParent->m_childs.size()-1)
+                printf("    ");
+            else
+                printf("|   ");
+        }
+    }
+}
+
+static double calcLocalWeight(cv::instr::InstrNode *pNode)
+{
+    if(pNode->m_pParent && pNode->m_pParent->m_pParent)
+        return ((double)pNode->m_payload.m_ticksTotal*100/pNode->m_pParent->m_payload.m_ticksTotal);
+    else
+        return 100;
+}
+
+static double calcGlobalWeight(cv::instr::InstrNode *pNode)
+{
+    cv::instr::InstrNode* globNode = pNode;
+
+    while(globNode->m_pParent && globNode->m_pParent->m_pParent)
+        globNode = globNode->m_pParent;
+
+    return ((double)pNode->m_payload.m_ticksTotal*100/(double)globNode->m_payload.m_ticksTotal);
+}
+
+static void printNodeRec(cv::instr::InstrNode *pNode, cv::instr::InstrNode *pRoot)
+{
+    printf("%s", (pNode->m_payload.m_funName.substr(0, 40) + ((pNode->m_payload.m_funName.size()>40)?"...":"")).c_str());
+
+    // Write instrumentation flags
+    if(pNode->m_payload.m_instrType != cv::instr::TYPE_GENERAL || pNode->m_payload.m_implType != cv::instr::IMPL_PLAIN)
+    {
+        printf("<");
+        if(pNode->m_payload.m_instrType == cv::instr::TYPE_WRAPPER)
+            printf("W");
+        else if(pNode->m_payload.m_instrType == cv::instr::TYPE_FUN)
+            printf("F");
+        else if(pNode->m_payload.m_instrType == cv::instr::TYPE_MARKER)
+            printf("MARK");
+
+        if(pNode->m_payload.m_instrType != cv::instr::TYPE_GENERAL && pNode->m_payload.m_implType != cv::instr::IMPL_PLAIN)
+            printf("_");
+
+        if(pNode->m_payload.m_implType == cv::instr::IMPL_IPP)
+            printf("IPP");
+        else if(pNode->m_payload.m_implType == cv::instr::IMPL_OPENCL)
+            printf("OCL");
+
+        printf(">");
+    }
+
+    if(pNode->m_pParent)
+    {
+        printf(" - TC:%d C:%d", pNode->m_payload.m_threads, pNode->m_payload.m_counter);
+        printf(" T:%.2fms", pNode->m_payload.getTotalMs());
+        if(pNode->m_pParent->m_pParent)
+            printf(" L:%.0f%% G:%.0f%%", calcLocalWeight(pNode), calcGlobalWeight(pNode));
+    }
+    printf("\n");
+
+    {
+        // Group childes by name
+        for(size_t i = 1; i < pNode->m_childs.size(); i++)
+        {
+            if(pNode->m_childs[i-1]->m_payload.m_funName == pNode->m_childs[i]->m_payload.m_funName )
+                continue;
+            for(size_t j = i+1; j < pNode->m_childs.size(); j++)
+            {
+                if(pNode->m_childs[i-1]->m_payload.m_funName == pNode->m_childs[j]->m_payload.m_funName )
+                {
+                    cv::swap(pNode->m_childs[i], pNode->m_childs[j]);
+                    i++;
+                }
+            }
+        }
+    }
+
+    for(size_t i = 0; i < pNode->m_childs.size(); i++)
+    {
+        printShift(pNode->m_childs[i], pRoot);
+
+        if(i == pNode->m_childs.size()-1)
+            printf("\\---");
+        else
+            printf("|---");
+        printNodeRec(pNode->m_childs[i], pRoot);
+    }
+}
+
+template <typename T>
+std::string to_string_with_precision(const T value, const int p = 3)
+{
+    std::ostringstream out;
+    out << std::fixed << std::setprecision(p) << value;
+    return out.str();
+}
+
+static cv::String nodeToString(cv::instr::InstrNode *pNode)
+{
+    cv::String string;
+    if (pNode->m_payload.m_funName == "ROOT")
+        string = pNode->m_payload.m_funName;
+    else
+    {
+        string = "#";
+        string += std::to_string((int)pNode->m_payload.m_instrType);
+        string += pNode->m_payload.m_funName;
+        string += " - L:";
+        string += to_string_with_precision(calcLocalWeight(pNode));
+        string += ", G:";
+        string += to_string_with_precision(calcGlobalWeight(pNode));
+    }
+    string += "(";
+    for(size_t i = 0; i < pNode->m_childs.size(); i++)
+        string += nodeToString(pNode->m_childs[i]);
+    string += ")";
+
+    return string;
+}
+
+static uint64 getNodeTimeRec(cv::instr::InstrNode *pNode, cv::instr::TYPE type, cv::instr::IMPL impl)
+{
+    uint64 ticks = 0;
+
+    if (pNode->m_pParent && (type < 0 || pNode->m_payload.m_instrType == type) && pNode->m_payload.m_implType == impl)
+    {
+        ticks = pNode->m_payload.m_ticksTotal;
+        return ticks;
+    }
+
+    for(size_t i = 0; i < pNode->m_childs.size(); i++)
+        ticks += getNodeTimeRec(pNode->m_childs[i], type, impl);
+
+    return ticks;
+}
+
+static uint64 getImplTime(cv::instr::IMPL impl)
+{
+    uint64 ticks = 0;
+    cv::instr::InstrNode *pRoot = cv::instr::getTrace();
+
+    ticks = getNodeTimeRec(pRoot, cv::instr::TYPE_FUN, impl);
+
+    return ticks;
+}
+
+static uint64 getTotalTime()
+{
+    uint64 ticks = 0;
+    cv::instr::InstrNode *pRoot = cv::instr::getTrace();
+
+    for(size_t i = 0; i < pRoot->m_childs.size(); i++)
+        ticks += pRoot->m_childs[i]->m_payload.m_ticksTotal;
+
+    return ticks;
+}
+
+::cv::String InstumentData::treeToString()
+{
+    cv::String string = nodeToString(cv::instr::getTrace());
+    return string;
+}
+
+void InstumentData::printTree()
+{
+    printf("[ TRACE    ]\n");
+    printNodeRec(cv::instr::getTrace(), cv::instr::getTrace());
+#ifdef HAVE_IPP
+    printf("\nIPP weight: %.1f%%", ((double)getImplTime(cv::instr::IMPL_IPP)*100/(double)getTotalTime()));
+#endif
+#ifdef HAVE_OPENCL
+    printf("\nOPENCL weight: %.1f%%", ((double)getImplTime(cv::instr::IMPL_OPENCL)*100/(double)getTotalTime()));
+#endif
+    printf("\n[/TRACE    ]\n");
+    fflush(stdout);
+}
+#endif
 
 /*****************************************************************************************\
 *                                   ::perf::TestBase
@@ -744,6 +954,8 @@ void TestBase::Init(int argc, const char* const argv[])
 void TestBase::Init(const std::vector<std::string> & availableImpls,
                  int argc, const char* const argv[])
 {
+    CV_TRACE_FUNCTION();
+
     available_impls = availableImpls;
 
     const std::string command_line_keys =
@@ -761,7 +973,7 @@ void TestBase::Init(const std::vector<std::string> & availableImpls,
         "{   perf_strategy               |default  |specifies performance measuring strategy: default, base or simple (weak restrictions)}"
         "{   perf_read_validation_results |        |specifies file name with performance results from previous run}"
         "{   perf_write_validation_results |       |specifies file name to write performance validation results}"
-#ifdef ANDROID
+#ifdef __ANDROID__
         "{   perf_time_limit             |6.0      |default time limit for a single test (in seconds)}"
         "{   perf_affinity_mask          |0        |set affinity mask for the main thread}"
         "{   perf_log_power_checkpoints  |         |additional xml logging for power measurement}"
@@ -775,11 +987,17 @@ void TestBase::Init(const std::vector<std::string> & availableImpls,
 #ifdef CV_COLLECT_IMPL_DATA
         "{   perf_collect_impl           |false    |collect info about executed implementations}"
 #endif
+#ifdef ENABLE_INSTRUMENTATION
+        "{   perf_instrument             |0        |instrument code to collect implementations trace: 1 - perform instrumentation; 2 - separate functions with the same name }"
+#endif
         "{   help h                      |false    |print help info}"
 #ifdef HAVE_CUDA
         "{   perf_cuda_device            |0        |run CUDA test suite onto specific CUDA capable device}"
         "{   perf_cuda_info_only         |false    |print an information about system and an available CUDA devices and then exit.}"
 #endif
+        "{ skip_unstable                 |false    |skip unstable tests }"
+
+        CV_TEST_TAGS_PARAMS
     ;
 
     cv::CommandLineParser args(argc, argv, command_line_keys);
@@ -820,13 +1038,16 @@ void TestBase::Init(const std::vector<std::string> & availableImpls,
     param_verify_sanity = args.get<bool>("perf_verify_sanity");
 
 #ifdef HAVE_IPP
-    test_ipp_check      = !args.get<bool>("perf_ipp_check") ? getenv("OPENCV_IPP_CHECK") != NULL : true;
+    test_ipp_check      = !args.get<bool>("perf_ipp_check") ? utils::getConfigurationParameterBool("OPENCV_IPP_CHECK") : true;
 #endif
-    param_threads       = args.get<int>("perf_threads");
+    testThreads         = args.get<int>("perf_threads");
 #ifdef CV_COLLECT_IMPL_DATA
     param_collect_impl  = args.get<bool>("perf_collect_impl");
 #endif
-#ifdef ANDROID
+#ifdef ENABLE_INSTRUMENTATION
+    param_instrument    = args.get<int>("perf_instrument");
+#endif
+#ifdef __ANDROID__
     param_affinity_mask   = args.get<int>("perf_affinity_mask");
     log_power_checkpoints = args.has("perf_log_power_checkpoints");
 #endif
@@ -856,6 +1077,16 @@ void TestBase::Init(const std::vector<std::string> & availableImpls,
     else
         cv::setUseCollection(0);
 #endif
+#ifdef ENABLE_INSTRUMENTATION
+    if(param_instrument > 0)
+    {
+        if(param_instrument == 2)
+            cv::instr::setFlags(cv::instr::getFlags()|cv::instr::FLAGS_EXPAND_SAME_NAMES);
+        cv::instr::setUseInstrumentation(true);
+    }
+    else
+        cv::instr::setUseInstrumentation(false);
+#endif
 
 #ifdef HAVE_CUDA
 
@@ -864,6 +1095,8 @@ void TestBase::Init(const std::vector<std::string> & availableImpls,
     if (printOnly)
         exit(0);
 #endif
+
+    skipUnstableTests = args.get<bool>("skip_unstable");
 
     if (available_impls.size() > 1)
         printf("[----------]\n[   INFO   ] \tImplementation variant: %s.\n[----------]\n", param_impl.c_str()), fflush(stdout);
@@ -888,12 +1121,11 @@ void TestBase::Init(const std::vector<std::string> & availableImpls,
 #endif
 
     {
-#ifndef WINRT
-        const char* path = getenv("OPENCV_PERF_VALIDATION_DIR");
-#else
-        const char* path = OPENCV_PERF_VALIDATION_DIR;
+        std::string path = utils::getConfigurationParameterString("OPENCV_PERF_VALIDATION_DIR");
+#ifdef WINRT
+        path = OPENCV_PERF_VALIDATION_DIR;
 #endif
-        if (path)
+        if (!path.empty())
             perf_validation_results_directory = path;
     }
 
@@ -911,6 +1143,8 @@ void TestBase::Init(const std::vector<std::string> & availableImpls,
         ::testing::AddGlobalTestEnvironment(new PerfValidationEnvironment());
     }
 
+    activateTestTags(args);
+
     if (!args.check())
     {
         args.printErrors();
@@ -918,14 +1152,13 @@ void TestBase::Init(const std::vector<std::string> & availableImpls,
     }
 
     timeLimitDefault = param_time_limit == 0.0 ? 1 : (int64)(param_time_limit * cv::getTickFrequency());
-    iterationsLimitDefault = param_force_samples == 0 ? (unsigned)(-1) : param_force_samples;
-    _timeadjustment = _calibrate();
+    iterationsLimitDefault = param_force_samples == 0 ? UINT_MAX : param_force_samples;
 }
 
 void TestBase::RecordRunParameters()
 {
     ::testing::Test::RecordProperty("cv_implementation", param_impl);
-    ::testing::Test::RecordProperty("cv_num_threads", param_threads);
+    ::testing::Test::RecordProperty("cv_num_threads", testThreads);
 
 #ifdef HAVE_CUDA
     if (param_impl == "cuda")
@@ -951,45 +1184,6 @@ enum PERF_STRATEGY TestBase::setModulePerformanceStrategy(enum PERF_STRATEGY str
 enum PERF_STRATEGY TestBase::getCurrentModulePerformanceStrategy()
 {
     return strategyForce == PERF_STRATEGY_DEFAULT ? strategyModule : strategyForce;
-}
-
-
-int64 TestBase::_calibrate()
-{
-    class _helper : public ::perf::TestBase
-    {
-        public:
-        performance_metrics& getMetrics() { return calcMetrics(); }
-        virtual void TestBody() {}
-        virtual void PerfTestBody()
-        {
-            //the whole system warmup
-            SetUp();
-            cv::Mat a(2048, 2048, CV_32S, cv::Scalar(1));
-            cv::Mat b(2048, 2048, CV_32S, cv::Scalar(2));
-            declare.time(30);
-            double s = 0;
-            for(declare.iterations(20); startTimer(), next(); stopTimer())
-                s+=a.dot(b);
-            declare.time(s);
-
-            //self calibration
-            SetUp();
-            for(declare.iterations(1000); startTimer(), next(); stopTimer()){}
-        }
-    };
-
-    _timeadjustment = 0;
-    _helper h;
-    h.PerfTestBody();
-    double compensation = h.getMetrics().min;
-    if (getCurrentModulePerformanceStrategy() == PERF_STRATEGY_SIMPLE)
-    {
-        CV_Assert(compensation < 0.01 * cv::getTickFrequency());
-        compensation = 0.0f; // simple strategy doesn't require any compensation
-    }
-    LOGD("Time compensation is %.0f", compensation);
-    return (int64)compensation;
 }
 
 #ifdef _MSC_VER
@@ -1022,6 +1216,7 @@ void TestBase::declareArray(SizeVector& sizes, cv::InputOutputArray a, WarmUpTyp
 
 void TestBase::warmup(cv::InputOutputArray a, WarmUpType wtype)
 {
+    CV_TRACE_FUNCTION();
     if (a.empty())
         return;
     else if (a.isUMat())
@@ -1035,7 +1230,7 @@ void TestBase::warmup(cv::InputOutputArray a, WarmUpType wtype)
                 cv::randu(a, -128, 128);
             else if (depth == CV_16U)
                 cv::randu(a, 0, 1024);
-            else if (depth == CV_32F || depth == CV_64F)
+            else if (depth == CV_32F || depth == CV_64F || depth == CV_16F)
                 cv::randu(a, -1.0, 1.0);
             else if (depth == CV_16S || depth == CV_32S)
                 cv::randu(a, -4096, 4096);
@@ -1104,7 +1299,7 @@ bool TestBase::next()
     bool has_next = false;
 
     do {
-        assert(currentIter == times.size());
+        CV_Assert(currentIter == times.size());
         if (currentIter == 0)
         {
             has_next = true;
@@ -1117,7 +1312,7 @@ bool TestBase::next()
         }
         else
         {
-            assert(getCurrentPerformanceStrategy() == PERF_STRATEGY_SIMPLE);
+            CV_Assert(getCurrentPerformanceStrategy() == PERF_STRATEGY_SIMPLE);
             if (totalTime - lastActivityPrintTime >= cv::getTickFrequency() * 10)
             {
                 std::cout << '.' << std::endl;
@@ -1193,9 +1388,10 @@ bool TestBase::next()
                             median_ms > perf_validation_time_threshold_ms &&
                             (grow || metrics.stddev > perf_stability_criteria * fabs(metrics.mean)))
                     {
+                        CV_TRACE_REGION("idle_delay");
                         printf("Performance is unstable, it may be a result of overheat problems\n");
                         printf("Idle delay for %d ms... \n", perf_validation_idle_delay_ms);
-#if defined WIN32 || defined _WIN32 || defined WIN64 || defined _WIN64
+#if defined _WIN32
 #ifndef WINRT_8_0
                         Sleep(perf_validation_idle_delay_ms);
 #else
@@ -1230,7 +1426,7 @@ bool TestBase::next()
         }
     }
 
-#ifdef ANDROID
+#ifdef __ANDROID__
     if (log_power_checkpoints)
     {
         timeval tim;
@@ -1242,8 +1438,6 @@ bool TestBase::next()
     }
 #endif
 
-    if (has_next)
-        startTimer(); // really we should measure activity from this moment, so reset start time
     return has_next;
 }
 
@@ -1281,9 +1475,17 @@ unsigned int TestBase::getTotalOutputSize() const
     return res;
 }
 
-void TestBase::startTimer()
+bool TestBase::startTimer()
 {
+#ifdef ENABLE_INSTRUMENTATION
+    if(currentIter == 0)
+    {
+        cv::instr::setFlags(cv::instr::getFlags()|cv::instr::FLAGS_MAPPING); // enable mapping for the first run
+        cv::instr::resetTrace();
+    }
+#endif
     lastTime = cv::getTickCount();
+    return true; // dummy true for conditional loop
 }
 
 void TestBase::stopTimer()
@@ -1292,11 +1494,14 @@ void TestBase::stopTimer()
     if (lastTime == 0)
         ADD_FAILURE() << "  stopTimer() is called before startTimer()/next()";
     lastTime = time - lastTime;
+    CV_Assert(lastTime >= 0);  // TODO: CV_Check* for int64
     totalTime += lastTime;
-    lastTime -= _timeadjustment;
-    if (lastTime < 0) lastTime = 0;
     times.push_back(lastTime);
     lastTime = 0;
+
+#ifdef ENABLE_INSTRUMENTATION
+    cv::instr::setFlags(cv::instr::getFlags()&~cv::instr::FLAGS_MAPPING); // disable mapping to decrease overhead for +1 run
+#endif
 }
 
 performance_metrics& TestBase::calcMetrics()
@@ -1365,7 +1570,7 @@ performance_metrics& TestBase::calcMetrics()
     }
     else
     {
-        assert(false);
+        CV_Assert(false);
     }
 
     int offset = static_cast<int>(start - times.begin());
@@ -1434,19 +1639,29 @@ void TestBase::validateMetrics()
     {
         double mean = metrics.mean * 1000.0f / metrics.frequency;
         double median = metrics.median * 1000.0f / metrics.frequency;
+        double min_value = metrics.min * 1000.0f / metrics.frequency;
         double stddev = metrics.stddev * 1000.0f / metrics.frequency;
         double percents = stddev / mean * 100.f;
-        printf("[ PERFSTAT ]    (samples = %d, mean = %.2f, median = %.2f, stddev = %.2f (%.1f%%))\n", (int)metrics.samples, mean, median, stddev, percents);
+        printf("[ PERFSTAT ]    (samples=%d   mean=%.2f   median=%.2f   min=%.2f   stddev=%.2f (%.1f%%))\n", (int)metrics.samples, mean, median, min_value, stddev, percents);
     }
     else
     {
-        assert(false);
+        CV_Assert(false);
     }
 }
 
 void TestBase::reportMetrics(bool toJUnitXML)
 {
+    CV_TRACE_FUNCTION();
+
     performance_metrics& m = calcMetrics();
+
+    CV_TRACE_ARG_VALUE(samples, "samples", (int64)m.samples);
+    CV_TRACE_ARG_VALUE(outliers, "outliers", (int64)m.outliers);
+    CV_TRACE_ARG_VALUE(median, "mean_ms", (double)(m.mean * 1000.0f / metrics.frequency));
+    CV_TRACE_ARG_VALUE(median, "median_ms", (double)(m.median * 1000.0f / metrics.frequency));
+    CV_TRACE_ARG_VALUE(stddev, "stddev_ms", (double)(m.stddev * 1000.0f / metrics.frequency));
+    CV_TRACE_ARG_VALUE(stddev_percents, "stddev_percents", (double)(m.stddev / (double)m.mean * 100.0f));
 
     if (m.terminationReason == performance_metrics::TERM_SKIP_TEST)
     {
@@ -1469,6 +1684,16 @@ void TestBase::reportMetrics(bool toJUnitXML)
         RecordProperty("gstddev", cv::format("%.6f", m.gstddev).c_str());
         RecordProperty("mean", cv::format("%.0f", m.mean).c_str());
         RecordProperty("stddev", cv::format("%.0f", m.stddev).c_str());
+#ifdef ENABLE_INSTRUMENTATION
+        if(cv::instr::useInstrumentation())
+        {
+            cv::String tree = InstumentData::treeToString();
+            RecordProperty("functions_hierarchy", tree.c_str());
+            RecordProperty("total_ipp_weight",    cv::format("%.1f", ((double)getImplTime(cv::instr::IMPL_IPP)*100/(double)getTotalTime())));
+            RecordProperty("total_opencl_weight", cv::format("%.1f", ((double)getImplTime(cv::instr::IMPL_OPENCL)*100/(double)getTotalTime())));
+            cv::instr::resetTrace();
+        }
+#endif
 #ifdef CV_COLLECT_IMPL_DATA
         if(param_collect_impl)
         {
@@ -1498,7 +1723,7 @@ void TestBase::reportMetrics(bool toJUnitXML)
         const char* type_param = test_info->type_param();
         const char* value_param = test_info->value_param();
 
-#if defined(ANDROID) && defined(USE_ANDROID_LOGGING)
+#if defined(__ANDROID__) && defined(USE_ANDROID_LOGGING)
         LOGD("[ FAILED   ] %s.%s", test_info->test_case_name(), test_info->name());
 #endif
 
@@ -1572,10 +1797,12 @@ void TestBase::SetUp()
 {
     cv::theRNG().state = param_seed; // this rng should generate same numbers for each run
 
-    if (param_threads >= 0)
-        cv::setNumThreads(param_threads);
+    if (testThreads >= 0)
+        cv::setNumThreads(testThreads);
+    else
+        cv::setNumThreads(-1);
 
-#ifdef ANDROID
+#ifdef __ANDROID__
     if (param_affinity_mask)
         setCurrentThreadAffinityMask(param_affinity_mask);
 #endif
@@ -1588,14 +1815,15 @@ void TestBase::SetUp()
     currentIter = (unsigned int)-1;
     timeLimit = timeLimitDefault;
     times.clear();
+    metrics.terminationReason = performance_metrics::TERM_SKIP_TEST;
 }
 
 void TestBase::TearDown()
 {
     if (metrics.terminationReason == performance_metrics::TERM_SKIP_TEST)
     {
-        LOGI("\tTest was skipped");
-        GTEST_SUCCEED() << "Test was skipped";
+        //LOGI("\tTest was skipped");
+        //GTEST_SUCCEED() << "Test was skipped";
     }
     else
     {
@@ -1606,15 +1834,14 @@ void TestBase::TearDown()
         if (HasFailure())
         {
             reportMetrics(false);
+
+#ifdef ENABLE_INSTRUMENTATION
+            if(cv::instr::useInstrumentation())
+                InstumentData::printTree();
+#endif
             return;
         }
     }
-
-    const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-    const char* type_param = test_info->type_param();
-    const char* value_param = test_info->value_param();
-    if (value_param) printf("[ VALUE    ] \t%s\n", value_param), fflush(stdout);
-    if (type_param)  printf("[ TYPE     ] \t%s\n", type_param), fflush(stdout);
 
 #ifdef CV_COLLECT_IMPL_DATA
     if(param_collect_impl)
@@ -1639,6 +1866,12 @@ void TestBase::TearDown()
         fflush(stdout);
     }
 #endif
+
+#ifdef ENABLE_INSTRUMENTATION
+    if(cv::instr::useInstrumentation())
+        InstumentData::printTree();
+#endif
+
     reportMetrics(true);
 }
 
@@ -1650,17 +1883,16 @@ std::string TestBase::getDataPath(const std::string& relativePath)
         throw PerfEarlyExitException();
     }
 
-#ifndef WINRT
-    const char *data_path_dir = getenv("OPENCV_TEST_DATA_PATH");
-#else
-    const char *data_path_dir = OPENCV_TEST_DATA_PATH;
+    std::string data_path_dir = utils::getConfigurationParameterString("OPENCV_TEST_DATA_PATH");
+#ifdef WINRT
+    data_path_dir = OPENCV_TEST_DATA_PATH;
 #endif
     const char *path_separator = "/";
 
     std::string path;
-    if (data_path_dir)
+    if (!data_path_dir.empty())
     {
-        int len = (int)strlen(data_path_dir) - 1;
+        int len = (int)data_path_dir.size() - 1;
         if (len < 0) len = 0;
         path = (data_path_dir[0] == 0 ? std::string(".") : std::string(data_path_dir))
                 + (data_path_dir[len] == '/' || data_path_dir[len] == '\\' ? "" : path_separator);
@@ -1689,6 +1921,7 @@ std::string TestBase::getDataPath(const std::string& relativePath)
 
 void TestBase::RunPerfTestBody()
 {
+    metrics.clear();
     try
     {
 #ifdef CV_COLLECT_IMPL_DATA
@@ -1701,17 +1934,22 @@ void TestBase::RunPerfTestBody()
             implConf.GetImpl();
 #endif
     }
-    catch(PerfSkipTestException&)
+    catch(const PerfSkipTestException&)
     {
         metrics.terminationReason = performance_metrics::TERM_SKIP_TEST;
         return;
     }
-    catch(PerfEarlyExitException&)
+    catch(const cvtest::details::SkipTestExceptionBase&)
+    {
+        metrics.terminationReason = performance_metrics::TERM_SKIP_TEST;
+        throw;
+    }
+    catch(const PerfEarlyExitException&)
     {
         metrics.terminationReason = performance_metrics::TERM_INTERRUPT;
         return;//no additional failure logging
     }
-    catch(cv::Exception& e)
+    catch(const cv::Exception& e)
     {
         metrics.terminationReason = performance_metrics::TERM_EXCEPTION;
         #ifdef HAVE_CUDA
@@ -1720,7 +1958,7 @@ void TestBase::RunPerfTestBody()
         #endif
         FAIL() << "Expected: PerfTestBody() doesn't throw an exception.\n  Actual: it throws cv::Exception:\n  " << e.what();
     }
-    catch(std::exception& e)
+    catch(const std::exception& e)
     {
         metrics.terminationReason = performance_metrics::TERM_EXCEPTION;
         FAIL() << "Expected: PerfTestBody() doesn't throw an exception.\n  Actual: it throws std::exception:\n  " << e.what();
@@ -1860,8 +2098,6 @@ struct KeypointComparator
     {
         return cmp(pts_[idx1], pts_[idx2]);
     }
-private:
-    const KeypointComparator& operator=(const KeypointComparator&); // quiet MSVC
 };
 }//namespace
 
@@ -1875,7 +2111,8 @@ void perf::sort(std::vector<cv::KeyPoint>& pts, cv::InputOutputArray descriptors
     for (int i = 0; i < desc.rows; ++i)
         idxs[i] = i;
 
-    std::sort((int*)idxs, (int*)idxs + desc.rows, KeypointComparator(pts));
+    comparators::KeypointGreater cmp;
+    std::sort(idxs.data(), idxs.data() + desc.rows, [&](int lhs, int rhs){ return cmp(pts[lhs], pts[rhs]); });
 
     std::vector<cv::KeyPoint> spts(pts.size());
     cv::Mat sdesc(desc.size(), desc.type());
@@ -1907,19 +2144,11 @@ namespace perf
 
 void PrintTo(const MatType& t, ::std::ostream* os)
 {
-    switch( CV_MAT_DEPTH((int)t) )
-    {
-        case CV_8U:  *os << "8U";  break;
-        case CV_8S:  *os << "8S";  break;
-        case CV_16U: *os << "16U"; break;
-        case CV_16S: *os << "16S"; break;
-        case CV_32S: *os << "32S"; break;
-        case CV_32F: *os << "32F"; break;
-        case CV_64F: *os << "64F"; break;
-        case CV_USRTYPE1: *os << "USRTYPE1"; break;
-        default: *os << "INVALID_TYPE"; break;
-    }
-    *os << 'C' << CV_MAT_CN((int)t);
+    String name = typeToString(t);
+    if (name.size() > 3 && name[0] == 'C' && name[1] == 'V' && name[2] == '_')
+        *os << name.substr(3);
+    else
+        *os << name;
 }
 
 } //namespace perf

@@ -1,26 +1,45 @@
-#!/usr/bin/env python
+# BSD 3-Clause License
 
-# svgfig.py copyright (C) 2008 Jim Pivarski <jpivarski@gmail.com>
-#
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 2
-# of the License, or (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program; if not, write to the Free Software
-# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
-#
-# Full licence is in the file COPYING and at http://www.gnu.org/copyleft/gpl.html
+# Copyright (c) 2022, Jim Pivarski
+# All rights reserved.
+
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions and the following disclaimer.
+
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+
+# 3. Neither the name of the copyright holder nor the names of its
+#    contributors may be used to endorse or promote products derived from
+#    this software without specific prior written permission.
+
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import re, codecs, os, platform, copy, itertools, math, cmath, random, sys, copy
 _epsilon = 1e-5
 
+if sys.version_info >= (3,0):
+  long = int
+  basestring = (str,bytes)
+
+# Fix Python 2.x.
+try:
+    UNICODE_EXISTS = bool(type(unicode))
+except NameError:
+    unicode = lambda s: str(s)
 
 if re.search("windows", platform.system(), re.I):
     try:
@@ -38,6 +57,8 @@ _default_fileName = "tmp.svg"
 _hacks = {}
 _hacks["inkscape-text-vertical-shift"] = False
 
+__version__ = "1.0.1"
+
 
 def rgb(r, g, b, maximum=1.):
     """Create an SVG color string "#xxyyzz" from r, g, and b.
@@ -49,20 +70,21 @@ def rgb(r, g, b, maximum=1.):
                               max(0, min(b*255./maximum, 255)))
 
 def attr_preprocess(attr):
+    attrCopy = attr.copy()
     for name in attr.keys():
         name_colon = re.sub("__", ":", name)
         if name_colon != name:
-            attr[name_colon] = attr[name]
-            del attr[name]
+            attrCopy[name_colon] = attrCopy[name]
+            del attrCopy[name]
             name = name_colon
 
         name_dash = re.sub("_", "-", name)
         if name_dash != name:
-            attr[name_dash] = attr[name]
-            del attr[name]
+            attrCopy[name_dash] = attrCopy[name]
+            del attrCopy[name]
             name = name_dash
 
-    return attr
+    return attrCopy
 
 
 class SVG:
@@ -128,7 +150,7 @@ class SVG:
     """
     def __init__(self, *t_sub, **attr):
         if len(t_sub) == 0:
-            raise TypeError, "SVG element must have a t (SVG type)"
+            raise TypeError( "SVG element must have a t (SVG type)")
 
         # first argument is t (SVG type)
         self.t = t_sub[0]
@@ -262,7 +284,7 @@ class SVG:
 
         Returns a breadth-first generator over the SVG.  If depth_limit
         is a number, stop recursion at that depth."""
-        raise NotImplementedError, "Got an algorithm for breadth-first searching a tree without effectively copying the tree?"
+        raise NotImplementedError( "Got an algorithm for breadth-first searching a tree without effectively copying the tree?")
 
     def __iter__(self):
         return self.depth_first()
@@ -558,7 +580,7 @@ def canvas_outline(*sub, **attr):
     svg = canvas(*sub, **attr)
     match = re.match(r"[, \t]*([0-9e.+\-]+)[, \t]+([0-9e.+\-]+)[, \t]+([0-9e.+\-]+)[, \t]+([0-9e.+\-]+)[, \t]*", svg["viewBox"])
     if match is None:
-        raise ValueError, "canvas viewBox is incorrectly formatted"
+        raise ValueError( "canvas viewBox is incorrectly formatted")
     x, y, width, height = [float(x) for x in match.groups()]
     svg.prepend(SVG("rect", x=x, y=y, width=width, height=height, stroke="none", fill="cornsilk"))
     svg.append(SVG("rect", x=x, y=y, width=width, height=height, stroke="black", fill="none"))
@@ -675,7 +697,7 @@ def totrans(expr, vars=("x", "y"), globals=None, locals=None):
             return output
 
         else:
-            raise TypeError, "must be a function of 2 or 1 variables"
+            raise TypeError( "must be a function of 2 or 1 variables")
 
     if len(vars) == 2:
         g = math.__dict__
@@ -696,7 +718,7 @@ def totrans(expr, vars=("x", "y"), globals=None, locals=None):
         return output2
 
     else:
-        raise TypeError, "vars must have 2 or 1 elements"
+        raise TypeError( "vars must have 2 or 1 elements")
 
 
 def window(xmin, xmax, ymin, ymax, x=0, y=0, width=100, height=100,
@@ -735,10 +757,10 @@ def window(xmin, xmax, ymin, ymax, x=0, y=0, width=100, height=100,
     iy2 = ymax
 
     if xlogbase is not None and (ix1 <= 0. or ix2 <= 0.):
-        raise ValueError, "x range incompatible with log scaling: (%g, %g)" % (ix1, ix2)
+        raise ValueError ("x range incompatible with log scaling: (%g, %g)" % (ix1, ix2))
 
     if ylogbase is not None and (iy1 <= 0. or iy2 <= 0.):
-        raise ValueError, "y range incompatible with log scaling: (%g, %g)" % (iy1, iy2)
+        raise ValueError ("y range incompatible with log scaling: (%g, %g)" % (iy1, iy2))
 
     def maybelog(t, it1, it2, ot1, ot2, logbase):
         if t <= 0.:
@@ -813,7 +835,7 @@ class Fig:
 
         self.trans = kwds["trans"]; del kwds["trans"]
         if len(kwds) != 0:
-            raise TypeError, "Fig() got unexpected keyword arguments %s" % kwds.keys()
+            raise TypeError ("Fig() got unexpected keyword arguments %s" % kwds.keys())
 
     def SVG(self, trans=None):
         """Apply the transformation "trans" and return an SVG object.
@@ -931,7 +953,7 @@ class Plot:
         self.text_attr = kwds["text_attr"]; del kwds["text_attr"]
         self.axis_attr = kwds["axis_attr"]; del kwds["axis_attr"]
         if len(kwds) != 0:
-            raise TypeError, "Plot() got unexpected keyword arguments %s" % kwds.keys()
+            raise TypeError ("Plot() got unexpected keyword arguments %s" % kwds.keys())
 
     def SVG(self, trans=None):
         """Apply the transformation "trans" and return an SVG object."""
@@ -1039,7 +1061,7 @@ class Frame:
         self.axis_attr.update(kwds["axis_attr"]); del kwds["axis_attr"]
 
         if len(kwds) != 0:
-            raise TypeError, "Frame() got unexpected keyword arguments %s" % kwds.keys()
+            raise TypeError( "Frame() got unexpected keyword arguments %s" % kwds.keys())
 
     def SVG(self):
         """Apply the window transformation and return an SVG object."""
@@ -1101,7 +1123,7 @@ class Frame:
 def pathtoPath(svg):
     """Converts SVG("path", d="...") into Path(d=[...])."""
     if not isinstance(svg, SVG) or svg.t != "path":
-        raise TypeError, "Only SVG <path /> objects can be converted into Paths"
+        raise TypeError ("Only SVG <path /> objects can be converted into Paths")
     attr = dict(svg.attr)
     d = attr["d"]
     del attr["d"]
@@ -1235,7 +1257,7 @@ class Path:
                 errstring = "Path command \"%s\" requires a number at index %d" % (command, index)
                 num1, index, pathdata = self.parse_number(index, pathdata)
                 if num1 is None:
-                    raise ValueError, errstring
+                    raise ValueError ( errstring)
 
                 while num1 is not None:
                     output.append((command, num1))
@@ -1248,11 +1270,11 @@ class Path:
                 num2, index, pathdata = self.parse_number(index, pathdata)
 
                 if num1 is None:
-                    raise ValueError, errstring
+                    raise ValueError ( errstring)
 
                 while num1 is not None:
                     if num2 is None:
-                        raise ValueError, errstring
+                        raise ValueError ( errstring)
                     output.append((command, num1, num2, False))
 
                     num1, index, pathdata = self.parse_number(index, pathdata)
@@ -1267,11 +1289,11 @@ class Path:
                 num4, index, pathdata = self.parse_number(index, pathdata)
 
                 if num1 is None:
-                    raise ValueError, errstring
+                    raise ValueError ( errstring )
 
                 while num1 is not None:
                     if num2 is None or num3 is None or num4 is None:
-                        raise ValueError, errstring
+                        raise ValueError (errstring)
                     output.append((command, num1, num2, False, num3, num4, False))
 
                     num1, index, pathdata = self.parse_number(index, pathdata)
@@ -1290,11 +1312,11 @@ class Path:
                 num6, index, pathdata = self.parse_number(index, pathdata)
 
                 if num1 is None:
-                    raise ValueError, errstring
+                    raise ValueError(errstring)
 
                 while num1 is not None:
                     if num2 is None or num3 is None or num4 is None or num5 is None or num6 is None:
-                        raise ValueError, errstring
+                        raise ValueError(errstring)
 
                     output.append((command, num1, num2, False, num3, num4, False, num5, num6, False))
 
@@ -1317,11 +1339,11 @@ class Path:
                 num7, index, pathdata = self.parse_number(index, pathdata)
 
                 if num1 is None:
-                    raise ValueError, errstring
+                    raise ValueError(errstring)
 
                 while num1 is not None:
                     if num2 is None or num3 is None or num4 is None or num5 is None or num6 is None or num7 is None:
-                        raise ValueError, errstring
+                        raise ValueError(errstring)
 
                     output.append((command, num1, num2, False, num3, num4, num5, num6, num7, False))
 
@@ -1344,7 +1366,7 @@ class Path:
         output = []
         for datum in self.d:
             if not isinstance(datum, (tuple, list)):
-                raise TypeError, "pathdata elements must be tuples/lists"
+                raise TypeError("pathdata elements must be tuples/lists")
 
             command = datum[0]
 
@@ -1722,7 +1744,7 @@ class Curve:
         try:
             # the best way to keep all the information while sampling is to make a linked list
             if not (self.low < self.high):
-                raise ValueError, "low must be less than high"
+                raise ValueError("low must be less than high")
             low, high = self.Sample(float(self.low)), self.Sample(float(self.high))
             low.link(None, high)
             high.link(low, None)
@@ -1913,10 +1935,10 @@ class Poly:
                     vx[i], vy[i] = 0., 0.
 
         else:
-            raise ValueError, "mode must be \"lines\", \"bezier\", \"velocity\", \"foreback\", \"smooth\", or an abbreviation"
+            raise ValueError("mode must be \"lines\", \"bezier\", \"velocity\", \"foreback\", \"smooth\", or an abbreviation")
 
         d = []
-        indexes = range(len(self.d))
+        indexes = list(range(len(self.d)))
         if self.loop and len(self.d) > 0:
             indexes.append(0)
 
@@ -2220,7 +2242,7 @@ class Line(Curve):
                     defs.append(make_marker(self.arrow_start, "arrow_start"))
                     line.attr["marker-start"] = "url(#%s)" % self.arrow_start
                 else:
-                    raise TypeError, "arrow_start must be False/None or an id string for the new marker"
+                    raise TypeError("arrow_start must be False/None or an id string for the new marker")
 
             if self.arrow_end != False and self.arrow_end is not None:
                 if isinstance(self.arrow_end, SVG):
@@ -2230,7 +2252,7 @@ class Line(Curve):
                     defs.append(make_marker(self.arrow_end, "arrow_end"))
                     line.attr["marker-end"] = "url(#%s)" % self.arrow_end
                 else:
-                    raise TypeError, "arrow_end must be False/None or an id string for the new marker"
+                    raise TypeError("arrow_end must be False/None or an id string for the new marker")
 
             return SVG("g", defs, line)
 
@@ -2316,7 +2338,7 @@ class LineGlobal:
                     defs.append(make_marker(self.arrow_start, "arrow_start"))
                     line.attr["marker-start"] = "url(#%s)" % self.arrow_start
                 else:
-                    raise TypeError, "arrow_start must be False/None or an id string for the new marker"
+                    raise TypeError("arrow_start must be False/None or an id string for the new marker")
 
             if self.arrow_end != False and self.arrow_end is not None:
                 if isinstance(self.arrow_end, SVG):
@@ -2326,7 +2348,7 @@ class LineGlobal:
                     defs.append(make_marker(self.arrow_end, "arrow_end"))
                     line.attr["marker-end"] = "url(#%s)" % self.arrow_end
                 else:
-                    raise TypeError, "arrow_end must be False/None or an id string for the new marker"
+                    raise TypeError("arrow_end must be False/None or an id string for the new marker")
 
             return SVG("g", defs, line)
 
@@ -2681,7 +2703,7 @@ class Ticks:
                 elif isinstance(self.arrow_start, basestring):
                     defs.append(make_marker(self.arrow_start, "arrow_start"))
                 else:
-                    raise TypeError, "arrow_start must be False/None or an id string for the new marker"
+                    raise TypeError("arrow_start must be False/None or an id string for the new marker")
 
             if self.arrow_end != False and self.arrow_end is not None:
                 if isinstance(self.arrow_end, SVG):
@@ -2689,7 +2711,7 @@ class Ticks:
                 elif isinstance(self.arrow_end, basestring):
                     defs.append(make_marker(self.arrow_end, "arrow_end"))
                 else:
-                    raise TypeError, "arrow_end must be False/None or an id string for the new marker"
+                    raise TypeError("arrow_end must be False/None or an id string for the new marker")
 
             output.append(defs)
 
@@ -2757,7 +2779,7 @@ class Ticks:
             format = self.labels
 
         else:
-            raise TypeError, "labels must be None/False, True, a format string, or a number->string function"
+            raise TypeError("labels must be None/False, True, a format string, or a number->string function")
 
         # Now for the ticks
         ticks = self.ticks
@@ -2793,7 +2815,7 @@ class Ticks:
                 return ticks, []
 
             else:
-                raise TypeError, "miniticks must be None/False, True, a number of desired miniticks, or a list of numbers"
+                raise TypeError("miniticks must be None/False, True, a number of desired miniticks, or a list of numbers")
 
         # Cases 3 & 4: ticks is iterable
         elif getattr(ticks, "__iter__", False):
@@ -2830,10 +2852,10 @@ class Ticks:
                 return ticks, []
 
             else:
-                raise TypeError, "miniticks must be None/False, True, a number of desired miniticks, or a list of numbers"
+                raise TypeError("miniticks must be None/False, True, a number of desired miniticks, or a list of numbers")
 
         else:
-            raise TypeError, "ticks must be None/False, a number of desired ticks, a list of numbers, or a dictionary of explicit markers"
+            raise TypeError("ticks must be None/False, a number of desired ticks, a list of numbers, or a dictionary of explicit markers")
 
     def compute_ticks(self, N, format):
         """Return less than -N or exactly N optimal linear ticks.
@@ -2841,9 +2863,9 @@ class Ticks:
         Normally only used internally.
         """
         if self.low >= self.high:
-            raise ValueError, "low must be less than high"
+            raise ValueError("low must be less than high")
         if N == 1:
-            raise ValueError, "N can be 0 or >1 to specify the exact number of ticks or negative to specify a maximum"
+            raise ValueError("N can be 0 or >1 to specify the exact number of ticks or negative to specify a maximum")
 
         eps = _epsilon * (self.high - self.low)
 
@@ -2948,7 +2970,7 @@ class Ticks:
         original_ticks.sort()
 
         if self.low > original_ticks[0] + _epsilon or self.high < original_ticks[-1] - _epsilon:
-            raise ValueError, "original_ticks {%g...%g} extend beyond [%g, %g]" % (original_ticks[0], original_ticks[-1], self.low, self.high)
+            raise ValueError("original_ticks {%g...%g} extend beyond [%g, %g]" % (original_ticks[0], original_ticks[-1], self.low, self.high))
 
         granularities = []
         for i in range(len(original_ticks)-1):
@@ -2975,9 +2997,9 @@ class Ticks:
         Normally only used internally.
         """
         if self.low >= self.high:
-            raise ValueError, "low must be less than high"
+            raise ValueError("low must be less than high")
         if N == 1:
-            raise ValueError, "N can be 0 or >1 to specify the exact number of ticks or negative to specify a maximum"
+            raise ValueError("N can be 0 or >1 to specify the exact number of ticks or negative to specify a maximum")
 
         eps = _epsilon * (self.high - self.low)
 
@@ -3032,7 +3054,7 @@ class Ticks:
         Normally only used internally.
         """
         if self.low >= self.high:
-            raise ValueError, "low must be less than high"
+            raise ValueError("low must be less than high")
 
         lowN = math.floor(math.log(self.low, base))
         highN = math.ceil(math.log(self.high, base))
@@ -3166,7 +3188,7 @@ class LineAxis(Line, Ticks):
     def interpret(self):
         if self.exclude is not None and not (isinstance(self.exclude, (tuple, list)) and len(self.exclude) == 2 and
                                              isinstance(self.exclude[0], (int, long, float)) and isinstance(self.exclude[1], (int, long, float))):
-            raise TypeError, "exclude must either be None or (low, high)"
+            raise TypeError("exclude must either be None or (low, high)")
 
         ticks, miniticks = Ticks.interpret(self)
         if self.exclude is None:

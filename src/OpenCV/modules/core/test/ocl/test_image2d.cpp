@@ -10,7 +10,7 @@
 
 #ifdef HAVE_OPENCL
 
-namespace cvtest {
+namespace opencv_test {
 namespace ocl {
 
 TEST(Image2D, createAliasEmptyUMat)
@@ -83,7 +83,7 @@ TEST(Image2D, turnOffOpenCL)
         }
         else
             std::cout << "CV_8UC1 is not supported for OpenCL images. Test skipped." << std::endl;
-    
+
         // reset state to the previous one
         cv::ocl::setUseOpenCL(useOCL);
     }
@@ -91,6 +91,6 @@ TEST(Image2D, turnOffOpenCL)
         std::cout << "OpenCL runtime not found. Test skipped." << std::endl;
 }
 
-} } // namespace cvtest::ocl
+} } // namespace opencv_test::ocl
 
 #endif // HAVE_OPENCL

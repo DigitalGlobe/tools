@@ -42,6 +42,8 @@
 
 #include "test_precomp.hpp"
 
+namespace opencv_test { namespace {
+
 class CV_DecomposeProjectionMatrixTest : public cvtest::BaseTest
 {
 public:
@@ -86,7 +88,7 @@ void CV_DecomposeProjectionMatrixTest::run(int start_from)
         rng.fill(rVec, cv::RNG::UNIFORM, -CV_PI, CV_PI);
 
         cv::Matx33d origR;
-        Rodrigues(rVec, origR);
+        cv::Rodrigues(rVec, origR); // TODO cvtest
 
         cv::Vec3d origT;
         rng.fill(origT, cv::RNG::NORMAL, 0, 1);
@@ -111,19 +113,19 @@ void CV_DecomposeProjectionMatrixTest::run(int start_from)
 
 
         const double thresh = 1e-6;
-        if ( norm(origK, K, cv::NORM_INF) > thresh )
+        if (cv::norm(origK, K, cv::NORM_INF) > thresh)
         {
             ts->set_failed_test_info(cvtest::TS::FAIL_BAD_ACCURACY);
             break;
         }
 
-        if ( norm(origR, R, cv::NORM_INF) > thresh )
+        if (cv::norm(origR, R, cv::NORM_INF) > thresh)
         {
             ts->set_failed_test_info(cvtest::TS::FAIL_BAD_ACCURACY);
             break;
         }
 
-        if ( norm(origT, t, cv::NORM_INF) > thresh )
+        if (cv::norm(origT, t, cv::NORM_INF) > thresh)
         {
             ts->set_failed_test_info(cvtest::TS::FAIL_BAD_ACCURACY);
             break;
@@ -138,3 +140,44 @@ TEST(Calib3d_DecomposeProjectionMatrix, accuracy)
     CV_DecomposeProjectionMatrixTest test;
     test.safe_run();
 }
+
+TEST(Calib3d_DecomposeProjectionMatrix, degenerate_cases)
+{
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 2; j++)
+        {
+            cv::Matx34d P;
+            P(0, i) = 1;
+            P(1, (i + j + 1) % 3) = 1;
+            P(2, (i + 2 * j + 2) % 3) = 1;
+
+            cv::Matx33d K, R;
+            cv::Vec4d t;
+            decomposeProjectionMatrix(P, K, R, t);
+            EXPECT_LT(cv::norm(K * R, P.get_minor<3, 3>(0, 0), cv::NORM_INF), 1e-6);
+        }
+    }
+}
+
+TEST(Calib3d_DecomposeProjectionMatrix, bug_23733)
+{
+    cv::Matx34d P(52, -7, 4, 12,
+                  -6, 49, 12, 8,
+                  4, 17, 1, 0);
+    P *= 1e-6;
+
+    cv::Matx33d K, R;
+    cv::Vec4d t;
+    decomposeProjectionMatrix(P, K, R, t);
+
+    EXPECT_LT(cv::norm(R.t() * R - cv::Matx33d::eye(), cv::NORM_INF), 1e-10);
+
+    cv::Matx34d M;
+    cv::hconcat(R, -R * cv::Vec3d(t[0] / t[3], t[1] / t[3], t[2] / t[3]), M);
+
+    cv::Matx34d P_recompose = K * M;
+    EXPECT_LT(cv::norm(P_recompose - P, cv::NORM_INF), 1e-16);
+}
+
+}} // namespace

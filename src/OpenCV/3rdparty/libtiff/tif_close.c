@@ -1,5 +1,3 @@
-/* $Id: tif_close.c,v 1.19 2010-03-10 18:56:48 bfriesen Exp $ */
-
 /*
  * Copyright (c) 1988-1997 Sam Leffler
  * Copyright (c) 1991-1997 Silicon Graphics, Inc.
@@ -36,73 +34,101 @@
 
 /**
  * Auxiliary function to free the TIFF structure. Given structure will be
- * completetly freed, so you should save opened file handle and pointer
+ * completely freed, so you should save opened file handle and pointer
  * to the close procedure in external variables before calling
  * _TIFFCleanup(), if you will need these ones to close the file.
  *
  * @param tif A TIFF pointer.
  */
 
-void
-TIFFCleanup(TIFF* tif)
+void TIFFCleanup(TIFF *tif)
 {
     /*
-         * Flush buffered data and directory (if dirty).
-         */
+     * Flush buffered data and directory (if dirty).
+     */
     if (tif->tif_mode != O_RDONLY)
         TIFFFlush(tif);
     (*tif->tif_cleanup)(tif);
     TIFFFreeDirectory(tif);
 
-    if (tif->tif_dirlist)
-        _TIFFfree(tif->tif_dirlist);
+    _TIFFCleanupIFDOffsetAndNumberMaps(tif);
 
     /*
-         * Clean up client info links.
-         */
-    while( tif->tif_clientinfo )
+     * Clean up client info links.
+     */
+    while (tif->tif_clientinfo)
     {
-        TIFFClientInfoLink *link = tif->tif_clientinfo;
+        TIFFClientInfoLink *psLink = tif->tif_clientinfo;
 
-        tif->tif_clientinfo = link->next;
-        _TIFFfree( link->name );
-        _TIFFfree( link );
+        tif->tif_clientinfo = psLink->next;
+        _TIFFfreeExt(tif, psLink->name);
+        _TIFFfreeExt(tif, psLink);
     }
 
-    if (tif->tif_rawdata && (tif->tif_flags&TIFF_MYBUFFER))
-        _TIFFfree(tif->tif_rawdata);
+    if (tif->tif_rawdata && (tif->tif_flags & TIFF_MYBUFFER))
+        _TIFFfreeExt(tif, tif->tif_rawdata);
     if (isMapped(tif))
         TIFFUnmapFileContents(tif, tif->tif_base, (toff_t)tif->tif_size);
 
     /*
-         * Clean up custom fields.
-         */
-    if (tif->tif_fields && tif->tif_nfields > 0) {
-        uint32 i;
+     * Clean up custom fields.
+     */
+    if (tif->tif_fields && tif->tif_nfields > 0)
+    {
+        uint32_t i;
 
-        for (i = 0; i < tif->tif_nfields; i++) {
+        for (i = 0; i < tif->tif_nfields; i++)
+        {
             TIFFField *fld = tif->tif_fields[i];
-            if (fld->field_bit == FIELD_CUSTOM &&
-                strncmp("Tag ", fld->field_name, 4) == 0) {
-                _TIFFfree(fld->field_name);
-                _TIFFfree(fld);
+            if (fld->field_name != NULL)
+            {
+                if (fld->field_bit == FIELD_CUSTOM &&
+                    /* caution: tif_fields[i] must not be the beginning of a
+                     * fields-array. Otherwise the following tags are also freed
+                     * with the first free().
+                     */
+                    TIFFFieldIsAnonymous(fld))
+                {
+                    _TIFFfreeExt(tif, fld->field_name);
+                    _TIFFfreeExt(tif, fld);
+                }
             }
         }
 
-        _TIFFfree(tif->tif_fields);
+        _TIFFfreeExt(tif, tif->tif_fields);
     }
 
-        if (tif->tif_nfieldscompat > 0) {
-                uint32 i;
+    if (tif->tif_nfieldscompat > 0)
+    {
+        uint32_t i;
 
-                for (i = 0; i < tif->tif_nfieldscompat; i++) {
-                        if (tif->tif_fieldscompat[i].allocated_size)
-                                _TIFFfree(tif->tif_fieldscompat[i].fields);
-                }
-                _TIFFfree(tif->tif_fieldscompat);
+        for (i = 0; i < tif->tif_nfieldscompat; i++)
+        {
+            if (tif->tif_fieldscompat[i].allocated_size)
+                _TIFFfreeExt(tif, tif->tif_fieldscompat[i].fields);
         }
+        _TIFFfreeExt(tif, tif->tif_fieldscompat);
+    }
 
-    _TIFFfree(tif);
+    _TIFFfreeExt(NULL, tif);
+}
+
+/************************************************************************/
+/*                    _TIFFCleanupIFDOffsetAndNumberMaps()              */
+/************************************************************************/
+
+void _TIFFCleanupIFDOffsetAndNumberMaps(TIFF *tif)
+{
+    if (tif->tif_map_dir_offset_to_number)
+    {
+        TIFFHashSetDestroy(tif->tif_map_dir_offset_to_number);
+        tif->tif_map_dir_offset_to_number = NULL;
+    }
+    if (tif->tif_map_dir_number_to_offset)
+    {
+        TIFFHashSetDestroy(tif->tif_map_dir_number_to_offset);
+        tif->tif_map_dir_number_to_offset = NULL;
+    }
 }
 
 /************************************************************************/
@@ -119,22 +145,14 @@ TIFFCleanup(TIFF* tif)
  * @param tif A TIFF pointer.
  */
 
-void
-TIFFClose(TIFF* tif)
+void TIFFClose(TIFF *tif)
 {
-    TIFFCloseProc closeproc = tif->tif_closeproc;
-    thandle_t fd = tif->tif_clientdata;
+    if (tif != NULL)
+    {
+        TIFFCloseProc closeproc = tif->tif_closeproc;
+        thandle_t fd = tif->tif_clientdata;
 
-    TIFFCleanup(tif);
-    (void) (*closeproc)(fd);
+        TIFFCleanup(tif);
+        (void)(*closeproc)(fd);
+    }
 }
-
-/* vim: set ts=8 sts=8 sw=8 noet: */
-
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 8
- * fill-column: 78
- * End:
- */

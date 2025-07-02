@@ -42,66 +42,71 @@
 
 #include "precomp.hpp"
 
+#if defined (__APPLE__) || defined(MACOSX)
+   #define GL_SHARING_EXTENSION "cl_APPLE_gl_sharing"
+#else
+   #define GL_SHARING_EXTENSION "cl_khr_gl_sharing"
+#endif
+
 #ifdef HAVE_OPENGL
 #  include "gl_core_3_1.hpp"
 #  ifdef HAVE_CUDA
+#    if (defined(__arm__) || defined(__aarch64__)) \
+         && !defined(OPENCV_SKIP_CUDA_OPENGL_ARM_WORKAROUND)
+#      include <GL/gl.h>
+#      ifndef GL_VERSION
+#        define GL_VERSION 0x1F02
+#      endif
+#    endif
 #    include <cuda_gl_interop.h>
 #  endif
 #else // HAVE_OPENGL
-#  define NO_OPENGL_SUPPORT_ERROR CV_ErrorNoReturn(cv::Error::StsBadFunc, "OpenCV was build without OpenGL support")
+#  define NO_OPENGL_SUPPORT_ERROR CV_Error(cv::Error::StsBadFunc, "OpenCV was build without OpenGL support")
 #endif // HAVE_OPENGL
 
 using namespace cv;
 using namespace cv::cuda;
 
+#if defined(_MSC_VER)
+#pragma warning(disable : 4702)  // unreachable code
+#endif
+
 namespace
 {
-    #ifndef HAVE_OPENGL
-        inline void throw_no_ogl() { CV_Error(cv::Error::OpenGlNotSupported, "The library is compiled without OpenGL support"); }
-    #else
-        inline void throw_no_ogl() { CV_Error(cv::Error::OpenGlApiCallError, "OpenGL context doesn't exist"); }
-
-    bool checkError(const char* file, const int line, const char* func = 0)
+#ifndef HAVE_OPENGL
+inline static CV_NORETURN void throw_no_ogl() { CV_Error(cv::Error::OpenGlNotSupported, "The library is compiled without OpenGL support"); }
+#elif defined _DEBUG
+inline static bool checkError(const char* file, const int line, const char* func = 0)
+{
+    GLenum err = gl::GetError();
+    if (err != gl::NO_ERROR_)
     {
-        GLenum err = gl::GetError();
-
-        if (err != gl::NO_ERROR_)
+        const char* msg;
+        switch (err)
         {
-            const char* msg;
-
-            switch (err)
-            {
-            case gl::INVALID_ENUM:
-                msg = "An unacceptable value is specified for an enumerated argument";
-                break;
-
-            case gl::INVALID_VALUE:
-                msg = "A numeric argument is out of range";
-                break;
-
-            case gl::INVALID_OPERATION:
-                msg = "The specified operation is not allowed in the current state";
-                break;
-
-            case gl::OUT_OF_MEMORY:
-                msg = "There is not enough memory left to execute the command";
-                break;
-
-            default:
-                msg = "Unknown error";
-            };
-
-            cvError(CV_OpenGlApiCallError, func, msg, file, line);
-
-            return false;
-        }
-
-        return true;
+        case gl::INVALID_ENUM:
+            msg = "An unacceptable value is specified for an enumerated argument";
+            break;
+        case gl::INVALID_VALUE:
+            msg = "A numeric argument is out of range";
+            break;
+        case gl::INVALID_OPERATION:
+            msg = "The specified operation is not allowed in the current state";
+            break;
+        case gl::OUT_OF_MEMORY:
+            msg = "There is not enough memory left to execute the command";
+            break;
+        default:
+            msg = "Unknown error";
+        };
+        cv::error(Error::OpenGlApiCallError, func, msg, file, line);
     }
-    #endif
-
-    #define CV_CheckGlError() CV_DbgAssert( (checkError(__FILE__, __LINE__, CV_Func)) )
+    return true;
+}
+#endif // HAVE_OPENGL
 } // namespace
+
+#define CV_CheckGlError() CV_DbgAssert( (checkError(__FILE__, __LINE__, CV_Func)) )
 
 #ifdef HAVE_OPENGL
 namespace
@@ -116,11 +121,11 @@ namespace
 void cv::cuda::setGlDevice(int device)
 {
 #ifndef HAVE_OPENGL
-    (void) device;
+    CV_UNUSED(device);
     throw_no_ogl();
 #else
     #ifndef HAVE_CUDA
-        (void) device;
+        CV_UNUSED(device);
         throw_no_cuda();
     #else
         cudaSafeCall( cudaGLSetGLDevice(device) );
@@ -226,7 +231,7 @@ namespace
         CV_DbgAssert( resource_ != 0 );
 
         GraphicsMapHolder h(&resource_, stream);
-        (void) h;
+        CV_UNUSED(h);
 
         void* dst;
         size_t size;
@@ -245,7 +250,7 @@ namespace
         CV_DbgAssert( resource_ != 0 );
 
         GraphicsMapHolder h(&resource_, stream);
-        (void) h;
+        CV_UNUSED(h);
 
         void* src;
         size_t size;
@@ -468,11 +473,11 @@ cv::ogl::Buffer::Buffer() : rows_(0), cols_(0), type_(0)
 cv::ogl::Buffer::Buffer(int arows, int acols, int atype, unsigned int abufId, bool autoRelease) : rows_(0), cols_(0), type_(0)
 {
 #ifndef HAVE_OPENGL
-    (void) arows;
-    (void) acols;
-    (void) atype;
-    (void) abufId;
-    (void) autoRelease;
+    CV_UNUSED(arows);
+    CV_UNUSED(acols);
+    CV_UNUSED(atype);
+    CV_UNUSED(abufId);
+    CV_UNUSED(autoRelease);
     throw_no_ogl();
 #else
     impl_.reset(new Impl(abufId, autoRelease));
@@ -485,10 +490,10 @@ cv::ogl::Buffer::Buffer(int arows, int acols, int atype, unsigned int abufId, bo
 cv::ogl::Buffer::Buffer(Size asize, int atype, unsigned int abufId, bool autoRelease) : rows_(0), cols_(0), type_(0)
 {
 #ifndef HAVE_OPENGL
-    (void) asize;
-    (void) atype;
-    (void) abufId;
-    (void) autoRelease;
+    CV_UNUSED(asize);
+    CV_UNUSED(atype);
+    CV_UNUSED(abufId);
+    CV_UNUSED(autoRelease);
     throw_no_ogl();
 #else
     impl_.reset(new Impl(abufId, autoRelease));
@@ -501,9 +506,9 @@ cv::ogl::Buffer::Buffer(Size asize, int atype, unsigned int abufId, bool autoRel
 cv::ogl::Buffer::Buffer(InputArray arr, Target target, bool autoRelease) : rows_(0), cols_(0), type_(0)
 {
 #ifndef HAVE_OPENGL
-    (void) arr;
-    (void) target;
-    (void) autoRelease;
+    CV_UNUSED(arr);
+    CV_UNUSED(target);
+    CV_UNUSED(autoRelease);
     throw_no_ogl();
 #else
     const int kind = arr.kind();
@@ -533,11 +538,11 @@ cv::ogl::Buffer::Buffer(InputArray arr, Target target, bool autoRelease) : rows_
 void cv::ogl::Buffer::create(int arows, int acols, int atype, Target target, bool autoRelease)
 {
 #ifndef HAVE_OPENGL
-    (void) arows;
-    (void) acols;
-    (void) atype;
-    (void) target;
-    (void) autoRelease;
+    CV_UNUSED(arows);
+    CV_UNUSED(acols);
+    CV_UNUSED(atype);
+    CV_UNUSED(target);
+    CV_UNUSED(autoRelease);
     throw_no_ogl();
 #else
     if (rows_ != arows || cols_ != acols || type_ != atype)
@@ -566,7 +571,7 @@ void cv::ogl::Buffer::release()
 void cv::ogl::Buffer::setAutoRelease(bool flag)
 {
 #ifndef HAVE_OPENGL
-    (void) flag;
+    CV_UNUSED(flag);
     throw_no_ogl();
 #else
     impl_->setAutoRelease(flag);
@@ -576,9 +581,9 @@ void cv::ogl::Buffer::setAutoRelease(bool flag)
 void cv::ogl::Buffer::copyFrom(InputArray arr, Target target, bool autoRelease)
 {
 #ifndef HAVE_OPENGL
-    (void) arr;
-    (void) target;
-    (void) autoRelease;
+    CV_UNUSED(arr);
+    CV_UNUSED(target);
+    CV_UNUSED(autoRelease);
     throw_no_ogl();
 #else
     const int kind = arr.kind();
@@ -621,17 +626,17 @@ void cv::ogl::Buffer::copyFrom(InputArray arr, Target target, bool autoRelease)
 void cv::ogl::Buffer::copyFrom(InputArray arr, cuda::Stream& stream, Target target, bool autoRelease)
 {
 #ifndef HAVE_OPENGL
-    (void) arr;
-    (void) stream;
-    (void) target;
-    (void) autoRelease;
+    CV_UNUSED(arr);
+    CV_UNUSED(stream);
+    CV_UNUSED(target);
+    CV_UNUSED(autoRelease);
     throw_no_ogl();
 #else
     #ifndef HAVE_CUDA
-        (void) arr;
-        (void) stream;
-        (void) target;
-        (void) autoRelease;
+        CV_UNUSED(arr);
+        CV_UNUSED(stream);
+        CV_UNUSED(target);
+        CV_UNUSED(autoRelease);
         throw_no_cuda();
     #else
         GpuMat dmat = arr.getGpuMat();
@@ -646,7 +651,7 @@ void cv::ogl::Buffer::copyFrom(InputArray arr, cuda::Stream& stream, Target targ
 void cv::ogl::Buffer::copyTo(OutputArray arr) const
 {
 #ifndef HAVE_OPENGL
-    (void) arr;
+    CV_UNUSED(arr);
     throw_no_ogl();
 #else
     const int kind = arr.kind();
@@ -686,13 +691,13 @@ void cv::ogl::Buffer::copyTo(OutputArray arr) const
 void cv::ogl::Buffer::copyTo(OutputArray arr, cuda::Stream& stream) const
 {
 #ifndef HAVE_OPENGL
-    (void) arr;
-    (void) stream;
+    CV_UNUSED(arr);
+    CV_UNUSED(stream);
     throw_no_ogl();
 #else
     #ifndef HAVE_CUDA
-        (void) arr;
-        (void) stream;
+        CV_UNUSED(arr);
+        CV_UNUSED(stream);
         throw_no_cuda();
     #else
         arr.create(rows_, cols_, type_);
@@ -705,10 +710,9 @@ void cv::ogl::Buffer::copyTo(OutputArray arr, cuda::Stream& stream) const
 cv::ogl::Buffer cv::ogl::Buffer::clone(Target target, bool autoRelease) const
 {
 #ifndef HAVE_OPENGL
-    (void) target;
-    (void) autoRelease;
+    CV_UNUSED(target);
+    CV_UNUSED(autoRelease);
     throw_no_ogl();
-    return cv::ogl::Buffer();
 #else
     ogl::Buffer buf;
     buf.copyFrom(*this, target, autoRelease);
@@ -719,7 +723,7 @@ cv::ogl::Buffer cv::ogl::Buffer::clone(Target target, bool autoRelease) const
 void cv::ogl::Buffer::bind(Target target) const
 {
 #ifndef HAVE_OPENGL
-    (void) target;
+    CV_UNUSED(target);
     throw_no_ogl();
 #else
     impl_->bind(target);
@@ -729,7 +733,7 @@ void cv::ogl::Buffer::bind(Target target) const
 void cv::ogl::Buffer::unbind(Target target)
 {
 #ifndef HAVE_OPENGL
-    (void) target;
+    CV_UNUSED(target);
     throw_no_ogl();
 #else
     gl::BindBuffer(target, 0);
@@ -740,9 +744,8 @@ void cv::ogl::Buffer::unbind(Target target)
 Mat cv::ogl::Buffer::mapHost(Access access)
 {
 #ifndef HAVE_OPENGL
-    (void) access;
+    CV_UNUSED(access);
     throw_no_ogl();
-    return Mat();
 #else
     return Mat(rows_, cols_, type_, impl_->mapHost(access));
 #endif
@@ -761,11 +764,9 @@ GpuMat cv::ogl::Buffer::mapDevice()
 {
 #ifndef HAVE_OPENGL
     throw_no_ogl();
-    return GpuMat();
 #else
     #ifndef HAVE_CUDA
         throw_no_cuda();
-        return GpuMat();
     #else
         return GpuMat(rows_, cols_, type_, impl_->mapDevice());
     #endif
@@ -788,14 +789,12 @@ void cv::ogl::Buffer::unmapDevice()
 cuda::GpuMat cv::ogl::Buffer::mapDevice(cuda::Stream& stream)
 {
 #ifndef HAVE_OPENGL
-    (void) stream;
+    CV_UNUSED(stream);
     throw_no_ogl();
-    return GpuMat();
 #else
     #ifndef HAVE_CUDA
-        (void) stream;
+        CV_UNUSED(stream);
         throw_no_cuda();
-        return GpuMat();
     #else
         return GpuMat(rows_, cols_, type_, impl_->mapDevice(cuda::StreamAccessor::getStream(stream)));
     #endif
@@ -805,11 +804,11 @@ cuda::GpuMat cv::ogl::Buffer::mapDevice(cuda::Stream& stream)
 void cv::ogl::Buffer::unmapDevice(cuda::Stream& stream)
 {
 #ifndef HAVE_OPENGL
-    (void) stream;
+    CV_UNUSED(stream);
     throw_no_ogl();
 #else
     #ifndef HAVE_CUDA
-        (void) stream;
+        CV_UNUSED(stream);
         throw_no_cuda();
     #else
         impl_->unmapDevice(cuda::StreamAccessor::getStream(stream));
@@ -821,7 +820,6 @@ unsigned int cv::ogl::Buffer::bufId() const
 {
 #ifndef HAVE_OPENGL
     throw_no_ogl();
-    return 0;
 #else
     return impl_->bufId();
 #endif
@@ -952,11 +950,11 @@ cv::ogl::Texture2D::Texture2D() : rows_(0), cols_(0), format_(NONE)
 cv::ogl::Texture2D::Texture2D(int arows, int acols, Format aformat, unsigned int atexId, bool autoRelease) : rows_(0), cols_(0), format_(NONE)
 {
 #ifndef HAVE_OPENGL
-    (void) arows;
-    (void) acols;
-    (void) aformat;
-    (void) atexId;
-    (void) autoRelease;
+    CV_UNUSED(arows);
+    CV_UNUSED(acols);
+    CV_UNUSED(aformat);
+    CV_UNUSED(atexId);
+    CV_UNUSED(autoRelease);
     throw_no_ogl();
 #else
     impl_.reset(new Impl(atexId, autoRelease));
@@ -969,10 +967,10 @@ cv::ogl::Texture2D::Texture2D(int arows, int acols, Format aformat, unsigned int
 cv::ogl::Texture2D::Texture2D(Size asize, Format aformat, unsigned int atexId, bool autoRelease) : rows_(0), cols_(0), format_(NONE)
 {
 #ifndef HAVE_OPENGL
-    (void) asize;
-    (void) aformat;
-    (void) atexId;
-    (void) autoRelease;
+    CV_UNUSED(asize);
+    CV_UNUSED(aformat);
+    CV_UNUSED(atexId);
+    CV_UNUSED(autoRelease);
     throw_no_ogl();
 #else
     impl_.reset(new Impl(atexId, autoRelease));
@@ -985,8 +983,8 @@ cv::ogl::Texture2D::Texture2D(Size asize, Format aformat, unsigned int atexId, b
 cv::ogl::Texture2D::Texture2D(InputArray arr, bool autoRelease) : rows_(0), cols_(0), format_(NONE)
 {
 #ifndef HAVE_OPENGL
-    (void) arr;
-    (void) autoRelease;
+    CV_UNUSED(arr);
+    CV_UNUSED(autoRelease);
     throw_no_ogl();
 #else
     const int kind = arr.kind();
@@ -1055,10 +1053,10 @@ cv::ogl::Texture2D::Texture2D(InputArray arr, bool autoRelease) : rows_(0), cols
 void cv::ogl::Texture2D::create(int arows, int acols, Format aformat, bool autoRelease)
 {
 #ifndef HAVE_OPENGL
-    (void) arows;
-    (void) acols;
-    (void) aformat;
-    (void) autoRelease;
+    CV_UNUSED(arows);
+    CV_UNUSED(acols);
+    CV_UNUSED(aformat);
+    CV_UNUSED(autoRelease);
     throw_no_ogl();
 #else
     if (rows_ != arows || cols_ != acols || format_ != aformat)
@@ -1087,7 +1085,7 @@ void cv::ogl::Texture2D::release()
 void cv::ogl::Texture2D::setAutoRelease(bool flag)
 {
 #ifndef HAVE_OPENGL
-    (void) flag;
+    CV_UNUSED(flag);
     throw_no_ogl();
 #else
     impl_->setAutoRelease(flag);
@@ -1097,8 +1095,8 @@ void cv::ogl::Texture2D::setAutoRelease(bool flag)
 void cv::ogl::Texture2D::copyFrom(InputArray arr, bool autoRelease)
 {
 #ifndef HAVE_OPENGL
-    (void) arr;
-    (void) autoRelease;
+    CV_UNUSED(arr);
+    CV_UNUSED(autoRelease);
     throw_no_ogl();
 #else
     const int kind = arr.kind();
@@ -1164,9 +1162,9 @@ void cv::ogl::Texture2D::copyFrom(InputArray arr, bool autoRelease)
 void cv::ogl::Texture2D::copyTo(OutputArray arr, int ddepth, bool autoRelease) const
 {
 #ifndef HAVE_OPENGL
-    (void) arr;
-    (void) ddepth;
-    (void) autoRelease;
+    CV_UNUSED(arr);
+    CV_UNUSED(ddepth);
+    CV_UNUSED(autoRelease);
     throw_no_ogl();
 #else
     const int kind = arr.kind();
@@ -1227,7 +1225,6 @@ unsigned int cv::ogl::Texture2D::texId() const
 {
 #ifndef HAVE_OPENGL
     throw_no_ogl();
-    return 0;
 #else
     return impl_->texId();
 #endif
@@ -1324,10 +1321,15 @@ void cv::ogl::Arrays::release()
 
 void cv::ogl::Arrays::setAutoRelease(bool flag)
 {
+#ifndef HAVE_OPENGL
+    CV_UNUSED(flag);
+    throw_no_ogl();
+#else
     vertex_.setAutoRelease(flag);
     color_.setAutoRelease(flag);
     normal_.setAutoRelease(flag);
     texCoord_.setAutoRelease(flag);
+#endif
 }
 
 void cv::ogl::Arrays::bind() const
@@ -1415,9 +1417,9 @@ void cv::ogl::Arrays::bind() const
 void cv::ogl::render(const ogl::Texture2D& tex, Rect_<double> wndRect, Rect_<double> texRect)
 {
 #ifndef HAVE_OPENGL
-    (void) tex;
-    (void) wndRect;
-    (void) texRect;
+    CV_UNUSED(tex);
+    CV_UNUSED(wndRect);
+    CV_UNUSED(texRect);
     throw_no_ogl();
 #else
     if (!tex.empty())
@@ -1445,14 +1447,14 @@ void cv::ogl::render(const ogl::Texture2D& tex, Rect_<double> wndRect, Rect_<dou
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR);
         CV_CheckGlError();
 
-        const float vertex[] =
+        const double vertex[] =
         {
-            wndRect.x, wndRect.y, 0.0f,
-            wndRect.x, (wndRect.y + wndRect.height), 0.0f,
-            wndRect.x + wndRect.width, (wndRect.y + wndRect.height), 0.0f,
-            wndRect.x + wndRect.width, wndRect.y, 0.0f
+            wndRect.x, wndRect.y, 0.0,
+            wndRect.x, (wndRect.y + wndRect.height), 0.0,
+            wndRect.x + wndRect.width, (wndRect.y + wndRect.height), 0.0,
+            wndRect.x + wndRect.width, wndRect.y, 0.0
         };
-        const float texCoords[] =
+        const double texCoords[] =
         {
             texRect.x, texRect.y,
             texRect.x, texRect.y + texRect.height,
@@ -1465,7 +1467,7 @@ void cv::ogl::render(const ogl::Texture2D& tex, Rect_<double> wndRect, Rect_<dou
         gl::EnableClientState(gl::TEXTURE_COORD_ARRAY);
         CV_CheckGlError();
 
-        gl::TexCoordPointer(2, gl::FLOAT, 0, texCoords);
+        gl::TexCoordPointer(2, gl::DOUBLE, 0, texCoords);
         CV_CheckGlError();
 
         gl::DisableClientState(gl::NORMAL_ARRAY);
@@ -1475,7 +1477,7 @@ void cv::ogl::render(const ogl::Texture2D& tex, Rect_<double> wndRect, Rect_<dou
         gl::EnableClientState(gl::VERTEX_ARRAY);
         CV_CheckGlError();
 
-        gl::VertexPointer(3, gl::FLOAT, 0, vertex);
+        gl::VertexPointer(3, gl::DOUBLE, 0, vertex);
         CV_CheckGlError();
 
         gl::DrawArrays(gl::QUADS, 0, 4);
@@ -1487,9 +1489,9 @@ void cv::ogl::render(const ogl::Texture2D& tex, Rect_<double> wndRect, Rect_<dou
 void cv::ogl::render(const ogl::Arrays& arr, int mode, Scalar color)
 {
 #ifndef HAVE_OPENGL
-    (void) arr;
-    (void) mode;
-    (void) color;
+    CV_UNUSED(arr);
+    CV_UNUSED(mode);
+    CV_UNUSED(color);
     throw_no_ogl();
 #else
     if (!arr.empty())
@@ -1506,10 +1508,10 @@ void cv::ogl::render(const ogl::Arrays& arr, int mode, Scalar color)
 void cv::ogl::render(const ogl::Arrays& arr, InputArray indices, int mode, Scalar color)
 {
 #ifndef HAVE_OPENGL
-    (void) arr;
-    (void) indices;
-    (void) mode;
-    (void) color;
+    CV_UNUSED(arr);
+    CV_UNUSED(indices);
+    CV_UNUSED(mode);
+    CV_UNUSED(color);
     throw_no_ogl();
 #else
     if (!arr.empty() && !indices.empty())
@@ -1579,18 +1581,19 @@ void cv::ogl::render(const ogl::Arrays& arr, InputArray indices, int mode, Scala
 // CL-GL Interoperability
 
 #ifdef HAVE_OPENCL
+#  include "opencv2/core/opencl/runtime/opencl_core.hpp"
 #  include "opencv2/core/opencl/runtime/opencl_gl.hpp"
 #  ifdef cl_khr_gl_sharing
 #    define HAVE_OPENCL_OPENGL_SHARING
 #  else
-#    define NO_OPENCL_SHARING_ERROR CV_ErrorNoReturn(cv::Error::StsBadFunc, "OpenCV was build without OpenCL/OpenGL sharing support")
+#    define NO_OPENCL_SHARING_ERROR CV_Error(cv::Error::StsBadFunc, "OpenCV was build without OpenCL/OpenGL sharing support")
 #  endif
 #else // HAVE_OPENCL
-#  define NO_OPENCL_SUPPORT_ERROR CV_ErrorNoReturn(cv::Error::StsBadFunc, "OpenCV was build without OpenCL support")
+#  define NO_OPENCL_SUPPORT_ERROR CV_Error(cv::Error::StsBadFunc, "OpenCV was build without OpenCL support")
 #endif // HAVE_OPENCL
 
 #if defined(HAVE_OPENGL)
-#  if defined(ANDROID)
+#  if defined(__ANDROID__)
 #    include <EGL/egl.h>
 #  elif defined(__linux__)
 #    include <GL/glx.h>
@@ -1598,6 +1601,34 @@ void cv::ogl::render(const ogl::Arrays& arr, InputArray indices, int mode, Scala
 #endif // HAVE_OPENGL
 
 namespace cv { namespace ogl {
+
+#if defined(HAVE_OPENCL) && defined(HAVE_OPENGL) && defined(HAVE_OPENCL_OPENGL_SHARING)
+// Check to avoid crash in OpenCL runtime: https://github.com/opencv/opencv/issues/5209
+static void checkOpenCLVersion()
+{
+    using namespace cv::ocl;
+    const Device& device = Device::getDefault();
+    //CV_Assert(!device.empty());
+    cl_device_id dev = (cl_device_id)device.ptr();
+    CV_Assert(dev);
+
+    cl_platform_id platform_id = 0;
+    size_t sz = 0;
+
+    cl_int status = clGetDeviceInfo(dev, CL_DEVICE_PLATFORM, sizeof(platform_id), &platform_id, &sz);
+    CV_Assert(status == CL_SUCCESS && sz == sizeof(cl_platform_id));
+    CV_Assert(platform_id);
+
+    PlatformInfo pi(&platform_id);
+    int versionMajor = pi.versionMajor();
+    int versionMinor = pi.versionMinor();
+    if (versionMajor < 1 || (versionMajor == 1 && versionMinor <= 1))
+        CV_Error_(cv::Error::OpenCLApiCallError,
+            ("OpenCL: clCreateFromGLTexture requires OpenCL 1.2+ version: %d.%d - %s (%s)",
+                versionMajor, versionMinor, pi.name().c_str(), pi.version().c_str())
+        );
+}
+#endif
 
 namespace ocl {
 
@@ -1610,92 +1641,151 @@ Context& initializeContextFromGL()
 #elif !defined(HAVE_OPENCL_OPENGL_SHARING)
     NO_OPENCL_SHARING_ERROR;
 #else
-    cl_uint numPlatforms;
-    cl_int status = clGetPlatformIDs(0, NULL, &numPlatforms);
+    cl_uint platformsCnt = 0;
+    cl_uint devCnt = 0;
+    cl_device_id* devices = nullptr;
+    cl_uint devUsed = 0;
+    cl_context context = nullptr;
+
+    cl_int status = clGetPlatformIDs(0, NULL, &platformsCnt);
     if (status != CL_SUCCESS)
-        CV_Error(cv::Error::OpenCLInitError, "OpenCL: Can't get number of platforms");
-    if (numPlatforms == 0)
+        CV_Error_(cv::Error::OpenCLInitError, ("OpenCL: Can't get number of platforms: %d", status));
+    if (platformsCnt == 0)
         CV_Error(cv::Error::OpenCLInitError, "OpenCL: No available platforms");
 
-    std::vector<cl_platform_id> platforms(numPlatforms);
-    status = clGetPlatformIDs(numPlatforms, &platforms[0], NULL);
+    std::vector<cl_platform_id> platforms(platformsCnt);
+    status = clGetPlatformIDs(platformsCnt, &platforms[0], NULL);
     if (status != CL_SUCCESS)
-        CV_Error(cv::Error::OpenCLInitError, "OpenCL: Can't get number of platforms");
+        CV_Error_(cv::Error::OpenCLInitError, ("OpenCL: Can't get platforms: %d", status));
+
 
     // TODO Filter platforms by name from OPENCV_OPENCL_DEVICE
+    bool sharingSupported = false;
 
-    int found = -1;
-    cl_device_id device = NULL;
-    cl_context context = NULL;
+    for (unsigned int i = 0; (!sharingSupported && (i < platformsCnt)); ++i) {
+        status = clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_GPU, 0, NULL, &devCnt);
+        if (status != CL_SUCCESS)
+            CV_Error_(cv::Error::OpenCLInitError, ("OpenCL: No devices available: %d", status));
 
-    for (int i = 0; i < (int)numPlatforms; i++)
-    {
-        // query platform extension: presence of "cl_khr_gl_sharing" extension is requred
-        {
-            AutoBuffer<char> extensionStr;
+        try {
+            devices = new cl_device_id[devCnt];
 
-            size_t extensionSize;
-            status = clGetPlatformInfo(platforms[i], CL_PLATFORM_EXTENSIONS, 0, NULL, &extensionSize);
-            if (status == CL_SUCCESS)
-            {
-                extensionStr.allocate(extensionSize+1);
-                status = clGetPlatformInfo(platforms[i], CL_PLATFORM_EXTENSIONS, extensionSize, (char*)extensionStr, NULL);
-            }
+            status = clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_GPU, devCnt, devices, NULL);
             if (status != CL_SUCCESS)
-                CV_Error(cv::Error::OpenCLInitError, "OpenCL: Can't get platform extension string");
+                CV_Error_(cv::Error::OpenCLInitError, ("OpenCL: Can't get platform devices: %d", status));
 
-            if (!strstr((const char*)extensionStr, "cl_khr_gl_sharing"))
-                continue;
+            for (unsigned int j = 0; (!sharingSupported && (j < devCnt)); ++j) {
+                size_t extensionSize;
+                status = clGetDeviceInfo(devices[j], CL_DEVICE_EXTENSIONS, 0, NULL, &extensionSize );
+                if (status != CL_SUCCESS)
+                    CV_Error_(cv::Error::OpenCLInitError, ("OpenCL: No devices available: %d", status));
+
+                if(extensionSize > 0)
+                {
+                    char* extensions = nullptr;
+
+                    try {
+                        extensions = new char[extensionSize];
+
+                        status = clGetDeviceInfo(devices[j], CL_DEVICE_EXTENSIONS, extensionSize, extensions, &extensionSize);
+                        if (status != CL_SUCCESS)
+                            continue;
+                    } catch(...) {
+                        CV_Error(cv::Error::OpenCLInitError, "OpenCL: Exception thrown during device extensions gathering");
+                    }
+
+                    std::string devString;
+
+                    if(extensions != nullptr) {
+                        devString = extensions;
+                        delete[] extensions;
+                    }
+                    else {
+                        CV_Error(cv::Error::OpenCLInitError, "OpenCL: Unexpected error during device extensions gathering");
+                    }
+
+                    size_t oldPos = 0;
+                    size_t spacePos = devString.find(' ', oldPos); // extensions string is space delimited
+                    while (spacePos != devString.npos) {
+                        if (strcmp(GL_SHARING_EXTENSION,
+                                devString.substr(oldPos, spacePos - oldPos).c_str())
+                                == 0) {
+                            // Device supports context sharing with OpenGL
+                            devUsed = i;
+                            sharingSupported = true;
+                            break;
+                        }
+                        do {
+                            oldPos = spacePos + 1;
+                            spacePos = devString.find(' ', oldPos);
+                        } while (spacePos == oldPos);
+                    }
+                }
+            }
+        } catch(...) {
+            CV_Error(cv::Error::OpenCLInitError, "OpenCL: Exception thrown during device information gathering");
+            if(devices != nullptr) {
+                delete[] devices;
+            }
+            continue;
         }
 
-        clGetGLContextInfoKHR_fn clGetGLContextInfoKHR = (clGetGLContextInfoKHR_fn)
-                clGetExtensionFunctionAddressForPlatform(platforms[i], "clGetGLContextInfoKHR");
-        if (!clGetGLContextInfoKHR)
-            continue;
-
-        cl_context_properties properties[] =
-        {
-#if defined(WIN32) || defined(_WIN32)
-            CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[i],
-            CL_GL_CONTEXT_KHR, (cl_context_properties)wglGetCurrentContext(),
-            CL_WGL_HDC_KHR, (cl_context_properties)wglGetCurrentDC(),
-#elif defined(ANDROID)
-            CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[i],
-            CL_GL_CONTEXT_KHR, (cl_context_properties)eglGetCurrentContext(),
-            CL_EGL_DISPLAY_KHR, (cl_context_properties)eglGetCurrentDisplay(),
+        if (sharingSupported) {
+            // Define OS-specific context properties and create the OpenCL context
+#if defined (__APPLE__)
+                CGLContextObj cglContext = CGLGetCurrentContext();
+                CGLShareGroupObj cglShareGroup = CGLGetShareGroup(cglContext);
+                cl_context_properties props[] =
+                {
+                    CL_CONTEXT_PROPERTY_USE_CGL_SHAREGROUP_APPLE, (cl_context_properties)cglShareGroup,
+                    0
+                };
+                context = clCreateContext(props, 0,0, NULL, NULL, &ciErrNum);
+#elif defined(__ANDROID__)
+                cl_context_properties props[] =
+                {
+                    CL_GL_CONTEXT_KHR, (cl_context_properties)glXGetCurrentContext(),
+                    CL_GLX_DISPLAY_KHR, (cl_context_properties)glXGetCurrentDisplay(),
+                    CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[i],
+                    0
+                };
+                context = clCreateContext(props, 1, &devices[devUsed], NULL, NULL, &status);
+#elif defined(_WIN32)
+                cl_context_properties props[] =
+                {
+                    CL_GL_CONTEXT_KHR, (cl_context_properties)wglGetCurrentContext(),
+                    CL_WGL_HDC_KHR, (cl_context_properties)wglGetCurrentDC(),
+                    CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[i],
+                    0
+                };
+                context = clCreateContext(props, 1, &devices[devUsed], NULL, NULL, &status);
 #elif defined(__linux__)
-            CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[i],
-            CL_GL_CONTEXT_KHR, (cl_context_properties)glXGetCurrentContext(),
-            CL_GLX_DISPLAY_KHR, (cl_context_properties)glXGetCurrentDisplay(),
+                cl_context_properties props[] =
+                {
+                    CL_GL_CONTEXT_KHR, (cl_context_properties)glXGetCurrentContext(),
+                    CL_GLX_DISPLAY_KHR, (cl_context_properties)glXGetCurrentDisplay(),
+                    CL_CONTEXT_PLATFORM, (cl_context_properties)platforms[i],
+                    0
+                };
+                context = clCreateContext(props, 1, &devices[devUsed], NULL, NULL, &status);
 #endif
-            0
-        };
-
-        // query device
-        device = NULL;
-        status = clGetGLContextInfoKHR(properties, CL_CURRENT_DEVICE_FOR_GL_CONTEXT_KHR, sizeof(cl_device_id), (void*)&device, NULL);
-        if (status != CL_SUCCESS)
-            continue;
-
-        // create context
-        context = clCreateContext(properties, 1, &device, NULL, NULL, &status);
-        if (status != CL_SUCCESS)
-        {
-            clReleaseDevice(device);
         }
+
+        if (status != CL_SUCCESS)
+            CV_Error_(cv::Error::OpenCLInitError, ("OpenCL: Can't create context for OpenGL interop: %d", status));
         else
-        {
-            found = i;
             break;
-        }
     }
 
-    if (found < 0)
-        CV_Error(cv::Error::OpenCLInitError, "OpenCL: Can't create context for OpenGL interop");
 
-    Context& ctx = Context::getDefault(false);
-    initializeContextFromHandle(ctx, platforms[found], context, device);
-    return ctx;
+    cl_platform_id platform = platforms[devUsed];
+    std::string platformName = PlatformInfo(&platform).name();
+
+    OpenCLExecutionContext clExecCtx = OpenCLExecutionContext::create(platformName, platform, context, devices[devUsed]);
+    clReleaseDevice(devices[devUsed]);
+    clReleaseContext(context);
+    clExecCtx.bind();
+    return const_cast<Context&>(clExecCtx.getContext());
 #endif
 }
 
@@ -1703,7 +1793,7 @@ Context& initializeContextFromGL()
 
 void convertToGLTexture2D(InputArray src, Texture2D& texture)
 {
-    (void)src; (void)texture;
+    CV_UNUSED(src); CV_UNUSED(texture);
 #if !defined(HAVE_OPENGL)
     NO_OPENGL_SUPPORT_ERROR;
 #elif !defined(HAVE_OPENCL)
@@ -1718,6 +1808,8 @@ void convertToGLTexture2D(InputArray src, Texture2D& texture)
     Context& ctx = Context::getDefault();
     cl_context context = (cl_context)ctx.ptr();
 
+    checkOpenCLVersion();  // clCreateFromGLTexture requires OpenCL 1.2
+
     UMat u = src.getUMat();
 
     // TODO Add support for roi
@@ -1727,37 +1819,37 @@ void convertToGLTexture2D(InputArray src, Texture2D& texture)
     cl_int status = 0;
     cl_mem clImage = clCreateFromGLTexture(context, CL_MEM_WRITE_ONLY, gl::TEXTURE_2D, 0, texture.texId(), &status);
     if (status != CL_SUCCESS)
-        CV_Error(cv::Error::OpenCLApiCallError, "OpenCL: clCreateFromGLTexture failed");
+        CV_Error_(cv::Error::OpenCLApiCallError, ("OpenCL: clCreateFromGLTexture failed: %d", status));
 
     cl_mem clBuffer = (cl_mem)u.handle(ACCESS_READ);
 
     cl_command_queue q = (cl_command_queue)Queue::getDefault().ptr();
     status = clEnqueueAcquireGLObjects(q, 1, &clImage, 0, NULL, NULL);
     if (status != CL_SUCCESS)
-        CV_Error(cv::Error::OpenCLApiCallError, "OpenCL: clEnqueueAcquireGLObjects failed");
+        CV_Error_(cv::Error::OpenCLApiCallError, ("OpenCL: clEnqueueAcquireGLObjects failed: %d", status));
     size_t offset = 0; // TODO
     size_t dst_origin[3] = {0, 0, 0};
-    size_t region[3] = {u.cols, u.rows, 1};
+    size_t region[3] = { (size_t)u.cols, (size_t)u.rows, 1};
     status = clEnqueueCopyBufferToImage(q, clBuffer, clImage, offset, dst_origin, region, 0, NULL, NULL);
     if (status != CL_SUCCESS)
-        CV_Error(cv::Error::OpenCLApiCallError, "OpenCL: clEnqueueCopyBufferToImage failed");
+        CV_Error_(cv::Error::OpenCLApiCallError, ("OpenCL: clEnqueueCopyBufferToImage failed: %d", status));
     status = clEnqueueReleaseGLObjects(q, 1, &clImage, 0, NULL, NULL);
     if (status != CL_SUCCESS)
-        CV_Error(cv::Error::OpenCLApiCallError, "OpenCL: clEnqueueReleaseGLObjects failed");
+        CV_Error_(cv::Error::OpenCLApiCallError, ("OpenCL: clEnqueueReleaseGLObjects failed: %d", status));
 
     status = clFinish(q); // TODO Use events
     if (status != CL_SUCCESS)
-        CV_Error(cv::Error::OpenCLApiCallError, "OpenCL: clFinish failed");
+        CV_Error_(cv::Error::OpenCLApiCallError, ("OpenCL: clFinish failed: %d", status));
 
     status = clReleaseMemObject(clImage); // TODO RAII
     if (status != CL_SUCCESS)
-        CV_Error(cv::Error::OpenCLApiCallError, "OpenCL: clReleaseMemObject failed");
+        CV_Error_(cv::Error::OpenCLApiCallError, ("OpenCL: clReleaseMemObject failed: %d", status));
 #endif
 }
 
 void convertFromGLTexture2D(const Texture2D& texture, OutputArray dst)
 {
-    (void)texture; (void)dst;
+    CV_UNUSED(texture); CV_UNUSED(dst);
 #if !defined(HAVE_OPENGL)
     NO_OPENGL_SUPPORT_ERROR;
 #elif !defined(HAVE_OPENCL)
@@ -1776,6 +1868,8 @@ void convertFromGLTexture2D(const Texture2D& texture, OutputArray dst)
     Context& ctx = Context::getDefault();
     cl_context context = (cl_context)ctx.ptr();
 
+    checkOpenCLVersion();  // clCreateFromGLTexture requires OpenCL 1.2
+
     // TODO Need to specify ACCESS_WRITE here somehow to prevent useless data copying!
     dst.create(texture.size(), textureType);
     UMat u = dst.getUMat();
@@ -1787,38 +1881,38 @@ void convertFromGLTexture2D(const Texture2D& texture, OutputArray dst)
     cl_int status = 0;
     cl_mem clImage = clCreateFromGLTexture(context, CL_MEM_READ_ONLY, gl::TEXTURE_2D, 0, texture.texId(), &status);
     if (status != CL_SUCCESS)
-        CV_Error(cv::Error::OpenCLApiCallError, "OpenCL: clCreateFromGLTexture failed");
+        CV_Error_(cv::Error::OpenCLApiCallError, ("OpenCL: clCreateFromGLTexture failed: %d", status));
 
     cl_mem clBuffer = (cl_mem)u.handle(ACCESS_READ);
 
     cl_command_queue q = (cl_command_queue)Queue::getDefault().ptr();
     status = clEnqueueAcquireGLObjects(q, 1, &clImage, 0, NULL, NULL);
     if (status != CL_SUCCESS)
-        CV_Error(cv::Error::OpenCLApiCallError, "OpenCL: clEnqueueAcquireGLObjects failed");
+        CV_Error_(cv::Error::OpenCLApiCallError, ("OpenCL: clEnqueueAcquireGLObjects failed: %d", status));
     size_t offset = 0; // TODO
     size_t src_origin[3] = {0, 0, 0};
-    size_t region[3] = {u.cols, u.rows, 1};
+    size_t region[3] = { (size_t)u.cols, (size_t)u.rows, 1};
     status = clEnqueueCopyImageToBuffer(q, clImage, clBuffer, src_origin, region, offset, 0, NULL, NULL);
     if (status != CL_SUCCESS)
-        CV_Error(cv::Error::OpenCLApiCallError, "OpenCL: clEnqueueCopyImageToBuffer failed");
+        CV_Error_(cv::Error::OpenCLApiCallError, ("OpenCL: clEnqueueCopyImageToBuffer failed: %d", status));
     status = clEnqueueReleaseGLObjects(q, 1, &clImage, 0, NULL, NULL);
     if (status != CL_SUCCESS)
-        CV_Error(cv::Error::OpenCLApiCallError, "OpenCL: clEnqueueReleaseGLObjects failed");
+        CV_Error_(cv::Error::OpenCLApiCallError, ("OpenCL: clEnqueueReleaseGLObjects failed: %d", status));
 
     status = clFinish(q); // TODO Use events
     if (status != CL_SUCCESS)
-        CV_Error(cv::Error::OpenCLApiCallError, "OpenCL: clFinish failed");
+        CV_Error_(cv::Error::OpenCLApiCallError, ("OpenCL: clFinish failed: %d", status));
 
     status = clReleaseMemObject(clImage); // TODO RAII
     if (status != CL_SUCCESS)
-        CV_Error(cv::Error::OpenCLApiCallError, "OpenCL: clReleaseMemObject failed");
+        CV_Error_(cv::Error::OpenCLApiCallError, ("OpenCL: clReleaseMemObject failed: %d", status));
 #endif
 }
 
-//void mapGLBuffer(const Buffer& buffer, UMat& dst, int accessFlags)
-UMat mapGLBuffer(const Buffer& buffer, int accessFlags)
+//void mapGLBuffer(const Buffer& buffer, UMat& dst, AccessFlag accessFlags)
+UMat mapGLBuffer(const Buffer& buffer, AccessFlag accessFlags)
 {
-    (void)buffer; (void)accessFlags;
+    CV_UNUSED(buffer); CV_UNUSED(accessFlags);
 #if !defined(HAVE_OPENGL)
     NO_OPENGL_SUPPORT_ERROR;
 #elif !defined(HAVE_OPENCL)
@@ -1835,7 +1929,7 @@ UMat mapGLBuffer(const Buffer& buffer, int accessFlags)
     switch (accessFlags & (ACCESS_READ|ACCESS_WRITE))
     {
     default:
-    case ACCESS_READ|ACCESS_WRITE:
+    case ACCESS_READ+ACCESS_WRITE:
         clAccessFlags = CL_MEM_READ_WRITE;
         break;
     case ACCESS_READ:
@@ -1849,13 +1943,13 @@ UMat mapGLBuffer(const Buffer& buffer, int accessFlags)
     cl_int status = 0;
     cl_mem clBuffer = clCreateFromGLBuffer(context, clAccessFlags, buffer.bufId(), &status);
     if (status != CL_SUCCESS)
-        CV_Error(cv::Error::OpenCLApiCallError, "OpenCL: clCreateFromGLBuffer failed");
+        CV_Error_(cv::Error::OpenCLApiCallError, ("OpenCL: clCreateFromGLBuffer failed: %d", status));
 
     gl::Finish();
 
     status = clEnqueueAcquireGLObjects(clQueue, 1, &clBuffer, 0, NULL, NULL);
     if (status != CL_SUCCESS)
-        CV_Error(cv::Error::OpenCLApiCallError, "OpenCL: clEnqueueAcquireGLObjects failed");
+        CV_Error_(cv::Error::OpenCLApiCallError, ("OpenCL: clEnqueueAcquireGLObjects failed: %d", status));
 
     size_t step = buffer.cols() * buffer.elemSize();
     int rows = buffer.rows();
@@ -1870,7 +1964,7 @@ UMat mapGLBuffer(const Buffer& buffer, int accessFlags)
 
 void unmapGLBuffer(UMat& u)
 {
-    (void)u;
+    CV_UNUSED(u);
 #if !defined(HAVE_OPENGL)
     NO_OPENGL_SUPPORT_ERROR;
 #elif !defined(HAVE_OPENCL)
@@ -1887,15 +1981,15 @@ void unmapGLBuffer(UMat& u)
 
     cl_int status = clEnqueueReleaseGLObjects(clQueue, 1, &clBuffer, 0, NULL, NULL);
     if (status != CL_SUCCESS)
-        CV_Error(cv::Error::OpenCLApiCallError, "OpenCL: clEnqueueReleaseGLObjects failed");
+        CV_Error_(cv::Error::OpenCLApiCallError, ("OpenCL: clEnqueueReleaseGLObjects failed: %d", status));
 
     status = clFinish(clQueue);
     if (status != CL_SUCCESS)
-        CV_Error(cv::Error::OpenCLApiCallError, "OpenCL: clFinish failed");
+        CV_Error_(cv::Error::OpenCLApiCallError, ("OpenCL: clFinish failed: %d", status));
 
     status = clReleaseMemObject(clBuffer);
     if (status != CL_SUCCESS)
-        CV_Error(cv::Error::OpenCLApiCallError, "OpenCL: clReleaseMemObject failed");
+        CV_Error_(cv::Error::OpenCLApiCallError, ("OpenCL: clReleaseMemObject failed: %d", status));
 #endif
 }
 

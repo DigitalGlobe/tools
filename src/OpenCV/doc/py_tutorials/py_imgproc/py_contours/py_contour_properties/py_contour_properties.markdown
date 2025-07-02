@@ -1,6 +1,9 @@
 Contour Properties {#tutorial_py_contour_properties}
 ==================
 
+@prev_tutorial{tutorial_py_contour_features}
+@next_tutorial{tutorial_py_contours_more_functions}
+
 Here we will learn to extract some frequently used properties of objects like Solidity, Equivalent
 Diameter, Mask image, Mean Intensity etc. More features can be found at [Matlab regionprops
 documentation](http://www.mathworks.in/help/images/ref/regionprops.html).
@@ -15,7 +18,7 @@ It is the ratio of width to height of bounding rect of the object.
 
 \f[Aspect \; Ratio = \frac{Width}{Height}\f]
 @code{.py}
-x,y,w,h = cv2.boundingRect(cnt)
+x,y,w,h = cv.boundingRect(cnt)
 aspect_ratio = float(w)/h
 @endcode
 
@@ -26,8 +29,8 @@ Extent is the ratio of contour area to bounding rectangle area.
 
 \f[Extent = \frac{Object \; Area}{Bounding \; Rectangle \; Area}\f]
 @code{.py}
-area = cv2.contourArea(cnt)
-x,y,w,h = cv2.boundingRect(cnt)
+area = cv.contourArea(cnt)
+x,y,w,h = cv.boundingRect(cnt)
 rect_area = w*h
 extent = float(area)/rect_area
 @endcode
@@ -39,9 +42,9 @@ Solidity is the ratio of contour area to its convex hull area.
 
 \f[Solidity = \frac{Contour \; Area}{Convex \; Hull \; Area}\f]
 @code{.py}
-area = cv2.contourArea(cnt)
-hull = cv2.convexHull(cnt)
-hull_area = cv2.contourArea(hull)
+area = cv.contourArea(cnt)
+hull = cv.convexHull(cnt)
+hull_area = cv.contourArea(hull)
 solidity = float(area)/hull_area
 @endcode
 
@@ -52,7 +55,7 @@ Equivalent Diameter is the diameter of the circle whose area is same as the cont
 
 \f[Equivalent \; Diameter = \sqrt{\frac{4 \times Contour \; Area}{\pi}}\f]
 @code{.py}
-area = cv2.contourArea(cnt)
+area = cv.contourArea(cnt)
 equi_diameter = np.sqrt(4*area/np.pi)
 @endcode
 
@@ -62,7 +65,7 @@ equi_diameter = np.sqrt(4*area/np.pi)
 Orientation is the angle at which object is directed. Following method also gives the Major Axis and
 Minor Axis lengths.
 @code{.py}
-(x,y),(MA,ma),angle = cv2.fitEllipse(cnt)
+(x,y),(MA,ma),angle = cv.fitEllipse(cnt)
 @endcode
 
 6. Mask and Pixel Points
@@ -71,21 +74,21 @@ Minor Axis lengths.
 In some cases, we may need all the points which comprises that object. It can be done as follows:
 @code{.py}
 mask = np.zeros(imgray.shape,np.uint8)
-cv2.drawContours(mask,[cnt],0,255,-1)
+cv.drawContours(mask,[cnt],0,255,-1)
 pixelpoints = np.transpose(np.nonzero(mask))
-#pixelpoints = cv2.findNonZero(mask)
+#pixelpoints = cv.findNonZero(mask)
 @endcode
 Here, two methods, one using Numpy functions, next one using OpenCV function (last commented line)
 are given to do the same. Results are also same, but with a slight difference. Numpy gives
 coordinates in **(row, column)** format, while OpenCV gives coordinates in **(x,y)** format. So
-basically the answers will be interchanged. Note that, **row = x** and **column = y**.
+basically the answers will be interchanged. Note that, **row = y** and **column = x**.
 
 7. Maximum Value, Minimum Value and their locations
 ---------------------------------------------------
 
 We can find these parameters using a mask image.
 @code{.py}
-min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(imgray,mask = mask)
+min_val, max_val, min_loc, max_loc = cv.minMaxLoc(imgray,mask = mask)
 @endcode
 
 8. Mean Color or Mean Intensity
@@ -94,7 +97,7 @@ min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(imgray,mask = mask)
 Here, we can find the average color of an object. Or it can be average intensity of the object in
 grayscale mode. We again use the same mask to do it.
 @code{.py}
-mean_val = cv2.mean(im,mask = mask)
+mean_val = cv.mean(im,mask = mask)
 @endcode
 
 9. Extreme Points
@@ -110,9 +113,6 @@ bottommost = tuple(cnt[cnt[:,:,1].argmax()][0])
 For eg, if I apply it to an Indian map, I get the following result :
 
 ![image](images/extremepoints.jpg)
-
-Additional Resources
---------------------
 
 Exercises
 ---------

@@ -12,10 +12,15 @@
  * Adapted for FLANN by Marius Muja
  */
 
+//! @cond IGNORED
+
 #include "defines.h"
 #include <stdexcept>
 #include <ostream>
 #include <typeinfo>
+
+#include "opencv2/core/cvdef.h"
+#include "opencv2/core/utility.hpp"
 
 namespace cvflann
 {
@@ -23,9 +28,29 @@ namespace cvflann
 namespace anyimpl
 {
 
-struct bad_any_cast
+struct bad_any_cast : public std::exception
 {
+    bad_any_cast() = default;
+
+    bad_any_cast(const char* src, const char* dst)
+        : message_(cv::format("cvflann::bad_any_cast(from %s to %s)", src, dst)) {}
+
+
+    const char* what() const noexcept override
+    {
+        return message_.c_str();
+    }
+
+private:
+    std::string message_{"cvflann::bad_any_cast"};
 };
+
+#ifndef CV_THROW_IF_TYPE_MISMATCH
+#define CV_THROW_IF_TYPE_MISMATCH(src_type_info, dst_type_info) \
+    if ((src_type_info) != (dst_type_info)) \
+        throw cvflann::anyimpl::bad_any_cast((src_type_info).name(), \
+                                             (dst_type_info).name())
+#endif
 
 struct empty_any
 {
@@ -54,50 +79,50 @@ struct base_any_policy
 template<typename T>
 struct typed_base_any_policy : base_any_policy
 {
-    virtual ::size_t get_size() { return sizeof(T); }
-    virtual const std::type_info& type() { return typeid(T); }
+    virtual ::size_t get_size() CV_OVERRIDE { return sizeof(T); }
+    virtual const std::type_info& type() CV_OVERRIDE { return typeid(T); }
 
 };
 
 template<typename T>
-struct small_any_policy : typed_base_any_policy<T>
+struct small_any_policy CV_FINAL : typed_base_any_policy<T>
 {
-    virtual void static_delete(void**) { }
-    virtual void copy_from_value(void const* src, void** dest)
+    virtual void static_delete(void**) CV_OVERRIDE { }
+    virtual void copy_from_value(void const* src, void** dest) CV_OVERRIDE
     {
         new (dest) T(* reinterpret_cast<T const*>(src));
     }
-    virtual void clone(void* const* src, void** dest) { *dest = *src; }
-    virtual void move(void* const* src, void** dest) { *dest = *src; }
-    virtual void* get_value(void** src) { return reinterpret_cast<void*>(src); }
-    virtual const void* get_value(void* const * src) { return reinterpret_cast<const void*>(src); }
-    virtual void print(std::ostream& out, void* const* src) { out << *reinterpret_cast<T const*>(src); }
+    virtual void clone(void* const* src, void** dest) CV_OVERRIDE { *dest = *src; }
+    virtual void move(void* const* src, void** dest) CV_OVERRIDE { *dest = *src; }
+    virtual void* get_value(void** src) CV_OVERRIDE { return reinterpret_cast<void*>(src); }
+    virtual const void* get_value(void* const * src) CV_OVERRIDE { return reinterpret_cast<const void*>(src); }
+    virtual void print(std::ostream& out, void* const* src) CV_OVERRIDE { out << *reinterpret_cast<T const*>(src); }
 };
 
 template<typename T>
-struct big_any_policy : typed_base_any_policy<T>
+struct big_any_policy CV_FINAL : typed_base_any_policy<T>
 {
-    virtual void static_delete(void** x)
+    virtual void static_delete(void** x) CV_OVERRIDE
     {
         if (* x) delete (* reinterpret_cast<T**>(x));
         *x = NULL;
     }
-    virtual void copy_from_value(void const* src, void** dest)
+    virtual void copy_from_value(void const* src, void** dest) CV_OVERRIDE
     {
         *dest = new T(*reinterpret_cast<T const*>(src));
     }
-    virtual void clone(void* const* src, void** dest)
+    virtual void clone(void* const* src, void** dest) CV_OVERRIDE
     {
         *dest = new T(**reinterpret_cast<T* const*>(src));
     }
-    virtual void move(void* const* src, void** dest)
+    virtual void move(void* const* src, void** dest) CV_OVERRIDE
     {
         (*reinterpret_cast<T**>(dest))->~T();
         **reinterpret_cast<T**>(dest) = **reinterpret_cast<T* const*>(src);
     }
-    virtual void* get_value(void** src) { return *src; }
-    virtual const void* get_value(void* const * src) { return *src; }
-    virtual void print(std::ostream& out, void* const* src) { out << *reinterpret_cast<T const*>(*src); }
+    virtual void* get_value(void** src) CV_OVERRIDE { return *src; }
+    virtual const void* get_value(void* const * src) CV_OVERRIDE { return *src; }
+    virtual void print(std::ostream& out, void* const* src) CV_OVERRIDE { out << *reinterpret_cast<T const*>(*src); }
 };
 
 template<> inline void big_any_policy<flann_centers_init_t>::print(std::ostream& out, void* const* src)
@@ -165,17 +190,15 @@ class SinglePolicy
 
 public:
     static base_any_policy* get_policy();
-
-private:
-    static typename choose_policy<T>::type policy;
 };
-
-template <typename T>
-typename choose_policy<T>::type SinglePolicy<T>::policy;
 
 /// This function will return a different policy for each type.
 template <typename T>
-inline base_any_policy* SinglePolicy<T>::get_policy() { return &policy; }
+inline base_any_policy* SinglePolicy<T>::get_policy()
+{
+    static typename choose_policy<T>::type policy;
+    return &policy;
+}
 
 } // namespace anyimpl
 
@@ -246,6 +269,12 @@ public:
         return assign(x);
     }
 
+    /// Assignment operator. Template-based version above doesn't work as expected. We need regular assignment operator here.
+    any& operator=(const any& x)
+    {
+        return assign(x);
+    }
+
     /// Assignment operator, specialed for literal strings.
     /// They have types like const char [6] which don't work as expected.
     any& operator=(const char* x)
@@ -265,7 +294,7 @@ public:
     template<typename T>
     T& cast()
     {
-        if (policy->type() != typeid(T)) throw anyimpl::bad_any_cast();
+        CV_THROW_IF_TYPE_MISMATCH(policy->type(), typeid(T));
         T* r = reinterpret_cast<T*>(policy->get_value(&object));
         return *r;
     }
@@ -274,7 +303,7 @@ public:
     template<typename T>
     const T& cast() const
     {
-        if (policy->type() != typeid(T)) throw anyimpl::bad_any_cast();
+        CV_THROW_IF_TYPE_MISMATCH(policy->type(), typeid(T));
         const T* r = reinterpret_cast<const T*>(policy->get_value(&object));
         return *r;
     }
@@ -320,5 +349,7 @@ inline std::ostream& operator <<(std::ostream& out, const any& any_val)
 }
 
 }
+
+//! @endcond
 
 #endif // OPENCV_FLANN_ANY_H_

@@ -1,5 +1,3 @@
-/* $Id: tif_packbits.c,v 1.20 2010-03-10 18:56:49 bfriesen Exp $ */
-
 /*
  * Copyright (c) 1988-1997 Sam Leffler
  * Copyright (c) 1991-1997 Silicon Graphics, Inc.
@@ -33,149 +31,173 @@
  */
 #include <stdio.h>
 
-static int
-PackBitsPreEncode(TIFF* tif, uint16 s)
+static int PackBitsPreEncode(TIFF *tif, uint16_t s)
 {
-    (void) s;
+    (void)s;
 
-    if (!(tif->tif_data = (uint8*)_TIFFmalloc(sizeof(tmsize_t))))
+    tif->tif_data = (uint8_t *)_TIFFmallocExt(tif, sizeof(tmsize_t));
+    if (tif->tif_data == NULL)
         return (0);
     /*
      * Calculate the scanline/tile-width size in bytes.
      */
     if (isTiled(tif))
-        *(tmsize_t*)tif->tif_data = TIFFTileRowSize(tif);
+        *(tmsize_t *)tif->tif_data = TIFFTileRowSize(tif);
     else
-        *(tmsize_t*)tif->tif_data = TIFFScanlineSize(tif);
+        *(tmsize_t *)tif->tif_data = TIFFScanlineSize(tif);
     return (1);
 }
 
-static int
-PackBitsPostEncode(TIFF* tif)
+static int PackBitsPostEncode(TIFF *tif)
 {
-        if (tif->tif_data)
-            _TIFFfree(tif->tif_data);
+    if (tif->tif_data)
+        _TIFFfreeExt(tif, tif->tif_data);
     return (1);
 }
 
 /*
  * Encode a run of pixels.
  */
-static int
-PackBitsEncode(TIFF* tif, uint8* buf, tmsize_t cc, uint16 s)
+static int PackBitsEncode(TIFF *tif, uint8_t *buf, tmsize_t cc, uint16_t s)
 {
-    unsigned char* bp = (unsigned char*) buf;
-    uint8* op;
-    uint8* ep;
-    uint8* lastliteral;
+    unsigned char *bp = (unsigned char *)buf;
+    uint8_t *op;
+    uint8_t *ep;
+    uint8_t *lastliteral;
     long n, slop;
     int b;
-    enum { BASE, LITERAL, RUN, LITERAL_RUN } state;
+    enum
+    {
+        BASE,
+        LITERAL,
+        RUN,
+        LITERAL_RUN
+    } state;
 
-    (void) s;
+    (void)s;
     op = tif->tif_rawcp;
     ep = tif->tif_rawdata + tif->tif_rawdatasize;
     state = BASE;
     lastliteral = 0;
-    while (cc > 0) {
+    while (cc > 0)
+    {
         /*
          * Find the longest string of identical bytes.
          */
-        b = *bp++, cc--, n = 1;
+        b = *bp++;
+        cc--;
+        n = 1;
         for (; cc > 0 && b == *bp; cc--, bp++)
             n++;
     again:
-        if (op + 2 >= ep) {		/* insure space for new data */
+        if (op + 2 >= ep)
+        { /* insure space for new data */
             /*
              * Be careful about writing the last
              * literal.  Must write up to that point
              * and then copy the remainder to the
              * front of the buffer.
              */
-            if (state == LITERAL || state == LITERAL_RUN) {
+            if (state == LITERAL || state == LITERAL_RUN)
+            {
                 slop = (long)(op - lastliteral);
                 tif->tif_rawcc += (tmsize_t)(lastliteral - tif->tif_rawcp);
                 if (!TIFFFlushData1(tif))
-                    return (-1);
+                    return (0);
                 op = tif->tif_rawcp;
                 while (slop-- > 0)
                     *op++ = *lastliteral++;
                 lastliteral = tif->tif_rawcp;
-            } else {
+            }
+            else
+            {
                 tif->tif_rawcc += (tmsize_t)(op - tif->tif_rawcp);
                 if (!TIFFFlushData1(tif))
-                    return (-1);
+                    return (0);
                 op = tif->tif_rawcp;
             }
         }
-        switch (state) {
-        case BASE:		/* initial state, set run/literal */
-            if (n > 1) {
-                state = RUN;
-                if (n > 128) {
-                    *op++ = (uint8) -127;
-                    *op++ = (uint8) b;
-                    n -= 128;
-                    goto again;
+        switch (state)
+        {
+            case BASE: /* initial state, set run/literal */
+                if (n > 1)
+                {
+                    state = RUN;
+                    if (n > 128)
+                    {
+                        *op++ = (uint8_t)-127;
+                        *op++ = (uint8_t)b;
+                        n -= 128;
+                        goto again;
+                    }
+                    *op++ = (uint8_t)(-(n - 1));
+                    *op++ = (uint8_t)b;
                 }
-                *op++ = (uint8)(-(n-1));
-                *op++ = (uint8) b;
-            } else {
-                lastliteral = op;
-                *op++ = 0;
-                *op++ = (uint8) b;
-                state = LITERAL;
-            }
-            break;
-        case LITERAL:		/* last object was literal string */
-            if (n > 1) {
-                state = LITERAL_RUN;
-                if (n > 128) {
-                    *op++ = (uint8) -127;
-                    *op++ = (uint8) b;
-                    n -= 128;
-                    goto again;
+                else
+                {
+                    lastliteral = op;
+                    *op++ = 0;
+                    *op++ = (uint8_t)b;
+                    state = LITERAL;
                 }
-                *op++ = (uint8)(-(n-1));	/* encode run */
-                *op++ = (uint8) b;
-            } else {			/* extend literal */
-                if (++(*lastliteral) == 127)
-                    state = BASE;
-                *op++ = (uint8) b;
-            }
-            break;
-        case RUN:		/* last object was run */
-            if (n > 1) {
-                if (n > 128) {
-                    *op++ = (uint8) -127;
-                    *op++ = (uint8) b;
-                    n -= 128;
-                    goto again;
+                break;
+            case LITERAL: /* last object was literal string */
+                if (n > 1)
+                {
+                    state = LITERAL_RUN;
+                    if (n > 128)
+                    {
+                        *op++ = (uint8_t)-127;
+                        *op++ = (uint8_t)b;
+                        n -= 128;
+                        goto again;
+                    }
+                    *op++ = (uint8_t)(-(n - 1)); /* encode run */
+                    *op++ = (uint8_t)b;
                 }
-                *op++ = (uint8)(-(n-1));
-                *op++ = (uint8) b;
-            } else {
-                lastliteral = op;
-                *op++ = 0;
-                *op++ = (uint8) b;
-                state = LITERAL;
-            }
-            break;
-        case LITERAL_RUN:	/* literal followed by a run */
-            /*
-             * Check to see if previous run should
-             * be converted to a literal, in which
-             * case we convert literal-run-literal
-             * to a single literal.
-             */
-            if (n == 1 && op[-2] == (uint8) -1 &&
-                *lastliteral < 126) {
-                state = (((*lastliteral) += 2) == 127 ?
-                    BASE : LITERAL);
-                op[-2] = op[-1];	/* replicate */
-            } else
-                state = RUN;
-            goto again;
+                else
+                { /* extend literal */
+                    if (++(*lastliteral) == 127)
+                        state = BASE;
+                    *op++ = (uint8_t)b;
+                }
+                break;
+            case RUN: /* last object was run */
+                if (n > 1)
+                {
+                    if (n > 128)
+                    {
+                        *op++ = (uint8_t)-127;
+                        *op++ = (uint8_t)b;
+                        n -= 128;
+                        goto again;
+                    }
+                    *op++ = (uint8_t)(-(n - 1));
+                    *op++ = (uint8_t)b;
+                }
+                else
+                {
+                    lastliteral = op;
+                    *op++ = 0;
+                    *op++ = (uint8_t)b;
+                    state = LITERAL;
+                }
+                break;
+            case LITERAL_RUN: /* literal followed by a run */
+                /*
+                 * Check to see if previous run should
+                 * be converted to a literal, in which
+                 * case we convert literal-run-literal
+                 * to a single literal.
+                 */
+                if (n == 1 && op[-2] == (uint8_t)-1 && *lastliteral < 126)
+                {
+                    state = (((*lastliteral) += 2) == 127 ? BASE : LITERAL);
+                    op[-2] = op[-1]; /* replicate */
+                }
+                else
+                    state = RUN;
+                goto again;
         }
     }
     tif->tif_rawcc += (tmsize_t)(op - tif->tif_rawcp);
@@ -190,15 +212,15 @@ PackBitsEncode(TIFF* tif, uint8* buf, tmsize_t cc, uint16 s)
  * the decoder if data is read, for example, by scanlines
  * when it was encoded by strips.
  */
-static int
-PackBitsEncodeChunk(TIFF* tif, uint8* bp, tmsize_t cc, uint16 s)
+static int PackBitsEncodeChunk(TIFF *tif, uint8_t *bp, tmsize_t cc, uint16_t s)
 {
-    tmsize_t rowsize = *(tmsize_t*)tif->tif_data;
+    tmsize_t rowsize = *(tmsize_t *)tif->tif_data;
 
-    while (cc > 0) {
+    while (cc > 0)
+    {
         tmsize_t chunk = rowsize;
 
-        if( cc < chunk )
+        if (cc < chunk)
             chunk = cc;
 
         if (PackBitsEncode(tif, bp, chunk, s) < 0)
@@ -209,69 +231,85 @@ PackBitsEncodeChunk(TIFF* tif, uint8* bp, tmsize_t cc, uint16 s)
     return (1);
 }
 
-static int
-PackBitsDecode(TIFF* tif, uint8* op, tmsize_t occ, uint16 s)
+static int PackBitsDecode(TIFF *tif, uint8_t *op, tmsize_t occ, uint16_t s)
 {
     static const char module[] = "PackBitsDecode";
-    char *bp;
+    int8_t *bp;
     tmsize_t cc;
     long n;
     int b;
 
-    (void) s;
-    bp = (char*) tif->tif_rawcp;
+    (void)s;
+    bp = (int8_t *)tif->tif_rawcp;
     cc = tif->tif_rawcc;
-    while (cc > 0 && occ > 0) {
-        n = (long) *bp++, cc--;
-        /*
-         * Watch out for compilers that
-         * don't sign extend chars...
-         */
-        if (n >= 128)
-            n -= 256;
-        if (n < 0) {		/* replicate next byte -n+1 times */
-            if (n == -128)	/* nop */
+    while (cc > 0 && occ > 0)
+    {
+        n = (long)*bp++;
+        cc--;
+        if (n < 0)
+        {                  /* replicate next byte -n+1 times */
+            if (n == -128) /* nop */
                 continue;
             n = -n + 1;
-            if( occ < (tmsize_t)n )
+            if (occ < (tmsize_t)n)
             {
-                TIFFWarningExt(tif->tif_clientdata, module,
-                    "Discarding %lu bytes to avoid buffer overrun",
-                    (unsigned long) ((tmsize_t)n - occ));
+                TIFFWarningExtR(tif, module,
+                                "Discarding %" TIFF_SSIZE_FORMAT
+                                " bytes to avoid buffer overrun",
+                                (tmsize_t)n - occ);
                 n = (long)occ;
             }
+            if (cc == 0)
+            {
+                TIFFWarningExtR(
+                    tif, module,
+                    "Terminating PackBitsDecode due to lack of data.");
+                break;
+            }
             occ -= n;
-            b = *bp++, cc--;      /* TODO: may be reading past input buffer here when input data is corrupt or ends prematurely */
+            b = *bp++;
+            cc--;
             while (n-- > 0)
-                *op++ = (uint8) b;
-        } else {		/* copy next n+1 bytes literally */
+                *op++ = (uint8_t)b;
+        }
+        else
+        { /* copy next n+1 bytes literally */
             if (occ < (tmsize_t)(n + 1))
             {
-                TIFFWarningExt(tif->tif_clientdata, module,
-                    "Discarding %lu bytes to avoid buffer overrun",
-                    (unsigned long) ((tmsize_t)n - occ + 1));
+                TIFFWarningExtR(tif, module,
+                                "Discarding %" TIFF_SSIZE_FORMAT
+                                " bytes to avoid buffer overrun",
+                                (tmsize_t)n - occ + 1);
                 n = (long)occ - 1;
             }
-            _TIFFmemcpy(op, bp, ++n);  /* TODO: may be reading past input buffer here when input data is corrupt or ends prematurely */
-            op += n; occ -= n;
-            bp += n; cc -= n;
+            if (cc < (tmsize_t)(n + 1))
+            {
+                TIFFWarningExtR(
+                    tif, module,
+                    "Terminating PackBitsDecode due to lack of data.");
+                break;
+            }
+            _TIFFmemcpy(op, bp, ++n);
+            op += n;
+            occ -= n;
+            bp += n;
+            cc -= n;
         }
     }
-    tif->tif_rawcp = (uint8*) bp;
+    tif->tif_rawcp = (uint8_t *)bp;
     tif->tif_rawcc = cc;
-    if (occ > 0) {
-        TIFFErrorExt(tif->tif_clientdata, module,
-            "Not enough data for scanline %lu",
-            (unsigned long) tif->tif_row);
+    if (occ > 0)
+    {
+        TIFFErrorExtR(tif, module, "Not enough data for scanline %" PRIu32,
+                      tif->tif_row);
         return (0);
     }
     return (1);
 }
 
-int
-TIFFInitPackBits(TIFF* tif, int scheme)
+int TIFFInitPackBits(TIFF *tif, int scheme)
 {
-    (void) scheme;
+    (void)scheme;
     tif->tif_decoderow = PackBitsDecode;
     tif->tif_decodestrip = PackBitsDecode;
     tif->tif_decodetile = PackBitsDecode;
@@ -283,12 +321,3 @@ TIFFInitPackBits(TIFF* tif, int scheme)
     return (1);
 }
 #endif /* PACKBITS_SUPPORT */
-
-/* vim: set ts=8 sts=8 sw=8 noet: */
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 8
- * fill-column: 78
- * End:
- */

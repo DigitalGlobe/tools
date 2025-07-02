@@ -1,14 +1,15 @@
 /**
- * @file LinearBlend.cpp
+ * @file AddingImagesTrackbar.cpp
  * @brief Simple linear blender ( dst = alpha*src1 + beta*src2 )
  * @author OpenCV team
  */
 
 #include "opencv2/imgcodecs.hpp"
 #include "opencv2/highgui.hpp"
-#include <stdio.h>
+#include <iostream>
 
 using namespace cv;
+using std::cout;
 
 /** Global Variables */
 const int alpha_slider_max = 100;
@@ -21,50 +22,53 @@ Mat src1;
 Mat src2;
 Mat dst;
 
+//![on_trackbar]
 /**
  * @function on_trackbar
  * @brief Callback for trackbar
  */
-static void on_trackbar( int, void* )
-{
-   alpha = (double) alpha_slider/alpha_slider_max ;
-
-   beta = ( 1.0 - alpha );
-
-   addWeighted( src1, alpha, src2, beta, 0.0, dst);
-
-   imshow( "Linear Blend", dst );
+static void on_trackbar(int pos, void* userdata) {
+    (void) userdata;
+    alpha = (double)pos / alpha_slider_max;
+    beta = (1.0 - alpha);
+    addWeighted(src1, alpha, src2, beta, 0.0, dst);
+    imshow("Linear Blend", dst);
 }
-
+//![on_trackbar]
 
 /**
  * @function main
  * @brief Main function
  */
-int main( void )
+int main(void)
 {
-   /// Read image ( same size, same type )
-   src1 = imread("../data/LinuxLogo.jpg");
-   src2 = imread("../data/WindowsLogo.jpg");
+    //![load]
+    /// Read images (both must be of the same size and type)
+    src1 = imread(samples::findFile("LinuxLogo.jpg"));
+    src2 = imread(samples::findFile("WindowsLogo.jpg"));
+    //![load]
 
-   if( src1.empty() ) { printf("Error loading src1 \n"); return -1; }
-   if( src2.empty() ) { printf("Error loading src2 \n"); return -1; }
+    if (src1.empty()) { cout << "Error loading src1 \n"; return -1; }
+    if (src2.empty()) { cout << "Error loading src2 \n"; return -1; }
 
-   /// Initialize values
-   alpha_slider = 0;
+    // Initialize trackbar value
+    alpha_slider = 0;
 
-   /// Create Windows
-   namedWindow("Linear Blend", 1);
+    //![window]
+    namedWindow("Linear Blend", WINDOW_AUTOSIZE); //Create Window
+    //![window]
 
-   /// Create Trackbars
-   char TrackbarName[50];
-   sprintf( TrackbarName, "Alpha x %d", alpha_slider_max );
-   createTrackbar( TrackbarName, "Linear Blend", &alpha_slider, alpha_slider_max, on_trackbar );
+    //![create_trackbar]
+    char TrackbarName[50];
+    snprintf(TrackbarName, sizeof(TrackbarName), "Alpha x %d", alpha_slider_max);
+    // Example userdata: Pass a pointer to an integer as userdata
+    createTrackbar(TrackbarName, "Linear Blend", &alpha_slider, alpha_slider_max, on_trackbar);
+    //![create_trackbar]
 
-   /// Show some stuff
-   on_trackbar( alpha_slider, 0 );
+    /// Show initial result
+    on_trackbar(alpha_slider, nullptr);
 
-   /// Wait until user press some key
-   waitKey(0);
-   return 0;
+    /// Wait for user input
+    waitKey(0);
+    return 0;
 }

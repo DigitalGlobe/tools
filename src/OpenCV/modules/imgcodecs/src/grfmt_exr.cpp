@@ -44,6 +44,9 @@
 
 #ifdef HAVE_OPENEXR
 
+#include <opencv2/core/utils/configuration.private.hpp>
+#include <opencv2/core/utils/logger.hpp>
+
 #if defined _MSC_VER && _MSC_VER >= 1200
 #  pragma warning( disable: 4100 4244 4267 )
 #endif
@@ -52,6 +55,11 @@
 #  pragma GCC diagnostic ignored "-Wshadow"
 #endif
 
+/// C++ Standard Libraries
+#include <iostream>
+#include <stdexcept>
+
+#include <ImfFrameBuffer.h>
 #include <ImfHeader.h>
 #include <ImfInputFile.h>
 #include <ImfOutputFile.h>
@@ -59,6 +67,7 @@
 #include <ImfStandardAttributes.h>
 #include <half.h>
 #include "grfmt_exr.hpp"
+#include "OpenEXRConfig.h"
 
 #if defined _WIN32
 
@@ -74,13 +83,42 @@
 namespace cv
 {
 
+static bool isOpenEXREnabled()
+{
+    static const bool PARAM_ENABLE_OPENEXR = utils::getConfigurationParameterBool("OPENCV_IO_ENABLE_OPENEXR",
+#ifdef OPENCV_IMGCODECS_USE_OPENEXR
+        true
+#else
+        false
+#endif
+    );
+    return PARAM_ENABLE_OPENEXR;
+}
+static void initOpenEXR()
+{
+    if (!isOpenEXREnabled())
+    {
+        const char* message = "imgcodecs: OpenEXR codec is disabled. You can enable it via 'OPENCV_IO_ENABLE_OPENEXR' option. Refer for details and cautions here: https://github.com/opencv/opencv/issues/21326";
+        CV_LOG_WARNING(NULL, message);
+        CV_Error(Error::StsNotImplemented, message);
+    }
+}
+
 /////////////////////// ExrDecoder ///////////////////
 
 ExrDecoder::ExrDecoder()
 {
     m_signature = "\x76\x2f\x31\x01";
     m_file = 0;
-    m_red = m_green = m_blue = 0;
+    m_red = m_green = m_blue = m_alpha = 0;
+    m_type = ((Imf::PixelType)0);
+    m_iscolor = false;
+    m_bit_depth = 0;
+    m_isfloat = false;
+    m_ischroma = false;
+    m_hasalpha = false;
+    m_native_depth = false;
+
 }
 
 
@@ -102,7 +140,7 @@ void  ExrDecoder::close()
 
 int  ExrDecoder::type() const
 {
-    return CV_MAKETYPE((m_isfloat ? CV_32F : CV_32S), m_iscolor ? 3 : 1);
+    return CV_MAKETYPE((m_isfloat ? CV_32F : CV_32S), ((m_iscolor && m_hasalpha) ? 4 : m_iscolor ? 3 : m_hasalpha ? 2 : 1));
 }
 
 
@@ -130,6 +168,11 @@ bool  ExrDecoder::readHeader()
     m_red = channels.findChannel( "R" );
     m_green = channels.findChannel( "G" );
     m_blue = channels.findChannel( "B" );
+    m_alpha = channels.findChannel( "A" );
+
+    if( m_alpha ) // alpha channel supported in RGB, Y, and YC scenarios
+        m_hasalpha = true;
+
     if( m_red || m_green || m_blue )
     {
         m_iscolor = true;
@@ -139,6 +182,10 @@ bool  ExrDecoder::readHeader()
     else
     {
         m_green = channels.findChannel( "Y" );
+        if( !m_green )
+        {
+            m_green = channels.findChannel( "Z" ); // Distance of the front of a sample from the viewer
+        }
         if( m_green )
         {
             m_ischroma = true;
@@ -153,26 +200,8 @@ bool  ExrDecoder::readHeader()
 
     if( result )
     {
-        int uintcnt = 0;
-        int chcnt = 0;
-        if( m_red )
-        {
-            chcnt++;
-            uintcnt += ( m_red->type == UINT );
-        }
-        if( m_green )
-        {
-            chcnt++;
-            uintcnt += ( m_green->type == UINT );
-        }
-        if( m_blue )
-        {
-            chcnt++;
-            uintcnt += ( m_blue->type == UINT );
-        }
-        m_type = (chcnt == uintcnt) ? UINT : FLOAT;
-
-        m_isfloat = (m_type == FLOAT);
+        m_type = FLOAT;
+        m_isfloat = ( m_type == FLOAT );
     }
 
     if( !result )
@@ -185,25 +214,44 @@ bool  ExrDecoder::readHeader()
 bool  ExrDecoder::readData( Mat& img )
 {
     m_native_depth = CV_MAT_DEPTH(type()) == img.depth();
-    bool color = img.channels() > 1;
-
+    bool color = img.channels() > 2; // output mat has 3+ channels; Y or YA are the 1 and 2 channel scenario
+    bool alphasupported = ( img.channels() % 2 == 0 );  // even number of channels indicates alpha
+    int channels = 0;
     uchar* data = img.ptr();
-    int step = img.step;
-    bool justcopy = m_native_depth;
-    bool chromatorgb = false;
-    bool rgbtogray = false;
+    size_t step = img.step;
+    bool justcopy = ( m_native_depth && (color == m_iscolor) );
+    bool chromatorgb = ( m_ischroma && color );
+    bool rgbtogray = ( !m_ischroma && m_iscolor && !color );
     bool result = true;
     FrameBuffer frame;
-    int xsample[3] = {1, 1, 1};
+    const int defaultchannels = 3;
+    int xsample[defaultchannels] = {1, 1, 1};
     char *buffer;
-    int xstep;
-    int ystep;
+    CV_Assert(m_type == FLOAT);
+    const size_t floatsize = sizeof(float);
+    size_t xstep = m_native_depth ? floatsize : 1; // 4 bytes if native depth (FLOAT), otherwise converting to 1 byte U8 depth
+    size_t ystep = 0;
+    const int channelstoread = ( (m_iscolor && alphasupported) ? 4 :
+                                ( (m_iscolor && !m_ischroma) || color) ? 3 : alphasupported ? 2 : 1 ); // number of channels to read may exceed channels in output img
+    size_t xStride = floatsize * channelstoread;
 
-    xstep = m_native_depth ? 4 : 1;
-
-    if( !m_native_depth || (!color && m_iscolor ))
+    // See https://github.com/opencv/opencv/issues/26705
+    // If ALGO_HINT_ACCURATE is set, read BGR and swap to RGB.
+    // If ALGO_HINT_APPROX is set,   read RGB directly.
+    bool doReadRGB = m_use_rgb;
+    bool doPostColorSwap = false; // After decoding, swap BGR to RGB
+    if(m_use_rgb && (getDefaultAlgorithmHint() == ALGO_HINT_ACCURATE) )
     {
-        buffer = (char *)new float[ m_width * 3 ];
+        doReadRGB = false;
+        doPostColorSwap = true;
+    }
+
+    AutoBuffer<char> copy_buffer;
+
+    if( !justcopy )
+    {
+        copy_buffer.allocate(floatsize * m_width * defaultchannels);
+        buffer = copy_buffer.data();
         ystep = 0;
     }
     else
@@ -216,53 +264,52 @@ bool  ExrDecoder::readData( Mat& img )
     {
         if( color )
         {
-            if( m_iscolor )
+            if( m_blue )
             {
-                if( m_blue )
-                {
-                    frame.insert( "BY", Slice( m_type,
-                                    buffer - m_datawindow.min.x * 12 - m_datawindow.min.y * ystep,
-                                    12, ystep, m_blue->xSampling, m_blue->ySampling, 0.0 ));
-                    xsample[0] = m_blue->ySampling;
-                }
-                if( m_green )
-                {
-                    frame.insert( "Y", Slice( m_type,
-                                    buffer - m_datawindow.min.x * 12 - m_datawindow.min.y * ystep + 4,
-                                    12, ystep, m_green->xSampling, m_green->ySampling, 0.0 ));
-                    xsample[1] = m_green->ySampling;
-                }
-                if( m_red )
-                {
-                    frame.insert( "RY", Slice( m_type,
-                                    buffer - m_datawindow.min.x * 12 - m_datawindow.min.y * ystep + 8,
-                                    12, ystep, m_red->xSampling, m_red->ySampling, 0.0 ));
-                    xsample[2] = m_red->ySampling;
-                }
-                chromatorgb = true;
+                frame.insert( "BY", Slice( m_type,
+                                           buffer - m_datawindow.min.x * xStride - m_datawindow.min.y * ystep,
+                                           xStride, ystep, m_blue->xSampling, m_blue->ySampling, 0.0 ));
+                xsample[0] = m_blue->xSampling;
+            }
+            else
+            {
+                frame.insert( "BY", Slice( m_type,
+                                           buffer - m_datawindow.min.x * xStride - m_datawindow.min.y * ystep,
+                                           xStride, ystep, 1, 1, 0.0 ));
+            }
+            if( m_green )
+            {
+                frame.insert( "Y", Slice( m_type,
+                                          buffer - m_datawindow.min.x * xStride - m_datawindow.min.y * ystep + floatsize,
+                                          xStride, ystep, m_green->xSampling, m_green->ySampling, 0.0 ));
+                xsample[1] = m_green->xSampling;
             }
             else
             {
                 frame.insert( "Y", Slice( m_type,
-                              buffer - m_datawindow.min.x * 12 - m_datawindow.min.y * ystep,
-                              12, ystep, m_green->xSampling, m_green->ySampling, 0.0 ));
-                frame.insert( "Y", Slice( m_type,
-                              buffer - m_datawindow.min.x * 12 - m_datawindow.min.y * ystep + 4,
-                              12, ystep, m_green->xSampling, m_green->ySampling, 0.0 ));
-                frame.insert( "Y", Slice( m_type,
-                              buffer - m_datawindow.min.x * 12 - m_datawindow.min.y * ystep + 8,
-                              12, ystep, m_green->xSampling, m_green->ySampling, 0.0 ));
-                xsample[0] = m_green->ySampling;
-                xsample[1] = m_green->ySampling;
-                xsample[2] = m_green->ySampling;
+                                          buffer - m_datawindow.min.x * xStride - m_datawindow.min.y * ystep + floatsize,
+                                          xStride, ystep, 1, 1, 0.0 ));
+            }
+            if( m_red )
+            {
+                frame.insert( "RY", Slice( m_type,
+                                           buffer - m_datawindow.min.x * xStride - m_datawindow.min.y * ystep + (floatsize * 2),
+                                           xStride, ystep, m_red->xSampling, m_red->ySampling, 0.0 ));
+                xsample[2] = m_red->xSampling;
+            }
+            else
+            {
+                frame.insert( "RY", Slice( m_type,
+                                           buffer - m_datawindow.min.x * xStride - m_datawindow.min.y * ystep + (floatsize * 2),
+                                           xStride, ystep, 1, 1, 0.0 ));
             }
         }
         else
         {
             frame.insert( "Y", Slice( m_type,
-                            buffer - m_datawindow.min.x * 4 - m_datawindow.min.y * ystep,
-                            4, ystep, m_green->xSampling, m_green->ySampling, 0.0 ));
-            xsample[0] = m_green->ySampling;
+                            buffer - m_datawindow.min.x * xStride - m_datawindow.min.y * ystep,
+                            xStride, ystep, m_green->xSampling, m_green->ySampling, 0.0 ));
+            xsample[0] = m_green->xSampling;
         }
     }
     else
@@ -270,29 +317,64 @@ bool  ExrDecoder::readData( Mat& img )
         if( m_blue )
         {
             frame.insert( "B", Slice( m_type,
-                            buffer - m_datawindow.min.x * 12 - m_datawindow.min.y * ystep,
-                            12, ystep, m_blue->xSampling, m_blue->ySampling, 0.0 ));
-            xsample[0] = m_blue->ySampling;
+                            buffer - m_datawindow.min.x * xStride - m_datawindow.min.y * ystep,
+                            xStride, ystep, m_blue->xSampling, m_blue->ySampling, 0.0 ));
+            xsample[0] = m_blue->xSampling;
+        }
+        else
+        {
+            frame.insert( "B", Slice( m_type,
+                            buffer - m_datawindow.min.x * xStride - m_datawindow.min.y * ystep,
+                            xStride, ystep, 1, 1, 0.0 ));
         }
         if( m_green )
         {
             frame.insert( "G", Slice( m_type,
-                            buffer - m_datawindow.min.x * 12 - m_datawindow.min.y * ystep + 4,
-                            12, ystep, m_green->xSampling, m_green->ySampling, 0.0 ));
-            xsample[1] = m_green->ySampling;
+                            buffer - m_datawindow.min.x * xStride - m_datawindow.min.y * ystep + floatsize,
+                            xStride, ystep, m_green->xSampling, m_green->ySampling, 0.0 ));
+            xsample[1] = m_green->xSampling;
+        }
+        else
+        {
+            frame.insert( "G", Slice( m_type,
+                            buffer - m_datawindow.min.x * xStride - m_datawindow.min.y * ystep + floatsize,
+                            xStride, ystep, 1, 1, 0.0 ));
         }
         if( m_red )
         {
             frame.insert( "R", Slice( m_type,
-                            buffer - m_datawindow.min.x * 12 - m_datawindow.min.y * ystep + 8,
-                            12, ystep, m_red->xSampling, m_red->ySampling, 0.0 ));
-            xsample[2] = m_red->ySampling;
+                            buffer - m_datawindow.min.x * xStride - m_datawindow.min.y * ystep + (floatsize * 2),
+                            xStride, ystep, m_red->xSampling, m_red->ySampling, 0.0 ));
+            xsample[2] = m_red->xSampling;
         }
-        if(color == 0)
+        else
         {
-            rgbtogray = true;
-            justcopy = false;
+            frame.insert( "R", Slice( m_type,
+                            buffer - m_datawindow.min.x * xStride - m_datawindow.min.y * ystep + (floatsize * 2),
+                            xStride, ystep, 1, 1, 0.0 ));
         }
+    }
+
+    if( justcopy && m_hasalpha && alphasupported )
+    { // alpha preserved only in justcopy scenario where alpha is desired (alphasupported)
+      // and present in original file (m_hasalpha)
+        CV_Assert(channelstoread == img.channels());
+        int offset = (channelstoread - 1) * floatsize;
+        frame.insert( "A", Slice( m_type,
+            buffer - m_datawindow.min.x * xStride - m_datawindow.min.y * ystep + offset,
+            xStride, ystep, m_alpha->xSampling, m_alpha->ySampling, 0.0 ));
+    }
+
+    for (FrameBuffer::Iterator it = frame.begin(); it != frame.end(); it++) {
+        channels++;
+    }
+
+    CV_Assert(channels == channelstoread);
+
+    if( (channels != channelstoread) || (!justcopy && channels > defaultchannels) )
+    { // safety checking what ought to be true here
+        close();
+        return false;
     }
 
     m_file->setFrameBuffer( frame );
@@ -300,17 +382,37 @@ bool  ExrDecoder::readData( Mat& img )
     {
         m_file->readPixels( m_datawindow.min.y, m_datawindow.max.y );
 
-        if( color )
+        if( m_iscolor )
         {
-            if( m_blue && (m_blue->xSampling != 1 || m_blue->ySampling != 1) )
-                UpSample( data, 3, step / xstep, xsample[0], m_blue->ySampling );
-            if( m_green && (m_green->xSampling != 1 || m_green->ySampling != 1) )
-                UpSample( data + xstep, 3, step / xstep, xsample[1], m_green->ySampling );
-            if( m_red && (m_red->xSampling != 1 || m_red->ySampling != 1) )
-                UpSample( data + 2 * xstep, 3, step / xstep, xsample[2], m_red->ySampling );
+            if (doReadRGB)
+            {
+                if( m_red && (m_red->xSampling != 1 || m_red->ySampling != 1) )
+                    UpSample( data, channelstoread, step / xstep, m_red->xSampling, m_red->ySampling );
+                if( m_green && (m_green->xSampling != 1 || m_green->ySampling != 1) )
+                    UpSample( data + xstep, channelstoread, step / xstep, m_green->xSampling, m_green->ySampling );
+                if( m_blue && (m_blue->xSampling != 1 || m_blue->ySampling != 1) )
+                    UpSample( data + 2 * xstep, channelstoread, step / xstep, m_blue->xSampling, m_blue->ySampling );
+            }
+            else
+            {
+                if( m_blue && (m_blue->xSampling != 1 || m_blue->ySampling != 1) )
+                    UpSample( data, channelstoread, step / xstep, m_blue->xSampling, m_blue->ySampling );
+                if( m_green && (m_green->xSampling != 1 || m_green->ySampling != 1) )
+                    UpSample( data + xstep, channelstoread, step / xstep, m_green->xSampling, m_green->ySampling );
+                if( m_red && (m_red->xSampling != 1 || m_red->ySampling != 1) )
+                    UpSample( data + 2 * xstep, channelstoread, step / xstep, m_red->xSampling, m_red->ySampling );
+            }
         }
         else if( m_green && (m_green->xSampling != 1 || m_green->ySampling != 1) )
-            UpSample( data, 1, step / xstep, xsample[0], m_green->ySampling );
+            UpSample( data, channelstoread, step / xstep, m_green->xSampling, m_green->ySampling );
+
+        if( chromatorgb )
+        {
+            if (doReadRGB)
+                ChromaToRGB( (float *)data, m_height, channelstoread, step / xstep );
+            else
+                ChromaToBGR( (float *)data, m_height, channelstoread, step / xstep );
+        }
     }
     else
     {
@@ -320,41 +422,37 @@ bool  ExrDecoder::readData( Mat& img )
         {
             m_file->readPixels( y, y );
 
+            for( int i = 0; i < channels; i++ )
+            {
+                if( xsample[i] != 1 )
+                    UpSampleX( (float *)buffer + i, channels, xsample[i] );
+            }
             if( rgbtogray )
             {
-                if( xsample[0] != 1 )
-                    UpSampleX( (float *)buffer, 3, xsample[0] );
-                if( xsample[1] != 1 )
-                    UpSampleX( (float *)buffer + 4, 3, xsample[1] );
-                if( xsample[2] != 1 )
-                    UpSampleX( (float *)buffer + 8, 3, xsample[2] );
-
                 RGBToGray( (float *)buffer, (float *)out );
             }
             else
             {
-                if( xsample[0] != 1 )
-                    UpSampleX( (float *)buffer, 3, xsample[0] );
-                if( xsample[1] != 1 )
-                    UpSampleX( (float *)(buffer + 4), 3, xsample[1] );
-                if( xsample[2] != 1 )
-                    UpSampleX( (float *)(buffer + 8), 3, xsample[2] );
-
                 if( chromatorgb )
-                    ChromaToBGR( (float *)buffer, 1, step );
+                {
+                    if (doReadRGB)
+                        ChromaToRGB( (float *)buffer, 1, defaultchannels, step );
+                    else
+                        ChromaToBGR( (float *)buffer, 1, defaultchannels, step );
+                }
 
                 if( m_type == FLOAT )
                 {
                     float *fi = (float *)buffer;
-                    for( x = 0; x < m_width * 3; x++)
+                    for( x = 0; x < m_width * img.channels(); x++)
                     {
-                        out[x] = cv::saturate_cast<uchar>(fi[x]*5);
+                        out[x] = cv::saturate_cast<uchar>(fi[x]);
                     }
                 }
                 else
                 {
                     unsigned *ui = (unsigned *)buffer;
-                    for( x = 0; x < m_width * 3; x++)
+                    for( x = 0; x < m_width * img.channels(); x++)
                     {
                         out[x] = cv::saturate_cast<uchar>(ui[x]);
                     }
@@ -365,25 +463,34 @@ bool  ExrDecoder::readData( Mat& img )
         }
         if( color )
         {
-            if( m_blue && (m_blue->xSampling != 1 || m_blue->ySampling != 1) )
-                UpSampleY( data, 3, step / xstep, m_blue->ySampling );
-            if( m_green && (m_green->xSampling != 1 || m_green->ySampling != 1) )
-                UpSampleY( data + xstep, 3, step / xstep, m_green->ySampling );
-            if( m_red && (m_red->xSampling != 1 || m_red->ySampling != 1) )
-                UpSampleY( data + 2 * xstep, 3, step / xstep, m_red->ySampling );
+            if (doReadRGB)
+            {
+                if( m_red && (m_red->xSampling != 1 || m_red->ySampling != 1) )
+                    UpSampleY( data, defaultchannels, step / xstep, m_red->ySampling );
+                if( m_green && (m_green->xSampling != 1 || m_green->ySampling != 1) )
+                    UpSampleY( data + xstep, defaultchannels, step / xstep, m_green->ySampling );
+                if( m_blue && (m_blue->xSampling != 1 || m_blue->ySampling != 1) )
+                    UpSampleY( data + 2 * xstep, defaultchannels, step / xstep, m_blue->ySampling );
+            }
+            else
+            {
+                if( m_blue && (m_blue->xSampling != 1 || m_blue->ySampling != 1) )
+                    UpSampleY( data, defaultchannels, step / xstep, m_blue->ySampling );
+                if( m_green && (m_green->xSampling != 1 || m_green->ySampling != 1) )
+                    UpSampleY( data + xstep, defaultchannels, step / xstep, m_green->ySampling );
+                if( m_red && (m_red->xSampling != 1 || m_red->ySampling != 1) )
+                    UpSampleY( data + 2 * xstep, defaultchannels, step / xstep, m_red->ySampling );
+            }
         }
         else if( m_green && (m_green->xSampling != 1 || m_green->ySampling != 1) )
             UpSampleY( data, 1, step / xstep, m_green->ySampling );
     }
 
-    if( chromatorgb )
-        ChromaToBGR( (float *)data, m_height, step / xstep );
-
     close();
 
-    if( !m_native_depth || (!color && m_iscolor ))
+    if(doPostColorSwap)
     {
-        delete[] buffer;
+        cvtColor( img, img, cv::COLOR_BGR2RGB );
     }
 
     return result;
@@ -459,60 +566,89 @@ void  ExrDecoder::UpSampleY( uchar *data, int xstep, int ystep, int ysample )
 /**
 // algorithm from ImfRgbaYca.cpp
  */
-void  ExrDecoder::ChromaToBGR( float *data, int numlines, int step )
+void  ExrDecoder::ChromaToBGR( float *data, int numlines, int xstep, int ystep )
 {
     for( int y = 0; y < numlines; y++ )
     {
         for( int x = 0; x < m_width; x++ )
         {
             double b, Y, r;
-            if( !m_native_depth )
+            if( m_type == FLOAT )
             {
-                b = ((uchar *)data)[y * step + x * 3];
-                Y = ((uchar *)data)[y * step + x * 3 + 1];
-                r = ((uchar *)data)[y * step + x * 3 + 2];
-            }
-            else if( m_type == FLOAT )
-            {
-                b = data[y * step + x * 3];
-                Y = data[y * step + x * 3 + 1];
-                r = data[y * step + x * 3 + 2];
+                b = data[y * ystep + x * xstep];
+                Y = data[y * ystep + x * xstep + 1];
+                r = data[y * ystep + x * xstep + 2];
             }
             else
             {
-                b = ((unsigned *)data)[y * step + x * 3];
-                Y = ((unsigned *)data)[y * step + x * 3 + 1];
-                r = ((unsigned *)data)[y * step + x * 3 + 2];
+                b = ((unsigned *)data)[y * ystep + x * xstep];
+                Y = ((unsigned *)data)[y * ystep + x * xstep + 1];
+                r = ((unsigned *)data)[y * ystep + x * xstep + 2];
             }
             r = (r + 1) * Y;
             b = (b + 1) * Y;
             Y = (Y - b * m_chroma.blue[1] - r * m_chroma.red[1]) / m_chroma.green[1];
 
-            if( !m_native_depth )
+            if( m_type == FLOAT )
             {
-                ((uchar *)data)[y * step + x * 3 + 0] = cv::saturate_cast<uchar>(b);
-                ((uchar *)data)[y * step + x * 3 + 1] = cv::saturate_cast<uchar>(Y);
-                ((uchar *)data)[y * step + x * 3 + 2] = cv::saturate_cast<uchar>(r);
-            }
-            else if( m_type == FLOAT )
-            {
-                data[y * step + x * 3] = (float)b;
-                data[y * step + x * 3 + 1] = (float)Y;
-                data[y * step + x * 3 + 2] = (float)r;
+                data[y * ystep + x * xstep] = (float)b;
+                data[y * ystep + x * xstep + 1] = (float)Y;
+                data[y * ystep + x * xstep + 2] = (float)r;
             }
             else
             {
                 int t = cvRound(b);
-                ((unsigned *)data)[y * step + x * 3 + 0] = (unsigned)MAX(t, 0);
+                ((unsigned *)data)[y * ystep + x * xstep + 0] = (unsigned)MAX(t, 0);
                 t = cvRound(Y);
-                ((unsigned *)data)[y * step + x * 3 + 1] = (unsigned)MAX(t, 0);
+                ((unsigned *)data)[y * ystep + x * xstep + 1] = (unsigned)MAX(t, 0);
                 t = cvRound(r);
-                ((unsigned *)data)[y * step + x * 3 + 2] = (unsigned)MAX(t, 0);
+                ((unsigned *)data)[y * ystep + x * xstep + 2] = (unsigned)MAX(t, 0);
             }
         }
     }
 }
 
+void  ExrDecoder::ChromaToRGB(float *data, int numlines, int xstep, int ystep)
+{
+    for( int y = 0; y < numlines; y++ )
+    {
+        for( int x = 0; x < m_width; x++ )
+        {
+            double b, Y, r;
+            if( m_type == FLOAT )
+            {
+                b = data[y * ystep + x * xstep];
+                Y = data[y * ystep + x * xstep + 1];
+                r = data[y * ystep + x * xstep + 2];
+            }
+            else
+            {
+                b = ((unsigned *)data)[y * ystep + x * xstep];
+                Y = ((unsigned *)data)[y * ystep + x * xstep + 1];
+                r = ((unsigned *)data)[y * ystep + x * xstep + 2];
+            }
+            r = (r + 1) * Y;
+            b = (b + 1) * Y;
+            Y = (Y - b * m_chroma.blue[1] - r * m_chroma.red[1]) / m_chroma.green[1];
+
+            if( m_type == FLOAT )
+            {
+                data[y * ystep + x * xstep] = (float)r;
+                data[y * ystep + x * xstep + 1] = (float)Y;
+                data[y * ystep + x * xstep + 2] = (float)b;
+            }
+            else
+            {
+                int t = cvRound(r);
+                ((unsigned *)data)[y * ystep + x * xstep + 0] = (unsigned)MAX(t, 0);
+                t = cvRound(Y);
+                ((unsigned *)data)[y * ystep + x * xstep + 1] = (unsigned)MAX(t, 0);
+                t = cvRound(b);
+                ((unsigned *)data)[y * ystep + x * xstep + 2] = (unsigned)MAX(t, 0);
+            }
+        }
+    }
+}
 
 /**
 // convert one row to gray
@@ -556,6 +692,7 @@ void  ExrDecoder::RGBToGray( float *in, float *out )
 
 ImageDecoder ExrDecoder::newDecoder() const
 {
+    initOpenEXR();
     return makePtr<ExrDecoder>();
 }
 
@@ -575,42 +712,107 @@ ExrEncoder::~ExrEncoder()
 
 bool  ExrEncoder::isFormatSupported( int depth ) const
 {
-    return CV_MAT_DEPTH(depth) >= CV_8U && CV_MAT_DEPTH(depth) < CV_64F;
+    return ( CV_MAT_DEPTH(depth) == CV_32F );
 }
 
 
-// TODO scale appropriately
-bool  ExrEncoder::write( const Mat& img, const std::vector<int>& )
+bool  ExrEncoder::write( const Mat& img, const std::vector<int>& params )
 {
     int width = img.cols, height = img.rows;
-    int depth = img.depth(), channels = img.channels();
+    int depth = img.depth();
+    CV_Assert( depth == CV_32F );
+    int channels = img.channels();
     bool result = false;
-    bool issigned = depth == CV_8S || depth == CV_16S || depth == CV_32S;
-    bool isfloat = depth == CV_32F || depth == CV_64F;
-    depth = CV_ELEM_SIZE1(depth)*8;
-    const int step = img.step;
-
     Header header( width, height );
-    Imf::PixelType type;
+    Imf::PixelType type = FLOAT;
 
-    if(depth == 8)
-        type = HALF;
-    else if(isfloat)
-        type = FLOAT;
-    else
-        type = UINT;
-
-    if( channels == 3 )
+    for( size_t i = 0; i < params.size(); i += 2 )
     {
-        header.channels().insert( "R", Channel( type ));
-        header.channels().insert( "G", Channel( type ));
-        header.channels().insert( "B", Channel( type ));
+        if( params[i] == IMWRITE_EXR_TYPE )
+        {
+            switch( params[i+1] )
+            {
+            case IMWRITE_EXR_TYPE_HALF:
+                type = HALF;
+                break;
+            case IMWRITE_EXR_TYPE_FLOAT:
+                type = FLOAT;
+                break;
+            default:
+                CV_Error(Error::StsBadArg, "IMWRITE_EXR_TYPE is invalid or not supported");
+            }
+        }
+        if ( params[i] == IMWRITE_EXR_COMPRESSION )
+        {
+            switch ( params[i + 1] )
+            {
+            case IMWRITE_EXR_COMPRESSION_NO:
+                header.compression() = NO_COMPRESSION;
+                break;
+            case IMWRITE_EXR_COMPRESSION_RLE:
+                header.compression() = RLE_COMPRESSION;
+                break;
+            case IMWRITE_EXR_COMPRESSION_ZIPS:
+                header.compression() = ZIPS_COMPRESSION;
+                break;
+            case IMWRITE_EXR_COMPRESSION_ZIP:
+                header.compression() = ZIP_COMPRESSION;
+                break;
+            case IMWRITE_EXR_COMPRESSION_PIZ:
+                header.compression() = PIZ_COMPRESSION;
+                break;
+            case IMWRITE_EXR_COMPRESSION_PXR24:
+                header.compression() = PXR24_COMPRESSION;
+                break;
+            case IMWRITE_EXR_COMPRESSION_B44:
+                header.compression() = B44_COMPRESSION;
+                break;
+            case IMWRITE_EXR_COMPRESSION_B44A:
+                header.compression() = B44A_COMPRESSION;
+                break;
+// version macros introduced in openexr 2.0.1.
+// - https://github.com/AcademySoftwareFoundation/openexr/commit/60cdff8a6f5c4e25a374e5f366d6e9b4efd869b3#diff-c4bae0726aebe410e407db9abd406d9cf2684f82dd8a08f46d84e8b7c35cf22aR67
+#if defined(OPENEXR_VERSION_MAJOR) && defined(OPENEXR_VERSION_MINOR) && OPENEXR_VERSION_MAJOR * 1000 + OPENEXR_VERSION_MINOR >= 2 * 1000 + 2
+            // available since version 2.2.0
+            case IMWRITE_EXR_COMPRESSION_DWAA:
+                header.compression() = DWAA_COMPRESSION;
+                break;
+            case IMWRITE_EXR_COMPRESSION_DWAB:
+                header.compression() = DWAB_COMPRESSION;
+                break;
+#endif
+            default:
+                CV_Error(Error::StsBadArg, "IMWRITE_EXR_COMPRESSION is invalid or not supported");
+            }
+        }
+        if (params[i] == IMWRITE_EXR_DWA_COMPRESSION_LEVEL)
+        {
+#if !defined(OPENEXR_VERSION_MAJOR)
+            CV_LOG_ONCE_WARNING(NULL, "Setting `IMWRITE_EXR_DWA_COMPRESSION_LEVEL` not supported in unknown OpenEXR version possibly prior to 2.0.1 (version 3 is required)");
+#elif OPENEXR_VERSION_MAJOR < 3
+            CV_LOG_ONCE_WARNING(NULL, "Setting `IMWRITE_EXR_DWA_COMPRESSION_LEVEL` not supported in OpenEXR version " + std::to_string(OPENEXR_VERSION_MAJOR) + " (version 3 is required)");
+#else
+            header.dwaCompressionLevel() = params[i + 1];
+#endif
+        }
+    }
+
+    if( channels == 3 || channels == 4 )
+    {
+        header.channels().insert( "R", Channel( type ) );
+        header.channels().insert( "G", Channel( type ) );
+        header.channels().insert( "B", Channel( type ) );
         //printf("bunt\n");
     }
     else
     {
-        header.channels().insert( "Y", Channel( type ));
+        header.channels().insert( "Y", Channel( type ) );
         //printf("gray\n");
+    }
+
+    if( channels % 2 == 0 )
+    { // even number of channels indicates Alpha
+        header.channels().insert( "A", Channel( type ) );
     }
 
     OutputFile file( m_filename.c_str(), header );
@@ -618,111 +820,47 @@ bool  ExrEncoder::write( const Mat& img, const std::vector<int>& )
     FrameBuffer frame;
 
     char *buffer;
-    int bufferstep;
+    size_t bufferstep;
     int size;
-    if( type == FLOAT && depth == 32 )
+    Mat exrMat;
+    if( type == HALF )
     {
-        buffer = (char *)const_cast<uchar *>(img.ptr());
-        bufferstep = step;
-        size = 4;
-    }
-    else if( depth > 16 || type == UINT )
-    {
-        buffer = (char *)new unsigned[width * channels];
-        bufferstep = 0;
-        size = 4;
-    }
-    else
-    {
-        buffer = (char *)new half[width * channels];
-        bufferstep = 0;
+        img.convertTo(exrMat, CV_16F);
+        buffer = (char *)const_cast<uchar *>( exrMat.ptr() );
+        bufferstep = exrMat.step;
         size = 2;
     }
-
-    //printf("depth %d %s\n", depth, types[type]);
-
-    if( channels == 3 )
+    else
     {
-        frame.insert( "B", Slice( type, buffer, size * 3, bufferstep ));
-        frame.insert( "G", Slice( type, buffer + size, size * 3, bufferstep ));
-        frame.insert( "R", Slice( type, buffer + size * 2, size * 3, bufferstep ));
+        buffer = (char *)const_cast<uchar *>( img.ptr() );
+        bufferstep = img.step;
+        size = 4;
+    }
+
+    if( channels == 3 || channels == 4 )
+    {
+        frame.insert( "B", Slice( type, buffer, size * channels, bufferstep ));
+        frame.insert( "G", Slice( type, buffer + size, size * channels, bufferstep ));
+        frame.insert( "R", Slice( type, buffer + size * 2, size * channels, bufferstep ));
     }
     else
-        frame.insert( "Y", Slice( type, buffer, size, bufferstep ));
+        frame.insert( "Y", Slice( type, buffer, size * channels, bufferstep ));
+
+    if( channels % 2 == 0 )
+    { // even channel count indicates Alpha channel
+        frame.insert( "A", Slice( type, buffer + size * (channels - 1), size * channels, bufferstep ));
+    }
 
     file.setFrameBuffer( frame );
 
-    int offset = issigned ? 1 << (depth - 1) : 0;
-
     result = true;
-    if( type == FLOAT && depth == 32 )
+    try
     {
-        try
-        {
-            file.writePixels( height );
-        }
-        catch(...)
-        {
-            result = false;
-        }
+        file.writePixels( height );
     }
-    else
+    catch(...)
     {
-    //    int scale = 1 << (32 - depth);
-    //    printf("scale %d\n", scale);
-        for(int line = 0; line < height; line++)
-        {
-            if(type == UINT)
-            {
-                unsigned *buf = (unsigned*)buffer; // FIXME 64-bit problems
-
-                if( depth <= 8 )
-                {
-                    const uchar* sd = img.ptr(line);
-                    for(int i = 0; i < width * channels; i++)
-                        buf[i] = sd[i] + offset;
-                }
-                else if( depth <= 16 )
-                {
-                    const unsigned short *sd = img.ptr<unsigned short>(line);
-                    for(int i = 0; i < width * channels; i++)
-                        buf[i] = sd[i] + offset;
-                }
-                else
-                {
-                    const int *sd = img.ptr<int>(line); // FIXME 64-bit problems
-                    for(int i = 0; i < width * channels; i++)
-                        buf[i] = (unsigned) sd[i] + offset;
-                }
-            }
-            else
-            {
-                half *buf = (half *)buffer;
-
-                if( depth <= 8 )
-                {
-                    const uchar* sd = img.ptr(line);
-                    for(int i = 0; i < width * channels; i++)
-                        buf[i] = sd[i];
-                }
-                else if( depth <= 16 )
-                {
-                    const unsigned short *sd = img.ptr<unsigned short>(line);
-                    for(int i = 0; i < width * channels; i++)
-                        buf[i] = sd[i];
-                }
-            }
-            try
-            {
-                file.writePixels( 1 );
-            }
-            catch(...)
-            {
-                result = false;
-                break;
-            }
-        }
-        delete[] buffer;
+        result = false;
     }
 
     return result;
@@ -731,6 +869,7 @@ bool  ExrEncoder::write( const Mat& img, const std::vector<int>& )
 
 ImageEncoder ExrEncoder::newEncoder() const
 {
+    initOpenEXR();
     return makePtr<ExrEncoder>();
 }
 

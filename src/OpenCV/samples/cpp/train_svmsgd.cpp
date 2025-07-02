@@ -1,7 +1,8 @@
-#include <opencv2/opencv.hpp>
+#include "opencv2/core.hpp"
 #include "opencv2/video/tracking.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc.hpp"
+#include "opencv2/highgui.hpp"
+#include "opencv2/ml.hpp"
 
 using namespace cv;
 using namespace cv::ml;
@@ -28,7 +29,7 @@ struct Data
 bool doTrain(const Mat samples, const Mat responses, Mat &weights, float &shift);
 
 //function finds two points for drawing line (wx = 0)
-bool findPointsForLine(const Mat &weights, float shift, Point points[], int width, int height);
+bool findPointsForLine(const Mat &weights, float shift, Point points[2], int width, int height);
 
 // function finds cross point of line (wx = 0) and segment ( (y = HEIGHT, 0 <= x <= WIDTH) or (x = WIDTH, 0 <= y <= HEIGHT) )
 bool findCrossPointWithBorders(const Mat &weights, float shift, const std::pair<Point,Point> &segment, Point &crossPoint);
@@ -188,11 +189,11 @@ static void onMouse( int event, int x, int y, int, void* pData)
 
     switch( event )
     {
-    case CV_EVENT_LBUTTONUP:
+    case EVENT_LBUTTONUP:
         addPointRetrainAndRedraw(data, x, y, 1);
         break;
 
-    case CV_EVENT_RBUTTONDOWN:
+    case EVENT_RBUTTONDOWN:
         addPointRetrainAndRedraw(data, x, y, -1);
         break;
     }

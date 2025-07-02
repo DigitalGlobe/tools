@@ -1,5 +1,3 @@
-/* $Header: /cvs/maptools/cvsroot/libtiff/libtiff/tif_dumpmode.c,v 1.14 2011-04-02 20:54:09 bfriesen Exp $ */
-
 /*
  * Copyright (c) 1988-1997 Sam Leffler
  * Copyright (c) 1991-1997 Silicon Graphics, Inc.
@@ -31,28 +29,27 @@
  */
 #include "tiffiop.h"
 
-static int
-DumpFixupTags(TIFF* tif)
+static int DumpFixupTags(TIFF *tif)
 {
-    (void) tif;
+    (void)tif;
     return (1);
 }
 
 /*
  * Encode a hunk of pixels.
  */
-static int
-DumpModeEncode(TIFF* tif, uint8* pp, tmsize_t cc, uint16 s)
+static int DumpModeEncode(TIFF *tif, uint8_t *pp, tmsize_t cc, uint16_t s)
 {
-    (void) s;
-    while (cc > 0) {
+    (void)s;
+    while (cc > 0)
+    {
         tmsize_t n;
 
         n = cc;
         if (tif->tif_rawcc + n > tif->tif_rawdatasize)
             n = tif->tif_rawdatasize - tif->tif_rawcc;
 
-        assert( n > 0 );
+        assert(n > 0);
 
         /*
          * Avoid copy if client has setup raw
@@ -64,9 +61,8 @@ DumpModeEncode(TIFF* tif, uint8* pp, tmsize_t cc, uint16 s)
         tif->tif_rawcc += n;
         pp += n;
         cc -= n;
-        if (tif->tif_rawcc >= tif->tif_rawdatasize &&
-            !TIFFFlushData1(tif))
-            return (-1);
+        if (tif->tif_rawcc >= tif->tif_rawdatasize && !TIFFFlushData1(tif))
+            return (0);
     }
     return (1);
 }
@@ -74,25 +70,17 @@ DumpModeEncode(TIFF* tif, uint8* pp, tmsize_t cc, uint16 s)
 /*
  * Decode a hunk of pixels.
  */
-static int
-DumpModeDecode(TIFF* tif, uint8* buf, tmsize_t cc, uint16 s)
+static int DumpModeDecode(TIFF *tif, uint8_t *buf, tmsize_t cc, uint16_t s)
 {
     static const char module[] = "DumpModeDecode";
-    (void) s;
-    if (tif->tif_rawcc < cc) {
-#if defined(__WIN32__) && (defined(_MSC_VER) || defined(__MINGW32__))
-        TIFFErrorExt(tif->tif_clientdata, module,
-"Not enough data for scanline %lu, expected a request for at most %I64d bytes, got a request for %I64d bytes",
-                     (unsigned long) tif->tif_row,
-                     (signed __int64) tif->tif_rawcc,
-                     (signed __int64) cc);
-#else
-        TIFFErrorExt(tif->tif_clientdata, module,
-"Not enough data for scanline %lu, expected a request for at most %lld bytes, got a request for %lld bytes",
-                     (unsigned long) tif->tif_row,
-                     (signed long long) tif->tif_rawcc,
-                     (signed long long) cc);
-#endif
+    (void)s;
+    if (tif->tif_rawcc < cc)
+    {
+        TIFFErrorExtR(tif, module,
+                      "Not enough data for scanline %" PRIu32
+                      ", expected a request for at most %" TIFF_SSIZE_FORMAT
+                      " bytes, got a request for %" TIFF_SSIZE_FORMAT " bytes",
+                      tif->tif_row, tif->tif_rawcc, cc);
         return (0);
     }
     /*
@@ -109,8 +97,7 @@ DumpModeDecode(TIFF* tif, uint8* buf, tmsize_t cc, uint16 s)
 /*
  * Seek forwards nrows in the current strip.
  */
-static int
-DumpModeSeek(TIFF* tif, uint32 nrows)
+static int DumpModeSeek(TIFF *tif, uint32_t nrows)
 {
     tif->tif_rawcp += nrows * tif->tif_scanlinesize;
     tif->tif_rawcc -= nrows * tif->tif_scanlinesize;
@@ -120,10 +107,9 @@ DumpModeSeek(TIFF* tif, uint32 nrows)
 /*
  * Initialize dump mode.
  */
-int
-TIFFInitDumpMode(TIFF* tif, int scheme)
+int TIFFInitDumpMode(TIFF *tif, int scheme)
 {
-    (void) scheme;
+    (void)scheme;
     tif->tif_fixuptags = DumpFixupTags;
     tif->tif_decoderow = DumpModeDecode;
     tif->tif_decodestrip = DumpModeDecode;
@@ -134,10 +120,3 @@ TIFFInitDumpMode(TIFF* tif, int scheme)
     tif->tif_seek = DumpModeSeek;
     return (1);
 }
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 8
- * fill-column: 78
- * End:
- */

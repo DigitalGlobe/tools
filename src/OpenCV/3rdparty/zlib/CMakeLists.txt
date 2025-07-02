@@ -21,7 +21,9 @@ endif()
 #
 # Check for unistd.h
 #
-check_include_file(unistd.h Z_HAVE_UNISTD_H)
+if(NOT MSVC)
+  check_include_file(unistd.h Z_HAVE_UNISTD_H)
+endif()
 
 if(MSVC)
   add_definitions(-D_CRT_SECURE_NO_DEPRECATE)
@@ -36,12 +38,13 @@ if(HAVE_OFF64_T)
   add_definitions(-D_LARGEFILE64_SOURCE=1)
 endif()
 
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/zconf.h.cmakein"
-               "${CMAKE_CURRENT_BINARY_DIR}/zconf.h" @ONLY)
+configure_file(	${CMAKE_CURRENT_SOURCE_DIR}/zconf.h.cmakein
+                ${CMAKE_CURRENT_BINARY_DIR}/zconf.h @ONLY)
+
 ocv_include_directories("${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}")
 
 set(ZLIB_PUBLIC_HDRS
-    "${CMAKE_CURRENT_BINARY_DIR}/zconf.h"
+    ${CMAKE_CURRENT_BINARY_DIR}/zconf.h
     zlib.h
 )
 set(ZLIB_PRIVATE_HDRS
@@ -73,24 +76,23 @@ set(ZLIB_SRCS
     zutil.c
 )
 
-add_library(${ZLIB_LIBRARY} STATIC ${ZLIB_SRCS} ${ZLIB_PUBLIC_HDRS} ${ZLIB_PRIVATE_HDRS})
+add_library(${ZLIB_LIBRARY} STATIC ${OPENCV_3RDPARTY_EXCLUDE_FROM_ALL} ${ZLIB_SRCS} ${ZLIB_PUBLIC_HDRS} ${ZLIB_PRIVATE_HDRS})
 set_target_properties(${ZLIB_LIBRARY} PROPERTIES DEFINE_SYMBOL ZLIB_DLL)
 
-if(UNIX)
-  if(CMAKE_COMPILER_IS_GNUCXX OR CV_ICC)
-     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
-  endif()
-endif()
-
-ocv_warnings_disable(CMAKE_C_FLAGS -Wshorten-64-to-32 -Wattributes -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wshift-negative-value)
+ocv_warnings_disable(CMAKE_C_FLAGS -Wshorten-64-to-32 -Wattributes -Wstrict-prototypes -Wmissing-prototypes -Wmissing-declarations -Wshift-negative-value
+    -Wundef  # _LFS64_LARGEFILE is not defined
+    /wd4267  # MSVS 2015 (x64) + zlib 1.2.11
+    -Wimplicit-fallthrough
+    /wd4244  # MSVS + zlib 1.2.12: warning C4244: '=': conversion from 'ush' to 'uchf', possible loss of data
+)
 
 set_target_properties(${ZLIB_LIBRARY} PROPERTIES
-        OUTPUT_NAME ${ZLIB_LIBRARY}
-        DEBUG_POSTFIX "${OPENCV_DEBUG_POSTFIX}"
-        COMPILE_PDB_NAME ${ZLIB_LIBRARY}
-        COMPILE_PDB_NAME_DEBUG "${ZLIB_LIBRARY}${OPENCV_DEBUG_POSTFIX}"
-        ARCHIVE_OUTPUT_DIRECTORY ${3P_LIBRARY_OUTPUT_PATH}
-    )
+    OUTPUT_NAME ${ZLIB_LIBRARY}
+    DEBUG_POSTFIX "${OPENCV_DEBUG_POSTFIX}"
+    COMPILE_PDB_NAME ${ZLIB_LIBRARY}
+    COMPILE_PDB_NAME_DEBUG "${ZLIB_LIBRARY}${OPENCV_DEBUG_POSTFIX}"
+    ARCHIVE_OUTPUT_DIRECTORY ${3P_LIBRARY_OUTPUT_PATH}
+)
 
 if(ENABLE_SOLUTION_FOLDERS)
   set_target_properties(${ZLIB_LIBRARY} PROPERTIES FOLDER "3rdparty")
@@ -99,3 +101,5 @@ endif()
 if(NOT BUILD_SHARED_LIBS)
   ocv_install_target(${ZLIB_LIBRARY} EXPORT OpenCVModules ARCHIVE DESTINATION ${OPENCV_3P_LIB_INSTALL_PATH} COMPONENT dev)
 endif()
+
+ocv_install_3rdparty_licenses(zlib LICENSE)

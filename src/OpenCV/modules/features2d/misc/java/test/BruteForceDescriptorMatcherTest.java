@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfDMatch;
@@ -12,13 +11,13 @@ import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Point;
 import org.opencv.core.Scalar;
 import org.opencv.core.DMatch;
-import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.DescriptorMatcher;
-import org.opencv.features2d.FeatureDetector;
+import org.opencv.features2d.BFMatcher;
 import org.opencv.core.KeyPoint;
 import org.opencv.test.OpenCVTestCase;
 import org.opencv.test.OpenCVTestRunner;
 import org.opencv.imgproc.Imgproc;
+import org.opencv.features2d.Feature2D;
 
 public class BruteForceDescriptorMatcherTest extends OpenCVTestCase {
 
@@ -39,12 +38,13 @@ public class BruteForceDescriptorMatcherTest extends OpenCVTestCase {
         MatOfKeyPoint keypoints = new MatOfKeyPoint();
         Mat descriptors = new Mat();
 
-        FeatureDetector detector = FeatureDetector.create(FeatureDetector.SURF);
-        DescriptorExtractor extractor = DescriptorExtractor.create(DescriptorExtractor.SURF);
+        Feature2D detector = createClassInstance(XFEATURES2D+"SURF", DEFAULT_FACTORY, null, null);
+        Feature2D extractor = createClassInstance(XFEATURES2D+"SURF", DEFAULT_FACTORY, null, null);
 
-        String filename = OpenCVTestRunner.getTempFileName("yml");
-        writeFile(filename, "%YAML:1.0\nhessianThreshold: 8000.\noctaves: 3\noctaveLayers: 4\nupright: 0\n");
-        detector.read(filename);
+        setProperty(detector, "hessianThreshold", "double", 8000);
+        setProperty(detector, "nOctaves", "int", 3);
+        setProperty(detector, "nOctaveLayers", "int", 4);
+        setProperty(detector, "upright", "boolean", false);
 
         detector.detect(img, keypoints);
         extractor.compute(img, keypoints, descriptors);
@@ -65,7 +65,7 @@ public class BruteForceDescriptorMatcherTest extends OpenCVTestCase {
         MatOfKeyPoint keypoints = new MatOfKeyPoint(new KeyPoint(50, 50, 16, 0, 20000, 1, -1), new KeyPoint(42, 42, 16, 160, 10000, 1, -1));
         Mat descriptors = new Mat();
 
-        DescriptorExtractor extractor = DescriptorExtractor.create(DescriptorExtractor.SURF);
+        Feature2D extractor = createClassInstance(XFEATURES2D+"SURF", DEFAULT_FACTORY, null, null);
 
         extractor.compute(img, keypoints, descriptors);
 
@@ -86,12 +86,21 @@ public class BruteForceDescriptorMatcherTest extends OpenCVTestCase {
         matSize = 100;
 
         truth = new DMatch[] {
-                new DMatch(0, 0, 0, 0.6211397f),
+                new DMatch(0, 0, 0, 0.6159003f),
                 new DMatch(1, 1, 0, 0.9177120f),
                 new DMatch(2, 1, 0, 0.3112163f),
                 new DMatch(3, 1, 0, 0.2925074f),
-                new DMatch(4, 1, 0, 0.9309178f)
+                new DMatch(4, 1, 0, 0.26520672f)
                 };
+    }
+
+    // https://github.com/opencv/opencv/issues/11268
+    public void testConstructor()
+    {
+        BFMatcher self_created_matcher = new BFMatcher();
+        Mat train = new Mat(1, 1, CvType.CV_8U, new Scalar(123));
+        self_created_matcher.add(Arrays.asList(train));
+        assertTrue(!self_created_matcher.empty());
     }
 
     public void testAdd() {
@@ -273,7 +282,7 @@ public class BruteForceDescriptorMatcherTest extends OpenCVTestCase {
 
     public void testRead() {
         String filename = OpenCVTestRunner.getTempFileName("yml");
-        writeFile(filename, "%YAML:1.0\n");
+        writeFile(filename, "%YAML:1.0\n---\n");
 
         matcher.read(filename);
         assertTrue(true);// BruteforceMatcher has no settings
@@ -288,7 +297,7 @@ public class BruteForceDescriptorMatcherTest extends OpenCVTestCase {
 
         matcher.write(filename);
 
-        String truth = "%YAML:1.0\n";
+        String truth = "%YAML:1.0\n---\n";
         assertEquals(truth, readFile(filename));
     }
 

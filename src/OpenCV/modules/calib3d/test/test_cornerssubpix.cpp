@@ -41,11 +41,9 @@
 
 #include "test_precomp.hpp"
 #include "opencv2/imgproc/imgproc_c.h"
-#include <limits>
 #include "test_chessboardgenerator.hpp"
 
-using namespace std;
-using namespace cv;
+namespace opencv_test { namespace {
 
 class CV_ChessboardSubpixelTest : public cvtest::BaseTest
 {
@@ -78,7 +76,7 @@ int calcDistance(const vector<Point2f>& set1, const vector<Point2f>& set2, doubl
 
         for(int j = 0; j < (int)set2.size(); j++)
         {
-            double dist = norm(set1[i] - set2[j]);
+            double dist = cv::norm(set1[i] - set2[j]); // TODO cvtest
             if(dist < min_dist)
             {
                 min_idx = j;
@@ -155,9 +153,8 @@ void CV_ChessboardSubpixelTest::run( int )
 
         vector<Point2f> test_corners;
         bool result = findChessboardCorners(chessboard_image, pattern_size, test_corners, 15);
-        if(!result)
+        if (!result && cvtest::debugLevel > 0)
         {
-#if 0
             ts->printf(cvtest::TS::LOG, "Warning: chessboard was not detected! Writing image to test.png\n");
             ts->printf(cvtest::TS::LOG, "Size = %d, %d\n", pattern_size.width, pattern_size.height);
             ts->printf(cvtest::TS::LOG, "Intrinsic params: fx = %f, fy = %f, cx = %f, cy = %f\n",
@@ -169,7 +166,9 @@ void CV_ChessboardSubpixelTest::run( int )
                        distortion_coeffs_.at<double>(0, 4));
 
             imwrite("test.png", chessboard_image);
-#endif
+        }
+        if (!result)
+        {
             continue;
         }
 
@@ -182,7 +181,7 @@ void CV_ChessboardSubpixelTest::run( int )
             break;
         }
 
-        IplImage chessboard_image_header = chessboard_image;
+        IplImage chessboard_image_header = cvIplImage(chessboard_image);
         cvFindCornerSubPix(&chessboard_image_header, (CvPoint2D32f*)&test_corners[0],
             (int)test_corners.size(), cvSize(3, 3), cvSize(1, 1), cvTermCriteria(CV_TERMCRIT_EPS|CV_TERMCRIT_ITER,300,0.1));
         find4QuadCornerSubpix(chessboard_image, test_corners, Size(5, 5));
@@ -242,4 +241,19 @@ void CV_ChessboardSubpixelTest::generateIntrinsicParams()
 
 TEST(Calib3d_ChessboardSubPixDetector, accuracy) { CV_ChessboardSubpixelTest test; test.safe_run(); }
 
+TEST(Calib3d_CornerSubPix, regression_7204)
+{
+    cv::Mat image(cv::Size(70, 38), CV_8UC1, cv::Scalar::all(0));
+    image(cv::Rect(65, 26, 5, 5)).setTo(cv::Scalar::all(255));
+    image(cv::Rect(55, 31, 8, 1)).setTo(cv::Scalar::all(255));
+    image(cv::Rect(56, 35, 14, 2)).setTo(cv::Scalar::all(255));
+    image(cv::Rect(66, 24, 4, 2)).setTo(cv::Scalar::all(255));
+    image.at<uchar>(24, 69) = 0;
+    std::vector<cv::Point2f> corners;
+    corners.push_back(cv::Point2f(65, 30));
+    cv::cornerSubPix(image, corners, cv::Size(3, 3), cv::Size(-1, -1),
+        cv::TermCriteria(CV_TERMCRIT_EPS + CV_TERMCRIT_ITER, 30, 0.1));
+}
+
+}} // namespace
 /* End of file. */

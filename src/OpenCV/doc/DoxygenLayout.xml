@@ -17,7 +17,7 @@
       <tab type="globals" visible="yes" title="Global objects" intro=""/>
     </tab>
     <tab type="examples" visible="yes" title="" intro=""/>
-    <tab type="user" url="/3.0-last-rst" title="Sphinx Documentation"/>
+    @CMAKE_DOXYGEN_JAVADOC_NODE@
   </navindex>
 
   <!-- Layout definition for a class page -->
@@ -139,6 +139,9 @@
     <groupgraph visible="$GROUP_GRAPHS"/>
     <memberdecl>
       <nestedgroups visible="yes" title=""/>
+    </memberdecl>
+    <detaileddescription title=""/>
+    <memberdecl>
       <dirs visible="yes" title=""/>
       <files visible="yes" title=""/>
       <namespaces visible="yes" title=""/>
@@ -158,7 +161,6 @@
       <friends title=""/>
       <membergroups visible="yes"/>
     </memberdecl>
-    <detaileddescription title=""/>
     <memberdef>
       <pagedocs/>
       <inlineclasses title=""/>

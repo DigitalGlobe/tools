@@ -87,6 +87,8 @@ allocWSNodes( std::vector<WSNode>& storage )
 
 void cv::watershed( InputArray _src, InputOutputArray _markers )
 {
+    CV_INSTRUMENT_REGION();
+
     // Labels for pixels
     const int IN_QUEUE = -2; // Pixel visited
     const int WSHED = -1; // Pixel belongs to watershed
@@ -153,7 +155,7 @@ void cv::watershed( InputArray _src, InputOutputArray _markers )
         dr = std::abs((ptr1)[2] - (ptr2)[2]);\
         diff = ws_max(db,dg);                \
         diff = ws_max(diff,dr);              \
-        assert( 0 <= diff && diff <= 255 );  \
+        CV_Assert( 0 <= diff && diff <= 255 );  \
     }
 
     CV_Assert( src.type() == CV_8UC3 && dst.type() == CV_32SC1 );
@@ -213,7 +215,7 @@ void cv::watershed( InputArray _src, InputOutputArray _markers )
                 }
 
                 // Add to according queue
-                assert( 0 <= idx && idx <= 255 );
+                CV_Assert( 0 <= idx && idx <= 255 );
                 ws_push( idx, i*mstep + j, i*istep + j*3 );
                 m[0] = IN_QUEUE;
             }
@@ -284,7 +286,7 @@ void cv::watershed( InputArray _src, InputOutputArray _markers )
         }
 
         // Set label to current pixel in marker image
-        assert( lab != 0 );
+        CV_Assert( lab != 0 );
         m[0] = lab;
 
         if( lab == WSHED )
@@ -332,6 +334,8 @@ void cv::pyrMeanShiftFiltering( InputArray _src, OutputArray _dst,
                                 double sp0, double sr, int max_level,
                                 TermCriteria termcrit )
 {
+    CV_INSTRUMENT_REGION();
+
     Mat src0 = _src.getMat();
 
     if( src0.empty() )
@@ -344,7 +348,7 @@ void cv::pyrMeanShiftFiltering( InputArray _src, OutputArray _dst,
     const int MAX_LEVELS = 8;
 
     if( (unsigned)max_level > (unsigned)MAX_LEVELS )
-        CV_Error( CV_StsOutOfRange, "The number of pyramid levels is too large or negative" );
+        CV_Error( cv::Error::StsOutOfRange, "The number of pyramid levels is too large or negative" );
 
     std::vector<cv::Mat> src_pyramid(max_level+1);
     std::vector<cv::Mat> dst_pyramid(max_level+1);
@@ -361,19 +365,19 @@ void cv::pyrMeanShiftFiltering( InputArray _src, OutputArray _dst,
 
 
     if( src0.type() != CV_8UC3 )
-        CV_Error( CV_StsUnsupportedFormat, "Only 8-bit, 3-channel images are supported" );
+        CV_Error( cv::Error::StsUnsupportedFormat, "Only 8-bit, 3-channel images are supported" );
 
     if( src0.type() != dst0.type() )
-        CV_Error( CV_StsUnmatchedFormats, "The input and output images must have the same type" );
+        CV_Error( cv::Error::StsUnmatchedFormats, "The input and output images must have the same type" );
 
     if( src0.size() != dst0.size() )
-        CV_Error( CV_StsUnmatchedSizes, "The input and output images must have the same size" );
+        CV_Error( cv::Error::StsUnmatchedSizes, "The input and output images must have the same size" );
 
-    if( !(termcrit.type & CV_TERMCRIT_ITER) )
+    if( !(termcrit.type & TermCriteria::MAX_ITER) )
         termcrit.maxCount = 5;
     termcrit.maxCount = MAX(termcrit.maxCount,1);
     termcrit.maxCount = MIN(termcrit.maxCount,100);
-    if( !(termcrit.type & CV_TERMCRIT_EPS) )
+    if( !(termcrit.type & TermCriteria::EPS) )
         termcrit.epsilon = 1.f;
     termcrit.epsilon = MAX(termcrit.epsilon, 0.f);
 
@@ -390,7 +394,6 @@ void cv::pyrMeanShiftFiltering( InputArray _src, OutputArray _dst,
         dst_pyramid[level].create( src_pyramid[level].rows,
                         src_pyramid[level].cols, src_pyramid[level].type() );
         cv::pyrDown( src_pyramid[level-1], src_pyramid[level], src_pyramid[level].size() );
-        //CV_CALL( cvResize( src_pyramid[level-1], src_pyramid[level], CV_INTER_AREA ));
     }
 
     mask0.create(src0.rows, src0.cols, CV_8UC1);
@@ -403,27 +406,24 @@ void cv::pyrMeanShiftFiltering( InputArray _src, OutputArray _dst,
         cv::Size size = src.size();
         const uchar* sptr = src.ptr();
         int sstep = (int)src.step;
-        uchar* mask = 0;
-        int mstep = 0;
         uchar* dptr;
         int dstep;
         float sp = (float)(sp0 / (1 << level));
         sp = MAX( sp, 1 );
 
+        cv::Mat m;
         if( level < max_level )
         {
             cv::Size size1 = dst_pyramid[level+1].size();
-            cv::Mat m( size.height, size.width, CV_8UC1, mask0.ptr() );
+            m = cv::Mat(size.height, size.width, CV_8UC1, mask0.ptr());
             dstep = (int)dst_pyramid[level+1].step;
             dptr = dst_pyramid[level+1].ptr() + dstep + cn;
-            mstep = (int)m.step;
-            mask = m.ptr() + mstep;
-            //cvResize( dst_pyramid[level+1], dst_pyramid[level], CV_INTER_CUBIC );
             cv::pyrUp( dst_pyramid[level+1], dst_pyramid[level], dst_pyramid[level].size() );
             m.setTo(cv::Scalar::all(0));
 
-            for( i = 1; i < size1.height-1; i++, dptr += dstep - (size1.width-2)*3, mask += mstep*2 )
+            for( i = 1; i < size1.height-1; i++, dptr += dstep - (size1.width-2)*3)
             {
+                uchar* mask = m.ptr(1 + i * 2);
                 for( j = 1; j < size1.width-1; j++, dptr += cn )
                 {
                     int c0 = dptr[0], c1 = dptr[1], c2 = dptr[2];
@@ -433,16 +433,16 @@ void cv::pyrMeanShiftFiltering( InputArray _src, OutputArray _dst,
             }
 
             cv::dilate( m, m, cv::Mat() );
-            mask = m.ptr();
         }
 
         dptr = dst_pyramid[level].ptr();
         dstep = (int)dst_pyramid[level].step;
 
         for( i = 0; i < size.height; i++, sptr += sstep - size.width*3,
-                                          dptr += dstep - size.width*3,
-                                          mask += mstep )
+                                          dptr += dstep - size.width*3
+        )
         {
+            uchar* mask = m.empty() ? NULL : m.ptr(i);
             for( j = 0; j < size.width; j++, sptr += 3, dptr += 3 )
             {
                 int x0 = j, y0 = i, x1, y1, iter;

@@ -53,24 +53,29 @@ inline void log_(const Mat& src, Mat& dst)
     log(dst, dst);
 }
 
-class TonemapImpl : public Tonemap
+class TonemapImpl CV_FINAL : public Tonemap
 {
 public:
     TonemapImpl(float _gamma) : name("Tonemap"), gamma(_gamma)
     {
     }
 
-    void process(InputArray _src, OutputArray _dst)
+    void process(InputArray _src, OutputArray _dst) CV_OVERRIDE
     {
+        CV_INSTRUMENT_REGION();
+
         Mat src = _src.getMat();
         CV_Assert(!src.empty());
+        CV_Assert(_src.dims() == 2 && _src.type() == CV_32FC3);
         _dst.create(src.size(), CV_32FC3);
         Mat dst = _dst.getMat();
 
         double min, max;
         minMaxLoc(src, &min, &max);
+        float fmin = static_cast<float>(min);
+        float fmax = static_cast<float>(max);
         if(max - min > DBL_EPSILON) {
-            dst = (src - min) / (max - min);
+            dst = (src - fmin) / (fmax - fmin);
         } else {
             src.copyTo(dst);
         }
@@ -78,17 +83,17 @@ public:
         pow(dst, 1.0f / gamma, dst);
     }
 
-    float getGamma() const { return gamma; }
-    void setGamma(float val) { gamma = val; }
+    float getGamma() const CV_OVERRIDE { return gamma; }
+    void setGamma(float val) CV_OVERRIDE { gamma = val; }
 
-    void write(FileStorage& fs) const
+    void write(FileStorage& fs) const CV_OVERRIDE
     {
         writeFormat(fs);
         fs << "name" << name
            << "gamma" << gamma;
     }
 
-    void read(const FileNode& fn)
+    void read(const FileNode& fn) CV_OVERRIDE
     {
         FileNode n = fn["name"];
         CV_Assert(n.isString() && String(n) == name);
@@ -105,7 +110,7 @@ Ptr<Tonemap> createTonemap(float gamma)
     return makePtr<TonemapImpl>(gamma);
 }
 
-class TonemapDragoImpl : public TonemapDrago
+class TonemapDragoImpl CV_FINAL : public TonemapDrago
 {
 public:
     TonemapDragoImpl(float _gamma, float _saturation, float _bias) :
@@ -116,8 +121,10 @@ public:
     {
     }
 
-    void process(InputArray _src, OutputArray _dst)
+    void process(InputArray _src, OutputArray _dst) CV_OVERRIDE
     {
+        CV_INSTRUMENT_REGION();
+
         Mat src = _src.getMat();
         CV_Assert(!src.empty());
         _dst.create(src.size(), CV_32FC3);
@@ -134,8 +141,10 @@ public:
         gray_img /= mean;
         log_img.release();
 
-        double max;
-        minMaxLoc(gray_img, NULL, &max);
+        double dmax;
+        minMaxLoc(gray_img, NULL, &dmax);
+        float max = static_cast<float>(dmax);
+        CV_Assert(max > 0);
 
         Mat map;
         log(gray_img + 1.0f, map);
@@ -144,23 +153,22 @@ public:
         log(2.0f + 8.0f * div, div);
         map = map.mul(1.0f / div);
         div.release();
-
         mapLuminance(img, img, gray_img, map, saturation);
 
         linear->setGamma(gamma);
         linear->process(img, img);
     }
 
-    float getGamma() const { return gamma; }
-    void setGamma(float val) { gamma = val; }
+    float getGamma() const CV_OVERRIDE { return gamma; }
+    void setGamma(float val) CV_OVERRIDE { gamma = val; }
 
-    float getSaturation() const { return saturation; }
-    void setSaturation(float val) { saturation = val; }
+    float getSaturation() const CV_OVERRIDE { return saturation; }
+    void setSaturation(float val) CV_OVERRIDE { saturation = val; }
 
-    float getBias() const { return bias; }
-    void setBias(float val) { bias = val; }
+    float getBias() const CV_OVERRIDE { return bias; }
+    void setBias(float val) CV_OVERRIDE { bias = val; }
 
-    void write(FileStorage& fs) const
+    void write(FileStorage& fs) const CV_OVERRIDE
     {
         writeFormat(fs);
         fs << "name" << name
@@ -169,7 +177,7 @@ public:
            << "saturation" << saturation;
     }
 
-    void read(const FileNode& fn)
+    void read(const FileNode& fn) CV_OVERRIDE
     {
         FileNode n = fn["name"];
         CV_Assert(n.isString() && String(n) == name);
@@ -188,93 +196,7 @@ Ptr<TonemapDrago> createTonemapDrago(float gamma, float saturation, float bias)
     return makePtr<TonemapDragoImpl>(gamma, saturation, bias);
 }
 
-class TonemapDurandImpl : public TonemapDurand
-{
-public:
-    TonemapDurandImpl(float _gamma, float _contrast, float _saturation, float _sigma_color, float _sigma_space) :
-        name("TonemapDurand"),
-        gamma(_gamma),
-        contrast(_contrast),
-        saturation(_saturation),
-        sigma_color(_sigma_color),
-        sigma_space(_sigma_space)
-    {
-    }
-
-    void process(InputArray _src, OutputArray _dst)
-    {
-        Mat src = _src.getMat();
-        CV_Assert(!src.empty());
-        _dst.create(src.size(), CV_32FC3);
-        Mat img = _dst.getMat();
-        Ptr<Tonemap> linear = createTonemap(1.0f);
-        linear->process(src, img);
-
-        Mat gray_img;
-        cvtColor(img, gray_img, COLOR_RGB2GRAY);
-        Mat log_img;
-        log_(gray_img, log_img);
-        Mat map_img;
-        bilateralFilter(log_img, map_img, -1, sigma_color, sigma_space);
-
-        double min, max;
-        minMaxLoc(map_img, &min, &max);
-        float scale = contrast / static_cast<float>(max - min);
-        exp(map_img * (scale - 1.0f) + log_img, map_img);
-        log_img.release();
-
-        mapLuminance(img, img, gray_img, map_img, saturation);
-        pow(img, 1.0f / gamma, img);
-    }
-
-    float getGamma() const { return gamma; }
-    void setGamma(float val) { gamma = val; }
-
-    float getSaturation() const { return saturation; }
-    void setSaturation(float val) { saturation = val; }
-
-    float getContrast() const { return contrast; }
-    void setContrast(float val) { contrast = val; }
-
-    float getSigmaColor() const { return sigma_color; }
-    void setSigmaColor(float val) { sigma_color = val; }
-
-    float getSigmaSpace() const { return sigma_space; }
-    void setSigmaSpace(float val) { sigma_space = val; }
-
-    void write(FileStorage& fs) const
-    {
-        writeFormat(fs);
-        fs << "name" << name
-           << "gamma" << gamma
-           << "contrast" << contrast
-           << "sigma_color" << sigma_color
-           << "sigma_space" << sigma_space
-           << "saturation" << saturation;
-    }
-
-    void read(const FileNode& fn)
-    {
-        FileNode n = fn["name"];
-        CV_Assert(n.isString() && String(n) == name);
-        gamma = fn["gamma"];
-        contrast = fn["contrast"];
-        sigma_color = fn["sigma_color"];
-        sigma_space = fn["sigma_space"];
-        saturation = fn["saturation"];
-    }
-
-protected:
-    String name;
-    float gamma, contrast, saturation, sigma_color, sigma_space;
-};
-
-Ptr<TonemapDurand> createTonemapDurand(float gamma, float contrast, float saturation, float sigma_color, float sigma_space)
-{
-    return makePtr<TonemapDurandImpl>(gamma, contrast, saturation, sigma_color, sigma_space);
-}
-
-class TonemapReinhardImpl : public TonemapReinhard
+class TonemapReinhardImpl CV_FINAL : public TonemapReinhard
 {
 public:
     TonemapReinhardImpl(float _gamma, float _intensity, float _light_adapt, float _color_adapt) :
@@ -286,8 +208,10 @@ public:
     {
     }
 
-    void process(InputArray _src, OutputArray _dst)
+    void process(InputArray _src, OutputArray _dst) CV_OVERRIDE
     {
+        CV_INSTRUMENT_REGION();
+
         Mat src = _src.getMat();
         CV_Assert(!src.empty());
         _dst.create(src.size(), CV_32FC3);
@@ -301,12 +225,14 @@ public:
         log_(gray_img, log_img);
 
         float log_mean = static_cast<float>(sum(log_img)[0] / log_img.total());
-        double log_min, log_max;
-        minMaxLoc(log_img, &log_min, &log_max);
+        double dlog_min, dlog_max;
+        minMaxLoc(log_img, &dlog_min, &dlog_max);
+        float log_max = static_cast<float>(dlog_max);
+        float log_min = static_cast<float>(dlog_min);
         log_img.release();
 
-        double key = static_cast<float>((log_max - log_mean) / (log_max - log_min));
-        float map_key = 0.3f + 0.7f * pow(static_cast<float>(key), 1.4f);
+        float key = (log_max - log_mean) / (log_max - log_min);
+        float map_key = 0.3f + 0.7f * pow(key, 1.4f);
         intensity = exp(-intensity);
         Scalar chan_mean = mean(img);
         float gray_mean = static_cast<float>(mean(gray_img)[0]);
@@ -328,19 +254,19 @@ public:
         linear->process(img, img);
     }
 
-    float getGamma() const { return gamma; }
-    void setGamma(float val) { gamma = val; }
+    float getGamma() const CV_OVERRIDE { return gamma; }
+    void setGamma(float val) CV_OVERRIDE { gamma = val; }
 
-    float getIntensity() const { return intensity; }
-    void setIntensity(float val) { intensity = val; }
+    float getIntensity() const CV_OVERRIDE { return intensity; }
+    void setIntensity(float val) CV_OVERRIDE { intensity = val; }
 
-    float getLightAdaptation() const { return light_adapt; }
-    void setLightAdaptation(float val) { light_adapt = val; }
+    float getLightAdaptation() const CV_OVERRIDE { return light_adapt; }
+    void setLightAdaptation(float val) CV_OVERRIDE { light_adapt = val; }
 
-    float getColorAdaptation() const { return color_adapt; }
-    void setColorAdaptation(float val) { color_adapt = val; }
+    float getColorAdaptation() const CV_OVERRIDE { return color_adapt; }
+    void setColorAdaptation(float val) CV_OVERRIDE { color_adapt = val; }
 
-    void write(FileStorage& fs) const
+    void write(FileStorage& fs) const CV_OVERRIDE
     {
         writeFormat(fs);
         fs << "name" << name
@@ -350,7 +276,7 @@ public:
            << "color_adapt" << color_adapt;
     }
 
-    void read(const FileNode& fn)
+    void read(const FileNode& fn) CV_OVERRIDE
     {
         FileNode n = fn["name"];
         CV_Assert(n.isString() && String(n) == name);
@@ -365,12 +291,12 @@ protected:
     float gamma, intensity, light_adapt, color_adapt;
 };
 
-Ptr<TonemapReinhard> createTonemapReinhard(float gamma, float contrast, float sigma_color, float sigma_space)
+Ptr<TonemapReinhard> createTonemapReinhard(float gamma, float intensity, float light_adapt, float color_adapt)
 {
-    return makePtr<TonemapReinhardImpl>(gamma, contrast, sigma_color, sigma_space);
+    return makePtr<TonemapReinhardImpl>(gamma, intensity, light_adapt, color_adapt);
 }
 
-class TonemapMantiukImpl : public TonemapMantiuk
+class TonemapMantiukImpl CV_FINAL : public TonemapMantiuk
 {
 public:
     TonemapMantiukImpl(float _gamma, float _scale, float _saturation) :
@@ -381,8 +307,10 @@ public:
     {
     }
 
-    void process(InputArray _src, OutputArray _dst)
+    void process(InputArray _src, OutputArray _dst) CV_OVERRIDE
     {
+        CV_INSTRUMENT_REGION();
+
         Mat src = _src.getMat();
         CV_Assert(!src.empty());
         _dst.create(src.size(), CV_32FC3);
@@ -419,12 +347,15 @@ public:
         for(int i = 0; i < max_iterations; i++)
         {
             calculateProduct(p, product);
-            float alpha = rr / static_cast<float>(p.dot(product));
+            double dprod = p.dot(product);
+            CV_Assert(fabs(dprod) > 0);
+            float alpha = rr / static_cast<float>(dprod);
 
             r -= alpha * product;
             x += alpha * p;
 
             float new_rr = static_cast<float>(r.dot(r));
+            CV_Assert(fabs(rr) > 0);
             p = r + (new_rr / rr) * p;
             rr = new_rr;
 
@@ -439,16 +370,16 @@ public:
         linear->process(img, img);
     }
 
-    float getGamma() const { return gamma; }
-    void setGamma(float val) { gamma = val; }
+    float getGamma() const CV_OVERRIDE { return gamma; }
+    void setGamma(float val) CV_OVERRIDE { gamma = val; }
 
-    float getScale() const { return scale; }
-    void setScale(float val) { scale = val; }
+    float getScale() const CV_OVERRIDE { return scale; }
+    void setScale(float val) CV_OVERRIDE { scale = val; }
 
-    float getSaturation() const { return saturation; }
-    void setSaturation(float val) { saturation = val; }
+    float getSaturation() const CV_OVERRIDE { return saturation; }
+    void setSaturation(float val) CV_OVERRIDE { saturation = val; }
 
-    void write(FileStorage& fs) const
+    void write(FileStorage& fs) const CV_OVERRIDE
     {
         writeFormat(fs);
         fs << "name" << name
@@ -457,7 +388,7 @@ public:
            << "saturation" << saturation;
     }
 
-    void read(const FileNode& fn)
+    void read(const FileNode& fn) CV_OVERRIDE
     {
         FileNode n = fn["name"];
         CV_Assert(n.isString() && String(n) == name);
@@ -509,7 +440,7 @@ protected:
         for(int i = 0; i < levels; i++) {
             getGradient(layer, x_contrast[i], 0);
             getGradient(layer.t(), y_contrast[i], 0);
-            resize(layer, layer, Size(layer.cols / 2, layer.rows / 2));
+            resize(layer, layer, Size(layer.cols / 2, layer.rows / 2), 0, 0, INTER_LINEAR);
         }
     }
 
@@ -524,7 +455,7 @@ protected:
             Mat grad_x, grad_y;
             getGradient(x_contrast[i], grad_x, 1);
             getGradient(y_contrast[i], grad_y, 1);
-            resize(sum, sum, x_contrast[i].size());
+            resize(sum, sum, x_contrast[i].size(), 0, 0, INTER_LINEAR);
             sum += grad_x + grad_y.t();
         }
     }

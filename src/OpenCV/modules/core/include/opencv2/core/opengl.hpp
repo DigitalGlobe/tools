@@ -40,8 +40,8 @@
 //
 //M*/
 
-#ifndef __OPENCV_CORE_OPENGL_HPP__
-#define __OPENCV_CORE_OPENGL_HPP__
+#ifndef OPENCV_CORE_OPENGL_HPP
+#define OPENCV_CORE_OPENGL_HPP
 
 #ifndef __cplusplus
 #  error opengl.hpp header must be compiled as C++
@@ -57,7 +57,7 @@ This section describes OpenGL interoperability.
 
 To enable OpenGL support, configure OpenCV using CMake with WITH_OPENGL=ON . Currently OpenGL is
 supported only with WIN32, GTK and Qt backends on Windows and Linux (MacOS and Android are not
-supported). For GTK backend gtkglext-1.0 library is required.
+supported). For GTK-2.0 backend gtkglext-1.0 library is required.
 
 To use OpenGL functionality you should first create OpenGL context (window or frame buffer). You can
 do this with namedWindow function or with other OpenGL toolkit (GLUT, for example).
@@ -245,7 +245,7 @@ public:
 
     /** @brief Maps OpenGL buffer to CUDA device memory.
 
-    This operatation doesn't copy data. Several buffer objects can be mapped to CUDA memory at a time.
+    This operation doesn't copy data. Several buffer objects can be mapped to CUDA memory at a time.
 
     A mapped data store must be unmapped with ogl::Buffer::unmapDevice before its buffer object is used.
      */
@@ -548,7 +548,7 @@ calling unmapGLBuffer() function.
 @param accessFlags - data access flags (ACCESS_READ|ACCESS_WRITE).
 @return Returns UMat object
  */
-CV_EXPORTS UMat mapGLBuffer(const Buffer& buffer, int accessFlags = ACCESS_READ|ACCESS_WRITE);
+CV_EXPORTS UMat mapGLBuffer(const Buffer& buffer, AccessFlag accessFlags = ACCESS_READ | ACCESS_WRITE);
 
 /** @brief Unmaps Buffer object (releases UMat, previously mapped from Buffer).
 
@@ -558,12 +558,10 @@ by the call to mapGLBuffer() function.
  */
 CV_EXPORTS void unmapGLBuffer(UMat& u);
 
+//! @}
 }} // namespace cv::ogl
 
 namespace cv { namespace cuda {
-
-//! @addtogroup cuda
-//! @{
 
 /** @brief Sets a CUDA device and initializes it for the current thread with OpenGL interoperability.
 
@@ -572,8 +570,6 @@ This function should be explicitly called after OpenGL context creation and befo
 @ingroup core_opengl
  */
 CV_EXPORTS void setGlDevice(int device = 0);
-
-//! @}
 
 }}
 
@@ -707,10 +703,18 @@ cv::ogl::Texture2D::Format cv::ogl::Texture2D::format() const
 
 ///////
 
+// WARNING: unreachable code using Ninja
+#if defined _MSC_VER && _MSC_VER >= 1920
+#pragma warning(push)
+#pragma warning(disable: 4702)
+#endif
 inline
 cv::ogl::Arrays::Arrays() : size_(0)
 {
 }
+#if defined _MSC_VER && _MSC_VER >= 1920
+#pragma warning(pop)
+#endif
 
 inline
 int cv::ogl::Arrays::size() const
@@ -726,4 +730,4 @@ bool cv::ogl::Arrays::empty() const
 
 //! @endcond
 
-#endif /* __OPENCV_CORE_OPENGL_HPP__ */
+#endif /* OPENCV_CORE_OPENGL_HPP */

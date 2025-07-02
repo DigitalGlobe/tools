@@ -44,7 +44,7 @@
 
 #ifdef HAVE_OPENCL
 
-namespace cvtest {
+namespace opencv_test {
 namespace ocl {
 
 ///////////// Lut ////////////////////////
@@ -91,7 +91,10 @@ OCL_PERF_TEST_P(ExpFixture, Exp, ::testing::Combine(
 
     OCL_TEST_CYCLE() cv::exp(src, dst);
 
-    SANITY_CHECK(dst, 1e-6, ERROR_RELATIVE);
+    if (CV_MAT_DEPTH(type) >= CV_32F)
+        SANITY_CHECK(dst, 1e-5, ERROR_RELATIVE);
+    else
+        SANITY_CHECK(dst, 1);
 }
 
 ///////////// Log ////////////////////////
@@ -113,7 +116,10 @@ OCL_PERF_TEST_P(LogFixture, Log, ::testing::Combine(
 
     OCL_TEST_CYCLE() cv::log(src, dst);
 
-    SANITY_CHECK(dst, 1e-6, ERROR_RELATIVE);
+    if (CV_MAT_DEPTH(type) >= CV_32F)
+        SANITY_CHECK(dst, 2e-4, ERROR_RELATIVE);
+    else
+        SANITY_CHECK(dst, 1);
 }
 
 ///////////// Add ////////////////////////
@@ -193,9 +199,21 @@ OCL_PERF_TEST_P(DivFixture, Divide,
     UMat src1(srcSize, type), src2(srcSize, type), dst(srcSize, type);
     declare.in(src1, src2, WARMUP_RNG).out(dst);
 
+    // remove zeros from src2
+    {
+        Mat m2 = src2.getMat(ACCESS_RW);
+        Mat zero_mask = m2 == 0;
+        Mat fix;
+        zero_mask.convertTo(fix, type); // 0 or 255
+        cv::add(m2, fix, m2);
+    }
+
     OCL_TEST_CYCLE() cv::divide(src1, src2, dst);
 
-    SANITY_CHECK(dst, 1e-6, ERROR_RELATIVE);
+    if (CV_MAT_DEPTH(type) >= CV_32F)
+        SANITY_CHECK(dst, 1e-6, ERROR_RELATIVE);
+    else
+        SANITY_CHECK(dst, 1);
 }
 
 ///////////// Absdiff ////////////////////////
@@ -334,12 +352,13 @@ enum
 
 CV_ENUM(FlipType, FLIP_BOTH, FLIP_ROWS, FLIP_COLS)
 
-typedef std::tr1::tuple<Size, MatType, FlipType> FlipParams;
+typedef tuple<Size, MatType, FlipType> FlipParams;
 typedef TestBaseWithParam<FlipParams> FlipFixture;
 
 OCL_PERF_TEST_P(FlipFixture, Flip,
             ::testing::Combine(OCL_TEST_SIZES,
-                               OCL_TEST_TYPES, FlipType::all()))
+                               ::testing::Values(CV_8UC1, CV_8UC3, CV_8UC4, CV_16UC1, CV_32FC1, CV_32FC4),
+                               FlipType::all()))
 {
     const FlipParams params = GetParam();
     const Size srcSize = get<0>(params);
@@ -354,6 +373,38 @@ OCL_PERF_TEST_P(FlipFixture, Flip,
     OCL_TEST_CYCLE() cv::flip(src, dst, flipType - 1);
 
     SANITY_CHECK(dst);
+}
+
+///////////// Rotate ////////////////////////
+
+enum
+{
+    ROTATE_90_CLOCKWISE = 0, ROTATE_180, ROTATE_90_COUNTERCLOCKWISE
+};
+
+CV_ENUM(RotateType, ROTATE_90_CLOCKWISE, ROTATE_180, ROTATE_90_COUNTERCLOCKWISE)
+
+typedef tuple<Size, MatType, RotateType> RotateParams;
+typedef TestBaseWithParam<RotateParams> RotateFixture;
+
+OCL_PERF_TEST_P(RotateFixture, rotate,
+                ::testing::Combine(OCL_TEST_SIZES,
+                                   ::testing::Values(CV_8UC1, CV_8UC2, CV_8UC4, CV_32FC1, CV_32FC4),
+                                   RotateType::all()))
+{
+    const RotateParams params = GetParam();
+    const Size srcSize   = get<0>(params);
+    const int type       = get<1>(params);
+    const int rotateCode = get<2>(params);
+
+    checkDeviceMaxMemoryAllocSize(srcSize, type);
+
+    UMat src(srcSize, type), dst(srcSize, type);
+    declare.in(src, WARMUP_RNG).out(dst);
+
+    OCL_TEST_CYCLE() cv::rotate(src, dst, rotateCode);
+
+    SANITY_CHECK_NOTHING();
 }
 
 ///////////// minMaxLoc ////////////////////////
@@ -440,6 +491,30 @@ OCL_PERF_TEST_P(CountNonZeroFixture, CountNonZero,
     OCL_TEST_CYCLE() result = cv::countNonZero(src);
 
     SANITY_CHECK(result);
+}
+
+///////////// countNonZero ////////////////////////
+
+typedef Size_MatType HasNonZeroFixture;
+
+OCL_PERF_TEST_P(HasNonZeroFixture, HasNonZero,
+    ::testing::Combine(OCL_TEST_SIZES,
+        OCL_PERF_ENUM(CV_8UC1, CV_32FC1)))
+{
+    const Size_MatType_t params = GetParam();
+    const Size srcSize = get<0>(params);
+    const int type = get<1>(params);
+
+    checkDeviceMaxMemoryAllocSize(srcSize, type);
+
+    UMat src(srcSize, type);
+    /*bool result = false;*/
+    randu(src, 0, 10);
+    declare.in(src);
+
+    OCL_TEST_CYCLE() /*result =*/ cv::hasNonZero(src);
+
+    SANITY_CHECK_NOTHING();
 }
 
 ///////////// Phase ////////////////////////
@@ -552,7 +627,7 @@ OCL_PERF_TEST_P(BitwiseNotFixture, Bitwise_not,
 
 CV_ENUM(CmpCode, CMP_LT, CMP_LE, CMP_EQ, CMP_NE, CMP_GE, CMP_GT)
 
-typedef std::tr1::tuple<Size, MatType, CmpCode> CompareParams;
+typedef tuple<Size, MatType, CmpCode> CompareParams;
 typedef TestBaseWithParam<CompareParams> CompareFixture;
 
 OCL_PERF_TEST_P(CompareFixture, Compare,
@@ -616,6 +691,24 @@ OCL_PERF_TEST_P(PowFixture, Pow, ::testing::Combine(
     SANITY_CHECK(dst, 1.5e-6, ERROR_RELATIVE);
 }
 
+///////////// iPow ////////////////////////
+OCL_PERF_TEST_P(PowFixture, iPow, ::testing::Combine(
+                OCL_TEST_SIZES, OCL_PERF_ENUM(CV_8UC1, CV_8UC3, CV_8SC1, CV_16UC1, CV_16SC1, CV_32SC1, CV_32FC1, CV_64FC1)))
+{
+    const Size_MatType_t params = GetParam();
+    const Size srcSize = get<0>(params);
+    const int type = get<1>(params);
+
+    checkDeviceMaxMemoryAllocSize(srcSize, type);
+
+    UMat src(srcSize, type), dst(srcSize, type);
+    randu(src, 0, 100);
+    declare.in(src).out(dst);
+
+    OCL_TEST_CYCLE() cv::pow(src, 3, dst);
+
+    SANITY_CHECK_NOTHING();
+}
 ///////////// AddWeighted////////////////////////
 
 typedef Size_MatType AddWeightedFixture;
@@ -660,7 +753,15 @@ OCL_PERF_TEST_P(SqrtFixture, Sqrt, ::testing::Combine(
 
     OCL_TEST_CYCLE() cv::sqrt(src, dst);
 
-    SANITY_CHECK(dst, 1e-6, ERROR_RELATIVE);
+    // To square root 32 bit floats we use native_sqrt, which has implementation
+    // defined accuracy. We know intel devices have accurate native_sqrt, but
+    // otherwise stick to a relaxed sanity check. For types larger than 32 bits
+    // we can do the accuracy check for all devices as normal.
+    if (CV_MAT_DEPTH(type) > CV_32F || !ocl::useOpenCL() ||
+        ocl::Device::getDefault().isIntel())
+        SANITY_CHECK(dst, 1e-5, ERROR_RELATIVE);
+    else
+        SANITY_CHECK(dst, 1);
 }
 
 ///////////// SetIdentity ////////////////////////
@@ -752,7 +853,7 @@ OCL_PERF_TEST_P(MeanStdDevFixture, MeanStdDevWithMask,
 
 CV_ENUM(NormType, NORM_INF, NORM_L1, NORM_L2)
 
-typedef std::tr1::tuple<Size, MatType, NormType> NormParams;
+typedef tuple<Size, MatType, NormType> NormParams;
 typedef TestBaseWithParam<NormParams> NormFixture;
 
 OCL_PERF_TEST_P(NormFixture, Norm1Arg,
@@ -983,7 +1084,7 @@ OCL_PERF_TEST_P(ConvertScaleAbsFixture, ConvertScaleAbs,
 
     OCL_TEST_CYCLE() cv::convertScaleAbs(src, dst, 0.5, 2);
 
-    SANITY_CHECK(dst);
+    SANITY_CHECK(dst, 1); // CV_8U
 }
 
 ///////////// PatchNaNs ////////////////////////
@@ -1041,6 +1142,34 @@ OCL_PERF_TEST_P(ScaleAddFixture, ScaleAdd,
     SANITY_CHECK(dst, 1e-6);
 }
 
+///////////// Transform ////////////////////////
+
+typedef Size_MatType TransformFixture;
+
+OCL_PERF_TEST_P(TransformFixture, Transform,
+                ::testing::Combine(OCL_TEST_SIZES,
+                ::testing::Values(CV_8UC3, CV_8SC3, CV_16UC3, CV_16SC3, CV_32SC3, CV_32FC3, CV_64FC3)))
+{
+    const Size_MatType_t params = GetParam();
+    const Size srcSize = get<0>(params);
+    const int type = get<1>(params);
+
+    checkDeviceMaxMemoryAllocSize(srcSize, type);
+
+    const float transform[] = { 0.5f,           0.f, 0.86602540378f, 128,
+                                0.f,            1.f, 0.f,            -64,
+                                0.86602540378f, 0.f, 0.5f,            32,};
+    Mat mtx(Size(4, 3), CV_32FC1, (void*)transform);
+
+    UMat src(srcSize, type), dst(srcSize, type);
+    randu(src, 0, 30);
+    declare.in(src).out(dst);
+
+    OCL_TEST_CYCLE() cv::transform(src, dst, mtx);
+
+    SANITY_CHECK(dst, 1e-6, ERROR_RELATIVE);
+}
+
 ///////////// PSNR ////////////////////////
 
 typedef Size_MatType PSNRFixture;
@@ -1096,7 +1225,7 @@ OCL_PERF_TEST_P(ReduceMinMaxFixture, Reduce,
     SANITY_CHECK(dst, eps);
 }
 
-CV_ENUM(ReduceAccOp, CV_REDUCE_SUM, CV_REDUCE_AVG)
+CV_ENUM(ReduceAccOp, REDUCE_SUM, REDUCE_AVG, REDUCE_SUM2)
 
 typedef tuple<Size, std::pair<MatType, MatType>, int, ReduceAccOp> ReduceAccParams;
 typedef TestBaseWithParam<ReduceAccParams> ReduceAccFixture;
@@ -1114,7 +1243,6 @@ OCL_PERF_TEST_P(ReduceAccFixture, Reduce,
             dim = get<2>(params), op = get<3>(params);
     const Size srcSize = get<0>(params),
             dstSize(dim == 0 ? srcSize.width : 1, dim == 0 ? 1 : srcSize.height);
-    const double eps = CV_MAT_DEPTH(dtype) <= CV_32S ? 1 : 3e-4;
 
     checkDeviceMaxMemoryAllocSize(srcSize, stype);
     checkDeviceMaxMemoryAllocSize(srcSize, dtype);
@@ -1124,9 +1252,9 @@ OCL_PERF_TEST_P(ReduceAccFixture, Reduce,
 
     OCL_TEST_CYCLE() cv::reduce(src, dst, dim, op, dtype);
 
-    SANITY_CHECK(dst, eps);
+    SANITY_CHECK_NOTHING();
 }
 
-} } // namespace cvtest::ocl
+} } // namespace opencv_test::ocl
 
 #endif // HAVE_OPENCL

@@ -41,8 +41,8 @@
 //
 //M*/
 
-#ifndef __OPENCV_CORE_PRIVATE_CUDA_HPP__
-#define __OPENCV_CORE_PRIVATE_CUDA_HPP__
+#ifndef OPENCV_CORE_PRIVATE_CUDA_HPP
+#define OPENCV_CORE_PRIVATE_CUDA_HPP
 
 #ifndef __OPENCV_BUILD
 #  error this is a private header which should not be used from outside of the OpenCV library
@@ -58,11 +58,23 @@
 #ifdef HAVE_CUDA
 #  include <cuda.h>
 #  include <cuda_runtime.h>
+#  if defined(__CUDACC_VER_MAJOR__) && (8 <= __CUDACC_VER_MAJOR__)
+#    if defined (__GNUC__) && !defined(__CUDACC__)
+#     pragma GCC diagnostic push
+#     pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#     include <cuda_fp16.h>
+#     pragma GCC diagnostic pop
+#    else
+#     include <cuda_fp16.h>
+#    endif
+#  endif // defined(__CUDACC_VER_MAJOR__) && (8 <= __CUDACC_VER_MAJOR__)
 #  include <npp.h>
 #  include "opencv2/core/cuda_stream_accessor.hpp"
 #  include "opencv2/core/cuda/common.hpp"
 
+# ifndef NPP_VERSION
 #  define NPP_VERSION (NPP_VERSION_MAJOR * 1000 + NPP_VERSION_MINOR * 100 + NPP_VERSION_BUILD)
+# endif
 
 #  define CUDART_MINIMUM_REQUIRED_VERSION 6050
 
@@ -70,9 +82,6 @@
 #    error "Insufficient Cuda Runtime library version, please update it."
 #  endif
 
-#  if defined(CUDA_ARCH_BIN_OR_PTX_10)
-#    error "OpenCV CUDA module doesn't support NVIDIA compute capability 1.0"
-#  endif
 #endif
 
 //! @cond IGNORED
@@ -94,28 +103,16 @@ namespace cv { namespace cuda {
 
 #ifndef HAVE_CUDA
 
-static inline void throw_no_cuda() { CV_Error(cv::Error::GpuNotSupported, "The library is compiled without CUDA support"); }
+static inline CV_NORETURN void throw_no_cuda() { CV_Error(cv::Error::GpuNotSupported, "The library is compiled without CUDA support"); }
 
 #else // HAVE_CUDA
 
-static inline void throw_no_cuda() { CV_Error(cv::Error::StsNotImplemented, "The called functionality is disabled for current build or platform"); }
+#define nppSafeSetStream(oldStream, newStream) { if(oldStream != newStream) { cudaStreamSynchronize(oldStream); nppSetStream(newStream); } }
+
+static inline CV_NORETURN void throw_no_cuda() { CV_Error(cv::Error::StsNotImplemented, "The called functionality is disabled for current build or platform"); }
 
 namespace cv { namespace cuda
 {
-    class CV_EXPORTS BufferPool
-    {
-    public:
-        explicit BufferPool(Stream& stream);
-
-        GpuMat getBuffer(int rows, int cols, int type);
-        GpuMat getBuffer(Size size, int type) { return getBuffer(size.height, size.width, type); }
-
-        GpuMat::Allocator* getAllocator() const { return allocator_; }
-
-    private:
-        GpuMat::Allocator* allocator_;
-    };
-
     static inline void checkNppError(int code, const char* file, const int line, const char* func)
     {
         if (code < 0)
@@ -137,36 +134,82 @@ namespace cv { namespace cuda
     template<> struct NPPTypeTraits<CV_32F> { typedef Npp32f npp_type; };
     template<> struct NPPTypeTraits<CV_64F> { typedef Npp64f npp_type; };
 
+#define nppSafeCall(expr)  cv::cuda::checkNppError(expr, __FILE__, __LINE__, CV_Func)
+// NppStreamContext is introduced in NPP version 10100 included in CUDA toolkit 10.1 (CUDA_VERSION == 10010) however not all of the NPP functions called internally by OpenCV
+// - have an NppStreamContext argument (e.g. nppiHistogramEvenGetBufferSize_8u_C1R_Ctx in CUDA 12.3) and/or
+// - have a corresponding function in the supplied library (e.g. nppiEvenLevelsHost_32s_Ctx is not present in nppist.lib or libnppist.so as of CUDA 12.6)
+// Because support for these functions has gradually been introduced without being mentioned in the release notes this flag is set to a version of NPP (version 12205 included in CUDA toolkit 12.4) which is known to work.
+#define USE_NPP_STREAM_CTX NPP_VERSION >= 12205
+#if USE_NPP_STREAM_CTX
+    class NppStreamHandler
+    {
+    public:
+        inline explicit NppStreamHandler(cudaStream_t newStream)
+        {
+            nppStreamContext = {};
+            #if CUDA_VERSION < 12090
+                nppSafeCall(nppGetStreamContext(&nppStreamContext));
+            #else
+                int device = 0;
+                cudaSafeCall(cudaGetDevice(&device));
+
+                cudaDeviceProp prop{};
+                cudaSafeCall(cudaGetDeviceProperties(&prop, device));
+
+                nppStreamContext.nCudaDeviceId = device;
+                nppStreamContext.nMultiProcessorCount = prop.multiProcessorCount;
+                nppStreamContext.nMaxThreadsPerMultiProcessor = prop.maxThreadsPerMultiProcessor;
+                nppStreamContext.nMaxThreadsPerBlock = prop.maxThreadsPerBlock;
+                nppStreamContext.nSharedMemPerBlock = prop.sharedMemPerBlock;
+                nppStreamContext.nCudaDevAttrComputeCapabilityMajor = prop.major;
+                nppStreamContext.nCudaDevAttrComputeCapabilityMinor = prop.minor;
+            #endif
+            nppStreamContext.hStream = newStream;
+            cudaSafeCall(cudaStreamGetFlags(nppStreamContext.hStream, &nppStreamContext.nStreamFlags));
+        }
+
+        inline explicit NppStreamHandler(Stream& newStream) : NppStreamHandler(StreamAccessor::getStream(newStream)) {}
+
+        inline operator NppStreamContext() const {
+            return nppStreamContext;
+        }
+
+        inline NppStreamContext get() { return nppStreamContext; }
+
+    private:
+        NppStreamContext nppStreamContext;
+    };
+#else
     class NppStreamHandler
     {
     public:
         inline explicit NppStreamHandler(Stream& newStream)
         {
             oldStream = nppGetStream();
-            nppSetStream(StreamAccessor::getStream(newStream));
+            nppSafeSetStream(oldStream, StreamAccessor::getStream(newStream));
         }
 
         inline explicit NppStreamHandler(cudaStream_t newStream)
         {
             oldStream = nppGetStream();
-            nppSetStream(newStream);
+            nppSafeSetStream(oldStream, newStream);
         }
 
         inline ~NppStreamHandler()
         {
-            nppSetStream(oldStream);
+            nppSafeSetStream(nppGetStream(), oldStream);
         }
 
     private:
         cudaStream_t oldStream;
     };
+#endif
 }}
 
-#define nppSafeCall(expr)  cv::cuda::checkNppError(expr, __FILE__, __LINE__, CV_Func)
 #define cuSafeCall(expr)  cv::cuda::checkCudaDriverApiError(expr, __FILE__, __LINE__, CV_Func)
 
 #endif // HAVE_CUDA
 
 //! @endcond
 
-#endif // __OPENCV_CORE_CUDA_PRIVATE_HPP__
+#endif // OPENCV_CORE_PRIVATE_CUDA_HPP

@@ -49,8 +49,7 @@
 
 #if defined (HAVE_CUDA) && defined(HAVE_OPENCV_CUDAARITHM) && defined(HAVE_OPENCV_CUDAIMGPROC)
 
-using namespace std;
-using namespace testing;
+namespace opencv_test { namespace {
 using namespace perf;
 
 #define CUDA_DENOISING_IMAGE_SIZES testing::Values(perf::szVGA, perf::sz720p)
@@ -72,7 +71,7 @@ PERF_TEST_P(Sz_Depth_Cn_WinSz_BlockSz, CUDA_NonLocalMeans,
     const cv::Size size = GET_PARAM(0);
     const int depth = GET_PARAM(1);
     const int channels = GET_PARAM(2);
-    const int search_widow_size = GET_PARAM(3);
+    const int search_window_size = GET_PARAM(3);
     const int block_size = GET_PARAM(4);
 
     const float h = 10;
@@ -88,7 +87,7 @@ PERF_TEST_P(Sz_Depth_Cn_WinSz_BlockSz, CUDA_NonLocalMeans,
         const cv::cuda::GpuMat d_src(src);
         cv::cuda::GpuMat dst;
 
-        TEST_CYCLE() cv::cuda::nonLocalMeans(d_src, dst, h, search_widow_size, block_size, borderMode);
+        TEST_CYCLE() cv::cuda::nonLocalMeans(d_src, dst, h, search_window_size, block_size, borderMode);
 
         CUDA_SANITY_CHECK(dst);
     }
@@ -115,7 +114,7 @@ PERF_TEST_P(Sz_Depth_Cn_WinSz_BlockSz, CUDA_FastNonLocalMeans,
 
     const cv::Size size = GET_PARAM(0);
     const int depth = GET_PARAM(1);
-    const int search_widow_size = GET_PARAM(2);
+    const int search_window_size = GET_PARAM(2);
     const int block_size = GET_PARAM(3);
 
     const float h = 10;
@@ -129,7 +128,7 @@ PERF_TEST_P(Sz_Depth_Cn_WinSz_BlockSz, CUDA_FastNonLocalMeans,
         const cv::cuda::GpuMat d_src(src);
         cv::cuda::GpuMat dst;
 
-        TEST_CYCLE() cv::cuda::fastNlMeansDenoising(d_src, dst, h, search_widow_size, block_size);
+        TEST_CYCLE() cv::cuda::fastNlMeansDenoising(d_src, dst, h, search_window_size, block_size);
 
         CUDA_SANITY_CHECK(dst);
     }
@@ -137,7 +136,7 @@ PERF_TEST_P(Sz_Depth_Cn_WinSz_BlockSz, CUDA_FastNonLocalMeans,
     {
         cv::Mat dst;
 
-        TEST_CYCLE() cv::fastNlMeansDenoising(src, dst, h, block_size, search_widow_size);
+        TEST_CYCLE() cv::fastNlMeansDenoising(src, dst, h, block_size, search_window_size);
 
         CPU_SANITY_CHECK(dst);
     }
@@ -158,7 +157,7 @@ PERF_TEST_P(Sz_Depth_WinSz_BlockSz, CUDA_FastNonLocalMeansColored,
 
     const cv::Size size = GET_PARAM(0);
     const int depth = GET_PARAM(1);
-    const int search_widow_size = GET_PARAM(2);
+    const int search_window_size = GET_PARAM(2);
     const int block_size = GET_PARAM(3);
 
     const float h = 10;
@@ -172,7 +171,7 @@ PERF_TEST_P(Sz_Depth_WinSz_BlockSz, CUDA_FastNonLocalMeansColored,
         const cv::cuda::GpuMat d_src(src);
         cv::cuda::GpuMat dst;
 
-        TEST_CYCLE() cv::cuda::fastNlMeansDenoisingColored(d_src, dst, h, h, search_widow_size, block_size);
+        TEST_CYCLE() cv::cuda::fastNlMeansDenoisingColored(d_src, dst, h, h, search_window_size, block_size);
 
         CUDA_SANITY_CHECK(dst);
     }
@@ -180,10 +179,11 @@ PERF_TEST_P(Sz_Depth_WinSz_BlockSz, CUDA_FastNonLocalMeansColored,
     {
         cv::Mat dst;
 
-        TEST_CYCLE() cv::fastNlMeansDenoisingColored(src, dst, h, h, block_size, search_widow_size);
+        TEST_CYCLE() cv::fastNlMeansDenoisingColored(src, dst, h, h, block_size, search_window_size);
 
         CPU_SANITY_CHECK(dst);
     }
 }
 
+}} // namespace
 #endif

@@ -64,7 +64,7 @@ namespace
     class DefaultThrustAllocator: public cv::cuda::device::ThrustAllocator
     {
     public:
-        __device__ __host__ uchar* allocate(size_t numBytes)
+        __device__ __host__ uchar* allocate(size_t numBytes) CV_OVERRIDE
         {
 #ifndef __CUDA_ARCH__
             uchar* ptr;
@@ -74,9 +74,9 @@ namespace
             return NULL;
 #endif
         }
-        __device__ __host__ void deallocate(uchar* ptr, size_t numBytes)
+        __device__ __host__ void deallocate(uchar* ptr, size_t numBytes) CV_OVERRIDE
         {
-            (void)numBytes;
+            CV_UNUSED(numBytes);
 #ifndef __CUDA_ARCH__
             CV_CUDEV_SAFE_CALL(cudaFree(ptr));
 #endif
@@ -105,8 +105,8 @@ namespace
     class DefaultAllocator : public GpuMat::Allocator
     {
     public:
-        bool allocate(GpuMat* mat, int rows, int cols, size_t elemSize);
-        void free(GpuMat* mat);
+        bool allocate(GpuMat* mat, int rows, int cols, size_t elemSize) CV_OVERRIDE;
+        void free(GpuMat* mat) CV_OVERRIDE;
     };
 
     bool DefaultAllocator::allocate(GpuMat* mat, int rows, int cols, size_t elemSize)
@@ -135,6 +135,7 @@ namespace
 
     DefaultAllocator cudaDefaultAllocator;
     GpuMat::Allocator* g_defaultAllocator = &cudaDefaultAllocator;
+    GpuMat::Allocator* g_stdAllocator = &cudaDefaultAllocator;
 }
 
 GpuMat::Allocator* cv::cuda::GpuMat::defaultAllocator()
@@ -147,6 +148,12 @@ void cv::cuda::GpuMat::setDefaultAllocator(Allocator* allocator)
     CV_Assert( allocator != 0 );
     g_defaultAllocator = allocator;
 }
+
+GpuMat::Allocator* cv::cuda::GpuMat::getStdAllocator()
+{
+    return g_stdAllocator;
+}
+
 
 /////////////////////////////////////////////////////
 /// create
@@ -184,11 +191,8 @@ void cv::cuda::GpuMat::create(int _rows, int _cols, int _type)
         if (esz * cols == step)
             flags |= Mat::CONTINUOUS_FLAG;
 
-        int64 _nettosize = static_cast<int64>(step) * rows;
-        size_t nettosize = static_cast<size_t>(_nettosize);
-
         datastart = data;
-        dataend = data + nettosize;
+        dataend = data + step * (rows - 1) + cols * esz;
 
         if (refcount)
             *refcount = 1;
@@ -510,6 +514,17 @@ namespace
 
         gridTransformUnary_< ConvertToPolicy<scalar_type> >(globPtr<T>(src), globPtr<D>(dst), op, stream);
     }
+
+    template <typename T, typename D>
+    void convertScaleHalf(const GpuMat& src, const GpuMat& dst, Stream& stream)
+    {
+        typedef typename VecTraits<T>::elem_type src_elem_type;
+        typedef typename VecTraits<D>::elem_type dst_elem_type;
+        typedef typename LargerType<src_elem_type, float>::type larger_elem_type;
+        typedef typename LargerType<float, dst_elem_type>::type scalar_type;
+
+        gridTransformUnary_< ConvertToPolicy<scalar_type> >(globPtr<T>(src), globPtr<D>(dst), saturate_cast_fp16_func<T,D>(), stream);
+    }
 }
 
 void cv::cuda::GpuMat::convertTo(OutputArray _dst, int rtype, Stream& stream) const
@@ -531,7 +546,7 @@ void cv::cuda::GpuMat::convertTo(OutputArray _dst, int rtype, Stream& stream) co
         return;
     }
 
-    CV_DbgAssert( sdepth <= CV_64F && ddepth <= CV_64F );
+    CV_Assert( sdepth <= CV_64F && ddepth <= CV_64F );
 
     GpuMat src = *this;
 
@@ -550,7 +565,7 @@ void cv::cuda::GpuMat::convertTo(OutputArray _dst, int rtype, Stream& stream) co
         {convertToNoScale<double, uchar>, convertToNoScale<double, schar>, convertToNoScale<double, ushort>, convertToNoScale<double, short>, convertToNoScale<double, int>, convertToNoScale<double, float>, 0}
     };
 
-    funcs[sdepth][ddepth](reshape(1), dst.reshape(1), stream);
+    funcs[sdepth][ddepth](src.reshape(1), dst.reshape(1), stream);
 }
 
 void cv::cuda::GpuMat::convertTo(OutputArray _dst, int rtype, double alpha, double beta, Stream& stream) const
@@ -562,6 +577,8 @@ void cv::cuda::GpuMat::convertTo(OutputArray _dst, int rtype, double alpha, doub
 
     const int sdepth = depth();
     const int ddepth = CV_MAT_DEPTH(rtype);
+
+    CV_Assert(sdepth <= CV_64F && ddepth <= CV_64F);
 
     GpuMat src = *this;
 
@@ -580,7 +597,39 @@ void cv::cuda::GpuMat::convertTo(OutputArray _dst, int rtype, double alpha, doub
         {convertToScale<double, uchar>, convertToScale<double, schar>, convertToScale<double, ushort>, convertToScale<double, short>, convertToScale<double, int>, convertToScale<double, float>, convertToScale<double, double>}
     };
 
-    funcs[sdepth][ddepth](reshape(1), dst.reshape(1), alpha, beta, stream);
+    funcs[sdepth][ddepth](src.reshape(1), dst.reshape(1), alpha, beta, stream);
+}
+
+void cv::cuda::convertFp16(InputArray _src, OutputArray _dst, Stream& stream)
+{
+    GpuMat src = _src.getGpuMat();
+    int ddepth = 0;
+
+    switch(src.depth())
+    {
+    case CV_32F:
+        ddepth = CV_16S;
+        break;
+    case CV_16S:
+        ddepth = CV_32F;
+        break;
+    default:
+        CV_Error(Error::StsUnsupportedFormat, "Unsupported input depth");
+        return;
+    }
+    int type = CV_MAKE_TYPE(CV_MAT_DEPTH(ddepth), src.channels());
+    _dst.create(src.size(), type);
+    GpuMat dst = _dst.getGpuMat();
+
+    typedef void (*func_t)(const GpuMat& src, const GpuMat& dst, Stream& stream);
+    static const func_t funcs[] =
+    {
+        0, 0, 0,
+        convertScaleHalf<float, short>, 0, convertScaleHalf<short, float>,
+        0, 0,
+    };
+
+    funcs[ddepth](src.reshape(1), dst.reshape(1), stream);
 }
 
 #endif

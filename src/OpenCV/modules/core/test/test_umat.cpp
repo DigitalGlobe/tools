@@ -42,11 +42,11 @@
 #include "test_precomp.hpp"
 #include "opencv2/ts/ocl_test.hpp"
 
-using namespace cvtest;
+using namespace opencv_test;
 using namespace testing;
 using namespace cv;
 
-namespace cvtest {
+namespace opencv_test {
 namespace ocl {
 
 #define UMAT_TEST_SIZES testing::Values(cv::Size(1, 1), cv::Size(1,128), cv::Size(128, 1), \
@@ -496,6 +496,20 @@ TEST_P(UMatTestRoi, adjustRoi)
 
 INSTANTIATE_TEST_CASE_P(UMat, UMatTestRoi, Combine(OCL_ALL_DEPTHS, OCL_ALL_CHANNELS, UMAT_TEST_SIZES ));
 
+TEST(UMatTestRoi, adjustRoiOverflow)
+{
+    UMat m(15, 10, CV_32S);
+    UMat roi(m, cv::Range(2, 10), cv::Range(3,6));
+    int rowsInROI = roi.rows;
+    roi.adjustROI(1, 0, 0, 0);
+
+    ASSERT_EQ(roi.rows, rowsInROI + 1);
+
+    roi.adjustROI(-m.rows, -m.rows, 0, 0);
+
+    ASSERT_EQ(roi.rows, m.rows);
+}
+
 /////////////////////////////////////////////////////////////// Size ////////////////////////////////////////////////////////////////////
 
 PARAM_TEST_CASE(UMatTestSizeOperations, int, int, Size, bool)
@@ -905,6 +919,28 @@ TEST(Core_UMat, getUMat)
         EXPECT_EQ(0., err);
     }
 }
+#include "test_precomp.hpp"
+
+TEST(Core_UMat, construct_from_vector)
+{
+    std::vector<int> src = {1, 2, 3, 4};
+    UMat um(src); // copyData parameter is deprecated and ignored
+
+    src[0] = 100; // modify source to ensure data was copied
+
+    Mat result;
+    um.copyTo(result);
+
+    ASSERT_EQ(4, result.rows);
+    ASSERT_EQ(1, result.cols);
+    ASSERT_EQ(CV_32S, result.type());
+    EXPECT_EQ(1, result.at<int>(0));
+    EXPECT_EQ(2, result.at<int>(1));
+    EXPECT_EQ(3, result.at<int>(2));
+    EXPECT_EQ(4, result.at<int>(3));
+}
+
+
 
 TEST(UMat, Sync)
 {
@@ -1059,7 +1095,7 @@ TEST(UMat, async_unmap)
             Mat m = Mat(1000, 1000, CV_8UC1, Scalar::all(0));
             UMat u = m.getUMat(ACCESS_READ);
             UMat dst;
-            add(u, Scalar::all(0), dst); // start async operation
+            cv::add(u, Scalar::all(0), dst); // start async operation
             u.release();
             m.release();
         }
@@ -1140,6 +1176,30 @@ TEST(UMat, map_unmap_counting)
 }
 
 
+static void process_with_async_cleanup(Mat& frame)
+{
+    UMat blurResult;
+    {
+        UMat umat_buffer = frame.getUMat(ACCESS_READ);
+        cv::blur(umat_buffer, blurResult, Size(3, 3));  // UMat doesn't support inplace, this call is not synchronized
+    }
+    Mat result;
+    blurResult.copyTo(result);
+    swap(result, frame);
+    // umat_buffer cleanup is done asynchronously, silence warning about original 'frame' cleanup here (through 'result')
+    // - release input 'frame' (as 'result')
+    // - release 'umat_buffer' asynchronously and silence warning about "parent" buffer (in debug builds)
+}
+TEST(UMat, async_cleanup_without_call_chain_warning)
+{
+    Mat frame(Size(640, 480), CV_8UC1, Scalar::all(128));
+    for (int i = 0; i < 10; i++)
+    {
+        process_with_async_cleanup(frame);
+    }
+}
+
+
 ///////////// oclCleanupCallback threadsafe check (#5062) /////////////////////
 
 // Case 1: reuse of old src Mat in OCL pipe. Hard to catch!
@@ -1178,7 +1238,7 @@ OCL_TEST(UMat, DISABLED_OCL_ThreadSafe_CleanupCallback_1_VeryLongTest)
     }
 }
 
-// Case 2: concurent deallocation of UMatData between UMat and Mat deallocators. Hard to catch!
+// Case 2: concurrent deallocation of UMatData between UMat and Mat deallocators. Hard to catch!
 OCL_TEST(UMat, DISABLED_OCL_ThreadSafe_CleanupCallback_2_VeryLongTest)
 {
     if (!cv::ocl::useOpenCL())
@@ -1219,7 +1279,7 @@ TEST(UMat, DISABLED_Test_same_behaviour_read_and_read)
         UMat u(Size(10, 10), CV_8UC1, Scalar::all(0));
         Mat m = u.getMat(ACCESS_READ);
         UMat dst;
-        add(u, Scalar::all(1), dst);
+        cv::add(u, Scalar::all(1), dst);
     }
     catch (...)
     {
@@ -1236,7 +1296,7 @@ TEST(UMat, DISABLED_Test_same_behaviour_read_and_write)
     {
         UMat u(Size(10, 10), CV_8UC1, Scalar::all(0));
         Mat m = u.getMat(ACCESS_READ);
-        add(u, Scalar::all(1), u);
+        cv::add(u, Scalar::all(1), u);
     }
     catch (...)
     {
@@ -1253,7 +1313,7 @@ TEST(UMat, DISABLED_Test_same_behaviour_write_and_read)
         UMat u(Size(10, 10), CV_8UC1, Scalar::all(0));
         Mat m = u.getMat(ACCESS_WRITE);
         UMat dst;
-        add(u, Scalar::all(1), dst);
+        cv::add(u, Scalar::all(1), dst);
     }
     catch (...)
     {
@@ -1269,7 +1329,7 @@ TEST(UMat, DISABLED_Test_same_behaviour_write_and_write)
     {
         UMat u(Size(10, 10), CV_8UC1, Scalar::all(0));
         Mat m = u.getMat(ACCESS_WRITE);
-        add(u, Scalar::all(1), u);
+        cv::add(u, Scalar::all(1), u);
     }
     catch (...)
     {
@@ -1287,7 +1347,7 @@ TEST(UMat, mat_umat_sync)
     }
 
     UMat uDiff;
-    compare(u, 255, uDiff, CMP_NE);
+    cv::compare(u, 255, uDiff, CMP_NE);
     ASSERT_EQ(0, countNonZero(uDiff));
 }
 
@@ -1300,24 +1360,22 @@ TEST(UMat, testTempObjects_UMat)
     }
 
     UMat uDiff;
-    compare(u, 255, uDiff, CMP_NE);
+    cv::compare(u, 255, uDiff, CMP_NE);
     ASSERT_EQ(0, countNonZero(uDiff));
 }
 
-// Disabled due to failure in VS 2015:
-//  C++11 is enabled by default ==>
-//  destructors have implicit 'noexcept(true)' specifier ==>
-//  throwing exception from destructor is not handled correctly
-#if defined(_MSC_VER) && _MSC_VER >= 1900 /* MSVC 14 */
-TEST(UMat, DISABLED_testTempObjects_Mat)
-#else
 TEST(UMat, testTempObjects_Mat)
-#endif
 {
     Mat m(10, 10, CV_8UC1, Scalar(1));
     {
         Mat m2;
-        ASSERT_ANY_THROW(m2 = m.getUMat(ACCESS_RW).getMat(ACCESS_RW));
+        ASSERT_ANY_THROW({
+          // Below is unwrapped version of this invalid expression:
+          // m2 = m.getUMat(ACCESS_RW).getMat(ACCESS_RW)
+          UMat u = m.getUMat(ACCESS_RW);
+          m2 = u.getMat(ACCESS_RW);
+          u.release();
+        });
     }
 }
 
@@ -1354,4 +1412,68 @@ TEST(UMat, DISABLED_regression_5991)
     EXPECT_EQ(0, cvtest::norm(mat.getMat(ACCESS_READ), Mat(3, sz, CV_8U, Scalar(1)), NORM_INF));
 }
 
-} } // namespace cvtest::ocl
+TEST(UMat, testTempObjects_Mat_issue_8693)
+{
+    UMat srcUMat(3, 4, CV_32FC1);
+    Mat srcMat;
+
+    randu(srcUMat, -1.f, 1.f);
+    srcUMat.copyTo(srcMat);
+
+    reduce(srcUMat, srcUMat, 0, REDUCE_SUM);
+    reduce(srcMat, srcMat, 0, REDUCE_SUM);
+
+    srcUMat.convertTo(srcUMat, CV_64FC1);
+    srcMat.convertTo(srcMat, CV_64FC1);
+
+    EXPECT_EQ(0, cvtest::norm(srcUMat.getMat(ACCESS_READ), srcMat, NORM_INF));
+}
+
+TEST(UMat, resize_Mat_issue_13577)
+{
+    // save the current state
+    bool useOCL = cv::ocl::useOpenCL();
+
+    cv::ocl::setUseOpenCL(false);
+    UMat foo(10, 10, CV_32FC1);
+    cv::resize(foo, foo, cv::Size(), .5, .5);
+
+    cv::ocl::setUseOpenCL(useOCL);  // restore state
+}
+
+TEST(UMat, exceptions_refcounts_issue_20594)
+{
+    if (!cv::ocl::useOpenCL())
+    {
+        // skip test, difficult to create exception scenario without OpenCL
+        std::cout << "OpenCL is not enabled. Skip test" << std::endl;
+        return;
+    }
+
+    UMat umat1(10, 10, CV_8UC1);
+    EXPECT_EQ(0, umat1.u->refcount);
+
+    // cause exception in underlying allocator
+    void* const original_handle = umat1.u->handle;
+    umat1.u->handle = NULL;
+    try
+    {
+        Mat mat1 = umat1.getMat(ACCESS_RW);
+    }
+    catch (...)
+    {
+        // nothing
+    }
+
+    // check for correct refcount, and no change of intentional bad handle
+    EXPECT_EQ(0, umat1.u->refcount);
+    EXPECT_EQ(NULL, umat1.u->handle);
+
+    // reset UMat to good state
+    umat1.u->refcount = 0;
+    umat1.u->handle = original_handle;
+}
+
+#include "test_precomp.hpp"
+
+} } // namespace opencv_test::ocl

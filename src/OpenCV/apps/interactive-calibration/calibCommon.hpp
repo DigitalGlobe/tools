@@ -1,8 +1,13 @@
+// This file is part of OpenCV project.
+// It is subject to the license terms in the LICENSE file found in the top-level directory
+// of this distribution and at http://opencv.org/license.html.
+
 #ifndef CALIB_COMMON_HPP
 #define CALIB_COMMON_HPP
 
-#include <memory>
 #include <opencv2/core.hpp>
+
+#include <memory>
 #include <vector>
 #include <string>
 
@@ -16,14 +21,14 @@ namespace calib
 
     enum InputType { Video, Pictures };
     enum InputVideoSource { Camera, File };
-    enum TemplateType { AcirclesGrid, Chessboard, chAruco, DoubleAcirclesGrid };
+    enum TemplateType { AcirclesGrid, Chessboard, ChArUco, DoubleAcirclesGrid, CirclesGrid };
 
     static const std::string mainWindowName = "Calibration";
     static const std::string gridWindowName = "Board locations";
     static const std::string consoleHelp = "Hot keys:\nesc - exit application\n"
                               "s - save current data to .xml file\n"
                               "r - delete last frame\n"
-                              "u - enable/disable applying undistortion"
+                              "u - enable/disable applying undistortion\n"
                               "d - delete all frames\n"
                               "v - switch visualization";
 
@@ -39,6 +44,8 @@ namespace calib
         std::vector<cv::Mat> tvecs;
         double totalAvgErr;
         cv::Size imageSize;
+
+        std::vector<cv::Mat> allFrames;
 
         std::vector<std::vector<cv::Point2f> > imagePoints;
         std::vector< std::vector<cv::Point3f> > objectPoints;
@@ -72,10 +79,13 @@ namespace calib
         InputType captureMethod;
         InputVideoSource source;
         TemplateType board;
-        cv::Size boardSize;
+        cv::Size inputBoardSize;
+        cv::Size boardSizeInnerCorners; // board size in inner corners for chessboard
+        cv::Size boardSizeUnits; // board size in squares, circles, etc.
         int charucoDictName;
+        std::string charucoDictFile;
         int calibrationStep;
-        float charucoSquareLenght, charucoMarkerSize;
+        float charucoSquareLength, charucoMarkerSize;
         float captureDelay;
         float squareSize;
         float templDst;
@@ -86,6 +96,9 @@ namespace calib
         cv::Size cameraResolution;
         int maxFramesNum;
         int minFramesNum;
+        bool saveFrames;
+        float zoom;
+        bool forceReopen;
 
         captureParameters()
         {
@@ -95,6 +108,7 @@ namespace calib
             minFramesNum = 10;
             fps = 30;
             cameraResolution = cv::Size(IMAGE_MAX_WIDTH, IMAGE_MAX_HEIGHT);
+            saveFrames = false;
         }
     };
 

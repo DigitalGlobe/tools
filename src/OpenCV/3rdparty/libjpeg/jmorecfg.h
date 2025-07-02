@@ -2,7 +2,7 @@
  * jmorecfg.h
  *
  * Copyright (C) 1991-1997, Thomas G. Lane.
- * Modified 1997-2012 by Guido Vollbeding.
+ * Modified 1997-2022 by Guido Vollbeding.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  *
@@ -15,13 +15,22 @@
 /*
  * Define BITS_IN_JSAMPLE as either
  *   8   for 8-bit sample values (the usual setting)
+ *   9   for 9-bit sample values
+ *   10  for 10-bit sample values
+ *   11  for 11-bit sample values
  *   12  for 12-bit sample values
- * Only 8 and 12 are legal data precisions for lossy JPEG according to the
- * JPEG standard, and the IJG code does not support anything else!
- * We do not support run-time selection of data precision, sorry.
+ * Only 8, 9, 10, 11, and 12 bits sample data precision are supported for
+ * full-feature DCT processing.  Further depths up to 16-bit may be added
+ * later for the lossless modes of operation.
+ * Run-time selection and conversion of data precision will be added later
+ * and are currently not supported, sorry.
+ * Exception:  The transcoding part (jpegtran) supports all settings in a
+ * single instance, since it operates on the level of DCT coefficients and
+ * not sample values.  The DCT coefficients are of the same type (16 bits)
+ * in all cases (see below).
  */
 
-#define BITS_IN_JSAMPLE  8	/* use 8 or 12 */
+#define BITS_IN_JSAMPLE  8	/* use 8, 9, 10, 11, or 12 */
 
 
 /*
@@ -75,6 +84,48 @@ typedef char JSAMPLE;
 #define CENTERJSAMPLE	128
 
 #endif /* BITS_IN_JSAMPLE == 8 */
+
+
+#if BITS_IN_JSAMPLE == 9
+/* JSAMPLE should be the smallest type that will hold the values 0..511.
+ * On nearly all machines "short" will do nicely.
+ */
+
+typedef short JSAMPLE;
+#define GETJSAMPLE(value)  ((int) (value))
+
+#define MAXJSAMPLE	511
+#define CENTERJSAMPLE	256
+
+#endif /* BITS_IN_JSAMPLE == 9 */
+
+
+#if BITS_IN_JSAMPLE == 10
+/* JSAMPLE should be the smallest type that will hold the values 0..1023.
+ * On nearly all machines "short" will do nicely.
+ */
+
+typedef short JSAMPLE;
+#define GETJSAMPLE(value)  ((int) (value))
+
+#define MAXJSAMPLE	1023
+#define CENTERJSAMPLE	512
+
+#endif /* BITS_IN_JSAMPLE == 10 */
+
+
+#if BITS_IN_JSAMPLE == 11
+/* JSAMPLE should be the smallest type that will hold the values 0..2047.
+ * On nearly all machines "short" will do nicely.
+ */
+
+typedef short JSAMPLE;
+#define GETJSAMPLE(value)  ((int) (value))
+
+#define MAXJSAMPLE	2047
+#define CENTERJSAMPLE	1024
+
+#endif /* BITS_IN_JSAMPLE == 11 */
 
 
 #if BITS_IN_JSAMPLE == 12
@@ -252,7 +303,10 @@ typedef void noreturn_t;
  * Defining HAVE_BOOLEAN before including jpeglib.h should make it work.
  */
 
-#ifdef HAVE_BOOLEAN
+#ifndef HAVE_BOOLEAN
+#if defined FALSE || defined TRUE || defined QGLOBAL_H
+/* Qt3 defines FALSE and TRUE as "const" variables in qglobal.h */
+typedef int boolean;
 #ifndef FALSE			/* in case these macros already exist */
 #define FALSE	0		/* values of boolean */
 #endif
@@ -261,6 +315,7 @@ typedef void noreturn_t;
 #endif
 #else
 typedef enum { FALSE = 0, TRUE = 1 } boolean;
+#endif
 #endif
 
 
@@ -296,14 +351,15 @@ typedef enum { FALSE = 0, TRUE = 1 } boolean;
 
 #define C_ARITH_CODING_SUPPORTED    /* Arithmetic coding back end? */
 #define C_MULTISCAN_FILES_SUPPORTED /* Multiple-scan JPEG files? */
-#define C_PROGRESSIVE_SUPPORTED	    /* Progressive JPEG? (Requires MULTISCAN)*/
-#define DCT_SCALING_SUPPORTED	    /* Input rescaling via DCT? (Requires DCT_ISLOW)*/
+#define C_PROGRESSIVE_SUPPORTED	    /* Progressive JPEG? (Requires MULTISCAN) */
+#define DCT_SCALING_SUPPORTED	/* Input rescaling via DCT? (Requires DCT_ISLOW) */
 #define ENTROPY_OPT_SUPPORTED	    /* Optimization of entropy coding parms? */
-/* Note: if you selected 12-bit data precision, it is dangerous to turn off
- * ENTROPY_OPT_SUPPORTED.  The standard Huffman tables are only good for 8-bit
- * precision, so jchuff.c normally uses entropy optimization to compute
- * usable tables for higher precision.  If you don't want to do optimization,
- * you'll have to supply different default Huffman tables.
+/* Note: if you selected more than 8-bit data precision, it is dangerous to
+ * turn off ENTROPY_OPT_SUPPORTED.  The standard Huffman tables are only
+ * good for 8-bit precision, so arithmetic coding is recommended for higher
+ * precision.  The Huffman encoder normally uses entropy optimization to
+ * compute usable tables for higher precision.  Otherwise, you'll have to
+ * supply different default Huffman tables.
  * The exact same statements apply for progressive JPEG: the default tables
  * don't work for progressive mode.  (This may get fixed, however.)
  */
@@ -313,8 +369,8 @@ typedef enum { FALSE = 0, TRUE = 1 } boolean;
 
 #define D_ARITH_CODING_SUPPORTED    /* Arithmetic coding back end? */
 #define D_MULTISCAN_FILES_SUPPORTED /* Multiple-scan JPEG files? */
-#define D_PROGRESSIVE_SUPPORTED	    /* Progressive JPEG? (Requires MULTISCAN)*/
-#define IDCT_SCALING_SUPPORTED	    /* Output rescaling via IDCT? */
+#define D_PROGRESSIVE_SUPPORTED	    /* Progressive JPEG? (Requires MULTISCAN) */
+#define IDCT_SCALING_SUPPORTED	/* Output rescaling via IDCT? (Requires DCT_ISLOW) */
 #define SAVE_MARKERS_SUPPORTED	    /* jpeg_save_markers() needed? */
 #define BLOCK_SMOOTHING_SUPPORTED   /* Block smoothing? (Progressive only) */
 #undef  UPSAMPLE_SCALING_SUPPORTED  /* Output rescaling at upsample stage? */
@@ -328,20 +384,31 @@ typedef enum { FALSE = 0, TRUE = 1 } boolean;
 /*
  * Ordering of RGB data in scanlines passed to or from the application.
  * If your application wants to deal with data in the order B,G,R, just
- * change these macros.  You can also deal with formats such as R,G,B,X
- * (one extra byte per pixel) by changing RGB_PIXELSIZE.  Note that changing
- * the offsets will also change the order in which colormap data is organized.
+ * #define JPEG_USE_RGB_CUSTOM in jconfig.h, or define your own custom
+ * order in jconfig.h and #define JPEG_HAVE_RGB_CUSTOM.
+ * You can also deal with formats such as R,G,B,X (one extra byte per pixel)
+ * by changing RGB_PIXELSIZE.
+ * Note that changing the offsets will also change
+ * the order in which colormap data is organized.
  * RESTRICTIONS:
  * 1. The sample applications cjpeg,djpeg do NOT support modified RGB formats.
  * 2. The color quantizer modules will not behave desirably if RGB_PIXELSIZE
- *    is not 3 (they don't understand about dummy color components!).  So you
- *    can't use color quantization if you change that value.
+ *    is not 3 (they don't understand about dummy color components!).
+ *    So you can't use color quantization if you change that value.
  */
 
+#ifndef JPEG_HAVE_RGB_CUSTOM
+#ifdef JPEG_USE_RGB_CUSTOM
+#define RGB_RED		2	/* Offset of Red in an RGB scanline element */
+#define RGB_GREEN	1	/* Offset of Green */
+#define RGB_BLUE	0	/* Offset of Blue */
+#else
 #define RGB_RED		0	/* Offset of Red in an RGB scanline element */
 #define RGB_GREEN	1	/* Offset of Green */
 #define RGB_BLUE	2	/* Offset of Blue */
+#endif
 #define RGB_PIXELSIZE	3	/* JSAMPLEs per RGB scanline element */
+#endif
 
 
 /* Definitions for speed-related optimizations. */

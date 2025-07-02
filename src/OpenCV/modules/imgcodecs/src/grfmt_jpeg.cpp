@@ -41,9 +41,10 @@
 
 #include "precomp.hpp"
 #include "grfmt_jpeg.hpp"
-#include "jpeg_exif.hpp"
 
 #ifdef HAVE_JPEG
+
+#include <opencv2/core/utils/logger.hpp>
 
 #ifdef _MSC_VER
 //interaction between '_setjmp' and C++ object destruction is non-portable
@@ -53,19 +54,19 @@
 #include <stdio.h>
 #include <setjmp.h>
 
-// the following defines are a hack to avoid multiple problems with frame ponter handling and setjmp
+// the following defines are a hack to avoid multiple problems with frame pointer handling and setjmp
 // see http://gcc.gnu.org/ml/gcc/2011-10/msg00324.html for some details
 #define mingw_getsp(...) 0
 #define __builtin_frame_address(...) 0
 
-#ifdef WIN32
+#ifdef _WIN32
 
 #define XMD_H // prevent redefinition of INT32
 #undef FAR  // prevent FAR redefinition
 
 #endif
 
-#if defined WIN32 && defined __GNUC__
+#if defined _WIN32 && defined __GNUC__
 typedef unsigned char boolean;
 #endif
 
@@ -76,21 +77,25 @@ extern "C" {
 #include "jpeglib.h"
 }
 
+#ifndef CV_MANUAL_JPEG_STD_HUFF_TABLES
+  #if defined(LIBJPEG_TURBO_VERSION_NUMBER) && LIBJPEG_TURBO_VERSION_NUMBER >= 1003090
+    #define CV_MANUAL_JPEG_STD_HUFF_TABLES 0  // libjpeg-turbo handles standard huffman tables itself (jstdhuff.c)
+  #else
+    #define CV_MANUAL_JPEG_STD_HUFF_TABLES 1
+  #endif
+#endif
+#if CV_MANUAL_JPEG_STD_HUFF_TABLES == 0
+  #undef CV_MANUAL_JPEG_STD_HUFF_TABLES
+#endif
+
 namespace cv
 {
 
-#ifdef _MSC_VER
-# pragma warning(push)
-# pragma warning(disable:4324) //structure was padded due to __declspec(align())
-#endif
 struct JpegErrorMgr
 {
     struct jpeg_error_mgr pub;
     jmp_buf setjmp_buffer;
 };
-#ifdef _MSC_VER
-# pragma warning(pop)
-#endif
 
 struct JpegSource
 {
@@ -178,7 +183,6 @@ JpegDecoder::JpegDecoder()
     m_state = 0;
     m_f = 0;
     m_buf_supported = true;
-    m_orientation = JPEG_ORIENTATION_TL;
 }
 
 
@@ -242,6 +246,7 @@ bool  JpegDecoder::readHeader()
 
         if (state->cinfo.src != 0)
         {
+            jpeg_save_markers(&state->cinfo, APP1, 0xffff);
             jpeg_read_header( &state->cinfo, TRUE );
 
             state->cinfo.scale_num=1;
@@ -255,71 +260,10 @@ bool  JpegDecoder::readHeader()
         }
     }
 
-    m_orientation = getOrientation();
-
-    if( !result )
-        close();
-
     return result;
 }
 
-int JpegDecoder::getOrientation()
-{
-    int orientation = JPEG_ORIENTATION_TL;
-
-    if (m_filename.size() > 0)
-    {
-        ExifReader reader( m_filename );
-        if( reader.parse() )
-        {
-            ExifEntry_t entry = reader.getTag( ORIENTATION );
-            if (entry.tag != INVALID_TAG)
-            {
-                orientation = entry.field_u16; //orientation is unsigned short, so check field_u16
-            }
-        }
-    }
-
-    return orientation;
-}
-
-void JpegDecoder::setOrientation(Mat& img)
-{
-    switch( m_orientation )
-    {
-        case    JPEG_ORIENTATION_TL: //0th row == visual top, 0th column == visual left-hand side
-            //do nothing, the image already has proper orientation
-            break;
-        case    JPEG_ORIENTATION_TR: //0th row == visual top, 0th column == visual right-hand side
-            flip(img, img, 1); //flip horizontally
-            break;
-        case    JPEG_ORIENTATION_BR: //0th row == visual bottom, 0th column == visual right-hand side
-            flip(img, img, -1);//flip both horizontally and vertically
-            break;
-        case    JPEG_ORIENTATION_BL: //0th row == visual bottom, 0th column == visual left-hand side
-            flip(img, img, 0); //flip vertically
-            break;
-        case    JPEG_ORIENTATION_LT: //0th row == visual left-hand side, 0th column == visual top
-            transpose(img, img);
-            break;
-        case    JPEG_ORIENTATION_RT: //0th row == visual right-hand side, 0th column == visual top
-            transpose(img, img);
-            flip(img, img, 1); //flip horizontally
-            break;
-        case    JPEG_ORIENTATION_RB: //0th row == visual right-hand side, 0th column == visual bottom
-            transpose(img, img);
-            flip(img, img, -1); //flip both horizontally and vertically
-            break;
-        case    JPEG_ORIENTATION_LB: //0th row == visual left-hand side, 0th column == visual bottom
-            transpose(img, img);
-            flip(img, img, 0); //flip vertically
-            break;
-        default:
-            //by default the image read has normal (JPEG_ORIENTATION_TL) orientation
-            break;
-    }
-}
-
+#ifdef CV_MANUAL_JPEG_STD_HUFF_TABLES
 /***************************************************************************
  * following code is for supporting MJPEG image files
  * based on a message of Laurent Pinchart on the video4linux mailing list
@@ -402,7 +346,7 @@ int my_jpeg_load_dht (struct jpeg_decompress_struct *info, unsigned char *dht,
 
     JHUFF_TBL **hufftbl;
     unsigned char bits[17];
-    unsigned char huffval[256];
+    unsigned char huffval[256] = {0};
 
     while (length > 16)
     {
@@ -425,7 +369,7 @@ int my_jpeg_load_dht (struct jpeg_decompress_struct *info, unsigned char *dht,
 
        if (index & 0x10)
        {
-           index -= 0x10;
+           index &= ~0x10;
            hufftbl = &ac_tables[index];
        }
        else
@@ -453,21 +397,21 @@ int my_jpeg_load_dht (struct jpeg_decompress_struct *info, unsigned char *dht,
  * end of code for supportting MJPEG image files
  * based on a message of Laurent Pinchart on the video4linux mailing list
  ***************************************************************************/
+#endif  // CV_MANUAL_JPEG_STD_HUFF_TABLES
 
 bool  JpegDecoder::readData( Mat& img )
 {
     volatile bool result = false;
-    int step = (int)img.step;
-    bool color = img.channels() > 1;
+    const bool color = img.channels() > 1;
 
     if( m_state && m_width && m_height )
     {
         jpeg_decompress_struct* cinfo = &((JpegState*)m_state)->cinfo;
         JpegErrorMgr* jerr = &((JpegState*)m_state)->jerr;
-        JSAMPARRAY buffer = 0;
 
         if( setjmp( jerr->setjmp_buffer ) == 0 )
         {
+#ifdef CV_MANUAL_JPEG_STD_HUFF_TABLES
             /* check if this is a mjpeg image format */
             if ( cinfo->ac_huff_tbl_ptrs[0] == NULL &&
                 cinfo->ac_huff_tbl_ptrs[1] == NULL &&
@@ -481,18 +425,32 @@ bool  JpegDecoder::readData( Mat& img )
                     cinfo->ac_huff_tbl_ptrs,
                     cinfo->dc_huff_tbl_ptrs );
             }
+#endif
+
+            // See https://github.com/opencv/opencv/issues/25274
+            // Conversion CMYK->BGR is not supported in libjpeg-turbo.
+            // So supporting both directly and indirectly is necessary.
+            bool doDirectRead = false;
 
             if( color )
             {
                 if( cinfo->num_components != 4 )
                 {
+#ifdef JCS_EXTENSIONS
+                    cinfo->out_color_space = m_use_rgb ? JCS_EXT_RGB : JCS_EXT_BGR;
+                    cinfo->out_color_components = 3;
+                    doDirectRead = true; // BGR -> BGR
+#else
                     cinfo->out_color_space = JCS_RGB;
                     cinfo->out_color_components = 3;
+                    doDirectRead = m_use_rgb ? true : false; // RGB -> BGR
+#endif
                 }
                 else
                 {
                     cinfo->out_color_space = JCS_CMYK;
                     cinfo->out_color_components = 4;
+                    doDirectRead = false; // CMYK -> BGR
                 }
             }
             else
@@ -501,46 +459,91 @@ bool  JpegDecoder::readData( Mat& img )
                 {
                     cinfo->out_color_space = JCS_GRAYSCALE;
                     cinfo->out_color_components = 1;
+                    doDirectRead = true; // GRAY -> GRAY
                 }
                 else
                 {
                     cinfo->out_color_space = JCS_CMYK;
                     cinfo->out_color_components = 4;
+                    doDirectRead = false; // CMYK -> GRAY
                 }
             }
 
+            // Check for Exif marker APP1
+            jpeg_saved_marker_ptr exif_marker = NULL;
+            jpeg_saved_marker_ptr cmarker = cinfo->marker_list;
+            while( cmarker && exif_marker == NULL )
+            {
+                if (cmarker->marker == APP1)
+                    exif_marker = cmarker;
+
+                cmarker = cmarker->next;
+            }
+
+            // Parse Exif data
+            if( exif_marker )
+            {
+                const std::streamsize offsetToTiffHeader = 6; //bytes from Exif size field to the first TIFF header
+
+                if (exif_marker->data_length > offsetToTiffHeader)
+                {
+                    m_exif.parseExif(exif_marker->data + offsetToTiffHeader, exif_marker->data_length - offsetToTiffHeader);
+                }
+            }
+
+
             jpeg_start_decompress( cinfo );
 
-            buffer = (*cinfo->mem->alloc_sarray)((j_common_ptr)cinfo,
-                                              JPOOL_IMAGE, m_width*4, 1 );
-
-            uchar* data = img.ptr();
-            for( ; m_height--; data += step )
+            if( doDirectRead)
             {
-                jpeg_read_scanlines( cinfo, buffer, 1 );
-                if( color )
+                for( int iy = 0 ; iy < m_height; iy ++ )
                 {
-                    if( cinfo->out_color_components == 3 )
-                        icvCvt_RGB2BGR_8u_C3R( buffer[0], 0, data, 0, cvSize(m_width,1) );
-                    else
-                        icvCvt_CMYK2BGR_8u_C4C3R( buffer[0], 0, data, 0, cvSize(m_width,1) );
+                    uchar* data = img.ptr<uchar>(iy);
+                    if (jpeg_read_scanlines( cinfo, &data, 1 ) != 1) return false;
                 }
-                else
+            }
+            else
+            {
+                JSAMPARRAY buffer = (*cinfo->mem->alloc_sarray)((j_common_ptr)cinfo,
+                                                                 JPOOL_IMAGE, m_width*4, 1 );
+
+                for( int iy = 0 ; iy < m_height; iy ++ )
                 {
-                    if( cinfo->out_color_components == 1 )
-                        memcpy( data, buffer[0], m_width );
+                    uchar* data = img.ptr<uchar>(iy);
+                    if (jpeg_read_scanlines( cinfo, buffer, 1 ) != 1) return false;
+
+                    if( color )
+                    {
+                        if (m_use_rgb)
+                        {
+                            if( cinfo->out_color_components == 3 )
+                                icvCvt_BGR2RGB_8u_C3R( buffer[0], 0, data, 0, Size(m_width,1) );
+                            else
+                                icvCvt_CMYK2RGB_8u_C4C3R( buffer[0], 0, data, 0, Size(m_width,1) );
+                        }
+                        else
+                        {
+                            if( cinfo->out_color_components == 3 )
+                                icvCvt_RGB2BGR_8u_C3R( buffer[0], 0, data, 0, Size(m_width,1) );
+                            else
+                                icvCvt_CMYK2BGR_8u_C4C3R( buffer[0], 0, data, 0, Size(m_width,1) );
+                        }
+                    }
                     else
-                        icvCvt_CMYK2Gray_8u_C4C1R( buffer[0], 0, data, 0, cvSize(m_width,1) );
+                    {
+                        if( cinfo->out_color_components == 1 )
+                            memcpy( data, buffer[0], m_width );
+                        else
+                            icvCvt_CMYK2Gray_8u_C4C1R( buffer[0], 0, data, 0, Size(m_width,1) );
+                    }
                 }
             }
 
             result = true;
             jpeg_finish_decompress( cinfo );
-            setOrientation( img );
         }
     }
 
-    close();
     return result;
 }
 
@@ -597,6 +600,8 @@ JpegEncoder::JpegEncoder()
 {
     m_description = "JPEG files (*.jpeg;*.jpg;*.jpe)";
     m_buf_supported = true;
+    m_support_metadata.assign((size_t)IMAGE_METADATA_MAX + 1, false);
+    m_support_metadata[(size_t)IMAGE_METADATA_EXIF] = true;
 }
 
 
@@ -625,16 +630,14 @@ bool JpegEncoder::write( const Mat& img, const std::vector<int>& params )
     int width = img.cols, height = img.rows;
 
     std::vector<uchar> out_buf(1 << 12);
-    AutoBuffer<uchar> _buffer;
-    uchar* buffer;
 
     struct jpeg_compress_struct cinfo;
     JpegErrorMgr jerr;
     JpegDestination dest;
 
-    jpeg_create_compress(&cinfo);
     cinfo.err = jpeg_std_error(&jerr.pub);
     jerr.pub.error_exit = error_exit;
+    jpeg_create_compress(&cinfo);
 
     if( !m_buf )
     {
@@ -661,8 +664,41 @@ bool JpegEncoder::write( const Mat& img, const std::vector<int>& params )
 
         int _channels = img.channels();
         int channels = _channels > 1 ? 3 : 1;
-        cinfo.input_components = channels;
-        cinfo.in_color_space = channels > 1 ? JCS_RGB : JCS_GRAYSCALE;
+
+        bool doDirectWrite = false;
+        switch( _channels )
+        {
+            case 1:
+                cinfo.input_components = 1;
+                cinfo.in_color_space = JCS_GRAYSCALE;
+                doDirectWrite = true; // GRAY -> GRAY
+                break;
+            case 3:
+#ifdef JCS_EXTENSIONS
+                cinfo.input_components = 3;
+                cinfo.in_color_space = JCS_EXT_BGR;
+                doDirectWrite = true; // BGR -> BGR
+#else
+                cinfo.input_components = 3;
+                cinfo.in_color_space = JCS_RGB;
+                doDirectWrite = false; // BGR -> RGB
+#endif
+                break;
+            case 4:
+#ifdef JCS_EXTENSIONS
+                cinfo.input_components = 4;
+                cinfo.in_color_space = JCS_EXT_BGRX;
+                doDirectWrite = true; // BGRX -> BGRX
+#else
+                cinfo.input_components = 3;
+                cinfo.in_color_space = JCS_RGB;
+                doDirectWrite = false; // BGRA -> RGB
+#endif
+                break;
+            default:
+                CV_Error(cv::Error::StsError, cv::format("Unsupported number of _channels: %06d", _channels) );
+                break;
+        }
 
         int quality = 95;
         int progressive = 0;
@@ -670,26 +706,27 @@ bool JpegEncoder::write( const Mat& img, const std::vector<int>& params )
         int rst_interval = 0;
         int luma_quality = -1;
         int chroma_quality = -1;
+        uint32_t sampling_factor = 0; // same as 0x221111
 
         for( size_t i = 0; i < params.size(); i += 2 )
         {
-            if( params[i] == CV_IMWRITE_JPEG_QUALITY )
+            if( params[i] == IMWRITE_JPEG_QUALITY )
             {
                 quality = params[i+1];
                 quality = MIN(MAX(quality, 0), 100);
             }
 
-            if( params[i] == CV_IMWRITE_JPEG_PROGRESSIVE )
+            if( params[i] == IMWRITE_JPEG_PROGRESSIVE )
             {
                 progressive = params[i+1];
             }
 
-            if( params[i] == CV_IMWRITE_JPEG_OPTIMIZE )
+            if( params[i] == IMWRITE_JPEG_OPTIMIZE )
             {
                 optimize = params[i+1];
             }
 
-            if( params[i] == CV_IMWRITE_JPEG_LUMA_QUALITY )
+            if( params[i] == IMWRITE_JPEG_LUMA_QUALITY )
             {
                 if (params[i+1] >= 0)
                 {
@@ -704,7 +741,7 @@ bool JpegEncoder::write( const Mat& img, const std::vector<int>& params )
                 }
             }
 
-            if( params[i] == CV_IMWRITE_JPEG_CHROMA_QUALITY )
+            if( params[i] == IMWRITE_JPEG_CHROMA_QUALITY )
             {
                 if (params[i+1] >= 0)
                 {
@@ -712,10 +749,31 @@ bool JpegEncoder::write( const Mat& img, const std::vector<int>& params )
                 }
             }
 
-            if( params[i] == CV_IMWRITE_JPEG_RST_INTERVAL )
+            if( params[i] == IMWRITE_JPEG_RST_INTERVAL )
             {
                 rst_interval = params[i+1];
                 rst_interval = MIN(MAX(rst_interval, 0), 65535L);
+            }
+
+            if( params[i] == IMWRITE_JPEG_SAMPLING_FACTOR )
+            {
+                sampling_factor = static_cast<uint32_t>(params[i+1]);
+
+                switch ( sampling_factor )
+                {
+                    case IMWRITE_JPEG_SAMPLING_FACTOR_411:
+                    case IMWRITE_JPEG_SAMPLING_FACTOR_420:
+                    case IMWRITE_JPEG_SAMPLING_FACTOR_422:
+                    case IMWRITE_JPEG_SAMPLING_FACTOR_440:
+                    case IMWRITE_JPEG_SAMPLING_FACTOR_444:
+                    // OK.
+                    break;
+
+                    default:
+                    CV_LOG_WARNING(NULL, cv::format("Unknown value for IMWRITE_JPEG_SAMPLING_FACTOR: 0x%06x", sampling_factor ) );
+                    sampling_factor = 0;
+                    break;
+                }
             }
         }
 
@@ -729,9 +787,17 @@ bool JpegEncoder::write( const Mat& img, const std::vector<int>& params )
         if( optimize )
             cinfo.optimize_coding = TRUE;
 
-#if JPEG_LIB_VERSION >= 70
+        if( (channels > 1) && ( sampling_factor != 0 ) )
+        {
+            cinfo.comp_info[0].v_samp_factor = (sampling_factor >> 16 ) & 0xF;
+            cinfo.comp_info[0].h_samp_factor = (sampling_factor >> 20 ) & 0xF;
+            cinfo.comp_info[1].v_samp_factor = 1;
+            cinfo.comp_info[1].h_samp_factor = 1;
+        }
+
         if (luma_quality >= 0 && chroma_quality >= 0)
         {
+#if JPEG_LIB_VERSION >= 70
             cinfo.q_scale_factor[0] = jpeg_quality_scaling(luma_quality);
             cinfo.q_scale_factor[1] = jpeg_quality_scaling(chroma_quality);
             if ( luma_quality != chroma_quality )
@@ -743,31 +809,59 @@ bool JpegEncoder::write( const Mat& img, const std::vector<int>& params )
                 cinfo.comp_info[1].h_samp_factor = 1;
             }
             jpeg_default_qtables( &cinfo, TRUE );
-        }
+#else
+            // See https://github.com/opencv/opencv/issues/25646
+            CV_LOG_ONCE_WARNING(NULL, cv::format("IMWRITE_JPEG_LUMA/CHROMA_QUALITY are not supported bacause JPEG_LIB_VERSION < 70."));
 #endif // #if JPEG_LIB_VERSION >= 70
+        }
 
         jpeg_start_compress( &cinfo, TRUE );
 
-        if( channels > 1 )
-            _buffer.allocate(width*channels);
-        buffer = _buffer;
+        if (!m_metadata.empty()) {
+            const std::vector<uchar>& metadata_exif = m_metadata[IMAGE_METADATA_EXIF];
+            size_t exif_size = metadata_exif.size();
+            if (exif_size > 0u) {
+                const char app1_exif_prefix[] = {'E', 'x', 'i', 'f', '\0', '\0'};
+                size_t app1_exif_prefix_size = sizeof(app1_exif_prefix);
+                size_t data_size = exif_size + app1_exif_prefix_size;
 
-        for( int y = 0; y < height; y++ )
+                std::vector<uchar> metadata_app1(data_size);
+                uchar* data = metadata_app1.data();
+                memcpy(data, app1_exif_prefix, app1_exif_prefix_size);
+                memcpy(data + app1_exif_prefix_size, metadata_exif.data(), exif_size);
+                jpeg_write_marker(&cinfo, JPEG_APP0 + 1, data, (unsigned)data_size);
+            }
+        }
+
+        if( doDirectWrite )
         {
-            uchar *data = img.data + img.step*y, *ptr = data;
-
-            if( _channels == 3 )
+            for( int y = 0; y < height; y++ )
             {
-                icvCvt_BGR2RGB_8u_C3R( data, 0, buffer, 0, cvSize(width,1) );
-                ptr = buffer;
+                uchar *data = const_cast<uchar*>(img.ptr<uchar>(y));
+                jpeg_write_scanlines( &cinfo, &data, 1 );
             }
-            else if( _channels == 4 )
-            {
-                icvCvt_BGRA2BGR_8u_C4C3R( data, 0, buffer, 0, cvSize(width,1), 2 );
-                ptr = buffer;
-            }
+        }
+        else
+        {
+            CV_Check(_channels, (_channels == 3) || (_channels == 4), "Unsupported number of channels(indirect write)");
 
-            jpeg_write_scanlines( &cinfo, &ptr, 1 );
+            AutoBuffer<uchar> _buffer;
+            _buffer.allocate(width*channels);
+            uchar *buffer = _buffer.data();
+
+            for( int y = 0; y < height; y++ )
+            {
+                uchar *data = const_cast<uchar*>(img.ptr<uchar>(y));
+                if( _channels == 3 )
+                {
+                    icvCvt_BGR2RGB_8u_C3R( data, 0, buffer, 0, Size(width,1) );
+                }
+                else // if( _channels == 4 )
+                {
+                    icvCvt_BGRA2BGR_8u_C4C3R( data, 0, buffer, 0, Size(width,1), 2 );
+                }
+                jpeg_write_scanlines( &cinfo, &buffer, 1 );
+            }
         }
 
         jpeg_finish_compress( &cinfo );

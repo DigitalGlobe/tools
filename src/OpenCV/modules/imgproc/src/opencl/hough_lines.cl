@@ -80,7 +80,7 @@ __kernel void fill_accum_global(__global const uchar * list_ptr, int list_step, 
             const int x = (val & 0xFFFF);
             const int y = (val >> 16) & 0xFFFF;
 
-            int r = convert_int_rte(mad(x, cosVal, y * sinVal)) + shift;
+            int r = convert_int_rte(mad((float)x, cosVal, y * sinVal)) + shift;
             atomic_inc(accum + r + 1);
         }
     }
@@ -94,6 +94,7 @@ __kernel void fill_accum_local(__global const uchar * list_ptr, int list_step, i
 {
     int theta_idx = get_group_id(1);
     int count_idx = get_local_id(0);
+    __local int l_accum[BUFFER_SIZE];
 
     if (theta_idx > 0 && theta_idx < numangle + 1)
     {
@@ -102,7 +103,6 @@ __kernel void fill_accum_local(__global const uchar * list_ptr, int list_step, i
         sinVal *= irho;
         cosVal *= irho;
 
-        __local int l_accum[BUFFER_SIZE];
         for (int i=count_idx; i<BUFFER_SIZE; i+=LOCAL_SIZE)
             l_accum[i] = 0;
 
@@ -117,7 +117,7 @@ __kernel void fill_accum_local(__global const uchar * list_ptr, int list_step, i
             const int x = (point & 0xFFFF);
             const int y = point >> 16;
 
-            int r = convert_int_rte(mad(x, cosVal, y * sinVal)) + shift;
+            int r = convert_int_rte(mad((float)x, cosVal, y * sinVal)) + shift;
             atomic_inc(l_accum + r + 1);
         }
 
@@ -186,7 +186,7 @@ __kernel void get_lines(__global const uchar * accum_ptr, int accum_step, int ac
 
     if (y < accum_rows-2)
     {
-        __global uchar* accum = accum_ptr + mad24(y+1, accum_step, mad24(x+1, (int) sizeof(int), accum_offset));
+        __global const uchar* accum = accum_ptr + mad24(y+1, accum_step, mad24(x+1, (int) sizeof(int), accum_offset));
         __global int4* lines = (__global int4*)(lines_ptr + lines_offset);
         __global int* lines_index = lines_index_ptr + 1;
 

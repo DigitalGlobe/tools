@@ -40,24 +40,44 @@
 //
 //M*/
 
-#ifndef __OPENCV_PHOTO_HPP__
-#define __OPENCV_PHOTO_HPP__
+#ifndef OPENCV_PHOTO_HPP
+#define OPENCV_PHOTO_HPP
 
 #include "opencv2/core.hpp"
 #include "opencv2/imgproc.hpp"
 
 /**
 @defgroup photo Computational Photography
+
+This module includes photo processing algorithms
 @{
+    @defgroup photo_inpaint Inpainting
     @defgroup photo_denoise Denoising
     @defgroup photo_hdr HDR imaging
 
-This section describes high dynamic range imaging algorithms namely tonemapping, exposure alignment,
-camera calibration with multiple exposures and exposure fusion.
+    This section describes high dynamic range imaging algorithms namely tonemapping, exposure alignment,
+    camera calibration with multiple exposures and exposure fusion.
+
+    @defgroup photo_decolor Contrast Preserving Decolorization
+
+    Useful links:
+
+    http://www.cse.cuhk.edu.hk/leojia/projects/color2gray/index.html
 
     @defgroup photo_clone Seamless Cloning
+
+    Useful links:
+
+    https://www.learnopencv.com/seamless-cloning-using-opencv-python-cpp
+
     @defgroup photo_render Non-Photorealistic Rendering
-    @defgroup photo_c C API
+
+    Useful links:
+
+    http://www.inf.ufrgs.br/~eslgastal/DomainTransform
+
+    https://www.learnopencv.com/non-photorealistic-rendering-using-opencv-python-c/
+
 @}
   */
 
@@ -67,37 +87,24 @@ namespace cv
 //! @addtogroup photo
 //! @{
 
+//! @addtogroup photo_inpaint
+//! @{
 //! the inpainting algorithm
 enum
 {
-    INPAINT_NS    = 0, // Navier-Stokes algorithm
-    INPAINT_TELEA = 1 // A. Telea algorithm
-};
-
-enum
-{
-    NORMAL_CLONE = 1,
-    MIXED_CLONE  = 2,
-    MONOCHROME_TRANSFER = 3
-};
-
-enum
-{
-    RECURS_FILTER = 1,
-    NORMCONV_FILTER = 2
+    INPAINT_NS    = 0, //!< Use Navier-Stokes based method
+    INPAINT_TELEA = 1 //!< Use the algorithm proposed by Alexandru Telea @cite Telea04
 };
 
 /** @brief Restores the selected region in an image using the region neighborhood.
 
-@param src Input 8-bit 1-channel or 3-channel image.
+@param src Input 8-bit, 16-bit unsigned or 32-bit float 1-channel or 8-bit 3-channel image.
 @param inpaintMask Inpainting mask, 8-bit 1-channel image. Non-zero pixels indicate the area that
 needs to be inpainted.
 @param dst Output image with the same size and type as src .
 @param inpaintRadius Radius of a circular neighborhood of each point inpainted that is considered
 by the algorithm.
-@param flags Inpainting method that could be one of the following:
--   **INPAINT_NS** Navier-Stokes based method [Navier01]
--   **INPAINT_TELEA** Method by Alexandru Telea @cite Telea04 .
+@param flags Inpainting method that could be cv::INPAINT_NS or cv::INPAINT_TELEA
 
 The function reconstructs the selected image area from the pixel near the area boundary. The
 function may be used to remove dust and scratches from a scanned photo, or to remove undesirable
@@ -106,11 +113,13 @@ objects from still images or video. See <http://en.wikipedia.org/wiki/Inpainting
 @note
    -   An example using the inpainting technique can be found at
         opencv_source_code/samples/cpp/inpaint.cpp
-    -   (Python) An example using the inpainting technique can be found at
+   -   (Python) An example using the inpainting technique can be found at
         opencv_source_code/samples/python/inpaint.py
  */
 CV_EXPORTS_W void inpaint( InputArray src, InputArray inpaintMask,
         OutputArray dst, double inpaintRadius, int flags );
+
+//! @} photo_inpaint
 
 //! @addtogroup photo_denoise
 //! @{
@@ -189,10 +198,10 @@ CV_EXPORTS_W void fastNlMeansDenoisingColored( InputArray src, OutputArray dst,
         float h = 3, float hColor = 3,
         int templateWindowSize = 7, int searchWindowSize = 21);
 
-/** @brief Modification of fastNlMeansDenoising function for images sequence where consequtive images have been
+/** @brief Modification of fastNlMeansDenoising function for images sequence where consecutive images have been
 captured in small period of time. For example video. This version of the function is for grayscale
-images or for manual manipulation with colorspaces. For more details see
-<http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.131.6394>
+images or for manual manipulation with colorspaces. See @cite Buades2005DenoisingIS for more details
+(open access [here](https://static.aminer.org/pdf/PDF/000/317/196/spatio_temporal_wiener_filtering_of_image_sequences_using_a_parametric.pdf)).
 
 @param srcImgs Input 8-bit 1-channel, 2-channel, 3-channel or
 4-channel images sequence. All images should have the same type and
@@ -200,7 +209,7 @@ size.
 @param imgToDenoiseIndex Target image to denoise index in srcImgs sequence
 @param temporalWindowSize Number of surrounding images to use for target image denoising. Should
 be odd. Images from imgToDenoiseIndex - temporalWindowSize / 2 to
-imgToDenoiseIndex - temporalWindowSize / 2 from srcImgs will be used to denoise
+imgToDenoiseIndex + temporalWindowSize / 2 from srcImgs will be used to denoise
 srcImgs[imgToDenoiseIndex] image.
 @param dst Output image with the same size and type as srcImgs images.
 @param templateWindowSize Size in pixels of the template patch that is used to compute weights.
@@ -216,10 +225,10 @@ CV_EXPORTS_W void fastNlMeansDenoisingMulti( InputArrayOfArrays srcImgs, OutputA
         int imgToDenoiseIndex, int temporalWindowSize,
         float h = 3, int templateWindowSize = 7, int searchWindowSize = 21);
 
-/** @brief Modification of fastNlMeansDenoising function for images sequence where consequtive images have been
+/** @brief Modification of fastNlMeansDenoising function for images sequence where consecutive images have been
 captured in small period of time. For example video. This version of the function is for grayscale
-images or for manual manipulation with colorspaces. For more details see
-<http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.131.6394>
+images or for manual manipulation with colorspaces. See @cite Buades2005DenoisingIS for more details
+(open access [here](https://static.aminer.org/pdf/PDF/000/317/196/spatio_temporal_wiener_filtering_of_image_sequences_using_a_parametric.pdf)).
 
 @param srcImgs Input 8-bit or 16-bit (only with NORM_L1) 1-channel,
 2-channel, 3-channel or 4-channel images sequence. All images should
@@ -227,7 +236,7 @@ have the same type and size.
 @param imgToDenoiseIndex Target image to denoise index in srcImgs sequence
 @param temporalWindowSize Number of surrounding images to use for target image denoising. Should
 be odd. Images from imgToDenoiseIndex - temporalWindowSize / 2 to
-imgToDenoiseIndex - temporalWindowSize / 2 from srcImgs will be used to denoise
+imgToDenoiseIndex + temporalWindowSize / 2 from srcImgs will be used to denoise
 srcImgs[imgToDenoiseIndex] image.
 @param dst Output image with the same size and type as srcImgs images.
 @param templateWindowSize Size in pixels of the template patch that is used to compute weights.
@@ -254,7 +263,7 @@ size.
 @param imgToDenoiseIndex Target image to denoise index in srcImgs sequence
 @param temporalWindowSize Number of surrounding images to use for target image denoising. Should
 be odd. Images from imgToDenoiseIndex - temporalWindowSize / 2 to
-imgToDenoiseIndex - temporalWindowSize / 2 from srcImgs will be used to denoise
+imgToDenoiseIndex + temporalWindowSize / 2 from srcImgs will be used to denoise
 srcImgs[imgToDenoiseIndex] image.
 @param dst Output image with the same size and type as srcImgs images.
 @param templateWindowSize Size in pixels of the template patch that is used to compute weights.
@@ -328,8 +337,8 @@ class CV_EXPORTS_W Tonemap : public Algorithm
 public:
     /** @brief Tonemaps image
 
-    @param src source image - 32-bit 3-channel Mat
-    @param dst destination image - 32-bit 3-channel Mat with values in [0, 1] range
+    @param src source image - CV_32FC3 Mat (float 32 bits 3 channels)
+    @param dst destination image - CV_32FC3 Mat with values in [0, 1] range
      */
     CV_WRAP virtual void process(InputArray src, OutputArray dst) = 0;
 
@@ -376,43 +385,6 @@ results, default value is 0.85.
  */
 CV_EXPORTS_W Ptr<TonemapDrago> createTonemapDrago(float gamma = 1.0f, float saturation = 1.0f, float bias = 0.85f);
 
-/** @brief This algorithm decomposes image into two layers: base layer and detail layer using bilateral filter
-and compresses contrast of the base layer thus preserving all the details.
-
-This implementation uses regular bilateral filter from opencv.
-
-Saturation enhancement is possible as in ocvTonemapDrago.
-
-For more information see @cite DD02 .
- */
-class CV_EXPORTS_W TonemapDurand : public Tonemap
-{
-public:
-
-    CV_WRAP virtual float getSaturation() const = 0;
-    CV_WRAP virtual void setSaturation(float saturation) = 0;
-
-    CV_WRAP virtual float getContrast() const = 0;
-    CV_WRAP virtual void setContrast(float contrast) = 0;
-
-    CV_WRAP virtual float getSigmaSpace() const = 0;
-    CV_WRAP virtual void setSigmaSpace(float sigma_space) = 0;
-
-    CV_WRAP virtual float getSigmaColor() const = 0;
-    CV_WRAP virtual void setSigmaColor(float sigma_color) = 0;
-};
-
-/** @brief Creates TonemapDurand object
-
-@param gamma gamma value for gamma correction. See createTonemap
-@param contrast resulting contrast on logarithmic scale, i. e. log(max / min), where max and min
-are maximum and minimum luminance values of the resulting image.
-@param saturation saturation enhancement value. See createTonemapDrago
-@param sigma_space bilateral filter sigma in color space
-@param sigma_color bilateral filter sigma in coordinate space
- */
-CV_EXPORTS_W Ptr<TonemapDurand>
-createTonemapDurand(float gamma = 1.0f, float contrast = 4.0f, float saturation = 1.0f, float sigma_space = 2.0f, float sigma_color = 2.0f);
 
 /** @brief This is a global tonemapping operator that models human visual system.
 
@@ -502,7 +474,7 @@ class CV_EXPORTS_W AlignMTB : public AlignExposures
 {
 public:
     CV_WRAP virtual void process(InputArrayOfArrays src, std::vector<Mat>& dst,
-                                 InputArray times, InputArray response) = 0;
+                                 InputArray times, InputArray response) CV_OVERRIDE = 0;
 
     /** @brief Short version of process, that doesn't take extra arguments.
 
@@ -591,7 +563,7 @@ public:
 @param samples number of pixel locations to use
 @param lambda smoothness term weight. Greater values produce smoother results, but can alter the
 response.
-@param random if true sample pixel locations are chosen at random, otherwise the form a
+@param random if true sample pixel locations are chosen at random, otherwise they form a
 rectangular grid.
  */
 CV_EXPORTS_W Ptr<CalibrateDebevec> createCalibrateDebevec(int samples = 70, float lambda = 10.0f, bool random = false);
@@ -646,7 +618,7 @@ class CV_EXPORTS_W MergeDebevec : public MergeExposures
 {
 public:
     CV_WRAP virtual void process(InputArrayOfArrays src, OutputArray dst,
-                                 InputArray times, InputArray response) = 0;
+                                 InputArray times, InputArray response) CV_OVERRIDE = 0;
     CV_WRAP virtual void process(InputArrayOfArrays src, OutputArray dst, InputArray times) = 0;
 };
 
@@ -669,7 +641,7 @@ class CV_EXPORTS_W MergeMertens : public MergeExposures
 {
 public:
     CV_WRAP virtual void process(InputArrayOfArrays src, OutputArray dst,
-                                 InputArray times, InputArray response) = 0;
+                                 InputArray times, InputArray response) CV_OVERRIDE = 0;
     /** @brief Short version of process, that doesn't take extra arguments.
 
     @param src vector of input images
@@ -705,7 +677,7 @@ class CV_EXPORTS_W MergeRobertson : public MergeExposures
 {
 public:
     CV_WRAP virtual void process(InputArrayOfArrays src, OutputArray dst,
-                                 InputArray times, InputArray response) = 0;
+                                 InputArray times, InputArray response) CV_OVERRIDE = 0;
     CV_WRAP virtual void process(InputArrayOfArrays src, OutputArray dst, InputArray times) = 0;
 };
 
@@ -714,6 +686,9 @@ public:
 CV_EXPORTS_W Ptr<MergeRobertson> createMergeRobertson();
 
 //! @} photo_hdr
+
+//! @addtogroup photo_decolor
+//! @{
 
 /** @brief Transforms a color image to a grayscale image. It is a basic tool in digital printing, stylized
 black-and-white photograph rendering, and in many single channel image processing applications
@@ -727,29 +702,80 @@ This function is to be applied on color images.
  */
 CV_EXPORTS_W void decolor( InputArray src, OutputArray grayscale, OutputArray color_boost);
 
+//! @} photo_decolor
+
 //! @addtogroup photo_clone
 //! @{
 
-/** @brief Image editing tasks concern either global changes (color/intensity corrections, filters,
-deformations) or local changes concerned to a selection. Here we are interested in achieving local
-changes, ones that are restricted to a region manually selected (ROI), in a seamless and effortless
-manner. The extent of the changes ranges from slight distortions to complete replacement by novel
-content @cite PM03 .
 
-@param src Input 8-bit 3-channel image.
-@param dst Input 8-bit 3-channel image.
-@param mask Input 8-bit 1 or 3-channel image.
-@param p Point in dst image where object is placed.
-@param blend Output image with the same size and type as dst.
-@param flags Cloning method that could be one of the following:
--   **NORMAL_CLONE** The power of the method is fully expressed when inserting objects with
-complex outlines into a new background
--   **MIXED_CLONE** The classic method, color-based selection and alpha masking might be time
-consuming and often leaves an undesirable halo. Seamless cloning, even averaged with the
-original image, is not effective. Mixed seamless cloning based on a loose selection proves
-effective.
--   **FEATURE_EXCHANGE** Feature exchange allows the user to easily replace certain features of
-one object by alternative features.
+//! Flags for the seamlessClone algorithm
+enum SeamlessCloneFlags
+{
+    /**
+    @brief Normal seamless cloning.
+    This method is ideal for inserting objects with complex outlines into a new background.
+    It preserves the original appearance and lighting of the inserted object, ensuring a natural blend.
+     */
+    NORMAL_CLONE = 1,
+
+    /**
+    @brief Mixed seamless cloning.
+    This method addresses cases where simple color-based selection or alpha masking is time-consuming
+    and may result in undesirable halos. By combining structure from the source and texture from the
+    destination, mixed seamless cloning is highly effective, even with loosely defined selections.
+     */
+    MIXED_CLONE = 2,
+
+    /**
+    @brief Monochrome transfer cloning.
+    This method allows users to replace specific features of an object, such as grayscale textures
+    or patterns, with alternative features. It is particularly useful for artistic effects or
+    targeted object modifications.
+     */
+    MONOCHROME_TRANSFER = 3,
+
+    /**
+    @brief Enhanced normal seamless cloning.
+    Similar to `NORMAL_CLONE`, but with an advanced approach to ROI (Region of Interest) calculation.
+    This mode processes a larger source region by considering the entire mask area instead of only
+    the bounding rectangle of non-zero pixels.
+     */
+    NORMAL_CLONE_WIDE = 9,
+
+    /**
+    @brief Enhanced mixed seamless cloning.
+    Similar to `MIXED_CLONE`, but with an advanced approach to ROI (Region of Interest) calculation.
+    This mode processes a larger source region by considering the entire mask area instead of only
+    the bounding rectangle of non-zero pixels.
+     */
+    MIXED_CLONE_WIDE = 10,
+
+    /**
+    @brief Enhanced monochrome transfer cloning.
+    Similar to `MONOCHROME_TRANSFER`, but with an advanced approach to ROI (Region of Interest) calculation.
+    This mode processes a larger source region by considering the entire mask area instead of only
+    the bounding rectangle of non-zero pixels.
+     */
+    MONOCHROME_TRANSFER_WIDE = 11
+};
+
+
+/** @example samples/cpp/tutorial_code/photo/seamless_cloning/cloning_demo.cpp
+An example using seamlessClone function
+*/
+/** @brief Performs seamless cloning to blend a region from a source image into a destination image.
+This function is designed for local image editing, allowing changes restricted to a region
+(manually selected as the ROI) to be applied effortlessly and seamlessly. These changes can
+range from slight distortions to complete replacement by novel content @cite PM03.
+
+@param src The source image (8-bit 3-channel), from which a region will be blended into the destination.
+@param dst The destination image (8-bit 3-channel), where the src image will be blended.
+@param mask A binary mask (8-bit, 1, 3, or 4-channel) specifying the region in the source image to blend.
+Non-zero pixels indicate the region to be blended. If an empty Mat is provided, a mask with
+all non-zero pixels is created internally.
+@param p The point where the center of the src image is placed in the dst image.
+@param blend The output image that stores the result of the seamless cloning. It has the same size and type as `dst`.
+@param flags Flags that control the type of cloning method, can take values of `cv::SeamlessCloneFlags`.
  */
 CV_EXPORTS_W void seamlessClone( InputArray src, InputArray dst, InputArray mask, Point p,
         OutputArray blend, int flags);
@@ -784,18 +810,16 @@ CV_EXPORTS_W void illuminationChange(InputArray src, InputArray mask, OutputArra
         float alpha = 0.2f, float beta = 0.4f);
 
 /** @brief By retaining only the gradients at edge locations, before integrating with the Poisson solver, one
-washes out the texture of the selected region, giving its contents a flat aspect. Here Canny Edge
-Detector is used.
+washes out the texture of the selected region, giving its contents a flat aspect. Here Canny Edge %Detector is used.
 
 @param src Input 8-bit 3-channel image.
 @param mask Input 8-bit 1 or 3-channel image.
 @param dst Output image with the same size and type as src.
-@param low_threshold Range from 0 to 100.
+@param low_threshold %Range from 0 to 100.
 @param high_threshold Value \> 100.
 @param kernel_size The size of the Sobel kernel to be used.
 
-**NOTE:**
-
+@note
 The algorithm assumes that the color of the source image is close to that of the destination. This
 assumption means that when the colors don't match, the source image color gets tinted toward the
 color of the destination image.
@@ -809,16 +833,21 @@ CV_EXPORTS_W void textureFlattening(InputArray src, InputArray mask, OutputArray
 //! @addtogroup photo_render
 //! @{
 
+//! Edge preserving filters
+enum
+{
+    RECURS_FILTER = 1, //!< Recursive Filtering
+    NORMCONV_FILTER = 2 //!< Normalized Convolution Filtering
+};
+
 /** @brief Filtering is the fundamental operation in image and video processing. Edge-preserving smoothing
 filters are used in many different applications @cite EM11 .
 
 @param src Input 8-bit 3-channel image.
 @param dst Output 8-bit 3-channel image.
-@param flags Edge preserving filters:
--   **RECURS_FILTER** = 1
--   **NORMCONV_FILTER** = 2
-@param sigma_s Range between 0 to 200.
-@param sigma_r Range between 0 to 1.
+@param flags Edge preserving filters: cv::RECURS_FILTER or cv::NORMCONV_FILTER
+@param sigma_s %Range between 0 to 200.
+@param sigma_r %Range between 0 to 1.
  */
 CV_EXPORTS_W void edgePreservingFilter(InputArray src, OutputArray dst, int flags = 1,
         float sigma_s = 60, float sigma_r = 0.4f);
@@ -827,20 +856,23 @@ CV_EXPORTS_W void edgePreservingFilter(InputArray src, OutputArray dst, int flag
 
 @param src Input 8-bit 3-channel image.
 @param dst Output image with the same size and type as src.
-@param sigma_s Range between 0 to 200.
-@param sigma_r Range between 0 to 1.
+@param sigma_s %Range between 0 to 200.
+@param sigma_r %Range between 0 to 1.
  */
 CV_EXPORTS_W void detailEnhance(InputArray src, OutputArray dst, float sigma_s = 10,
         float sigma_r = 0.15f);
 
+/** @example samples/cpp/tutorial_code/photo/non_photorealistic_rendering/npr_demo.cpp
+An example using non-photorealistic line drawing functions
+*/
 /** @brief Pencil-like non-photorealistic line drawing
 
 @param src Input 8-bit 3-channel image.
 @param dst1 Output 8-bit 1-channel image.
 @param dst2 Output image with the same size and type as src.
-@param sigma_s Range between 0 to 200.
-@param sigma_r Range between 0 to 1.
-@param shade_factor Range between 0 to 0.1.
+@param sigma_s %Range between 0 to 200.
+@param sigma_r %Range between 0 to 1.
+@param shade_factor %Range between 0 to 0.1.
  */
 CV_EXPORTS_W void pencilSketch(InputArray src, OutputArray dst1, OutputArray dst2,
         float sigma_s = 60, float sigma_r = 0.07f, float shade_factor = 0.02f);
@@ -851,8 +883,8 @@ contrast while preserving, or enhancing, high-contrast features.
 
 @param src Input 8-bit 3-channel image.
 @param dst Output image with the same size and type as src.
-@param sigma_s Range between 0 to 200.
-@param sigma_r Range between 0 to 1.
+@param sigma_s %Range between 0 to 200.
+@param sigma_r %Range between 0 to 1.
  */
 CV_EXPORTS_W void stylization(InputArray src, OutputArray dst, float sigma_s = 60,
         float sigma_r = 0.45f);
@@ -862,9 +894,5 @@ CV_EXPORTS_W void stylization(InputArray src, OutputArray dst, float sigma_s = 6
 //! @} photo
 
 } // cv
-
-#ifndef DISABLE_OPENCV_24_COMPATIBILITY
-#include "opencv2/photo/photo_c.h"
-#endif
 
 #endif

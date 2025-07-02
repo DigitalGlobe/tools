@@ -12,7 +12,11 @@ else()
 endif()
 
 if(HAVE_CUDA)
-  ocv_cmake_configure("${CMAKE_CURRENT_LIST_DIR}/templates/OpenCVConfig-CUDA.cmake.in" CUDA_CONFIGCMAKE @ONLY)
+  if(ENABLE_CUDA_FIRST_CLASS_LANGUAGE)
+    ocv_cmake_configure("${CMAKE_CURRENT_LIST_DIR}/templates/OpenCVConfig-CUDALanguage.cmake.in" CUDA_CONFIGCMAKE @ONLY)
+  else()
+    ocv_cmake_configure("${CMAKE_CURRENT_LIST_DIR}/templates/OpenCVConfig-CUDA.cmake.in" CUDA_CONFIGCMAKE @ONLY)
+  endif()
 endif()
 
 if(ANDROID)
@@ -30,10 +34,15 @@ if(BUILD_FAT_JAVA_LIB AND HAVE_opencv_java)
   list(APPEND OPENCV_MODULES_CONFIGCMAKE opencv_java)
 endif()
 
+if(BUILD_OBJC AND HAVE_opencv_objc)
+  list(APPEND OPENCV_MODULES_CONFIGCMAKE opencv_objc)
+endif()
+
+
 # -------------------------------------------------------------------------------------------
 #  Part 1/3: ${BIN_DIR}/OpenCVConfig.cmake              -> For use *without* "make install"
 # -------------------------------------------------------------------------------------------
-set(OpenCV_INCLUDE_DIRS_CONFIGCMAKE "\"${OPENCV_CONFIG_FILE_INCLUDE_DIR}\" \"${OpenCV_SOURCE_DIR}/include\" \"${OpenCV_SOURCE_DIR}/include/opencv\"")
+set(OpenCV_INCLUDE_DIRS_CONFIGCMAKE "\"${OPENCV_CONFIG_FILE_INCLUDE_DIR}\" \"${OpenCV_SOURCE_DIR}/include\"")
 
 foreach(m ${OPENCV_MODULES_BUILD})
   if(EXISTS "${OPENCV_MODULE_${m}_LOCATION}/include")
@@ -41,16 +50,33 @@ foreach(m ${OPENCV_MODULES_BUILD})
   endif()
 endforeach()
 
-export(TARGETS ${OpenCVModules_TARGETS} FILE "${CMAKE_BINARY_DIR}/OpenCVModules.cmake")
+export(EXPORT OpenCVModules FILE "${CMAKE_BINARY_DIR}/OpenCVModules.cmake")
 
 if(TARGET ippicv AND NOT BUILD_SHARED_LIBS)
   set(USE_IPPICV TRUE)
-  file(RELATIVE_PATH IPPICV_INSTALL_PATH_RELATIVE_CONFIGCMAKE ${CMAKE_BINARY_DIR} ${IPPICV_LOCATION_PATH})
+  file(RELATIVE_PATH IPPICV_INSTALL_PATH_RELATIVE_CONFIGCMAKE "${CMAKE_BINARY_DIR}" "${IPPICV_LOCATION_PATH}")
   ocv_cmake_configure("${CMAKE_CURRENT_LIST_DIR}/templates/OpenCVConfig-IPPICV.cmake.in" IPPICV_CONFIGCMAKE @ONLY)
 else()
   set(USE_IPPICV FALSE)
 endif()
 
+if(TARGET ippiw AND NOT BUILD_SHARED_LIBS AND IPPIW_INSTALL_PATH)
+  set(USE_IPPIW TRUE)
+  file(RELATIVE_PATH IPPIW_INSTALL_PATH_RELATIVE_CONFIGCMAKE "${CMAKE_BINARY_DIR}" "${IPPIW_LOCATION_PATH}")
+  ocv_cmake_configure("${CMAKE_CURRENT_LIST_DIR}/templates/OpenCVConfig-IPPIW.cmake.in" IPPIW_CONFIGCMAKE @ONLY)
+else()
+  set(USE_IPPIW FALSE)
+endif()
+
+if(TARGET fastcv AND NOT BUILD_SHARED_LIBS)
+  file(RELATIVE_PATH FASTCV_INSTALL_PATH_RELATIVE_CONFIGCMAKE "${CMAKE_BINARY_DIR}" "${FASTCV_LOCATION_PATH}")
+  ocv_cmake_configure("${CMAKE_CURRENT_LIST_DIR}/templates/OpenCVConfig-FastCV.cmake.in" FASTCV_CONFIGCMAKE @ONLY)
+  set(USE_FASTCV TRUE)
+else()
+  set(USE_FASTCV FALSE)
+endif()
+
+ocv_cmake_hook(PRE_CMAKE_CONFIG_BUILD)
 configure_file("${OpenCV_SOURCE_DIR}/cmake/templates/OpenCVConfig.cmake.in" "${CMAKE_BINARY_DIR}/OpenCVConfig.cmake" @ONLY)
 #support for version checking when finding opencv. find_package(OpenCV 2.3.1 EXACT) should now work.
 configure_file("${OpenCV_SOURCE_DIR}/cmake/templates/OpenCVConfig-version.cmake.in" "${CMAKE_BINARY_DIR}/OpenCVConfig-version.cmake" @ONLY)
@@ -59,11 +85,24 @@ configure_file("${OpenCV_SOURCE_DIR}/cmake/templates/OpenCVConfig-version.cmake.
 #  Part 2/3: ${BIN_DIR}/unix-install/OpenCVConfig.cmake -> For use *with* "make install"
 # -------------------------------------------------------------------------------------------
 file(RELATIVE_PATH OpenCV_INSTALL_PATH_RELATIVE_CONFIGCMAKE "${CMAKE_INSTALL_PREFIX}/${OPENCV_CONFIG_INSTALL_PATH}/" ${CMAKE_INSTALL_PREFIX})
-set(OpenCV_INCLUDE_DIRS_CONFIGCMAKE "\"\${OpenCV_INSTALL_PATH}/${OPENCV_INCLUDE_INSTALL_PATH}\" \"\${OpenCV_INSTALL_PATH}/${OPENCV_INCLUDE_INSTALL_PATH}/opencv\"")
+if (IS_ABSOLUTE ${OPENCV_INCLUDE_INSTALL_PATH})
+  set(OpenCV_INCLUDE_DIRS_CONFIGCMAKE "\"${OPENCV_INCLUDE_INSTALL_PATH}\"")
+else()
+  set(OpenCV_INCLUDE_DIRS_CONFIGCMAKE "\"\${OpenCV_INSTALL_PATH}/${OPENCV_INCLUDE_INSTALL_PATH}\"")
+endif()
 
 if(USE_IPPICV)
-  file(RELATIVE_PATH IPPICV_INSTALL_PATH_RELATIVE_CONFIGCMAKE "${CMAKE_INSTALL_PREFIX}" ${IPPICV_INSTALL_PATH})
+  file(RELATIVE_PATH IPPICV_INSTALL_PATH_RELATIVE_CONFIGCMAKE "${CMAKE_INSTALL_PREFIX}" "${IPPICV_INSTALL_PATH}")
   ocv_cmake_configure("${CMAKE_CURRENT_LIST_DIR}/templates/OpenCVConfig-IPPICV.cmake.in" IPPICV_CONFIGCMAKE @ONLY)
+endif()
+if(USE_IPPIW)
+  file(RELATIVE_PATH IPPIW_INSTALL_PATH_RELATIVE_CONFIGCMAKE "${CMAKE_INSTALL_PREFIX}" "${IPPIW_INSTALL_PATH}")
+  ocv_cmake_configure("${CMAKE_CURRENT_LIST_DIR}/templates/OpenCVConfig-IPPIW.cmake.in" IPPIW_CONFIGCMAKE @ONLY)
+endif()
+
+if(USE_FASTCV)
+  file(RELATIVE_PATH FASTCV_INSTALL_PATH_RELATIVE_CONFIGCMAKE "${CMAKE_INSTALL_PREFIX}" "${FASTCV_INSTALL_PATH}")
+  ocv_cmake_configure("${CMAKE_CURRENT_LIST_DIR}/templates/OpenCVConfig-FastCV.cmake.in" FASTCV_CONFIGCMAKE @ONLY)
 endif()
 
 function(ocv_gen_config TMP_DIR NESTED_PATH ROOT_NAME)
@@ -72,6 +111,7 @@ function(ocv_gen_config TMP_DIR NESTED_PATH ROOT_NAME)
 
   file(RELATIVE_PATH OpenCV_INSTALL_PATH_RELATIVE_CONFIGCMAKE "${CMAKE_INSTALL_PREFIX}/${__install_nested}" "${CMAKE_INSTALL_PREFIX}/")
 
+  ocv_cmake_hook(PRE_CMAKE_CONFIG_INSTALL)
   configure_file("${OpenCV_SOURCE_DIR}/cmake/templates/OpenCVConfig-version.cmake.in" "${TMP_DIR}/OpenCVConfig-version.cmake" @ONLY)
 
   configure_file("${OpenCV_SOURCE_DIR}/cmake/templates/OpenCVConfig.cmake.in" "${__tmp_nested}/OpenCVConfig.cmake" @ONLY)
@@ -91,26 +131,22 @@ function(ocv_gen_config TMP_DIR NESTED_PATH ROOT_NAME)
   endif()
 endfunction()
 
-if(UNIX AND NOT ANDROID)
+if((CMAKE_HOST_SYSTEM_NAME MATCHES "Linux" OR UNIX) AND NOT ANDROID)
   ocv_gen_config("${CMAKE_BINARY_DIR}/unix-install" "" "")
 endif()
 
 if(ANDROID)
   ocv_gen_config("${CMAKE_BINARY_DIR}/unix-install" "abi-${ANDROID_NDK_ABI_NAME}" "OpenCVConfig.root-ANDROID.cmake.in")
-  install(FILES "${OpenCV_SOURCE_DIR}/platforms/android/android.toolchain.cmake" DESTINATION "${OPENCV_CONFIG_INSTALL_PATH}" COMPONENT dev)
 endif()
 
 # --------------------------------------------------------------------------------------------
 #  Part 3/3: ${BIN_DIR}/win-install/OpenCVConfig.cmake  -> For use within binary installers/packages
 # --------------------------------------------------------------------------------------------
 if(WIN32)
-  if(CMAKE_HOST_SYSTEM_NAME MATCHES Windows)
-    if(BUILD_SHARED_LIBS)
-      set(_lib_suffix "lib")
-    else()
-      set(_lib_suffix "staticlib")
-    endif()
-    ocv_gen_config("${CMAKE_BINARY_DIR}/win-install" "${OpenCV_INSTALL_BINARIES_PREFIX}${_lib_suffix}" "OpenCVConfig.root-WIN32.cmake.in")
+  if(CMAKE_HOST_SYSTEM_NAME MATCHES Windows AND NOT OPENCV_SKIP_CMAKE_ROOT_CONFIG)
+    ocv_gen_config("${CMAKE_BINARY_DIR}/win-install"
+                   "${OPENCV_INSTALL_BINARIES_PREFIX}${OPENCV_INSTALL_BINARIES_SUFFIX}"
+                   "OpenCVConfig.root-WIN32.cmake.in")
   else()
     ocv_gen_config("${CMAKE_BINARY_DIR}/win-install" "" "")
   endif()

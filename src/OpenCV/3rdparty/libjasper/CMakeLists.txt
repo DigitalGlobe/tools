@@ -17,7 +17,7 @@ file(GLOB lib_ext_hdrs jasper/*.h)
 #         Define the library target:
 # ----------------------------------------------------------------------------------
 
-add_library(${JASPER_LIBRARY} STATIC ${lib_srcs} ${lib_hdrs} ${lib_ext_hdrs})
+add_library(${JASPER_LIBRARY} STATIC ${OPENCV_3RDPARTY_EXCLUDE_FROM_ALL} ${lib_srcs} ${lib_hdrs} ${lib_ext_hdrs})
 
 if(WIN32 AND NOT MINGW)
   add_definitions(-DJAS_WIN_MSVC_BUILD)
@@ -25,15 +25,12 @@ endif(WIN32 AND NOT MINGW)
 
 ocv_warnings_disable(CMAKE_C_FLAGS -Wno-implicit-function-declaration -Wno-uninitialized -Wmissing-prototypes
                                    -Wno-unused-but-set-parameter -Wmissing-declarations -Wunused -Wshadow
-                                   -Wsign-compare -Wstrict-overflow)
-ocv_warnings_disable(CMAKE_C_FLAGS -Wunused-parameter) # clang
+                                   -Wsign-compare -Wstrict-overflow -Wpointer-compare
+                                   -Wabsolute-value  # clang on Linux
+                                   -Wimplicit-fallthrough
+)
+ocv_warnings_disable(CMAKE_C_FLAGS -Wunused-parameter -Wstrict-prototypes) # clang
 ocv_warnings_disable(CMAKE_C_FLAGS /wd4013 /wd4018 /wd4101 /wd4244 /wd4267 /wd4715) # vs2005
-
-if(UNIX)
-  if(CMAKE_COMPILER_IS_GNUCXX OR CV_ICC)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC")
-  endif()
-endif()
 
 set_target_properties(${JASPER_LIBRARY}
   PROPERTIES
@@ -49,5 +46,7 @@ if(ENABLE_SOLUTION_FOLDERS)
 endif()
 
 if(NOT BUILD_SHARED_LIBS)
-  ocv_install_target(${JASPER_LIBRARY} EXPORT OpenCVModules ARCHIVE DESTINATION ${OPENCV_3P_LIB_INSTALL_PATH} COMPONENT dev)
+  ocv_install_target(${JASPER_LIBRARY} EXPORT OpenCVModules ARCHIVE DESTINATION ${OPENCV_3P_LIB_INSTALL_PATH} COMPONENT dev OPTIONAL)
 endif()
+
+ocv_install_3rdparty_licenses(jasper LICENSE README copyright)

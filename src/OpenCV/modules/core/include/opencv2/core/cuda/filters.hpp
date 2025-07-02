@@ -40,13 +40,14 @@
 //
 //M*/
 
-#ifndef __OPENCV_CUDA_FILTERS_HPP__
-#define __OPENCV_CUDA_FILTERS_HPP__
+#ifndef OPENCV_CUDA_FILTERS_HPP
+#define OPENCV_CUDA_FILTERS_HPP
 
 #include "saturate_cast.hpp"
 #include "vec_traits.hpp"
 #include "vec_math.hpp"
 #include "type_traits.hpp"
+#include "nppdefs.h"
 
 /** @file
  * @deprecated Use @ref cudev instead.
@@ -64,8 +65,8 @@ namespace cv { namespace cuda { namespace device
         explicit __host__ __device__ __forceinline__ PointFilter(const Ptr2D& src_, float fx = 0.f, float fy = 0.f)
         : src(src_)
         {
-            (void)fx;
-            (void)fy;
+            CV_UNUSED(fx);
+            CV_UNUSED(fy);
         }
 
         __device__ __forceinline__ elem_type operator ()(float y, float x) const
@@ -84,8 +85,8 @@ namespace cv { namespace cuda { namespace device
         explicit __host__ __device__ __forceinline__ LinearFilter(const Ptr2D& src_, float fx = 0.f, float fy = 0.f)
         : src(src_)
         {
-            (void)fx;
-            (void)fy;
+            CV_UNUSED(fx);
+            CV_UNUSED(fy);
         }
         __device__ __forceinline__ elem_type operator ()(float y, float x) const
         {
@@ -95,6 +96,12 @@ namespace cv { namespace cuda { namespace device
 
             const int x1 = __float2int_rd(x);
             const int y1 = __float2int_rd(y);
+            if (x1 <= NPP_MIN_32S || x1 >= NPP_MAX_32S || y1 <= NPP_MIN_32S || y1 >= NPP_MAX_32S)
+            {
+                elem_type src_reg = src(y1, x1);
+                out = out + src_reg * 1.0f;
+                return saturate_cast<elem_type>(out);
+            }
             const int x2 = x1 + 1;
             const int y2 = y1 + 1;
 
@@ -125,8 +132,8 @@ namespace cv { namespace cuda { namespace device
         explicit __host__ __device__ __forceinline__ CubicFilter(const Ptr2D& src_, float fx = 0.f, float fy = 0.f)
         : src(src_)
         {
-            (void)fx;
-            (void)fy;
+            CV_UNUSED(fx);
+            CV_UNUSED(fy);
         }
 
         static __device__ __forceinline__ float bicubicCoeff(float x_)
@@ -283,4 +290,4 @@ namespace cv { namespace cuda { namespace device
 
 //! @endcond
 
-#endif // __OPENCV_CUDA_FILTERS_HPP__
+#endif // OPENCV_CUDA_FILTERS_HPP

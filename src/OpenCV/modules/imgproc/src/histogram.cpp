@@ -41,11 +41,18 @@
 
 #include "precomp.hpp"
 #include "opencl_kernels_imgproc.hpp"
+#include "opencv2/core/hal/intrin.hpp"
+
+#include "opencv2/core/openvx/ovx_defs.hpp"
+
+#include "opencv2/core/utils/tls.hpp"
 
 namespace cv
 {
 
 ////////////////// Helper functions //////////////////////
+
+#define CV_CLAMP_INT(v, vmin, vmax) (v < vmin ? vmin : (vmax < v ? vmax : v))
 
 static const size_t OUT_OF_RANGE = (size_t)1 << (sizeof(size_t)*8 - 2);
 
@@ -68,20 +75,23 @@ calcHistLookupTables_8u( const Mat& hist, const SparseMat& shist,
             int sz = !issparse ? hist.size[i] : shist.size(i);
             size_t step = !issparse ? hist.step[i] : 1;
 
+            double v_lo = ranges ? ranges[i][0] : 0;
+            double v_hi = ranges ? ranges[i][1] : 256;
+
             for( j = low; j < high; j++ )
             {
                 int idx = cvFloor(j*a + b);
-                size_t written_idx;
-                if( (unsigned)idx < (unsigned)sz )
+                size_t written_idx = OUT_OF_RANGE;
+                if (j >= v_lo && j < v_hi)
+                {
+                    idx = CV_CLAMP_INT(idx, 0, sz - 1);
                     written_idx = idx*step;
-                else
-                    written_idx = OUT_OF_RANGE;
-
+                }
                 tab[i*(high - low) + j - low] = written_idx;
             }
         }
     }
-    else
+    else if (ranges)
     {
         for( i = 0; i < dims; i++ )
         {
@@ -108,6 +118,10 @@ calcHistLookupTables_8u( const Mat& hist, const SparseMat& shist,
                 }
             }
         }
+    }
+    else
+    {
+        CV_Error(Error::StsBadArg, "Either ranges, either uniform ranges should be provided");
     }
 }
 
@@ -163,15 +177,13 @@ static void histPrepareImages( const Mat* images, int nimages, const int* channe
         deltas[dims*2 + 1] = (int)(mask.step/mask.elemSize1());
     }
 
-#ifndef HAVE_TBB
     if( isContinuous )
     {
         imsize.width *= imsize.height;
         imsize.height = 1;
     }
-#endif
 
-    if( !ranges )
+    if( !ranges ) // implicit uniform ranges for 8U
     {
         CV_Assert( depth == CV_8U );
 
@@ -192,6 +204,10 @@ static void histPrepareImages( const Mat* images, int nimages, const int* channe
             double t = histSize[i]/(high - low);
             uniranges[i*2] = t;
             uniranges[i*2+1] = -t*low;
+#if 0  // This should be true by math, but it is not accurate numerically
+            CV_Assert(cvFloor(low * uniranges[i*2] + uniranges[i*2+1]) == 0);
+            CV_Assert((high * uniranges[i*2] + uniranges[i*2+1]) < histSize[i]);
+#endif
         }
     }
     else
@@ -207,544 +223,6 @@ static void histPrepareImages( const Mat* images, int nimages, const int* channe
 
 
 ////////////////////////////////// C A L C U L A T E    H I S T O G R A M ////////////////////////////////////
-#ifdef HAVE_TBB
-enum {one = 1, two, three}; // array elements number
-
-template<typename T>
-class calcHist1D_Invoker
-{
-public:
-    calcHist1D_Invoker( const std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
-                        Mat& hist, const double* _uniranges, int sz, int dims,
-                        Size& imageSize )
-        : mask_(_ptrs[dims]),
-          mstep_(_deltas[dims*2 + 1]),
-          imageWidth_(imageSize.width),
-          histogramSize_(hist.size()), histogramType_(hist.type()),
-          globalHistogram_((tbb::atomic<int>*)hist.data)
-    {
-        p_[0] = ((T**)&_ptrs[0])[0];
-        step_[0] = (&_deltas[0])[1];
-        d_[0] = (&_deltas[0])[0];
-        a_[0] = (&_uniranges[0])[0];
-        b_[0] = (&_uniranges[0])[1];
-        size_[0] = sz;
-    }
-
-    void operator()( const BlockedRange& range ) const
-    {
-        T* p0 = p_[0] + range.begin() * (step_[0] + imageWidth_*d_[0]);
-        uchar* mask = mask_ + range.begin()*mstep_;
-
-        for( int row = range.begin(); row < range.end(); row++, p0 += step_[0] )
-        {
-            if( !mask_ )
-            {
-                for( int x = 0; x < imageWidth_; x++, p0 += d_[0] )
-                {
-                    int idx = cvFloor(*p0*a_[0] + b_[0]);
-                    if( (unsigned)idx < (unsigned)size_[0] )
-                    {
-                        globalHistogram_[idx].fetch_and_add(1);
-                    }
-                }
-            }
-            else
-            {
-                for( int x = 0; x < imageWidth_; x++, p0 += d_[0] )
-                {
-                    if( mask[x] )
-                    {
-                        int idx = cvFloor(*p0*a_[0] + b_[0]);
-                        if( (unsigned)idx < (unsigned)size_[0] )
-                        {
-                            globalHistogram_[idx].fetch_and_add(1);
-                        }
-                    }
-                }
-                mask += mstep_;
-            }
-        }
-    }
-
-private:
-    calcHist1D_Invoker operator=(const calcHist1D_Invoker&);
-
-    T* p_[one];
-    uchar* mask_;
-    int step_[one];
-    int d_[one];
-    int mstep_;
-    double a_[one];
-    double b_[one];
-    int size_[one];
-    int imageWidth_;
-    Size histogramSize_;
-    int histogramType_;
-    tbb::atomic<int>* globalHistogram_;
-};
-
-template<typename T>
-class calcHist2D_Invoker
-{
-public:
-    calcHist2D_Invoker( const std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
-                        Mat& hist, const double* _uniranges, const int* size,
-                        int dims, Size& imageSize, size_t* hstep )
-        : mask_(_ptrs[dims]),
-          mstep_(_deltas[dims*2 + 1]),
-          imageWidth_(imageSize.width),
-          histogramSize_(hist.size()), histogramType_(hist.type()),
-          globalHistogram_(hist.data)
-    {
-        p_[0] = ((T**)&_ptrs[0])[0]; p_[1] = ((T**)&_ptrs[0])[1];
-        step_[0] = (&_deltas[0])[1]; step_[1] = (&_deltas[0])[3];
-        d_[0] = (&_deltas[0])[0];    d_[1] = (&_deltas[0])[2];
-        a_[0] = (&_uniranges[0])[0]; a_[1] = (&_uniranges[0])[2];
-        b_[0] = (&_uniranges[0])[1]; b_[1] = (&_uniranges[0])[3];
-        size_[0] = size[0];          size_[1] = size[1];
-        hstep_[0] = hstep[0];
-    }
-
-    void operator()(const BlockedRange& range) const
-    {
-        T* p0 = p_[0] + range.begin()*(step_[0] + imageWidth_*d_[0]);
-        T* p1 = p_[1] + range.begin()*(step_[1] + imageWidth_*d_[1]);
-        uchar* mask = mask_ + range.begin()*mstep_;
-
-        for( int row = range.begin(); row < range.end(); row++, p0 += step_[0], p1 += step_[1] )
-        {
-            if( !mask_ )
-            {
-                for( int x = 0; x < imageWidth_; x++, p0 += d_[0], p1 += d_[1] )
-                {
-                    int idx0 = cvFloor(*p0*a_[0] + b_[0]);
-                    int idx1 = cvFloor(*p1*a_[1] + b_[1]);
-                    if( (unsigned)idx0 < (unsigned)size_[0] && (unsigned)idx1 < (unsigned)size_[1] )
-                        ( (tbb::atomic<int>*)(globalHistogram_ + hstep_[0]*idx0) )[idx1].fetch_and_add(1);
-                }
-            }
-            else
-            {
-                for( int x = 0; x < imageWidth_; x++, p0 += d_[0], p1 += d_[1] )
-                {
-                    if( mask[x] )
-                    {
-                        int idx0 = cvFloor(*p0*a_[0] + b_[0]);
-                        int idx1 = cvFloor(*p1*a_[1] + b_[1]);
-                        if( (unsigned)idx0 < (unsigned)size_[0] && (unsigned)idx1 < (unsigned)size_[1] )
-                            ((tbb::atomic<int>*)(globalHistogram_ + hstep_[0]*idx0))[idx1].fetch_and_add(1);
-                    }
-                }
-                mask += mstep_;
-            }
-        }
-    }
-
-private:
-    calcHist2D_Invoker operator=(const calcHist2D_Invoker&);
-
-    T* p_[two];
-    uchar* mask_;
-    int step_[two];
-    int d_[two];
-    int mstep_;
-    double a_[two];
-    double b_[two];
-    int size_[two];
-    const int imageWidth_;
-    size_t hstep_[one];
-    Size histogramSize_;
-    int histogramType_;
-    uchar* globalHistogram_;
-};
-
-
-template<typename T>
-class calcHist3D_Invoker
-{
-public:
-    calcHist3D_Invoker( const std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
-                        Size imsize, Mat& hist, const double* uniranges, int _dims,
-                        size_t* hstep, int* size )
-        : mask_(_ptrs[_dims]),
-          mstep_(_deltas[_dims*2 + 1]),
-          imageWidth_(imsize.width),
-          globalHistogram_(hist.data)
-    {
-        p_[0] = ((T**)&_ptrs[0])[0]; p_[1] = ((T**)&_ptrs[0])[1]; p_[2] = ((T**)&_ptrs[0])[2];
-        step_[0] = (&_deltas[0])[1]; step_[1] = (&_deltas[0])[3]; step_[2] = (&_deltas[0])[5];
-        d_[0] = (&_deltas[0])[0];    d_[1] = (&_deltas[0])[2];    d_[2] = (&_deltas[0])[4];
-        a_[0] = uniranges[0];        a_[1] = uniranges[2];        a_[2] = uniranges[4];
-        b_[0] = uniranges[1];        b_[1] = uniranges[3];        b_[2] = uniranges[5];
-        size_[0] = size[0];          size_[1] = size[1];          size_[2] = size[2];
-        hstep_[0] = hstep[0];        hstep_[1] = hstep[1];
-    }
-
-    void operator()( const BlockedRange& range ) const
-    {
-        T* p0 = p_[0] + range.begin()*(imageWidth_*d_[0] + step_[0]);
-        T* p1 = p_[1] + range.begin()*(imageWidth_*d_[1] + step_[1]);
-        T* p2 = p_[2] + range.begin()*(imageWidth_*d_[2] + step_[2]);
-        uchar* mask = mask_ + range.begin()*mstep_;
-
-        for( int i = range.begin(); i < range.end(); i++, p0 += step_[0], p1 += step_[1], p2 += step_[2] )
-        {
-            if( !mask_ )
-            {
-                for( int x = 0; x < imageWidth_; x++, p0 += d_[0], p1 += d_[1], p2 += d_[2] )
-                {
-                    int idx0 = cvFloor(*p0*a_[0] + b_[0]);
-                    int idx1 = cvFloor(*p1*a_[1] + b_[1]);
-                    int idx2 = cvFloor(*p2*a_[2] + b_[2]);
-                    if( (unsigned)idx0 < (unsigned)size_[0] &&
-                            (unsigned)idx1 < (unsigned)size_[1] &&
-                            (unsigned)idx2 < (unsigned)size_[2] )
-                    {
-                        ( (tbb::atomic<int>*)(globalHistogram_ + hstep_[0]*idx0 + hstep_[1]*idx1) )[idx2].fetch_and_add(1);
-                    }
-                }
-            }
-            else
-            {
-                for( int x = 0; x < imageWidth_; x++, p0 += d_[0], p1 += d_[1], p2 += d_[2] )
-                {
-                    if( mask[x] )
-                    {
-                        int idx0 = cvFloor(*p0*a_[0] + b_[0]);
-                        int idx1 = cvFloor(*p1*a_[1] + b_[1]);
-                        int idx2 = cvFloor(*p2*a_[2] + b_[2]);
-                        if( (unsigned)idx0 < (unsigned)size_[0] &&
-                                (unsigned)idx1 < (unsigned)size_[1] &&
-                                (unsigned)idx2 < (unsigned)size_[2] )
-                        {
-                            ( (tbb::atomic<int>*)(globalHistogram_ + hstep_[0]*idx0 + hstep_[1]*idx1) )[idx2].fetch_and_add(1);
-                        }
-                    }
-                }
-                mask += mstep_;
-            }
-        }
-    }
-
-    static bool isFit( const Mat& histogram, const Size imageSize )
-    {
-        return ( imageSize.width * imageSize.height >= 320*240
-                 && histogram.total() >= 8*8*8 );
-    }
-
-private:
-    calcHist3D_Invoker operator=(const calcHist3D_Invoker&);
-
-    T* p_[three];
-    uchar* mask_;
-    int step_[three];
-    int d_[three];
-    const int mstep_;
-    double a_[three];
-    double b_[three];
-    int size_[three];
-    int imageWidth_;
-    size_t hstep_[two];
-    uchar* globalHistogram_;
-};
-
-class CalcHist1D_8uInvoker
-{
-public:
-    CalcHist1D_8uInvoker( const std::vector<uchar*>& ptrs, const std::vector<int>& deltas,
-                          Size imsize, Mat& hist, int dims, const std::vector<size_t>& tab,
-                          tbb::mutex* lock )
-        : mask_(ptrs[dims]),
-          mstep_(deltas[dims*2 + 1]),
-          imageWidth_(imsize.width),
-          imageSize_(imsize),
-          histSize_(hist.size()), histType_(hist.type()),
-          tab_((size_t*)&tab[0]),
-          histogramWriteLock_(lock),
-          globalHistogram_(hist.data)
-    {
-        p_[0] = (&ptrs[0])[0];
-        step_[0] = (&deltas[0])[1];
-        d_[0] = (&deltas[0])[0];
-    }
-
-    void operator()( const BlockedRange& range ) const
-    {
-        int localHistogram[256] = { 0, };
-        uchar* mask = mask_;
-        uchar* p0 = p_[0];
-        int x;
-        tbb::mutex::scoped_lock lock;
-
-        if( !mask_ )
-        {
-            int n = (imageWidth_ - 4) / 4 + 1;
-            int tail = imageWidth_ - n*4;
-
-            int xN = 4*n;
-            p0 += (xN*d_[0] + tail*d_[0] + step_[0]) * range.begin();
-        }
-        else
-        {
-            p0 += (imageWidth_*d_[0] + step_[0]) * range.begin();
-            mask += mstep_*range.begin();
-        }
-
-        for( int i = range.begin(); i < range.end(); i++, p0 += step_[0] )
-        {
-            if( !mask_ )
-            {
-                if( d_[0] == 1 )
-                {
-                    for( x = 0; x <= imageWidth_ - 4; x += 4 )
-                    {
-                        int t0 = p0[x], t1 = p0[x+1];
-                        localHistogram[t0]++; localHistogram[t1]++;
-                        t0 = p0[x+2]; t1 = p0[x+3];
-                        localHistogram[t0]++; localHistogram[t1]++;
-                    }
-                    p0 += x;
-                }
-                else
-                {
-                    for( x = 0; x <= imageWidth_ - 4; x += 4 )
-                    {
-                        int t0 = p0[0], t1 = p0[d_[0]];
-                        localHistogram[t0]++; localHistogram[t1]++;
-                        p0 += d_[0]*2;
-                        t0 = p0[0]; t1 = p0[d_[0]];
-                        localHistogram[t0]++; localHistogram[t1]++;
-                        p0 += d_[0]*2;
-                    }
-                }
-
-                for( ; x < imageWidth_; x++, p0 += d_[0] )
-                {
-                    localHistogram[*p0]++;
-                }
-            }
-            else
-            {
-                for( x = 0; x < imageWidth_; x++, p0 += d_[0] )
-                {
-                    if( mask[x] )
-                    {
-                        localHistogram[*p0]++;
-                    }
-                }
-                mask += mstep_;
-            }
-        }
-
-        lock.acquire(*histogramWriteLock_);
-        for(int i = 0; i < 256; i++ )
-        {
-            size_t hidx = tab_[i];
-            if( hidx < OUT_OF_RANGE )
-            {
-                *(int*)((globalHistogram_ + hidx)) += localHistogram[i];
-            }
-        }
-        lock.release();
-    }
-
-    static bool isFit( const Mat& histogram, const Size imageSize )
-    {
-        return ( histogram.total() >= 8
-                && imageSize.width * imageSize.height >= 160*120 );
-    }
-
-private:
-    uchar* p_[one];
-    uchar* mask_;
-    int mstep_;
-    int step_[one];
-    int d_[one];
-    int imageWidth_;
-    Size imageSize_;
-    Size histSize_;
-    int histType_;
-    size_t* tab_;
-    tbb::mutex* histogramWriteLock_;
-    uchar* globalHistogram_;
-};
-
-class CalcHist2D_8uInvoker
-{
-public:
-    CalcHist2D_8uInvoker( const std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
-                          Size imsize, Mat& hist, int dims, const std::vector<size_t>& _tab,
-                          tbb::mutex* lock )
-        : mask_(_ptrs[dims]),
-          mstep_(_deltas[dims*2 + 1]),
-          imageWidth_(imsize.width),
-          histSize_(hist.size()), histType_(hist.type()),
-          tab_((size_t*)&_tab[0]),
-          histogramWriteLock_(lock),
-          globalHistogram_(hist.data)
-    {
-        p_[0] = (uchar*)(&_ptrs[0])[0]; p_[1] = (uchar*)(&_ptrs[0])[1];
-        step_[0] = (&_deltas[0])[1];    step_[1] = (&_deltas[0])[3];
-        d_[0] = (&_deltas[0])[0];       d_[1] = (&_deltas[0])[2];
-    }
-
-    void operator()( const BlockedRange& range ) const
-    {
-        uchar* p0 = p_[0] + range.begin()*(step_[0] + imageWidth_*d_[0]);
-        uchar* p1 = p_[1] + range.begin()*(step_[1] + imageWidth_*d_[1]);
-        uchar* mask = mask_ + range.begin()*mstep_;
-
-        Mat localHist = Mat::zeros(histSize_, histType_);
-        uchar* localHistData = localHist.data;
-        tbb::mutex::scoped_lock lock;
-
-        for(int i = range.begin(); i < range.end(); i++, p0 += step_[0], p1 += step_[1])
-        {
-            if( !mask_ )
-            {
-                for( int x = 0; x < imageWidth_; x++, p0 += d_[0], p1 += d_[1] )
-                {
-                    size_t idx = tab_[*p0] + tab_[*p1 + 256];
-                    if( idx < OUT_OF_RANGE )
-                    {
-                        ++*(int*)(localHistData + idx);
-                    }
-                }
-            }
-            else
-            {
-                for( int x = 0; x < imageWidth_; x++, p0 += d_[0], p1 += d_[1] )
-                {
-                    size_t idx;
-                    if( mask[x] && (idx = tab_[*p0] + tab_[*p1 + 256]) < OUT_OF_RANGE )
-                    {
-                        ++*(int*)(localHistData + idx);
-                    }
-                }
-                mask += mstep_;
-            }
-        }
-
-        lock.acquire(*histogramWriteLock_);
-        for(int i = 0; i < histSize_.width*histSize_.height; i++)
-        {
-            ((int*)globalHistogram_)[i] += ((int*)localHistData)[i];
-        }
-        lock.release();
-    }
-
-    static bool isFit( const Mat& histogram, const Size imageSize )
-    {
-        return ( (histogram.total() > 4*4 &&  histogram.total() <= 116*116
-                  && imageSize.width * imageSize.height >= 320*240)
-                 || (histogram.total() > 116*116 && imageSize.width * imageSize.height >= 1280*720) );
-    }
-
-private:
-    uchar* p_[two];
-    uchar* mask_;
-    int step_[two];
-    int d_[two];
-    int mstep_;
-    int imageWidth_;
-    Size histSize_;
-    int histType_;
-    size_t* tab_;
-    tbb::mutex* histogramWriteLock_;
-    uchar* globalHistogram_;
-};
-
-class CalcHist3D_8uInvoker
-{
-public:
-    CalcHist3D_8uInvoker( const std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
-                          Size imsize, Mat& hist, int dims, const std::vector<size_t>& tab )
-        : mask_(_ptrs[dims]),
-          mstep_(_deltas[dims*2 + 1]),
-          histogramSize_(hist.size.p), histogramType_(hist.type()),
-          imageWidth_(imsize.width),
-          tab_((size_t*)&tab[0]),
-          globalHistogram_(hist.data)
-    {
-        p_[0] = (uchar*)(&_ptrs[0])[0]; p_[1] = (uchar*)(&_ptrs[0])[1]; p_[2] = (uchar*)(&_ptrs[0])[2];
-        step_[0] = (&_deltas[0])[1];    step_[1] = (&_deltas[0])[3];    step_[2] = (&_deltas[0])[5];
-        d_[0] = (&_deltas[0])[0];       d_[1] = (&_deltas[0])[2];       d_[2] = (&_deltas[0])[4];
-    }
-
-    void operator()( const BlockedRange& range ) const
-    {
-        uchar* p0 = p_[0] + range.begin()*(step_[0] + imageWidth_*d_[0]);
-        uchar* p1 = p_[1] + range.begin()*(step_[1] + imageWidth_*d_[1]);
-        uchar* p2 = p_[2] + range.begin()*(step_[2] + imageWidth_*d_[2]);
-        uchar* mask = mask_ + range.begin()*mstep_;
-
-        for(int i = range.begin(); i < range.end(); i++, p0 += step_[0], p1 += step_[1], p2 += step_[2] )
-        {
-            if( !mask_ )
-            {
-                for( int x = 0; x < imageWidth_; x++, p0 += d_[0], p1 += d_[1], p2 += d_[2] )
-                {
-                    size_t idx = tab_[*p0] + tab_[*p1 + 256] + tab_[*p2 + 512];
-                    if( idx < OUT_OF_RANGE )
-                    {
-                        ( *(tbb::atomic<int>*)(globalHistogram_ + idx) ).fetch_and_add(1);
-                    }
-                }
-            }
-            else
-            {
-                for( int x = 0; x < imageWidth_; x++, p0 += d_[0], p1 += d_[1], p2 += d_[2] )
-                {
-                    size_t idx;
-                    if( mask[x] && (idx = tab_[*p0] + tab_[*p1 + 256] + tab_[*p2 + 512]) < OUT_OF_RANGE )
-                    {
-                        (*(tbb::atomic<int>*)(globalHistogram_ + idx)).fetch_and_add(1);
-                    }
-                }
-                mask += mstep_;
-            }
-        }
-    }
-
-    static bool isFit( const Mat& histogram, const Size imageSize )
-    {
-        return ( histogram.total() >= 128*128*128
-                 && imageSize.width * imageSize.width >= 320*240 );
-    }
-
-private:
-    uchar* p_[three];
-    uchar* mask_;
-    int mstep_;
-    int step_[three];
-    int d_[three];
-    int* histogramSize_;
-    int histogramType_;
-    int imageWidth_;
-    size_t* tab_;
-    uchar* globalHistogram_;
-};
-
-static void
-callCalcHist2D_8u( std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
-                   Size imsize, Mat& hist, int dims,  std::vector<size_t>& _tab )
-{
-    int grainSize = imsize.height / tbb::task_scheduler_init::default_num_threads();
-    tbb::mutex histogramWriteLock;
-
-    CalcHist2D_8uInvoker body(_ptrs, _deltas, imsize, hist, dims, _tab, &histogramWriteLock);
-    parallel_for(BlockedRange(0, imsize.height, grainSize), body);
-}
-
-static void
-callCalcHist3D_8u( std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
-                   Size imsize, Mat& hist, int dims,  std::vector<size_t>& _tab )
-{
-    CalcHist3D_8uInvoker body(_ptrs, _deltas, imsize, hist, dims, _tab);
-    parallel_for(BlockedRange(0, imsize.height), body);
-}
-#endif
 
 template<typename T> static void
 calcHist_( std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
@@ -772,41 +250,43 @@ calcHist_( std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
 
         if( dims == 1 )
         {
-#ifdef HAVE_TBB
-            calcHist1D_Invoker<T> body(_ptrs, _deltas, hist, _uniranges, size[0], dims, imsize);
-            parallel_for(BlockedRange(0, imsize.height), body);
-#else
             double a = uniranges[0], b = uniranges[1];
             int sz = size[0], d0 = deltas[0], step0 = deltas[1];
             const T* p0 = (const T*)ptrs[0];
+
+            double v0_lo = _ranges[0][0];
+            double v0_hi = _ranges[0][1];
 
             for( ; imsize.height--; p0 += step0, mask += mstep )
             {
                 if( !mask )
                     for( x = 0; x < imsize.width; x++, p0 += d0 )
                     {
-                        int idx = cvFloor(*p0*a + b);
-                        if( (unsigned)idx < (unsigned)sz )
-                            ((int*)H)[idx]++;
+                        double v0 = (double)*p0;
+                        int idx = cvFloor(v0*a + b);
+                        if (v0 < v0_lo || v0 >= v0_hi)
+                            continue;
+                        idx = CV_CLAMP_INT(idx, 0, sz - 1);
+                        CV_DbgAssert((unsigned)idx < (unsigned)sz);
+                        ((int*)H)[idx]++;
                     }
                 else
                     for( x = 0; x < imsize.width; x++, p0 += d0 )
                         if( mask[x] )
                         {
-                            int idx = cvFloor(*p0*a + b);
-                            if( (unsigned)idx < (unsigned)sz )
-                                ((int*)H)[idx]++;
+                            double v0 = (double)*p0;
+                            int idx = cvFloor(v0*a + b);
+                            if (v0 < v0_lo || v0 >= v0_hi)
+                                continue;
+                            idx = CV_CLAMP_INT(idx, 0, sz - 1);
+                            CV_DbgAssert((unsigned)idx < (unsigned)sz);
+                            ((int*)H)[idx]++;
                         }
             }
-#endif //HAVE_TBB
             return;
         }
         else if( dims == 2 )
         {
-#ifdef HAVE_TBB
-            calcHist2D_Invoker<T> body(_ptrs, _deltas, hist, _uniranges, size, dims, imsize, hstep);
-            parallel_for(BlockedRange(0, imsize.height), body);
-#else
             double a0 = uniranges[0], b0 = uniranges[1], a1 = uniranges[2], b1 = uniranges[3];
             int sz0 = size[0], sz1 = size[1];
             int d0 = deltas[0], step0 = deltas[1],
@@ -815,39 +295,51 @@ calcHist_( std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
             const T* p0 = (const T*)ptrs[0];
             const T* p1 = (const T*)ptrs[1];
 
+            double v0_lo = _ranges[0][0];
+            double v0_hi = _ranges[0][1];
+            double v1_lo = _ranges[1][0];
+            double v1_hi = _ranges[1][1];
+
             for( ; imsize.height--; p0 += step0, p1 += step1, mask += mstep )
             {
                 if( !mask )
                     for( x = 0; x < imsize.width; x++, p0 += d0, p1 += d1 )
                     {
-                        int idx0 = cvFloor(*p0*a0 + b0);
-                        int idx1 = cvFloor(*p1*a1 + b1);
-                        if( (unsigned)idx0 < (unsigned)sz0 && (unsigned)idx1 < (unsigned)sz1 )
-                            ((int*)(H + hstep0*idx0))[idx1]++;
+                        double v0 = (double)*p0;
+                        double v1 = (double)*p1;
+                        int idx0 = cvFloor(v0*a0 + b0);
+                        int idx1 = cvFloor(v1*a1 + b1);
+                        if (v0 < v0_lo || v0 >= v0_hi)
+                            continue;
+                        if (v1 < v1_lo || v1 >= v1_hi)
+                            continue;
+                        idx0 = CV_CLAMP_INT(idx0, 0, sz0 - 1);
+                        idx1 = CV_CLAMP_INT(idx1, 0, sz1 - 1);
+                        CV_DbgAssert((unsigned)idx0 < (unsigned)sz0 && (unsigned)idx1 < (unsigned)sz1);
+                        ((int*)(H + hstep0*idx0))[idx1]++;
                     }
                 else
                     for( x = 0; x < imsize.width; x++, p0 += d0, p1 += d1 )
                         if( mask[x] )
                         {
-                            int idx0 = cvFloor(*p0*a0 + b0);
-                            int idx1 = cvFloor(*p1*a1 + b1);
-                            if( (unsigned)idx0 < (unsigned)sz0 && (unsigned)idx1 < (unsigned)sz1 )
-                                ((int*)(H + hstep0*idx0))[idx1]++;
+                            double v0 = (double)*p0;
+                            double v1 = (double)*p1;
+                            int idx0 = cvFloor(v0*a0 + b0);
+                            int idx1 = cvFloor(v1*a1 + b1);
+                            if (v0 < v0_lo || v0 >= v0_hi)
+                                continue;
+                            if (v1 < v1_lo || v1 >= v1_hi)
+                                continue;
+                            idx0 = CV_CLAMP_INT(idx0, 0, sz0 - 1);
+                            idx1 = CV_CLAMP_INT(idx1, 0, sz1 - 1);
+                            CV_DbgAssert((unsigned)idx0 < (unsigned)sz0 && (unsigned)idx1 < (unsigned)sz1);
+                            ((int*)(H + hstep0*idx0))[idx1]++;
                         }
             }
-#endif //HAVE_TBB
             return;
         }
         else if( dims == 3 )
         {
-#ifdef HAVE_TBB
-            if( calcHist3D_Invoker<T>::isFit(hist, imsize) )
-            {
-                calcHist3D_Invoker<T> body(_ptrs, _deltas, imsize, hist, uniranges, dims, hstep, size);
-                parallel_for(BlockedRange(0, imsize.height), body);
-                return;
-            }
-#endif
             double a0 = uniranges[0], b0 = uniranges[1],
                    a1 = uniranges[2], b1 = uniranges[3],
                    a2 = uniranges[4], b2 = uniranges[5];
@@ -860,30 +352,63 @@ calcHist_( std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
             const T* p1 = (const T*)ptrs[1];
             const T* p2 = (const T*)ptrs[2];
 
+            double v0_lo = _ranges[0][0];
+            double v0_hi = _ranges[0][1];
+            double v1_lo = _ranges[1][0];
+            double v1_hi = _ranges[1][1];
+            double v2_lo = _ranges[2][0];
+            double v2_hi = _ranges[2][1];
+
             for( ; imsize.height--; p0 += step0, p1 += step1, p2 += step2, mask += mstep )
             {
                 if( !mask )
                     for( x = 0; x < imsize.width; x++, p0 += d0, p1 += d1, p2 += d2 )
                     {
-                        int idx0 = cvFloor(*p0*a0 + b0);
-                        int idx1 = cvFloor(*p1*a1 + b1);
-                        int idx2 = cvFloor(*p2*a2 + b2);
-                        if( (unsigned)idx0 < (unsigned)sz0 &&
+                        double v0 = (double)*p0;
+                        double v1 = (double)*p1;
+                        double v2 = (double)*p2;
+                        int idx0 = cvFloor(v0*a0 + b0);
+                        int idx1 = cvFloor(v1*a1 + b1);
+                        int idx2 = cvFloor(v2*a2 + b2);
+                        if (v0 < v0_lo || v0 >= v0_hi)
+                            continue;
+                        if (v1 < v1_lo || v1 >= v1_hi)
+                            continue;
+                        if (v2 < v2_lo || v2 >= v2_hi)
+                            continue;
+                        idx0 = CV_CLAMP_INT(idx0, 0, sz0 - 1);
+                        idx1 = CV_CLAMP_INT(idx1, 0, sz1 - 1);
+                        idx2 = CV_CLAMP_INT(idx2, 0, sz2 - 1);
+                        CV_DbgAssert(
+                            (unsigned)idx0 < (unsigned)sz0 &&
                             (unsigned)idx1 < (unsigned)sz1 &&
-                            (unsigned)idx2 < (unsigned)sz2 )
-                            ((int*)(H + hstep0*idx0 + hstep1*idx1))[idx2]++;
+                            (unsigned)idx2 < (unsigned)sz2);
+                        ((int*)(H + hstep0*idx0 + hstep1*idx1))[idx2]++;
                     }
                 else
                     for( x = 0; x < imsize.width; x++, p0 += d0, p1 += d1, p2 += d2 )
                         if( mask[x] )
                         {
-                            int idx0 = cvFloor(*p0*a0 + b0);
-                            int idx1 = cvFloor(*p1*a1 + b1);
-                            int idx2 = cvFloor(*p2*a2 + b2);
-                            if( (unsigned)idx0 < (unsigned)sz0 &&
-                               (unsigned)idx1 < (unsigned)sz1 &&
-                               (unsigned)idx2 < (unsigned)sz2 )
-                                ((int*)(H + hstep0*idx0 + hstep1*idx1))[idx2]++;
+                            double v0 = (double)*p0;
+                            double v1 = (double)*p1;
+                            double v2 = (double)*p2;
+                            int idx0 = cvFloor(v0*a0 + b0);
+                            int idx1 = cvFloor(v1*a1 + b1);
+                            int idx2 = cvFloor(v2*a2 + b2);
+                            if (v0 < v0_lo || v0 >= v0_hi)
+                                continue;
+                            if (v1 < v1_lo || v1 >= v1_hi)
+                                continue;
+                            if (v2 < v2_lo || v2 >= v2_hi)
+                                continue;
+                            idx0 = CV_CLAMP_INT(idx0, 0, sz0 - 1);
+                            idx1 = CV_CLAMP_INT(idx1, 0, sz1 - 1);
+                            idx2 = CV_CLAMP_INT(idx2, 0, sz2 - 1);
+                            CV_DbgAssert(
+                                (unsigned)idx0 < (unsigned)sz0 &&
+                                (unsigned)idx1 < (unsigned)sz1 &&
+                                (unsigned)idx2 < (unsigned)sz2);
+                            ((int*)(H + hstep0*idx0 + hstep1*idx1))[idx2]++;
                         }
             }
         }
@@ -897,9 +422,14 @@ calcHist_( std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
                         uchar* Hptr = H;
                         for( i = 0; i < dims; i++ )
                         {
-                            int idx = cvFloor(*ptrs[i]*uniranges[i*2] + uniranges[i*2+1]);
-                            if( (unsigned)idx >= (unsigned)size[i] )
+                            double v_lo = _ranges[i][0];
+                            double v_hi = _ranges[i][1];
+                            double v = *ptrs[i];
+                            if (v < v_lo || v >= v_hi)
                                 break;
+                            int idx = cvFloor(v*uniranges[i*2] + uniranges[i*2+1]);
+                            idx = CV_CLAMP_INT(idx, 0, size[i] - 1);
+                            CV_DbgAssert((unsigned)idx < (unsigned)size[i]);
                             ptrs[i] += deltas[i*2];
                             Hptr += idx*hstep[i];
                         }
@@ -918,9 +448,14 @@ calcHist_( std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
                         if( mask[x] )
                             for( ; i < dims; i++ )
                             {
-                                int idx = cvFloor(*ptrs[i]*uniranges[i*2] + uniranges[i*2+1]);
-                                if( (unsigned)idx >= (unsigned)size[i] )
+                                double v_lo = _ranges[i][0];
+                                double v_hi = _ranges[i][1];
+                                double v = *ptrs[i];
+                                if (v < v_lo || v >= v_hi)
                                     break;
+                                int idx = cvFloor(v*uniranges[i*2] + uniranges[i*2+1]);
+                                idx = CV_CLAMP_INT(idx, 0, size[i] - 1);
+                                CV_DbgAssert((unsigned)idx < (unsigned)size[i]);
                                 ptrs[i] += deltas[i*2];
                                 Hptr += idx*hstep[i];
                             }
@@ -936,7 +471,7 @@ calcHist_( std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
             }
         }
     }
-    else
+    else if (_ranges)
     {
         // non-uniform histogram
         const float* ranges[CV_MAX_DIM];
@@ -978,6 +513,10 @@ calcHist_( std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
                 ptrs[i] += deltas[i*2 + 1];
         }
     }
+    else
+    {
+        CV_Error(Error::StsBadArg, "Either ranges, either uniform ranges should be provided");
+    }
 }
 
 
@@ -999,18 +538,6 @@ calcHist_8u( std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
 
     if( dims == 1 )
     {
-#ifdef HAVE_TBB
-        if( CalcHist1D_8uInvoker::isFit(hist, imsize) )
-        {
-            int treadsNumber = tbb::task_scheduler_init::default_num_threads();
-            int grainSize = imsize.height/treadsNumber;
-            tbb::mutex histogramWriteLock;
-
-            CalcHist1D_8uInvoker body(_ptrs, _deltas, imsize, hist, dims, _tab, &histogramWriteLock);
-            parallel_for(BlockedRange(0, imsize.height, grainSize), body);
-            return;
-        }
-#endif
         int d0 = deltas[0], step0 = deltas[1];
         int matH[256] = { 0, };
         const uchar* p0 = (const uchar*)ptrs[0];
@@ -1059,13 +586,6 @@ calcHist_8u( std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
     }
     else if( dims == 2 )
     {
-#ifdef HAVE_TBB
-        if( CalcHist2D_8uInvoker::isFit(hist, imsize) )
-        {
-            callCalcHist2D_8u(_ptrs, _deltas, imsize, hist, dims, _tab);
-            return;
-        }
-#endif
         int d0 = deltas[0], step0 = deltas[1],
             d1 = deltas[2], step1 = deltas[3];
         const uchar* p0 = (const uchar*)ptrs[0];
@@ -1091,13 +611,6 @@ calcHist_8u( std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
     }
     else if( dims == 3 )
     {
-#ifdef HAVE_TBB
-        if( CalcHist3D_8uInvoker::isFit(hist, imsize) )
-        {
-            callCalcHist3D_8u(_ptrs, _deltas, imsize, hist, dims, _tab);
-            return;
-        }
-#endif
         int d0 = deltas[0], step0 = deltas[1],
             d1 = deltas[2], step1 = deltas[3],
             d2 = deltas[4], step2 = deltas[5];
@@ -1176,133 +689,259 @@ calcHist_8u( std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
 }
 
 #ifdef HAVE_IPP
-class IPPCalcHistInvoker :
-    public ParallelLoopBody
+
+typedef IppStatus(CV_STDCALL * IppiHistogram_C1)(const void* pSrc, int srcStep,
+    IppiSize roiSize, Ipp32u* pHist, const IppiHistogramSpec* pSpec, Ipp8u* pBuffer);
+
+static IppiHistogram_C1 getIppiHistogramFunction_C1(int type)
+{
+    IppiHistogram_C1 ippFunction =
+        (type == CV_8UC1) ? (IppiHistogram_C1)ippiHistogram_8u_C1R :
+        (type == CV_16UC1) ? (IppiHistogram_C1)ippiHistogram_16u_C1R :
+        (type == CV_32FC1) ? (IppiHistogram_C1)ippiHistogram_32f_C1R :
+        NULL;
+
+    return ippFunction;
+}
+
+class ipp_calcHistParallelTLS
 {
 public:
-    IPPCalcHistInvoker(const Mat & _src, Mat & _hist, AutoBuffer<Ipp32f> & _levels, Ipp32s _histSize, Ipp32f _low, Ipp32f _high, bool * _ok) :
-        ParallelLoopBody(), src(&_src), hist(&_hist), levels(&_levels), histSize(_histSize), low(_low), high(_high), ok(_ok)
+    ipp_calcHistParallelTLS() {}
+
+    IppAutoBuffer<IppiHistogramSpec> spec;
+    IppAutoBuffer<Ipp8u>  buffer;
+    IppAutoBuffer<Ipp32u> thist;
+};
+
+class ipp_calcHistParallel: public ParallelLoopBody
+{
+public:
+    ipp_calcHistParallel(const Mat &src, Mat &hist, Ipp32s histSize, const float *ranges, bool uniform, bool &ok):
+        ParallelLoopBody(), m_src(src), m_hist(hist), m_ok(ok)
     {
-        *ok = true;
+        ok = true;
+
+        m_uniform        = uniform;
+        m_ranges         = ranges;
+        m_histSize       = histSize;
+        m_type           = ippiGetDataType(src.type());
+        m_levelsNum      = histSize+1;
+        ippiHistogram_C1 = getIppiHistogramFunction_C1(src.type());
+        m_fullRoi    = ippiSize(src.size());
+        m_bufferSize = 0;
+        m_specSize   = 0;
+        if(!ippiHistogram_C1)
+        {
+            ok = false;
+            return;
+        }
+
+        if(ippiHistogramGetBufferSize(m_type, m_fullRoi, &m_levelsNum, 1, 1, &m_specSize, &m_bufferSize) < 0)
+        {
+            ok = false;
+            return;
+        }
+
+        hist.setTo(0);
     }
 
-    virtual void operator() (const Range & range) const
+    virtual void operator() (const Range & range) const CV_OVERRIDE
     {
-        Ipp32s levelNum = histSize + 1;
-        Mat phist(hist->size(), hist->type(), Scalar::all(0));
-#if IPP_VERSION_X100 >= 900
-        IppiSize roi = {src->cols, range.end - range.start};
-        int bufferSize = 0;
-        int specSize = 0;
-        IppiHistogramSpec *pSpec = NULL;
-        Ipp8u *pBuffer = NULL;
+        CV_INSTRUMENT_REGION_IPP();
 
-        if(ippiHistogramGetBufferSize(ipp8u, roi, &levelNum, 1, 1, &specSize, &bufferSize) < 0)
+        if(!m_ok)
+            return;
+
+        ipp_calcHistParallelTLS *pTls = m_tls.get();
+
+        IppiSize roi = {m_src.cols, range.end - range.start };
+        bool     mtLoop = false;
+        if(m_fullRoi.height != roi.height)
+            mtLoop = true;
+
+        if(!pTls->spec)
         {
-            *ok = false;
+            pTls->spec.allocate(m_specSize);
+            if(!pTls->spec.get())
+            {
+                m_ok = false;
+                return;
+            }
+
+            pTls->buffer.allocate(m_bufferSize);
+            if(!pTls->buffer.get() && m_bufferSize)
+            {
+                m_ok = false;
+                return;
+            }
+
+            if(m_uniform)
+            {
+                if(ippiHistogramUniformInit(m_type, (Ipp32f*)&m_ranges[0], (Ipp32f*)&m_ranges[1], (Ipp32s*)&m_levelsNum, 1, pTls->spec) < 0)
+                {
+                    m_ok = false;
+                    return;
+                }
+            }
+            else
+            {
+                if(ippiHistogramInit(m_type, (const Ipp32f**)&m_ranges, (Ipp32s*)&m_levelsNum, 1, pTls->spec) < 0)
+                {
+                    m_ok = false;
+                    return;
+                }
+            }
+
+            pTls->thist.allocate(m_histSize*sizeof(Ipp32u));
+        }
+
+        if(CV_INSTRUMENT_FUN_IPP(ippiHistogram_C1, m_src.ptr(range.start), (int)m_src.step, roi, pTls->thist, pTls->spec, pTls->buffer) < 0)
+        {
+            m_ok = false;
             return;
         }
 
-        pBuffer = (Ipp8u*)ippMalloc(bufferSize);
-        if(!pBuffer && bufferSize)
+        if(mtLoop)
         {
-            *ok = false;
-            return;
+            for(int i = 0; i < m_histSize; i++)
+                CV_XADD((int*)(m_hist.ptr(i)), *(int*)((Ipp32u*)pTls->thist + i));
         }
-
-        pSpec = (IppiHistogramSpec*)ippMalloc(specSize);
-        if(!pSpec && specSize)
-        {
-            if(pBuffer) ippFree(pBuffer);
-            *ok = false;
-            return;
-        }
-
-        if(ippiHistogramUniformInit(ipp8u, (Ipp32f*)&low, (Ipp32f*)&high, (Ipp32s*)&levelNum, 1, pSpec) < 0)
-        {
-            if(pSpec)   ippFree(pSpec);
-            if(pBuffer) ippFree(pBuffer);
-            *ok = false;
-            return;
-        }
-
-        IppStatus status = ippiHistogram_8u_C1R(src->ptr(range.start), (int)src->step, ippiSize(src->cols, range.end - range.start),
-            phist.ptr<Ipp32u>(), pSpec, pBuffer);
-
-        if(pSpec)   ippFree(pSpec);
-        if(pBuffer) ippFree(pBuffer);
-#else
-        CV_SUPPRESS_DEPRECATED_START
-        IppStatus status = ippiHistogramEven_8u_C1R(src->ptr(range.start), (int)src->step, ippiSize(src->cols, range.end - range.start),
-            phist.ptr<Ipp32s>(), (Ipp32s*)(Ipp32f*)*levels, levelNum, (Ipp32s)low, (Ipp32s)high);
-        CV_SUPPRESS_DEPRECATED_END
-#endif
-        if(status < 0)
-        {
-            *ok = false;
-            return;
-        }
-
-        for (int i = 0; i < histSize; ++i)
-            CV_XADD((int *)(hist->data + i * hist->step), *(int *)(phist.data + i * phist.step));
+        else
+            ippiCopy_32s_C1R((Ipp32s*)pTls->thist.get(), sizeof(Ipp32u), (Ipp32s*)m_hist.ptr(), (int)m_hist.step, ippiSize(1, m_histSize));
     }
 
 private:
-    const Mat * src;
-    Mat * hist;
-    AutoBuffer<Ipp32f> * levels;
-    Ipp32s histSize;
-    Ipp32f low, high;
-    bool * ok;
+    const Mat      &m_src;
+    Mat            &m_hist;
+    Ipp32s          m_histSize;
+    const float    *m_ranges;
+    bool            m_uniform;
 
-    const IPPCalcHistInvoker & operator = (const IPPCalcHistInvoker & );
+    IppiHistogram_C1    ippiHistogram_C1;
+    IppiSize            m_fullRoi;
+    IppDataType         m_type;
+    Ipp32s              m_levelsNum;
+    int                 m_bufferSize;
+    int                 m_specSize;
+
+    mutable Mutex                    m_syncMutex;
+    TLSData<ipp_calcHistParallelTLS> m_tls;
+
+    volatile bool &m_ok;
+    const ipp_calcHistParallel & operator = (const ipp_calcHistParallel & );
 };
 
 #endif
 
 }
 
-#if defined(HAVE_IPP)
+#ifdef HAVE_OPENVX
 namespace cv
 {
-static bool ipp_calchist(const Mat* images, int nimages, const int* channels,
-                   InputArray _mask, OutputArray _hist, int dims, const int* histSize,
-                   const float** ranges, bool uniform, bool accumulate )
-{
-    Mat mask = _mask.getMat();
-
-    CV_Assert(dims > 0 && histSize);
-
-    _hist.create(dims, histSize, CV_32F);
-    Mat hist = _hist.getMat(), ihist = hist;
-    ihist.flags = (ihist.flags & ~CV_MAT_TYPE_MASK)|CV_32S;
-
-    {
-        if (nimages == 1 && images[0].type() == CV_8UC1 && dims == 1 && channels &&
-                channels[0] == 0 && mask.empty() && images[0].dims <= 2 &&
-                !accumulate && uniform)
-        {
-            ihist.setTo(Scalar::all(0));
-            AutoBuffer<Ipp32f> levels(histSize[0]);
-
-            bool ok = true;
-            const Mat & src = images[0];
-            int nstripes = std::min<int>(8, static_cast<int>(src.total() / (1 << 16)));
-#ifdef HAVE_CONCURRENCY
-            nstripes = 1;
-#endif
-            IPPCalcHistInvoker invoker(src, ihist, levels, histSize[0], ranges[0][0], ranges[0][1], &ok);
-            Range range(0, src.rows);
-            parallel_for_(range, invoker, nstripes);
-
-            if (ok)
-            {
-                ihist.convertTo(hist, CV_32F);
-                return true;
-            }
-        }
+    namespace ovx {
+        template <> inline bool skipSmallImages<VX_KERNEL_HISTOGRAM>(int w, int h) { return w*h < 2048 * 1536; }
     }
-    return false;
+    static bool openvx_calchist(const Mat& image, OutputArray _hist, const int histSize,
+        const float* _range)
+    {
+        vx_int32 offset = (vx_int32)(_range[0]);
+        vx_uint32 range = (vx_uint32)(_range[1] - _range[0]);
+        if (float(offset) != _range[0] || float(range) != (_range[1] - _range[0]))
+            return false;
+
+        size_t total_size = image.total();
+        int rows = image.dims > 1 ? image.size[0] : 1, cols = rows ? (int)(total_size / rows) : 0;
+        if (image.dims > 2 && !(image.isContinuous() && cols > 0 && (size_t)rows*cols == total_size))
+            return false;
+
+        try
+        {
+            ivx::Context ctx = ovx::getOpenVXContext();
+#if VX_VERSION <= VX_VERSION_1_0
+            if (ctx.vendorID() == VX_ID_KHRONOS && (range % histSize))
+                return false;
+#endif
+
+            ivx::Image
+                img = ivx::Image::createFromHandle(ctx, VX_DF_IMAGE_U8,
+                    ivx::Image::createAddressing(cols, rows, 1, (vx_int32)(image.step[0])), image.data);
+
+            ivx::Distribution vxHist = ivx::Distribution::create(ctx, histSize, offset, range);
+            ivx::IVX_CHECK_STATUS(vxuHistogram(ctx, img, vxHist));
+
+            _hist.create(1, &histSize, CV_32F);
+            Mat hist = _hist.getMat(), ihist = hist;
+            ihist.flags = (ihist.flags & ~CV_MAT_TYPE_MASK) | CV_32S;
+            vxHist.copyTo(ihist);
+            ihist.convertTo(hist, CV_32F);
+
+#ifdef VX_VERSION_1_1
+            img.swapHandle();
+#endif
+        }
+        catch (const ivx::RuntimeError & e)
+        {
+            VX_DbgThrow(e.what());
+        }
+        catch (const ivx::WrapperError & e)
+        {
+            VX_DbgThrow(e.what());
+        }
+
+        return true;
+    }
+}
+#endif
+
+#ifdef HAVE_IPP
+#define IPP_HISTOGRAM_PARALLEL 1
+namespace cv
+{
+static bool ipp_calchist(const Mat &image, Mat &hist, int histSize, const float** ranges, bool uniform, bool accumulate)
+{
+    CV_INSTRUMENT_REGION_IPP();
+
+#if IPP_VERSION_X100 < 201801
+    // No SSE42 optimization for uniform 32f
+    if(uniform && image.depth() == CV_32F && cv::ipp::getIppTopFeatures() == ippCPUID_SSE42)
+        return false;
+#endif
+
+    // IPP_DISABLE_HISTOGRAM - https://github.com/opencv/opencv/issues/11544
+    // and https://github.com/opencv/opencv/issues/21595
+    if ((uniform && (ranges[0][1] - ranges[0][0]) != histSize) || abs(ranges[0][0]) != cvFloor(ranges[0][0]))
+        return false;
+
+    Mat ihist = hist;
+    if(accumulate)
+        ihist.create(1, &histSize, CV_32S);
+
+    bool  ok      = true;
+    int   threads = ippiSuggestThreadsNum(image, (1+((double)ihist.total()/image.total()))*2);
+    Range range(0, image.rows);
+    ipp_calcHistParallel invoker(image, ihist, histSize, ranges[0], uniform, ok);
+    if(!ok)
+        return false;
+
+    if(IPP_HISTOGRAM_PARALLEL && threads > 1)
+        parallel_for_(range, invoker, threads*2);
+    else
+        invoker(range);
+
+    if(ok)
+    {
+        if(accumulate)
+        {
+            IppiSize histRoi = ippiSize(1, histSize);
+            IppAutoBuffer<Ipp32f> fhist(histSize*sizeof(Ipp32f));
+            CV_INSTRUMENT_FUN_IPP(ippiConvert_32s32f_C1R, (Ipp32s*)ihist.ptr(), (int)ihist.step, (Ipp32f*)fhist, sizeof(Ipp32f), histRoi);
+            CV_INSTRUMENT_FUN_IPP(ippiAdd_32f_C1IR, (Ipp32f*)fhist, sizeof(Ipp32f), (Ipp32f*)hist.ptr(), (int)hist.step, histRoi);
+        }
+        else
+            CV_INSTRUMENT_FUN_IPP(ippiConvert_32s32f_C1R, (Ipp32s*)ihist.ptr(), (int)ihist.step, (Ipp32f*)hist.ptr(), (int)hist.step, ippiSize(1, histSize));
+    }
+    return ok;
 }
 }
 #endif
@@ -1311,13 +950,17 @@ void cv::calcHist( const Mat* images, int nimages, const int* channels,
                    InputArray _mask, OutputArray _hist, int dims, const int* histSize,
                    const float** ranges, bool uniform, bool accumulate )
 {
+    CV_INSTRUMENT_REGION();
 
-    CV_IPP_RUN(nimages == 1 && images[0].type() == CV_8UC1 && dims == 1 && channels &&
-                channels[0] == 0 && _mask.getMat().empty() && images[0].dims <= 2 &&
-                !accumulate && uniform,
-                ipp_calchist(images, nimages, channels,
-                   _mask, _hist, dims, histSize,
-                   ranges, uniform, accumulate));
+    CV_Assert(images && nimages > 0);
+
+    CV_OVX_RUN(
+        images && histSize &&
+        nimages == 1 && images[0].type() == CV_8UC1 && dims == 1 && _mask.getMat().empty() &&
+        (!channels || channels[0] == 0) && !accumulate && uniform &&
+        ranges && ranges[0] &&
+        !ovx::skipSmallImages<VX_KERNEL_HISTOGRAM>(images[0].cols, images[0].rows),
+        openvx_calchist(images[0], _hist, histSize[0], ranges[0]))
 
     Mat mask = _mask.getMat();
 
@@ -1325,10 +968,25 @@ void cv::calcHist( const Mat* images, int nimages, const int* channels,
 
     const uchar* const histdata = _hist.getMat().ptr();
     _hist.create(dims, histSize, CV_32F);
-    Mat hist = _hist.getMat(), ihist = hist;
+    Mat hist = _hist.getMat();
+
+    if(histdata != hist.data)
+        accumulate = false;
+
+    CV_IPP_RUN(
+        nimages == 1 && dims == 1 && channels && channels[0] == 0
+            && _mask.empty() && images[0].dims <= 2 && ranges && ranges[0],
+        ipp_calchist(images[0], hist, histSize[0], ranges, uniform, accumulate));
+
+    if (nimages == 1 && dims == 1 && channels && channels[0] == 0 && _mask.empty() && images[0].dims <= 2 && ranges && ranges[0]) {
+        CALL_HAL(calcHist, cv_hal_calcHist, images[0].data, images[0].step, images[0].type(), images[0].cols, images[0].rows,
+                                            hist.ptr<float>(), histSize[0], ranges, uniform, accumulate);
+    }
+
+    Mat ihist = hist;
     ihist.flags = (ihist.flags & ~CV_MAT_TYPE_MASK)|CV_32S;
 
-    if( !accumulate || histdata != hist.data )
+    if(!accumulate)
         hist = Scalar(0.);
     else
         hist.convertTo(ihist, CV_32S);
@@ -1352,7 +1010,7 @@ void cv::calcHist( const Mat* images, int nimages, const int* channels,
     else if( depth == CV_32F )
         calcHist_<float>(ptrs, deltas, imsize, ihist, dims, ranges, _uniranges, uniform );
     else
-        CV_Error(CV_StsUnsupportedFormat, "");
+        CV_Error(cv::Error::StsUnsupportedFormat, "");
 
     ihist.convertTo(hist, CV_32F);
 }
@@ -1402,7 +1060,7 @@ calcSparseHist_( std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
                 ptrs[i] += deltas[i*2 + 1];
         }
     }
-    else
+    else if (_ranges)
     {
         // non-uniform histogram
         const float* ranges[CV_MAX_DIM];
@@ -1441,6 +1099,10 @@ calcSparseHist_( std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
             for( i = 0; i < dims; i++ )
                 ptrs[i] += deltas[i*2 + 1];
         }
+    }
+    else
+    {
+        CV_Error(Error::StsBadArg, "Either ranges, either uniform ranges should be provided");
     }
 }
 
@@ -1501,6 +1163,7 @@ static void calcHist( const Mat* images, int nimages, const int* channels,
         SparseMatIterator it = hist.begin();
         for( i = 0, N = hist.nzcount(); i < N; i++, ++it )
         {
+            CV_Assert(it.ptr != NULL);
             Cv32suf* val = (Cv32suf*)it.ptr;
             val->i = cvRound(val->f);
         }
@@ -1524,13 +1187,14 @@ static void calcHist( const Mat* images, int nimages, const int* channels,
     else if( depth == CV_32F )
         calcSparseHist_<float>(ptrs, deltas, imsize, hist, dims, ranges, _uniranges, uniform );
     else
-        CV_Error(CV_StsUnsupportedFormat, "");
+        CV_Error(cv::Error::StsUnsupportedFormat, "");
 
     if( !keepInt )
     {
         SparseMatIterator it = hist.begin();
         for( i = 0, N = hist.nzcount(); i < N; i++, ++it )
         {
+            CV_Assert(it.ptr != NULL);
             Cv32suf* val = (Cv32suf*)it.ptr;
             val->f = (float)val->i;
         }
@@ -1554,7 +1218,7 @@ static bool ocl_calcHist1(InputArray _src, OutputArray _hist, int ddepth = CV_32
     int kercn = dev.isAMD() && use16 ? 16 : std::min(4, ocl::predictOptimalVectorWidth(_src));
 
     ocl::Kernel k1("calculate_histogram", ocl::imgproc::histogram_oclsrc,
-                   format("-D BINS=%d -D HISTS_COUNT=%d -D WGS=%d -D kercn=%d -D T=%s%s",
+                   format("-D BINS=%d -D HISTS_COUNT=%d -D WGS=%zu -D kercn=%d -D T=%s%s",
                           BINS, compunits, wgs, kercn,
                           kercn == 4 ? "int" : ocl::typeToStr(CV_8UC(kercn)),
                           _src.isContinuous() ? " -D HAVE_SRC_CONT" : ""));
@@ -1572,10 +1236,11 @@ static bool ocl_calcHist1(InputArray _src, OutputArray _hist, int ddepth = CV_32
     if (!k1.run(1, &globalsize, &wgs, false))
         return false;
 
-    char cvt[40];
+    wgs = std::min<size_t>(ocl::Device::getDefault().maxWorkGroupSize(), BINS);
+    char cvt[50];
     ocl::Kernel k2("merge_histogram", ocl::imgproc::histogram_oclsrc,
                    format("-D BINS=%d -D HISTS_COUNT=%d -D WGS=%d -D convertToHT=%s -D HT=%s",
-                          BINS, compunits, (int)wgs, ocl::convertTypeStr(CV_32S, ddepth, 1, cvt),
+                          BINS, compunits, (int)wgs, ocl::convertTypeStr(CV_32S, ddepth, 1, cvt, sizeof(cvt)),
                           ocl::typeToStr(ddepth)));
     if (k2.empty())
         return false;
@@ -1602,6 +1267,10 @@ void cv::calcHist( const Mat* images, int nimages, const int* channels,
                InputArray _mask, SparseMat& hist, int dims, const int* histSize,
                const float** ranges, bool uniform, bool accumulate )
 {
+    CV_INSTRUMENT_REGION();
+
+    CV_Assert(images && nimages > 0);
+
     Mat mask = _mask.getMat();
     calcHist( images, nimages, channels, mask, hist, dims, histSize,
               ranges, uniform, accumulate, false );
@@ -1614,10 +1283,12 @@ void cv::calcHist( InputArrayOfArrays images, const std::vector<int>& channels,
                    const std::vector<float>& ranges,
                    bool accumulate )
 {
+    CV_INSTRUMENT_REGION();
+
     CV_OCL_RUN(images.total() == 1 && channels.size() == 1 && images.channels(0) == 1 &&
                channels[0] == 0 && images.isUMatVector() && mask.empty() && !accumulate &&
                histSize.size() == 1 && histSize[0] == BINS && ranges.size() == 2 &&
-               ranges[0] == 0 && ranges[1] == BINS,
+               ranges[0] == 0 && ranges[1] == static_cast<float>(BINS),
                ocl_calcHist(images, hist))
 
     int i, dims = (int)histSize.size(), rsz = (int)ranges.size(), csz = (int)channels.size();
@@ -1768,7 +1439,7 @@ calcBackProj_( std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
             }
         }
     }
-    else
+    else if (_ranges)
     {
         // non-uniform histogram
         const float* ranges[CV_MAX_DIM];
@@ -1809,6 +1480,10 @@ calcBackProj_( std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas,
             for( i = 0; i < dims; i++ )
                 ptrs[i] += deltas[i*2 + 1];
         }
+    }
+    else
+    {
+        CV_Error(Error::StsBadArg, "Either ranges, either uniform ranges should be provided");
     }
 }
 
@@ -1941,6 +1616,10 @@ void cv::calcBackProject( const Mat* images, int nimages, const int* channels,
                           InputArray _hist, OutputArray _backProject,
                           const float** ranges, double scale, bool uniform )
 {
+    CV_INSTRUMENT_REGION();
+
+    CV_Assert(images && nimages > 0);
+
     Mat hist = _hist.getMat();
     std::vector<uchar*> ptrs;
     std::vector<int> deltas;
@@ -1963,7 +1642,7 @@ void cv::calcBackProject( const Mat* images, int nimages, const int* channels,
     else if( depth == CV_32F )
         calcBackProj_<float, float>(ptrs, deltas, imsize, hist, dims, ranges, _uniranges, (float)scale, uniform );
     else
-        CV_Error(CV_StsUnsupportedFormat, "");
+        CV_Error(cv::Error::StsUnsupportedFormat, "");
 }
 
 
@@ -2012,7 +1691,7 @@ calcSparseBackProj_( std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas
                 ptrs[i] += deltas[i*2 + 1];
         }
     }
-    else
+    else if (_ranges)
     {
         // non-uniform histogram
         const float* ranges[CV_MAX_DIM];
@@ -2051,6 +1730,10 @@ calcSparseBackProj_( std::vector<uchar*>& _ptrs, const std::vector<int>& _deltas
             for( i = 0; i < dims; i++ )
                 ptrs[i] += deltas[i*2 + 1];
         }
+    }
+    else
+    {
+        CV_Error(Error::StsBadArg, "Either ranges, either uniform ranges should be provided");
     }
 }
 
@@ -2104,6 +1787,10 @@ void cv::calcBackProject( const Mat* images, int nimages, const int* channels,
                           const SparseMat& hist, OutputArray _backProject,
                           const float** ranges, double scale, bool uniform )
 {
+    CV_INSTRUMENT_REGION();
+
+    CV_Assert(images && nimages > 0);
+
     std::vector<uchar*> ptrs;
     std::vector<int> deltas;
     std::vector<double> uniranges;
@@ -2117,7 +1804,6 @@ void cv::calcBackProject( const Mat* images, int nimages, const int* channels,
                        dims, hist.hdr->size, ranges,
                        uniform, ptrs, deltas, imsize, uniranges );
     const double* _uniranges = uniform ? &uniranges[0] : 0;
-
     int depth = images[0].depth();
     if( depth == CV_8U )
         calcSparseBackProj_8u(ptrs, deltas, imsize, hist, dims, ranges,
@@ -2129,7 +1815,7 @@ void cv::calcBackProject( const Mat* images, int nimages, const int* channels,
         calcSparseBackProj_<float, float>(ptrs, deltas, imsize, hist, dims, ranges,
                                           _uniranges, (float)scale, uniform );
     else
-        CV_Error(CV_StsUnsupportedFormat, "");
+        CV_Error(cv::Error::StsUnsupportedFormat, "");
 }
 
 #ifdef HAVE_OPENCL
@@ -2283,16 +1969,19 @@ void cv::calcBackProject( InputArrayOfArrays images, const std::vector<int>& cha
                           const std::vector<float>& ranges,
                           double scale )
 {
+    CV_INSTRUMENT_REGION();
+    if (hist.dims() <= 2)
+    {
 #ifdef HAVE_OPENCL
-    Size histSize = hist.size();
-    bool _1D = histSize.height == 1 || histSize.width == 1;
-    size_t histdims = _1D ? 1 : hist.dims();
+        Size histSize = hist.size();
+        bool _1D = histSize.height == 1 || histSize.width == 1;
+        size_t histdims = _1D ? 1 : hist.dims();
 #endif
 
-    CV_OCL_RUN(dst.isUMat() && hist.type() == CV_32FC1 &&
-               histdims <= 2 && ranges.size() == histdims * 2 && histdims == channels.size(),
-               ocl_calcBackProject(images, channels, hist, dst, ranges, (float)scale, histdims))
-
+        CV_OCL_RUN(dst.isUMat() && hist.type() == CV_32FC1 &&
+            histdims <= 2 && ranges.size() == histdims * 2 && histdims == channels.size(),
+            ocl_calcBackProject(images, channels, hist, dst, ranges, (float)scale, histdims))
+    }
     Mat H0 = hist.getMat(), H;
     int hcn = H0.channels();
 
@@ -2335,12 +2024,14 @@ void cv::calcBackProject( InputArrayOfArrays images, const std::vector<int>& cha
 
 double cv::compareHist( InputArray _H1, InputArray _H2, int method )
 {
+    CV_INSTRUMENT_REGION();
+
     Mat H1 = _H1.getMat(), H2 = _H2.getMat();
     const Mat* arrays[] = {&H1, &H2, 0};
     Mat planes[2];
     NAryMatIterator it(arrays, planes);
     double result = 0;
-    int j, len = (int)it.size;
+    int j;
 
     CV_Assert( H1.type() == H2.type() && H1.depth() == CV_32F );
 
@@ -2348,19 +2039,55 @@ double cv::compareHist( InputArray _H1, InputArray _H2, int method )
 
     CV_Assert( it.planes[0].isContinuous() && it.planes[1].isContinuous() );
 
-#if CV_SSE2
-    bool haveSIMD = checkHardwareSupport(CV_CPU_SSE2);
-#endif
-
     for( size_t i = 0; i < it.nplanes; i++, ++it )
     {
         const float* h1 = it.planes[0].ptr<float>();
         const float* h2 = it.planes[1].ptr<float>();
-        len = it.planes[0].rows*it.planes[0].cols*H1.channels();
+        const int len = it.planes[0].rows*it.planes[0].cols*H1.channels();
         j = 0;
 
         if( (method == CV_COMP_CHISQR) || (method == CV_COMP_CHISQR_ALT))
         {
+#if CV_SIMD_64F || CV_SIMD_SCALABLE_64F
+            v_float64 v_eps = vx_setall_f64(DBL_EPSILON);
+            v_float64 v_one = vx_setall_f64(1.f);
+            v_float64 v_zero = vx_setzero_f64();
+            v_float64 v_res = vx_setzero_f64();
+            for ( ; j <= len - VTraits<v_float32>::vlanes(); j += VTraits<v_float32>::vlanes())
+            {
+                v_float32 v_h1 = vx_load(h1 + j), v_h2 = vx_load(h2 + j);
+                v_float64 v_h1_l = v_cvt_f64(v_h1), v_h1_h = v_cvt_f64_high(v_h1);
+                v_float64 v_h2_l = v_cvt_f64(v_h2), v_h2_h = v_cvt_f64_high(v_h2);
+
+                v_float64 v_a_l, v_a_h;
+                v_a_l = v_sub(v_h1_l, v_h2_l);
+                v_a_h = v_sub(v_h1_h, v_h2_h);
+
+                v_float64 v_b_l, v_b_h;
+                if (method == CV_COMP_CHISQR)
+                {
+                    v_b_l = v_h1_l;
+                    v_b_h = v_h1_h;
+                }
+                else
+                {
+                    v_b_l = v_add(v_h1_l, v_h2_l);
+                    v_b_h = v_add(v_h1_h, v_h2_h);
+                }
+
+                // low part
+                auto v_res_l = v_mul(v_mul(v_a_l, v_a_l), v_div(v_one, v_b_l));
+                auto mask = v_gt(v_abs(v_b_l), v_eps);
+                v_res_l = v_select(mask, v_res_l, v_zero);
+                v_res = v_add(v_res, v_res_l);
+                // high part
+                auto v_res_h = v_mul(v_mul(v_a_h, v_a_h), v_div(v_one, v_b_h));
+                mask = v_gt(v_abs(v_b_h), v_eps);
+                v_res_h = v_select(mask, v_res_h, v_zero);
+                v_res = v_add(v_res, v_res_h);
+            }
+            result += v_reduce_sum(v_res);
+#endif
             for( ; j < len; j++ )
             {
                 double a = h1[j] - h2[j];
@@ -2371,50 +2098,63 @@ double cv::compareHist( InputArray _H1, InputArray _H2, int method )
         }
         else if( method == CV_COMP_CORREL )
         {
-            #if CV_SSE2
-            if (haveSIMD)
+#if (CV_SIMD_64F || CV_SIMD_SCALABLE_64F)
+            v_float64 v_s1 = vx_setzero_f64();
+            v_float64 v_s2 = vx_setzero_f64();
+            v_float64 v_s11 = vx_setzero_f64();
+            v_float64 v_s12 = vx_setzero_f64();
+            v_float64 v_s22 = vx_setzero_f64();
+            for ( ; j <= len - VTraits<v_float32>::vlanes(); j += VTraits<v_float32>::vlanes())
             {
-                __m128d v_s1 = _mm_setzero_pd(), v_s2 = v_s1;
-                __m128d v_s11 = v_s1, v_s22 = v_s1, v_s12 = v_s1;
+                v_float32 v_a = vx_load(h1 + j);
+                v_float32 v_b = vx_load(h2 + j);
 
-                for ( ; j <= len - 4; j += 4)
-                {
-                    __m128 v_a = _mm_loadu_ps(h1 + j);
-                    __m128 v_b = _mm_loadu_ps(h2 + j);
+                // 0-1
+                v_float64 v_ad = v_cvt_f64(v_a);
+                v_float64 v_bd = v_cvt_f64(v_b);
+                v_s12 = v_muladd(v_ad, v_bd, v_s12);
+                v_s11 = v_muladd(v_ad, v_ad, v_s11);
+                v_s22 = v_muladd(v_bd, v_bd, v_s22);
+                v_s1 = v_add(v_s1, v_ad);
+                v_s2 = v_add(v_s2, v_bd);
 
-                    // 0-1
-                    __m128d v_ad = _mm_cvtps_pd(v_a);
-                    __m128d v_bd = _mm_cvtps_pd(v_b);
-                    v_s12 = _mm_add_pd(v_s12, _mm_mul_pd(v_ad, v_bd));
-                    v_s11 = _mm_add_pd(v_s11, _mm_mul_pd(v_ad, v_ad));
-                    v_s22 = _mm_add_pd(v_s22, _mm_mul_pd(v_bd, v_bd));
-                    v_s1 = _mm_add_pd(v_s1, v_ad);
-                    v_s2 = _mm_add_pd(v_s2, v_bd);
-
-                    // 2-3
-                    v_ad = _mm_cvtps_pd(_mm_castsi128_ps(_mm_srli_si128(_mm_castps_si128(v_a), 8)));
-                    v_bd = _mm_cvtps_pd(_mm_castsi128_ps(_mm_srli_si128(_mm_castps_si128(v_b), 8)));
-                    v_s12 = _mm_add_pd(v_s12, _mm_mul_pd(v_ad, v_bd));
-                    v_s11 = _mm_add_pd(v_s11, _mm_mul_pd(v_ad, v_ad));
-                    v_s22 = _mm_add_pd(v_s22, _mm_mul_pd(v_bd, v_bd));
-                    v_s1 = _mm_add_pd(v_s1, v_ad);
-                    v_s2 = _mm_add_pd(v_s2, v_bd);
-                }
-
-                double CV_DECL_ALIGNED(16) ar[10];
-                _mm_store_pd(ar, v_s12);
-                _mm_store_pd(ar + 2, v_s11);
-                _mm_store_pd(ar + 4, v_s22);
-                _mm_store_pd(ar + 6, v_s1);
-                _mm_store_pd(ar + 8, v_s2);
-
-                s12 += ar[0] + ar[1];
-                s11 += ar[2] + ar[3];
-                s22 += ar[4] + ar[5];
-                s1 += ar[6] + ar[7];
-                s2 += ar[8] + ar[9];
+                // 2-3
+                v_ad = v_cvt_f64_high(v_a);
+                v_bd = v_cvt_f64_high(v_b);
+                v_s12 = v_muladd(v_ad, v_bd, v_s12);
+                v_s11 = v_muladd(v_ad, v_ad, v_s11);
+                v_s22 = v_muladd(v_bd, v_bd, v_s22);
+                v_s1 = v_add(v_s1, v_ad);
+                v_s2 = v_add(v_s2, v_bd);
             }
-            #endif
+            s12 += v_reduce_sum(v_s12);
+            s11 += v_reduce_sum(v_s11);
+            s22 += v_reduce_sum(v_s22);
+            s1 += v_reduce_sum(v_s1);
+            s2 += v_reduce_sum(v_s2);
+#elif CV_SIMD && 0 //Disable vectorization for CV_COMP_CORREL if f64 is unsupported due to low precision
+            v_float32 v_s1 = vx_setzero_f32();
+            v_float32 v_s2 = vx_setzero_f32();
+            v_float32 v_s11 = vx_setzero_f32();
+            v_float32 v_s12 = vx_setzero_f32();
+            v_float32 v_s22 = vx_setzero_f32();
+            for (; j <= len - VTraits<v_float32>::vlanes(); j += VTraits<v_float32>::vlanes())
+            {
+                v_float32 v_a = vx_load(h1 + j);
+                v_float32 v_b = vx_load(h2 + j);
+
+                v_s12 = v_muladd(v_a, v_b, v_s12);
+                v_s11 = v_muladd(v_a, v_a, v_s11);
+                v_s22 = v_muladd(v_b, v_b, v_s22);
+                v_s1 += v_a;
+                v_s2 += v_b;
+            }
+            s12 += v_reduce_sum(v_s12);
+            s11 += v_reduce_sum(v_s11);
+            s22 += v_reduce_sum(v_s22);
+            s1 += v_reduce_sum(v_s1);
+            s2 += v_reduce_sum(v_s2);
+#endif
             for( ; j < len; j++ )
             {
                 double a = h1[j];
@@ -2429,67 +2169,69 @@ double cv::compareHist( InputArray _H1, InputArray _H2, int method )
         }
         else if( method == CV_COMP_INTERSECT )
         {
-            #if CV_NEON
-            float32x4_t v_result = vdupq_n_f32(0.0f);
-            for( ; j <= len - 4; j += 4 )
-                v_result = vaddq_f32(v_result, vminq_f32(vld1q_f32(h1 + j), vld1q_f32(h2 + j)));
-            float CV_DECL_ALIGNED(16) ar[4];
-            vst1q_f32(ar, v_result);
-            result += ar[0] + ar[1] + ar[2] + ar[3];
-            #elif CV_SSE2
-            if (haveSIMD)
+#if (CV_SIMD_64F || CV_SIMD_SCALABLE_64F)
+            v_float64 v_result = vx_setzero_f64();
+            for ( ; j <= len - VTraits<v_float32>::vlanes(); j += VTraits<v_float32>::vlanes())
             {
-                __m128d v_result = _mm_setzero_pd();
-                for ( ; j <= len - 4; j += 4)
-                {
-                    __m128 v_src = _mm_min_ps(_mm_loadu_ps(h1 + j),
-                                              _mm_loadu_ps(h2 + j));
-                    v_result = _mm_add_pd(v_result, _mm_cvtps_pd(v_src));
-                    v_src = _mm_castsi128_ps(_mm_srli_si128(_mm_castps_si128(v_src), 8));
-                    v_result = _mm_add_pd(v_result, _mm_cvtps_pd(v_src));
-                }
-
-                double CV_DECL_ALIGNED(16) ar[2];
-                _mm_store_pd(ar, v_result);
-                result += ar[0] + ar[1];
+                v_float32 v_src = v_min(vx_load(h1 + j), vx_load(h2 + j));
+                v_result = v_add(v_result, v_add(v_cvt_f64(v_src), v_cvt_f64_high(v_src)));
             }
-            #endif
+            result += v_reduce_sum(v_result);
+#elif CV_SIMD && 0 // Disable vectorization for CV_COMP_INTERSECT if f64 is unsupported due to low precision
+                   // See https://github.com/opencv/opencv/issues/24757
+            v_float32 v_result = vx_setzero_f32();
+            for (; j <= len - VTraits<v_float32>::vlanes(); j += VTraits<v_float32>::vlanes())
+            {
+                v_float32 v_src = v_min(vx_load(h1 + j), vx_load(h2 + j));
+                v_result = v_add(v_result, v_src);
+            }
+            result += v_reduce_sum(v_result);
+#endif
             for( ; j < len; j++ )
                 result += std::min(h1[j], h2[j]);
         }
         else if( method == CV_COMP_BHATTACHARYYA )
         {
-            #if CV_SSE2
-            if (haveSIMD)
+#if (CV_SIMD_64F || CV_SIMD_SCALABLE_64F)
+            v_float64 v_s1 = vx_setzero_f64();
+            v_float64 v_s2 = vx_setzero_f64();
+            v_float64 v_result = vx_setzero_f64();
+            for ( ; j <= len - VTraits<v_float32>::vlanes(); j += VTraits<v_float32>::vlanes())
             {
-                __m128d v_s1 = _mm_setzero_pd(), v_s2 = v_s1, v_result = v_s1;
-                for ( ; j <= len - 4; j += 4)
-                {
-                    __m128 v_a = _mm_loadu_ps(h1 + j);
-                    __m128 v_b = _mm_loadu_ps(h2 + j);
+                v_float32 v_a = vx_load(h1 + j);
+                v_float32 v_b = vx_load(h2 + j);
 
-                    __m128d v_ad = _mm_cvtps_pd(v_a);
-                    __m128d v_bd = _mm_cvtps_pd(v_b);
-                    v_s1 = _mm_add_pd(v_s1, v_ad);
-                    v_s2 = _mm_add_pd(v_s2, v_bd);
-                    v_result = _mm_add_pd(v_result, _mm_sqrt_pd(_mm_mul_pd(v_ad, v_bd)));
+                v_float64 v_ad = v_cvt_f64(v_a);
+                v_float64 v_bd = v_cvt_f64(v_b);
+                v_s1 = v_add(v_s1, v_ad);
+                v_s2 = v_add(v_s2, v_bd);
+                v_result = v_add(v_result, v_sqrt(v_mul(v_ad, v_bd)));
 
-                    v_ad = _mm_cvtps_pd(_mm_castsi128_ps(_mm_srli_si128(_mm_castps_si128(v_a), 8)));
-                    v_bd = _mm_cvtps_pd(_mm_castsi128_ps(_mm_srli_si128(_mm_castps_si128(v_b), 8)));
-                    v_s1 = _mm_add_pd(v_s1, v_ad);
-                    v_s2 = _mm_add_pd(v_s2, v_bd);
-                    v_result = _mm_add_pd(v_result, _mm_sqrt_pd(_mm_mul_pd(v_ad, v_bd)));
-                }
-
-                double CV_DECL_ALIGNED(16) ar[6];
-                _mm_store_pd(ar, v_s1);
-                _mm_store_pd(ar + 2, v_s2);
-                _mm_store_pd(ar + 4, v_result);
-                s1 += ar[0] + ar[1];
-                s2 += ar[2] + ar[3];
-                result += ar[4] + ar[5];
+                v_ad = v_cvt_f64_high(v_a);
+                v_bd = v_cvt_f64_high(v_b);
+                v_s1 = v_add(v_s1, v_ad);
+                v_s2 = v_add(v_s2, v_bd);
+                v_result = v_add(v_result, v_sqrt(v_mul(v_ad, v_bd)));
             }
-            #endif
+            s1 += v_reduce_sum(v_s1);
+            s2 += v_reduce_sum(v_s2);
+            result += v_reduce_sum(v_result);
+#elif CV_SIMD && 0 //Disable vectorization for CV_COMP_BHATTACHARYYA if f64 is unsupported due to low precision
+            v_float32 v_s1 = vx_setzero_f32();
+            v_float32 v_s2 = vx_setzero_f32();
+            v_float32 v_result = vx_setzero_f32();
+            for (; j <= len - VTraits<v_float32>::vlanes(); j += VTraits<v_float32>::vlanes())
+            {
+                v_float32 v_a = vx_load(h1 + j);
+                v_float32 v_b = vx_load(h2 + j);
+                v_s1 += v_a;
+                v_s2 += v_b;
+                v_result += v_sqrt(v_a * v_b);
+            }
+            s1 += v_reduce_sum(v_s1);
+            s2 += v_reduce_sum(v_s2);
+            result += v_reduce_sum(v_result);
+#endif
             for( ; j < len; j++ )
             {
                 double a = h1[j];
@@ -2515,7 +2257,7 @@ double cv::compareHist( InputArray _H1, InputArray _H2, int method )
             }
         }
         else
-            CV_Error( CV_StsBadArg, "Unknown comparison method" );
+            CV_Error( cv::Error::StsBadArg, "Unknown comparison method" );
     }
 
     if( method == CV_COMP_CHISQR_ALT )
@@ -2541,6 +2283,8 @@ double cv::compareHist( InputArray _H1, InputArray _H2, int method )
 
 double cv::compareHist( const SparseMat& H1, const SparseMat& H2, int method )
 {
+    CV_INSTRUMENT_REGION();
+
     double result = 0;
     int i, dims = H1.dims();
 
@@ -2553,12 +2297,14 @@ double cv::compareHist( const SparseMat& H1, const SparseMat& H2, int method )
         std::swap(PH1, PH2);
 
     SparseMatConstIterator it = PH1->begin();
+
     int N1 = (int)PH1->nzcount(), N2 = (int)PH2->nzcount();
 
     if( (method == CV_COMP_CHISQR) || (method == CV_COMP_CHISQR_ALT) )
     {
         for( i = 0; i < N1; i++, ++it )
         {
+            CV_Assert(it.ptr != NULL);
             float v1 = it.value<float>();
             const SparseMat::Node* node = it.node();
             float v2 = PH2->value<float>(node->idx, (size_t*)&node->hashval);
@@ -2574,6 +2320,7 @@ double cv::compareHist( const SparseMat& H1, const SparseMat& H2, int method )
 
         for( i = 0; i < N1; i++, ++it )
         {
+            CV_Assert(it.ptr != NULL);
             double v1 = it.value<float>();
             const SparseMat::Node* node = it.node();
             s12 += v1*PH2->value<float>(node->idx, (size_t*)&node->hashval);
@@ -2584,6 +2331,7 @@ double cv::compareHist( const SparseMat& H1, const SparseMat& H2, int method )
         it = PH2->begin();
         for( i = 0; i < N2; i++, ++it )
         {
+            CV_Assert(it.ptr != NULL);
             double v2 = it.value<float>();
             s2 += v2;
             s22 += v2*v2;
@@ -2601,6 +2349,7 @@ double cv::compareHist( const SparseMat& H1, const SparseMat& H2, int method )
     {
         for( i = 0; i < N1; i++, ++it )
         {
+            CV_Assert(it.ptr != NULL);
             float v1 = it.value<float>();
             const SparseMat::Node* node = it.node();
             float v2 = PH2->value<float>(node->idx, (size_t*)&node->hashval);
@@ -2614,6 +2363,7 @@ double cv::compareHist( const SparseMat& H1, const SparseMat& H2, int method )
 
         for( i = 0; i < N1; i++, ++it )
         {
+            CV_Assert(it.ptr != NULL);
             double v1 = it.value<float>();
             const SparseMat::Node* node = it.node();
             double v2 = PH2->value<float>(node->idx, (size_t*)&node->hashval);
@@ -2623,7 +2373,10 @@ double cv::compareHist( const SparseMat& H1, const SparseMat& H2, int method )
 
         it = PH2->begin();
         for( i = 0; i < N2; i++, ++it )
+        {
+            CV_Assert(it.ptr != NULL);
             s2 += it.value<float>();
+        }
 
         s1 *= s2;
         s1 = fabs(s1) > FLT_EPSILON ? 1./std::sqrt(s1) : 1.;
@@ -2633,6 +2386,7 @@ double cv::compareHist( const SparseMat& H1, const SparseMat& H2, int method )
     {
         for( i = 0; i < N1; i++, ++it )
         {
+            CV_Assert(it.ptr != NULL);
             double v1 = it.value<float>();
             const SparseMat::Node* node = it.node();
             double v2 = PH2->value<float>(node->idx, (size_t*)&node->hashval);
@@ -2642,7 +2396,7 @@ double cv::compareHist( const SparseMat& H1, const SparseMat& H2, int method )
         }
     }
     else
-        CV_Error( CV_StsBadArg, "Unknown comparison method" );
+        CV_Error( cv::Error::StsBadArg, "Unknown comparison method" );
 
     if( method == CV_COMP_CHISQR_ALT )
         result *= 2;
@@ -2679,7 +2433,7 @@ cvCreateHist( int dims, int *sizes, CvHistType type, float** ranges, int uniform
     else if( type == CV_HIST_SPARSE )
         hist->bins = cvCreateSparseMat( dims, sizes, CV_HIST_DEFAULT_TYPE );
     else
-        CV_Error( CV_StsBadArg, "Invalid histogram type" );
+        CV_Error( cv::Error::StsBadArg, "Invalid histogram type" );
 
     if( ranges )
         cvSetHistBinRanges( hist, ranges, uniform );
@@ -2694,10 +2448,10 @@ cvMakeHistHeaderForArray( int dims, int *sizes, CvHistogram *hist,
                           float *data, float **ranges, int uniform )
 {
     if( !hist )
-        CV_Error( CV_StsNullPtr, "Null histogram header pointer" );
+        CV_Error( cv::Error::StsNullPtr, "Null histogram header pointer" );
 
     if( !data )
-        CV_Error( CV_StsNullPtr, "Null data pointer" );
+        CV_Error( cv::Error::StsNullPtr, "Null data pointer" );
 
     hist->thresh2 = 0;
     hist->type = CV_HIST_MAGIC_VAL;
@@ -2706,7 +2460,7 @@ cvMakeHistHeaderForArray( int dims, int *sizes, CvHistogram *hist,
     if( ranges )
     {
         if( !uniform )
-            CV_Error( CV_StsBadArg, "Only uniform bin ranges can be used here "
+            CV_Error( cv::Error::StsBadArg, "Only uniform bin ranges can be used here "
                                     "(to avoid memory allocation)" );
         cvSetHistBinRanges( hist, ranges, uniform );
     }
@@ -2719,14 +2473,14 @@ CV_IMPL void
 cvReleaseHist( CvHistogram **hist )
 {
     if( !hist )
-        CV_Error( CV_StsNullPtr, "" );
+        CV_Error( cv::Error::StsNullPtr, "" );
 
     if( *hist )
     {
         CvHistogram* temp = *hist;
 
         if( !CV_IS_HIST(temp))
-            CV_Error( CV_StsBadArg, "Invalid histogram header" );
+            CV_Error( cv::Error::StsBadArg, "Invalid histogram header" );
         *hist = 0;
 
         if( CV_IS_SPARSE_HIST( temp ))
@@ -2747,7 +2501,7 @@ CV_IMPL void
 cvClearHist( CvHistogram *hist )
 {
     if( !CV_IS_HIST(hist) )
-        CV_Error( CV_StsBadArg, "Invalid histogram header" );
+        CV_Error( cv::Error::StsBadArg, "Invalid histogram header" );
     cvZero( hist->bins );
 }
 
@@ -2757,13 +2511,13 @@ CV_IMPL void
 cvThreshHist( CvHistogram* hist, double thresh )
 {
     if( !CV_IS_HIST(hist) )
-        CV_Error( CV_StsBadArg, "Invalid histogram header" );
+        CV_Error( cv::Error::StsBadArg, "Invalid histogram header" );
 
     if( !CV_IS_SPARSE_MAT(hist->bins) )
     {
         CvMat mat;
         cvGetMat( hist->bins, &mat, 0, 1 );
-        cvThreshold( &mat, &mat, thresh, 0, CV_THRESH_TOZERO );
+        cvThreshold( &mat, &mat, thresh, 0, cv::THRESH_TOZERO );
     }
     else
     {
@@ -2789,7 +2543,7 @@ cvNormalizeHist( CvHistogram* hist, double factor )
     double sum = 0;
 
     if( !CV_IS_HIST(hist) )
-        CV_Error( CV_StsBadArg, "Invalid histogram header" );
+        CV_Error( cv::Error::StsBadArg, "Invalid histogram header" );
 
     if( !CV_IS_SPARSE_HIST(hist) )
     {
@@ -2836,14 +2590,14 @@ cvGetMinMaxHistValue( const CvHistogram* hist,
     int dims, size[CV_MAX_DIM];
 
     if( !CV_IS_HIST(hist) )
-        CV_Error( CV_StsBadArg, "Invalid histogram header" );
+        CV_Error( cv::Error::StsBadArg, "Invalid histogram header" );
 
     dims = cvGetDims( hist->bins, size );
 
     if( !CV_IS_SPARSE_HIST(hist) )
     {
         CvMat mat;
-        CvPoint minPt, maxPt;
+        CvPoint minPt = {0, 0}, maxPt = {0, 0};
 
         cvGetMat( hist->bins, &mat, 0, 1 );
         cvMinMaxLoc( &mat, &minVal, &maxVal, &minPt, &maxPt );
@@ -2954,10 +2708,10 @@ cvCompareHist( const CvHistogram* hist1,
     int size1[CV_MAX_DIM], size2[CV_MAX_DIM], total = 1;
 
     if( !CV_IS_HIST(hist1) || !CV_IS_HIST(hist2) )
-        CV_Error( CV_StsBadArg, "Invalid histogram header[s]" );
+        CV_Error( cv::Error::StsBadArg, "Invalid histogram header[s]" );
 
     if( CV_IS_SPARSE_MAT(hist1->bins) != CV_IS_SPARSE_MAT(hist2->bins))
-        CV_Error(CV_StsUnmatchedFormats, "One of histograms is sparse and other is not");
+        CV_Error(cv::Error::StsUnmatchedFormats, "One of histograms is sparse and other is not");
 
     if( !CV_IS_SPARSE_MAT(hist1->bins) )
     {
@@ -2970,13 +2724,13 @@ cvCompareHist( const CvHistogram* hist1,
     int dims2 = cvGetDims( hist2->bins, size2 );
 
     if( dims1 != dims2 )
-        CV_Error( CV_StsUnmatchedSizes,
+        CV_Error( cv::Error::StsUnmatchedSizes,
                  "The histograms have different numbers of dimensions" );
 
     for( i = 0; i < dims1; i++ )
     {
         if( size1[i] != size2[i] )
-            CV_Error( CV_StsUnmatchedSizes, "The histograms have different sizes" );
+            CV_Error( cv::Error::StsUnmatchedSizes, "The histograms have different sizes" );
         total *= size1[i];
     }
 
@@ -3096,7 +2850,7 @@ cvCompareHist( const CvHistogram* hist1,
         result = cv::compareHist( sH1, sH2, CV_COMP_KL_DIV );
     }
     else
-        CV_Error( CV_StsBadArg, "Unknown comparison method" );
+        CV_Error( cv::Error::StsBadArg, "Unknown comparison method" );
 
     if( method == CV_COMP_CHISQR_ALT )
         result *= 2;
@@ -3109,12 +2863,12 @@ CV_IMPL void
 cvCopyHist( const CvHistogram* src, CvHistogram** _dst )
 {
     if( !_dst )
-        CV_Error( CV_StsNullPtr, "Destination double pointer is NULL" );
+        CV_Error( cv::Error::StsNullPtr, "Destination double pointer is NULL" );
 
     CvHistogram* dst = *_dst;
 
     if( !CV_IS_HIST(src) || (dst && !CV_IS_HIST(dst)) )
-        CV_Error( CV_StsBadArg, "Invalid histogram header[s]" );
+        CV_Error( cv::Error::StsBadArg, "Invalid histogram header[s]" );
 
     bool eq = false;
     int size1[CV_MAX_DIM];
@@ -3179,10 +2933,10 @@ cvSetHistBinRanges( CvHistogram* hist, float** ranges, int uniform )
     int i, j;
 
     if( !ranges )
-        CV_Error( CV_StsNullPtr, "NULL ranges pointer" );
+        CV_Error( cv::Error::StsNullPtr, "NULL ranges pointer" );
 
     if( !CV_IS_HIST(hist) )
-        CV_Error( CV_StsBadArg, "Invalid histogram header" );
+        CV_Error( cv::Error::StsBadArg, "Invalid histogram header" );
 
     dims = cvGetDims( hist->bins, size );
     for( i = 0; i < dims; i++ )
@@ -3193,7 +2947,7 @@ cvSetHistBinRanges( CvHistogram* hist, float** ranges, int uniform )
         for( i = 0; i < dims; i++ )
         {
             if( !ranges[i] )
-                CV_Error( CV_StsNullPtr, "One of <ranges> elements is NULL" );
+                CV_Error( cv::Error::StsNullPtr, "One of <ranges> elements is NULL" );
             hist->thresh[i][0] = ranges[i][0];
             hist->thresh[i][1] = ranges[i][1];
         }
@@ -3217,13 +2971,13 @@ cvSetHistBinRanges( CvHistogram* hist, float** ranges, int uniform )
             float val0 = -FLT_MAX;
 
             if( !ranges[i] )
-                CV_Error( CV_StsNullPtr, "One of <ranges> elements is NULL" );
+                CV_Error( cv::Error::StsNullPtr, "One of <ranges> elements is NULL" );
 
             for( j = 0; j <= size[i]; j++ )
             {
                 float val = ranges[i][j];
                 if( val <= val0 )
-                    CV_Error(CV_StsOutOfRange, "Bin ranges should go in ascenting order");
+                    CV_Error(cv::Error::StsOutOfRange, "Bin ranges should go in ascenting order");
                 val0 = dim_ranges[j] = val;
             }
 
@@ -3241,10 +2995,10 @@ CV_IMPL void
 cvCalcArrHist( CvArr** img, CvHistogram* hist, int accumulate, const CvArr* mask )
 {
     if( !CV_IS_HIST(hist))
-        CV_Error( CV_StsBadArg, "Bad histogram pointer" );
+        CV_Error( cv::Error::StsBadArg, "Bad histogram pointer" );
 
     if( !img )
-        CV_Error( CV_StsNullPtr, "Null double array pointer" );
+        CV_Error( cv::Error::StsNullPtr, "Null double array pointer" );
 
     int size[CV_MAX_DIM];
     int i, dims = cvGetDims( hist->bins, size);
@@ -3295,7 +3049,10 @@ cvCalcArrHist( CvArr** img, CvHistogram* hist, int accumulate, const CvArr* mask
         cv::SparseMatConstIterator it = sH.begin();
         int nz = (int)sH.nzcount();
         for( i = 0; i < nz; i++, ++it )
+        {
+            CV_Assert(it.ptr != NULL);
             *(float*)cvPtrND(sparsemat, it.node()->idx, 0, -2) = (float)*(const int*)it.ptr;
+        }
     }
 }
 
@@ -3304,10 +3061,10 @@ CV_IMPL void
 cvCalcArrBackProject( CvArr** img, CvArr* dst, const CvHistogram* hist )
 {
     if( !CV_IS_HIST(hist))
-        CV_Error( CV_StsBadArg, "Bad histogram pointer" );
+        CV_Error( cv::Error::StsBadArg, "Bad histogram pointer" );
 
     if( !img )
-        CV_Error( CV_StsNullPtr, "Null double array pointer" );
+        CV_Error( cv::Error::StsNullPtr, "Null double array pointer" );
 
     int size[CV_MAX_DIM];
     int i, dims = cvGetDims( hist->bins, size );
@@ -3364,22 +3121,24 @@ cvCalcArrBackProjectPatch( CvArr** arr, CvArr* dst, CvSize patch_size, CvHistogr
     CvMat dststub, *dstmat;
     int i, dims;
     int x, y;
-    CvSize size;
+    cv::Size size;
 
     if( !CV_IS_HIST(hist))
-        CV_Error( CV_StsBadArg, "Bad histogram pointer" );
+        CV_Error( cv::Error::StsBadArg, "Bad histogram pointer" );
 
     if( !arr )
-        CV_Error( CV_StsNullPtr, "Null double array pointer" );
+        CV_Error( cv::Error::StsNullPtr, "Null double array pointer" );
 
     if( norm_factor <= 0 )
-        CV_Error( CV_StsOutOfRange,
+        CV_Error( cv::Error::StsOutOfRange,
                   "Bad normalization factor (set it to 1.0 if unsure)" );
 
     if( patch_size.width <= 0 || patch_size.height <= 0 )
-        CV_Error( CV_StsBadSize, "The patch width and height must be positive" );
+        CV_Error( cv::Error::StsBadSize, "The patch width and height must be positive" );
 
     dims = cvGetDims( hist->bins );
+    if (dims < 1)
+        CV_Error( cv::Error::StsOutOfRange, "Invalid number of dimensions");
     cvNormalizeHist( hist, norm_factor );
 
     for( i = 0; i < dims; i++ )
@@ -3392,11 +3151,11 @@ cvCalcArrBackProjectPatch( CvArr** arr, CvArr* dst, CvSize patch_size, CvHistogr
 
     dstmat = cvGetMat( dst, &dststub, 0, 0 );
     if( CV_MAT_TYPE( dstmat->type ) != CV_32FC1 )
-        CV_Error( CV_StsUnsupportedFormat, "Resultant image must have 32fC1 type" );
+        CV_Error( cv::Error::StsUnsupportedFormat, "Resultant image must have 32fC1 type" );
 
     if( dstmat->cols != img[0]->width - patch_size.width + 1 ||
         dstmat->rows != img[0]->height - patch_size.height + 1 )
-        CV_Error( CV_StsUnmatchedSizes,
+        CV_Error( cv::Error::StsUnmatchedSizes,
             "The output map must be (W-w+1 x H-h+1), "
             "where the input images are (W x H) each and the patch is (w x h)" );
 
@@ -3433,18 +3192,18 @@ cvCalcBayesianProb( CvHistogram** src, int count, CvHistogram** dst )
     int i;
 
     if( !src || !dst )
-        CV_Error( CV_StsNullPtr, "NULL histogram array pointer" );
+        CV_Error( cv::Error::StsNullPtr, "NULL histogram array pointer" );
 
     if( count < 2 )
-        CV_Error( CV_StsOutOfRange, "Too small number of histograms" );
+        CV_Error( cv::Error::StsOutOfRange, "Too small number of histograms" );
 
     for( i = 0; i < count; i++ )
     {
         if( !CV_IS_HIST(src[i]) || !CV_IS_HIST(dst[i]) )
-            CV_Error( CV_StsBadArg, "Invalid histogram header" );
+            CV_Error( cv::Error::StsBadArg, "Invalid histogram header" );
 
         if( !CV_IS_MATND(src[i]->bins) || !CV_IS_MATND(dst[i]->bins) )
-            CV_Error( CV_StsBadArg, "The function supports dense histograms only" );
+            CV_Error( cv::Error::StsBadArg, "The function supports dense histograms only" );
     }
 
     cvZero( dst[0]->bins );
@@ -3465,10 +3224,10 @@ cvCalcProbDensity( const CvHistogram* hist, const CvHistogram* hist_mask,
                    CvHistogram* hist_dens, double scale )
 {
     if( scale <= 0 )
-        CV_Error( CV_StsOutOfRange, "scale must be positive" );
+        CV_Error( cv::Error::StsOutOfRange, "scale must be positive" );
 
     if( !CV_IS_HIST(hist) || !CV_IS_HIST(hist_mask) || !CV_IS_HIST(hist_dens) )
-        CV_Error( CV_StsBadArg, "Invalid histogram pointer[s]" );
+        CV_Error( cv::Error::StsBadArg, "Invalid histogram pointer[s]" );
 
     {
         CvArr* arrs[] = { hist->bins, hist_mask->bins, hist_dens->bins };
@@ -3478,7 +3237,7 @@ cvCalcProbDensity( const CvHistogram* hist, const CvHistogram* hist_mask,
         cvInitNArrayIterator( 3, arrs, 0, stubs, &iterator );
 
         if( CV_MAT_TYPE(iterator.hdr[0]->type) != CV_32FC1 )
-            CV_Error( CV_StsUnsupportedFormat, "All histograms must have 32fC1 type" );
+            CV_Error( cv::Error::StsUnsupportedFormat, "All histograms must have 32fC1 type" );
 
         do
         {
@@ -3513,7 +3272,7 @@ public:
         : src_(src), globalHistogram_(histogram), histogramLock_(histogramLock)
     { }
 
-    void operator()( const cv::Range& rowRange ) const
+    void operator()( const cv::Range& rowRange ) const CV_OVERRIDE
     {
         int localHistogram[HIST_SZ] = {0, };
 
@@ -3571,7 +3330,7 @@ public:
           lut_(lut)
     { }
 
-    void operator()( const cv::Range& rowRange ) const
+    void operator()( const cv::Range& rowRange ) const CV_OVERRIDE
     {
         const size_t sstep = src_.step;
         const size_t dstep = dst_.step;
@@ -3646,7 +3405,7 @@ static bool ocl_equalizeHist(InputArray _src, OutputArray _dst)
     int kercn = dev.isAMD() && use16 ? 16 : std::min(4, ocl::predictOptimalVectorWidth(_src));
 
     ocl::Kernel k1("calculate_histogram", ocl::imgproc::histogram_oclsrc,
-                   format("-D BINS=%d -D HISTS_COUNT=%d -D WGS=%d -D kercn=%d -D T=%s%s",
+                   format("-D BINS=%d -D HISTS_COUNT=%d -D WGS=%zu -D kercn=%d -D T=%s%s",
                           BINS, compunits, wgs, kercn,
                           kercn == 4 ? "int" : ocl::typeToStr(CV_8UC(kercn)),
                           _src.isContinuous() ? " -D HAVE_SRC_CONT" : ""));
@@ -3685,6 +3444,8 @@ static bool ocl_equalizeHist(InputArray _src, OutputArray _dst)
 
 void cv::equalizeHist( InputArray _src, OutputArray _dst )
 {
+    CV_INSTRUMENT_REGION();
+
     CV_Assert( _src.type() == CV_8UC1 );
 
     if (_src.empty())
@@ -3696,6 +3457,8 @@ void cv::equalizeHist( InputArray _src, OutputArray _dst )
     Mat src = _src.getMat();
     _dst.create( src.size(), src.type() );
     Mat dst = _dst.getMat();
+
+    CALL_HAL(equalizeHist, cv_hal_equalize_hist, src.data, src.step, dst.data, dst.step, src.cols, src.rows);
 
     Mutex histogramLockInstance;
 
@@ -3737,6 +3500,7 @@ void cv::equalizeHist( InputArray _src, OutputArray _dst )
         lutBody(heightRange);
 }
 
+#if 0
 // ----------------------------------------------------------------------
 
 /* Implementation of RTTI and Generic Functions for CvHistogram */
@@ -3777,7 +3541,7 @@ static void *icvReadHist( CvFileStorage * fs, CvFileNode * node )
         int i, sizes[CV_MAX_DIM];
 
         if(!CV_IS_MATND(mat))
-            CV_Error( CV_StsError, "Expected CvMatND");
+            CV_Error( cv::Error::StsError, "Expected CvMatND");
 
         for(i=0; i<mat->dims; i++)
             sizes[i] = mat->dim[i].size;
@@ -3798,7 +3562,7 @@ static void *icvReadHist( CvFileStorage * fs, CvFileNode * node )
     {
         h->bins = cvReadByName( fs, node, "bins" );
         if(!CV_IS_SPARSE_MAT(h->bins)){
-            CV_Error( CV_StsError, "Unknown Histogram type");
+            CV_Error( cv::Error::StsError, "Unknown Histogram type");
         }
     }
 
@@ -3815,7 +3579,7 @@ static void *icvReadHist( CvFileStorage * fs, CvFileNode * node )
 
         thresh_node = cvGetFileNodeByName( fs, node, "thresh" );
         if(!thresh_node)
-            CV_Error( CV_StsError, "'thresh' node is missing");
+            CV_Error( cv::Error::StsError, "'thresh' node is missing");
         cvStartReadRawData( fs, thresh_node, &reader );
 
         if(is_uniform)
@@ -3888,5 +3652,6 @@ static void icvWriteHist( CvFileStorage* fs, const char* name,
 
 CvType hist_type( CV_TYPE_NAME_HIST, icvIsHist, (CvReleaseFunc)cvReleaseHist,
                   icvReadHist, icvWriteHist, (CvCloneFunc)icvCloneHist );
+#endif
 
 /* End of file. */

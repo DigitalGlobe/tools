@@ -12,8 +12,6 @@
 #ifndef _CAP_DSHOW_HPP_
 #define _CAP_DSHOW_HPP_
 
-#include "precomp.hpp"
-
 #ifdef HAVE_DSHOW
 
 class videoInput;
@@ -23,15 +21,15 @@ namespace cv
 class VideoCapture_DShow : public IVideoCapture
 {
 public:
-    VideoCapture_DShow(int index);
+    VideoCapture_DShow(int index, const VideoCaptureParameters& params);
     virtual ~VideoCapture_DShow();
 
-    virtual double getProperty(int propIdx) const;
-    virtual bool setProperty(int propIdx, double propVal);
+    virtual double getProperty(int propIdx) const CV_OVERRIDE;
+    virtual bool setProperty(int propIdx, double propVal) CV_OVERRIDE;
 
-    virtual bool grabFrame();
-    virtual bool retrieveFrame(int outputType, OutputArray frame);
-    virtual int getCaptureDomain();
+    virtual bool grabFrame() CV_OVERRIDE;
+    virtual bool retrieveFrame(int outputType, OutputArray frame) CV_OVERRIDE;
+    virtual int getCaptureDomain() CV_OVERRIDE;
     virtual bool isOpened() const;
 protected:
     void open(int index);
@@ -39,6 +37,7 @@ protected:
 
     int m_index, m_width, m_height, m_fourcc;
     int m_widthSet, m_heightSet;
+    bool m_convertRGBSet;
     static videoInput g_VI;
 };
 

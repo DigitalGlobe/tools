@@ -28,9 +28,6 @@ void detectAndDraw( UMat& img, Mat& canvas, CascadeClassifier& cascade,
                     CascadeClassifier& nestedCascade,
                     double scale, bool tryflip );
 
-string cascadeName = "../../data/haarcascades/haarcascade_frontalface_alt.xml";
-string nestedCascadeName = "../../data/haarcascades/haarcascade_eye_tree_eyeglasses.xml";
-
 int main( int argc, const char** argv )
 {
     VideoCapture capture;
@@ -44,8 +41,8 @@ int main( int argc, const char** argv )
     double scale;
 
     cv::CommandLineParser parser(argc, argv,
-        "{cascade|../../data/haarcascades/haarcascade_frontalface_alt.xml|}"
-        "{nested-cascade|../../data/haarcascades/haarcascade_eye_tree_eyeglasses.xml|}"
+        "{cascade|data/haarcascades/haarcascade_frontalface_alt.xml|}"
+        "{nested-cascade|data/haarcascades/haarcascade_eye_tree_eyeglasses.xml|}"
         "{help h ||}{scale|1|}{try-flip||}{@filename||}"
     );
     if (parser.has("help"))
@@ -53,8 +50,8 @@ int main( int argc, const char** argv )
         help();
         return 0;
     }
-    cascadeName = parser.get<string>("cascade");
-    nestedCascadeName = parser.get<string>("nested-cascade");
+    string cascadeName = samples::findFile(parser.get<string>("cascade"));
+    string nestedCascadeName = samples::findFileOrKeep(parser.get<string>("nested-cascade"));
     scale = parser.get<double>("scale");
     tryflip = parser.has("try-flip");
     inputName = parser.get<string>("@filename");
@@ -66,10 +63,10 @@ int main( int argc, const char** argv )
     }
 
     if ( !nestedCascade.load( nestedCascadeName ) )
-        cerr << "WARNING: Could not load classifier cascade for nested objects" << endl;
+        cerr << "WARNING: Could not load classifier cascade for nested objects: " << nestedCascadeName << endl;
     if( !cascade.load( cascadeName ) )
     {
-        cerr << "ERROR: Could not load classifier cascade" << endl;
+        cerr << "ERROR: Could not load classifier cascade: " << cascadeName << endl;
         help();
         return -1;
     }
@@ -78,15 +75,14 @@ int main( int argc, const char** argv )
 
     if( inputName.empty() || (isdigit(inputName[0]) && inputName.size() == 1) )
     {
-        int c = inputName.empty() ? 0 : inputName[0] - '0';
-        if(!capture.open(c))
-            cout << "Capture from camera #" <<  c << " didn't work" << endl;
+        int camera = inputName.empty() ? 0 : inputName[0] - '0';
+        if(!capture.open(camera))
+            cout << "Capture from camera #" <<  camera << " didn't work" << endl;
     }
     else
     {
-        if( inputName.empty() )
-            inputName = "../data/lena.jpg";
-        image = imread( inputName, 1 ).getUMat(ACCESS_READ);
+        inputName = samples::findFileOrKeep(inputName);
+        imread(inputName, IMREAD_COLOR).copyTo(image);
         if( image.empty() )
         {
             if(!capture.open( inputName ))
@@ -105,7 +101,7 @@ int main( int argc, const char** argv )
 
             detectAndDraw( frame, canvas, cascade, nestedCascade, scale, tryflip );
 
-            int c = waitKey(10);
+            char c = (char)waitKey(10);
             if( c == 27 || c == 'q' || c == 'Q' )
                 break;
         }
@@ -128,16 +124,16 @@ int main( int argc, const char** argv )
                 char buf[1000+1];
                 while( fgets( buf, 1000, f ) )
                 {
-                    int len = (int)strlen(buf), c;
+                    int len = (int)strlen(buf);
                     while( len > 0 && isspace(buf[len-1]) )
                         len--;
                     buf[len] = '\0';
                     cout << "file " << buf << endl;
-                    image = imread( buf, 1 ).getUMat(ACCESS_READ);
+                    imread(samples::findFile(buf), IMREAD_COLOR).copyTo(image);
                     if( !image.empty() )
                     {
                         detectAndDraw( image, canvas, cascade, nestedCascade, scale, tryflip );
-                        c = waitKey(0);
+                        char c = (char)waitKey(0);
                         if( c == 27 || c == 'q' || c == 'Q' )
                             break;
                     }
@@ -177,7 +173,7 @@ void detectAndDraw( UMat& img, Mat& canvas, CascadeClassifier& cascade,
 
     cvtColor( img, gray, COLOR_BGR2GRAY );
     double fx = 1 / scale;
-    resize( gray, smallImg, Size(), fx, fx, INTER_LINEAR );
+    resize( gray, smallImg, Size(), fx, fx, INTER_LINEAR_EXACT );
     equalizeHist( smallImg, smallImg );
 
     cascade.detectMultiScale( smallImg, faces,
@@ -210,7 +206,7 @@ void detectAndDraw( UMat& img, Mat& canvas, CascadeClassifier& cascade,
     double alpha = nframes > 50 ? 0.01 : 1./nframes;
     avgfps = avgfps*(1-alpha) + fps*alpha;
 
-    putText(canvas, format("OpenCL: %s, fps: %.1f", ocl::useOpenCL() ? "ON" : "OFF", avgfps), Point(50, 30),
+    putText(canvas, cv::format("OpenCL: %s, fps: %.1f", ocl::useOpenCL() ? "ON" : "OFF", avgfps), Point(50, 30),
             FONT_HERSHEY_SIMPLEX, 0.8, Scalar(0,255,0), 2);
 
     for ( size_t i = 0; i < faces.size(); i++ )

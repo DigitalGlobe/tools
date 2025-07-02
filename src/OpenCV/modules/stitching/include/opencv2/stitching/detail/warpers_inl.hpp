@@ -40,8 +40,8 @@
 //
 //M*/
 
-#ifndef __OPENCV_STITCHING_WARPERS_INL_HPP__
-#define __OPENCV_STITCHING_WARPERS_INL_HPP__
+#ifndef OPENCV_STITCHING_WARPERS_INL_HPP
+#define OPENCV_STITCHING_WARPERS_INL_HPP
 
 #include "opencv2/core.hpp"
 #include "warpers.hpp" // Make your IDE see declarations
@@ -61,6 +61,14 @@ Point2f RotationWarperBase<P>::warpPoint(const Point2f &pt, InputArray K, InputA
     return uv;
 }
 
+template <class P>
+Point2f RotationWarperBase<P>::warpPointBackward(const Point2f& pt, InputArray K, InputArray R)
+{
+    projector_.setCameraParams(K, R);
+    Point2f xy;
+    projector_.mapBackward(pt.x, pt.y, xy.x, xy.y);
+    return xy;
+}
 
 template <class P>
 Rect RotationWarperBase<P>::buildMaps(Size src_size, InputArray K, InputArray R, OutputArray _xmap, OutputArray _ymap)
@@ -150,10 +158,10 @@ Rect RotationWarperBase<P>::warpRoi(Size src_size, InputArray K, InputArray R)
 template <class P>
 void RotationWarperBase<P>::detectResultRoi(Size src_size, Point &dst_tl, Point &dst_br)
 {
-    float tl_uf = std::numeric_limits<float>::max();
-    float tl_vf = std::numeric_limits<float>::max();
-    float br_uf = -std::numeric_limits<float>::max();
-    float br_vf = -std::numeric_limits<float>::max();
+    float tl_uf = (std::numeric_limits<float>::max)();
+    float tl_vf = (std::numeric_limits<float>::max)();
+    float br_uf = -(std::numeric_limits<float>::max)();
+    float br_vf = -(std::numeric_limits<float>::max)();
 
     float u, v;
     for (int y = 0; y < src_size.height; ++y)
@@ -161,8 +169,8 @@ void RotationWarperBase<P>::detectResultRoi(Size src_size, Point &dst_tl, Point 
         for (int x = 0; x < src_size.width; ++x)
         {
             projector_.mapForward(static_cast<float>(x), static_cast<float>(y), u, v);
-            tl_uf = std::min(tl_uf, u); tl_vf = std::min(tl_vf, v);
-            br_uf = std::max(br_uf, u); br_vf = std::max(br_vf, v);
+            tl_uf = (std::min)(tl_uf, u); tl_vf = (std::min)(tl_vf, v);
+            br_uf = (std::max)(br_uf, u); br_vf = (std::max)(br_vf, v);
         }
     }
 
@@ -176,31 +184,31 @@ void RotationWarperBase<P>::detectResultRoi(Size src_size, Point &dst_tl, Point 
 template <class P>
 void RotationWarperBase<P>::detectResultRoiByBorder(Size src_size, Point &dst_tl, Point &dst_br)
 {
-    float tl_uf = std::numeric_limits<float>::max();
-    float tl_vf = std::numeric_limits<float>::max();
-    float br_uf = -std::numeric_limits<float>::max();
-    float br_vf = -std::numeric_limits<float>::max();
+    float tl_uf = (std::numeric_limits<float>::max)();
+    float tl_vf = (std::numeric_limits<float>::max)();
+    float br_uf = -(std::numeric_limits<float>::max)();
+    float br_vf = -(std::numeric_limits<float>::max)();
 
     float u, v;
     for (float x = 0; x < src_size.width; ++x)
     {
         projector_.mapForward(static_cast<float>(x), 0, u, v);
-        tl_uf = std::min(tl_uf, u); tl_vf = std::min(tl_vf, v);
-        br_uf = std::max(br_uf, u); br_vf = std::max(br_vf, v);
+        tl_uf = (std::min)(tl_uf, u); tl_vf = (std::min)(tl_vf, v);
+        br_uf = (std::max)(br_uf, u); br_vf = (std::max)(br_vf, v);
 
         projector_.mapForward(static_cast<float>(x), static_cast<float>(src_size.height - 1), u, v);
-        tl_uf = std::min(tl_uf, u); tl_vf = std::min(tl_vf, v);
-        br_uf = std::max(br_uf, u); br_vf = std::max(br_vf, v);
+        tl_uf = (std::min)(tl_uf, u); tl_vf = (std::min)(tl_vf, v);
+        br_uf = (std::max)(br_uf, u); br_vf = (std::max)(br_vf, v);
     }
     for (int y = 0; y < src_size.height; ++y)
     {
         projector_.mapForward(0, static_cast<float>(y), u, v);
-        tl_uf = std::min(tl_uf, u); tl_vf = std::min(tl_vf, v);
-        br_uf = std::max(br_uf, u); br_vf = std::max(br_vf, v);
+        tl_uf = (std::min)(tl_uf, u); tl_vf = (std::min)(tl_vf, v);
+        br_uf = (std::max)(br_uf, u); br_vf = (std::max)(br_vf, v);
 
         projector_.mapForward(static_cast<float>(src_size.width - 1), static_cast<float>(y), u, v);
-        tl_uf = std::min(tl_uf, u); tl_vf = std::min(tl_vf, v);
-        br_uf = std::max(br_uf, u); br_vf = std::max(br_vf, v);
+        tl_uf = (std::min)(tl_uf, u); tl_vf = (std::min)(tl_vf, v);
+        br_uf = (std::max)(br_uf, u); br_vf = (std::max)(br_vf, v);
     }
 
     dst_tl.x = static_cast<int>(tl_uf);
@@ -355,8 +363,8 @@ void StereographicProjector::mapForward(float x, float y, float &u, float &v)
 
     float r = sinf(v_) / (1 - cosf(v_));
 
-    u = scale * r * cos(u_);
-    v = scale * r * sin(u_);
+    u = scale * r * std::cos(u_);
+    v = scale * r * std::sin(u_);
 }
 
 inline
@@ -617,7 +625,7 @@ void TransverseMercatorProjector::mapBackward(float u, float v, float &x, float 
     v /= scale;
 
     float v_ = asinf( sinf(v) / coshf(u) );
-    float u_ = atan2f( sinhf(u), cos(v) );
+    float u_ = atan2f( sinhf(u), std::cos(v) );
 
     float cosv = cosf(v_);
     float x_ = cosv * sinf(u_);
@@ -771,4 +779,4 @@ void PlanePortraitProjector::mapBackward(float u0, float v0, float &x, float &y)
 
 //! @endcond
 
-#endif // __OPENCV_STITCHING_WARPERS_INL_HPP__
+#endif // OPENCV_STITCHING_WARPERS_INL_HPP

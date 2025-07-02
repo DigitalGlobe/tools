@@ -49,7 +49,7 @@ void gaussian_2D_convolution(const cv::Mat& src, cv::Mat& dst, int ksize_x, int 
 
     // Compute an appropriate kernel size according to the specified sigma
     if (sigma > ksize_x || sigma > ksize_y || ksize_x == 0 || ksize_y == 0) {
-        ksize_x_ = (int)ceil(2.0f*(1.0f + (sigma - 0.8f) / (0.3f)));
+        ksize_x_ = cvCeil(2.0f*(1.0f + (sigma - 0.8f) / (0.3f)));
         ksize_y_ = ksize_x_;
     }
 
@@ -86,12 +86,16 @@ void image_derivatives_scharr(const cv::Mat& src, cv::Mat& dst, int xorder, int 
 /**
  * @brief This function computes the Perona and Malik conductivity coefficient g1
  * g1 = exp(-|dL|^2/k^2)
- * @param Lx First order image derivative in X-direction (horizontal)
- * @param Ly First order image derivative in Y-direction (vertical)
- * @param dst Output image
+ * @param _Lx First order image derivative in X-direction (horizontal)
+ * @param _Ly First order image derivative in Y-direction (vertical)
+ * @param _dst Output image
  * @param k Contrast factor parameter
  */
-void pm_g1(const cv::Mat& Lx, const cv::Mat& Ly, cv::Mat& dst, float k) {
+void pm_g1(InputArray _Lx, InputArray _Ly, OutputArray _dst, float k) {
+  _dst.create(_Lx.size(), _Lx.type());
+  Mat Lx = _Lx.getMat();
+  Mat Ly = _Ly.getMat();
+  Mat dst = _dst.getMat();
 
   Size sz = Lx.size();
   float inv_k = 1.0f / (k*k);
@@ -113,12 +117,18 @@ void pm_g1(const cv::Mat& Lx, const cv::Mat& Ly, cv::Mat& dst, float k) {
 /**
  * @brief This function computes the Perona and Malik conductivity coefficient g2
  * g2 = 1 / (1 + dL^2 / k^2)
- * @param Lx First order image derivative in X-direction (horizontal)
- * @param Ly First order image derivative in Y-direction (vertical)
- * @param dst Output image
+ * @param _Lx First order image derivative in X-direction (horizontal)
+ * @param _Ly First order image derivative in Y-direction (vertical)
+ * @param _dst Output image
  * @param k Contrast factor parameter
  */
-void pm_g2(const cv::Mat &Lx, const cv::Mat& Ly, cv::Mat& dst, float k) {
+void pm_g2(InputArray _Lx, InputArray _Ly, OutputArray _dst, float k) {
+    CV_INSTRUMENT_REGION();
+
+    _dst.create(_Lx.size(), _Lx.type());
+    Mat Lx = _Lx.getMat();
+    Mat Ly = _Ly.getMat();
+    Mat dst = _dst.getMat();
 
     Size sz = Lx.size();
     dst.create(sz, Lx.type());
@@ -136,15 +146,19 @@ void pm_g2(const cv::Mat &Lx, const cv::Mat& Ly, cv::Mat& dst, float k) {
 /* ************************************************************************* */
 /**
  * @brief This function computes Weickert conductivity coefficient gw
- * @param Lx First order image derivative in X-direction (horizontal)
- * @param Ly First order image derivative in Y-direction (vertical)
- * @param dst Output image
+ * @param _Lx First order image derivative in X-direction (horizontal)
+ * @param _Ly First order image derivative in Y-direction (vertical)
+ * @param _dst Output image
  * @param k Contrast factor parameter
  * @note For more information check the following paper: J. Weickert
  * Applications of nonlinear diffusion in image processing and computer vision,
  * Proceedings of Algorithmy 2000
  */
-void weickert_diffusivity(const cv::Mat& Lx, const cv::Mat& Ly, cv::Mat& dst, float k) {
+void weickert_diffusivity(InputArray _Lx, InputArray _Ly, OutputArray _dst, float k) {
+  _dst.create(_Lx.size(), _Lx.type());
+  Mat Lx = _Lx.getMat();
+  Mat Ly = _Ly.getMat();
+  Mat dst = _dst.getMat();
 
   Size sz = Lx.size();
   float inv_k = 1.0f / (k*k);
@@ -169,15 +183,19 @@ void weickert_diffusivity(const cv::Mat& Lx, const cv::Mat& Ly, cv::Mat& dst, fl
 /**
 * @brief This function computes Charbonnier conductivity coefficient gc
 * gc = 1 / sqrt(1 + dL^2 / k^2)
-* @param Lx First order image derivative in X-direction (horizontal)
-* @param Ly First order image derivative in Y-direction (vertical)
-* @param dst Output image
+* @param _Lx First order image derivative in X-direction (horizontal)
+* @param _Ly First order image derivative in Y-direction (vertical)
+* @param _dst Output image
 * @param k Contrast factor parameter
 * @note For more information check the following paper: J. Weickert
 * Applications of nonlinear diffusion in image processing and computer vision,
 * Proceedings of Algorithmy 2000
 */
-void charbonnier_diffusivity(const cv::Mat& Lx, const cv::Mat& Ly, cv::Mat& dst, float k) {
+void charbonnier_diffusivity(InputArray _Lx, InputArray _Ly, OutputArray _dst, float k) {
+  _dst.create(_Lx.size(), _Lx.type());
+  Mat Lx = _Lx.getMat();
+  Mat Ly = _Ly.getMat();
+  Mat dst = _dst.getMat();
 
   Size sz = Lx.size();
   float inv_k = 1.0f / (k*k);
@@ -209,6 +227,7 @@ void charbonnier_diffusivity(const cv::Mat& Lx, const cv::Mat& Ly, cv::Mat& dst,
  * @return k contrast factor
  */
 float compute_k_percentile(const cv::Mat& img, float perc, float gscale, int nbins, int ksize_x, int ksize_y) {
+    CV_INSTRUMENT_REGION();
 
     int nbin = 0, nelements = 0, nthreshold = 0, k = 0;
     float kperc = 0.0, modg = 0.0;
@@ -304,9 +323,10 @@ void compute_scharr_derivatives(const cv::Mat& src, cv::Mat& dst, int xorder, in
  * @param _ky Vertical kernel values
  * @param dx Derivative order in X-direction (horizontal)
  * @param dy Derivative order in Y-direction (vertical)
- * @param scale_ Scale factor or derivative size
+ * @param scale Scale factor or derivative size
  */
 void compute_derivative_kernels(cv::OutputArray _kx, cv::OutputArray _ky, int dx, int dy, int scale) {
+    CV_INSTRUMENT_REGION();
 
     int ksize = 3 + 2 * (scale - 1);
 
@@ -320,6 +340,7 @@ void compute_derivative_kernels(cv::OutputArray _kx, cv::OutputArray _ky, int dx
     _ky.create(ksize, 1, CV_32F, -1, true);
     Mat kx = _kx.getMat();
     Mat ky = _ky.getMat();
+    std::vector<float> kerI;
 
     float w = 10.0f / 3.0f;
     float norm = 1.0f / (2.0f*scale*(w + 2.0f));
@@ -327,7 +348,7 @@ void compute_derivative_kernels(cv::OutputArray _kx, cv::OutputArray _ky, int dx
     for (int k = 0; k < 2; k++) {
         Mat* kernel = k == 0 ? &kx : &ky;
         int order = k == 0 ? dx : dy;
-        std::vector<float> kerI(ksize, 0.0f);
+        kerI.assign(ksize, 0.0f);
 
         if (order == 0) {
             kerI[0] = norm, kerI[ksize / 2] = w*norm, kerI[ksize - 1] = norm;
@@ -357,7 +378,7 @@ public:
 
     }
 
-    void operator()(const cv::Range& range) const
+    void operator()(const cv::Range& range) const CV_OVERRIDE
     {
         cv::Mat& Ld = *_Ld;
         const cv::Mat& c = *_c;
@@ -394,7 +415,7 @@ private:
 /* ************************************************************************* */
 /**
 * @brief This function performs a scalar non-linear diffusion step
-* @param Ld2 Output image in the evolution
+* @param Ld Output image in the evolution
 * @param c Conductivity image
 * @param Lstep Previous image in the evolution
 * @param stepsize The step size in time units
@@ -403,6 +424,7 @@ private:
 * dL_by_ds = d(c dL_by_dx)_by_dx + d(c dL_by_dy)_by_dy
 */
 void nld_step_scalar(cv::Mat& Ld, const cv::Mat& c, cv::Mat& Lstep, float stepsize) {
+    CV_INSTRUMENT_REGION();
 
     cv::parallel_for_(cv::Range(1, Lstep.rows - 1), Nld_Step_Scalar_Invoker(Ld, c, Lstep, stepsize), (double)Ld.total()/(1 << 16));
 
@@ -468,11 +490,10 @@ void nld_step_scalar(cv::Mat& Ld, const cv::Mat& c, cv::Mat& Lstep, float stepsi
 /* ************************************************************************* */
 /**
 * @brief This function downsamples the input image using OpenCV resize
-* @param img Input image to be downsampled
+* @param src Input image to be downsampled
 * @param dst Output image with half of the resolution of the input image
 */
 void halfsample_image(const cv::Mat& src, cv::Mat& dst) {
-
     // Make sure the destination image is of the right size
     CV_Assert(src.cols / 2 == dst.cols);
     CV_Assert(src.rows / 2 == dst.rows);

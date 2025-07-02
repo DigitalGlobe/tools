@@ -7,17 +7,18 @@
 
 using namespace cv;
 
-static void help()
+static void help(char** argv)
 {
 
 printf("\nShow off image morphology: erosion, dialation, open and close\n"
-    "Call:\n   morphology2 [image]\n"
-    "This program also shows use of rect, ellipse and cross kernels\n\n");
+    "Call:\n   %s [image]\n"
+    "This program also shows use of rect, ellipse, cross and diamond kernels\n\n", argv[0]);
 printf( "Hot keys: \n"
     "\tESC - quit the program\n"
     "\tr - use rectangle structuring element\n"
     "\te - use elliptic structuring element\n"
     "\tc - use cross-shaped structuring element\n"
+    "\td - use diamond-shaped structuring element\n"
     "\tSPACE - loop through all the options\n" );
 }
 
@@ -33,8 +34,8 @@ int erode_dilate_pos = 0;
 // callback function for open/close trackbar
 static void OpenClose(int, void*)
 {
-    int n = open_close_pos - max_iters;
-    int an = n > 0 ? n : -n;
+    int n = open_close_pos;
+    int an = abs(n);
     Mat element = getStructuringElement(element_shape, Size(an*2+1, an*2+1), Point(an, an) );
     if( n < 0 )
         morphologyEx(src, dst, MORPH_OPEN, element);
@@ -46,8 +47,8 @@ static void OpenClose(int, void*)
 // callback function for erode/dilate trackbar
 static void ErodeDilate(int, void*)
 {
-    int n = erode_dilate_pos - max_iters;
-    int an = n > 0 ? n : -n;
+    int n = erode_dilate_pos;
+    int an = abs(n);
     Mat element = getStructuringElement(element_shape, Size(an*2+1, an*2+1), Point(an, an) );
     if( n < 0 )
         erode(src, dst, element);
@@ -59,16 +60,16 @@ static void ErodeDilate(int, void*)
 
 int main( int argc, char** argv )
 {
-    cv::CommandLineParser parser(argc, argv, "{help h||}{ @image | ../data/baboon.jpg | }");
+    cv::CommandLineParser parser(argc, argv, "{help h||}{ @image | baboon.jpg | }");
     if (parser.has("help"))
     {
-        help();
+        help(argv);
         return 0;
     }
-    std::string filename = parser.get<std::string>("@image");
+    std::string filename = samples::findFile(parser.get<std::string>("@image"));
     if( (src = imread(filename,IMREAD_COLOR)).empty() )
     {
-        help();
+        help(argv);
         return -1;
     }
 
@@ -78,26 +79,33 @@ int main( int argc, char** argv )
 
     open_close_pos = erode_dilate_pos = max_iters;
     createTrackbar("iterations", "Open/Close",&open_close_pos,max_iters*2+1,OpenClose);
+    setTrackbarMin("iterations", "Open/Close", -max_iters);
+    setTrackbarMax("iterations", "Open/Close", max_iters);
+    setTrackbarPos("iterations", "Open/Close", 0);
+
     createTrackbar("iterations", "Erode/Dilate",&erode_dilate_pos,max_iters*2+1,ErodeDilate);
+    setTrackbarMin("iterations", "Erode/Dilate", -max_iters);
+    setTrackbarMax("iterations", "Erode/Dilate", max_iters);
+    setTrackbarPos("iterations", "Erode/Dilate", 0);
 
     for(;;)
     {
-        int c;
-
         OpenClose(open_close_pos, 0);
         ErodeDilate(erode_dilate_pos, 0);
-        c = waitKey(0);
+        char c = (char)waitKey(0);
 
-        if( (char)c == 27 )
+        if( c == 27 )
             break;
-        if( (char)c == 'e' )
+        if( c == 'e' )
             element_shape = MORPH_ELLIPSE;
-        else if( (char)c == 'r' )
+        else if( c == 'r' )
             element_shape = MORPH_RECT;
-        else if( (char)c == 'c' )
+        else if( c == 'c' )
             element_shape = MORPH_CROSS;
-        else if( (char)c == ' ' )
-            element_shape = (element_shape + 1) % 3;
+        else if( c == 'd' )
+            element_shape = MORPH_DIAMOND;
+        else if( c == ' ' )
+            element_shape = (element_shape + 1) % 4;
     }
 
     return 0;

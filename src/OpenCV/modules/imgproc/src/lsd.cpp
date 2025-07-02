@@ -69,12 +69,6 @@ const double DEG_TO_RADS = CV_PI / 180;
 
 #define log_gamma(x) ((x)>15.0?log_gamma_windschitl(x):log_gamma_lanczos(x))
 
-struct edge
-{
-    cv::Point p;
-    bool taken;
-};
-
 /////////////////////////////////////////////////////////////////////////////////////////
 
 inline double distSq(const double x1, const double y1,
@@ -120,10 +114,20 @@ inline bool double_equal(const double& a, const double& b)
     return (abs_diff / abs_max) <= (RELATIVE_ERROR_FACTOR * DBL_EPSILON);
 }
 
-inline bool AsmallerB_XoverY(const edge& a, const edge& b)
-{
-    if (a.p.x == b.p.x) return a.p.y < b.p.y;
-    else return a.p.x < b.p.x;
+// function to sort points by y and then by x
+inline bool AsmallerB_YoverX(const cv::Point2d &a, const cv::Point2d &b) {
+    if (a.y == b.y) return a.x < b.x;
+    else return a.y < b.y;
+}
+
+// function to get the slope of the rectangle for a specific row
+inline double get_slope(cv::Point2d p1, cv::Point2d p2) {
+    return ((int) ceil(p2.y) != (int) ceil(p1.y)) ? (p2.x - p1.x) / (p2.y - p1.y) : 0;
+}
+
+// function to get the limit of the rectangle for a specific row
+inline double get_limit(cv::Point2d p, int row, double slope) {
+    return p.x + (row - p.y) * slope;
 }
 
 /**
@@ -160,7 +164,7 @@ inline double log_gamma_lanczos(const double& x)
 
 namespace cv{
 
-class LineSegmentDetectorImpl : public LineSegmentDetector
+class LineSegmentDetectorImpl CV_FINAL : public LineSegmentDetector
 {
 public:
 
@@ -191,8 +195,8 @@ public:
  *                  If only a roi needs to be selected, use
  *                  lsd_ptr->detect(image(roi), ..., lines);
  *                  lines += Scalar(roi.x, roi.y, roi.x, roi.y);
- * @param _lines    Return: A vector of Vec4i or Vec4f elements specifying the beginning and ending point of a line.
- *                          Where Vec4i/Vec4f is (x1, y1, x2, y2), point 1 is the start, point 2 - end.
+ * @param _lines    Return: A vector of Vec4f elements specifying the beginning and ending point of a line.
+ *                          Where Vec4f is (x1, y1, x2, y2), point 1 is the start, point 2 - end.
  *                          Returned lines are strictly oriented depending on the gradient.
  * @param width     Return: Vector of widths of the regions, where the lines are found. E.g. Width of line.
  * @param prec      Return: Vector of precisions with which the lines are found.
@@ -205,16 +209,16 @@ public:
  */
     void detect(InputArray _image, OutputArray _lines,
                 OutputArray width = noArray(), OutputArray prec = noArray(),
-                OutputArray nfa = noArray());
+                OutputArray nfa = noArray()) CV_OVERRIDE;
 
 /**
  * Draw lines on the given canvas.
  *
- * @param image     The image, where lines will be drawn.
+ * @param _image    The image, where lines will be drawn.
  *                  Should have the size of the image, where the lines were found
  * @param lines     The lines that need to be drawn
  */
-    void drawSegments(InputOutputArray _image, InputArray lines);
+    void drawSegments(InputOutputArray _image, InputArray lines) CV_OVERRIDE;
 
 /**
  * Draw both vectors on the image canvas. Uses blue for lines 1 and red for lines 2.
@@ -222,20 +226,17 @@ public:
  * @param size      The size of the image, where lines1 and lines2 were found.
  * @param lines1    The first lines that need to be drawn. Color - Blue.
  * @param lines2    The second lines that need to be drawn. Color - Red.
- * @param image     An optional image, where lines will be drawn.
+ * @param _image    An optional image, where lines will be drawn.
  *                  Should have the size of the image, where the lines were found
  * @return          The number of mismatching pixels between lines1 and lines2.
  */
-    int compareSegments(const Size& size, InputArray lines1, InputArray lines2, InputOutputArray _image = noArray());
+    int compareSegments(const Size& size, InputArray lines1, InputArray lines2, InputOutputArray _image = noArray()) CV_OVERRIDE;
 
 private:
     Mat image;
-    Mat_<double> scaled_image;
-    double *scaled_image_data;
+    Mat scaled_image;
     Mat_<double> angles;     // in rads
-    double *angles_data;
     Mat_<double> modgrad;
-    double *modgrad_data;
     Mat_<uchar> used;
 
     int img_width;
@@ -263,12 +264,13 @@ private:
         double modgrad;
     };
 
-
-    struct coorlist
+    struct normPoint
     {
         Point2i p;
-        struct coorlist* next;
+        int norm;
     };
+
+    std::vector<normPoint> ordered_points;
 
     struct rect
     {
@@ -304,12 +306,10 @@ private:
 /**
  * Finds the angles and the gradients of the image. Generates a list of pseudo ordered points.
  *
- * @param threshold The minimum value of the angle that is considered defined, otherwise NOTDEF
- * @param n_bins    The number of bins with which gradients are ordered by, using bucket sort.
- * @param list      Return: Vector of coordinate points that are pseudo ordered by magnitude.
- *                  Pixels would be ordered by norm value, up to a precision given by max_grad/n_bins.
+ * @param threshold      The minimum value of the angle that is considered defined, otherwise NOTDEF
+ * @param n_bins         The number of bins with which gradients are ordered by, using bucket sort.
  */
-    void ll_angle(const double& threshold, const unsigned int& n_bins, std::vector<coorlist>& list);
+    void ll_angle(const double& threshold, const unsigned int& n_bins);
 
 /**
  * Grow a region starting from point s with a defined precision,
@@ -317,31 +317,29 @@ private:
  *
  * @param s         Starting point for the region.
  * @param reg       Return: Vector of points, that are part of the region
- * @param reg_size  Return: The size of the region.
  * @param reg_angle Return: The mean angle of the region.
  * @param prec      The precision by which each region angle should be aligned to the mean.
  */
     void region_grow(const Point2i& s, std::vector<RegionPoint>& reg,
-                     int& reg_size, double& reg_angle, const double& prec);
+                     double& reg_angle, const double& prec);
 
 /**
  * Finds the bounding rotated rectangle of a region.
  *
  * @param reg       The region of points, from which the rectangle to be constructed from.
- * @param reg_size  The number of points in the region.
  * @param reg_angle The mean angle of the region.
  * @param prec      The precision by which points were found.
  * @param p         Probability of a point with angle within 'prec'.
  * @param rec       Return: The generated rectangle.
  */
-    void region2rect(const std::vector<RegionPoint>& reg, const int reg_size, const double reg_angle,
+    void region2rect(const std::vector<RegionPoint>& reg, const double reg_angle,
                      const double prec, const double p, rect& rec) const;
 
 /**
  * Compute region's angle as the principal inertia axis of the region.
  * @return          Regions angle.
  */
-    double get_theta(const std::vector<RegionPoint>& reg, const int& reg_size, const double& x,
+    double get_theta(const std::vector<RegionPoint>& reg, const double& x,
                      const double& y, const double& reg_angle, const double& prec) const;
 
 /**
@@ -350,14 +348,14 @@ private:
  * estimated angle tolerance. If this fails to produce a rectangle with the right density of region points,
  * 'reduce_region_radius' is called to try to satisfy this condition.
  */
-    bool refine(std::vector<RegionPoint>& reg, int& reg_size, double reg_angle,
+    bool refine(std::vector<RegionPoint>& reg, double reg_angle,
                 const double prec, double p, rect& rec, const double& density_th);
 
 /**
  * Reduce the region size, by elimination the points far from the starting point, until that leads to
  * rectangle with the right density of region points or to discard the region if too small.
  */
-    bool reduce_region_radius(std::vector<RegionPoint>& reg, int& reg_size, double reg_angle,
+    bool reduce_region_radius(std::vector<RegionPoint>& reg, double reg_angle,
                 const double prec, double p, rect& rec, double density, const double& density_th);
 
 /**
@@ -383,7 +381,14 @@ private:
  * Is the point at place 'address' aligned to angle theta, up to precision 'prec'?
  * @return      Whether the point is aligned.
  */
-    bool isAligned(const int& address, const double& theta, const double& prec) const;
+    bool isAligned(int x, int y, const double& theta, const double& prec) const;
+
+public:
+    // Compare norm
+    static inline bool compare_norm( const normPoint& n1, const normPoint& n2 )
+    {
+        return (n1.norm > n2.norm);
+    }
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -401,8 +406,9 @@ CV_EXPORTS Ptr<LineSegmentDetector> createLineSegmentDetector(
 
 LineSegmentDetectorImpl::LineSegmentDetectorImpl(int _refine, double _scale, double _sigma_scale, double _quant,
         double _ang_th, double _log_eps, double _density_th, int _n_bins)
-        :SCALE(_scale), doRefine(_refine), SIGMA_SCALE(_sigma_scale), QUANT(_quant),
-        ANG_TH(_ang_th), LOG_EPS(_log_eps), DENSITY_TH(_density_th), N_BINS(_n_bins)
+        : img_width(0), img_height(0), LOG_NT(0), w_needed(false), p_needed(false), n_needed(false),
+          SCALE(_scale), doRefine(_refine), SIGMA_SCALE(_sigma_scale), QUANT(_quant),
+          ANG_TH(_ang_th), LOG_EPS(_log_eps), DENSITY_TH(_density_th), N_BINS(_n_bins)
 {
     CV_Assert(_scale > 0 && _sigma_scale > 0 && _quant >= 0 &&
               _ang_th > 0 && _ang_th < 180 && _density_th >= 0 && _density_th < 1 &&
@@ -412,11 +418,10 @@ LineSegmentDetectorImpl::LineSegmentDetectorImpl(int _refine, double _scale, dou
 void LineSegmentDetectorImpl::detect(InputArray _image, OutputArray _lines,
                 OutputArray _width, OutputArray _prec, OutputArray _nfa)
 {
-    Mat_<double> img = _image.getMat();
-    CV_Assert(!img.empty() && img.channels() == 1);
+    CV_INSTRUMENT_REGION();
 
-    // Convert image to double
-    img.convertTo(image, CV_64FC1);
+    image = _image.getMat();
+    CV_Assert(!image.empty() && image.type() == CV_8UC1);
 
     std::vector<Vec4f> lines;
     std::vector<double> w, p, n;
@@ -433,6 +438,9 @@ void LineSegmentDetectorImpl::detect(InputArray _image, OutputArray _lines,
     if(w_needed) Mat(w).copyTo(_width);
     if(p_needed) Mat(p).copyTo(_prec);
     if(n_needed) Mat(n).copyTo(_nfa);
+
+    // Clear used structures
+    ordered_points.clear();
 }
 
 void LineSegmentDetectorImpl::flsd(std::vector<Vec4f>& lines,
@@ -444,7 +452,6 @@ void LineSegmentDetectorImpl::flsd(std::vector<Vec4f>& lines,
     const double p = ANG_TH / 180;
     const double rho = QUANT / sin(prec);    // gradient magnitude threshold
 
-    std::vector<coorlist> list;
     if(SCALE != 1)
     {
         Mat gaussian_img;
@@ -454,46 +461,44 @@ void LineSegmentDetectorImpl::flsd(std::vector<Vec4f>& lines,
         Size ksize(1 + 2 * h, 1 + 2 * h); // kernel size
         GaussianBlur(image, gaussian_img, ksize, sigma);
         // Scale image to needed size
-        resize(gaussian_img, scaled_image, Size(), SCALE, SCALE);
-        ll_angle(rho, N_BINS, list);
+        resize(gaussian_img, scaled_image, Size(), SCALE, SCALE, INTER_LINEAR_EXACT);
+        ll_angle(rho, N_BINS);
     }
     else
     {
         scaled_image = image;
-        ll_angle(rho, N_BINS, list);
+        ll_angle(rho, N_BINS);
     }
 
     LOG_NT = 5 * (log10(double(img_width)) + log10(double(img_height))) / 2 + log10(11.0);
-    const int min_reg_size = int(-LOG_NT/log10(p)); // minimal number of points in region that can give a meaningful event
+    const size_t min_reg_size = size_t(-LOG_NT/log10(p)); // minimal number of points in region that can give a meaningful event
 
     // // Initialize region only when needed
     // Mat region = Mat::zeros(scaled_image.size(), CV_8UC1);
     used = Mat_<uchar>::zeros(scaled_image.size()); // zeros = NOTUSED
-    std::vector<RegionPoint> reg(img_width * img_height);
+    std::vector<RegionPoint> reg;
 
     // Search for line segments
-    unsigned int ls_count = 0;
-    for(size_t i = 0, list_size = list.size(); i < list_size; ++i)
+    for(size_t i = 0, points_size = ordered_points.size(); i < points_size; ++i)
     {
-        unsigned int adx = list[i].p.x + list[i].p.y * img_width;
-        if((used.ptr()[adx] == NOTUSED) && (angles_data[adx] != NOTDEF))
+        const Point2i& point = ordered_points[i].p;
+        if((used.at<uchar>(point) == NOTUSED) && (angles.at<double>(point) != NOTDEF))
         {
-            int reg_size;
             double reg_angle;
-            region_grow(list[i].p, reg, reg_size, reg_angle, prec);
+            region_grow(ordered_points[i].p, reg, reg_angle, prec);
 
             // Ignore small regions
-            if(reg_size < min_reg_size) { continue; }
+            if(reg.size() < min_reg_size) { continue; }
 
             // Construct rectangular approximation for the region
             rect rec;
-            region2rect(reg, reg_size, reg_angle, prec, p, rec);
+            region2rect(reg, reg_angle, prec, p, rec);
 
             double log_nfa = -1;
             if(doRefine > LSD_REFINE_NONE)
             {
                 // At least REFINE_STANDARD lvl.
-                if(!refine(reg, reg_size, reg_angle, prec, p, rec, DENSITY_TH)) { continue; }
+                if(!refine(reg, reg_angle, prec, p, rec, DENSITY_TH)) { continue; }
 
                 if(doRefine >= LSD_REFINE_ADV)
                 {
@@ -503,7 +508,6 @@ void LineSegmentDetectorImpl::flsd(std::vector<Vec4f>& lines,
                 }
             }
             // Found new line
-            ++ls_count;
 
             // Add the offset
             rec.x1 += 0.5; rec.y1 += 0.5;
@@ -522,28 +526,16 @@ void LineSegmentDetectorImpl::flsd(std::vector<Vec4f>& lines,
             if(w_needed) widths.push_back(rec.width);
             if(p_needed) precisions.push_back(rec.p);
             if(n_needed && doRefine >= LSD_REFINE_ADV) nfas.push_back(log_nfa);
-
-
-            // //Add the linesID to the region on the image
-            // for(unsigned int el = 0; el < reg_size; el++)
-            // {
-            //     region.data[reg[i].x + reg[i].y * width] = ls_count;
-            // }
         }
     }
 }
 
 void LineSegmentDetectorImpl::ll_angle(const double& threshold,
-                                   const unsigned int& n_bins,
-                                   std::vector<coorlist>& list)
+                                   const unsigned int& n_bins)
 {
     //Initialize data
     angles = Mat_<double>(scaled_image.size());
     modgrad = Mat_<double>(scaled_image.size());
-
-    angles_data = angles.ptr<double>(0);
-    modgrad_data = modgrad.ptr<double>(0);
-    scaled_image_data = scaled_image.ptr<double>(0);
 
     img_width = scaled_image.cols;
     img_height = scaled_image.rows;
@@ -553,30 +545,30 @@ void LineSegmentDetectorImpl::ll_angle(const double& threshold,
     angles.col(img_width - 1).setTo(NOTDEF);
 
     // Computing gradient for remaining pixels
-    CV_Assert(scaled_image.isContinuous() &&
-              modgrad.isContinuous() &&
-              angles.isContinuous());   // Accessing image data linearly
-
     double max_grad = -1;
     for(int y = 0; y < img_height - 1; ++y)
     {
-        for(int addr = y * img_width, addr_end = addr + img_width - 1; addr < addr_end; ++addr)
+        const uchar* scaled_image_row = scaled_image.ptr<uchar>(y);
+        const uchar* next_scaled_image_row = scaled_image.ptr<uchar>(y+1);
+        double* angles_row = angles.ptr<double>(y);
+        double* modgrad_row = modgrad.ptr<double>(y);
+        for(int x = 0; x < img_width-1; ++x)
         {
-            double DA = scaled_image_data[addr + img_width + 1] - scaled_image_data[addr];
-            double BC = scaled_image_data[addr + 1] - scaled_image_data[addr + img_width];
-            double gx = DA + BC;    // gradient x component
-            double gy = DA - BC;    // gradient y component
-            double norm = std::sqrt((gx * gx + gy * gy) / 4); // gradient norm
+            int DA = next_scaled_image_row[x + 1] - scaled_image_row[x];
+            int BC = scaled_image_row[x + 1] - next_scaled_image_row[x];
+            int gx = DA + BC;    // gradient x component
+            int gy = DA - BC;    // gradient y component
+            double norm = std::sqrt((gx * gx + gy * gy) / 4.0); // gradient norm
 
-            modgrad_data[addr] = norm;    // store gradient
+            modgrad_row[x] = norm;    // store gradient
 
             if (norm <= threshold)  // norm too small, gradient no defined
             {
-                angles_data[addr] = NOTDEF;
+                angles_row[x] = NOTDEF;
             }
             else
             {
-                angles_data[addr] = fastAtan2(float(gx), float(-gy)) * DEG_TO_RADS;  // gradient angle computation
+                angles_row[x] = fastAtan2(float(gx), float(-gy)) * DEG_TO_RADS;  // gradient angle computation
                 if (norm > max_grad) { max_grad = norm; }
             }
 
@@ -584,95 +576,70 @@ void LineSegmentDetectorImpl::ll_angle(const double& threshold,
     }
 
     // Compute histogram of gradient values
-    list = std::vector<coorlist>(img_width * img_height);
-    std::vector<coorlist*> range_s(n_bins);
-    std::vector<coorlist*> range_e(n_bins);
-    unsigned int count = 0;
     double bin_coef = (max_grad > 0) ? double(n_bins - 1) / max_grad : 0; // If all image is smooth, max_grad <= 0
-
     for(int y = 0; y < img_height - 1; ++y)
     {
-        const double* norm = modgrad_data + y * img_width;
-        for(int x = 0; x < img_width - 1; ++x, ++norm)
+        const double* modgrad_row = modgrad.ptr<double>(y);
+        for(int x = 0; x < img_width - 1; ++x)
         {
-            // Store the point in the right bin according to its norm
-            int i = int((*norm) * bin_coef);
-            if(!range_e[i])
-            {
-                range_e[i] = range_s[i] = &list[count];
-                ++count;
-            }
-            else
-            {
-                range_e[i]->next = &list[count];
-                range_e[i] = &list[count];
-                ++count;
-            }
-            range_e[i]->p = Point(x, y);
-            range_e[i]->next = 0;
+            normPoint _point;
+            int i = int(modgrad_row[x] * bin_coef);
+            _point.p = Point(x, y);
+            _point.norm = i;
+            ordered_points.push_back(_point);
         }
     }
 
-    // Sort
-    int idx = n_bins - 1;
-    for(;idx > 0 && !range_s[idx]; --idx);
-    coorlist* start = range_s[idx];
-    coorlist* end = range_e[idx];
-    if(start)
-    {
-        while(idx > 0)
-        {
-            --idx;
-            if(range_s[idx])
-            {
-                end->next = range_s[idx];
-                end = range_e[idx];
-            }
-        }
-    }
+    // Use stable sort to ensure deterministic region growing and thus overall LSD result determinism.
+    std::stable_sort(ordered_points.begin(), ordered_points.end(), compare_norm);
 }
 
 void LineSegmentDetectorImpl::region_grow(const Point2i& s, std::vector<RegionPoint>& reg,
-                                      int& reg_size, double& reg_angle, const double& prec)
+                                      double& reg_angle, const double& prec)
 {
+    reg.clear();
+
     // Point to this region
-    reg_size = 1;
-    reg[0].x = s.x;
-    reg[0].y = s.y;
-    int addr = s.x + s.y * img_width;
-    reg[0].used = used.ptr() + addr;
-    reg_angle = angles_data[addr];
-    reg[0].angle = reg_angle;
-    reg[0].modgrad = modgrad_data[addr];
+    RegionPoint seed;
+    seed.x = s.x;
+    seed.y = s.y;
+    seed.used = &used.at<uchar>(s);
+    reg_angle = angles.at<double>(s);
+    seed.angle = reg_angle;
+    seed.modgrad = modgrad.at<double>(s);
+    reg.push_back(seed);
 
     float sumdx = float(std::cos(reg_angle));
     float sumdy = float(std::sin(reg_angle));
-    *reg[0].used = USED;
+    *seed.used = USED;
 
     //Try neighboring regions
-    for(int i = 0; i < reg_size; ++i)
+    for (size_t i = 0;i<reg.size();i++)
     {
         const RegionPoint& rpoint = reg[i];
         int xx_min = std::max(rpoint.x - 1, 0), xx_max = std::min(rpoint.x + 1, img_width - 1);
         int yy_min = std::max(rpoint.y - 1, 0), yy_max = std::min(rpoint.y + 1, img_height - 1);
         for(int yy = yy_min; yy <= yy_max; ++yy)
         {
-            int c_addr = xx_min + yy * img_width;
-            for(int xx = xx_min; xx <= xx_max; ++xx, ++c_addr)
+            uchar* used_row = used.ptr<uchar>(yy);
+            const double* angles_row = angles.ptr<double>(yy);
+            const double* modgrad_row = modgrad.ptr<double>(yy);
+            for(int xx = xx_min; xx <= xx_max; ++xx)
             {
-                if((used.ptr()[c_addr] != USED) &&
-                   (isAligned(c_addr, reg_angle, prec)))
+                uchar& is_used = used_row[xx];
+                if(is_used != USED &&
+                   (isAligned(xx, yy, reg_angle, prec)))
                 {
+                    const double& angle = angles_row[xx];
                     // Add point
-                    used.ptr()[c_addr] = USED;
-                    RegionPoint& region_point = reg[reg_size];
+                    is_used = USED;
+                    RegionPoint region_point;
                     region_point.x = xx;
                     region_point.y = yy;
-                    region_point.used = &(used.ptr()[c_addr]);
-                    region_point.modgrad = modgrad_data[c_addr];
-                    const double& angle = angles_data[c_addr];
+                    region_point.used = &is_used;
+                    region_point.modgrad = modgrad_row[xx];
                     region_point.angle = angle;
-                    ++reg_size;
+                    reg.push_back(region_point);
 
                     // Update region's angle
                     sumdx += cos(float(angle));
@@ -685,11 +652,11 @@ void LineSegmentDetectorImpl::region_grow(const Point2i& s, std::vector<RegionPo
     }
 }
 
-void LineSegmentDetectorImpl::region2rect(const std::vector<RegionPoint>& reg, const int reg_size,
+void LineSegmentDetectorImpl::region2rect(const std::vector<RegionPoint>& reg,
                                       const double reg_angle, const double prec, const double p, rect& rec) const
 {
     double x = 0, y = 0, sum = 0;
-    for(int i = 0; i < reg_size; ++i)
+    for(size_t i = 0; i < reg.size(); ++i)
     {
         const RegionPoint& pnt = reg[i];
         const double& weight = pnt.modgrad;
@@ -704,14 +671,14 @@ void LineSegmentDetectorImpl::region2rect(const std::vector<RegionPoint>& reg, c
     x /= sum;
     y /= sum;
 
-    double theta = get_theta(reg, reg_size, x, y, reg_angle, prec);
+    double theta = get_theta(reg, x, y, reg_angle, prec);
 
     // Find length and width
     double dx = cos(theta);
     double dy = sin(theta);
     double l_min = 0, l_max = 0, w_min = 0, w_max = 0;
 
-    for(int i = 0; i < reg_size; ++i)
+    for(size_t i = 0; i < reg.size(); ++i)
     {
         double regdx = double(reg[i].x) - x;
         double regdy = double(reg[i].y) - y;
@@ -743,7 +710,7 @@ void LineSegmentDetectorImpl::region2rect(const std::vector<RegionPoint>& reg, c
     if(rec.width < 1.0) rec.width = 1.0;
 }
 
-double LineSegmentDetectorImpl::get_theta(const std::vector<RegionPoint>& reg, const int& reg_size, const double& x,
+double LineSegmentDetectorImpl::get_theta(const std::vector<RegionPoint>& reg, const double& x,
                                       const double& y, const double& reg_angle, const double& prec) const
 {
     double Ixx = 0.0;
@@ -751,7 +718,7 @@ double LineSegmentDetectorImpl::get_theta(const std::vector<RegionPoint>& reg, c
     double Ixy = 0.0;
 
     // Compute inertia matrix
-    for(int i = 0; i < reg_size; ++i)
+    for(size_t i = 0; i < reg.size(); ++i)
     {
         const double& regx = reg[i].x;
         const double& regy = reg[i].y;
@@ -781,10 +748,10 @@ double LineSegmentDetectorImpl::get_theta(const std::vector<RegionPoint>& reg, c
     return theta;
 }
 
-bool LineSegmentDetectorImpl::refine(std::vector<RegionPoint>& reg, int& reg_size, double reg_angle,
+bool LineSegmentDetectorImpl::refine(std::vector<RegionPoint>& reg, double reg_angle,
                                  const double prec, double p, rect& rec, const double& density_th)
 {
-    double density = double(reg_size) / (dist(rec.x1, rec.y1, rec.x2, rec.y2) * rec.width);
+    double density = double(reg.size()) / (dist(rec.x1, rec.y1, rec.x2, rec.y2) * rec.width);
 
     if (density >= density_th) { return true; }
 
@@ -795,7 +762,7 @@ bool LineSegmentDetectorImpl::refine(std::vector<RegionPoint>& reg, int& reg_siz
     double sum = 0, s_sum = 0;
     int n = 0;
 
-    for (int i = 0; i < reg_size; ++i)
+    for (size_t i = 0; i < reg.size(); ++i)
     {
         *(reg[i].used) = NOTUSED;
         if (dist(xc, yc, reg[i].x, reg[i].y) < rec.width)
@@ -807,21 +774,22 @@ bool LineSegmentDetectorImpl::refine(std::vector<RegionPoint>& reg, int& reg_siz
             ++n;
         }
     }
+    CV_Assert(n > 0);
     double mean_angle = sum / double(n);
     // 2 * standard deviation
     double tau = 2.0 * sqrt((s_sum - 2.0 * mean_angle * sum) / double(n) + mean_angle * mean_angle);
 
     // Try new region
-    region_grow(Point(reg[0].x, reg[0].y), reg, reg_size, reg_angle, tau);
+    region_grow(Point(reg[0].x, reg[0].y), reg, reg_angle, tau);
 
-    if (reg_size < 2) { return false; }
+    if (reg.size() < 2) { return false; }
 
-    region2rect(reg, reg_size, reg_angle, prec, p, rec);
-    density = double(reg_size) / (dist(rec.x1, rec.y1, rec.x2, rec.y2) * rec.width);
+    region2rect(reg, reg_angle, prec, p, rec);
+    density = double(reg.size()) / (dist(rec.x1, rec.y1, rec.x2, rec.y2) * rec.width);
 
     if (density < density_th)
     {
-        return reduce_region_radius(reg, reg_size, reg_angle, prec, p, rec, density, density_th);
+        return reduce_region_radius(reg, reg_angle, prec, p, rec, density, density_th);
     }
     else
     {
@@ -829,7 +797,7 @@ bool LineSegmentDetectorImpl::refine(std::vector<RegionPoint>& reg, int& reg_siz
     }
 }
 
-bool LineSegmentDetectorImpl::reduce_region_radius(std::vector<RegionPoint>& reg, int& reg_size, double reg_angle,
+bool LineSegmentDetectorImpl::reduce_region_radius(std::vector<RegionPoint>& reg, double reg_angle,
                 const double prec, double p, rect& rec, double density, const double& density_th)
 {
     // Compute region's radius
@@ -843,25 +811,25 @@ bool LineSegmentDetectorImpl::reduce_region_radius(std::vector<RegionPoint>& reg
     {
         radSq *= 0.75*0.75; // Reduce region's radius to 75% of its value
         // Remove points from the region and update 'used' map
-        for(int i = 0; i < reg_size; ++i)
+        for (size_t i = 0; i < reg.size(); ++i)
         {
             if(distSq(xc, yc, double(reg[i].x), double(reg[i].y)) > radSq)
             {
                 // Remove point from the region
                 *(reg[i].used) = NOTUSED;
-                std::swap(reg[i], reg[reg_size - 1]);
-                --reg_size;
+                std::swap(reg[i], reg[reg.size() - 1]);
+                reg.pop_back();
                 --i; // To avoid skipping one point
             }
         }
 
-        if(reg_size < 2) { return false; }
+        if(reg.size() < 2) { return false; }
 
         // Re-compute rectangle
-        region2rect(reg, reg_size ,reg_angle, prec, p, rec);
+        region2rect(reg ,reg_angle, prec, p, rec);
 
         // Re-compute region points density
-        density = double(reg_size) /
+        density = double(reg.size()) /
                   (dist(rec.x1, rec.y1, rec.x2, rec.y2) * rec.width);
     }
 
@@ -979,117 +947,61 @@ double LineSegmentDetectorImpl::rect_nfa(const rect& rec) const
     double dyhw = rec.dy * half_width;
     double dxhw = rec.dx * half_width;
 
-    std::vector<edge> ordered_x(4);
-    edge* min_y = &ordered_x[0];
-    edge* max_y = &ordered_x[0]; // Will be used for loop range
+    cv::Point2d v_tmp[4];
+    v_tmp[0] = cv::Point2d(rec.x1 - dyhw, rec.y1 + dxhw);
+    v_tmp[1] = cv::Point2d(rec.x2 - dyhw, rec.y2 + dxhw);
+    v_tmp[2] = cv::Point2d(rec.x2 + dyhw, rec.y2 - dxhw);
+    v_tmp[3] = cv::Point2d(rec.x1 + dyhw, rec.y1 - dxhw);
 
-    ordered_x[0].p.x = int(rec.x1 - dyhw); ordered_x[0].p.y = int(rec.y1 + dxhw); ordered_x[0].taken = false;
-    ordered_x[1].p.x = int(rec.x2 - dyhw); ordered_x[1].p.y = int(rec.y2 + dxhw); ordered_x[1].taken = false;
-    ordered_x[2].p.x = int(rec.x2 + dyhw); ordered_x[2].p.y = int(rec.y2 - dxhw); ordered_x[2].taken = false;
-    ordered_x[3].p.x = int(rec.x1 + dyhw); ordered_x[3].p.y = int(rec.y1 - dxhw); ordered_x[3].taken = false;
-
-    std::sort(ordered_x.begin(), ordered_x.end(), AsmallerB_XoverY);
-
-    // Find min y. And mark as taken. find max y.
-    for(unsigned int i = 1; i < 4; ++i)
-    {
-        if(min_y->p.y > ordered_x[i].p.y) {min_y = &ordered_x[i]; }
-        if(max_y->p.y < ordered_x[i].p.y) {max_y = &ordered_x[i]; }
-    }
-    min_y->taken = true;
-
-    // Find leftmost untaken point;
-    edge* leftmost = 0;
-    for(unsigned int i = 0; i < 4; ++i)
-    {
-        if(!ordered_x[i].taken)
-        {
-            if(!leftmost) // if uninitialized
-            {
-                leftmost = &ordered_x[i];
-            }
-            else if (leftmost->p.x > ordered_x[i].p.x)
-            {
-                leftmost = &ordered_x[i];
-            }
+    // Find the vertex with the smallest y coordinate (or the smallest x if there is a tie).
+    int offset = 0;
+    for (int i = 1; i < 4; ++i) {
+        if (AsmallerB_YoverX(v_tmp[i], v_tmp[offset])){
+            offset = i;
         }
     }
-    leftmost->taken = true;
 
-    // Find rightmost untaken point;
-    edge* rightmost = 0;
-    for(unsigned int i = 0; i < 4; ++i)
-    {
-        if(!ordered_x[i].taken)
-        {
-            if(!rightmost) // if uninitialized
-            {
-                rightmost = &ordered_x[i];
-            }
-            else if (rightmost->p.x < ordered_x[i].p.x)
-            {
-                rightmost = &ordered_x[i];
-            }
-        }
+    // Rotate the vertices so that the first one is the one with the smallest y coordinate (or the smallest x if there is a tie).
+    // The rest will be then ordered counterclockwise.
+    cv::Point2d ordered_y[4];
+    for (int i = 0; i < 4; ++i) {
+        ordered_y[i] = v_tmp[(i + offset) % 4];
     }
-    rightmost->taken = true;
 
-    // Find last untaken point;
-    edge* tailp = 0;
-    for(unsigned int i = 0; i < 4; ++i)
-    {
-        if(!ordered_x[i].taken)
-        {
-            if(!tailp) // if uninitialized
-            {
-                tailp = &ordered_x[i];
-            }
-            else if (tailp->p.x > ordered_x[i].p.x)
-            {
-                tailp = &ordered_x[i];
-            }
-        }
-    }
-    tailp->taken = true;
+    double flstep = get_slope(ordered_y[0], ordered_y[1]); //first left step
+    double slstep = get_slope(ordered_y[1], ordered_y[2]); //second left step
 
-    double flstep = (min_y->p.y != leftmost->p.y) ?
-                    (min_y->p.x - leftmost->p.x) / (min_y->p.y - leftmost->p.y) : 0; //first left step
-    double slstep = (leftmost->p.y != tailp->p.x) ?
-                    (leftmost->p.x - tailp->p.x) / (leftmost->p.y - tailp->p.x) : 0; //second left step
+    double frstep = get_slope(ordered_y[0], ordered_y[3]); //first right step
+    double srstep = get_slope(ordered_y[3], ordered_y[2]); //second right step
 
-    double frstep = (min_y->p.y != rightmost->p.y) ?
-                    (min_y->p.x - rightmost->p.x) / (min_y->p.y - rightmost->p.y) : 0; //first right step
-    double srstep = (rightmost->p.y != tailp->p.x) ?
-                    (rightmost->p.x - tailp->p.x) / (rightmost->p.y - tailp->p.x) : 0; //second right step
-
-    double lstep = flstep, rstep = frstep;
-
-    double left_x = min_y->p.x, right_x = min_y->p.x;
+    double top_y = ordered_y[0].y, bottom_y = ordered_y[2].y;
 
     // Loop around all points in the region and count those that are aligned.
-    int min_iter = min_y->p.y;
-    int max_iter = max_y->p.y;
-    for(int y = min_iter; y <= max_iter; ++y)
+    std::vector<cv::Point> points;
+    double left_limit, right_limit;
+    for(int y = (int) ceil(top_y); y <= (int) ceil(bottom_y); ++y)
     {
         if (y < 0 || y >= img_height) continue;
 
-        int adx = y * img_width + int(left_x);
-        for(int x = int(left_x); x <= int(right_x); ++x, ++adx)
-        {
+        if(y <= int(ceil(ordered_y[1].y)))
+            left_limit = get_limit(ordered_y[0], y, flstep);
+        else
+            left_limit = get_limit(ordered_y[1], y, slstep);
+
+        if(y < int(ceil(ordered_y[3].y)))
+            right_limit = get_limit(ordered_y[0], y, frstep);
+        else
+            right_limit = get_limit(ordered_y[3], y, srstep);
+
+        for(int x = (int) ceil(left_limit); x <= (int)(right_limit); ++x) {
             if (x < 0 || x >= img_width) continue;
 
             ++total_pts;
-            if(isAligned(adx, rec.theta, rec.prec))
+            if(isAligned(x, y, rec.theta, rec.prec))
             {
                 ++alg_pts;
             }
         }
-
-        if(y >= leftmost->p.y) { lstep = slstep; }
-        if(y >= rightmost->p.y) { rstep = srstep; }
-
-        left_x += lstep;
-        right_x += rstep;
     }
 
     return nfa(total_pts, alg_pts, rec.p);
@@ -1103,7 +1015,7 @@ double LineSegmentDetectorImpl::nfa(const int& n, const int& k, const double& p)
 
     double p_term = p / (1 - p);
 
-    double log1term = (double(n) + 1) - log_gamma(double(k) + 1)
+    double log1term = log_gamma(double(n) + 1) - log_gamma(double(k) + 1)
                 - log_gamma(double(n-k) + 1)
                 + double(k) * log(p) + double(n-k) * log(1.0 - p);
     double term = exp(log1term);
@@ -1133,10 +1045,10 @@ double LineSegmentDetectorImpl::nfa(const int& n, const int& k, const double& p)
     return -log10(bin_tail) - LOG_NT;
 }
 
-inline bool LineSegmentDetectorImpl::isAligned(const int& address, const double& theta, const double& prec) const
+inline bool LineSegmentDetectorImpl::isAligned(int x, int y, const double& theta, const double& prec) const
 {
-    if(address < 0) { return false; }
-    const double& a = angles_data[address];
+    if(x < 0 || y < 0 || x >= angles.cols || y >= angles.rows) { return false; }
+    const double& a = angles.at<double>(y, x);
     if(a == NOTDEF) { return false; }
 
     // It is assumed that 'theta' and 'a' are in the range [-pi,pi]
@@ -1154,68 +1066,83 @@ inline bool LineSegmentDetectorImpl::isAligned(const int& address, const double&
 
 void LineSegmentDetectorImpl::drawSegments(InputOutputArray _image, InputArray lines)
 {
+    CV_INSTRUMENT_REGION();
+
     CV_Assert(!_image.empty() && (_image.channels() == 1 || _image.channels() == 3));
 
-    Mat gray;
     if (_image.channels() == 1)
     {
-        gray = _image.getMatRef();
+        cvtColor(_image, _image, COLOR_GRAY2BGR);
     }
-    else if (_image.channels() == 3)
+
+    Mat _lines = lines.getMat();
+    if (_lines.empty())
     {
-        cvtColor(_image, gray, CV_BGR2GRAY);
+        return;
     }
+    const int N = _lines.checkVector(4);
 
-    // Create a 3 channel image in order to draw colored lines
-    std::vector<Mat> planes;
-    planes.push_back(gray);
-    planes.push_back(gray);
-    planes.push_back(gray);
-
-    merge(planes, _image);
-
-    Mat _lines;
-    _lines = lines.getMat();
-    int N = _lines.checkVector(4);
+    CV_Assert(_lines.depth() == CV_32F || _lines.depth() == CV_32S);
 
     // Draw segments
-    for(int i = 0; i < N; ++i)
+    if (_lines.depth() == CV_32F)
     {
-        const Vec4f& v = _lines.at<Vec4f>(i);
-        Point2f b(v[0], v[1]);
-        Point2f e(v[2], v[3]);
-        line(_image.getMatRef(), b, e, Scalar(0, 0, 255), 1);
+        for (int i = 0; i < N; ++i)
+        {
+            const Vec4f& v = _lines.at<Vec4f>(i);
+            const Point2f b(v[0], v[1]);
+            const Point2f e(v[2], v[3]);
+            line(_image, b, e, Scalar(0, 0, 255), 1);
+        }
+    }
+    else
+    {
+        for (int i = 0; i < N; ++i)
+        {
+            const Vec4i& v = _lines.at<Vec4i>(i);
+            const Point2i b(v[0], v[1]);
+            const Point2i e(v[2], v[3]);
+            line(_image, b, e, Scalar(0, 0, 255), 1);
+        }
     }
 }
 
 
 int LineSegmentDetectorImpl::compareSegments(const Size& size, InputArray lines1, InputArray lines2, InputOutputArray _image)
 {
+    CV_INSTRUMENT_REGION();
+
     Size sz = size;
     if (_image.needed() && _image.size() != size) sz = _image.size();
-    CV_Assert(sz.area());
+    CV_Assert(!sz.empty());
 
     Mat_<uchar> I1 = Mat_<uchar>::zeros(sz);
     Mat_<uchar> I2 = Mat_<uchar>::zeros(sz);
 
-    Mat _lines1;
-    Mat _lines2;
-    _lines1 = lines1.getMat();
-    _lines2 = lines2.getMat();
-    int N1 = _lines1.checkVector(4);
-    int N2 = _lines2.checkVector(4);
+    Mat _lines1 = lines1.getMat();
+    Mat _lines2 = lines2.getMat();
+    const int N1 = _lines1.checkVector(4);
+    const int N2 = _lines2.checkVector(4);
+
+    CV_Assert(_lines1.depth() == CV_32F || _lines1.depth() == CV_32S);
+    CV_Assert(_lines2.depth() == CV_32F || _lines2.depth() == CV_32S);
+
+    if (_lines1.depth() == CV_32S)
+        _lines1.convertTo(_lines1, CV_32F);
+    if (_lines2.depth() == CV_32S)
+        _lines2.convertTo(_lines2, CV_32F);
 
     // Draw segments
     for(int i = 0; i < N1; ++i)
     {
-        Point2f b(_lines1.at<Vec4f>(i)[0], _lines1.at<Vec4f>(i)[1]);
-        Point2f e(_lines1.at<Vec4f>(i)[2], _lines1.at<Vec4f>(i)[3]);
+        const Point2f b(_lines1.at<Vec4f>(i)[0], _lines1.at<Vec4f>(i)[1]);
+        const Point2f e(_lines1.at<Vec4f>(i)[2], _lines1.at<Vec4f>(i)[3]);
         line(I1, b, e, Scalar::all(255), 1);
     }
     for(int i = 0; i < N2; ++i)
     {
-        Point2f b(_lines2.at<Vec4f>(i)[0], _lines2.at<Vec4f>(i)[1]);
-        Point2f e(_lines2.at<Vec4f>(i)[2], _lines2.at<Vec4f>(i)[3]);
+        const Point2f b(_lines2.at<Vec4f>(i)[0], _lines2.at<Vec4f>(i)[1]);
+        const Point2f e(_lines2.at<Vec4f>(i)[2], _lines2.at<Vec4f>(i)[3]);
         line(I2, b, e, Scalar::all(255), 1);
     }
 

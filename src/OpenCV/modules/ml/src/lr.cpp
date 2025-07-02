@@ -1,57 +1,12 @@
-///////////////////////////////////////////////////////////////////////////////////////
-// IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.
+// This file is part of OpenCV project.
+// It is subject to the license terms in the LICENSE file found in the top-level directory
+// of this distribution and at http://opencv.org/license.html.
+//
+// AUTHOR: Rahul Kavi rahulkavi[at]live[at]com
 
-//  By downloading, copying, installing or using the software you agree to this license.
-//  If you do not agree to this license, do not download, install,
-//  copy or use the software.
-
-// This is a implementation of the Logistic Regression algorithm in C++ in OpenCV.
-
-// AUTHOR:
-// Rahul Kavi rahulkavi[at]live[at]com
-
-// # You are free to use, change, or redistribute the code in any way you wish for
-// # non-commercial purposes, but please maintain the name of the original author.
-// # This code comes with no warranty of any kind.
-
-// #
-// # You are free to use, change, or redistribute the code in any way you wish for
-// # non-commercial purposes, but please maintain the name of the original author.
-// # This code comes with no warranty of any kind.
-
-// # Logistic Regression ALGORITHM
-
-
-//                           License Agreement
-//                For Open Source Computer Vision Library
-
-// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
-// Copyright (C) 2008-2011, Willow Garage Inc., all rights reserved.
-// Third party copyrights are property of their respective owners.
-
-// Redistribution and use in source and binary forms, with or without modification,
-// are permitted provided that the following conditions are met:
-
-//   * Redistributions of source code must retain the above copyright notice,
-//     this list of conditions and the following disclaimer.
-
-//   * Redistributions in binary form must reproduce the above copyright notice,
-//     this list of conditions and the following disclaimer in the documentation
-//     and/or other materials provided with the distribution.
-
-//   * The name of the copyright holders may not be used to endorse or promote products
-//     derived from this software without specific prior written permission.
-
-// This software is provided by the copyright holders and contributors "as is" and
-// any express or implied warranties, including, but not limited to, the implied
-// warranties of merchantability and fitness for a particular purpose are disclaimed.
-// In no event shall the Intel Corporation or contributors be liable for any direct,
-// indirect, incidental, special, exemplary, or consequential damages
-// (including, but not limited to, procurement of substitute goods or services;
-// loss of use, data, or profits; or business interruption) however caused
-// and on any theory of liability, whether in contract, strict liability,
-// or tort (including negligence or otherwise) arising in any way out of
-// the use of this software, even if advised of the possibility of such damage.
+//
+// This is a implementation of the Logistic Regression algorithm
+//
 
 #include "precomp.hpp"
 
@@ -81,30 +36,36 @@ public:
     TermCriteria term_crit;
 };
 
-class LogisticRegressionImpl : public LogisticRegression
+class LogisticRegressionImpl CV_FINAL : public LogisticRegression
 {
 public:
 
     LogisticRegressionImpl() { }
     virtual ~LogisticRegressionImpl() {}
 
-    CV_IMPL_PROPERTY(double, LearningRate, params.alpha)
-    CV_IMPL_PROPERTY(int, Iterations, params.num_iters)
-    CV_IMPL_PROPERTY(int, Regularization, params.norm)
-    CV_IMPL_PROPERTY(int, TrainMethod, params.train_method)
-    CV_IMPL_PROPERTY(int, MiniBatchSize, params.mini_batch_size)
-    CV_IMPL_PROPERTY(TermCriteria, TermCriteria, params.term_crit)
+    inline double getLearningRate() const CV_OVERRIDE { return params.alpha; }
+    inline void setLearningRate(double val) CV_OVERRIDE { params.alpha = val; }
+    inline int getIterations() const CV_OVERRIDE { return params.num_iters; }
+    inline void setIterations(int val) CV_OVERRIDE { params.num_iters = val; }
+    inline int getRegularization() const CV_OVERRIDE { return params.norm; }
+    inline void setRegularization(int val) CV_OVERRIDE { params.norm = val; }
+    inline int getTrainMethod() const CV_OVERRIDE { return params.train_method; }
+    inline void setTrainMethod(int val) CV_OVERRIDE { params.train_method = val; }
+    inline int getMiniBatchSize() const CV_OVERRIDE { return params.mini_batch_size; }
+    inline void setMiniBatchSize(int val) CV_OVERRIDE { params.mini_batch_size = val; }
+    inline TermCriteria getTermCriteria() const CV_OVERRIDE { return params.term_crit; }
+    inline void setTermCriteria(TermCriteria val) CV_OVERRIDE { params.term_crit = val; }
 
-    virtual bool train( const Ptr<TrainData>& trainData, int=0 );
-    virtual float predict(InputArray samples, OutputArray results, int flags=0) const;
-    virtual void clear();
-    virtual void write(FileStorage& fs) const;
-    virtual void read(const FileNode& fn);
-    virtual Mat get_learnt_thetas() const { return learnt_thetas; }
-    virtual int getVarCount() const { return learnt_thetas.cols; }
-    virtual bool isTrained() const { return !learnt_thetas.empty(); }
-    virtual bool isClassifier() const { return true; }
-    virtual String getDefaultName() const { return "opencv_ml_lr"; }
+    virtual bool train( const Ptr<TrainData>& trainData, int=0 ) CV_OVERRIDE;
+    virtual float predict(InputArray samples, OutputArray results, int flags=0) const CV_OVERRIDE;
+    virtual void clear() CV_OVERRIDE;
+    virtual void write(FileStorage& fs) const CV_OVERRIDE;
+    virtual void read(const FileNode& fn) CV_OVERRIDE;
+    virtual Mat get_learnt_thetas() const CV_OVERRIDE { return learnt_thetas; }
+    virtual int getVarCount() const CV_OVERRIDE { return learnt_thetas.cols; }
+    virtual bool isTrained() const CV_OVERRIDE { return !learnt_thetas.empty(); }
+    virtual bool isClassifier() const CV_OVERRIDE { return true; }
+    virtual String getDefaultName() const CV_OVERRIDE { return "opencv_ml_lr"; }
 protected:
     Mat calc_sigmoid(const Mat& data) const;
     double compute_cost(const Mat& _data, const Mat& _labels, const Mat& _init_theta);
@@ -127,11 +88,19 @@ Ptr<LogisticRegression> LogisticRegression::create()
     return makePtr<LogisticRegressionImpl>();
 }
 
+Ptr<LogisticRegression> LogisticRegression::load(const String& filepath, const String& nodeName)
+{
+    return Algorithm::load<LogisticRegression>(filepath, nodeName);
+}
+
+
 bool LogisticRegressionImpl::train(const Ptr<TrainData>& trainData, int)
 {
+    CV_TRACE_FUNCTION_SKIP_NESTED();
+    CV_Assert(!trainData.empty());
+
     // return value
     bool ok = false;
-
     clear();
     Mat _data_i = trainData->getSamples();
     Mat _labels_i = trainData->getResponses();
@@ -140,15 +109,15 @@ bool LogisticRegressionImpl::train(const Ptr<TrainData>& trainData, int)
     CV_Assert( !_labels_i.empty() && !_data_i.empty());
     if(_labels_i.cols != 1)
     {
-        CV_Error( CV_StsBadArg, "labels should be a column matrix" );
+        CV_Error( cv::Error::StsBadArg, "labels should be a column matrix" );
     }
     if(_data_i.type() != CV_32FC1 || _labels_i.type() != CV_32FC1)
     {
-        CV_Error( CV_StsBadArg, "data and labels must be a floating point matrix" );
+        CV_Error( cv::Error::StsBadArg, "data and labels must be a floating point matrix" );
     }
     if(_labels_i.rows != _data_i.rows)
     {
-        CV_Error( CV_StsBadArg, "number of rows in data and labels should be equal" );
+        CV_Error( cv::Error::StsBadArg, "number of rows in data and labels should be equal" );
     }
 
     // class labels
@@ -157,7 +126,7 @@ bool LogisticRegressionImpl::train(const Ptr<TrainData>& trainData, int)
     int num_classes = (int) this->forward_mapper.size();
     if(num_classes < 2)
     {
-        CV_Error( CV_StsBadArg, "data should have atleast 2 classes" );
+        CV_Error( cv::Error::StsBadArg, "data should have at least 2 classes" );
     }
 
     // add a column of ones to the data (bias/intercept term)
@@ -205,7 +174,7 @@ bool LogisticRegressionImpl::train(const Ptr<TrainData>& trainData, int)
     this->learnt_thetas = thetas.clone();
     if( cvIsNaN( (double)sum(this->learnt_thetas)[0] ) )
     {
-        CV_Error( CV_StsBadArg, "check training parameters. Invalid training classifier" );
+        CV_Error( cv::Error::StsBadArg, "check training parameters. Invalid training classifier" );
     }
 
     // success
@@ -218,7 +187,7 @@ float LogisticRegressionImpl::predict(InputArray samples, OutputArray results, i
     // check if learnt_mats array is populated
     if(!this->isTrained())
     {
-        CV_Error( CV_StsBadArg, "classifier should be trained first" );
+        CV_Error( cv::Error::StsBadArg, "classifier should be trained first" );
     }
 
     // coefficient matrix
@@ -237,7 +206,7 @@ float LogisticRegressionImpl::predict(InputArray samples, OutputArray results, i
     Mat data = samples.getMat();
     if(data.type() != CV_32F)
     {
-        CV_Error( CV_StsBadArg, "data must be of floating type" );
+        CV_Error( cv::Error::StsBadArg, "data must be of floating type" );
     }
 
     // add a column of ones to the data (bias/intercept term)
@@ -304,6 +273,7 @@ float LogisticRegressionImpl::predict(InputArray samples, OutputArray results, i
 
 Mat LogisticRegressionImpl::calc_sigmoid(const Mat& data) const
 {
+    CV_TRACE_FUNCTION();
     Mat dest;
     exp(-data, dest);
     return 1.0/(1.0+dest);
@@ -311,7 +281,8 @@ Mat LogisticRegressionImpl::calc_sigmoid(const Mat& data) const
 
 double LogisticRegressionImpl::compute_cost(const Mat& _data, const Mat& _labels, const Mat& _init_theta)
 {
-    int llambda = 0;
+    CV_TRACE_FUNCTION();
+    float llambda = 0;                   /*changed llambda from int to float to solve issue #7924*/
     int m;
     int n;
     double cost = 0;
@@ -356,7 +327,7 @@ double LogisticRegressionImpl::compute_cost(const Mat& _data, const Mat& _labels
 
     if(cvIsNaN( cost ) == 1)
     {
-        CV_Error( CV_StsBadArg, "check training parameters. Invalid training classifier" );
+        CV_Error( cv::Error::StsBadArg, "check training parameters. Invalid training classifier" );
     }
 
     return cost;
@@ -380,7 +351,7 @@ struct LogisticRegressionImpl_ComputeDradient_Impl : ParallelLoopBody
 
     }
 
-    void operator()(const cv::Range& r) const
+    void operator()(const cv::Range& r) const CV_OVERRIDE
     {
         const Mat& _data  = *data;
         const Mat &_theta = *theta;
@@ -401,6 +372,7 @@ struct LogisticRegressionImpl_ComputeDradient_Impl : ParallelLoopBody
 
 void LogisticRegressionImpl::compute_gradient(const Mat& _data, const Mat& _labels, const Mat &_theta, const double _lambda, Mat & _gradient )
 {
+    CV_TRACE_FUNCTION();
     const int m = _data.rows;
     Mat pcal_a, pcal_b, pcal_ab;
 
@@ -422,15 +394,16 @@ void LogisticRegressionImpl::compute_gradient(const Mat& _data, const Mat& _labe
 
 Mat LogisticRegressionImpl::batch_gradient_descent(const Mat& _data, const Mat& _labels, const Mat& _init_theta)
 {
+    CV_TRACE_FUNCTION();
     // implements batch gradient descent
     if(this->params.alpha<=0)
     {
-        CV_Error( CV_StsBadArg, "check training parameters (learning rate) for the classifier" );
+        CV_Error( cv::Error::StsBadArg, "check training parameters (learning rate) for the classifier" );
     }
 
     if(this->params.num_iters <= 0)
     {
-        CV_Error( CV_StsBadArg, "number of iterations cannot be zero or a negative number" );
+        CV_Error( cv::Error::StsBadArg, "number of iterations cannot be zero or a negative number" );
     }
 
     int llambda = 0;
@@ -466,12 +439,12 @@ Mat LogisticRegressionImpl::mini_batch_gradient_descent(const Mat& _data, const 
 
     if(this->params.mini_batch_size <= 0 || this->params.alpha == 0)
     {
-        CV_Error( CV_StsBadArg, "check training parameters for the classifier" );
+        CV_Error( cv::Error::StsBadArg, "check training parameters for the classifier" );
     }
 
     if(this->params.num_iters <= 0)
     {
-        CV_Error( CV_StsBadArg, "number of iterations cannot be zero or a negative number" );
+        CV_Error( cv::Error::StsBadArg, "number of iterations cannot be zero or a negative number" );
     }
 
     Mat theta_p = _init_theta.clone();
@@ -559,7 +532,9 @@ Mat LogisticRegressionImpl::remap_labels(const Mat& _labels_i, const map<int, in
 
     for(int i =0;i<labels.rows;i++)
     {
-        new_labels.at<int>(i,0) = lmap.find(labels.at<int>(i,0))->second;
+        map<int, int>::const_iterator val = lmap.find(labels.at<int>(i,0));
+        CV_Assert(val != lmap.end());
+        new_labels.at<int>(i,0) = val->second;
     }
     return new_labels;
 }
@@ -576,10 +551,10 @@ void LogisticRegressionImpl::write(FileStorage& fs) const
     // check if open
     if(fs.isOpened() == 0)
     {
-        CV_Error(CV_StsBadArg,"file can't open. Check file path");
+        CV_Error(cv::Error::StsBadArg,"file can't open. Check file path");
     }
     writeFormat(fs);
-    string desc = "Logisitic Regression Classifier";
+    string desc = "Logistic Regression Classifier";
     fs<<"classifier"<<desc.c_str();
     fs<<"alpha"<<this->params.alpha;
     fs<<"iterations"<<this->params.num_iters;
@@ -599,7 +574,7 @@ void LogisticRegressionImpl::read(const FileNode& fn)
     // check if empty
     if(fn.empty())
     {
-        CV_Error( CV_StsBadArg, "empty FileNode object" );
+        CV_Error( cv::Error::StsBadArg, "empty FileNode object" );
     }
 
     this->params.alpha = (double)fn["alpha"];

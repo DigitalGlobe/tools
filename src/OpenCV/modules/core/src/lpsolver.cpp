@@ -41,7 +41,6 @@
 #include "precomp.hpp"
 #include <climits>
 #include <algorithm>
-#include <cstdarg>
 
 #define dprintf(x)
 #define print_matrix(x)
@@ -91,14 +90,20 @@ static void swap_columns(Mat_<double>& A,int col1,int col2);
 #define SWAP(type,a,b) {type tmp=(a);(a)=(b);(b)=tmp;}
 
 //return codes:-2 (no_sol - unbdd),-1(no_sol - unfsbl), 0(single_sol), 1(multiple_sol=>least_l2_norm)
-int solveLP(const Mat& Func, const Mat& Constr, Mat& z){
+int solveLP(InputArray Func_, InputArray Constr_, OutputArray z_, double constr_eps)
+{
     dprintf(("call to solveLP\n"));
 
     //sanity check (size, type, no. of channels)
-    CV_Assert(Func.type()==CV_64FC1 || Func.type()==CV_32FC1);
-    CV_Assert(Constr.type()==CV_64FC1 || Constr.type()==CV_32FC1);
-    CV_Assert((Func.rows==1 && (Constr.cols-Func.cols==1))||
-            (Func.cols==1 && (Constr.cols-Func.rows==1)));
+    CV_Assert(Func_.type()==CV_64FC1 || Func_.type()==CV_32FC1);
+    CV_Assert(Constr_.type()==CV_64FC1 || Constr_.type()==CV_32FC1);
+    CV_Assert((Func_.rows()==1 && (Constr_.cols()-Func_.cols()==1))||
+            (Func_.cols()==1 && (Constr_.cols()-Func_.rows()==1)));
+    if (z_.fixedType())
+        CV_CheckType(z_.type(), z_.type() == CV_64FC1 || z_.type() == CV_32FC1 || z_.type() == CV_32SC1, "");
+
+    Mat Func = Func_.getMat();
+    Mat Constr = Constr_.getMat();
 
     //copy arguments for we will shall modify them
     Mat_<double> bigC=Mat_<double>(1,(Func.rows==1?Func.cols:Func.rows)+1),
@@ -126,7 +131,7 @@ int solveLP(const Mat& Func, const Mat& Constr, Mat& z){
     }
 
     //return the optimal solution
-    z.create(c.cols,1,CV_64FC1);
+    Mat z(c.cols,1,CV_64FC1);
     MatIterator_<double> it=z.begin<double>();
     unsigned int nsize = (unsigned int)N.size();
     for(int i=1;i<=c.cols;i++,it++){
@@ -137,7 +142,24 @@ int solveLP(const Mat& Func, const Mat& Constr, Mat& z){
         }
     }
 
+    z.copyTo(z_);
+
+    //check constraints feasibility
+    Mat prod = Constr(Rect(0, 0, Constr.cols - 1, Constr.rows)) * z;
+    Mat constr_check = Constr.col(Constr.cols - 1) - prod;
+    double min_value = 0.0;
+    minMaxIdx(constr_check, &min_value);
+    if (min_value < -constr_eps)
+    {
+        return SOLVELP_LOST;
+    }
+
     return res;
+}
+
+int solveLP(InputArray Func, InputArray Constr, OutputArray z)
+{
+    return solveLP(Func, Constr, z, 1e-12);
 }
 
 static int initialize_simplex(Mat_<double>& c, Mat_<double>& b,double& v,vector<int>& N,vector<int>& B,vector<unsigned int>& indexToRow){
@@ -247,12 +269,9 @@ static int initialize_simplex(Mat_<double>& c, Mat_<double>& b,double& v,vector<
 }
 
 static int inner_simplex(Mat_<double>& c, Mat_<double>& b,double& v,vector<int>& N,vector<int>& B,vector<unsigned int>& indexToRow){
-    int count=0;
-    for(;;){
-        dprintf(("iteration #%d\n",count));
-        count++;
 
-        static MatIterator_<double> pos_ptr;
+    for(;;){
+        MatIterator_<double> pos_ptr;
         int e=-1,pos_ctr=0,min_var=INT_MAX;
         bool all_nonzero=true;
         for(pos_ptr=c.begin();pos_ptr!=c.end();pos_ptr++,pos_ctr++){

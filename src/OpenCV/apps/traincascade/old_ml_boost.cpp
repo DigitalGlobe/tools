@@ -168,7 +168,7 @@ CvBoostTree::try_split_node( CvDTreeNode* node )
         // store the responses for the corresponding training samples
         double* weak_eval = ensemble->get_weak_response()->data.db;
         cv::AutoBuffer<int> inn_buf(node->sample_count);
-        const int* labels = data->get_cv_labels( node, (int*)inn_buf );
+        const int* labels = data->get_cv_labels(node, inn_buf.data());
         int i, count = node->sample_count;
         double value = node->value;
 
@@ -191,7 +191,7 @@ CvBoostTree::calc_node_dir( CvDTreeNode* node )
     if( data->get_var_type(vi) >= 0 ) // split on categorical var
     {
         cv::AutoBuffer<int> inn_buf(n);
-        const int* cat_labels = data->get_cat_var_data( node, vi, (int*)inn_buf );
+        const int* cat_labels = data->get_cat_var_data(node, vi, inn_buf.data());
         const int* subset = node->split->subset;
         double sum = 0, sum_abs = 0;
 
@@ -210,7 +210,7 @@ CvBoostTree::calc_node_dir( CvDTreeNode* node )
     else // split on ordered var
     {
         cv::AutoBuffer<uchar> inn_buf(2*n*sizeof(int)+n*sizeof(float));
-        float* values_buf = (float*)(uchar*)inn_buf;
+        float* values_buf = (float*)inn_buf.data();
         int* sorted_indices_buf = (int*)(values_buf + n);
         int* sample_indices_buf = sorted_indices_buf + n;
         const float* values = 0;
@@ -260,7 +260,7 @@ CvBoostTree::find_split_ord_class( CvDTreeNode* node, int vi, float init_quality
     cv::AutoBuffer<uchar> inn_buf;
     if( !_ext_buf )
         inn_buf.allocate(n*(3*sizeof(int)+sizeof(float)));
-    uchar* ext_buf = _ext_buf ? _ext_buf : (uchar*)inn_buf;
+    uchar* ext_buf = _ext_buf ? _ext_buf : inn_buf.data();
     float* values_buf = (float*)ext_buf;
     int* sorted_indices_buf = (int*)(values_buf + n);
     int* sample_indices_buf = sorted_indices_buf + n;
@@ -369,7 +369,7 @@ CvBoostTree::find_split_cat_class( CvDTreeNode* node, int vi, float init_quality
     cv::AutoBuffer<uchar> inn_buf((2*mi+3)*sizeof(double) + mi*sizeof(double*));
     if( !_ext_buf)
         inn_buf.allocate( base_size + 2*n*sizeof(int) );
-    uchar* base_buf = (uchar*)inn_buf;
+    uchar* base_buf = inn_buf.data();
     uchar* ext_buf = _ext_buf ? _ext_buf : base_buf + base_size;
 
     int* cat_labels_buf = (int*)ext_buf;
@@ -490,7 +490,7 @@ CvBoostTree::find_split_ord_reg( CvDTreeNode* node, int vi, float init_quality, 
     cv::AutoBuffer<uchar> inn_buf;
     if( !_ext_buf )
         inn_buf.allocate(2*n*(sizeof(int)+sizeof(float)));
-    uchar* ext_buf = _ext_buf ? _ext_buf : (uchar*)inn_buf;
+    uchar* ext_buf = _ext_buf ? _ext_buf : inn_buf.data();
 
     float* values_buf = (float*)ext_buf;
     int* indices_buf = (int*)(values_buf + n);
@@ -559,7 +559,7 @@ CvBoostTree::find_split_cat_reg( CvDTreeNode* node, int vi, float init_quality, 
     cv::AutoBuffer<uchar> inn_buf(base_size);
     if( !_ext_buf )
         inn_buf.allocate(base_size + n*(2*sizeof(int) + sizeof(float)));
-    uchar* base_buf = (uchar*)inn_buf;
+    uchar* base_buf = inn_buf.data();
     uchar* ext_buf = _ext_buf ? _ext_buf : base_buf + base_size;
 
     int* cat_labels_buf = (int*)ext_buf;
@@ -652,7 +652,7 @@ CvBoostTree::find_surrogate_split_ord( CvDTreeNode* node, int vi, uchar* _ext_bu
     cv::AutoBuffer<uchar> inn_buf;
     if( !_ext_buf )
         inn_buf.allocate(n*(2*sizeof(int)+sizeof(float)));
-    uchar* ext_buf = _ext_buf ? _ext_buf : (uchar*)inn_buf;
+    uchar* ext_buf = _ext_buf ? _ext_buf : inn_buf.data();
     float* values_buf = (float*)ext_buf;
     int* indices_buf = (int*)(values_buf + n);
     int* sample_indices_buf = indices_buf + n;
@@ -733,7 +733,7 @@ CvBoostTree::find_surrogate_split_cat( CvDTreeNode* node, int vi, uchar* _ext_bu
     cv::AutoBuffer<uchar> inn_buf(base_size);
     if( !_ext_buf )
         inn_buf.allocate(base_size + n*sizeof(int));
-    uchar* ext_buf = _ext_buf ? _ext_buf : (uchar*)inn_buf;
+    uchar* ext_buf = _ext_buf ? _ext_buf : inn_buf.data();
     int* cat_labels_buf = (int*)ext_buf;
     const int* cat_labels = data->get_cat_var_data(node, vi, cat_labels_buf);
 
@@ -797,7 +797,7 @@ CvBoostTree::calc_node_value( CvDTreeNode* node )
     int i, n = node->sample_count;
     const double* weights = ensemble->get_weights()->data.db;
     cv::AutoBuffer<uchar> inn_buf(n*(sizeof(int) + ( data->is_classifier ? sizeof(int) : sizeof(int) + sizeof(float))));
-    int* labels_buf = (int*)(uchar*)inn_buf;
+    int* labels_buf = (int*)inn_buf.data();
     const int* labels = data->get_cv_labels(node, labels_buf);
     double* subtree_weights = ensemble->get_subtree_weights()->data.db;
     double rcw[2] = {0,0};
@@ -876,21 +876,21 @@ CvBoostTree::calc_node_value( CvDTreeNode* node )
 }
 
 
-void CvBoostTree::read( CvFileStorage* fs, CvFileNode* fnode, CvBoost* _ensemble, CvDTreeTrainData* _data )
+void CvBoostTree::read( const cv::FileNode& fnode, CvBoost* _ensemble, CvDTreeTrainData* _data )
 {
-    CvDTree::read( fs, fnode, _data );
+    CvDTree::read( fnode, _data );
     ensemble = _ensemble;
 }
 
-void CvBoostTree::read( CvFileStorage*, CvFileNode* )
+void CvBoostTree::read( cv::FileNode& )
 {
     assert(0);
 }
 
-void CvBoostTree::read( CvFileStorage* _fs, CvFileNode* _node,
+void CvBoostTree::read( cv::FileNode& _node,
                         CvDTreeTrainData* _data )
 {
-    CvDTree::read( _fs, _node, _data );
+    CvDTree::read( _node, _data );
 }
 
 
@@ -991,7 +991,7 @@ CvBoost::set_params( const CvBoostParams& _params )
     params = _params;
     if( params.boost_type != DISCRETE && params.boost_type != REAL &&
         params.boost_type != LOGIT && params.boost_type != GENTLE )
-        CV_ERROR( CV_StsBadArg, "Unknown/unsupported boosting type" );
+        CV_ERROR( cv::Error::StsBadArg, "Unknown/unsupported boosting type" );
 
     params.weak_count = MAX( params.weak_count, 1 );
     params.weight_trim_rate = MAX( params.weight_trim_rate, 0. );
@@ -1045,7 +1045,7 @@ CvBoost::train( const CvMat* _train_data, int _tflag,
             _sample_idx, _var_type, _missing_mask, _params, true, true );
 
         if( data->get_num_classes() != 2 )
-            CV_ERROR( CV_StsNotImplemented,
+            CV_ERROR( cv::Error::StsNotImplemented,
             "Boosted trees can only be used for 2-class classification." );
         CV_CALL( storage = cvCreateMemStorage() );
         weak = cvCreateSeq( 0, sizeof(CvSeq), sizeof(CvBoostTree*), storage );
@@ -1147,7 +1147,7 @@ CvBoost::update_weights( CvBoostTree* tree )
             _buf_size += data->get_length_subbuf()*(sizeof(float)+sizeof(uchar));
     }
     inn_buf.allocate(_buf_size);
-    uchar* cur_buf_pos = (uchar*)inn_buf;
+    uchar* cur_buf_pos = inn_buf.data();
 
     if ( (params.boost_type == LOGIT) || (params.boost_type == GENTLE) )
     {
@@ -1482,7 +1482,7 @@ CvBoost::get_active_vars( bool absolute_idx )
     __BEGIN__;
 
     if( !weak )
-        CV_ERROR( CV_StsError, "The boosted tree ensemble has not been trained yet" );
+        CV_ERROR( cv::Error::StsError, "The boosted tree ensemble has not been trained yet" );
 
     if( !active_vars || !active_vars_abs )
     {
@@ -1612,13 +1612,13 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
     const float* sample_data;
 
     if( !weak )
-        CV_Error( CV_StsError, "The boosted tree ensemble has not been trained yet" );
+        CV_Error( cv::Error::StsError, "The boosted tree ensemble has not been trained yet" );
 
     if( !CV_IS_MAT(_sample) || CV_MAT_TYPE(_sample->type) != CV_32FC1 ||
         (_sample->cols != 1 && _sample->rows != 1) ||
         (_sample->cols + _sample->rows - 1 != data->var_all && !raw_mode) ||
         (active_vars && _sample->cols + _sample->rows - 1 != active_vars->cols && raw_mode) )
-            CV_Error( CV_StsBadArg,
+            CV_Error( cv::Error::StsBadArg,
         "the input sample must be 1d floating-point vector with the same "
         "number of elements as the total number of variables or "
         "as the number of variables used for training" );
@@ -1627,7 +1627,7 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
     {
         if( !CV_IS_MAT(_missing) || !CV_IS_MASK_ARR(_missing) ||
             !CV_ARE_SIZES_EQ(_missing, _sample) )
-            CV_Error( CV_StsBadArg,
+            CV_Error( cv::Error::StsBadArg,
             "the missing data mask must be 8-bit vector of the same size as input sample" );
     }
 
@@ -1644,7 +1644,7 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
             CV_MAT_TYPE(weak_responses->type) != CV_32FC1 ||
             (weak_responses->cols != 1 && weak_responses->rows != 1) ||
             weak_responses->cols + weak_responses->rows - 1 != weak_count )
-            CV_Error( CV_StsBadArg,
+            CV_Error( cv::Error::StsBadArg,
             "The output matrix of weak classifier responses must be valid "
             "floating-point vector of the same number of components as the length of input slice" );
         wstep = CV_IS_MAT_CONT(weak_responses->type) ? 1 : weak_responses->step/sizeof(float);
@@ -1700,7 +1700,7 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
                     c = a;
                 int ival = cvRound(val);
                 if ( (ival != val) && (!m) )
-                    CV_Error( CV_StsBadArg,
+                    CV_Error( cv::Error::StsBadArg,
                         "one of input categorical variable is not an integer" );
 
                 while( a < b )
@@ -1735,7 +1735,7 @@ CvBoost::predict( const CvMat* _sample, const CvMat* _missing,
     else
     {
         if( !CV_IS_MAT_CONT(_sample->type & (_missing ? _missing->type : -1)) )
-            CV_Error( CV_StsBadArg, "In raw mode the input vectors must be continuous" );
+            CV_Error( cv::Error::StsBadArg, "In raw mode the input vectors must be continuous" );
     }
 
     cvStartReadSeq( weak, &reader );
@@ -1884,7 +1884,7 @@ float CvBoost::calc_error( CvMLData* _data, int type, std::vector<float> *resp )
     return err;
 }
 
-void CvBoost::write_params( CvFileStorage* fs ) const
+void CvBoost::write_params( cv::FileStorage& fs ) const
 {
     const char* boost_type_str =
         params.boost_type == DISCRETE ? "DiscreteAdaboost" :
@@ -1899,35 +1899,33 @@ void CvBoost::write_params( CvFileStorage* fs ) const
         params.boost_type == SQERR ? "SquaredErr" : 0;
 
     if( boost_type_str )
-        cvWriteString( fs, "boosting_type", boost_type_str );
+        fs.write( "boosting_type", boost_type_str );
     else
-        cvWriteInt( fs, "boosting_type", params.boost_type );
+        fs.write( "boosting_type", params.boost_type );
 
     if( split_crit_str )
-        cvWriteString( fs, "splitting_criteria", split_crit_str );
+        fs.write( "splitting_criteria", split_crit_str );
     else
-        cvWriteInt( fs, "splitting_criteria", params.split_criteria );
+        fs.write( "splitting_criteria", params.split_criteria );
 
-    cvWriteInt( fs, "ntrees", weak->total );
-    cvWriteReal( fs, "weight_trimming_rate", params.weight_trim_rate );
+    fs.write( "ntrees", weak->total );
+    fs.write( "weight_trimming_rate", params.weight_trim_rate );
 
     data->write_params( fs );
 }
 
 
-void CvBoost::read_params( CvFileStorage* fs, CvFileNode* fnode )
+void CvBoost::read_params( cv::FileNode& fnode )
 {
     CV_FUNCNAME( "CvBoost::read_params" );
 
     __BEGIN__;
 
-    CvFileNode* temp;
-
-    if( !fnode || !CV_NODE_IS_MAP(fnode->tag) )
+    if( fnode.empty() || !fnode.isMap() )
         return;
 
     data = new CvDTreeTrainData();
-    CV_CALL( data->read_params(fs, fnode));
+    data->read_params( fnode );
     data->shared = true;
 
     params.max_depth = data->params.max_depth;
@@ -1937,41 +1935,41 @@ void CvBoost::read_params( CvFileStorage* fs, CvFileNode* fnode )
     params.regression_accuracy = data->params.regression_accuracy;
     params.use_surrogates = data->params.use_surrogates;
 
-    temp = cvGetFileNodeByName( fs, fnode, "boosting_type" );
-    if( !temp )
+    cv::FileNode temp = fnode[ "boosting_type" ];
+    if( temp.empty() )
         return;
 
-    if( temp && CV_NODE_IS_STRING(temp->tag) )
+    if ( temp.isString() )
     {
-        const char* boost_type_str = cvReadString( temp, "" );
-        params.boost_type = strcmp( boost_type_str, "DiscreteAdaboost" ) == 0 ? DISCRETE :
-                            strcmp( boost_type_str, "RealAdaboost" ) == 0 ? REAL :
-                            strcmp( boost_type_str, "LogitBoost" ) == 0 ? LOGIT :
-                            strcmp( boost_type_str, "GentleAdaboost" ) == 0 ? GENTLE : -1;
+        std::string boost_type_str = temp;
+        params.boost_type = (boost_type_str == "DiscreteAdaboost") ? DISCRETE :
+                            (boost_type_str == "RealAdaboost") ? REAL :
+                            (boost_type_str == "LogitBoost") ? LOGIT :
+                            (boost_type_str == "GentleAdaboost") ? GENTLE : -1;
     }
     else
-        params.boost_type = cvReadInt( temp, -1 );
+        params.boost_type = temp.empty() ? -1 : (int)temp;
 
     if( params.boost_type < DISCRETE || params.boost_type > GENTLE )
-        CV_ERROR( CV_StsBadArg, "Unknown boosting type" );
+        CV_ERROR( cv::Error::StsBadArg, "Unknown boosting type" );
 
-    temp = cvGetFileNodeByName( fs, fnode, "splitting_criteria" );
-    if( temp && CV_NODE_IS_STRING(temp->tag) )
+    temp = fnode[ "splitting_criteria" ];
+    if( !temp.empty() && temp.isString() )
     {
-        const char* split_crit_str = cvReadString( temp, "" );
-        params.split_criteria = strcmp( split_crit_str, "Default" ) == 0 ? DEFAULT :
-                                strcmp( split_crit_str, "Gini" ) == 0 ? GINI :
-                                strcmp( split_crit_str, "Misclassification" ) == 0 ? MISCLASS :
-                                strcmp( split_crit_str, "SquaredErr" ) == 0 ? SQERR : -1;
+        std::string split_crit_str = temp;
+        params.split_criteria = ( split_crit_str == "Default" ) ? DEFAULT :
+                                ( split_crit_str == "Gini" ) ? GINI :
+                                ( split_crit_str == "Misclassification" ) ? MISCLASS :
+                                ( split_crit_str == "SquaredErr" ) ? SQERR : -1;
     }
     else
-        params.split_criteria = cvReadInt( temp, -1 );
+        params.split_criteria = temp.empty() ? -1 : (int) temp;
 
     if( params.split_criteria < DEFAULT || params.boost_type > SQERR )
-        CV_ERROR( CV_StsBadArg, "Unknown boosting type" );
+        CV_ERROR( cv::Error::StsBadArg, "Unknown boosting type" );
 
-    params.weak_count = cvReadIntByName( fs, fnode, "ntrees" );
-    params.weight_trim_rate = cvReadRealByName( fs, fnode, "weight_trimming_rate", 0. );
+    params.weak_count = (int) fnode[ "ntrees" ];
+    params.weight_trim_rate = (double)fnode["weight_trimming_rate"];
 
     __END__;
 }
@@ -1979,42 +1977,42 @@ void CvBoost::read_params( CvFileStorage* fs, CvFileNode* fnode )
 
 
 void
-CvBoost::read( CvFileStorage* fs, CvFileNode* node )
+CvBoost::read( cv::FileNode& node )
 {
     CV_FUNCNAME( "CvBoost::read" );
 
     __BEGIN__;
 
-    CvSeqReader reader;
-    CvFileNode* trees_fnode;
+    cv::FileNodeIterator reader;
+    cv::FileNode trees_fnode;
     CvMemStorage* storage;
-    int i, ntrees;
+    int ntrees;
 
     clear();
-    read_params( fs, node );
+    read_params( node );
 
     if( !data )
         EXIT;
 
-    trees_fnode = cvGetFileNodeByName( fs, node, "trees" );
-    if( !trees_fnode || !CV_NODE_IS_SEQ(trees_fnode->tag) )
-        CV_ERROR( CV_StsParseError, "<trees> tag is missing" );
+    trees_fnode =  node[ "trees" ];
+    if( trees_fnode.empty() || !trees_fnode.isSeq() )
+        CV_ERROR( cv::Error::StsParseError, "<trees> tag is missing" );
 
-    cvStartReadSeq( trees_fnode->data.seq, &reader );
-    ntrees = trees_fnode->data.seq->total;
+    reader = trees_fnode.begin();
+    ntrees = (int) trees_fnode.size();
 
     if( ntrees != params.weak_count )
-        CV_ERROR( CV_StsUnmatchedSizes,
+        CV_ERROR( cv::Error::StsUnmatchedSizes,
         "The number of trees stored does not match <ntrees> tag value" );
 
     CV_CALL( storage = cvCreateMemStorage() );
     weak = cvCreateSeq( 0, sizeof(CvSeq), sizeof(CvBoostTree*), storage );
 
-    for( i = 0; i < ntrees; i++ )
+    for( int i = 0; i < ntrees; i++ )
     {
         CvBoostTree* tree = new CvBoostTree();
-        CV_CALL(tree->read( fs, (CvFileNode*)reader.ptr, this, data ));
-        CV_NEXT_SEQ_ELEM( reader.seq->elem_size, reader );
+        tree->read( *reader, this, data );
+        reader++;
         cvSeqPush( weak, &tree );
     }
     get_active_vars();
@@ -2024,7 +2022,7 @@ CvBoost::read( CvFileStorage* fs, CvFileNode* node )
 
 
 void
-CvBoost::write( CvFileStorage* fs, const char* name ) const
+CvBoost::write( cv::FileStorage& fs, const char* name ) const
 {
     CV_FUNCNAME( "CvBoost::write" );
 
@@ -2033,27 +2031,27 @@ CvBoost::write( CvFileStorage* fs, const char* name ) const
     CvSeqReader reader;
     int i;
 
-    cvStartWriteStruct( fs, name, CV_NODE_MAP, CV_TYPE_NAME_ML_BOOSTING );
+    fs.startWriteStruct( name, cv::FileNode::MAP, CV_TYPE_NAME_ML_BOOSTING );
 
     if( !weak )
-        CV_ERROR( CV_StsBadArg, "The classifier has not been trained yet" );
+        CV_ERROR( cv::Error::StsBadArg, "The classifier has not been trained yet" );
 
     write_params( fs );
-    cvStartWriteStruct( fs, "trees", CV_NODE_SEQ );
+    fs.startWriteStruct( "trees", cv::FileNode::SEQ );
 
-    cvStartReadSeq( weak, &reader );
+    cvStartReadSeq(weak, &reader);
 
     for( i = 0; i < weak->total; i++ )
     {
         CvBoostTree* tree;
         CV_READ_SEQ_ELEM( tree, reader );
-        cvStartWriteStruct( fs, 0, CV_NODE_MAP );
+        fs.startWriteStruct( 0, cv::FileNode::MAP );
         tree->write( fs );
-        cvEndWriteStruct( fs );
+        fs.endWriteStruct();
     }
 
-    cvEndWriteStruct( fs );
-    cvEndWriteStruct( fs );
+    fs.endWriteStruct();
+    fs.endWriteStruct();
 
     __END__;
 }
@@ -2122,12 +2120,12 @@ CvBoost::train( const Mat& _train_data, int _tflag,
                const Mat& _missing_mask,
                CvBoostParams _params, bool _update )
 {
-    train_data_hdr = _train_data;
+    train_data_hdr = cvMat(_train_data);
     train_data_mat = _train_data;
-    responses_hdr = _responses;
+    responses_hdr = cvMat(_responses);
     responses_mat = _responses;
 
-    CvMat vidx = _var_idx, sidx = _sample_idx, vtype = _var_type, mmask = _missing_mask;
+    CvMat vidx = cvMat(_var_idx), sidx = cvMat(_sample_idx), vtype = cvMat(_var_type), mmask = cvMat(_missing_mask);
 
     return train(&train_data_hdr, _tflag, &responses_hdr, vidx.data.ptr ? &vidx : 0,
           sidx.data.ptr ? &sidx : 0, vtype.data.ptr ? &vtype : 0,
@@ -2138,7 +2136,7 @@ float
 CvBoost::predict( const Mat& _sample, const Mat& _missing,
                   const Range& slice, bool raw_mode, bool return_sum ) const
 {
-    CvMat sample = _sample, mmask = _missing;
+    CvMat sample = cvMat(_sample), mmask = cvMat(_missing);
     /*if( weak_responses )
     {
         int weak_count = cvSliceLength( slice, weak );

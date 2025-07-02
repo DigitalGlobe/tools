@@ -51,7 +51,6 @@
 
 /* Includes */
 #include <opencv2/core.hpp>
-#include <stdint.h>
 
 
 
@@ -95,7 +94,7 @@ typedef struct RHO_HEST RHO_HEST;
  * Initialize the estimator context, by allocating the aligned buffers
  * internally needed.
  *
- * @return A pointer to the context if successful; NULL if an error occured.
+ * @return A pointer to the context if successful; NULL if an error occurred.
  */
 
 Ptr<RHO_HEST> rhoInit(void);
@@ -216,7 +215,7 @@ void rhoSeed(Ptr<RHO_HEST> p, uint64_t seed);
  * homography with at least the minimum required support, and 0 if it was not.
  *
  *
- * @param [in/out] p       The context to use for homography estimation. Must
+ * @param [in,out] p       The context to use for homography estimation. Must
  *                             be already initialized. Cannot be NULL.
  * @param [in]     src     The pointer to the source points of the matches.
  *                             Must be aligned to 4 bytes. Cannot be NULL.

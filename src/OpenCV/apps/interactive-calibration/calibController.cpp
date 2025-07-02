@@ -1,10 +1,16 @@
+// This file is part of OpenCV project.
+// It is subject to the license terms in the LICENSE file found in the top-level directory
+// of this distribution and at http://opencv.org/license.html.
+
 #include "calibController.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <ctime>
+
 #include <opencv2/calib3d.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/imgcodecs.hpp>
 
 double calib::calibController::estimateCoverageQuality()
 {
@@ -205,22 +211,27 @@ void calib::calibDataController::filterFrames()
                 worstElemIndex = i;
             }
         }
-        showOverlayMessage(cv::format("Frame %d is worst", worstElemIndex + 1));
+        showOverlayMessage(cv::format("Frame %zu is worst", worstElemIndex + 1));
+
+        if(mCalibData->allFrames.size())
+            mCalibData->allFrames.erase(mCalibData->allFrames.begin() + worstElemIndex);
 
         if(mCalibData->imagePoints.size()) {
             mCalibData->imagePoints.erase(mCalibData->imagePoints.begin() + worstElemIndex);
             mCalibData->objectPoints.erase(mCalibData->objectPoints.begin() + worstElemIndex);
-        }
-        else {
-            mCalibData->allCharucoCorners.erase(mCalibData->allCharucoCorners.begin() + worstElemIndex);
-            mCalibData->allCharucoIds.erase(mCalibData->allCharucoIds.begin() + worstElemIndex);
+            if (mCalibData->allCharucoCorners.size()) {
+                mCalibData->allCharucoCorners.erase(mCalibData->allCharucoCorners.begin() + worstElemIndex);
+                mCalibData->allCharucoIds.erase(mCalibData->allCharucoIds.begin() + worstElemIndex);
+            }
         }
 
         cv::Mat newErrorsVec = cv::Mat((int)numberOfFrames - 1, 1, CV_64F);
         std::copy(mCalibData->perViewErrors.ptr<double>(0),
                   mCalibData->perViewErrors.ptr<double>((int)worstElemIndex), newErrorsVec.ptr<double>(0));
-        std::copy(mCalibData->perViewErrors.ptr<double>((int)worstElemIndex + 1), mCalibData->perViewErrors.ptr<double>((int)numberOfFrames),
+        if((int)worstElemIndex < (int)numberOfFrames-1) {
+            std::copy(mCalibData->perViewErrors.ptr<double>((int)worstElemIndex + 1), mCalibData->perViewErrors.ptr<double>((int)numberOfFrames),
                     newErrorsVec.ptr<double>((int)worstElemIndex));
+        }
         mCalibData->perViewErrors = newErrorsVec;
     }
 }
@@ -232,6 +243,11 @@ void calib::calibDataController::setParametersFileName(const std::string &name)
 
 void calib::calibDataController::deleteLastFrame()
 {
+    if(!mCalibData->allFrames.empty())
+    {
+        mCalibData->allFrames.pop_back();
+    }
+
     if( !mCalibData->imagePoints.empty()) {
         mCalibData->imagePoints.pop_back();
         mCalibData->objectPoints.pop_back();
@@ -262,6 +278,7 @@ void calib::calibDataController::rememberCurrentParameters()
 
 void calib::calibDataController::deleteAllData()
 {
+    mCalibData->allFrames.clear();
     mCalibData->imagePoints.clear();
     mCalibData->objectPoints.clear();
     mCalibData->allCharucoCorners.clear();
@@ -273,6 +290,10 @@ void calib::calibDataController::deleteAllData()
 
 bool calib::calibDataController::saveCurrentCameraParameters() const
 {
+
+    for(size_t i = 0; i < mCalibData->allFrames.size(); i++)
+        cv::imwrite(cv::format("calibration_%zu.png", i), mCalibData->allFrames[i]);
+
     bool success = false;
     if(mCalibData->cameraMatrix.total()) {
             cv::FileStorage parametersWriter(mParamsFileName, cv::FileStorage::WRITE);

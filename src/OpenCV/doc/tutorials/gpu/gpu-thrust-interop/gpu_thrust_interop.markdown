@@ -1,11 +1,16 @@
-Using a cv::cuda::GpuMat with thrust
+@cond CUDA_MODULES
+Using a cv::cuda::GpuMat with thrust {#tutorial_gpu_thrust_interop}
 ===========================================
+
+@tableofcontents
+
+@prev_tutorial{tutorial_gpu_basics_similarity}
 
 Goal
 ----
 
 Thrust is an extremely powerful library for various cuda accelerated algorithms.  However thrust is designed
-to work with vectors and not pitched matricies.  The following tutorial will discuss wrapping cv::cuda::GpuMat's
+to work with vectors and not pitched matrices.  The following tutorial will discuss wrapping cv::cuda::GpuMat's
 into thrust iterators that can be used with thrust algorithms.
 
 This tutorial should show you how to:
@@ -68,3 +73,4 @@ Next we will determine how many values are greater than 0 by using thrust::count
 
 We will use those results to create an output buffer for storing the copied values, we will then use copy_if with the same predicate to populate the output buffer.
 Lastly we will download the values into a CPU mat for viewing.
+@endcond

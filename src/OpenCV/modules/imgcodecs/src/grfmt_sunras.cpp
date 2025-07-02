@@ -1,47 +1,11 @@
-/*M///////////////////////////////////////////////////////////////////////////////////////
-//
-//  IMPORTANT: READ BEFORE DOWNLOADING, COPYING, INSTALLING OR USING.
-//
-//  By downloading, copying, installing or using the software you agree to this license.
-//  If you do not agree to this license, do not download, install,
-//  copy or use the software.
-//
-//
-//                           License Agreement
-//                For Open Source Computer Vision Library
-//
-// Copyright (C) 2000-2008, Intel Corporation, all rights reserved.
-// Copyright (C) 2009, Willow Garage Inc., all rights reserved.
-// Third party copyrights are property of their respective owners.
-//
-// Redistribution and use in source and binary forms, with or without modification,
-// are permitted provided that the following conditions are met:
-//
-//   * Redistribution's of source code must retain the above copyright notice,
-//     this list of conditions and the following disclaimer.
-//
-//   * Redistribution's in binary form must reproduce the above copyright notice,
-//     this list of conditions and the following disclaimer in the documentation
-//     and/or other materials provided with the distribution.
-//
-//   * The name of the copyright holders may not be used to endorse or promote products
-//     derived from this software without specific prior written permission.
-//
-// This software is provided by the copyright holders and contributors "as is" and
-// any express or implied warranties, including, but not limited to, the implied
-// warranties of merchantability and fitness for a particular purpose are disclaimed.
-// In no event shall the Intel Corporation or contributors be liable for any direct,
-// indirect, incidental, special, exemplary, or consequential damages
-// (including, but not limited to, procurement of substitute goods or services;
-// loss of use, data, or profits; or business interruption) however caused
-// and on any theory of liability, whether in contract, strict liability,
-// or tort (including negligence or otherwise) arising in any way out of
-// the use of this software, even if advised of the possibility of such damage.
-//
-//M*/
+// This file is part of OpenCV project.
+// It is subject to the license terms in the LICENSE file found in the top-level
+// directory of this distribution and at http://opencv.org/license.html
 
 #include "precomp.hpp"
 #include "grfmt_sunras.hpp"
+
+#ifdef HAVE_IMGCODEC_SUNRASTER
 
 namespace cv
 {
@@ -54,6 +18,11 @@ SunRasterDecoder::SunRasterDecoder()
 {
     m_offset = -1;
     m_signature = fmtSignSunRas;
+    m_bpp = 0;
+    m_encoding = RAS_STANDARD;
+    m_maptype = RMT_NONE;
+    m_maplength = 0;
+    m_buf_supported = true;
 }
 
 
@@ -76,7 +45,12 @@ bool  SunRasterDecoder::readHeader()
 {
     bool result = false;
 
-    if( !m_strm.open( m_filename )) return false;
+    if (!m_buf.empty())
+        m_strm.open(m_buf);
+    else
+        m_strm.open(m_filename);
+
+    if( !m_strm.isOpened()) return false;
 
     try
     {
@@ -84,7 +58,7 @@ bool  SunRasterDecoder::readHeader()
         m_width  = m_strm.getDWord();
         m_height = m_strm.getDWord();
         m_bpp    = m_strm.getDWord();
-        int palSize = 3*(1 << m_bpp);
+        int palSize = (m_bpp > 0 && m_bpp <= 8) ? (3*(1 << m_bpp)) : 0;
 
         m_strm.skip( 4 );
         m_encoding = (SunRasType)m_strm.getDWord();
@@ -120,7 +94,7 @@ bool  SunRasterDecoder::readHeader()
                     m_type = IsColorPalette( m_palette, m_bpp ) ? CV_8UC3 : CV_8UC1;
                     m_offset = m_strm.getPos();
 
-                    assert( m_offset == 32 + m_maplength );
+                    CV_Assert(m_offset == 32 + m_maplength);
                     result = true;
                 }
             }
@@ -133,7 +107,7 @@ bool  SunRasterDecoder::readHeader()
 
                 m_offset = m_strm.getPos();
 
-                assert( m_offset == 32 + m_maplength );
+                CV_Assert(m_offset == 32 + m_maplength);
                 result = true;
             }
         }
@@ -154,10 +128,10 @@ bool  SunRasterDecoder::readHeader()
 
 bool  SunRasterDecoder::readData( Mat& img )
 {
-    int color = img.channels() > 1;
+    bool color = img.channels() > 1;
     uchar* data = img.ptr();
-    int step = (int)img.step;
-    uchar  gray_palette[256];
+    size_t step = img.step;
+    uchar  gray_palette[256] = {0};
     bool   result = false;
     int  src_pitch = ((m_width*m_bpp + 7)/8 + 1) & -2;
     int  nch = color ? 3 : 1;
@@ -168,9 +142,7 @@ bool  SunRasterDecoder::readData( Mat& img )
         return false;
 
     AutoBuffer<uchar> _src(src_pitch + 32);
-    uchar* src = _src;
-    AutoBuffer<uchar> _bgr(m_width*3 + 32);
-    uchar* bgr = _bgr;
+    uchar* src = _src.data();
 
     if( !color && m_maptype == RMT_EQUAL_RGB )
         CvtPaletteToGray( m_palette, gray_palette, 1 << m_bpp );
@@ -226,7 +198,7 @@ bool  SunRasterDecoder::readData( Mat& img )
                         code = m_strm.getByte();
                         if( len > line_end - tsrc )
                         {
-                            assert(0);
+                            CV_Error(Error::StsInternal, "");
                             goto bad_decoding_1bpp;
                         }
 
@@ -304,11 +276,11 @@ bad_decoding_1bpp:
                         code = m_strm.getByte();
 
                         if( color )
-                            data = FillUniColor( data, line_end, step, width3,
+                            data = FillUniColor( data, line_end, validateToInt(step), width3,
                                                  y, m_height, len,
                                                  m_palette[code] );
                         else
-                            data = FillUniGray( data, line_end, step, width3,
+                            data = FillUniGray( data, line_end, validateToInt(step), width3,
                                                 y, m_height, len,
                                                 gray_palette[code] );
                         if( y >= m_height )
@@ -334,16 +306,18 @@ bad_decoding_end:
         case 24:
             for( y = 0; y < m_height; y++, data += step )
             {
-                m_strm.getBytes( color ? data : bgr, src_pitch );
+                m_strm.getBytes(src, src_pitch );
 
                 if( color )
                 {
-                    if( m_type == RAS_FORMAT_RGB )
-                        icvCvt_RGB2BGR_8u_C3R( data, 0, data, 0, cvSize(m_width,1) );
+                    if( m_type == RAS_FORMAT_RGB || m_use_rgb)
+                        icvCvt_RGB2BGR_8u_C3R(src, 0, data, 0, Size(m_width,1) );
+                    else
+                        memcpy(data, src, std::min(step, (size_t)src_pitch));
                 }
                 else
                 {
-                    icvCvt_BGR2Gray_8u_C3C1R( bgr, 0, data, 0, cvSize(m_width,1),
+                    icvCvt_BGR2Gray_8u_C3C1R(src, 0, data, 0, Size(m_width,1),
                                               m_type == RAS_FORMAT_RGB ? 2 : 0 );
                 }
             }
@@ -358,16 +332,16 @@ bad_decoding_end:
                 m_strm.getBytes( src + 3, src_pitch );
 
                 if( color )
-                    icvCvt_BGRA2BGR_8u_C4C3R( src + 4, 0, data, 0, cvSize(m_width,1),
-                                              m_type == RAS_FORMAT_RGB ? 2 : 0 );
+                    icvCvt_BGRA2BGR_8u_C4C3R( src + 4, 0, data, 0, Size(m_width,1),
+                                              (m_type == RAS_FORMAT_RGB || m_use_rgb) ? 2 : 0 );
                 else
-                    icvCvt_BGRA2Gray_8u_C4C1R( src + 4, 0, data, 0, cvSize(m_width,1),
+                    icvCvt_BGRA2Gray_8u_C4C1R( src + 4, 0, data, 0, Size(m_width,1),
                                                m_type == RAS_FORMAT_RGB ? 2 : 0 );
             }
             result = true;
             break;
         default:
-            assert(0);
+            CV_Error(Error::StsInternal, "");
         }
     }
     catch( ... )
@@ -383,6 +357,7 @@ bad_decoding_end:
 SunRasterEncoder::SunRasterEncoder()
 {
     m_description = "Sun raster files (*.sr;*.ras)";
+    m_buf_supported = true;
 }
 
 
@@ -402,19 +377,30 @@ bool  SunRasterEncoder::write( const Mat& img, const std::vector<int>& )
     int fileStep = (width*channels + 1) & -2;
     WMByteStream  strm;
 
-    if( strm.open(m_filename) )
+    if (m_buf) {
+        if (!strm.open(*m_buf)) {
+            return false;
+        }
+        else {
+            m_buf->reserve(height * fileStep + 32);
+        }
+    }
+    else
+        strm.open(m_filename);
+
+    if( strm.isOpened() )
     {
-        strm.putBytes( fmtSignSunRas, (int)strlen(fmtSignSunRas) );
-        strm.putDWord( width );
-        strm.putDWord( height );
-        strm.putDWord( channels*8 );
-        strm.putDWord( fileStep*height );
-        strm.putDWord( RAS_STANDARD );
-        strm.putDWord( RMT_NONE );
-        strm.putDWord( 0 );
+        CHECK_WRITE(strm.putBytes( fmtSignSunRas, (int)strlen(fmtSignSunRas) ));
+        CHECK_WRITE(strm.putDWord( width ));
+        CHECK_WRITE(strm.putDWord( height ));
+        CHECK_WRITE(strm.putDWord( channels*8 ));
+        CHECK_WRITE(strm.putDWord( fileStep*height ));
+        CHECK_WRITE(strm.putDWord( RAS_STANDARD ));
+        CHECK_WRITE(strm.putDWord( RMT_NONE ));
+        CHECK_WRITE(strm.putDWord( 0 ));
 
         for( y = 0; y < height; y++ )
-            strm.putBytes( img.ptr(y), fileStep );
+            CHECK_WRITE(strm.putBytes( img.ptr(y), fileStep ));
 
         strm.close();
         result = true;
@@ -423,3 +409,5 @@ bool  SunRasterEncoder::write( const Mat& img, const std::vector<int>& )
 }
 
 }
+
+#endif // HAVE_IMGCODEC_SUNRASTER

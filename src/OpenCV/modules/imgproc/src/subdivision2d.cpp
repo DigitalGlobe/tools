@@ -229,7 +229,7 @@ int Subdiv2D::newEdge()
 {
     if( freeQEdge <= 0 )
     {
-        qedges.push_back(QuadEdge());
+        qedges.emplace_back();
         freeQEdge = (int)(qedges.size()-1);
     }
     int edge = freeQEdge*4;
@@ -275,15 +275,17 @@ void Subdiv2D::deletePoint(int vidx)
 
 int Subdiv2D::locate(Point2f pt, int& _edge, int& _vertex)
 {
+    CV_INSTRUMENT_REGION();
+
     int vertex = 0;
 
     int i, maxEdges = (int)(qedges.size() * 4);
 
     if( qedges.size() < (size_t)4 )
-        CV_Error( CV_StsError, "Subdivision is empty" );
+        CV_Error( cv::Error::StsError, "Subdivision is empty" );
 
     if( pt.x < topLeft.x || pt.y < topLeft.y || pt.x >= bottomRight.x || pt.y >= bottomRight.y )
-        CV_Error( CV_StsOutOfRange, "" );
+        CV_Error( cv::Error::StsOutOfRange, "" );
 
     int edge = recentEdge;
     CV_Assert(edge > 0);
@@ -409,14 +411,16 @@ isPtInCircle3( Point2f pt, Point2f a, Point2f b, Point2f c)
 
 int Subdiv2D::insert(Point2f pt)
 {
+    CV_INSTRUMENT_REGION();
+
     int curr_point = 0, curr_edge = 0, deleted_edge = 0;
     int location = locate( pt, curr_edge, curr_point );
 
     if( location == PTLOC_ERROR )
-        CV_Error( CV_StsBadSize, "" );
+        CV_Error( cv::Error::StsBadSize, "" );
 
     if( location == PTLOC_OUTSIDE_RECT )
-        CV_Error( CV_StsOutOfRange, "" );
+        CV_Error( cv::Error::StsOutOfRange, "" );
 
     if( location == PTLOC_VERTEX )
         return curr_point;
@@ -430,9 +434,9 @@ int Subdiv2D::insert(Point2f pt)
     else if( location == PTLOC_INSIDE )
         ;
     else
-        CV_Error_(CV_StsError, ("Subdiv2D::locate returned invalid location = %d", location) );
+        CV_Error_(cv::Error::StsError, ("Subdiv2D::locate returned invalid location = %d", location) );
 
-    assert( curr_edge != 0 );
+    CV_Assert( curr_edge != 0 );
     validGeometry = false;
 
     curr_point = newPoint(pt, false);
@@ -479,13 +483,17 @@ int Subdiv2D::insert(Point2f pt)
 
 void Subdiv2D::insert(const std::vector<Point2f>& ptvec)
 {
+    CV_INSTRUMENT_REGION();
+
     for( size_t i = 0; i < ptvec.size(); i++ )
         insert(ptvec[i]);
 }
 
 void Subdiv2D::initDelaunay( Rect rect )
 {
-    float big_coord = 3.f * MAX( rect.width, rect.height );
+    CV_INSTRUMENT_REGION();
+
+    float big_coord = 6.f * MAX( rect.width, rect.height );
     float rx = (float)rect.x;
     float ry = (float)rect.y;
 
@@ -644,6 +652,8 @@ isRightOf2( const Point2f& pt, const Point2f& org, const Point2f& diff )
 
 int Subdiv2D::findNearest(Point2f pt, Point2f* nearestPt)
 {
+    CV_INSTRUMENT_REGION();
+
     if( !validGeometry )
         calcVoronoi();
 
@@ -723,9 +733,9 @@ void Subdiv2D::getEdgeList(std::vector<Vec4f>& edgeList) const
     }
 }
 
-void Subdiv2D::getTriangleList(std::vector<Vec6f>& triangleList) const
+void Subdiv2D::getLeadingEdgeList(std::vector<int>& leadingEdgeList) const
 {
-    triangleList.clear();
+    leadingEdgeList.clear();
     int i, total = (int)(qedges.size()*4);
     std::vector<bool> edgemask(total, false);
 
@@ -733,16 +743,43 @@ void Subdiv2D::getTriangleList(std::vector<Vec6f>& triangleList) const
     {
         if( edgemask[i] )
             continue;
-        Point2f a, b, c;
         int edge = i;
-        edgeOrg(edge, &a);
         edgemask[edge] = true;
         edge = getEdge(edge, NEXT_AROUND_LEFT);
-        edgeOrg(edge, &b);
         edgemask[edge] = true;
         edge = getEdge(edge, NEXT_AROUND_LEFT);
-        edgeOrg(edge, &c);
         edgemask[edge] = true;
+        leadingEdgeList.push_back(i);
+    }
+}
+
+void Subdiv2D::getTriangleList(std::vector<Vec6f>& triangleList) const
+{
+    triangleList.clear();
+    int i, total = (int)(qedges.size()*4);
+    std::vector<bool> edgemask(total, false);
+    Rect2f rect(topLeft.x, topLeft.y, bottomRight.x - topLeft.x, bottomRight.y - topLeft.y);
+
+    for( i = 4; i < total; i += 2 )
+    {
+        if( edgemask[i] )
+            continue;
+        Point2f a, b, c;
+        int edge_a = i;
+        edgeOrg(edge_a, &a);
+        if ( !rect.contains(a) )
+            continue;
+        int edge_b = getEdge(edge_a, NEXT_AROUND_LEFT);
+        edgeOrg(edge_b, &b);
+        if ( !rect.contains(b) )
+            continue;
+        int edge_c = getEdge(edge_b, NEXT_AROUND_LEFT);
+        edgeOrg(edge_c, &c);
+        if ( !rect.contains(c) )
+            continue;
+        edgemask[edge_a] = true;
+        edgemask[edge_b] = true;
+        edgemask[edge_c] = true;
         triangleList.push_back(Vec6f(a.x, a.y, b.x, b.y, c.x, c.y));
     }
 }

@@ -2,22 +2,6 @@
 #  Detect other 3rd-party performance and math libraries
 # ----------------------------------------------------------------------------
 
-# --- Lapack ---
-if(WITH_LAPACK)
-  find_package(LAPACK)
-  if(LAPACK_FOUND)
-    find_path(LAPACKE_INCLUDE_DIR "lapacke.h")
-    if(LAPACKE_INCLUDE_DIR)
-      find_path(CBLAS_INCLUDE_DIR "cblas.h")
-      if(CBLAS_INCLUDE_DIR)
-        set(HAVE_LAPACK 1)
-        ocv_include_directories(${LAPACKE_INCLUDE_DIR} ${CBLAS_INCLUDE_DIR})
-        list(APPEND OPENCV_LINKER_LIBS ${LAPACK_LIBRARIES})
-      endif()
-    endif()
-  endif()
-endif()
-
 # --- TBB ---
 if(WITH_TBB)
   include("${OpenCV_SOURCE_DIR}/cmake/OpenCVDetectTBB.cmake")
@@ -27,55 +11,131 @@ endif(WITH_TBB)
 if(WITH_IPP)
   include("${OpenCV_SOURCE_DIR}/cmake/OpenCVFindIPP.cmake")
   if(HAVE_IPP)
+    include("${OpenCV_SOURCE_DIR}/cmake/OpenCVFindIPPIW.cmake")
+    if(HAVE_IPP_IW)
+      ocv_include_directories(${IPP_IW_INCLUDES})
+      list(APPEND OPENCV_LINKER_LIBS ${IPP_IW_LIBRARIES})
+    endif()
     ocv_include_directories(${IPP_INCLUDE_DIRS})
     list(APPEND OPENCV_LINKER_LIBS ${IPP_LIBRARIES})
+
+    # Details: #10229
+    if(ANDROID AND NOT OPENCV_SKIP_ANDROID_IPP_FIX_1)
+      set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--exclude-libs,libippicv.a -Wl,--exclude-libs,libippiw.a ${CMAKE_SHARED_LINKER_FLAGS}")
+    elseif(ANDROID AND NOT OPENCV_SKIP_ANDROID_IPP_FIX_2)
+      set(CMAKE_SHARED_LINKER_FLAGS "-Wl,-Bsymbolic ${CMAKE_SHARED_LINKER_FLAGS}")
+    endif()
+
+    if(OPENCV_FORCE_IPP_EXCLUDE_LIBS
+        OR (HAVE_IPP_ICV
+            AND UNIX AND NOT ANDROID AND NOT APPLE
+            AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|Intel"
+        )
+        AND NOT OPENCV_SKIP_IPP_EXCLUDE_LIBS
+    )
+      set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--exclude-libs,libippicv.a -Wl,--exclude-libs,libippiw.a ${CMAKE_SHARED_LINKER_FLAGS}")
+    endif()
   endif()
 endif()
 
-# --- IPP Async ---
-
-if(WITH_IPP_A)
-  include("${OpenCV_SOURCE_DIR}/cmake/OpenCVFindIPPAsync.cmake")
-  if(IPP_A_INCLUDE_DIR AND IPP_A_LIBRARIES)
-    ocv_include_directories(${IPP_A_INCLUDE_DIR})
-    link_directories(${IPP_A_LIBRARIES})
-    set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} ${IPP_A_LIBRARIES})
-   endif()
-endif(WITH_IPP_A)
-
 # --- CUDA ---
 if(WITH_CUDA)
-  include("${OpenCV_SOURCE_DIR}/cmake/OpenCVDetectCUDA.cmake")
+  if(ENABLE_CUDA_FIRST_CLASS_LANGUAGE)
+    include("${OpenCV_SOURCE_DIR}/cmake/OpenCVDetectCUDALanguage.cmake")
+  else()
+    include("${OpenCV_SOURCE_DIR}/cmake/OpenCVDetectCUDA.cmake")
+  endif()
+  if(NOT HAVE_CUDA)
+    message(WARNING "OpenCV is not able to find/configure CUDA SDK (required by WITH_CUDA).
+CUDA support will be disabled in OpenCV build.
+To eliminate this warning remove WITH_CUDA=ON CMake configuration option.
+")
+  endif()
 endif(WITH_CUDA)
 
 # --- Eigen ---
-if(WITH_EIGEN)
-  find_path(EIGEN_INCLUDE_PATH "Eigen/Core"
-            PATHS /usr/local /opt /usr $ENV{EIGEN_ROOT}/include ENV ProgramFiles ENV ProgramW6432
-            PATH_SUFFIXES include/eigen3 include/eigen2 Eigen/include/eigen3 Eigen/include/eigen2
-            DOC "The path to Eigen3/Eigen2 headers"
-            CMAKE_FIND_ROOT_PATH_BOTH)
-
-  if(EIGEN_INCLUDE_PATH)
-    ocv_include_directories(${EIGEN_INCLUDE_PATH})
-    ocv_parse_header("${EIGEN_INCLUDE_PATH}/Eigen/src/Core/util/Macros.h" EIGEN_VERSION_LINES EIGEN_WORLD_VERSION EIGEN_MAJOR_VERSION EIGEN_MINOR_VERSION)
-    set(HAVE_EIGEN 1)
+if(WITH_EIGEN AND NOT HAVE_EIGEN)
+  if((OPENCV_FORCE_EIGEN_FIND_PACKAGE_CONFIG
+      OR NOT (CMAKE_VERSION VERSION_LESS "3.0.0")  # Eigen3Targets.cmake required CMake 3.0.0+
+      ) AND NOT OPENCV_SKIP_EIGEN_FIND_PACKAGE_CONFIG
+  )
+    find_package(Eigen3 CONFIG QUIET)  # Ceres 2.0.0 CMake scripts doesn't work with CMake's FindEigen3.cmake module (due to missing EIGEN3_VERSION_STRING)
   endif()
-endif(WITH_EIGEN)
+  if(NOT Eigen3_FOUND)
+    find_package(Eigen3 QUIET)
+  endif()
+
+  if(Eigen3_FOUND)
+    if(TARGET Eigen3::Eigen)
+      # Use Eigen3 imported target if possible
+      list(APPEND OPENCV_LINKER_LIBS Eigen3::Eigen)
+      set(HAVE_EIGEN 1)
+    else()
+      if(DEFINED EIGEN3_INCLUDE_DIRS)
+        set(EIGEN_INCLUDE_PATH ${EIGEN3_INCLUDE_DIRS})
+        set(HAVE_EIGEN 1)
+      elseif(DEFINED EIGEN3_INCLUDE_DIR)
+        set(EIGEN_INCLUDE_PATH ${EIGEN3_INCLUDE_DIR})
+        set(HAVE_EIGEN 1)
+      endif()
+    endif()
+    if(HAVE_EIGEN)
+      if(DEFINED EIGEN3_WORLD_VERSION)  # CMake module
+        set(EIGEN_WORLD_VERSION ${EIGEN3_WORLD_VERSION})
+        set(EIGEN_MAJOR_VERSION ${EIGEN3_MAJOR_VERSION})
+        set(EIGEN_MINOR_VERSION ${EIGEN3_MINOR_VERSION})
+      else()  # Eigen config file
+        set(EIGEN_WORLD_VERSION ${EIGEN3_VERSION_MAJOR})
+        set(EIGEN_MAJOR_VERSION ${EIGEN3_VERSION_MINOR})
+        set(EIGEN_MINOR_VERSION ${EIGEN3_VERSION_PATCH})
+      endif()
+    endif()
+  endif()
+
+  if(NOT HAVE_EIGEN)
+    if(NOT EIGEN_INCLUDE_PATH OR NOT EXISTS "${EIGEN_INCLUDE_PATH}")
+      set(__find_paths "")
+      set(__find_path_extra_options "")
+      if(NOT CMAKE_CROSSCOMPILING)
+        list(APPEND __find_paths /opt)
+      endif()
+      if(DEFINED ENV{EIGEN_ROOT})
+        set(__find_paths "$ENV{EIGEN_ROOT}/include")
+        list(APPEND __find_path_extra_options NO_DEFAULT_PATH)
+      else()
+        set(__find_paths ENV ProgramFiles ENV ProgramW6432)
+      endif()
+      find_path(EIGEN_INCLUDE_PATH "Eigen/Core"
+                PATHS ${__find_paths}
+                PATH_SUFFIXES include/eigen3 include/eigen2 Eigen/include/eigen3 Eigen/include/eigen2
+                DOC "The path to Eigen3/Eigen2 headers"
+                ${__find_path_extra_options}
+      )
+    endif()
+    if(EIGEN_INCLUDE_PATH AND EXISTS "${EIGEN_INCLUDE_PATH}")
+      ocv_parse_header("${EIGEN_INCLUDE_PATH}/Eigen/src/Core/util/Macros.h" EIGEN_VERSION_LINES EIGEN_WORLD_VERSION EIGEN_MAJOR_VERSION EIGEN_MINOR_VERSION)
+      set(HAVE_EIGEN 1)
+    endif()
+  endif()
+endif()
+if(HAVE_EIGEN)
+  if(EIGEN_INCLUDE_PATH AND EXISTS "${EIGEN_INCLUDE_PATH}")
+    ocv_include_directories(SYSTEM ${EIGEN_INCLUDE_PATH})
+  endif()
+endif()
 
 # --- Clp ---
 # Ubuntu: sudo apt-get install coinor-libclp-dev coinor-libcoinutils-dev
 ocv_clear_vars(HAVE_CLP)
 if(WITH_CLP)
   if(UNIX)
-    PKG_CHECK_MODULES(CLP clp)
+    ocv_check_modules(CLP clp)
     if(CLP_FOUND)
       set(HAVE_CLP TRUE)
       if(NOT ${CLP_INCLUDE_DIRS} STREQUAL "")
         ocv_include_directories(${CLP_INCLUDE_DIRS})
       endif()
-      link_directories(${CLP_LIBRARY_DIRS})
-      set(OPENCV_LINKER_LIBS ${OPENCV_LINKER_LIBS} ${CLP_LIBRARIES})
+      list(APPEND OPENCV_LINKER_LIBS ${CLP_LIBRARIES})
     endif()
   endif()
 
@@ -102,50 +162,55 @@ if(WITH_CLP)
   endif()
 endif(WITH_CLP)
 
-# --- C= ---
-if(WITH_CSTRIPES AND NOT HAVE_TBB)
-  include("${OpenCV_SOURCE_DIR}/cmake/OpenCVDetectCStripes.cmake")
-else()
-  set(HAVE_CSTRIPES 0)
-endif()
-
-# --- GCD ---
-if(APPLE AND NOT HAVE_TBB AND NOT HAVE_CSTRIPES)
-  set(HAVE_GCD 1)
-else()
-  set(HAVE_GCD 0)
-endif()
-
-# --- Concurrency ---
-if(MSVC AND NOT HAVE_TBB AND NOT HAVE_CSTRIPES)
-  set(_fname "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/concurrencytest.cpp")
-  file(WRITE "${_fname}" "#if _MSC_VER < 1600\n#error\n#endif\nint main() { return 0; }\n")
-  try_compile(HAVE_CONCURRENCY "${CMAKE_BINARY_DIR}" "${_fname}")
-  file(REMOVE "${_fname}")
-else()
-  set(HAVE_CONCURRENCY 0)
-endif()
-
-# --- OpenMP ---
-if(WITH_OPENMP)
-  find_package(OpenMP)
-  if(OPENMP_FOUND)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+# --- ARM KleidiCV
+if(WITH_KLEIDICV)
+  if(KLEIDICV_SOURCE_PATH AND EXISTS "${KLEIDICV_SOURCE_PATH}/adapters/opencv/CMakeLists.txt")
+    message(STATUS "Use external KleidiCV ${KLEIDICV_SOURCE_PATH}")
+    set(HAVE_KLEIDICV ON)
   endif()
-  set(HAVE_OPENMP "${OPENMP_FOUND}")
-endif()
+  if(NOT HAVE_KLEIDICV)
+    include("${OpenCV_SOURCE_DIR}/hal/kleidicv/kleidicv.cmake")
+    download_kleidicv(KLEIDICV_SOURCE_PATH)
+    if(KLEIDICV_SOURCE_PATH)
+      set(HAVE_KLEIDICV ON)
+    endif()
+  endif()
+endif(WITH_KLEIDICV)
 
-if(NOT MSVC AND NOT DEFINED HAVE_PTHREADS)
-  set(_fname "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/pthread_test.cpp")
-  file(WRITE "${_fname}" "#include <pthread.h>\nint main() { (void)pthread_self(); return 0; }\n")
-  try_compile(HAVE_PTHREADS "${CMAKE_BINARY_DIR}" "${_fname}")
-  file(REMOVE "${_fname}")
-endif()
-
-ocv_clear_vars(HAVE_PTHREADS_PF)
-if(WITH_PTHREADS_PF)
-  set(HAVE_PTHREADS_PF ${HAVE_PTHREADS})
-else()
-  set(HAVE_PTHREADS_PF 0)
-endif()
+# --- FastCV ---
+if(WITH_FASTCV)
+  if((EXISTS ${FastCV_INCLUDE_PATH}) AND (EXISTS ${FastCV_LIB_PATH}))
+    message(STATUS "Use external FastCV ${FastCV_INCLUDE_PATH}, ${FastCV_LIB_PATH}")
+    find_library(FASTCV_LIBRARY NAMES "fastcv"
+                 PATHS "${FastCV_LIB_PATH}" NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)
+    mark_as_advanced(FASTCV_LIBRARY)
+    if (FASTCV_LIBRARY)
+      set(HAVE_FASTCV TRUE CACHE BOOL "FastCV status")
+    else()
+      set(HAVE_FASTCV FALSE CACHE BOOL "FastCV status")
+    endif()
+  else()
+    include("${OpenCV_SOURCE_DIR}/3rdparty/fastcv/fastcv.cmake")
+    set(FCV_ROOT_DIR "${OpenCV_BINARY_DIR}/3rdparty/fastcv")
+    download_fastcv(${FCV_ROOT_DIR})
+    if(HAVE_FASTCV)
+      set(FastCV_INCLUDE_PATH "${FCV_ROOT_DIR}/inc" CACHE PATH "FastCV includes directory")
+      set(FastCV_LIB_PATH "${FCV_ROOT_DIR}/libs" CACHE PATH "FastCV library directory")
+      ocv_install_3rdparty_licenses(FastCV "${OpenCV_BINARY_DIR}/3rdparty/fastcv/LICENSE")
+      add_library(fastcv STATIC IMPORTED)
+      set_target_properties(fastcv PROPERTIES
+          IMPORTED_LINK_INTERFACE_LIBRARIES "dl"
+          IMPORTED_LOCATION "${FastCV_LIB_PATH}/libfastcv.a"
+      )
+      if (NOT BUILD_SHARED_LIBS)
+        install(FILES "${FastCV_LIB_PATH}/libfastcv.a" DESTINATION "${OPENCV_3P_LIB_INSTALL_PATH}" COMPONENT "dev")
+        set(FASTCV_LOCATION_PATH "${FastCV_LIB_PATH}/libfastcv.a" CACHE INTERNAL "" FORCE)
+        set(FASTCV_INSTALL_PATH "${CMAKE_INSTALL_PREFIX}/${OPENCV_3P_LIB_INSTALL_PATH}/libfastcv.a" CACHE INTERNAL "" FORCE)
+      endif()
+      set(FASTCV_LIBRARY "fastcv" CACHE PATH "FastCV library")
+      list(APPEND OPENCV_LINKER_LIBS ${FASTCV_LIBRARY})
+    else()
+      set(HAVE_FASTCV FALSE CACHE BOOL "FastCV status")
+    endif()
+  endif()
+endif(WITH_FASTCV)

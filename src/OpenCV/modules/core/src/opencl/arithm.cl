@@ -71,7 +71,34 @@
 #pragma OPENCL FP_FAST_FMA ON
 #endif
 
-#if depth <= 5
+#if !defined(DEPTH_dst)
+#error "Kernel configuration error: DEPTH_dst value is required"
+#elif !(DEPTH_dst >= 0 && DEPTH_dst <= 7)
+#error "Kernel configuration error: invalid DEPTH_dst value"
+#endif
+#if defined(depth)
+#error "Kernel configuration error: ambiguous 'depth' value is defined, use 'DEPTH_dst' instead"
+#endif
+
+#define CAT__(x, y) x ## y
+#define CAT_(x, y) CAT__(x, y)
+#define CAT(x, y) CAT_(x, y)
+
+
+#if DEPTH_dst < 5 /* CV_32F */
+#define CV_DST_TYPE_IS_INTEGER
+#else
+#define CV_DST_TYPE_IS_FP
+#endif
+
+#if DEPTH_dst != 6 /* CV_64F */
+#define CV_DST_TYPE_FIT_32F 1
+#else
+#define CV_DST_TYPE_FIT_32F 0
+#endif
+
+
+#if CV_DST_TYPE_FIT_32F
 #define CV_PI M_PI_F
 #else
 #define CV_PI M_PI
@@ -204,9 +231,15 @@
 #define PROCESS_ELEM storedst(convertToDT(srcelem1 * scale * srcelem2))
 
 #elif defined OP_DIV
+#ifdef CV_DST_TYPE_IS_INTEGER
 #define PROCESS_ELEM \
         workT e2 = srcelem2, zero = (workT)(0); \
         storedst(convertToDT(e2 != zero ? srcelem1 / e2 : zero))
+#else
+#define PROCESS_ELEM \
+        workT e2 = srcelem2; \
+        storedst(convertToDT(srcelem1 / e2))
+#endif
 
 #elif defined OP_DIV_SCALE
 #undef EXTRA_PARAMS
@@ -217,9 +250,15 @@
 #else
 #define EXTRA_PARAMS , scaleT scale
 #endif
+#ifdef CV_DST_TYPE_IS_INTEGER
 #define PROCESS_ELEM \
         workT e2 = srcelem2, zero = (workT)(0); \
         storedst(convertToDT(e2 == zero ? zero : (srcelem1 * (workT)(scale) / e2)))
+#else
+#define PROCESS_ELEM \
+        workT e2 = srcelem2; \
+        storedst(convertToDT(srcelem1 * (workT)(scale) / e2))
+#endif
 
 #elif defined OP_RDIV_SCALE
 #undef EXTRA_PARAMS
@@ -230,16 +269,28 @@
 #else
 #define EXTRA_PARAMS , scaleT scale
 #endif
+#ifdef CV_DST_TYPE_IS_INTEGER
 #define PROCESS_ELEM \
         workT e1 = srcelem1, zero = (workT)(0); \
         storedst(convertToDT(e1 == zero ? zero : (srcelem2 * (workT)(scale) / e1)))
+#else
+#define PROCESS_ELEM \
+        workT e1 = srcelem1; \
+        storedst(convertToDT(srcelem2 * (workT)(scale) / e1))
+#endif
 
 #elif defined OP_RECIP_SCALE
 #undef EXTRA_PARAMS
 #define EXTRA_PARAMS , scaleT scale
+#ifdef CV_DST_TYPE_IS_INTEGER
 #define PROCESS_ELEM \
         workT e1 = srcelem1, zero = (workT)(0); \
         storedst(convertToDT(e1 != zero ? scale / e1 : zero))
+#else
+#define PROCESS_ELEM \
+        workT e1 = srcelem1; \
+        storedst(convertToDT(scale / e1))
+#endif
 
 #elif defined OP_ADDW
 #undef EXTRA_PARAMS
@@ -278,12 +329,15 @@
 #define PROCESS_ELEM storedst(pow(srcelem1, srcelem2))
 
 #elif defined OP_POWN
-#undef workT
-#define workT int
-#define PROCESS_ELEM storedst(pown(srcelem1, srcelem2))
+#if cn > 1
+#define PROCESS_INIT CAT(int, cn) powi = (CAT(int, cn))srcelem2;
+#else // cn
+#define PROCESS_INIT int powi = srcelem2;
+#endif
+#define PROCESS_ELEM storedst(convertToDT(pown(srcelem1, powi)))
 
 #elif defined OP_SQRT
-#if depth <= 5
+#if CV_DST_TYPE_FIT_32F
 #define PROCESS_ELEM storedst(native_sqrt(srcelem1))
 #else
 #define PROCESS_ELEM storedst(sqrt(srcelem1))
@@ -324,7 +378,7 @@
 #endif
 
 #elif defined OP_CTP_AD || defined OP_CTP_AR
-#if depth <= 5
+#if CV_DST_TYPE_FIT_32F
 #define CV_EPSILON FLT_EPSILON
 #else
 #define CV_EPSILON DBL_EPSILON
@@ -333,6 +387,20 @@
 #define TO_DEGREE cartToPolar = degrees(cartToPolar);
 #elif defined OP_CTP_AR
 #define TO_DEGREE
+#endif
+#ifdef SRC1_IS_DST_MAG
+#define ADAPT_SRC1 dstptr = srcptr1;
+#elif SRC1_IS_DST_ANGLE
+#define ADAPT_SRC1 dstptr2 = srcptr1;
+#else
+#define ADAPT_SRC1
+#endif
+#ifdef SRC2_IS_DST_MAG
+#define ADAPT_SRC2 dstptr = srcptr2;
+#elif SRC2_IS_DST_ANGLE
+#define ADAPT_SRC2 dstptr2 = srcptr2;
+#else
+#define ADAPT_SRC2
 #endif
 #define PROCESS_ELEM \
     dstT x = srcelem1, y = srcelem2; \
@@ -343,6 +411,8 @@
     dstT tmp1 = y >= 0 ? CV_PI * 0.5f : CV_PI * 1.5f; \
     dstT cartToPolar = y2 <= x2 ? x * y / mad((dstT)(0.28f), y2, x2 + CV_EPSILON) + tmp : (tmp1 - x * y / mad((dstT)(0.28f), x2, y2 + CV_EPSILON)); \
     TO_DEGREE \
+    ADAPT_SRC1 \
+    ADAPT_SRC2 \
     storedst(magnitude); \
     storedst2(cartToPolar)
 
@@ -352,9 +422,25 @@
 #else
 #define FROM_DEGREE
 #endif
+#ifdef SRC1_IS_DST_X
+#define ADAPT_SRC1 dstptr = srcptr1;
+#elif SRC1_IS_DST_Y
+#define ADAPT_SRC1 dstptr2 = srcptr1;
+#else
+#define ADAPT_SRC1
+#endif
+#ifdef SRC2_IS_DST_X
+#define ADAPT_SRC2 dstptr = srcptr2;
+#elif SRC2_IS_DST_Y
+#define ADAPT_SRC2 dstptr2 = srcptr2;
+#else
+#define ADAPT_SRC2
+#endif
 #define PROCESS_ELEM \
     dstT x = srcelem1, y = srcelem2, cosval; \
     FROM_DEGREE; \
+    ADAPT_SRC1; \
+    ADAPT_SRC2; \
     storedst2(sincos(y, &cosval) * x); \
     storedst(cosval * x);
 
@@ -390,7 +476,7 @@
     #define srcelem2 srcelem2_
 #endif
 
-#if cn == 3
+#if !defined(PROCESS_INIT) && cn == 3
 #undef srcelem2
 #define srcelem2 (workT)(srcelem2_.x, srcelem2_.y, srcelem2_.z)
 #endif
@@ -438,6 +524,10 @@ __kernel void KF(__global const uchar * srcptr1, int srcstep1, int srcoffset1,
     int x = get_global_id(0);
     int y0 = get_global_id(1) * rowsPerWI;
 
+#ifdef PROCESS_INIT
+    PROCESS_INIT
+#endif
+
     if (x < cols)
     {
         int mask_index = mad24(y0, maskstep, x + maskoffset);
@@ -463,6 +553,10 @@ __kernel void KF(__global const uchar * srcptr1, int srcstep1, int srcoffset1,
     int x = get_global_id(0);
     int y0 = get_global_id(1) * rowsPerWI;
 
+#ifdef PROCESS_INIT
+    PROCESS_INIT
+#endif
+
     if (x < cols)
     {
         int src1_index = mad24(y0, srcstep1, mad24(x, (int)sizeof(srcT1_C1) * cn, srcoffset1));
@@ -484,6 +578,10 @@ __kernel void KF(__global const uchar * srcptr1, int srcstep1, int srcoffset1,
 {
     int x = get_global_id(0);
     int y0 = get_global_id(1) * rowsPerWI;
+
+#ifdef PROCESS_INIT
+    PROCESS_INIT
+#endif
 
     if (x < cols)
     {

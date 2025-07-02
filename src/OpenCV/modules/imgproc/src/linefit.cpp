@@ -47,6 +47,7 @@ static const double eps = 1e-6;
 
 static void fitLine2D_wods( const Point2f* points, int count, float *weights, float *line )
 {
+    CV_Assert(count > 0);
     double x = 0, y = 0, x2 = 0, y2 = 0, xy = 0, w = 0;
     double dx2, dy2, dxy;
     int i;
@@ -98,6 +99,7 @@ static void fitLine2D_wods( const Point2f* points, int count, float *weights, fl
 
 static void fitLine3D_wods( const Point3f * points, int count, float *weights, float *line )
 {
+    CV_Assert(count > 0);
     int i;
     float w0 = 0;
     float x0 = 0, y0 = 0, z0 = 0;
@@ -319,7 +321,7 @@ static void fitLine2D( const Point2f * points, int count, int dist,
     void (*calc_weights) (float *, int, float *) = 0;
     void (*calc_weights_param) (float *, int, float *, float) = 0;
     int i, j, k;
-    float _line[6], _lineprev[6];
+    float _line[4], _lineprev[4];
     float rdelta = reps != 0 ? reps : 1.0f;
     float adelta = aeps != 0 ? aeps : 0.01f;
     double min_err = DBL_MAX, err = 0;
@@ -329,26 +331,26 @@ static void fitLine2D( const Point2f * points, int count, int dist,
 
     switch (dist)
     {
-    case CV_DIST_L2:
+    case cv::DIST_L2:
         return fitLine2D_wods( points, count, 0, line );
 
-    case CV_DIST_L1:
+    case cv::DIST_L1:
         calc_weights = weightL1;
         break;
 
-    case CV_DIST_L12:
+    case cv::DIST_L12:
         calc_weights = weightL12;
         break;
 
-    case CV_DIST_FAIR:
+    case cv::DIST_FAIR:
         calc_weights_param = weightFair;
         break;
 
-    case CV_DIST_WELSCH:
+    case cv::DIST_WELSCH:
         calc_weights_param = weightWelsch;
         break;
 
-    case CV_DIST_HUBER:
+    case cv::DIST_HUBER:
         calc_weights_param = weightHuber;
         break;
 
@@ -356,11 +358,11 @@ static void fitLine2D( const Point2f * points, int count, int dist,
      calc_weights = (void ( * )(float *, int, float *)) _PFP.fp;
      break;*/
     default:
-        CV_Error(CV_StsBadArg, "Unknown distance type");
+        CV_Error(cv::Error::StsBadArg, "Unknown distance type");
     }
 
     AutoBuffer<float> wr(count*2);
-    float *w = wr, *r = w + count;
+    float *w = wr.data(), *r = w + count;
 
     for( k = 0; k < 20; k++ )
     {
@@ -406,8 +408,14 @@ static void fitLine2D( const Point2f * points, int count, int dist,
             }
             /* calculate distances */
             err = calcDist2D( points, count, _line, r );
-            if( err < EPS )
-                break;
+
+            if (err < min_err)
+            {
+                min_err = err;
+                memcpy(line, _line, 4 * sizeof(line[0]));
+                if (err < EPS)
+                    break;
+            }
 
             /* calculate weights */
             if( calc_weights )
@@ -467,35 +475,35 @@ static void fitLine3D( Point3f * points, int count, int dist,
 
     switch (dist)
     {
-    case CV_DIST_L2:
+    case cv::DIST_L2:
         return fitLine3D_wods( points, count, 0, line );
 
-    case CV_DIST_L1:
+    case cv::DIST_L1:
         calc_weights = weightL1;
         break;
 
-    case CV_DIST_L12:
+    case cv::DIST_L12:
         calc_weights = weightL12;
         break;
 
-    case CV_DIST_FAIR:
+    case cv::DIST_FAIR:
         calc_weights_param = weightFair;
         break;
 
-    case CV_DIST_WELSCH:
+    case cv::DIST_WELSCH:
         calc_weights_param = weightWelsch;
         break;
 
-    case CV_DIST_HUBER:
+    case cv::DIST_HUBER:
         calc_weights_param = weightHuber;
         break;
 
     default:
-        CV_Error(CV_StsBadArg, "Unknown distance");
+        CV_Error(cv::Error::StsBadArg, "Unknown distance");
     }
 
     AutoBuffer<float> buf(count*2);
-    float *w = buf, *r = w + count;
+    float *w = buf.data(), *r = w + count;
 
     for( k = 0; k < 20; k++ )
     {
@@ -548,8 +556,13 @@ static void fitLine3D( Point3f * points, int count, int dist,
             }
             /* calculate distances */
             err = calcDist3D( points, count, _line, r );
-            //if( err < FLT_EPSILON*count )
-            //    break;
+            if (err < min_err)
+            {
+                min_err = err;
+                memcpy(line, _line, 6 * sizeof(line[0]));
+                if (err < EPS)
+                    break;
+            }
 
             /* calculate weights */
             if( calc_weights )
@@ -594,6 +607,8 @@ static void fitLine3D( Point3f * points, int count, int dist,
 void cv::fitLine( InputArray _points, OutputArray _line, int distType,
                  double param, double reps, double aeps )
 {
+    CV_INSTRUMENT_REGION();
+
     Mat points = _points.getMat();
 
     float linebuf[6]={0.f};

@@ -40,8 +40,8 @@
 //
 //M*/
 
-#ifndef __OPENCV_STITCHING_UTIL_HPP__
-#define __OPENCV_STITCHING_UTIL_HPP__
+#ifndef OPENCV_STITCHING_UTIL_HPP
+#define OPENCV_STITCHING_UTIL_HPP
 
 #include <list>
 #include "opencv2/core.hpp"
@@ -100,16 +100,16 @@ private:
 //////////////////////////////////////////////////////////////////////////////
 // Auxiliary functions
 
-CV_EXPORTS bool overlapRoi(Point tl1, Point tl2, Size sz1, Size sz2, Rect &roi);
-CV_EXPORTS Rect resultRoi(const std::vector<Point> &corners, const std::vector<UMat> &images);
-CV_EXPORTS Rect resultRoi(const std::vector<Point> &corners, const std::vector<Size> &sizes);
-CV_EXPORTS Rect resultRoiIntersection(const std::vector<Point> &corners, const std::vector<Size> &sizes);
-CV_EXPORTS Point resultTl(const std::vector<Point> &corners);
+CV_EXPORTS_W bool overlapRoi(Point tl1, Point tl2, Size sz1, Size sz2, Rect &roi);
+CV_EXPORTS_W Rect resultRoi(const std::vector<Point> &corners, const std::vector<UMat> &images);
+CV_EXPORTS_W Rect resultRoi(const std::vector<Point> &corners, const std::vector<Size> &sizes);
+CV_EXPORTS_W Rect resultRoiIntersection(const std::vector<Point> &corners, const std::vector<Size> &sizes);
+CV_EXPORTS_W Point resultTl(const std::vector<Point> &corners);
 
 // Returns random 'count' element subset of the {0,1,...,size-1} set
-CV_EXPORTS void selectRandomSubset(int count, int size, std::vector<int> &subset);
+CV_EXPORTS_W void selectRandomSubset(int count, int size, std::vector<int> &subset);
 
-CV_EXPORTS int& stitchingLogLevel();
+CV_EXPORTS_W int& stitchingLogLevel();
 
 //! @}
 
@@ -118,4 +118,4 @@ CV_EXPORTS int& stitchingLogLevel();
 
 #include "util_inl.hpp"
 
-#endif // __OPENCV_STITCHING_UTIL_HPP__
+#endif // OPENCV_STITCHING_UTIL_HPP

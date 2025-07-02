@@ -48,7 +48,7 @@
 
 #ifdef HAVE_OPENCL
 
-namespace cvtest {
+namespace opencv_test {
 namespace ocl {
 
 ////////////////////////////////////////////////////////
@@ -77,7 +77,7 @@ PARAM_TEST_CASE(Canny, Channels, ApertureSize, L2gradient, UseRoi)
     void generateTestData()
     {
         Mat img = readImageType("shared/fruits.png", CV_8UC(cn));
-        ASSERT_FALSE(img.empty()) << "cann't load shared/fruits.png";
+        ASSERT_FALSE(img.empty()) << "can't load shared/fruits.png";
 
         Size roiSize = img.size();
         int type = img.type();
@@ -99,11 +99,7 @@ OCL_TEST_P(Canny, Accuracy)
     generateTestData();
 
     const double low_thresh = 50.0, high_thresh = 100.0;
-    double eps = 1e-2;
-#ifdef ANDROID
-    if (cv::ocl::Device::getDefault().isNVidia())
-        eps = 12e-3;
-#endif
+    double eps = 0.03;
 
     OCL_OFF(cv::Canny(src_roi, dst_roi, low_thresh, high_thresh, aperture_size, useL2gradient));
     OCL_ON(cv::Canny(usrc_roi, udst_roi, low_thresh, high_thresh, aperture_size, useL2gradient));
@@ -117,11 +113,7 @@ OCL_TEST_P(Canny, AccuracyCustomGradient)
     generateTestData();
 
     const double low_thresh = 50.0, high_thresh = 100.0;
-    double eps = 1e-2;
-#ifdef ANDROID
-    if (cv::ocl::Device::getDefault().isNVidia())
-        eps = 12e-3;
-#endif
+    double eps = 0.03;
 
     OCL_OFF(cv::Canny(src_roi, dst_roi, low_thresh, high_thresh, aperture_size, useL2gradient));
     OCL_ON(
@@ -141,6 +133,8 @@ OCL_INSTANTIATE_TEST_CASE_P(ImgProc, Canny, testing::Combine(
                                 testing::Values(L2gradient(false), L2gradient(true)),
                                 testing::Values(UseRoi(false), UseRoi(true))));
 
-} } // namespace cvtest::ocl
+} // namespace ocl
+
+} // namespace opencv_test
 
 #endif // HAVE_OPENCL

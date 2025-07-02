@@ -30,49 +30,8 @@ using cv::ParallelLoopBody;
 #include "boost.h"
 #include "cascadeclassifier.h"
 #include <queue>
-#include "cxmisc.h"
 
 #include "cvconfig.h"
-#ifdef HAVE_TBB
-#  include "tbb/tbb_stddef.h"
-#  if TBB_VERSION_MAJOR*100 + TBB_VERSION_MINOR >= 202
-#    include "tbb/tbb.h"
-#    include "tbb/task.h"
-#    undef min
-#    undef max
-#  else
-#    undef HAVE_TBB
-#  endif
-#endif
-
-#ifdef HAVE_TBB
-    typedef tbb::blocked_range<int> BlockedRange;
-
-    template<typename Body> static inline
-    void parallel_for( const BlockedRange& range, const Body& body )
-    {
-        tbb::parallel_for(range, body);
-    }
-#else
-    class BlockedRange
-    {
-    public:
-        BlockedRange() : _begin(0), _end(0), _grainsize(0) {}
-        BlockedRange(int b, int e, int g=1) : _begin(b), _end(e), _grainsize(g) {}
-        int begin() const { return _begin; }
-        int end() const { return _end; }
-        int grainsize() const { return _grainsize; }
-
-    protected:
-        int _begin, _end, _grainsize;
-    };
-
-    template<typename Body> static inline
-    void parallel_for( const BlockedRange& range, const Body& body )
-    {
-        body(range);
-    }
-#endif
 
 using namespace std;
 
@@ -127,10 +86,10 @@ static CvMat* cvPreprocessIndexArray( const CvMat* idx_arr, int data_arr_size, b
     int* dsti;
 
     if( !CV_IS_MAT(idx_arr) )
-        CV_ERROR( CV_StsBadArg, "Invalid index array" );
+        CV_ERROR( cv::Error::StsBadArg, "Invalid index array" );
 
     if( idx_arr->rows != 1 && idx_arr->cols != 1 )
-        CV_ERROR( CV_StsBadSize, "the index array must be 1-dimensional" );
+        CV_ERROR( cv::Error::StsBadSize, "the index array must be 1-dimensional" );
 
     idx_total = idx_arr->rows + idx_arr->cols - 1;
     srcb = idx_arr->data.ptr;
@@ -146,20 +105,20 @@ static CvMat* cvPreprocessIndexArray( const CvMat* idx_arr, int data_arr_size, b
         // idx_arr is array of 1's and 0's -
         // i.e. it is a mask of the selected components
         if( idx_total != data_arr_size )
-            CV_ERROR( CV_StsUnmatchedSizes,
+            CV_ERROR( cv::Error::StsUnmatchedSizes,
             "Component mask should contain as many elements as the total number of input variables" );
 
         for( i = 0; i < idx_total; i++ )
             idx_selected += srcb[i*step] != 0;
 
         if( idx_selected == 0 )
-            CV_ERROR( CV_StsOutOfRange, "No components/input_variables is selected!" );
+            CV_ERROR( cv::Error::StsOutOfRange, "No components/input_variables is selected!" );
 
         break;
     case CV_32SC1:
         // idx_arr is array of integer indices of selected components
         if( idx_total > data_arr_size )
-            CV_ERROR( CV_StsOutOfRange,
+            CV_ERROR( cv::Error::StsOutOfRange,
             "index array may not contain more elements than the total number of input variables" );
         idx_selected = idx_total;
         // check if sorted already
@@ -175,7 +134,7 @@ static CvMat* cvPreprocessIndexArray( const CvMat* idx_arr, int data_arr_size, b
         }
         break;
     default:
-        CV_ERROR( CV_StsUnsupportedFormat, "Unsupported index array data type "
+        CV_ERROR( cv::Error::StsUnsupportedFormat, "Unsupported index array data type "
                                            "(it should be 8uC1, 8sC1 or 32sC1)" );
     }
 
@@ -197,13 +156,13 @@ static CvMat* cvPreprocessIndexArray( const CvMat* idx_arr, int data_arr_size, b
             qsort( dsti, idx_total, sizeof(dsti[0]), icvCmpIntegers );
 
         if( dsti[0] < 0 || dsti[idx_total-1] >= data_arr_size )
-            CV_ERROR( CV_StsOutOfRange, "the index array elements are out of range" );
+            CV_ERROR( cv::Error::StsOutOfRange, "the index array elements are out of range" );
 
         if( check_for_duplicates )
         {
             for( i = 1; i < idx_total; i++ )
                 if( dsti[i] <= dsti[i-1] )
-                    CV_ERROR( CV_StsBadArg, "There are duplicated index array elements" );
+                    CV_ERROR( cv::Error::StsBadArg, "There are duplicated index array elements" );
         }
     }
 
@@ -259,7 +218,7 @@ bool CvCascadeBoostParams::read( const FileNode &node )
                  !boostTypeStr.compare( CC_LOGIT_BOOST ) ? CvBoost::LOGIT :
                  !boostTypeStr.compare( CC_GENTLE_BOOST ) ? CvBoost::GENTLE : -1;
     if (boost_type == -1)
-        CV_Error( CV_StsBadArg, "unsupported Boost type" );
+        CV_Error( cv::Error::StsBadArg, "unsupported Boost type" );
     node[CC_MINHITRATE] >> minHitRate;
     node[CC_MAXFALSEALARM] >> maxFalseAlarm;
     node[CC_TRIM_RATE] >> weight_trim_rate ;
@@ -269,7 +228,7 @@ bool CvCascadeBoostParams::read( const FileNode &node )
          maxFalseAlarm <= 0 || maxFalseAlarm > 1 ||
          weight_trim_rate <= 0 || weight_trim_rate > 1 ||
          max_depth <= 0 || weak_count <= 0 )
-        CV_Error( CV_StsBadArg, "bad parameters range");
+        CV_Error( cv::Error::StsBadArg, "bad parameters range");
     return true;
 }
 
@@ -350,7 +309,7 @@ CvDTreeNode* CvCascadeBoostTrainData::subsample_data( const CvMat* _subsample_id
     bool isMakeRootCopy = true;
 
     if( !data_root )
-        CV_Error( CV_StsError, "No training data has been set" );
+        CV_Error( cv::Error::StsError, "No training data has been set" );
 
     if( _subsample_idx )
     {
@@ -423,7 +382,7 @@ CvDTreeNode* CvCascadeBoostTrainData::subsample_data( const CvMat* _subsample_id
             int ci = get_var_type(vi);
             CV_Assert( ci < 0 );
 
-            int *src_idx_buf = (int*)(uchar*)inn_buf;
+            int *src_idx_buf = (int*)inn_buf.data();
             float *src_val_buf = (float*)(src_idx_buf + sample_count);
             int* sample_indices_buf = (int*)(src_val_buf + sample_count);
             const int* src_idx = 0;
@@ -463,7 +422,7 @@ CvDTreeNode* CvCascadeBoostTrainData::subsample_data( const CvMat* _subsample_id
         }
 
         // subsample cv_lables
-        const int* src_lbls = get_cv_labels(data_root, (int*)(uchar*)inn_buf);
+        const int* src_lbls = get_cv_labels(data_root, (int*)inn_buf.data());
         if (is_buf_16u)
         {
             unsigned short* udst = (unsigned short*)(buf->data.s + root->buf_idx*get_length_subbuf() +
@@ -480,7 +439,7 @@ CvDTreeNode* CvCascadeBoostTrainData::subsample_data( const CvMat* _subsample_id
         }
 
         // subsample sample_indices
-        const int* sample_idx_src = get_sample_indices(data_root, (int*)(uchar*)inn_buf);
+        const int* sample_idx_src = get_sample_indices(data_root, (int*)inn_buf.data());
         if (is_buf_16u)
         {
             unsigned short* sample_idx_dst = (unsigned short*)(buf->data.s + root->buf_idx*get_length_subbuf() +
@@ -583,12 +542,12 @@ void CvCascadeBoostTrainData::setData( const CvFeatureEvaluator* _featureEvaluat
     featureEvaluator = _featureEvaluator;
 
     max_c_count = MAX( 2, featureEvaluator->getMaxCatCount() );
-    _resp = featureEvaluator->getCls();
+    _resp = cvMat(featureEvaluator->getCls());
     responses = &_resp;
     // TODO: check responses: elements must be 0 or 1
 
     if( _precalcValBufSize < 0 || _precalcIdxBufSize < 0)
-        CV_Error( CV_StsOutOfRange, "_numPrecalcVal and _numPrecalcIdx must be positive or 0" );
+        CV_Error( cv::Error::StsOutOfRange, "_numPrecalcVal and _numPrecalcIdx must be positive or 0" );
 
     var_count = var_all = featureEvaluator->getNumFeatures() * featureEvaluator->getFeatureSize();
     sample_count = _numSamples;
@@ -643,7 +602,7 @@ void CvCascadeBoostTrainData::setData( const CvFeatureEvaluator* _featureEvaluat
 
     if ((uint64)effective_buf_width * (uint64)effective_buf_height != effective_buf_size)
     {
-        CV_Error(CV_StsBadArg, "The memory buffer cannot be allocated since its size exceeds integer fields limit");
+        CV_Error(cv::Error::StsBadArg, "The memory buffer cannot be allocated since its size exceeds integer fields limit");
     }
 
     if ( is_buf_16u )
@@ -855,7 +814,7 @@ struct FeatureIdxOnlyPrecalc : ParallelLoopBody
     void operator()( const Range& range ) const
     {
         cv::AutoBuffer<float> valCache(sample_count);
-        float* valCachePtr = (float*)valCache;
+        float* valCachePtr = valCache.data();
         for ( int fi = range.start; fi < range.end; fi++)
         {
             for( int si = 0; si < sample_count; si++ )
@@ -955,7 +914,7 @@ CvDTreeNode* CvCascadeBoostTree::predict( int sampleIdx ) const
 {
     CvDTreeNode* node = root;
     if( !node )
-        CV_Error( CV_StsError, "The tree has not been trained yet" );
+        CV_Error( cv::Error::StsError, "The tree has not been trained yet" );
 
     if ( ((CvCascadeBoostTrainData*)data)->featureEvaluator->getMaxCatCount() == 0 ) // ordered
     {
@@ -1046,7 +1005,7 @@ void CvCascadeBoostTree::read( const FileNode &node, CvBoost* _ensemble,
     int step = 3 + ( maxCatCount>0 ? subsetN : 1 );
 
     queue<CvDTreeNode*> internalNodesQueue;
-    FileNodeIterator internalNodesIt, leafValsuesIt;
+    int internalNodesIdx, leafValsuesIdx;
     CvDTreeNode* prntNode, *cldNode;
 
     clear();
@@ -1056,9 +1015,9 @@ void CvCascadeBoostTree::read( const FileNode &node, CvBoost* _ensemble,
 
     // read tree nodes
     FileNode rnode = node[CC_INTERNAL_NODES];
-    internalNodesIt = rnode.end();
-    leafValsuesIt = node[CC_LEAF_VALUES].end();
-    internalNodesIt--; leafValsuesIt--;
+    internalNodesIdx = (int) rnode.size() - 1;
+    FileNode lnode = node[CC_LEAF_VALUES];
+    leafValsuesIdx = (int) lnode.size() - 1;
     for( size_t i = 0; i < rnode.size()/step; i++ )
     {
         prntNode = data->new_node( 0, 0, 0, 0 );
@@ -1067,23 +1026,23 @@ void CvCascadeBoostTree::read( const FileNode &node, CvBoost* _ensemble,
             prntNode->split = data->new_split_cat( 0, 0 );
             for( int j = subsetN-1; j>=0; j--)
             {
-                *internalNodesIt >> prntNode->split->subset[j]; internalNodesIt--;
+                rnode[internalNodesIdx] >> prntNode->split->subset[j]; --internalNodesIdx;
             }
         }
         else
         {
             float split_value;
-            *internalNodesIt >> split_value; internalNodesIt--;
+            rnode[internalNodesIdx] >> split_value; --internalNodesIdx;
             prntNode->split = data->new_split_ord( 0, split_value, 0, 0, 0);
         }
-        *internalNodesIt >> prntNode->split->var_idx; internalNodesIt--;
+        rnode[internalNodesIdx] >> prntNode->split->var_idx; --internalNodesIdx;
         int ridx, lidx;
-        *internalNodesIt >> ridx; internalNodesIt--;
-        *internalNodesIt >> lidx;internalNodesIt--;
+        rnode[internalNodesIdx] >> ridx; --internalNodesIdx;
+        rnode[internalNodesIdx] >> lidx; --internalNodesIdx;
         if ( ridx <= 0)
         {
             prntNode->right = cldNode = data->new_node( 0, 0, 0, 0 );
-            *leafValsuesIt >> cldNode->value; leafValsuesIt--;
+            lnode[leafValsuesIdx] >> cldNode->value; --leafValsuesIdx;
             cldNode->parent = prntNode;
         }
         else
@@ -1096,7 +1055,7 @@ void CvCascadeBoostTree::read( const FileNode &node, CvBoost* _ensemble,
         if ( lidx <= 0)
         {
             prntNode->left = cldNode = data->new_node( 0, 0, 0, 0 );
-            *leafValsuesIt >> cldNode->value; leafValsuesIt--;
+            lnode[leafValsuesIdx] >> cldNode->value; --leafValsuesIdx;
             cldNode->parent = prntNode;
         }
         else
@@ -1124,7 +1083,7 @@ void CvCascadeBoostTree::split_node_data( CvDTreeNode* node )
     CvMat* buf = data->buf;
     size_t length_buf_row = data->get_length_subbuf();
     cv::AutoBuffer<uchar> inn_buf(n*(3*sizeof(int)+sizeof(float)));
-    int* tempBuf = (int*)(uchar*)inn_buf;
+    int* tempBuf = (int*)inn_buf.data();
     bool splitInputData;
 
     complete_node_dir(node);
@@ -1438,7 +1397,7 @@ void CvCascadeBoost::update_weights( CvBoostTree* tree )
     int inn_buf_size = ((params.boost_type == LOGIT) || (params.boost_type == GENTLE) ? n*sizeof(int) : 0) +
                        ( !tree ? n*sizeof(int) : 0 );
     cv::AutoBuffer<uchar> inn_buf(inn_buf_size);
-    uchar* cur_inn_buf_pos = (uchar*)inn_buf;
+    uchar* cur_inn_buf_pos = inn_buf.data();
     if ( (params.boost_type == LOGIT) || (params.boost_type == GENTLE) )
     {
         step = CV_IS_MAT_CONT(data->responses_copy->type) ?
@@ -1718,7 +1677,7 @@ void CvCascadeBoost::write( FileStorage &fs, const Mat& featureMap ) const
     fs << CC_WEAK_CLASSIFIERS << "[";
     for( int wi = 0; wi < weak->total; wi++)
     {
-        /*sprintf( cmnt, "tree %i", wi );
+        /*snprintf( cmnt, sizeof(cmnt), "tree %i", wi );
         cvWriteComment( fs, cmnt, 0 );*/
         weakTree = *((CvCascadeBoostTree**) cvGetSeqElem( weak, wi ));
         weakTree->write( fs, featureMap );

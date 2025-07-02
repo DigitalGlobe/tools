@@ -49,9 +49,6 @@
 #elif defined (cl_khr_fp64)
 #pragma OPENCL EXTENSION cl_khr_fp64:enable
 #endif
-#define CT double
-#else
-#define CT float
 #endif
 
 #define INTER_BITS 5
@@ -69,7 +66,7 @@
 #define ST T
 #endif
 
-#if cn != 3
+#if CN != 3
 #define loadpix(addr)  *(__global const T*)(addr)
 #define storepix(val, addr)  *(__global T*)(addr) = val
 #define scalar scalar_
@@ -92,7 +89,7 @@ __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_of
                          __constant CT * M, ST scalar_)
 {
     int dx = get_global_id(0);
-    int dy0 = get_global_id(1) * rowsPerWI;
+    int dy0 = get_global_id(1) * ROWS_PER_WI;
 
     if (dx < dst_cols)
     {
@@ -102,10 +99,10 @@ __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_of
         int Y0_ = rint(M[3] * dx * AB_SCALE);
         int dst_index = mad24(dy0, dst_step, mad24(dx, pixsize, dst_offset));
 
-        for (int dy = dy0, dy1 = min(dst_rows, dy0 + rowsPerWI); dy < dy1; ++dy, dst_index += dst_step)
+        for (int dy = dy0, dy1 = min(dst_rows, dy0 + ROWS_PER_WI); dy < dy1; ++dy, dst_index += dst_step)
         {
-            int X0 = X0_ + rint(fma(M[1], dy, M[2]) * AB_SCALE) + round_delta;
-            int Y0 = Y0_ + rint(fma(M[4], dy, M[5]) * AB_SCALE) + round_delta;
+            int X0 = X0_ + rint(fma(M[1], (CT)dy, M[2]) * AB_SCALE) + round_delta;
+            int Y0 = Y0_ + rint(fma(M[4], (CT)dy, M[5]) * AB_SCALE) + round_delta;
 
             short sx = convert_short_sat(X0 >> AB_BITS);
             short sy = convert_short_sat(Y0 >> AB_BITS);
@@ -136,7 +133,7 @@ __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_of
                          __constant CT * M, ST scalar_)
 {
     int dx = get_global_id(0);
-    int dy0 = get_global_id(1) * rowsPerWI;
+    int dy0 = get_global_id(1) * ROWS_PER_WI;
 
     if (dx < dst_cols)
     {
@@ -144,31 +141,31 @@ __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_of
         int X0_ = rint(M[0] * tmp);
         int Y0_ = rint(M[3] * tmp);
 
-        for (int dy = dy0, dy1 = min(dst_rows, dy0 + rowsPerWI); dy < dy1; ++dy)
+        for (int dy = dy0, dy1 = min(dst_rows, dy0 + ROWS_PER_WI); dy < dy1; ++dy)
         {
-            int X0 = X0_ + rint(fma(M[1], dy, M[2]) * AB_SCALE) + ROUND_DELTA;
-            int Y0 = Y0_ + rint(fma(M[4], dy, M[5]) * AB_SCALE) + ROUND_DELTA;
+            int X0 = X0_ + rint(fma(M[1], (CT)dy, M[2]) * AB_SCALE) + ROUND_DELTA;
+            int Y0 = Y0_ + rint(fma(M[4], (CT)dy, M[5]) * AB_SCALE) + ROUND_DELTA;
             X0 = X0 >> (AB_BITS - INTER_BITS);
             Y0 = Y0 >> (AB_BITS - INTER_BITS);
 
             short sx = convert_short_sat(X0 >> INTER_BITS), sy = convert_short_sat(Y0 >> INTER_BITS);
             short ax = convert_short(X0 & (INTER_TAB_SIZE-1)), ay = convert_short(Y0 & (INTER_TAB_SIZE-1));
 
-#if defined AMD_DEVICE || depth > 4
+#if defined AMD_DEVICE || SRC_DEPTH > 4
             WT v0 = scalar, v1 = scalar, v2 = scalar, v3 = scalar;
             if (sx >= 0 && sx < src_cols)
             {
                 if (sy >= 0 && sy < src_rows)
-                    v0 = convertToWT(loadpix(srcptr + mad24(sy, src_step, mad24(sx, pixsize, src_offset))));
+                    v0 = CONVERT_TO_WT(loadpix(srcptr + mad24(sy, src_step, mad24(sx, pixsize, src_offset))));
                 if (sy+1 >= 0 && sy+1 < src_rows)
-                    v2 = convertToWT(loadpix(srcptr + mad24(sy+1, src_step, mad24(sx, pixsize, src_offset))));
+                    v2 = CONVERT_TO_WT(loadpix(srcptr + mad24(sy+1, src_step, mad24(sx, pixsize, src_offset))));
             }
             if (sx+1 >= 0 && sx+1 < src_cols)
             {
                 if (sy >= 0 && sy < src_rows)
-                    v1 = convertToWT(loadpix(srcptr + mad24(sy, src_step, mad24(sx+1, pixsize, src_offset))));
+                    v1 = CONVERT_TO_WT(loadpix(srcptr + mad24(sy, src_step, mad24(sx+1, pixsize, src_offset))));
                 if (sy+1 >= 0 && sy+1 < src_rows)
-                    v3 = convertToWT(loadpix(srcptr + mad24(sy+1, src_step, mad24(sx+1, pixsize, src_offset))));
+                    v3 = CONVERT_TO_WT(loadpix(srcptr + mad24(sy+1, src_step, mad24(sx+1, pixsize, src_offset))));
             }
 
             float taby = 1.f/INTER_TAB_SIZE*ay;
@@ -176,18 +173,18 @@ __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_of
 
             int dst_index = mad24(dy, dst_step, mad24(dx, pixsize, dst_offset));
 
-#if depth <= 4
+#if SRC_DEPTH <= 4
             int itab0 = convert_short_sat_rte( (1.0f-taby)*(1.0f-tabx) * INTER_REMAP_COEF_SCALE );
             int itab1 = convert_short_sat_rte( (1.0f-taby)*tabx * INTER_REMAP_COEF_SCALE );
             int itab2 = convert_short_sat_rte( taby*(1.0f-tabx) * INTER_REMAP_COEF_SCALE );
             int itab3 = convert_short_sat_rte( taby*tabx * INTER_REMAP_COEF_SCALE );
 
             WT val = mad24(v0, itab0, mad24(v1, itab1, mad24(v2, itab2, v3 * itab3)));
-            storepix(convertToT((val + (1 << (INTER_REMAP_COEF_BITS-1))) >> INTER_REMAP_COEF_BITS), dstptr + dst_index);
+            storepix(CONVERT_TO_T((val + (1 << (INTER_REMAP_COEF_BITS-1))) >> INTER_REMAP_COEF_BITS), dstptr + dst_index);
 #else
             float tabx2 = 1.0f - tabx, taby2 = 1.0f - taby;
             WT val = fma(tabx2, fma(v0, taby2, v2 * taby), tabx * fma(v1, taby2, v3 * taby));
-            storepix(convertToT(val), dstptr + dst_index);
+            storepix(CONVERT_TO_T(val), dstptr + dst_index);
 #endif
 #else // INTEL_DEVICE
             __constant float * coeffs_y = coeffs + (ay << 1), * coeffs_x = coeffs + (ax << 1);
@@ -205,13 +202,13 @@ __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_of
                     xsum = (WT)(0);
                     if (sx >= 0 && sx + 2 < src_cols)
                     {
-#if depth == 0 && cn == 1
+#if SRC_DEPTH == 0 && CN == 1
                         uchar2 value = vload2(0, srcptr + src_index);
                         xsum = dot(convert_float2(value), (float2)(coeffs_x[0], coeffs_x[1]));
 #else
                         #pragma unroll
                         for (int x = 0; x < 2; x++)
-                            xsum = fma(convertToWT(loadpix(srcptr + mad24(x, pixsize, src_index))), coeffs_x[x], xsum);
+                            xsum = fma(CONVERT_TO_WT(loadpix(srcptr + mad24(x, pixsize, src_index))), coeffs_x[x], xsum);
 #endif
                     }
                     else
@@ -219,7 +216,7 @@ __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_of
                         #pragma unroll
                         for (int x = 0; x < 2; x++)
                             xsum = fma(sx + x >= 0 && sx + x < src_cols ?
-                                       convertToWT(loadpix(srcptr + mad24(x, pixsize, src_index))) : scalar, coeffs_x[x], xsum);
+                                       CONVERT_TO_WT(loadpix(srcptr + mad24(x, pixsize, src_index))) : scalar, coeffs_x[x], xsum);
                     }
                     sum = fma(xsum, coeffs_y[y], sum);
                 }
@@ -227,7 +224,7 @@ __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_of
                     sum = fma(scalar, coeffs_y[y], sum);
             }
 
-            storepix(convertToT(sum), dstptr + dst_index);
+            storepix(CONVERT_TO_T(sum), dstptr + dst_index);
 #endif
         }
     }
@@ -274,8 +271,8 @@ __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_of
     if (dx < dst_cols && dy < dst_rows)
     {
         int tmp = (dx << AB_BITS);
-        int X0 = rint(M[0] * tmp) + rint(fma(M[1], dy, M[2]) * AB_SCALE) + ROUND_DELTA;
-        int Y0 = rint(M[3] * tmp) + rint(fma(M[4], dy, M[5]) * AB_SCALE) + ROUND_DELTA;
+        int X0 = rint(M[0] * tmp) + rint(fma(M[1], (CT)dy, M[2]) * AB_SCALE) + ROUND_DELTA;
+        int Y0 = rint(M[3] * tmp) + rint(fma(M[4], (CT)dy, M[5]) * AB_SCALE) + ROUND_DELTA;
 
         X0 = X0 >> (AB_BITS - INTER_BITS);
         Y0 = Y0 >> (AB_BITS - INTER_BITS);
@@ -293,7 +290,7 @@ __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_of
                 #pragma unroll
                 for (int x = 0; x < 4; x++)
                     v[mad24(y, 4, x)] = sx+x >= 0 && sx+x < src_cols ?
-                        convertToWT(loadpix(srcptr + mad24(sy+y, src_step, mad24(sx+x, pixsize, src_offset)))) : scalar;
+                        CONVERT_TO_WT(loadpix(srcptr + mad24(sy+y, src_step, mad24(sx+x, pixsize, src_offset)))) : scalar;
             }
             else
             {
@@ -313,7 +310,7 @@ __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_of
         int dst_index = mad24(dy, dst_step, mad24(dx, pixsize, dst_offset));
 
         WT sum = (WT)(0);
-#if depth <= 4
+#if SRC_DEPTH <= 4
         int itab[16];
 
         #pragma unroll
@@ -323,12 +320,12 @@ __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_of
         #pragma unroll
         for (int i = 0; i < 16; i++)
             sum = mad24(v[i], itab[i], sum);
-        storepix(convertToT( (sum + (1 << (INTER_REMAP_COEF_BITS-1))) >> INTER_REMAP_COEF_BITS ), dstptr + dst_index);
+        storepix(CONVERT_TO_T( (sum + (1 << (INTER_REMAP_COEF_BITS-1))) >> INTER_REMAP_COEF_BITS ), dstptr + dst_index);
 #else
         #pragma unroll
         for (int i = 0; i < 16; i++)
             sum = fma(v[i], tab1y[(i>>2)] * tab1x[(i&3)], sum);
-        storepix(convertToT( sum ), dstptr + dst_index);
+        storepix(CONVERT_TO_T( sum ), dstptr + dst_index);
 #endif
 #else // INTEL_DEVICE
         __constant float * coeffs_y = coeffs + (ay << 2), * coeffs_x = coeffs + (ax << 2);
@@ -346,13 +343,13 @@ __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_of
                 xsum = (WT)(0);
                 if (sx >= 0 && sx + 4 < src_cols)
                 {
-#if depth == 0 && cn == 1
+#if SRC_DEPTH == 0 && CN == 1
                     uchar4 value = vload4(0, srcptr + src_index);
                     xsum = dot(convert_float4(value), (float4)(coeffs_x[0], coeffs_x[1], coeffs_x[2], coeffs_x[3]));
 #else
                     #pragma unroll
                     for (int x = 0; x < 4; x++)
-                        xsum = fma(convertToWT(loadpix(srcptr + mad24(x, pixsize, src_index))), coeffs_x[x], xsum);
+                        xsum = fma(CONVERT_TO_WT(loadpix(srcptr + mad24(x, pixsize, src_index))), coeffs_x[x], xsum);
 #endif
                 }
                 else
@@ -360,7 +357,7 @@ __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_of
                     #pragma unroll
                     for (int x = 0; x < 4; x++)
                         xsum = fma(sx + x >= 0 && sx + x < src_cols ?
-                                   convertToWT(loadpix(srcptr + mad24(x, pixsize, src_index))) : scalar, coeffs_x[x], xsum);
+                                   CONVERT_TO_WT(loadpix(srcptr + mad24(x, pixsize, src_index))) : scalar, coeffs_x[x], xsum);
                 }
                 sum = fma(xsum, coeffs_y[y], sum);
             }
@@ -368,7 +365,7 @@ __kernel void warpAffine(__global const uchar * srcptr, int src_step, int src_of
                 sum = fma(scalar, coeffs_y[y], sum);
         }
 
-        storepix(convertToT(sum), dstptr + dst_index);
+        storepix(CONVERT_TO_T(sum), dstptr + dst_index);
 #endif
     }
 }

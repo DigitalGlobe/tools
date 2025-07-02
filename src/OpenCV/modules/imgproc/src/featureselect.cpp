@@ -42,6 +42,8 @@
 #include "precomp.hpp"
 #include "opencl_kernels_imgproc.hpp"
 
+#include "opencv2/core/openvx/ovx_defs.hpp"
+
 #include <cstdio>
 #include <vector>
 #include <iostream>
@@ -50,11 +52,11 @@
 namespace cv
 {
 
-struct greaterThanPtr :
-        public std::binary_function<const float *, const float *, bool>
+struct greaterThanPtr
 {
     bool operator () (const float * a, const float * b) const
-    { return *a > *b; }
+    // Ensure a fully deterministic result of the sort
+    { return (*a > *b) ? true : (*a < *b) ? false : (a > b); }
 };
 
 #ifdef HAVE_OPENCL
@@ -66,19 +68,20 @@ struct Corner
     short x;
 
     bool operator < (const Corner & c) const
-    {  return val > c.val; }
+    // Ensure a fully deterministic result of the sort
+    {  return (val > c.val) ? true : (val < c.val) ? false : (y > c.y) ? true : (y < c.y) ? false : (x > c.x); }
 };
 
 static bool ocl_goodFeaturesToTrack( InputArray _image, OutputArray _corners,
                                      int maxCorners, double qualityLevel, double minDistance,
-                                     InputArray _mask, int blockSize,
-                                     bool useHarrisDetector, double harrisK )
+                                     InputArray _mask, OutputArray _cornersQuality, int blockSize, int gradientSize,
+                                     bool useHarrisDetector, double harrisK)
 {
     UMat eig, maxEigenValue;
     if( useHarrisDetector )
-        cornerHarris( _image, eig, blockSize, 3, harrisK );
+        cornerHarris( _image, eig, blockSize, gradientSize, harrisK );
     else
-        cornerMinEigenVal( _image, eig, blockSize, 3 );
+        cornerMinEigenVal( _image, eig, blockSize, gradientSize );
 
     Size imgsize = _image.size();
     size_t total, i, j, ncorners = 0, possibleCornersCount =
@@ -123,7 +126,7 @@ static bool ocl_goodFeaturesToTrack( InputArray _image, OutputArray _corners,
             return false;
 
         ocl::Kernel k2("maxEigenValTask", ocl::imgproc::gftt_oclsrc,
-                       format("-D OP_MAX_EIGEN_VAL -D WGS=%d -D WGS2_ALIGNED=%d -D groupnum=%d",
+                       format("-D OP_MAX_EIGEN_VAL -D WGS=%zu -D WGS2_ALIGNED=%d -D groupnum=%d",
                               wgs, wgs2_aligned, dbsize));
         if (k2.empty())
             return false;
@@ -173,7 +176,9 @@ static bool ocl_goodFeaturesToTrack( InputArray _image, OutputArray _corners,
     std::sort(corner_ptr, corner_ptr + total);
 
     std::vector<Point2f> corners;
+    std::vector<float> cornersQuality;
     corners.reserve(total);
+    cornersQuality.reserve(total);
 
     if (minDistance >= 1)
     {
@@ -234,6 +239,7 @@ static bool ocl_goodFeaturesToTrack( InputArray _image, OutputArray _corners,
                 grid[y_cell*grid_width + x_cell].push_back(Point2f((float)c.x, (float)c.y));
 
                 corners.push_back(Point2f((float)c.x, (float)c.y));
+                cornersQuality.push_back(c.val);
                 ++ncorners;
 
                 if( maxCorners > 0 && (int)ncorners == maxCorners )
@@ -248,13 +254,108 @@ static bool ocl_goodFeaturesToTrack( InputArray _image, OutputArray _corners,
             const Corner & c = corner_ptr[i];
 
             corners.push_back(Point2f((float)c.x, (float)c.y));
+            cornersQuality.push_back(c.val);
             ++ncorners;
+
             if( maxCorners > 0 && (int)ncorners == maxCorners )
                 break;
         }
     }
 
     Mat(corners).convertTo(_corners, _corners.fixedType() ? _corners.type() : CV_32F);
+    if (_cornersQuality.needed()) {
+        Mat(cornersQuality).convertTo(_cornersQuality, _cornersQuality.fixedType() ? _cornersQuality.type() : CV_32F);
+    }
+
+    return true;
+}
+
+#endif
+
+#ifdef HAVE_OPENVX
+struct VxKeypointsComparator
+{
+    bool operator () (const vx_keypoint_t& a, const vx_keypoint_t& b)
+    {
+        return a.strength > b.strength;
+    }
+};
+
+static bool openvx_harris(Mat image, OutputArray _corners,
+                          int _maxCorners, double _qualityLevel, double _minDistance,
+                          int _blockSize, int _gradientSize, double _harrisK)
+{
+    using namespace ivx;
+
+    if(image.type() != CV_8UC1) return false;
+
+    //OpenVX implementations don't have to provide other sizes
+    if(!(_blockSize == 3 || _blockSize == 5 || _blockSize == 7)) return false;
+
+    try
+    {
+        Context context = ovx::getOpenVXContext();
+
+        Image ovxImage = Image::createFromHandle(context, Image::matTypeToFormat(image.type()),
+                                                 Image::createAddressing(image), image.data);
+        //The minimum threshold which to eliminate Harris Corner scores (computed using the normalized Sobel kernel).
+        //set to 0, we'll filter it later by threshold
+        ivx::Scalar strengthThresh = ivx::Scalar::create<VX_TYPE_FLOAT32>(context, 0);
+
+        //The gradient window size to use on the input.
+        vx_int32 gradientSize = _gradientSize;
+
+        //The block window size used to compute the harris corner score
+        vx_int32 blockSize = _blockSize;
+
+        //The scalar sensitivity threshold k from the Harris-Stephens equation
+        ivx::Scalar sensivity = ivx::Scalar::create<VX_TYPE_FLOAT32>(context, _harrisK);
+
+        //The radial Euclidean distance for non-maximum suppression
+        ivx::Scalar minDistance = ivx::Scalar::create<VX_TYPE_FLOAT32>(context, _minDistance);
+
+        vx_size capacity = image.cols * image.rows;
+        Array corners = Array::create(context, VX_TYPE_KEYPOINT, capacity);
+        ivx::Scalar numCorners = ivx::Scalar::create<VX_TYPE_SIZE>(context, 0);
+
+        IVX_CHECK_STATUS(vxuHarrisCorners(context, ovxImage, strengthThresh, minDistance, sensivity,
+                                          gradientSize, blockSize, corners, numCorners));
+
+        std::vector<vx_keypoint_t> vxKeypoints;
+        corners.copyTo(vxKeypoints);
+
+        std::sort(vxKeypoints.begin(), vxKeypoints.end(), VxKeypointsComparator());
+
+        vx_float32 maxStrength = 0.0f;
+        if(vxKeypoints.size() > 0)
+            maxStrength = vxKeypoints[0].strength;
+        size_t maxKeypoints = min((size_t)_maxCorners, vxKeypoints.size());
+        std::vector<Point2f> keypoints;
+        keypoints.reserve(maxKeypoints);
+        for(size_t i = 0; i < maxKeypoints; i++)
+        {
+            vx_keypoint_t kp = vxKeypoints[i];
+            if(kp.strength < maxStrength*_qualityLevel) break;
+            keypoints.push_back(Point2f((float)kp.x, (float)kp.y));
+        }
+
+        Mat(keypoints).convertTo(_corners, _corners.fixedType() ? _corners.type() : CV_32F);
+
+#ifdef VX_VERSION_1_1
+        //we should take user memory back before release
+        //(it's not done automatically according to standard)
+        ovxImage.swapHandle();
+#endif
+    }
+    catch (const RuntimeError & e)
+    {
+        VX_DbgThrow(e.what());
+    }
+    catch (const WrapperError & e)
+    {
+        VX_DbgThrow(e.what());
+    }
+
     return true;
 }
 
@@ -262,29 +363,53 @@ static bool ocl_goodFeaturesToTrack( InputArray _image, OutputArray _corners,
 
 }
 
+void cv::goodFeaturesToTrack( InputArray image, OutputArray corners,
+                              int maxCorners, double qualityLevel, double minDistance,
+                              InputArray mask, int blockSize, bool useHarrisDetector, double k )
+{
+    return goodFeaturesToTrack(image, corners, maxCorners, qualityLevel, minDistance,
+                               mask, noArray(), blockSize, 3, useHarrisDetector, k);
+}
+
+void cv::goodFeaturesToTrack( InputArray image, OutputArray corners,
+                              int maxCorners, double qualityLevel, double minDistance,
+                              InputArray mask, int blockSize, int gradientSize, bool useHarrisDetector, double k )
+{
+    return goodFeaturesToTrack( image, corners, maxCorners, qualityLevel, minDistance,
+                                mask, noArray(), blockSize, gradientSize, useHarrisDetector, k );
+}
+
 void cv::goodFeaturesToTrack( InputArray _image, OutputArray _corners,
                               int maxCorners, double qualityLevel, double minDistance,
-                              InputArray _mask, int blockSize,
+                              InputArray _mask, OutputArray _cornersQuality, int blockSize, int gradientSize,
                               bool useHarrisDetector, double harrisK )
 {
+    CV_INSTRUMENT_REGION();
+
     CV_Assert( qualityLevel > 0 && minDistance >= 0 && maxCorners >= 0 );
     CV_Assert( _mask.empty() || (_mask.type() == CV_8UC1 && _mask.sameSize(_image)) );
 
     CV_OCL_RUN(_image.dims() <= 2 && _image.isUMat(),
                ocl_goodFeaturesToTrack(_image, _corners, maxCorners, qualityLevel, minDistance,
-                                    _mask, blockSize, useHarrisDetector, harrisK))
+                                       _mask, _cornersQuality, blockSize, gradientSize, useHarrisDetector, harrisK))
 
     Mat image = _image.getMat(), eig, tmp;
     if (image.empty())
     {
         _corners.release();
+        _cornersQuality.release();
         return;
     }
 
+    // Disabled due to bad accuracy
+    CV_OVX_RUN(false && useHarrisDetector && _mask.empty() &&
+               !ovx::skipSmallImages<VX_KERNEL_HARRIS_CORNERS>(image.cols, image.rows),
+               openvx_harris(image, _corners, maxCorners, qualityLevel, minDistance, blockSize, gradientSize, harrisK))
+
     if( useHarrisDetector )
-        cornerHarris( image, eig, blockSize, 3, harrisK );
+        cornerHarris( image, eig, blockSize, gradientSize, harrisK );
     else
-        cornerMinEigenVal( image, eig, blockSize, 3 );
+        cornerMinEigenVal( image, eig, blockSize, gradientSize );
 
     double maxVal = 0;
     minMaxLoc( eig, 0, &maxVal, 0, 0, _mask );
@@ -311,11 +436,13 @@ void cv::goodFeaturesToTrack( InputArray _image, OutputArray _corners,
     }
 
     std::vector<Point2f> corners;
+    std::vector<float> cornersQuality;
     size_t i, j, total = tmpCorners.size(), ncorners = 0;
 
     if (total == 0)
     {
         _corners.release();
+        _cornersQuality.release();
         return;
     }
 
@@ -386,6 +513,8 @@ void cv::goodFeaturesToTrack( InputArray _image, OutputArray _corners,
             {
                 grid[y_cell*grid_width + x_cell].push_back(Point2f((float)x, (float)y));
 
+                cornersQuality.push_back(*tmpCorners[i]);
+
                 corners.push_back(Point2f((float)x, (float)y));
                 ++ncorners;
 
@@ -398,18 +527,24 @@ void cv::goodFeaturesToTrack( InputArray _image, OutputArray _corners,
     {
         for( i = 0; i < total; i++ )
         {
+            cornersQuality.push_back(*tmpCorners[i]);
+
             int ofs = (int)((const uchar*)tmpCorners[i] - eig.ptr());
             int y = (int)(ofs / eig.step);
             int x = (int)((ofs - y*eig.step)/sizeof(float));
 
             corners.push_back(Point2f((float)x, (float)y));
             ++ncorners;
+
             if( maxCorners > 0 && (int)ncorners == maxCorners )
                 break;
         }
     }
 
     Mat(corners).convertTo(_corners, _corners.fixedType() ? _corners.type() : CV_32F);
+    if (_cornersQuality.needed()) {
+        Mat(cornersQuality).convertTo(_cornersQuality, _cornersQuality.fixedType() ? _cornersQuality.type() : CV_32F);
+    }
 }
 
 CV_IMPL void
@@ -431,7 +566,7 @@ cvGoodFeaturesToTrack( const void* _image, void*, void*,
 
     size_t i, ncorners = corners.size();
     for( i = 0; i < ncorners; i++ )
-        _corners[i] = corners[i];
+        _corners[i] = cvPoint2D32f(corners[i]);
     *_corner_count = (int)ncorners;
 }
 

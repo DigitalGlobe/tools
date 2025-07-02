@@ -80,15 +80,15 @@ void ArrayTest::clear()
 }
 
 
-int ArrayTest::read_params( CvFileStorage* fs )
+int ArrayTest::read_params( const cv::FileStorage& fs )
 {
     int code = BaseTest::read_params( fs );
     if( code < 0 )
         return code;
 
-    min_log_array_size = cvReadInt( find_param( fs, "min_log_array_size" ), min_log_array_size );
-    max_log_array_size = cvReadInt( find_param( fs, "max_log_array_size" ), max_log_array_size );
-    test_case_count = cvReadInt( find_param( fs, "test_case_count" ), test_case_count );
+    read( find_param( fs, "min_log_array_size" ), min_log_array_size, min_log_array_size );
+    read( find_param( fs, "max_log_array_size" ), max_log_array_size, max_log_array_size );
+    read( find_param( fs, "test_case_count" ), test_case_count, test_case_count );
     test_case_count = cvRound( test_case_count*ts->get_test_case_count_scale() );
 
     min_log_array_size = clipInt( min_log_array_size, 0, 20 );
@@ -158,8 +158,8 @@ int ArrayTest::prepare_test_case( int test_case_idx )
         {
             unsigned t = randInt(rng);
             bool create_mask = true, use_roi = false;
-            CvSize size = sizes[i][j], whole_size = size;
-            CvRect roi;
+            CvSize size = cvSize(sizes[i][j]), whole_size = size;
+            CvRect roi = CV_STRUCT_INITIALIZER;
 
             is_image = !cvmat_allowed ? true : iplimage_allowed ? (t & 1) != 0 : false;
             create_mask = (t & 6) == 0; // ~ each of 3 tests will use mask
@@ -268,14 +268,14 @@ void ArrayTest::fill_array( int /*test_case_idx*/, int i, int j, Mat& arr )
 double ArrayTest::get_success_error_level( int /*test_case_idx*/, int i, int j )
 {
     int elem_depth = CV_MAT_DEPTH(cvGetElemType(test_array[i][j]));
-    assert( i == OUTPUT || i == INPUT_OUTPUT );
+    CV_Assert( i == OUTPUT || i == INPUT_OUTPUT );
     return elem_depth < CV_32F ? 0 : elem_depth == CV_32F ? FLT_EPSILON*100: DBL_EPSILON*5000;
 }
 
 
 void ArrayTest::prepare_to_validation( int /*test_case_idx*/ )
 {
-    assert(0);
+    CV_Assert(0);
 }
 
 
@@ -293,7 +293,7 @@ int ArrayTest::validate_test_results( int test_case_idx )
         int i1 = i == 0 ? REF_OUTPUT : REF_INPUT_OUTPUT;
         size_t sizei = test_array[i0].size();
 
-        assert( sizei == test_array[i1].size() );
+        CV_Assert( sizei == test_array[i1].size() );
         for( j = 0; j < sizei; j++ )
         {
             double err_level;

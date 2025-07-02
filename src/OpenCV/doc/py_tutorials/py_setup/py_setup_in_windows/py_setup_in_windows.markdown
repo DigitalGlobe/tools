@@ -15,28 +15,30 @@ Installing OpenCV from prebuilt binaries
 
 -#  Below Python packages are to be downloaded and installed to their default locations.
 
-    -#  [Python-2.7.x](http://python.org/ftp/python/2.7.5/python-2.7.5.msi).
+    -#  Python 3.x (3.4+) or Python 2.7.x from [here](https://www.python.org/downloads/).
 
-    -#  [Numpy](http://sourceforge.net/projects/numpy/files/NumPy/1.7.1/numpy-1.7.1-win32-superpack-python2.7.exe/download).
+    -#  Numpy package (for example, using `pip install numpy` command).
 
-    -#  [Matplotlib](https://downloads.sourceforge.net/project/matplotlib/matplotlib/matplotlib-1.3.0/matplotlib-1.3.0.win32-py2.7.exe) (*Matplotlib is optional, but recommended since we use it a lot in our tutorials*).
+    -#  Matplotlib (`pip install matplotlib`) (*Matplotlib is optional, but recommended since we use it a lot in our tutorials*).
 
--#  Install all packages into their default locations. Python will be installed to `C:/Python27/`.
+-#  Install all packages into their default locations. Python will be installed to `C:/Python27/` in case of Python 2.7.
 
--#  After installation, open Python IDLE. Enter import numpy and make sure Numpy is working fine.
+-#  After installation, open Python IDLE. Enter **import numpy** and make sure Numpy is working fine.
 
--#  Download latest OpenCV release from [sourceforge
-    site](http://sourceforge.net/projects/opencvlibrary/files/opencv-win/2.4.6/OpenCV-2.4.6.0.exe/download)
+-#  Download latest OpenCV release from [GitHub](https://github.com/opencv/opencv/releases) or
+    [SourceForge site](https://sourceforge.net/projects/opencvlibrary/files/)
     and double-click to extract it.
 
 -#  Goto **opencv/build/python/2.7** folder.
 
 -#  Copy **cv2.pyd** to **C:/Python27/lib/site-packages**.
 
+-#  Copy the **opencv_world.dll** file to **C:/Python27/lib/site-packages**
+
 -#  Open Python IDLE and type following codes in Python terminal.
     @code
-        >>> import cv2
-        >>> print cv2.__version__
+        >>> import cv2 as cv
+        >>> print( cv.__version__ )
     @endcode
 
 If the results are printed out without any errors, congratulations !!! You have installed
@@ -49,16 +51,13 @@ Building OpenCV from source
 
     -#  [Visual Studio 2012](http://go.microsoft.com/?linkid=9816768)
 
-    -#  [CMake](http://www.cmake.org/files/v2.8/cmake-2.8.11.2-win32-x86.exe)
+    -#  [CMake](https://cmake.org/download/)
 
 -#  Download and install necessary Python packages to their default locations
 
-    -#  [Python 2.7.x](http://python.org/ftp/python/2.7.5/python-2.7.5.msi)
+    -#  Python
 
-    -#  [Numpy](http://sourceforge.net/projects/numpy/files/NumPy/1.7.1/numpy-1.7.1-win32-superpack-python2.7.exe/download)
-
-    -#  [Matplotlib](https://downloads.sourceforge.net/project/matplotlib/matplotlib/matplotlib-1.3.0/matplotlib-1.3.0.win32-py2.7.exe)
-        (*Matplotlib is optional, but recommended since we use it a lot in our tutorials.*)
+    -#  Numpy
 
     @note In this case, we are using 32-bit binaries of Python packages. But if you want to use
     OpenCV for x64, 64-bit binaries of Python packages are to be installed. Problem is that, there
@@ -80,69 +79,42 @@ Building OpenCV from source
 -#  Extract it to a folder, opencv and create a new folder build in it.
 -#  Open CMake-gui (*Start \> All Programs \> CMake-gui*)
 -#  Fill the fields as follows (see the image below):
-
     -#  Click on **Browse Source...** and locate the opencv folder.
-
     -#  Click on **Browse Build...** and locate the build folder we created.
-
     -#  Click on **Configure**.
-
         ![image](images/Capture1.jpg)
-
     -#  It will open a new window to select the compiler. Choose appropriate compiler (here,
         Visual Studio 11) and click **Finish**.
-
         ![image](images/Capture2.png)
-
     -#  Wait until analysis is finished.
-
 -#  You will see all the fields are marked in red. Click on the **WITH** field to expand it. It
     decides what extra features you need. So mark appropriate fields. See the below image:
-
     ![image](images/Capture3.png)
-
 -#  Now click on **BUILD** field to expand it. First few fields configure the build method. See the
     below image:
-
     ![image](images/Capture5.png)
-
 -#  Remaining fields specify what modules are to be built. Since GPU modules are not yet supported
     by OpenCV-Python, you can completely avoid it to save time (But if you work with them, keep it
     there). See the image below:
-
     ![image](images/Capture6.png)
-
 -#  Now click on **ENABLE** field to expand it. Make sure **ENABLE_SOLUTION_FOLDERS** is unchecked
     (Solution folders are not supported by Visual Studio Express edition). See the image below:
-
     ![image](images/Capture7.png)
-
 -#  Also make sure that in the **PYTHON** field, everything is filled. (Ignore
     PYTHON_DEBUG_LIBRARY). See image below:
-
     ![image](images/Capture80.png)
-
 -#  Finally click the **Generate** button.
-
 -#  Now go to our **opencv/build** folder. There you will find **OpenCV.sln** file. Open it with
     Visual Studio.
-
 -#  Check build mode as **Release** instead of **Debug**.
-
 -#  In the solution explorer, right-click on the **Solution** (or **ALL_BUILD**) and build it. It
     will take some time to finish.
-
 -#  Again, right-click on **INSTALL** and build it. Now OpenCV-Python will be installed.
-
     ![image](images/Capture8.png)
-
--#  Open Python IDLE and enter import cv2. If no error, it is installed correctly.
+-#  Open Python IDLE and enter 'import cv2 as cv'. If no error, it is installed correctly.
 
 @note We have installed with no other support like TBB, Eigen, Qt, Documentation etc. It would be
 difficult to explain it here. A more detailed video will be added soon or you can just hack around.
-
-Additional Resources
---------------------
 
 Exercises
 ---------

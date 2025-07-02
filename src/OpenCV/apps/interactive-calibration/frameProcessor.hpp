@@ -1,9 +1,14 @@
+// This file is part of OpenCV project.
+// It is subject to the license terms in the LICENSE file found in the top-level directory
+// of this distribution and at http://opencv.org/license.html.
+
 #ifndef FRAME_PROCESSOR_HPP
 #define FRAME_PROCESSOR_HPP
 
 #include <opencv2/core.hpp>
-#include <opencv2/aruco/charuco.hpp>
 #include <opencv2/calib3d.hpp>
+#include <opencv2/objdetect.hpp>
+
 #include "calibCommon.hpp"
 #include "calibController.hpp"
 
@@ -25,15 +30,17 @@ class CalibProcessor : public FrameProcessor
 protected:
     cv::Ptr<calibrationData> mCalibData;
     TemplateType mBoardType;
-    cv::Size mBoardSize;
+    cv::Size mBoardSizeUnits;
+    cv::Size mBoardSizeInnerCorners;
     std::vector<cv::Point2f> mTemplateLocations;
     std::vector<cv::Point2f> mCurrentImagePoints;
     cv::Mat mCurrentCharucoCorners;
     cv::Mat mCurrentCharucoIds;
 
     cv::Ptr<cv::SimpleBlobDetector> mBlobDetectorPtr;
-    cv::Ptr<cv::aruco::Dictionary> mArucoDictionary;
+    cv::aruco::Dictionary mArucoDictionary;
     cv::Ptr<cv::aruco::CharucoBoard> mCharucoBoard;
+    cv::Ptr<cv::aruco::CharucoDetector> detector;
 
     int mNeededFramesNum;
     unsigned mDelayBetweenCaptures;
@@ -41,9 +48,12 @@ protected:
     double mMaxTemplateOffset;
     float mSquareSize;
     float mTemplDist;
+    bool mSaveFrames;
+    float mZoom;
 
     bool detectAndParseChessboard(const cv::Mat& frame);
     bool detectAndParseChAruco(const cv::Mat& frame);
+    bool detectAndParseCircles(const cv::Mat& frame);
     bool detectAndParseACircles(const cv::Mat& frame);
     bool detectAndParseDualACircles(const cv::Mat& frame);
     void saveFrameData();
@@ -52,10 +62,10 @@ protected:
 
 public:
     CalibProcessor(cv::Ptr<calibrationData> data, captureParameters& capParams);
-    virtual cv::Mat processFrame(const cv::Mat& frame);
-    virtual bool isProcessed() const;
-    virtual void resetState();
-    ~CalibProcessor();
+    virtual cv::Mat processFrame(const cv::Mat& frame) CV_OVERRIDE;
+    virtual bool isProcessed() const CV_OVERRIDE;
+    virtual void resetState() CV_OVERRIDE;
+    ~CalibProcessor() CV_OVERRIDE;
 };
 
 enum visualisationMode {Grid, Window};
@@ -75,9 +85,9 @@ protected:
     void drawGridPoints(const cv::Mat& frame);
 public:
     ShowProcessor(cv::Ptr<calibrationData> data, cv::Ptr<calibController> controller, TemplateType board);
-    virtual cv::Mat processFrame(const cv::Mat& frame);
-    virtual bool isProcessed() const;
-    virtual void resetState();
+    virtual cv::Mat processFrame(const cv::Mat& frame) CV_OVERRIDE;
+    virtual bool isProcessed() const CV_OVERRIDE;
+    virtual void resetState() CV_OVERRIDE;
 
     void setVisualizationMode(visualisationMode mode);
     void switchVisualizationMode();
@@ -86,7 +96,7 @@ public:
 
     void switchUndistort();
     void setUndistort(bool isEnabled);
-    ~ShowProcessor();
+    ~ShowProcessor() CV_OVERRIDE;
 };
 
 }

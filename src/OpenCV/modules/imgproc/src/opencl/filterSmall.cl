@@ -154,6 +154,7 @@ inline bool isBorder(const struct RectCoords bounds, int2 coord, int numPixels)
 #endif
 
 #define float1 float
+#define double1 double
 #define uchar1 uchar
 #define int1 int
 #define uint1 unit
@@ -176,21 +177,21 @@ inline PX_LOAD_FLOAT_VEC_TYPE readSrcPixelGroup(int2 pos, __global const uchar *
 }
 
 // Macros to ensure unrolled loops
-#define LOOP1(VAR, STMT) (STMT); (VAR)++;
-#define LOOP2(VAR, STMT) LOOP1(VAR, STMT); (STMT); (VAR)++;
-#define LOOP3(VAR, STMT) LOOP2(VAR, STMT); (STMT); (VAR)++;
-#define LOOP4(VAR, STMT) LOOP3(VAR, STMT); (STMT); (VAR)++;
-#define LOOP5(VAR, STMT) LOOP4(VAR, STMT); (STMT); (VAR)++;
-#define LOOP6(VAR, STMT) LOOP5(VAR, STMT); (STMT); (VAR)++;
-#define LOOP7(VAR, STMT) LOOP6(VAR, STMT); (STMT); (VAR)++;
-#define LOOP8(VAR, STMT) LOOP7(VAR, STMT); (STMT); (VAR)++;
-#define LOOP9(VAR, STMT) LOOP8(VAR, STMT); (STMT); (VAR)++;
-#define LOOP10(VAR, STMT) LOOP9(VAR, STMT); (STMT); (VAR)++;
-#define LOOP11(VAR, STMT) LOOP10(VAR, STMT); (STMT); (VAR)++;
-#define LOOP12(VAR, STMT) LOOP11(VAR, STMT); (STMT); (VAR)++;
-#define LOOP13(VAR, STMT) LOOP12(VAR, STMT); (STMT); (VAR)++;
+#define LOOP1(VAR, STMT) STMT; (VAR)++;
+#define LOOP2(VAR, STMT) LOOP1(VAR, STMT); STMT; (VAR)++;
+#define LOOP3(VAR, STMT) LOOP2(VAR, STMT); STMT; (VAR)++;
+#define LOOP4(VAR, STMT) LOOP3(VAR, STMT); STMT; (VAR)++;
+#define LOOP5(VAR, STMT) LOOP4(VAR, STMT); STMT; (VAR)++;
+#define LOOP6(VAR, STMT) LOOP5(VAR, STMT); STMT; (VAR)++;
+#define LOOP7(VAR, STMT) LOOP6(VAR, STMT); STMT; (VAR)++;
+#define LOOP8(VAR, STMT) LOOP7(VAR, STMT); STMT; (VAR)++;
+#define LOOP9(VAR, STMT) LOOP8(VAR, STMT); STMT; (VAR)++;
+#define LOOP10(VAR, STMT) LOOP9(VAR, STMT); STMT; (VAR)++;
+#define LOOP11(VAR, STMT) LOOP10(VAR, STMT); STMT; (VAR)++;
+#define LOOP12(VAR, STMT) LOOP11(VAR, STMT); STMT; (VAR)++;
+#define LOOP13(VAR, STMT) LOOP12(VAR, STMT); STMT; (VAR)++;
 
-#define LOOP(N, VAR, STMT) CAT(LOOP, N)((VAR), (STMT))
+#define LOOP(N, VAR, STMT) CAT(LOOP, N)(VAR, STMT)
 
 #ifdef OP_BOX_FILTER
 #define PROCESS_ELEM \

@@ -3,13 +3,12 @@
 
 #ifdef HAVE_OPENCL
 
-namespace cvtest {
-
+namespace opencv_test {
 namespace ocl {
 
 CV_ENUM(MethodType, TM_SQDIFF, TM_SQDIFF_NORMED, TM_CCORR, TM_CCORR_NORMED, TM_CCOEFF, TM_CCOEFF_NORMED)
 
-typedef std::tr1::tuple<Size, Size, MethodType, MatType> ImgSize_TmplSize_Method_MatType_t;
+typedef tuple<Size, Size, MethodType, MatType> ImgSize_TmplSize_Method_MatType_t;
 typedef TestBaseWithParam<ImgSize_TmplSize_Method_MatType_t> ImgSize_TmplSize_Method_MatType;
 
 OCL_PERF_TEST_P(ImgSize_TmplSize_Method_MatType, MatchTemplate,
@@ -61,7 +60,7 @@ OCL_PERF_TEST_P(CV_TM_CCORRFixture, matchTemplate,
 
     declare.in(src, templ, WARMUP_RNG).out(dst);
 
-    OCL_TEST_CYCLE() cv::matchTemplate(src, templ, dst, CV_TM_CCORR);
+    OCL_TEST_CYCLE() cv::matchTemplate(src, templ, dst, cv::TM_CCORR);
 
     SANITY_CHECK(dst, 1e-4);
 }
@@ -79,11 +78,11 @@ OCL_PERF_TEST_P(CV_TM_CCORR_NORMEDFixture, matchTemplate,
 
     declare.in(src, templ, WARMUP_RNG).out(dst);
 
-    OCL_TEST_CYCLE() cv::matchTemplate(src, templ, dst, CV_TM_CCORR_NORMED);
+    OCL_TEST_CYCLE() cv::matchTemplate(src, templ, dst, cv::TM_CCORR_NORMED);
 
     SANITY_CHECK(dst, 3e-2);
 }
 
-} }
+} } // namespace
 
 #endif // HAVE_OPENCL

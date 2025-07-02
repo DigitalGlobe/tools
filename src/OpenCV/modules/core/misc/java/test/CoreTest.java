@@ -394,7 +394,13 @@ public class CoreTest extends OpenCVTestCase {
     }
 
     public void testEigen() {
-        Mat src = new Mat(3, 3, CvType.CV_32FC1, new Scalar(2.0));
+        Mat src = new Mat(3, 3, CvType.CV_32FC1) {
+            {
+                put(0, 0, 2, 0, 0);
+                put(1, 0, 0, 6, 0);
+                put(2, 0, 0, 0, 4);
+            }
+        };
         Mat eigenVals = new Mat();
         Mat eigenVecs = new Mat();
 
@@ -402,18 +408,22 @@ public class CoreTest extends OpenCVTestCase {
 
         Mat expectedEigenVals = new Mat(3, 1, CvType.CV_32FC1) {
             {
-                put(0, 0, 6, 0, 0);
-            }
-        };
-        Mat expectedEigenVecs = new Mat(3, 3, CvType.CV_32FC1) {
-            {
-                put(0, 0, 0.57735026, 0.57735026, 0.57735032);
-                put(1, 0, 0.70710677, -0.70710677, 0);
-                put(2, 0, -0.40824831, -0.40824831, 0.81649661);
+                put(0, 0, 6, 4, 2);
             }
         };
         assertMatEqual(eigenVals, expectedEigenVals, EPS);
-        assertMatEqual(eigenVecs, expectedEigenVecs, EPS);
+
+        // check by definition
+        double eps = 1e-3;
+        for(int i = 0; i < 3; i++)
+        {
+            Mat vec = eigenVecs.row(i).t();
+            Mat lhs = new Mat(3, 1, CvType.CV_32FC1);
+            Core.gemm(src, vec, 1.0, new Mat(), 1.0, lhs);
+            Mat rhs = new Mat(3, 1, CvType.CV_32FC1);
+            Core.gemm(vec, eigenVals.row(i), 1.0, new Mat(), 1.0, rhs);
+            assertMatEqual(lhs, rhs, eps);
+        }
     }
 
     public void testExp() {
@@ -866,7 +876,7 @@ public class CoreTest extends OpenCVTestCase {
         Point point1 = new Point(0, 0);
         Point point2 = new Point(nPoints, nPoints);
 
-        Imgproc.line(gray0, point1, point2, colorWhite, 0);
+        Imgproc.line(gray0, point1, point2, colorWhite, 1);
 
         assertTrue(nPoints == Core.countNonZero(gray0));
     }
@@ -937,19 +947,22 @@ public class CoreTest extends OpenCVTestCase {
     }
 
     public void testMahalanobis() {
+        Mat src = new Mat(matSize + 1, matSize, CvType.CV_32F);
+        Core.randu(src, -128, 128);
+
         Mat covar = new Mat(matSize, matSize, CvType.CV_32F);
-        Mat mean = new Mat(1, matSize, CvType.CV_32F);
-        Core.calcCovarMatrix(grayRnd_32f, covar, mean, Core.COVAR_ROWS | Core.COVAR_NORMAL, CvType.CV_32F);
+        Mat mean = new Mat(1, matSize + 1, CvType.CV_32F);
+        Core.calcCovarMatrix(src, covar, mean, Core.COVAR_ROWS | Core.COVAR_NORMAL, CvType.CV_32F);
         covar = covar.inv();
-        Mat line1 = grayRnd_32f.row(0);
-        Mat line2 = grayRnd_32f.row(1);
+
+        Mat line1 = src.row(0);
+        Mat line2 = src.row(1);
 
         double d = Core.Mahalanobis(line1, line1, covar);
 
         assertEquals(0.0, d);
 
         d = Core.Mahalanobis(line1, line2, covar);
-
         assertTrue(d > 0.0);
     }
 
@@ -1326,7 +1339,8 @@ public class CoreTest extends OpenCVTestCase {
         Mat vectors = new Mat();
 
         Core.PCACompute(data, mean, vectors);
-
+        //System.out.println(mean.dump());
+        //System.out.println(vectors.dump());
         Mat mean_truth = new Mat(1, 4, CvType.CV_32F) {
             {
                 put(0, 0, 2, 4, 4, 8);
@@ -1338,7 +1352,21 @@ public class CoreTest extends OpenCVTestCase {
             }
         };
         assertMatEqual(mean_truth, mean, EPS);
-        assertMatEqual(vectors_truth, vectors, EPS);
+
+        // eigenvectors are normalized (length = 1),
+        // but direction is unknown (v and -v are both eigen vectors)
+        // so this direct check doesn't work:
+        // assertMatEqual(vectors_truth, vectors, EPS);
+        for(int i = 0; i < 3; i++)
+        {
+            Mat vec0 = vectors_truth.row(i);
+            Mat vec1 = vectors.row(i);
+            Mat vec1_ = new Mat();
+            Core.subtract(new Mat(1, 4, CvType.CV_32F, new Scalar(0)), vec1, vec1_);
+            double scale1 = Core.norm(vec0, vec1);
+            double scale2 = Core.norm(vec0, vec1_);
+            assertTrue(Math.min(scale1, scale2) < EPS);
+        }
     }
 
     public void testPCAComputeMatMatMatInt() {
@@ -1365,7 +1393,20 @@ public class CoreTest extends OpenCVTestCase {
             }
         };
         assertMatEqual(mean_truth, mean, EPS);
-        assertMatEqual(vectors_truth, vectors, EPS);
+        // eigenvectors are normalized (length = 1),
+        // but direction is unknown (v and -v are both eigen vectors)
+        // so this direct check doesn't work:
+        // assertMatEqual(vectors_truth, vectors, EPS);
+        for(int i = 0; i < 1; i++)
+        {
+            Mat vec0 = vectors_truth.row(i);
+            Mat vec1 = vectors.row(i);
+            Mat vec1_ = new Mat();
+            Core.subtract(new Mat(1, 4, CvType.CV_32F, new Scalar(0)), vec1, vec1_);
+            double scale1 = Core.norm(vec0, vec1);
+            double scale2 = Core.norm(vec0, vec1_);
+            assertTrue(Math.min(scale1, scale2) < EPS);
+        }
     }
 
     public void testPCAProject() {
@@ -1777,7 +1818,7 @@ public class CoreTest extends OpenCVTestCase {
         };
         Mat roots = new Mat();
 
-        assertEquals(0.0, Core.solvePoly(coeffs, roots));
+        assertGE(1e-6, Math.abs(Core.solvePoly(coeffs, roots)));
 
         truth = new Mat(3, 1, CvType.CV_32FC2) {
             {
@@ -2010,4 +2051,19 @@ public class CoreTest extends OpenCVTestCase {
         assertEquals(5f, val2);
     }
 
+    public void testVersion() {
+        assertEquals(Core.VERSION_MAJOR, Core.getVersionMajor());
+        assertEquals(Core.VERSION_MINOR, Core.getVersionMinor());
+        assertEquals(Core.VERSION_REVISION, Core.getVersionRevision());
+        assertEquals(Core.VERSION, Core.getVersionString());
+    }
+
+    public void testHardwareOptions() {
+        Core.checkHardwareSupport(0);
+        boolean original_status = Core.useOptimized();
+        Core.setUseOptimized(!original_status);
+        assertEquals(!original_status, Core.useOptimized());
+        Core.setUseOptimized(original_status);
+        assertEquals(original_status, Core.useOptimized());
+    }
 }

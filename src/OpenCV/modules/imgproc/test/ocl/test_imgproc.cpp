@@ -52,12 +52,11 @@
 //M*/
 
 #include "../test_precomp.hpp"
-#include "cvconfig.h"
 #include "opencv2/ts/ocl_test.hpp"
 
 #ifdef HAVE_OPENCL
 
-namespace cvtest {
+namespace opencv_test {
 namespace ocl {
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -81,7 +80,7 @@ PARAM_TEST_CASE(ImgprocTestBase, MatType,
         useRoi = GET_PARAM(3);
     }
 
-    virtual void random_roi()
+    void random_roi()
     {
         Size roiSize = randomSize(1, MAX_VALUE);
         Border srcBorder = randomBorder(0, useRoi ? MAX_VALUE : 0);
@@ -193,7 +192,7 @@ OCL_TEST_P(EqualizeHist, Mat)
 struct CornerTestBase :
         public ImgprocTestBase
 {
-    virtual void random_roi()
+    void random_roi()
     {
         Mat image = readImageType("../gpu/stereobm/aloe-L.png", type);
         ASSERT_FALSE(image.empty());
@@ -235,7 +234,12 @@ OCL_TEST_P(CornerMinEigenVal, Mat)
         OCL_OFF(cv::cornerMinEigenVal(src_roi, dst_roi, blockSize, apertureSize, borderType));
         OCL_ON(cv::cornerMinEigenVal(usrc_roi, udst_roi, blockSize, apertureSize, borderType));
 
-        Near(1e-5, true);
+        // The corner kernel uses native_sqrt() which has implementation defined accuracy.
+        // If we're using a CL implementation that isn't intel, test with relaxed accuracy.
+        if (!ocl::useOpenCL() || ocl::Device::getDefault().isIntel())
+            Near(1e-5, true);
+        else
+            Near(0.1, true);
     }
 }
 
@@ -296,7 +300,7 @@ struct Integral :
         useRoi = GET_PARAM(3);
     }
 
-    virtual void random_roi()
+    void random_roi()
     {
         ASSERT_EQ(CV_MAT_CN(type), 1);
 
@@ -381,6 +385,83 @@ OCL_TEST_P(Threshold, Mat)
         Near(1);
     }
 }
+
+struct Threshold_Dryrun :
+        public ImgprocTestBase
+{
+    int thresholdType;
+
+    virtual void SetUp()
+    {
+        type = GET_PARAM(0);
+        thresholdType = GET_PARAM(2);
+        useRoi = GET_PARAM(3);
+    }
+};
+
+OCL_TEST_P(Threshold_Dryrun, Mat)
+{
+    for (int j = 0; j < test_loop_times; j++)
+    {
+        random_roi();
+
+        double maxVal = randomDouble(20.0, 127.0);
+        double thresh = randomDouble(0.0, maxVal);
+
+        const int _thresholdType = thresholdType | THRESH_DRYRUN;
+
+        src_roi.copyTo(dst_roi);
+        usrc_roi.copyTo(udst_roi);
+
+        OCL_OFF(cv::threshold(src_roi, dst_roi, thresh, maxVal, _thresholdType));
+        OCL_ON(cv::threshold(usrc_roi, udst_roi, thresh, maxVal, _thresholdType));
+
+        OCL_EXPECT_MATS_NEAR(dst, 0);
+    }
+}
+
+struct Threshold_masked :
+    public ImgprocTestBase
+{
+    int thresholdType;
+
+    virtual void SetUp()
+    {
+        type = GET_PARAM(0);
+        thresholdType = GET_PARAM(2);
+        useRoi = GET_PARAM(3);
+    }
+};
+
+OCL_TEST_P(Threshold_masked, Mat)
+{
+    for (int j = 0; j < test_loop_times; j++)
+    {
+        random_roi();
+
+        double maxVal = randomDouble(20.0, 127.0);
+        double thresh = randomDouble(0.0, maxVal);
+
+        const int _thresholdType = thresholdType;
+
+        cv::Size sz = src_roi.size();
+        cv::Mat mask_roi = cv::Mat::zeros(sz, CV_8UC1);
+        cv::RotatedRect ellipseRect((cv::Point2f)cv::Point(sz.width/2, sz.height/2), (cv::Size2f)sz, 0);
+        cv::ellipse(mask_roi, ellipseRect, cv::Scalar::all(255), cv::FILLED);//for very different mask alignments
+
+        cv::UMat umask_roi(mask_roi.size(), mask_roi.type());
+        mask_roi.copyTo(umask_roi.getMat(cv::AccessFlag::ACCESS_WRITE));
+
+        src_roi.copyTo(dst_roi);
+        usrc_roi.copyTo(udst_roi);
+
+        OCL_OFF(cv::thresholdWithMask(src_roi, dst_roi, mask_roi, thresh, maxVal, _thresholdType));
+        OCL_ON(cv::thresholdWithMask(usrc_roi, udst_roi, umask_roi, thresh, maxVal, _thresholdType));
+
+        OCL_EXPECT_MATS_NEAR(dst, 0);
+    }
+}
+
 
 /////////////////////////////////////////// CLAHE //////////////////////////////////////////////////
 
@@ -479,6 +560,24 @@ OCL_INSTANTIATE_TEST_CASE_P(Imgproc, Threshold, Combine(
                                    ThreshOp(THRESH_TOZERO), ThreshOp(THRESH_TOZERO_INV)),
                             Bool()));
 
+OCL_INSTANTIATE_TEST_CASE_P(Imgproc, Threshold_Dryrun, Combine(
+                            Values(CV_8UC1, CV_8UC2, CV_8UC3, CV_8UC4,
+                                   CV_16SC1, CV_16SC2, CV_16SC3, CV_16SC4,
+                                   CV_32FC1, CV_32FC2, CV_32FC3, CV_32FC4),
+                            Values(0),
+                            Values(ThreshOp(THRESH_BINARY),
+                                   ThreshOp(THRESH_BINARY_INV), ThreshOp(THRESH_TRUNC),
+                                   ThreshOp(THRESH_TOZERO), ThreshOp(THRESH_TOZERO_INV)),
+                            Bool()));
+
+OCL_INSTANTIATE_TEST_CASE_P(Imgproc, Threshold_masked, Combine(
+                            Values(CV_8UC1, CV_8UC3, CV_16SC1, CV_16SC3, CV_16UC1, CV_16UC3, CV_32FC1, CV_32FC3, CV_64FC1, CV_64FC3),
+                            Values(0),
+                            Values(ThreshOp(THRESH_BINARY),
+                                   ThreshOp(THRESH_BINARY_INV), ThreshOp(THRESH_TRUNC),
+                                   ThreshOp(THRESH_TOZERO), ThreshOp(THRESH_TOZERO_INV)),
+                            Bool()));
+
 OCL_INSTANTIATE_TEST_CASE_P(Imgproc, CLAHETest, Combine(
                             Values(Size(4, 4), Size(32, 8), Size(8, 64)),
                             Values(0.0, 10.0, 62.0, 300.0),
@@ -492,6 +591,6 @@ OCL_INSTANTIATE_TEST_CASE_P(ImgprocTestBase, CopyMakeBorder, Combine(
                                    (BorderType)BORDER_WRAP, (BorderType)BORDER_REFLECT_101),
                             Bool()));
 
-} } // namespace cvtest::ocl
+} } // namespace opencv_test::ocl
 
 #endif // HAVE_OPENCL

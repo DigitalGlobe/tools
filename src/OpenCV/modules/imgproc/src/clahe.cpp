@@ -54,16 +54,7 @@ namespace clahe
         const int tilesX, const int tilesY, const cv::Size tileSize,
         const int clipLimit, const float lutScale)
     {
-        cv::ocl::Kernel _k("calcLut", cv::ocl::imgproc::clahe_oclsrc);
-
-        bool is_cpu = cv::ocl::Device::getDefault().type() == cv::ocl::Device::TYPE_CPU;
-        cv::String opts;
-        if(is_cpu)
-            opts = "-D CPU ";
-        else
-            opts = cv::format("-D WAVE_SIZE=%d", _k.preferedWorkGroupSizeMultiple());
-
-        cv::ocl::Kernel k("calcLut", cv::ocl::imgproc::clahe_oclsrc, opts);
+        cv::ocl::Kernel k("calcLut", cv::ocl::imgproc::clahe_oclsrc);
         if(k.empty())
             return false;
 
@@ -136,7 +127,7 @@ namespace
         {
         }
 
-        void operator ()(const cv::Range& range) const;
+        void operator ()(const cv::Range& range) const CV_OVERRIDE;
 
     private:
         cv::Mat src_;
@@ -171,7 +162,9 @@ namespace
 
             // calc histogram
 
-            int tileHist[histSize] = {0, };
+            cv::AutoBuffer<int> _tileHist(histSize);
+            int* tileHist = _tileHist.data();
+            std::fill(tileHist, tileHist + histSize, 0);
 
             int height = tileROI.height;
             const size_t sstep = src_.step / sizeof(T);
@@ -212,8 +205,12 @@ namespace
                 for (int i = 0; i < histSize; ++i)
                     tileHist[i] += redistBatch;
 
-                for (int i = 0; i < residual; ++i)
-                    tileHist[i]++;
+                if (residual != 0)
+                {
+                    int residualStep = MAX(histSize / residual, 1);
+                    for (int i = 0; i < histSize && residual > 0; i += residualStep, residual--)
+                        tileHist[i]++;
+                }
             }
 
             // calc Lut
@@ -235,7 +232,7 @@ namespace
             src_(src), dst_(dst), lut_(lut), tileSize_(tileSize), tilesX_(tilesX), tilesY_(tilesY)
         {
             buf.allocate(src.cols << 2);
-            ind1_p = (int *)buf;
+            ind1_p = buf.data();
             ind2_p = ind1_p + src.cols;
             xa_p = (float *)(ind2_p + src.cols);
             xa1_p = xa_p + src.cols;
@@ -261,7 +258,7 @@ namespace
             }
         }
 
-        void operator ()(const cv::Range& range) const;
+        void operator ()(const cv::Range& range) const CV_OVERRIDE;
 
     private:
         cv::Mat src_;
@@ -315,20 +312,20 @@ namespace
         }
     }
 
-    class CLAHE_Impl : public cv::CLAHE
+    class CLAHE_Impl CV_FINAL : public cv::CLAHE
     {
     public:
         CLAHE_Impl(double clipLimit = 40.0, int tilesX = 8, int tilesY = 8);
 
-        void apply(cv::InputArray src, cv::OutputArray dst);
+        void apply(cv::InputArray src, cv::OutputArray dst) CV_OVERRIDE;
 
-        void setClipLimit(double clipLimit);
-        double getClipLimit() const;
+        void setClipLimit(double clipLimit) CV_OVERRIDE;
+        double getClipLimit() const CV_OVERRIDE;
 
-        void setTilesGridSize(cv::Size tileGridSize);
-        cv::Size getTilesGridSize() const;
+        void setTilesGridSize(cv::Size tileGridSize) CV_OVERRIDE;
+        cv::Size getTilesGridSize() const CV_OVERRIDE;
 
-        void collectGarbage();
+        void collectGarbage() CV_OVERRIDE;
 
     private:
         double clipLimit_;
@@ -351,13 +348,15 @@ namespace
 
     void CLAHE_Impl::apply(cv::InputArray _src, cv::OutputArray _dst)
     {
+        CV_INSTRUMENT_REGION();
+
         CV_Assert( _src.type() == CV_8UC1 || _src.type() == CV_16UC1 );
 
 #ifdef HAVE_OPENCL
-        bool useOpenCL = cv::ocl::useOpenCL() && _src.isUMat() && _src.dims()<=2 && _src.type() == CV_8UC1;
+        bool useOpenCL = cv::ocl::isOpenCLActivated() && _src.isUMat() && _src.dims()<=2 && _src.type() == CV_8UC1;
 #endif
 
-        int histSize = _src.type() == CV_8UC1 ? 256 : 4096;
+        int histSize = _src.type() == CV_8UC1 ? 256 : 65536;
 
         cv::Size tileSize;
         cv::_InputArray _srcForLut;
@@ -414,9 +413,9 @@ namespace
         if (_src.type() == CV_8UC1)
             calcLutBody = cv::makePtr<CLAHE_CalcLut_Body<uchar, 256, 0> >(srcForLut, lut_, tileSize, tilesX_, clipLimit, lutScale);
         else if (_src.type() == CV_16UC1)
-            calcLutBody = cv::makePtr<CLAHE_CalcLut_Body<ushort, 4096, 4> >(srcForLut, lut_, tileSize, tilesX_, clipLimit, lutScale);
+            calcLutBody = cv::makePtr<CLAHE_CalcLut_Body<ushort, 65536, 0> >(srcForLut, lut_, tileSize, tilesX_, clipLimit, lutScale);
         else
-            CV_Error( CV_StsBadArg, "Unsupported type" );
+            CV_Error( cv::Error::StsBadArg, "Unsupported type" );
 
         cv::parallel_for_(cv::Range(0, tilesX_ * tilesY_), *calcLutBody);
 
@@ -424,7 +423,7 @@ namespace
         if (_src.type() == CV_8UC1)
             interpolationBody = cv::makePtr<CLAHE_Interpolation_Body<uchar, 0> >(src, dst, lut_, tileSize, tilesX_, tilesY_);
         else if (_src.type() == CV_16UC1)
-            interpolationBody = cv::makePtr<CLAHE_Interpolation_Body<ushort, 4> >(src, dst, lut_, tileSize, tilesX_, tilesY_);
+            interpolationBody = cv::makePtr<CLAHE_Interpolation_Body<ushort, 0> >(src, dst, lut_, tileSize, tilesX_, tilesY_);
 
         cv::parallel_for_(cv::Range(0, src.rows), *interpolationBody);
     }

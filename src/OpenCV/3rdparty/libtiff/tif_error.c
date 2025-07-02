@@ -1,5 +1,3 @@
-/* $Header: /cvs/maptools/cvsroot/libtiff/libtiff/tif_error.c,v 1.5 2010-03-10 18:56:48 bfriesen Exp $ */
-
 /*
  * Copyright (c) 1988-1997 Sam Leffler
  * Copyright (c) 1991-1997 Silicon Graphics, Inc.
@@ -31,50 +29,104 @@
 
 TIFFErrorHandlerExt _TIFFerrorHandlerExt = NULL;
 
-TIFFErrorHandler
-TIFFSetErrorHandler(TIFFErrorHandler handler)
+TIFFErrorHandler TIFFSetErrorHandler(TIFFErrorHandler handler)
 {
     TIFFErrorHandler prev = _TIFFerrorHandler;
     _TIFFerrorHandler = handler;
     return (prev);
 }
 
-TIFFErrorHandlerExt
-TIFFSetErrorHandlerExt(TIFFErrorHandlerExt handler)
+TIFFErrorHandlerExt TIFFSetErrorHandlerExt(TIFFErrorHandlerExt handler)
 {
     TIFFErrorHandlerExt prev = _TIFFerrorHandlerExt;
     _TIFFerrorHandlerExt = handler;
     return (prev);
 }
 
-void
-TIFFError(const char* module, const char* fmt, ...)
+void TIFFError(const char *module, const char *fmt, ...)
 {
     va_list ap;
-    va_start(ap, fmt);
     if (_TIFFerrorHandler)
+    {
+        va_start(ap, fmt);
         (*_TIFFerrorHandler)(module, fmt, ap);
+        va_end(ap);
+    }
     if (_TIFFerrorHandlerExt)
+    {
+        va_start(ap, fmt);
         (*_TIFFerrorHandlerExt)(0, module, fmt, ap);
-    va_end(ap);
+        va_end(ap);
+    }
 }
 
-void
-TIFFErrorExt(thandle_t fd, const char* module, const char* fmt, ...)
+void TIFFErrorExt(thandle_t fd, const char *module, const char *fmt, ...)
 {
     va_list ap;
-    va_start(ap, fmt);
     if (_TIFFerrorHandler)
+    {
+        va_start(ap, fmt);
         (*_TIFFerrorHandler)(module, fmt, ap);
+        va_end(ap);
+    }
     if (_TIFFerrorHandlerExt)
+    {
+        va_start(ap, fmt);
         (*_TIFFerrorHandlerExt)(fd, module, fmt, ap);
-    va_end(ap);
+        va_end(ap);
+    }
 }
 
-/*
- * Local Variables:
- * mode: c
- * c-basic-offset: 8
- * fill-column: 78
- * End:
- */
+void _TIFFErrorEarly(TIFFOpenOptions *opts, thandle_t clientdata,
+                     const char *module, const char *fmt, ...)
+{
+    va_list ap;
+    if (opts && opts->errorhandler)
+    {
+        va_start(ap, fmt);
+        int stop = opts->errorhandler(NULL, opts->errorhandler_user_data,
+                                      module, fmt, ap);
+        va_end(ap);
+        if (stop)
+            return;
+    }
+    if (_TIFFerrorHandler)
+    {
+        va_start(ap, fmt);
+        (*_TIFFerrorHandler)(module, fmt, ap);
+        va_end(ap);
+    }
+    if (_TIFFerrorHandlerExt)
+    {
+        va_start(ap, fmt);
+        (*_TIFFerrorHandlerExt)(clientdata, module, fmt, ap);
+        va_end(ap);
+    }
+}
+
+void TIFFErrorExtR(TIFF *tif, const char *module, const char *fmt, ...)
+{
+    va_list ap;
+    if (tif && tif->tif_errorhandler)
+    {
+        va_start(ap, fmt);
+        int stop = (*tif->tif_errorhandler)(
+            tif, tif->tif_errorhandler_user_data, module, fmt, ap);
+        va_end(ap);
+        if (stop)
+            return;
+    }
+    if (_TIFFerrorHandler)
+    {
+        va_start(ap, fmt);
+        (*_TIFFerrorHandler)(module, fmt, ap);
+        va_end(ap);
+    }
+    if (_TIFFerrorHandlerExt)
+    {
+        va_start(ap, fmt);
+        (*_TIFFerrorHandlerExt)(tif ? tif->tif_clientdata : NULL, module, fmt,
+                                ap);
+        va_end(ap);
+    }
+}

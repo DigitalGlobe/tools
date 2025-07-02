@@ -46,7 +46,7 @@
     Here is the copyright notice from the original Vladimir's code:
     ===============================================================
 
-    The algorithms developed and implemented by Vezhnevets Vldimir
+    The algorithms developed and implemented by Vezhnevets Vladimir
     aka Dead Moroz (vvp@graphics.cs.msu.ru)
     See http://graphics.cs.msu.su/en/research/calibration/opencv.html
     for detailed information.
@@ -54,7 +54,7 @@
     Reliability additions and modifications made by Philip Gruebele.
     <a href="mailto:pgruebele@cox.net">pgruebele@cox.net</a>
 
-    Some further improvements for detection of partially ocluded boards at non-ideal
+    Some further improvements for detection of partially occluded boards at non-ideal
     lighting conditions have been made by Alex Bovyrin and Kurt Kolonige
 
 \************************************************************************************/
@@ -70,30 +70,31 @@
 \************************************************************************************/
 
 #include "precomp.hpp"
-#include "opencv2/imgproc/imgproc_c.h"
-#include "opencv2/calib3d/calib3d_c.h"
 #include "circlesgrid.hpp"
-#include <stdarg.h>
-#include <vector>
+#include "opencv2/flann.hpp"
+
+#include <stack>
 
 //#define ENABLE_TRIM_COL_ROW
 
+// Requires CMake flag: DEBUG_opencv_calib3d=ON
 //#define DEBUG_CHESSBOARD
+#define DEBUG_CHESSBOARD_TIMEOUT 0  // 0 - wait for 'q'
+
+#include <opencv2/core/utils/logger.defines.hpp>
+//#undef CV_LOG_STRIP_LEVEL
+//#define CV_LOG_STRIP_LEVEL CV_LOG_LEVEL_VERBOSE + 1
+#include <opencv2/core/utils/logger.hpp>
 
 #ifdef DEBUG_CHESSBOARD
-static int PRINTF( const char* fmt, ... )
-{
-    va_list args;
-    va_start(args, fmt);
-    return vprintf(fmt, args);
-}
+#include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
+#define DPRINTF(...)  CV_LOG_INFO(NULL, cv::format("calib3d: " __VA_ARGS__))
 #else
-static int PRINTF( const char*, ... )
-{
-    return 0;
-}
+#define DPRINTF(...)
 #endif
 
+namespace cv {
 
 //=====================================================================================
 // Implementation for the enhanced calibration object detection
@@ -101,684 +102,756 @@ static int PRINTF( const char*, ... )
 
 #define MAX_CONTOUR_APPROX  7
 
-struct CvContourEx
-{
-    CV_CONTOUR_FIELDS()
-    int counter;
-};
+struct QuadCountour {
+    Point pt[4];
+    int parent_contour;
 
-//=====================================================================================
-
-/// Corner info structure
-/** This structure stores information about the chessboard corner.*/
-struct CvCBCorner
-{
-    CvPoint2D32f pt; // Coordinates of the corner
-    int row;         // Board row index
-    int count;       // Number of neighbor corners
-    struct CvCBCorner* neighbors[4]; // Neighbor corners
-
-    float meanDist(int *_n) const
+    QuadCountour(const Point pt_[4], int parent_contour_) :
+        parent_contour(parent_contour_)
     {
-        float sum = 0;
-        int n = 0;
-        for( int i = 0; i < 4; i++ )
-        {
-            if( neighbors[i] )
-            {
-                float dx = neighbors[i]->pt.x - pt.x;
-                float dy = neighbors[i]->pt.y - pt.y;
-                sum += sqrt(dx*dx + dy*dy);
-                n++;
-            }
-        }
-        if(_n)
-            *_n = n;
-        return sum/MAX(n,1);
+        pt[0] = pt_[0]; pt[1] = pt_[1]; pt[2] = pt_[2]; pt[3] = pt_[3];
     }
 };
 
-//=====================================================================================
-/// Quadrangle contour info structure
-/** This structure stores information about the chessboard quadrange.*/
-struct CvCBQuad
+
+/** This structure stores information about the chessboard corner.*/
+struct ChessBoardCorner
+{
+    cv::Point2f pt;  // Coordinates of the corner
+    int row;         // Board row index
+    int count;       // Number of neighbor corners
+    struct ChessBoardCorner* neighbors[4]; // Neighbor corners
+
+    ChessBoardCorner(const cv::Point2f& pt_ = cv::Point2f()) :
+        pt(pt_), row(0), count(0)
+    {
+        neighbors[0] = neighbors[1] = neighbors[2] = neighbors[3] = NULL;
+    }
+
+    float sumDist(int& n_) const
+    {
+        float sum = 0;
+        int n = 0;
+        for (int i = 0; i < 4; ++i)
+        {
+            if (neighbors[i])
+            {
+                sum += sqrt(normL2Sqr<float>(neighbors[i]->pt - pt));
+                n++;
+            }
+        }
+        n_ = n;
+        return sum;
+    }
+};
+
+
+/** This structure stores information about the chessboard quadrangle.*/
+struct ChessBoardQuad
 {
     int count;      // Number of quad neighbors
     int group_idx;  // quad group ID
     int row, col;   // row and column of this quad
     bool ordered;   // true if corners/neighbors are ordered counter-clockwise
-    float edge_len; // quad edge len, in pix^2
+    float edge_sqr_len; // quad edge squared length, in pix^2
     // neighbors and corners are synced, i.e., neighbor 0 shares corner 0
-    CvCBCorner *corners[4]; // Coordinates of quad corners
-    struct CvCBQuad *neighbors[4]; // Pointers of quad neighbors
+    ChessBoardCorner *corners[4]; // Coordinates of quad corners
+    struct ChessBoardQuad *neighbors[4]; // Pointers of quad neighbors. M.b. sparse.
+    // Each neighbors element corresponds to quad corner, but not just sequential index.
+
+    ChessBoardQuad(int group_idx_ = -1) :
+        count(0),
+        group_idx(group_idx_),
+        row(0), col(0),
+        ordered(0),
+        edge_sqr_len(0)
+    {
+        corners[0] = corners[1] = corners[2] = corners[3] = NULL;
+        neighbors[0] = neighbors[1] = neighbors[2] = neighbors[3] = NULL;
+    }
 };
 
-//=====================================================================================
 
-//static CvMat* debug_img = 0;
 
-static int icvGenerateQuads( CvCBQuad **quads, CvCBCorner **corners,
-                             CvMemStorage *storage, CvMat *image, int flags, int *max_quad_buf_size);
-
-/*static int
-icvGenerateQuadsEx( CvCBQuad **out_quads, CvCBCorner **out_corners,
-    CvMemStorage *storage, CvMat *image, CvMat *thresh_img, int dilation, int flags );*/
-
-static void icvFindQuadNeighbors( CvCBQuad *quads, int quad_count );
-
-static int icvFindConnectedQuads( CvCBQuad *quads, int quad_count,
-                                  CvCBQuad **quad_group, int group_idx,
-                                  CvMemStorage* storage );
-
-static int icvCheckQuadGroup( CvCBQuad **quad_group, int count,
-                              CvCBCorner **out_corners, CvSize pattern_size );
-
-static int icvCleanFoundConnectedQuads( int quad_count,
-                CvCBQuad **quads, CvSize pattern_size );
-
-static int icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
-           int *all_count, CvCBQuad **all_quads, CvCBCorner **corners,
-           CvSize pattern_size, int max_quad_buf_size, CvMemStorage* storage );
-
-static void icvOrderQuad(CvCBQuad *quad, CvCBCorner *corner, int common);
-
-#ifdef ENABLE_TRIM_COL_ROW
-static int icvTrimCol(CvCBQuad **quads, int count, int col, int dir);
-
-static int icvTrimRow(CvCBQuad **quads, int count, int row, int dir);
+#ifdef DEBUG_CHESSBOARD
+static void SHOW(const std::string & name, Mat & img)
+{
+    imshow(name, img);
+#if DEBUG_CHESSBOARD_TIMEOUT
+    waitKey(DEBUG_CHESSBOARD_TIMEOUT);
+#else
+    while ((uchar)waitKey(0) != 'q') {}
+#endif
+}
+static void SHOW_QUADS(const std::string & name, const Mat & img_, ChessBoardQuad * quads, int quads_count)
+{
+    Mat img = img_.clone();
+    if (img.channels() == 1)
+        cvtColor(img, img, COLOR_GRAY2BGR);
+    for (int i = 0; i < quads_count; ++i)
+    {
+        ChessBoardQuad & quad = quads[i];
+        for (int j = 0; j < 4; ++j)
+        {
+            line(img, quad.corners[j]->pt, quad.corners[(j + 1) & 3]->pt, Scalar(0, 240, 0), 1, LINE_AA);
+        }
+    }
+    imshow(name, img);
+#if DEBUG_CHESSBOARD_TIMEOUT
+    waitKey(DEBUG_CHESSBOARD_TIMEOUT);
+#else
+    while ((uchar)waitKey(0) != 'q') {}
+#endif
+}
+#else
+#define SHOW(...)
+#define SHOW_QUADS(...)
 #endif
 
-static int icvAddOuterQuad(CvCBQuad *quad, CvCBQuad **quads, int quad_count,
-                    CvCBQuad **all_quads, int all_count, CvCBCorner **corners, int max_quad_buf_size);
 
-static void icvRemoveQuadFromGroup(CvCBQuad **quads, int count, CvCBQuad *q0);
 
-static int icvCheckBoardMonotony( CvPoint2D32f* corners, CvSize pattern_size );
+class ChessBoardDetector
+{
+public:
+    cv::Mat binarized_image;
+    Size pattern_size;
 
-int cvCheckChessboardBinary(IplImage* src, CvSize size);
+    cv::AutoBuffer<ChessBoardQuad> all_quads;
+    cv::AutoBuffer<ChessBoardCorner> all_corners;
+
+    int all_quads_count;
+
+    struct NeighborsFinder {
+        const float thresh_sqr_scale = 2.f;
+        ChessBoardDetector& detector;
+        std::vector<int> neighbors_indices;
+        std::vector<float> neighbors_dists;
+        std::vector<Point2f> all_quads_pts;
+        flann::GenericIndex<flann::L2_Simple<float>> all_quads_pts_index;
+
+        NeighborsFinder(ChessBoardDetector& detector);
+
+        bool findCornerNeighbor(
+            const int quad_idx,
+            const int corner_idx,
+            const cv::Point2f& corner_pt,
+            float& min_sqr_dist,
+            const float sqr_radius,
+            int& closest_quad_idx,
+            int& closest_corner_idx,
+            cv::Point2f& closest_corner_pt);
+    };
+
+    ChessBoardDetector(const Size& pattern_size_) :
+        pattern_size(pattern_size_),
+        all_quads_count(0)
+    {
+    }
+
+    void reset()
+    {
+        all_quads.deallocate();
+        all_corners.deallocate();
+        all_quads_count = 0;
+    }
+
+    void generateQuads(const cv::Mat& image_, int flags, int dilations);
+
+    bool processQuads(std::vector<cv::Point2f>& out_corners, int &prev_sqr_size);
+
+    void findQuadNeighbors();
+
+    void findConnectedQuads(std::vector<ChessBoardQuad*>& out_group, int group_idx);
+
+    int checkQuadGroup(const std::vector<ChessBoardQuad*>& quad_group, std::vector<ChessBoardCorner*>& out_corners);
+
+    int cleanFoundConnectedQuads(std::vector<ChessBoardQuad*>& quad_group);
+
+    int orderFoundConnectedQuads(std::vector<ChessBoardQuad*>& quads);
+
+    void orderQuad(ChessBoardQuad& quad, ChessBoardCorner& corner, int common);
+
+#ifdef ENABLE_TRIM_COL_ROW
+    void trimCol(std::vector<ChessBoardQuad*>& quads, int col, int dir);
+    void trimRow(std::vector<ChessBoardQuad*>& quads, int row, int dir);
+#endif
+
+    int addOuterQuad(ChessBoardQuad& quad, std::vector<ChessBoardQuad*>& quads);
+
+    void removeQuadFromGroup(std::vector<ChessBoardQuad*>& quads, ChessBoardQuad& q0);
+
+    bool checkBoardMonotony(const std::vector<cv::Point2f>& corners);
+};
 
 /***************************************************************************************************/
 //COMPUTE INTENSITY HISTOGRAM OF INPUT IMAGE
-static int icvGetIntensityHistogram( unsigned char* pucImage, int iSizeCols, int iSizeRows, std::vector<int>& piHist );
+template<typename ArrayContainer>
+static void icvGetIntensityHistogram256(const Mat& img, ArrayContainer& piHist)
+{
+    for (int i = 0; i < 256; i++)
+        piHist[i] = 0;
+    // sum up all pixel in row direction and divide by number of columns
+    for (int j = 0; j < img.rows; ++j)
+    {
+        const uchar* row = img.ptr<uchar>(j);
+        for (int i = 0; i < img.cols; i++)
+        {
+            piHist[row[i]]++;
+        }
+    }
+}
+/***************************************************************************************************/
 //SMOOTH HISTOGRAM USING WINDOW OF SIZE 2*iWidth+1
-static int icvSmoothHistogram( const std::vector<int>& piHist, std::vector<int>& piHistSmooth, int iWidth );
+template<int iWidth_, typename ArrayContainer>
+static void icvSmoothHistogram256(const ArrayContainer& piHist, ArrayContainer& piHistSmooth, int iWidth = 0)
+{
+    CV_DbgAssert(iWidth_ == 0 || (iWidth == iWidth_ || iWidth == 0));
+    iWidth = (iWidth_ != 0) ? iWidth_ : iWidth;
+    CV_Assert(iWidth > 0);
+    CV_DbgAssert(piHist.size() == 256);
+    CV_DbgAssert(piHistSmooth.size() == 256);
+    for (int i = 0; i < 256; ++i)
+    {
+        int iIdx_min = std::max(0, i - iWidth);
+        int iIdx_max = std::min(255, i + iWidth);
+        int iSmooth = 0;
+        for (int iIdx = iIdx_min; iIdx <= iIdx_max; ++iIdx)
+        {
+            CV_DbgAssert(iIdx >= 0 && iIdx < 256);
+            iSmooth += piHist[iIdx];
+        }
+        piHistSmooth[i] = iSmooth/(iIdx_max-iIdx_min+1);
+    }
+}
+/***************************************************************************************************/
 //COMPUTE FAST HISTOGRAM GRADIENT
-static int icvGradientOfHistogram( const std::vector<int>& piHist, std::vector<int>& piHistGrad );
-//PERFORM SMART IMAGE THRESHOLDING BASED ON ANALYSIS OF INTENSTY HISTOGRAM
-static bool icvBinarizationHistogramBased( unsigned char* pucImg, int iCols, int iRows );
-/***************************************************************************************************/
-int icvGetIntensityHistogram( unsigned char* pucImage, int iSizeCols, int iSizeRows, std::vector<int>& piHist )
+template<typename ArrayContainer>
+static void icvGradientOfHistogram256(const ArrayContainer& piHist, ArrayContainer& piHistGrad)
 {
-  int iVal;
-
-  // sum up all pixel in row direction and divide by number of columns
-  for ( int j=0; j<iSizeRows; j++ )
-  {
-    for ( int i=0; i<iSizeCols; i++ )
+    CV_DbgAssert(piHist.size() == 256);
+    CV_DbgAssert(piHistGrad.size() == 256);
+    piHistGrad[0] = 0;
+    int prev_grad = 0;
+    for (int i = 1; i < 255; ++i)
     {
-      iVal = (int)pucImage[j*iSizeCols+i];
-      piHist[iVal]++;
+        int grad = piHist[i-1] - piHist[i+1];
+        if (std::abs(grad) < 100)
+        {
+            if (prev_grad == 0)
+                grad = -100;
+            else
+                grad = prev_grad;
+        }
+        piHistGrad[i] = grad;
+        prev_grad = grad;
     }
-  }
-  return 0;
+    piHistGrad[255] = 0;
 }
 /***************************************************************************************************/
-int icvSmoothHistogram( const std::vector<int>& piHist, std::vector<int>& piHistSmooth, int iWidth )
+//PERFORM SMART IMAGE THRESHOLDING BASED ON ANALYSIS OF INTENSITY HISTOGRAM
+static void icvBinarizationHistogramBased(Mat & img)
 {
-  int iIdx;
-  for ( int i=0; i<256; i++)
-  {
-    int iSmooth = 0;
-    for ( int ii=-iWidth; ii<=iWidth; ii++)
+    CV_Assert(img.channels() == 1 && img.depth() == CV_8U);
+    int iCols = img.cols;
+    int iRows = img.rows;
+    int iMaxPix = iCols*iRows;
+    int iMaxPix1 = iMaxPix/100;
+    const int iNumBins = 256;
+    const int iMaxPos = 20;
+    cv::AutoBuffer<int, 256> piHistIntensity(iNumBins);
+    cv::AutoBuffer<int, 256> piHistSmooth(iNumBins);
+    cv::AutoBuffer<int, 256> piHistGrad(iNumBins);
+    cv::AutoBuffer<int> piMaxPos(iMaxPos);
+
+    icvGetIntensityHistogram256(img, piHistIntensity);
+
+#if 0
+    // get accumulated sum starting from bright
+    cv::AutoBuffer<int, 256> piAccumSum(iNumBins);
+    piAccumSum[iNumBins-1] = piHistIntensity[iNumBins-1];
+    for (int i = iNumBins - 2; i >= 0; --i)
     {
-      iIdx = i+ii;
-      if (iIdx > 0 && iIdx < 256)
-      {
-        iSmooth += piHist[iIdx];
-      }
+        piAccumSum[i] = piHistIntensity[i] + piAccumSum[i+1];
     }
-    piHistSmooth[i] = iSmooth/(2*iWidth+1);
-  }
-  return 0;
-}
-/***************************************************************************************************/
-int icvGradientOfHistogram( const std::vector<int>& piHist, std::vector<int>& piHistGrad )
-{
-  piHistGrad[0] = 0;
-  for ( int i=1; i<255; i++)
-  {
-    piHistGrad[i] = piHist[i-1] - piHist[i+1];
-    if ( abs(piHistGrad[i]) < 100 )
+#endif
+
+    // first smooth the distribution
+    //const int iWidth = 1;
+    icvSmoothHistogram256<1>(piHistIntensity, piHistSmooth);
+
+    // compute gradient
+    icvGradientOfHistogram256(piHistSmooth, piHistGrad);
+
+    // check for zeros
+    unsigned iCntMaxima = 0;
+    for (int i = iNumBins-2; (i > 2) && (iCntMaxima < iMaxPos); --i)
     {
-      if ( piHistGrad[i-1] == 0)
-        piHistGrad[i] = -100;
-      else
-        piHistGrad[i] = piHistGrad[i-1];
-    }
-  }
-  return 0;
-}
-/***************************************************************************************************/
-bool icvBinarizationHistogramBased( unsigned char* pucImg, int iCols, int iRows )
-{
-  int iMaxPix = iCols*iRows;
-  int iMaxPix1 = iMaxPix/100;
-  const int iNumBins = 256;
-  std::vector<int> piHistIntensity(iNumBins, 0);
-  std::vector<int> piHistSmooth(iNumBins, 0);
-  std::vector<int> piHistGrad(iNumBins, 0);
-  std::vector<int> piAccumSum(iNumBins, 0);
-  std::vector<int> piMaxPos(20, 0);
-  int iThresh = 0;
-  int iIdx;
-  int iWidth = 1;
-
-  icvGetIntensityHistogram( pucImg, iCols, iRows, piHistIntensity );
-
-  // get accumulated sum starting from bright
-  piAccumSum[iNumBins-1] = piHistIntensity[iNumBins-1];
-  for ( int i=iNumBins-2; i>=0; i-- )
-  {
-    piAccumSum[i] = piHistIntensity[i] + piAccumSum[i+1];
-  }
-
-  // first smooth the distribution
-  icvSmoothHistogram( piHistIntensity, piHistSmooth, iWidth );
-
-  // compute gradient
-  icvGradientOfHistogram( piHistSmooth, piHistGrad );
-
-  // check for zeros
-  int iCntMaxima = 0;
-  for ( int i=iNumBins-2; (i>2) && (iCntMaxima<20); i--)
-  {
-    if ( (piHistGrad[i-1] < 0) && (piHistGrad[i] > 0) )
-    {
-      piMaxPos[iCntMaxima] = i;
-      iCntMaxima++;
-    }
-  }
-
-  iIdx = 0;
-  int iSumAroundMax = 0;
-  for ( int i=0; i<iCntMaxima; i++ )
-  {
-    iIdx = piMaxPos[i];
-    iSumAroundMax = piHistSmooth[iIdx-1] + piHistSmooth[iIdx] + piHistSmooth[iIdx+1];
-    if ( iSumAroundMax < iMaxPix1 && iIdx < 64 )
-    {
-      for ( int j=i; j<iCntMaxima-1; j++ )
-      {
-        piMaxPos[j] = piMaxPos[j+1];
-      }
-      iCntMaxima--;
-      i--;
-    }
-  }
-  if ( iCntMaxima == 1)
-  {
-    iThresh = piMaxPos[0]/2;
-  }
-  else if ( iCntMaxima == 2)
-  {
-    iThresh = (piMaxPos[0] + piMaxPos[1])/2;
-  }
-  else // iCntMaxima >= 3
-  {
-    // CHECKING THRESHOLD FOR WHITE
-    int iIdxAccSum = 0, iAccum = 0;
-    for (int i=iNumBins-1; i>0; i--)
-    {
-      iAccum += piHistIntensity[i];
-      // iMaxPix/18 is about 5,5%, minimum required number of pixels required for white part of chessboard
-      if ( iAccum > (iMaxPix/18) )
-      {
-        iIdxAccSum = i;
-        break;
-      }
+        if ((piHistGrad[i-1] < 0) && (piHistGrad[i] > 0))
+        {
+            int iSumAroundMax = piHistSmooth[i-1] + piHistSmooth[i] + piHistSmooth[i+1];
+            if (!(iSumAroundMax < iMaxPix1 && i < 64))
+            {
+                piMaxPos[iCntMaxima++] = i;
+            }
+        }
     }
 
-    int iIdxBGMax = 0;
-    int iBrightMax = piMaxPos[0];
-    // printf("iBrightMax = %d\n", iBrightMax);
-    for ( int n=0; n<iCntMaxima-1; n++)
+    DPRINTF("HIST: MAXIMA COUNT: %d (%d, %d, %d, ...)", iCntMaxima,
+            iCntMaxima > 0 ? piMaxPos[0] : -1,
+            iCntMaxima > 1 ? piMaxPos[1] : -1,
+            iCntMaxima > 2 ? piMaxPos[2] : -1);
+
+    int iThresh = 0;
+
+    CV_Assert((size_t)iCntMaxima <= piMaxPos.size());
+
+    DPRINTF("HIST: MAXIMA COUNT: %d (%d, %d, %d, ...)", iCntMaxima,
+                iCntMaxima > 0 ? piMaxPos[0] : -1,
+                iCntMaxima > 1 ? piMaxPos[1] : -1,
+                iCntMaxima > 2 ? piMaxPos[2] : -1);
+
+    if (iCntMaxima == 0)
     {
-      iIdxBGMax = n+1;
-      if ( piMaxPos[n] < iIdxAccSum )
-      {
-        break;
-      }
-      iBrightMax = piMaxPos[n];
+        // no any maxima inside (only 0 and 255 which are not counted above)
+        // Does image black-write already?
+        const int iMaxPix2 = iMaxPix / 2;
+        for (int sum = 0, i = 0; i < 256; ++i) // select mean intensity
+        {
+            sum += piHistIntensity[i];
+            if (sum > iMaxPix2)
+            {
+                iThresh = i;
+                break;
+            }
+        }
+    }
+    else if (iCntMaxima == 1)
+    {
+        iThresh = piMaxPos[0]/2;
+    }
+    else if (iCntMaxima == 2)
+    {
+        iThresh = (piMaxPos[0] + piMaxPos[1])/2;
+    }
+    else // iCntMaxima >= 3
+    {
+        // CHECKING THRESHOLD FOR WHITE
+        int iIdxAccSum = 0, iAccum = 0;
+        for (int i = iNumBins - 1; i > 0; --i)
+        {
+            iAccum += piHistIntensity[i];
+            // iMaxPix/18 is about 5,5%, minimum required number of pixels required for white part of chessboard
+            if ( iAccum > (iMaxPix/18) )
+            {
+                iIdxAccSum = i;
+                break;
+            }
+        }
+
+        unsigned iIdxBGMax = 0;
+        int iBrightMax = piMaxPos[0];
+        // printf("iBrightMax = %d\n", iBrightMax);
+        for (unsigned n = 0; n < iCntMaxima - 1; ++n)
+        {
+            iIdxBGMax = n + 1;
+            if ( piMaxPos[n] < iIdxAccSum )
+            {
+                break;
+            }
+            iBrightMax = piMaxPos[n];
+        }
+
+        // CHECKING THRESHOLD FOR BLACK
+        int iMaxVal = piHistIntensity[piMaxPos[iIdxBGMax]];
+
+        //IF TOO CLOSE TO 255, jump to next maximum
+        if (piMaxPos[iIdxBGMax] >= 250 && iIdxBGMax + 1 < iCntMaxima)
+        {
+            iIdxBGMax++;
+            iMaxVal = piHistIntensity[piMaxPos[iIdxBGMax]];
+        }
+
+        for (unsigned n = iIdxBGMax + 1; n < iCntMaxima; n++)
+        {
+            if (piHistIntensity[piMaxPos[n]] >= iMaxVal)
+            {
+                iMaxVal = piHistIntensity[piMaxPos[n]];
+                iIdxBGMax = n;
+            }
+        }
+
+        //SETTING THRESHOLD FOR BINARIZATION
+        int iDist2 = (iBrightMax - piMaxPos[iIdxBGMax])/2;
+        iThresh = iBrightMax - iDist2;
+        DPRINTF("THRESHOLD SELECTED = %d, BRIGHTMAX = %d, DARKMAX = %d", iThresh, iBrightMax, piMaxPos[iIdxBGMax]);
     }
 
-    // CHECKING THRESHOLD FOR BLACK
-    int iMaxVal = piHistIntensity[piMaxPos[iIdxBGMax]];
-
-    //IF TOO CLOSE TO 255, jump to next maximum
-    if ( piMaxPos[iIdxBGMax] >= 250 && iIdxBGMax < iCntMaxima )
+    if (iThresh > 0)
     {
-      iIdxBGMax++;
-      iMaxVal = piHistIntensity[piMaxPos[iIdxBGMax]];
+        img = (img >= iThresh);
     }
-
-    for ( int n=iIdxBGMax + 1; n<iCntMaxima; n++)
-    {
-      if ( piHistIntensity[piMaxPos[n]] >= iMaxVal )
-      {
-        iMaxVal = piHistIntensity[piMaxPos[n]];
-        iIdxBGMax = n;
-      }
-    }
-
-    //SETTING THRESHOLD FOR BINARIZATION
-    int iDist2 = (iBrightMax - piMaxPos[iIdxBGMax])/2;
-    iThresh = iBrightMax - iDist2;
-    PRINTF("THRESHOLD SELECTED = %d, BRIGHTMAX = %d, DARKMAX = %d\n", iThresh, iBrightMax, piMaxPos[iIdxBGMax]);
-  }
-
-
-  if ( iThresh > 0 )
-  {
-    for ( int jj=0; jj<iRows; jj++)
-    {
-      for ( int ii=0; ii<iCols; ii++)
-      {
-        if ( pucImg[jj*iCols+ii]< iThresh )
-          pucImg[jj*iCols+ii] = 0;
-        else
-          pucImg[jj*iCols+ii] = 255;
-      }
-    }
-  }
-
-  return true;
 }
 
-CV_IMPL
-int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
-                             CvPoint2D32f* out_corners, int* out_corner_count,
-                             int flags )
+static std::vector<Point2f> getCornersFromQuads(ChessBoardQuad* p_all_quads, const int all_quads_count)
 {
-    int found = 0;
-    CvCBQuad *quads = 0, **quad_group = 0;
-    CvCBCorner *corners = 0, **corner_group = 0;
-    IplImage* cImgSeg = 0;
-
-    try
+    std::vector<Point2f> all_quads_pts;
+    all_quads_pts.reserve(all_quads_count * 4);
+    for (int idx = 0; idx < all_quads_count; idx++)
     {
-    int k = 0;
-    const int min_dilations = 0;
-    const int max_dilations = 7;
-    cv::Ptr<CvMat> norm_img, thresh_img;
-    cv::Ptr<CvMemStorage> storage;
+        const ChessBoardQuad& cur_quad = (const ChessBoardQuad&)p_all_quads[idx];
+        for (int i = 0; i < 4; i++)
+            all_quads_pts.push_back(cur_quad.corners[i]->pt);
+    }
+    return all_quads_pts;
+}
 
-    CvMat stub, *img = (CvMat*)arr;
-    cImgSeg = cvCreateImage(cvGetSize(img), IPL_DEPTH_8U, 1 );
-    memcpy( cImgSeg->imageData, cvPtr1D( img, 0), img->rows*img->cols );
+ChessBoardDetector::NeighborsFinder::NeighborsFinder(ChessBoardDetector& _detector) :
+    detector(_detector),
+    all_quads_pts(getCornersFromQuads(detector.all_quads.data(), detector.all_quads_count)),
+    all_quads_pts_index(Mat(all_quads_pts).reshape(1, detector.all_quads_count * 4), cvflann::KDTreeSingleIndexParams())
+{
+    const int all_corners_count = detector.all_quads_count * 4;
+    neighbors_indices.resize(all_corners_count);
+    neighbors_dists.resize(all_corners_count);
+}
 
-    CvMat stub2, *thresh_img_new;
-    thresh_img_new = cvGetMat( cImgSeg, &stub2, 0, 0 );
+static double pointSideFromLine(const Point2f& line_direction_vector, const Point2f& vector)
+{
+    return line_direction_vector.cross(vector);
+}
 
-    int expected_corners_num = (pattern_size.width/2+1)*(pattern_size.height/2+1);
+static bool arePointsOnSameSideFromLine(const Point2f& line_pt1, const Point2f& line_pt2, const Point2f& pt1, const Point2f& pt2)
+{
+    const Point2f line_direction_vector = line_pt2 - line_pt1;
+    const Point2f vector1 = pt1 - line_pt1;
+    const Point2f vector2 = pt2 - line_pt1;
+    return pointSideFromLine(line_direction_vector, vector1) * pointSideFromLine(line_direction_vector, vector2) > 0.;
+}
+
+bool ChessBoardDetector::NeighborsFinder::findCornerNeighbor(
+    const int quad_idx,
+    const int corner_idx,
+    const cv::Point2f& corner_pt,
+    float& min_sqr_dist,
+    const float sqr_radius,
+    int& closest_quad_idx,
+    int& closest_corner_idx,
+    cv::Point2f& closest_corner_pt)
+{
+    ChessBoardQuad* p_all_quads = detector.all_quads.data();
+
+    const ChessBoardQuad& cur_quad = (const ChessBoardQuad&)p_all_quads[quad_idx];
+    int closest_neighbor_idx = -1;
+    ChessBoardQuad *closest_quad = 0;
+
+    // find the closest corner in all other quadrangles
+    const std::vector<float> query = { corner_pt.x, corner_pt.y };
+    const cvflann::SearchParams search_params(-1);
+    const int neighbors_count = all_quads_pts_index.radiusSearch(query, neighbors_indices, neighbors_dists, sqr_radius, search_params);
+
+    for (int neighbor_idx_idx = 0; neighbor_idx_idx < neighbors_count; neighbor_idx_idx++)
+    {
+        const int neighbor_idx = neighbors_indices[neighbor_idx_idx];
+        const int k = neighbor_idx >> 2;
+        if (k == quad_idx)
+            continue;
+
+        ChessBoardQuad& q_k = p_all_quads[k];
+        const int j = neighbor_idx & 3;
+        if (q_k.neighbors[j])
+            continue;
+
+        const Point2f neighbor_pt = all_quads_pts[neighbor_idx];
+        const float sqr_dist = normL2Sqr<float>(corner_pt - neighbor_pt);
+        if (sqr_dist <= cur_quad.edge_sqr_len * thresh_sqr_scale &&
+            sqr_dist <= q_k.edge_sqr_len * thresh_sqr_scale)
+        {
+            // check edge lengths, make sure they're compatible
+            // edges that are different by more than 1:4 are rejected.
+            // edge_sqr_len is edge squared length, so we compare them
+            // with squared constant 16 = 4^2
+            if (q_k.edge_sqr_len > 16 * cur_quad.edge_sqr_len ||
+                cur_quad.edge_sqr_len > 16 * q_k.edge_sqr_len)
+            {
+                DPRINTF("Incompatible edge lengths");
+                continue;
+            }
+
+            const Point2f mid_pt1 = (cur_quad.corners[corner_idx]->pt + cur_quad.corners[(corner_idx + 1) & 3]->pt) / 2.f;
+            const Point2f mid_pt2 = (cur_quad.corners[(corner_idx + 2) & 3]->pt + cur_quad.corners[(corner_idx + 3) & 3]->pt) / 2.f;
+            if (!arePointsOnSameSideFromLine(mid_pt1, mid_pt2, corner_pt, neighbor_pt))
+                continue;
+
+            const Point2f mid_pt3 = (cur_quad.corners[(corner_idx + 1) & 3]->pt + cur_quad.corners[(corner_idx + 2) & 3]->pt) / 2.f;
+            const Point2f mid_pt4 = (cur_quad.corners[(corner_idx + 3) & 3]->pt + cur_quad.corners[corner_idx]->pt) / 2.f;
+            if (!arePointsOnSameSideFromLine(mid_pt3, mid_pt4, corner_pt, neighbor_pt))
+                continue;
+
+            const Point2f neighbor_pt_diagonal = q_k.corners[(j + 2) & 3]->pt;
+            if (!arePointsOnSameSideFromLine(mid_pt1, mid_pt2, corner_pt, neighbor_pt_diagonal))
+                continue;
+
+            if (!arePointsOnSameSideFromLine(mid_pt3, mid_pt4, corner_pt, neighbor_pt_diagonal))
+                continue;
+
+            closest_neighbor_idx = neighbor_idx;
+            closest_quad_idx = k;
+            closest_corner_idx = j;
+            closest_quad = &q_k;
+            min_sqr_dist = sqr_dist;
+            break;
+        }
+    }
+
+    // we found a matching corner point?
+    if (closest_neighbor_idx >= 0 && closest_quad_idx >= 0 && closest_corner_idx >= 0 && min_sqr_dist < FLT_MAX)
+    {
+        CV_Assert(closest_quad);
+
+        if (cur_quad.count >= 4 || closest_quad->count >= 4)
+            return false;
+
+        // If another point from our current quad is closer to the found corner
+        // than the current one, then we don't count this one after all.
+        // This is necessary to support small squares where otherwise the wrong
+        // corner will get matched to closest_quad;
+        closest_corner_pt = all_quads_pts[closest_neighbor_idx];
+
+        int j = 0;
+        for (; j < 4; j++)
+        {
+            if (cur_quad.neighbors[j] == closest_quad)
+                break;
+
+            if (normL2Sqr<float>(closest_corner_pt - all_quads_pts[(quad_idx << 2) + j]) < min_sqr_dist)
+                break;
+        }
+        if (j < 4)
+            return false;
+
+        // Check that each corner is a neighbor of different quads
+        for(j = 0; j < 4; j++ )
+        {
+            if (closest_quad->neighbors[j] == &cur_quad)
+                break;
+        }
+        if (j < 4)
+            return false;
+
+        return true;
+    }
+
+    return false;
+}
+
+bool findChessboardCorners(InputArray image_, Size pattern_size,
+                           OutputArray corners_, int flags)
+{
+    CV_INSTRUMENT_REGION();
+
+    DPRINTF("==== findChessboardCorners(img=%dx%d, pattern=%dx%d, flags=%d)",
+            image_.cols(), image_.rows(), pattern_size.width, pattern_size.height, flags);
+
+    bool found = false;
+
+    const bool is_plain = (flags & CALIB_CB_PLAIN) != 0;
+
+    int type = image_.type(), depth = CV_MAT_DEPTH(type), cn = CV_MAT_CN(type);
+    Mat img = image_.getMat();
+
+    CV_CheckType(type, depth == CV_8U && (cn == 1 || cn == 3 || cn == 4),
+            "Only 8-bit grayscale or color images are supported");
+
+    if (pattern_size.width <= 2 || pattern_size.height <= 2)
+        CV_Error(Error::StsOutOfRange, "Both width and height of the pattern should have bigger than 2");
+
+    if (!corners_.needed())
+        CV_Error(Error::StsNullPtr, "Null pointer to corners");
+
+    std::vector<cv::Point2f> out_corners;
+
+    if (is_plain)
+      CV_CheckType(type, depth == CV_8U && cn == 1, "Only 8-bit grayscale images are supported whith CALIB_CB_PLAIN flag enable");
+
+    if (img.channels() != 1)
+    {
+        cvtColor(img, img, COLOR_BGR2GRAY);
+    }
 
     int prev_sqr_size = 0;
 
-    if( out_corner_count )
-        *out_corner_count = 0;
+    Mat thresh_img_new = img.clone();
+    if(!is_plain)
+        icvBinarizationHistogramBased(thresh_img_new); // process image in-place
+    SHOW("New binarization", thresh_img_new);
 
-    int quad_count = 0, group_idx = 0, dilations = 0;
-
-    img = cvGetMat( img, &stub );
-    //debug_img = img;
-
-    if( CV_MAT_DEPTH( img->type ) != CV_8U || CV_MAT_CN( img->type ) == 2 )
-        CV_Error( CV_StsUnsupportedFormat, "Only 8-bit grayscale or color images are supported" );
-
-    if( pattern_size.width <= 2 || pattern_size.height <= 2 )
-        CV_Error( CV_StsOutOfRange, "Both width and height of the pattern should have bigger than 2" );
-
-    if( !out_corners )
-        CV_Error( CV_StsNullPtr, "Null pointer to corners" );
-
-    storage.reset(cvCreateMemStorage(0));
-    thresh_img.reset(cvCreateMat( img->rows, img->cols, CV_8UC1 ));
-
-    if( CV_MAT_CN(img->type) != 1 || (flags & CV_CALIB_CB_NORMALIZE_IMAGE) )
-    {
-        // equalize the input image histogram -
-        // that should make the contrast between "black" and "white" areas big enough
-        norm_img.reset(cvCreateMat( img->rows, img->cols, CV_8UC1 ));
-
-        if( CV_MAT_CN(img->type) != 1 )
-        {
-            cvCvtColor( img, norm_img, CV_BGR2GRAY );
-            img = norm_img;
-        }
-
-        if( flags & CV_CALIB_CB_NORMALIZE_IMAGE )
-        {
-            cvEqualizeHist( img, norm_img );
-            img = norm_img;
-        }
-    }
-
-    if( flags & CV_CALIB_CB_FAST_CHECK)
+    if (flags & CALIB_CB_FAST_CHECK && !is_plain)
     {
         //perform new method for checking chessboard using a binary image.
         //image is binarised using a threshold dependent on the image histogram
-        icvBinarizationHistogramBased( (unsigned char*) cImgSeg->imageData, cImgSeg->width, cImgSeg->height );
-        int check_chessboard_result = cvCheckChessboardBinary(cImgSeg, pattern_size);
-        if(check_chessboard_result <= 0) //fall back to the old method
+        if (checkChessboardBinary(thresh_img_new, pattern_size) <= 0) //fall back to the old method
         {
-            IplImage _img;
-            cvGetImage(img, &_img);
-            check_chessboard_result = cvCheckChessboard(&_img, pattern_size);
-            if(check_chessboard_result <= 0)
+            if (!checkChessboard(img, pattern_size))
             {
-                return 0;
+                corners_.release();
+                return false;
             }
         }
     }
 
-    // Try our standard "1" dilation, but if the pattern is not found, iterate the whole procedure with higher dilations.
-    // This is necessary because some squares simply do not separate properly with a single dilation.  However,
+    ChessBoardDetector detector(pattern_size);
+
+    const int min_dilations = 0;
+    const int max_dilations = is_plain ? 0 : 7;
+
+    // Try our standard "0" and "1" dilations, but if the pattern is not found, iterate the whole procedure with higher dilations.
+    // This is necessary because some squares simply do not separate properly without and with a single dilations. However,
     // we want to use the minimum number of dilations possible since dilations cause the squares to become smaller,
     // making it difficult to detect smaller squares.
-    for( dilations = min_dilations; dilations <= max_dilations; dilations++ )
+    for (int dilations = min_dilations; dilations <= max_dilations; dilations++)
     {
-      if (found)
-        break;      // already found it
+        //USE BINARY IMAGE COMPUTED USING icvBinarizationHistogramBased METHOD
+        if(!is_plain && dilations > 0)
+            dilate( thresh_img_new, thresh_img_new, Mat(), Point(-1, -1), 1 );
 
-      cvFree(&quads);
-      cvFree(&corners);
+        // So we can find rectangles that go to the edge, we draw a white line around the image edge.
+        // Otherwise FindContours will miss those clipped rectangle contours.
+        // The border color will be the image mean, because otherwise we risk screwing up filters like cvSmooth()...
+        rectangle( thresh_img_new, Point(0,0), Point(thresh_img_new.cols-1, thresh_img_new.rows-1), Scalar(255,255,255), 3, LINE_8);
 
-      int max_quad_buf_size = 0;
-
-      //USE BINARY IMAGE COMPUTED USING icvBinarizationHistogramBased METHOD
-      cvDilate( thresh_img_new, thresh_img_new, 0, 1 );
-
-      // So we can find rectangles that go to the edge, we draw a white line around the image edge.
-      // Otherwise FindContours will miss those clipped rectangle contours.
-      // The border color will be the image mean, because otherwise we risk screwing up filters like cvSmooth()...
-      cvRectangle( thresh_img_new, cvPoint(0,0), cvPoint(thresh_img_new->cols-1, thresh_img_new->rows-1), CV_RGB(255,255,255), 3, 8);
-      quad_count = icvGenerateQuads( &quads, &corners, storage, thresh_img_new, flags, &max_quad_buf_size );
-      PRINTF("Quad count: %d/%d\n", quad_count, expected_corners_num);
-
-      if( quad_count <= 0 )
-      {
-        continue;
-      }
-
-      // Find quad's neighbors
-      icvFindQuadNeighbors( quads, quad_count );
-
-      // allocate extra for adding in icvOrderFoundQuads
-      cvFree(&quad_group);
-      cvFree(&corner_group);
-      quad_group = (CvCBQuad**)cvAlloc( sizeof(quad_group[0]) * max_quad_buf_size);
-      corner_group = (CvCBCorner**)cvAlloc( sizeof(corner_group[0]) * max_quad_buf_size * 4 );
-
-      for( group_idx = 0; ; group_idx++ )
-      {
-        int count = 0;
-        count = icvFindConnectedQuads( quads, quad_count, quad_group, group_idx, storage );
-
-        int icount = count;
-        if( count == 0 )
+        detector.reset();
+        detector.generateQuads(thresh_img_new, flags, dilations);
+        DPRINTF("Quad count: %d/%d", detector.all_quads_count, (pattern_size.width/2+1)*(pattern_size.height/2+1));
+        SHOW_QUADS("New quads", thresh_img_new, &detector.all_quads[0], detector.all_quads_count);
+        if (detector.processQuads(out_corners, prev_sqr_size))
+        {
+            found = true;
             break;
-
-        // order the quad corners globally
-        // maybe delete or add some
-        PRINTF("Starting ordering of inner quads\n");
-        count = icvOrderFoundConnectedQuads(count, quad_group, &quad_count, &quads, &corners, pattern_size, max_quad_buf_size, storage );
-        PRINTF("Orig count: %d  After ordering: %d\n", icount, count);
-
-        if (count == 0)
-            continue; // haven't found inner quads
-
-        // If count is more than it should be, this will remove those quads
-        // which cause maximum deviation from a nice square pattern.
-        count = icvCleanFoundConnectedQuads( count, quad_group, pattern_size );
-        PRINTF("Connected group: %d  orig count: %d cleaned: %d\n", group_idx, icount, count);
-
-        count = icvCheckQuadGroup( quad_group, count, corner_group, pattern_size );
-        PRINTF("Connected group: %d  count: %d  cleaned: %d\n", group_idx, icount, count);
-
-        int n = count > 0 ? pattern_size.width * pattern_size.height : -count;
-        n = MIN( n, pattern_size.width * pattern_size.height );
-        float sum_dist = 0;
-        int total = 0;
-
-        for(int i = 0; i < n; i++ )
-        {
-          int ni = 0;
-          float avgi = corner_group[i]->meanDist(&ni);
-          sum_dist += avgi*ni;
-          total += ni;
         }
-        prev_sqr_size = cvRound(sum_dist/MAX(total, 1));
+    }
 
-        if( count > 0 || (out_corner_count && -count > *out_corner_count) )
-        {
-          // copy corners to output array
-          for(int i = 0; i < n; i++ )
-              out_corners[i] = corner_group[i]->pt;
-
-          if( out_corner_count )
-              *out_corner_count = n;
-
-          if( count == pattern_size.width*pattern_size.height &&
-              icvCheckBoardMonotony( out_corners, pattern_size ))
-          {
-              found = 1;
-              break;
-          }
-        }
-      }
-    }//dilations
-
-    PRINTF("Chessboard detection result 0: %d\n", found);
+    DPRINTF("Chessboard detection result 0: %d", (int)found);
 
     // revert to old, slower, method if detection failed
-    if (!found)
+    if (!found && !is_plain)
     {
-      PRINTF("Fallback to old algorithm\n");
-      // empiric threshold level
-      // thresholding performed here and not inside the cycle to save processing time
-      int thresh_level;
-      if ( !(flags & CV_CALIB_CB_ADAPTIVE_THRESH) )
-      {
-          double mean = cvAvg( img ).val[0];
-          thresh_level = cvRound( mean - 10 );
-          thresh_level = MAX( thresh_level, 10 );
-          cvThreshold( img, thresh_img, thresh_level, 255, CV_THRESH_BINARY );
-      }
-      for( k = 0; k < 6; k++ )
-      {
-        int max_quad_buf_size = 0;
-        for( dilations = min_dilations; dilations <= max_dilations; dilations++ )
+        if (flags & CALIB_CB_NORMALIZE_IMAGE)
         {
-          if (found)
-            break;      // already found it
+            img = img.clone();
+            equalizeHist(img, img);
+        }
 
-          cvFree(&quads);
-          cvFree(&corners);
+        Mat thresh_img;
+        prev_sqr_size = 0;
 
-          // convert the input grayscale image to binary (black-n-white)
-          if( flags & CV_CALIB_CB_ADAPTIVE_THRESH )
-          {
-              int block_size = cvRound(prev_sqr_size == 0 ?
-                  MIN(img->cols,img->rows)*(k%2 == 0 ? 0.2 : 0.1): prev_sqr_size*2)|1;
-
-              // convert to binary
-              cvAdaptiveThreshold( img, thresh_img, 255,
-                  CV_ADAPTIVE_THRESH_MEAN_C, CV_THRESH_BINARY, block_size, (k/2)*5 );
-              if (dilations > 0)
-                  cvDilate( thresh_img, thresh_img, 0, dilations-1 );
-          }
-          //if flag CV_CALIB_CB_ADAPTIVE_THRESH is not set it doesn't make sense
-          //to iterate over k
-          else
-          {
-            k = 6;
-            cvDilate( thresh_img, thresh_img, 0, 1 );
-          }
-
-          // So we can find rectangles that go to the edge, we draw a white line around the image edge.
-          // Otherwise FindContours will miss those clipped rectangle contours.
-          // The border color will be the image mean, because otherwise we risk screwing up filters like cvSmooth()...
-          cvRectangle( thresh_img, cvPoint(0,0), cvPoint(thresh_img->cols-1,
-             thresh_img->rows-1), CV_RGB(255,255,255), 3, 8);
-
-          quad_count = icvGenerateQuads( &quads, &corners, storage, thresh_img, flags, &max_quad_buf_size);
-          PRINTF("Quad count: %d/%d\n", quad_count, expected_corners_num);
-
-          if( quad_count <= 0 )
-          {
-            continue;
-          }
-
-          // Find quad's neighbors
-          icvFindQuadNeighbors( quads, quad_count );
-
-          // allocate extra for adding in icvOrderFoundQuads
-          cvFree(&quad_group);
-          cvFree(&corner_group);
-          quad_group = (CvCBQuad**)cvAlloc( sizeof(quad_group[0]) * max_quad_buf_size);
-          corner_group = (CvCBCorner**)cvAlloc( sizeof(corner_group[0]) * max_quad_buf_size * 4 );
-
-          for( group_idx = 0; ; group_idx++ )
-          {
-            int count = 0;
-            count = icvFindConnectedQuads( quads, quad_count, quad_group, group_idx, storage );
-
-            int icount = count;
-            if( count == 0 )
-              break;
-
-            // order the quad corners globally
-            // maybe delete or add some
-            PRINTF("Starting ordering of inner quads\n");
-            count = icvOrderFoundConnectedQuads(count, quad_group, &quad_count, &quads, &corners, pattern_size, max_quad_buf_size, storage );
-
-            PRINTF("Orig count: %d  After ordering: %d\n", icount, count);
-
-            if (count == 0)
-              continue;       // haven't found inner quads
-
-
-            // If count is more than it should be, this will remove those quads
-            // which cause maximum deviation from a nice square pattern.
-            count = icvCleanFoundConnectedQuads( count, quad_group, pattern_size );
-            PRINTF("Connected group: %d  orig count: %d cleaned: %d\n", group_idx, icount, count);
-
-            count = icvCheckQuadGroup( quad_group, count, corner_group, pattern_size );
-            PRINTF("Connected group: %d  count: %d  cleaned: %d\n", group_idx, icount, count);
-
-            int n = count > 0 ? pattern_size.width * pattern_size.height : -count;
-            n = MIN( n, pattern_size.width * pattern_size.height );
-            float sum_dist = 0;
-            int total = 0;
-
-            for(int i = 0; i < n; i++ )
+        DPRINTF("Fallback to old algorithm");
+        const bool useAdaptive = flags & CALIB_CB_ADAPTIVE_THRESH;
+        if (!useAdaptive)
+        {
+            // empiric threshold level
+            // thresholding performed here and not inside the cycle to save processing time
+            double mean = cv::mean(img).val[0];
+            int thresh_level = std::max(cvRound(mean - 10), 10);
+            threshold(img, thresh_img, thresh_level, 255, THRESH_BINARY);
+        }
+        //if flag CALIB_CB_ADAPTIVE_THRESH is not set it doesn't make sense to iterate over k
+        int max_k = useAdaptive ? 6 : 1;
+        Mat prev_thresh_img;
+        for (int k = 0; k < max_k && !found; k++)
+        {
+            int prev_block_size = -1;
+            for (int dilations = min_dilations; dilations <= max_dilations; dilations++)
             {
-              int ni = 0;
-              float avgi = corner_group[i]->meanDist(&ni);
-              sum_dist += avgi*ni;
-              total += ni;
+                // convert the input grayscale image to binary (black-n-white)
+                if (useAdaptive)
+                {
+                    int block_size = cvRound(prev_sqr_size == 0
+                                             ? std::min(img.cols, img.rows) * (k % 2 == 0 ? 0.2 : 0.1)
+                                             : prev_sqr_size * 2);
+                    block_size = block_size | 1;
+                    // convert to binary
+                    if (block_size != prev_block_size)
+                    {
+                        adaptiveThreshold( img, thresh_img, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, block_size, (k/2)*5 );
+                        dilate( thresh_img, thresh_img, Mat(), Point(-1, -1), dilations );
+                        thresh_img.copyTo(prev_thresh_img);
+                    }
+                    else if (dilations > 0)
+                    {
+                        dilate( prev_thresh_img, prev_thresh_img, Mat(), Point(-1, -1), 1 );
+                        prev_thresh_img.copyTo(thresh_img);
+                    }
+                    prev_block_size = block_size;
+                }
+                else
+                {
+                    if (dilations > 0)
+                        dilate( thresh_img, thresh_img, Mat(), Point(-1, -1), 1 );
+                }
+                SHOW("Old binarization", thresh_img);
+
+                // So we can find rectangles that go to the edge, we draw a white line around the image edge.
+                // Otherwise FindContours will miss those clipped rectangle contours.
+                // The border color will be the image mean, because otherwise we risk screwing up filters like cvSmooth()...
+                rectangle( thresh_img, Point(0,0), Point(thresh_img.cols-1, thresh_img.rows-1), Scalar(255,255,255), 3, LINE_8);
+
+                detector.reset();
+                detector.generateQuads(thresh_img, flags, dilations);
+                DPRINTF("Quad count: %d/%d", detector.all_quads_count, (pattern_size.width/2+1)*(pattern_size.height/2+1));
+                SHOW_QUADS("Old quads", thresh_img, &detector.all_quads[0], detector.all_quads_count);
+                if (detector.processQuads(out_corners, prev_sqr_size))
+                {
+                    found = 1;
+                    break;
+                }
             }
-            prev_sqr_size = cvRound(sum_dist/MAX(total, 1));
-
-            if( count > 0 || (out_corner_count && -count > *out_corner_count) )
-            {
-              // copy corners to output array
-              for(int i = 0; i < n; i++ )
-                out_corners[i] = corner_group[i]->pt;
-
-              if( out_corner_count )
-                *out_corner_count = n;
-
-              if( count == pattern_size.width*pattern_size.height && icvCheckBoardMonotony( out_corners, pattern_size ))
-              {
-                found = 1;
-                break;
-              }
-            }
-          }
-        }//dilations
-      }// for k = 0 -> 6
+        }
     }
 
-    PRINTF("Chessboard detection result 1: %d\n", found);
+    DPRINTF("Chessboard detection result 1: %d", (int)found);
 
-    if( found )
-        found = icvCheckBoardMonotony( out_corners, pattern_size );
+    if (found)
+        found = detector.checkBoardMonotony(out_corners);
 
-    PRINTF("Chessboard detection result 2: %d\n", found);
+    DPRINTF("Chessboard detection result 2: %d", (int)found);
 
     // check that none of the found corners is too close to the image boundary
-    if( found )
+    if (found)
     {
         const int BORDER = 8;
-        for( k = 0; k < pattern_size.width*pattern_size.height; k++ )
+        for (int k = 0; k < pattern_size.width*pattern_size.height; ++k)
         {
-            if( out_corners[k].x <= BORDER || out_corners[k].x > img->cols - BORDER ||
-                out_corners[k].y <= BORDER || out_corners[k].y > img->rows - BORDER )
+            if( out_corners[k].x <= BORDER || out_corners[k].x > img.cols - BORDER ||
+                out_corners[k].y <= BORDER || out_corners[k].y > img.rows - BORDER )
+            {
+                found = false;
                 break;
+            }
         }
-
-        found = k == pattern_size.width*pattern_size.height;
     }
 
-    PRINTF("Chessboard detection result 3: %d\n", found);
+    DPRINTF("Chessboard detection result 3: %d", (int)found);
 
-    if( found )
+    if (found)
     {
-      if ( pattern_size.height % 2 == 0 && pattern_size.width % 2 == 0 )
-      {
-        int last_row = (pattern_size.height-1)*pattern_size.width;
-        double dy0 = out_corners[last_row].y - out_corners[0].y;
-        if( dy0 < 0 )
+        if ((pattern_size.height & 1) == 0 && (pattern_size.width & 1) == 0 )
         {
-          int n = pattern_size.width*pattern_size.height;
-          for(int i = 0; i < n/2; i++ )
-          {
-            CvPoint2D32f temp;
-            CV_SWAP(out_corners[i], out_corners[n-i-1], temp);
-          }
+            int last_row = (pattern_size.height-1)*pattern_size.width;
+            double dy0 = out_corners[last_row].y - out_corners[0].y;
+            if (dy0 < 0)
+            {
+                int n = pattern_size.width*pattern_size.height;
+                for(int i = 0; i < n/2; i++ )
+                {
+                    std::swap(out_corners[i], out_corners[n-i-1]);
+                }
+            }
         }
-      }
-      cv::Ptr<CvMat> gray;
-      if( CV_MAT_CN(img->type) != 1 )
-      {
-        gray.reset(cvCreateMat(img->rows, img->cols, CV_8UC1));
-        cvCvtColor(img, gray, CV_BGR2GRAY);
-      }
-      else
-      {
-        gray.reset(cvCloneMat(img));
-      }
-      int wsize = 2;
-      cvFindCornerSubPix( gray, out_corners, pattern_size.width*pattern_size.height,
-                          cvSize(wsize, wsize), cvSize(-1,-1),
-                          cvTermCriteria(CV_TERMCRIT_EPS+CV_TERMCRIT_ITER, 15, 0.1));
-    }
-    }
-    catch(...)
-    {
-        cvFree(&quads);
-        cvFree(&corners);
-        cvFree(&quad_group);
-        cvFree(&corner_group);
-        cvFree(&cImgSeg);
-        throw;
+        cv::cornerSubPix(img, out_corners, Size(2, 2), Size(-1,-1),
+                         cv::TermCriteria(TermCriteria::EPS + TermCriteria::MAX_ITER, 15, 0.1));
     }
 
-    cvFree(&quads);
-    cvFree(&corners);
-    cvFree(&quad_group);
-    cvFree(&corner_group);
-    cvFree(&cImgSeg);
+    Mat(out_corners).copyTo(corners_);
     return found;
 }
 
@@ -790,37 +863,35 @@ int cvFindChessboardCorners( const void* arr, CvSize pattern_size,
 //    of the neighbor corners in the same row/column.
 //
 // This function has been created as temporary workaround for the bug in current implementation
-// of cvFindChessboardCornes that produces absolutely unordered sets of corners.
+// of cvFindChessboardCorners that produces absolutely unordered sets of corners.
 //
-
-static int
-icvCheckBoardMonotony( CvPoint2D32f* corners, CvSize pattern_size )
+bool ChessBoardDetector::checkBoardMonotony(const std::vector<cv::Point2f>& corners)
 {
-    int i, j, k;
-
-    for( k = 0; k < 2; k++ )
+    for (int k = 0; k < 2; ++k)
     {
-        for( i = 0; i < (k == 0 ? pattern_size.height : pattern_size.width); i++ )
+        int max_i = (k == 0 ? pattern_size.height : pattern_size.width);
+        int max_j = (k == 0 ? pattern_size.width: pattern_size.height) - 1;
+        for (int i = 0; i < max_i; ++i)
         {
-            CvPoint2D32f a = k == 0 ? corners[i*pattern_size.width] : corners[i];
-            CvPoint2D32f b = k == 0 ? corners[(i+1)*pattern_size.width-1] :
-                corners[(pattern_size.height-1)*pattern_size.width + i];
-            float prevt = 0, dx0 = b.x - a.x, dy0 = b.y - a.y;
-            if( fabs(dx0) + fabs(dy0) < FLT_EPSILON )
-                return 0;
-            for( j = 1; j < (k == 0 ? pattern_size.width : pattern_size.height) - 1; j++ )
+            cv::Point2f a = k == 0 ? corners[i*pattern_size.width] : corners[i];
+            cv::Point2f b = k == 0 ? corners[(i+1)*pattern_size.width-1]
+                                   : corners[(pattern_size.height-1)*pattern_size.width + i];
+            float dx0 = b.x - a.x, dy0 = b.y - a.y;
+            if (fabs(dx0) + fabs(dy0) < FLT_EPSILON)
+                return false;
+            float prevt = 0;
+            for (int j = 1; j < max_j; ++j)
             {
-                CvPoint2D32f c = k == 0 ? corners[i*pattern_size.width + j] :
-                    corners[j*pattern_size.width + i];
+                cv::Point2f c = k == 0 ? corners[i*pattern_size.width + j]
+                                       : corners[j*pattern_size.width + i];
                 float t = ((c.x - a.x)*dx0 + (c.y - a.y)*dy0)/(dx0*dx0 + dy0*dy0);
-                if( t < prevt || t > 1 )
-                    return 0;
+                if (t < prevt || t > 1)
+                    return false;
                 prevt = t;
             }
         }
     }
-
-    return 1;
+    return true;
 }
 
 //
@@ -834,18 +905,16 @@ icvCheckBoardMonotony( CvPoint2D32f* corners, CvSize pattern_size )
 // can change the number of quads in the group
 // can add quads, so we need to have quad/corner arrays passed in
 //
-
-static int
-icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
-        int *all_count, CvCBQuad **all_quads, CvCBCorner **corners,
-        CvSize pattern_size, int max_quad_buf_size, CvMemStorage* storage )
+int ChessBoardDetector::orderFoundConnectedQuads(std::vector<ChessBoardQuad*>& quads)
 {
-    cv::Ptr<CvMemStorage> temp_storage(cvCreateChildMemStorage( storage ));
-    CvSeq* stack = cvCreateSeq( 0, sizeof(*stack), sizeof(void*), temp_storage );
+    const int max_quad_buf_size = (int)all_quads.size();
+    int quad_count = (int)quads.size();
+
+    std::stack<ChessBoardQuad*> stack;
 
     // first find an interior quad
-    CvCBQuad *start = NULL;
-    for (int i=0; i<quad_count; i++)
+    ChessBoardQuad *start = NULL;
+    for (int i = 0; i < quad_count; i++)
     {
         if (quads[i]->count == 4)
         {
@@ -863,7 +932,7 @@ icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
     std::map<int, int> col_hist;
     std::map<int, int> row_hist;
 
-    cvSeqPush(stack, &start);
+    stack.push(start);
     start->row = 0;
     start->col = 0;
     start->ordered = true;
@@ -871,10 +940,10 @@ icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
     // Recursively order the quads so that all position numbers (e.g.,
     // 0,1,2,3) are in the at the same relative corner (e.g., lower right).
 
-    while( stack->total )
+    while (!stack.empty())
     {
-        CvCBQuad* q;
-        cvSeqPop( stack, &q );
+        ChessBoardQuad* q = stack.top(); stack.pop(); CV_Assert(q);
+
         int col = q->col;
         int row = q->row;
         col_hist[col]++;
@@ -886,9 +955,10 @@ icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
         if (col > col_max) col_max = col;
         if (col < col_min) col_min = col;
 
-        for(int i = 0; i < 4; i++ )
+        for (int i = 0; i < 4; i++)
         {
-            CvCBQuad *neighbor = q->neighbors[i];
+            CV_DbgAssert(q);
+            ChessBoardQuad *neighbor = q->neighbors[i];
             switch(i)   // adjust col, row for this quad
             {           // start at top left, go clockwise
             case 0:
@@ -904,18 +974,21 @@ icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
             // just do inside quads
             if (neighbor && neighbor->ordered == false && neighbor->count == 4)
             {
-                PRINTF("col: %d  row: %d\n", col, row);
-                icvOrderQuad(neighbor, q->corners[i], (i+2)%4); // set in order
+                DPRINTF("col: %d  row: %d", col, row);
+                CV_Assert(q->corners[i]);
+                orderQuad(*neighbor, *(q->corners[i]), (i+2)&3); // set in order
                 neighbor->ordered = true;
                 neighbor->row = row;
                 neighbor->col = col;
-                cvSeqPush( stack, &neighbor );
+                stack.push(neighbor);
             }
         }
     }
 
-    for (int i=col_min; i<=col_max; i++)
-        PRINTF("HIST[%d] = %d\n", i, col_hist[i]);
+#ifdef DEBUG_CHESSBOARD
+    for (int i = col_min; i <= col_max; i++)
+        DPRINTF("HIST[%d] = %d", i, col_hist[i]);
+#endif
 
     // analyze inner quad structure
     int w = pattern_size.width - 1;
@@ -931,62 +1004,67 @@ icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
         w = pattern_size.height - 1;
     }
 
-    PRINTF("Size: %dx%d  Pattern: %dx%d\n", dcol, drow, w, h);
+    DPRINTF("Size: %dx%d  Pattern: %dx%d", dcol, drow, w, h);
 
     // check if there are enough inner quads
     if (dcol < w || drow < h)   // found enough inner quads?
     {
-        PRINTF("Too few inner quad rows/cols\n");
+        DPRINTF("Too few inner quad rows/cols");
         return 0;   // no, return
     }
 #ifdef ENABLE_TRIM_COL_ROW
     // too many columns, not very common
     if (dcol == w+1)    // too many, trim
     {
-        PRINTF("Trimming cols\n");
+        DPRINTF("Trimming cols");
         if (col_hist[col_max] > col_hist[col_min])
         {
-            PRINTF("Trimming left col\n");
-            quad_count = icvTrimCol(quads,quad_count,col_min,-1);
+            DPRINTF("Trimming left col");
+            trimCol(quads, col_min, -1);
         }
         else
         {
-            PRINTF("Trimming right col\n");
-            quad_count = icvTrimCol(quads,quad_count,col_max,+1);
+            DPRINTF("Trimming right col");
+            trimCol(quads, col_max, +1);
         }
     }
 
     // too many rows, not very common
     if (drow == h+1)    // too many, trim
     {
-        PRINTF("Trimming rows\n");
+        DPRINTF("Trimming rows");
         if (row_hist[row_max] > row_hist[row_min])
         {
-            PRINTF("Trimming top row\n");
-            quad_count = icvTrimRow(quads,quad_count,row_min,-1);
+            DPRINTF("Trimming top row");
+            trimRow(quads, row_min, -1);
         }
         else
         {
-            PRINTF("Trimming bottom row\n");
-            quad_count = icvTrimRow(quads,quad_count,row_max,+1);
+            DPRINTF("Trimming bottom row");
+            trimRow(quads, row_max, +1);
         }
     }
+
+    quad_count = (int)quads.size(); // update after icvTrimCol/icvTrimRow
 #endif
 
     // check edges of inner quads
     // if there is an outer quad missing, fill it in
     // first order all inner quads
     int found = 0;
-    for (int i=0; i<quad_count; i++)
+    for (int i=0; i < quad_count; ++i)
     {
-        if (quads[i]->count == 4)
+        ChessBoardQuad& q = *quads[i];
+        if (q.count != 4)
+            continue;
+
         {   // ok, look at neighbors
-            int col = quads[i]->col;
-            int row = quads[i]->row;
-            for (int j=0; j<4; j++)
+            int col = q.col;
+            int row = q.row;
+            for (int j = 0; j < 4; j++)
             {
                 switch(j)   // adjust col, row for this quad
-                {       // start at top left, go clockwise
+                {           // start at top left, go clockwise
                 case 0:
                     row--; col--; break;
                 case 1:
@@ -996,15 +1074,16 @@ icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
                 case 3:
                     col -= 2; break;
                 }
-                CvCBQuad *neighbor = quads[i]->neighbors[j];
+                ChessBoardQuad *neighbor = q.neighbors[j];
                 if (neighbor && !neighbor->ordered && // is it an inner quad?
                     col <= col_max && col >= col_min &&
                     row <= row_max && row >= row_min)
                 {
                     // if so, set in order
-                    PRINTF("Adding inner: col: %d  row: %d\n", col, row);
+                    DPRINTF("Adding inner: col: %d  row: %d", col, row);
                     found++;
-                    icvOrderQuad(neighbor, quads[i]->corners[j], (j+2)%4);
+                    CV_Assert(q.corners[j]);
+                    orderQuad(*neighbor, *q.corners[j], (j+2)&3);
                     neighbor->ordered = true;
                     neighbor->row = row;
                     neighbor->col = col;
@@ -1017,18 +1096,18 @@ icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
     //   which are missing
     if (found > 0)
     {
-        PRINTF("Found %d inner quads not connected to outer quads, repairing\n", found);
-        for (int i=0; i<quad_count && *all_count < max_quad_buf_size; i++)
+        DPRINTF("Found %d inner quads not connected to outer quads, repairing", found);
+        for (int i = 0; i < quad_count && all_quads_count < max_quad_buf_size; i++)
         {
-            if (quads[i]->count < 4 && quads[i]->ordered)
+            ChessBoardQuad& q = *quads[i];
+            if (q.count < 4 && q.ordered)
             {
-                int added = icvAddOuterQuad(quads[i],quads,quad_count,all_quads,*all_count,corners, max_quad_buf_size);
-                *all_count += added;
+                int added = addOuterQuad(q, quads);
                 quad_count += added;
             }
         }
 
-        if (*all_count >= max_quad_buf_size)
+        if (all_quads_count >= max_quad_buf_size)
             return 0;
     }
 
@@ -1036,29 +1115,27 @@ icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
     // final trimming of outer quads
     if (dcol == w && drow == h) // found correct inner quads
     {
-        PRINTF("Inner bounds ok, check outer quads\n");
-        int rcount = quad_count;
-        for (int i=quad_count-1; i>=0; i--) // eliminate any quad not connected to
-            // an ordered quad
+        DPRINTF("Inner bounds ok, check outer quads");
+        for (int i = quad_count - 1; i >= 0; i--) // eliminate any quad not connected to an ordered quad
         {
-            if (quads[i]->ordered == false)
+            ChessBoardQuad& q = *quads[i];
+            if (q.ordered == false)
             {
                 bool outer = false;
                 for (int j=0; j<4; j++) // any neighbors that are ordered?
                 {
-                    if (quads[i]->neighbors[j] && quads[i]->neighbors[j]->ordered)
+                    if (q.neighbors[j] && q.neighbors[j]->ordered)
                         outer = true;
                 }
                 if (!outer) // not an outer quad, eliminate
                 {
-                    PRINTF("Removing quad %d\n", i);
-                    icvRemoveQuadFromGroup(quads,rcount,quads[i]);
-                    rcount--;
+                    DPRINTF("Removing quad %d", i);
+                    removeQuadFromGroup(quads, q);
                 }
             }
 
         }
-        return rcount;
+        return (int)quads.size();
     }
 
     return 0;
@@ -1069,69 +1146,81 @@ icvOrderFoundConnectedQuads( int quad_count, CvCBQuad **quads,
 // looks for the neighbor of <quad> that isn't present,
 //   tries to add it in.
 // <quad> is ordered
-
-static int
-icvAddOuterQuad( CvCBQuad *quad, CvCBQuad **quads, int quad_count,
-        CvCBQuad **all_quads, int all_count, CvCBCorner **corners, int max_quad_buf_size )
-
+int ChessBoardDetector::addOuterQuad(ChessBoardQuad& quad, std::vector<ChessBoardQuad*>& quads)
 {
     int added = 0;
-    for (int i=0; i<4 && all_count < max_quad_buf_size; i++) // find no-neighbor corners
+    int max_quad_buf_size = (int)all_quads.size();
+
+    for (int i = 0; i < 4 && all_quads_count < max_quad_buf_size; i++) // find no-neighbor corners
     {
-        if (!quad->neighbors[i])    // ok, create and add neighbor
+        if (!quad.neighbors[i])    // ok, create and add neighbor
         {
-            int j = (i+2)%4;
-            PRINTF("Adding quad as neighbor 2\n");
-            CvCBQuad *q = &(*all_quads)[all_count];
-            memset( q, 0, sizeof(*q) );
+            int j = (i+2)&3;
+            DPRINTF("Adding quad as neighbor 2");
+            int q_index = all_quads_count++;
+            ChessBoardQuad& q = all_quads[q_index];
+            q = ChessBoardQuad(0);
             added++;
-            quads[quad_count] = q;
-            quad_count++;
+            quads.push_back(&q);
 
             // set neighbor and group id
-            quad->neighbors[i] = q;
-            quad->count += 1;
-            q->neighbors[j] = quad;
-            q->group_idx = quad->group_idx;
-            q->count = 1;   // number of neighbors
-            q->ordered = false;
-            q->edge_len = quad->edge_len;
+            quad.neighbors[i] = &q;
+            quad.count += 1;
+            q.neighbors[j] = &quad;
+            q.group_idx = quad.group_idx;
+            q.count = 1;   // number of neighbors
+            q.ordered = false;
+            q.edge_sqr_len = quad.edge_sqr_len;
 
             // make corners of new quad
             // same as neighbor quad, but offset
-            CvPoint2D32f pt = quad->corners[i]->pt;
-            CvCBCorner* corner;
-            float dx = pt.x - quad->corners[j]->pt.x;
-            float dy = pt.y - quad->corners[j]->pt.y;
-            for (int k=0; k<4; k++)
+            const cv::Point2f pt_offset = quad.corners[i]->pt - quad.corners[j]->pt;
+            for (int k = 0; k < 4; k++)
             {
-                corner = &(*corners)[all_count*4+k];
-                pt = quad->corners[k]->pt;
-                memset( corner, 0, sizeof(*corner) );
-                corner->pt = pt;
-                q->corners[k] = corner;
-                corner->pt.x += dx;
-                corner->pt.y += dy;
+                ChessBoardCorner& corner = (ChessBoardCorner&)all_corners[q_index * 4 + k];
+                const cv::Point2f& pt = quad.corners[k]->pt;
+                corner = ChessBoardCorner(pt);
+                q.corners[k] = &corner;
+                corner.pt += pt_offset;
             }
             // have to set exact corner
-            q->corners[j] = quad->corners[i];
+            q.corners[j] = quad.corners[i];
 
-            // now find other neighbor and add it, if possible
-            if (quad->neighbors[(i+3)%4] &&
-                quad->neighbors[(i+3)%4]->ordered &&
-                quad->neighbors[(i+3)%4]->neighbors[i] &&
-                quad->neighbors[(i+3)%4]->neighbors[i]->ordered )
+            // set row and col for next step check
+            switch (i)
             {
-                CvCBQuad *qn = quad->neighbors[(i+3)%4]->neighbors[i];
-                q->count = 2;
-                q->neighbors[(j+1)%4] = qn;
-                qn->neighbors[(i+1)%4] = q;
-                qn->count += 1;
-                // have to set exact corner
-                q->corners[(j+1)%4] = qn->corners[(i+1)%4];
+            case 0:
+                q.col = quad.col - 1; q.row = quad.row - 1; break;
+            case 1:
+                q.col = quad.col + 1; q.row = quad.row - 1; break;
+            case 2:
+                q.col = quad.col + 1; q.row = quad.row - 1; break;
+            case 3:
+                q.col = quad.col - 1; q.row = quad.row + 1; break;
             }
 
-            all_count++;
+            // now find other neighbor and add it, if possible
+            for (int k = 1; k <= 3; k += 2)
+            {
+                int next_i = (i + k) % 4;
+                int prev_i = (i + k + 2) % 4;
+                ChessBoardQuad* quad_prev = quad.neighbors[prev_i];
+                if (quad_prev &&
+                    quad_prev->ordered &&
+                    quad_prev->neighbors[i] &&
+                    quad_prev->neighbors[i]->ordered &&
+                    std::abs(quad_prev->neighbors[i]->col - q.col) == 1 &&
+                    std::abs(quad_prev->neighbors[i]->row - q.row) == 1)
+                {
+                    ChessBoardQuad* qn = quad_prev->neighbors[i];
+                    q.count = 2;
+                    q.neighbors[prev_i] = qn;
+                    qn->neighbors[next_i] = &q;
+                    qn->count += 1;
+                    // have to set exact corner
+                    q.corners[prev_i] = qn->corners[next_i];
+                }
+            }
         }
     }
     return added;
@@ -1140,151 +1229,141 @@ icvAddOuterQuad( CvCBQuad *quad, CvCBQuad **quads, int quad_count,
 
 // trimming routines
 #ifdef ENABLE_TRIM_COL_ROW
-static int
-icvTrimCol(CvCBQuad **quads, int count, int col, int dir)
+void ChessBoardDetector::trimCol(std::vector<ChessBoardQuad*>& quads, int col, int dir)
 {
-    int rcount = count;
+    std::vector<ChessBoardQuad*> quads_(quads);
     // find the right quad(s)
-    for (int i=0; i<count; i++)
+    for (size_t i = 0; i < quads_.size(); ++i)
     {
+        ChessBoardQuad& q = *quads_[i];
 #ifdef DEBUG_CHESSBOARD
-        if (quads[i]->ordered)
-            PRINTF("index: %d  cur: %d\n", col, quads[i]->col);
+        if (q.ordered)
+            DPRINTF("i: %d  index: %d  cur: %d", (int)i, col, q.col);
 #endif
-        if (quads[i]->ordered && quads[i]->col == col)
+        if (q.ordered && q.col == col)
         {
             if (dir == 1)
             {
-                if (quads[i]->neighbors[1])
+                if (q.neighbors[1])
                 {
-                    icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[1]);
-                    rcount--;
+                    removeQuadFromGroup(quads, *q.neighbors[1]);
                 }
-                if (quads[i]->neighbors[2])
+                if (q.neighbors[2])
                 {
-                    icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[2]);
-                    rcount--;
+                    removeQuadFromGroup(quads, *q.neighbors[2]);
                 }
             }
             else
             {
-                if (quads[i]->neighbors[0])
+                if (q.neighbors[0])
                 {
-                    icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[0]);
-                    rcount--;
+                    removeQuadFromGroup(quads, *q.neighbors[0]);
                 }
-                if (quads[i]->neighbors[3])
+                if (q.neighbors[3])
                 {
-                    icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[3]);
-                    rcount--;
+                    removeQuadFromGroup(quads, *q.neighbors[3]);
                 }
             }
-
         }
     }
-    return rcount;
 }
 
-static int
-icvTrimRow(CvCBQuad **quads, int count, int row, int dir)
+void ChessBoardDetector::trimRow(std::vector<ChessBoardQuad*>& quads, int row, int dir)
 {
-    int i, rcount = count;
+    std::vector<ChessBoardQuad*> quads_(quads);
     // find the right quad(s)
-    for (i=0; i<count; i++)
+    for (size_t i = 0; i < quads_.size(); ++i)
     {
+        ChessBoardQuad& q = *quads_[i];
 #ifdef DEBUG_CHESSBOARD
-        if (quads[i]->ordered)
-            PRINTF("index: %d  cur: %d\n", row, quads[i]->row);
+        if (q.ordered)
+            DPRINTF("i: %d  index: %d  cur: %d", (int)i, row, q.row);
 #endif
-        if (quads[i]->ordered && quads[i]->row == row)
+        if (q.ordered && q.row == row)
         {
             if (dir == 1)   // remove from bottom
             {
-                if (quads[i]->neighbors[2])
+                if (q.neighbors[2])
                 {
-                    icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[2]);
-                    rcount--;
+                    removeQuadFromGroup(quads, *q.neighbors[2]);
                 }
-                if (quads[i]->neighbors[3])
+                if (q.neighbors[3])
                 {
-                    icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[3]);
-                    rcount--;
+                    removeQuadFromGroup(quads, *q.neighbors[3]);
                 }
             }
             else    // remove from top
             {
-                if (quads[i]->neighbors[0])
+                if (q.neighbors[0])
                 {
-                    icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[0]);
-                    rcount--;
+                    removeQuadFromGroup(quads, *q.neighbors[0]);
                 }
-                if (quads[i]->neighbors[1])
+                if (q.neighbors[1])
                 {
-                    icvRemoveQuadFromGroup(quads,rcount,quads[i]->neighbors[1]);
-                    rcount--;
+                    removeQuadFromGroup(quads, *q.neighbors[1]);
                 }
             }
 
         }
     }
-    return rcount;
 }
 #endif
 
 //
 // remove quad from quad group
 //
-
-static void
-icvRemoveQuadFromGroup(CvCBQuad **quads, int count, CvCBQuad *q0)
+void ChessBoardDetector::removeQuadFromGroup(std::vector<ChessBoardQuad*>& quads, ChessBoardQuad& q0)
 {
-    int i, j;
+    const int count = (int)quads.size();
+
+    int self_idx = -1;
+
     // remove any references to this quad as a neighbor
-    for(i = 0; i < count; i++ )
+    for (int i = 0; i < count; ++i)
     {
-        CvCBQuad *q = quads[i];
-        for(j = 0; j < 4; j++ )
+        ChessBoardQuad* q = quads[i];
+        if (q == &q0)
+            self_idx = i;
+        for (int j = 0; j < 4; j++)
         {
-            if( q->neighbors[j] == q0 )
+            if (q->neighbors[j] == &q0)
             {
-                q->neighbors[j] = 0;
+                q->neighbors[j] = NULL;
                 q->count--;
-                for(int k = 0; k < 4; k++ )
-                    if( q0->neighbors[k] == q )
+                for (int k = 0; k < 4; ++k)
+                {
+                    if (q0.neighbors[k] == q)
                     {
-                        q0->neighbors[k] = 0;
-                        q0->count--;
+                        q0.neighbors[k] = 0;
+                        q0.count--;
+#ifndef _DEBUG
                         break;
+#endif
                     }
+                }
                 break;
             }
         }
     }
+    CV_Assert(self_idx >= 0); // item itself should be found
 
     // remove the quad
-    for(i = 0; i < count; i++ )
-    {
-        CvCBQuad *q = quads[i];
-        if (q == q0)
-        {
-            quads[i] = quads[count-1];
-            break;
-        }
-    }
+    if (self_idx != count-1)
+        quads[self_idx] = quads[count-1];
+    quads.resize(count - 1);
 }
 
 //
 // put quad into correct order, where <corner> has value <common>
 //
-
-static void
-icvOrderQuad(CvCBQuad *quad, CvCBCorner *corner, int common)
+void ChessBoardDetector::orderQuad(ChessBoardQuad& quad, ChessBoardCorner& corner, int common)
 {
+    CV_DbgAssert(common >= 0 && common <= 3);
+
     // find the corner
-    int tc;
-    for (tc=0; tc<4; tc++)
-        if (quad->corners[tc]->pt.x == corner->pt.x &&
-            quad->corners[tc]->pt.y == corner->pt.y)
+    int tc = 0;;
+    for (; tc < 4; ++tc)
+        if (quad.corners[tc]->pt == corner.pt)
             break;
 
     // set corner order
@@ -1292,114 +1371,107 @@ icvOrderQuad(CvCBQuad *quad, CvCBCorner *corner, int common)
     while (tc != common)
     {
         // shift by one
-        CvCBCorner *tempc;
-        CvCBQuad *tempq;
-        tempc = quad->corners[3];
-        tempq = quad->neighbors[3];
-        for (int i=3; i>0; i--)
+        ChessBoardCorner *tempc = quad.corners[3];
+        ChessBoardQuad *tempq = quad.neighbors[3];
+        for (int i = 3; i > 0; --i)
         {
-            quad->corners[i] = quad->corners[i-1];
-            quad->neighbors[i] = quad->neighbors[i-1];
+            quad.corners[i] = quad.corners[i-1];
+            quad.neighbors[i] = quad.neighbors[i-1];
         }
-        quad->corners[0] = tempc;
-        quad->neighbors[0] = tempq;
-        tc++;
-        tc = tc%4;
+        quad.corners[0] = tempc;
+        quad.neighbors[0] = tempq;
+        tc = (tc + 1) & 3;
     }
 }
 
 
 // if we found too many connect quads, remove those which probably do not belong.
-static int
-icvCleanFoundConnectedQuads( int quad_count, CvCBQuad **quad_group, CvSize pattern_size )
+int ChessBoardDetector::cleanFoundConnectedQuads(std::vector<ChessBoardQuad*>& quad_group)
 {
-    CvPoint2D32f center;
-    int i, j, k;
     // number of quads this pattern should contain
     int count = ((pattern_size.width + 1)*(pattern_size.height + 1) + 1)/2;
 
     // if we have more quadrangles than we should,
     // try to eliminate duplicates or ones which don't belong to the pattern rectangle...
-    if( quad_count <= count )
+    int quad_count = (int)quad_group.size();
+    if (quad_count <= count)
         return quad_count;
+    CV_DbgAssert(quad_count > 0);
 
     // create an array of quadrangle centers
-    cv::AutoBuffer<CvPoint2D32f> centers( quad_count );
-    cv::Ptr<CvMemStorage> temp_storage(cvCreateMemStorage(0));
+    cv::AutoBuffer<cv::Point2f> centers(quad_count);
 
-    for( i = 0; i < quad_count; i++ )
+    cv::Point2f center;
+    for (int i = 0; i < quad_count; ++i)
     {
-        CvPoint2D32f ci;
-        CvCBQuad* q = quad_group[i];
+        ChessBoardQuad* q = quad_group[i];
 
-        for( j = 0; j < 4; j++ )
-        {
-            CvPoint2D32f pt = q->corners[j]->pt;
-            ci.x += pt.x;
-            ci.y += pt.y;
-        }
-
-        ci.x *= 0.25f;
-        ci.y *= 0.25f;
+        const cv::Point2f ci = (
+                q->corners[0]->pt +
+                q->corners[1]->pt +
+                q->corners[2]->pt +
+                q->corners[3]->pt
+            ) * 0.25f;
 
         centers[i] = ci;
-        center.x += ci.x;
-        center.y += ci.y;
+        center += ci;
     }
-    center.x /= quad_count;
-    center.y /= quad_count;
+    center *= (1.0f / quad_count);
 
     // If we still have more quadrangles than we should,
     // we try to eliminate bad ones based on minimizing the bounding box.
     // We iteratively remove the point which reduces the size of
     // the bounding box of the blobs the most
     // (since we want the rectangle to be as small as possible)
-    // remove the quadrange that causes the biggest reduction
+    // remove the quadrangle that causes the biggest reduction
     // in pattern size until we have the correct number
-    for( ; quad_count > count; quad_count-- )
+    while (quad_count > count)
     {
         double min_box_area = DBL_MAX;
-        int skip, min_box_area_index = -1;
+        int min_box_area_index = -1;
 
         // For each point, calculate box area without that point
-        for( skip = 0; skip < quad_count; skip++ )
+        for (int skip = 0; skip < quad_count; ++skip)
         {
             // get bounding rectangle
-            CvPoint2D32f temp = centers[skip]; // temporarily make index 'skip' the same as
+            cv::Point2f temp = centers[skip]; // temporarily make index 'skip' the same as
             centers[skip] = center;            // pattern center (so it is not counted for convex hull)
-            CvMat pointMat = cvMat(1, quad_count, CV_32FC2, centers);
-            CvSeq *hull = cvConvexHull2( &pointMat, temp_storage, CV_CLOCKWISE, 1 );
+            std::vector<Point2f> hull;
+            Mat points(1, quad_count, CV_32FC2, &centers[0]);
+            cv::convexHull(points, hull, true);
             centers[skip] = temp;
-            double hull_area = fabs(cvContourArea(hull, CV_WHOLE_SEQ));
+            double hull_area = contourArea(hull, false);
 
             // remember smallest box area
-            if( hull_area < min_box_area )
+            if (hull_area < min_box_area)
             {
                 min_box_area = hull_area;
                 min_box_area_index = skip;
             }
-            cvClearMemStorage( temp_storage );
         }
 
-        CvCBQuad *q0 = quad_group[min_box_area_index];
+        ChessBoardQuad *q0 = quad_group[min_box_area_index];
 
         // remove any references to this quad as a neighbor
-        for( i = 0; i < quad_count; i++ )
+        for (int i = 0; i < quad_count; ++i)
         {
-            CvCBQuad *q = quad_group[i];
-            for( j = 0; j < 4; j++ )
+            ChessBoardQuad *q = quad_group[i];
+            CV_DbgAssert(q);
+            for (int j = 0; j < 4; ++j)
             {
-                if( q->neighbors[j] == q0 )
+                if (q->neighbors[j] == q0)
                 {
                     q->neighbors[j] = 0;
                     q->count--;
-                    for( k = 0; k < 4; k++ )
-                        if( q0->neighbors[k] == q )
+                    for (int k = 0; k < 4; ++k)
+                    {
+                        if (q0->neighbors[k] == q)
                         {
                             q0->neighbors[k] = 0;
                             q0->count--;
                             break;
                         }
+                    }
                     break;
                 }
             }
@@ -1410,115 +1482,113 @@ icvCleanFoundConnectedQuads( int quad_count, CvCBQuad **quad_group, CvSize patte
         quad_group[min_box_area_index] = quad_group[quad_count];
         centers[min_box_area_index] = centers[quad_count];
     }
+    quad_group.resize(quad_count);
 
     return quad_count;
 }
 
-//=====================================================================================
 
-static int
-icvFindConnectedQuads( CvCBQuad *quad, int quad_count, CvCBQuad **out_group,
-                       int group_idx, CvMemStorage* storage )
+
+void ChessBoardDetector::findConnectedQuads(std::vector<ChessBoardQuad*>& out_group, int group_idx)
 {
-    cv::Ptr<CvMemStorage> temp_storage(cvCreateChildMemStorage( storage ));
-    CvSeq* stack = cvCreateSeq( 0, sizeof(*stack), sizeof(void*), temp_storage );
-    int i, count = 0;
+    out_group.clear();
 
-    // Scan the array for a first unlabeled quad
-    for( i = 0; i < quad_count; i++ )
-    {
-        if( quad[i].count > 0 && quad[i].group_idx < 0)
-            break;
-    }
+    std::stack<ChessBoardQuad*> stack;
 
-    // Recursively find a group of connected quads starting from the seed quad[i]
-    if( i < quad_count )
+    int i = 0;
+    for (; i < all_quads_count; i++)
     {
-        CvCBQuad* q = &quad[i];
-        cvSeqPush( stack, &q );
-        out_group[count++] = q;
+        ChessBoardQuad* q = (ChessBoardQuad*)&all_quads[i];
+
+        // Scan the array for a first unlabeled quad
+        if (q->count <= 0 || q->group_idx >= 0) continue;
+
+        // Recursively find a group of connected quads starting from the seed all_quads[i]
+        stack.push(q);
+        out_group.push_back(q);
         q->group_idx = group_idx;
         q->ordered = false;
 
-        while( stack->total )
+        while (!stack.empty())
         {
-            cvSeqPop( stack, &q );
-            for( i = 0; i < 4; i++ )
+            q = stack.top(); CV_Assert(q);
+            stack.pop();
+            for (int k = 0; k < 4; k++ )
             {
-                CvCBQuad *neighbor = q->neighbors[i];
-                if( neighbor && neighbor->count > 0 && neighbor->group_idx < 0 )
+                CV_DbgAssert(q);
+                ChessBoardQuad *neighbor = q->neighbors[k];
+                if (neighbor && neighbor->count > 0 && neighbor->group_idx < 0 )
                 {
-                    cvSeqPush( stack, &neighbor );
-                    out_group[count++] = neighbor;
+                    stack.push(neighbor);
+                    out_group.push_back(neighbor);
                     neighbor->group_idx = group_idx;
                     neighbor->ordered = false;
                 }
             }
         }
+        break;
     }
-
-    return count;
 }
 
 
-//=====================================================================================
-
-static int
-icvCheckQuadGroup( CvCBQuad **quad_group, int quad_count,
-                   CvCBCorner **out_corners, CvSize pattern_size )
+int ChessBoardDetector::checkQuadGroup(const std::vector<ChessBoardQuad*>& quad_group, std::vector<ChessBoardCorner*>& out_corners)
 {
     const int ROW1 = 1000000;
     const int ROW2 = 2000000;
     const int ROW_ = 3000000;
-    int result = 0;
-    int i, out_corner_count = 0, corner_count = 0;
-    std::vector<CvCBCorner*> corners(quad_count*4);
 
-    int j, k, kk;
+    int quad_count = (int)quad_group.size();
+
+    std::vector<ChessBoardCorner*> corners(quad_count*4);
+    int corner_count = 0;
+    int result = 0;
+
     int width = 0, height = 0;
     int hist[5] = {0,0,0,0,0};
-    CvCBCorner* first = 0, *first2 = 0, *right, *cur, *below, *c;
+    //ChessBoardCorner* first = 0, *first2 = 0, *right, *cur, *below, *c;
 
     // build dual graph, which vertices are internal quad corners
     // and two vertices are connected iff they lie on the same quad edge
-    for( i = 0; i < quad_count; i++ )
+    for (int i = 0; i < quad_count; ++i)
     {
-        CvCBQuad* q = quad_group[i];
+        ChessBoardQuad* q = quad_group[i];
         /*CvScalar color = q->count == 0 ? cvScalar(0,255,255) :
                          q->count == 1 ? cvScalar(0,0,255) :
                          q->count == 2 ? cvScalar(0,255,0) :
                          q->count == 3 ? cvScalar(255,255,0) :
                                          cvScalar(255,0,0);*/
 
-        for( j = 0; j < 4; j++ )
+        for (int j = 0; j < 4; ++j)
         {
-            //cvLine( debug_img, cvPointFrom32f(q->corners[j]->pt), cvPointFrom32f(q->corners[(j+1)&3]->pt), color, 1, CV_AA, 0 );
-            if( q->neighbors[j] )
+            if (q->neighbors[j])
             {
-                CvCBCorner *a = q->corners[j], *b = q->corners[(j+1)&3];
+                int next_j = (j + 1) & 3;
+                ChessBoardCorner *a = q->corners[j], *b = q->corners[next_j];
                 // mark internal corners that belong to:
                 //   - a quad with a single neighbor - with ROW1,
                 //   - a quad with two neighbors     - with ROW2
                 // make the rest of internal corners with ROW_
                 int row_flag = q->count == 1 ? ROW1 : q->count == 2 ? ROW2 : ROW_;
 
-                if( a->row == 0 )
+                if (a->row == 0)
                 {
                     corners[corner_count++] = a;
                     a->row = row_flag;
                 }
-                else if( a->row > row_flag )
-                    a->row = row_flag;
-
-                if( q->neighbors[(j+1)&3] )
+                else if (a->row > row_flag)
                 {
-                    if( a->count >= 4 || b->count >= 4 )
+                    a->row = row_flag;
+                }
+
+                if (q->neighbors[next_j])
+                {
+                    if (a->count >= 4 || b->count >= 4)
                         goto finalize;
-                    for( k = 0; k < 4; k++ )
+                    for (int k = 0; k < 4; ++k)
                     {
-                        if( a->neighbors[k] == b )
+                        if (a->neighbors[k] == b)
                             goto finalize;
-                        if( b->neighbors[k] == a )
+                        if (b->neighbors[k] == a)
                             goto finalize;
                     }
                     a->neighbors[a->count++] = b;
@@ -1528,24 +1598,26 @@ icvCheckQuadGroup( CvCBQuad **quad_group, int quad_count,
         }
     }
 
-    if( corner_count != pattern_size.width*pattern_size.height )
+    if (corner_count != pattern_size.width*pattern_size.height)
         goto finalize;
 
-    for( i = 0; i < corner_count; i++ )
+{
+    ChessBoardCorner* first = NULL, *first2 = NULL;
+    for (int i = 0; i < corner_count; ++i)
     {
         int n = corners[i]->count;
-        assert( 0 <= n && n <= 4 );
+        CV_DbgAssert(0 <= n && n <= 4);
         hist[n]++;
-        if( !first && n == 2 )
+        if (!first && n == 2)
         {
-            if( corners[i]->row == ROW1 )
+            if (corners[i]->row == ROW1)
                 first = corners[i];
-            else if( !first2 && corners[i]->row == ROW2 )
+            else if (!first2 && corners[i]->row == ROW2)
                 first2 = corners[i];
         }
     }
 
-    // start with a corner that belongs to a quad with a signle neighbor.
+    // start with a corner that belongs to a quad with a single neighbor.
     // if we do not have such, start with a corner of a quad with two neighbors.
     if( !first )
         first = first2;
@@ -1554,18 +1626,20 @@ icvCheckQuadGroup( CvCBQuad **quad_group, int quad_count,
         hist[3] != (pattern_size.width + pattern_size.height)*2 - 8 )
         goto finalize;
 
-    cur = first;
-    right = below = 0;
-    out_corners[out_corner_count++] = cur;
+    ChessBoardCorner* cur = first;
+    ChessBoardCorner* right = NULL;
+    ChessBoardCorner* below = NULL;
+    out_corners.clear();
+    out_corners.push_back(cur);
 
-    for( k = 0; k < 4; k++ )
+    for (int k = 0; k < 4; ++k)
     {
-        c = cur->neighbors[k];
-        if( c )
+        ChessBoardCorner* c = cur->neighbors[k];
+        if (c)
         {
-            if( !right )
+            if (!right)
                 right = c;
-            else if( !below )
+            else if (!below)
                 below = c;
         }
     }
@@ -1575,31 +1649,31 @@ icvCheckQuadGroup( CvCBQuad **quad_group, int quad_count,
         goto finalize;
 
     cur->row = 0;
-    //cvCircle( debug_img, cvPointFrom32f(cur->pt), 3, cvScalar(0,255,0), -1, 8, 0 );
 
     first = below; // remember the first corner in the next row
+
     // find and store the first row (or column)
-    for(j=1;;j++)
+    while( 1 )
     {
         right->row = 0;
-        out_corners[out_corner_count++] = right;
-        //cvCircle( debug_img, cvPointFrom32f(right->pt), 3, cvScalar(0,255-j*10,0), -1, 8, 0 );
+        out_corners.push_back(right);
         if( right->count == 2 )
             break;
-        if( right->count != 3 || out_corner_count >= MAX(pattern_size.width,pattern_size.height) )
+        if( right->count != 3 || (int)out_corners.size() >= std::max(pattern_size.width,pattern_size.height) )
             goto finalize;
         cur = right;
-        for( k = 0; k < 4; k++ )
+        for (int k = 0; k < 4; ++k)
         {
-            c = cur->neighbors[k];
-            if( c && c->row > 0 )
+            ChessBoardCorner* c = cur->neighbors[k];
+            if (c && c->row > 0)
             {
-                for( kk = 0; kk < 4; kk++ )
+                int kk = 0;
+                for (; kk < 4; ++kk)
                 {
-                    if( c->neighbors[kk] == below )
+                    if (c->neighbors[kk] == below)
                         break;
                 }
-                if( kk < 4 )
+                if (kk < 4)
                     below = c;
                 else
                     right = c;
@@ -1607,109 +1681,113 @@ icvCheckQuadGroup( CvCBQuad **quad_group, int quad_count,
         }
     }
 
-    width = out_corner_count;
-    if( width == pattern_size.width )
+    width = (int)out_corners.size();
+    if (width == pattern_size.width)
         height = pattern_size.height;
-    else if( width == pattern_size.height )
+    else if (width == pattern_size.height)
         height = pattern_size.width;
     else
         goto finalize;
 
     // find and store all the other rows
-    for( i = 1; ; i++ )
+    for (int i = 1; ; ++i)
     {
         if( !first )
             break;
         cur = first;
         first = 0;
-        for( j = 0;; j++ )
+        int j = 0;
+        for (; ; ++j)
         {
             cur->row = i;
-            out_corners[out_corner_count++] = cur;
-            //cvCircle( debug_img, cvPointFrom32f(cur->pt), 3, cvScalar(0,0,255-j*10), -1, 8, 0 );
-            if( cur->count == 2 + (i < height-1) && j > 0 )
+            out_corners.push_back(cur);
+            if (cur->count == 2 + (i < height-1) && j > 0)
                 break;
 
             right = 0;
 
             // find a neighbor that has not been processed yet
             // and that has a neighbor from the previous row
-            for( k = 0; k < 4; k++ )
+            for (int k = 0; k < 4; ++k)
             {
-                c = cur->neighbors[k];
-                if( c && c->row > i )
+                ChessBoardCorner* c = cur->neighbors[k];
+                if (c && c->row > i)
                 {
-                    for( kk = 0; kk < 4; kk++ )
+                    int kk = 0;
+                    for (; kk < 4; ++kk)
                     {
-                        if( c->neighbors[kk] && c->neighbors[kk]->row == i-1 )
+                        if (c->neighbors[kk] && c->neighbors[kk]->row == i-1)
                             break;
                     }
-                    if( kk < 4 )
+                    if(kk < 4)
                     {
                         right = c;
-                        if( j > 0 )
+                        if (j > 0)
                             break;
                     }
-                    else if( j == 0 )
+                    else if (j == 0)
                         first = c;
                 }
             }
-            if( !right )
+            if (!right)
                 goto finalize;
             cur = right;
         }
 
-        if( j != width - 1 )
+        if (j != width - 1)
             goto finalize;
     }
 
-    if( out_corner_count != corner_count )
+    if ((int)out_corners.size() != corner_count)
         goto finalize;
 
     // check if we need to transpose the board
-    if( width != pattern_size.width )
+    if (width != pattern_size.width)
     {
-        CV_SWAP( width, height, k );
+        std::swap(width, height);
 
-        memcpy( &corners[0], out_corners, corner_count*sizeof(corners[0]) );
-        for( i = 0; i < height; i++ )
-            for( j = 0; j < width; j++ )
-                out_corners[i*width + j] = corners[j*height + i];
+        std::vector<ChessBoardCorner*> tmp(out_corners);
+        for (int i = 0; i < height; ++i)
+            for (int j = 0; j < width; ++j)
+                out_corners[i*width + j] = tmp[j*height + i];
     }
 
     // check if we need to revert the order in each row
     {
-        CvPoint2D32f p0 = out_corners[0]->pt, p1 = out_corners[pattern_size.width-1]->pt,
-                     p2 = out_corners[pattern_size.width]->pt;
+        cv::Point2f p0 = out_corners[0]->pt,
+                    p1 = out_corners[pattern_size.width-1]->pt,
+                    p2 = out_corners[pattern_size.width]->pt;
         if( (p1.x - p0.x)*(p2.y - p1.y) - (p1.y - p0.y)*(p2.x - p1.x) < 0 )
         {
-            if( width % 2 == 0 )
+            if (width % 2 == 0)
             {
-                for( i = 0; i < height; i++ )
-                    for( j = 0; j < width/2; j++ )
-                        CV_SWAP( out_corners[i*width+j], out_corners[i*width+width-j-1], c );
+                for (int i = 0; i < height; ++i)
+                    for (int j = 0; j < width/2; ++j)
+                        std::swap(out_corners[i*width+j], out_corners[i*width+width-j-1]);
             }
             else
             {
-                for( j = 0; j < width; j++ )
-                    for( i = 0; i < height/2; i++ )
-                        CV_SWAP( out_corners[i*width+j], out_corners[(height - i - 1)*width+j], c );
+                for (int j = 0; j < width; ++j)
+                    for (int i = 0; i < height/2; ++i)
+                        std::swap(out_corners[i*width+j], out_corners[(height - i - 1)*width+j]);
             }
         }
     }
 
     result = corner_count;
+}
 
 finalize:
-
-    if( result <= 0 )
+    if (result <= 0)
     {
-        corner_count = MIN( corner_count, pattern_size.width*pattern_size.height );
-        for( i = 0; i < corner_count; i++ )
+        corner_count = std::min(corner_count, pattern_size.area());
+        out_corners.resize(corner_count);
+        for (int i = 0; i < corner_count; i++)
             out_corners[i] = corners[i];
+
         result = -corner_count;
 
-        if (result == -pattern_size.width*pattern_size.height)
+        if (result == -pattern_size.area())
             result = -result;
     }
 
@@ -1718,19 +1796,12 @@ finalize:
 
 
 
-
-//=====================================================================================
-
-static void icvFindQuadNeighbors( CvCBQuad *quads, int quad_count )
+void ChessBoardDetector::findQuadNeighbors()
 {
-    const float thresh_scale = 1.f;
-    int idx, i, k, j;
-    float dx, dy, dist;
-
-    // find quad neighbors
-    for( idx = 0; idx < quad_count; idx++ )
+    NeighborsFinder neighborsFinder(*this);
+    for (int idx = 0; idx < all_quads_count; idx++)
     {
-        CvCBQuad* cur_quad = &quads[idx];
+        ChessBoardQuad& cur_quad = (ChessBoardQuad&)all_quads[idx];
 
         // choose the points of the current quadrangle that are close to
         // some points of the other quadrangles
@@ -1738,300 +1809,311 @@ static void icvFindQuadNeighbors( CvCBQuad *quads, int quad_count )
         // checker board). Search only in other quadrangles!
 
         // for each corner of this quadrangle
-        for( i = 0; i < 4; i++ )
+        for (int i = 0; i < 4; i++)
         {
-            CvPoint2D32f pt;
-            float min_dist = FLT_MAX;
-            int closest_corner_idx = -1;
-            CvCBQuad *closest_quad = 0;
-            CvCBCorner *closest_corner = 0;
-
-            if( cur_quad->neighbors[i] )
+            if (cur_quad.neighbors[i])
                 continue;
 
-            pt = cur_quad->corners[i]->pt;
+            const cv::Point2f pt = neighborsFinder.all_quads_pts[(idx << 2) + i];
 
-            // find the closest corner in all other quadrangles
-            for( k = 0; k < quad_count; k++ )
-            {
-                if( k == idx )
-                    continue;
+            float min_sqr_dist = FLT_MAX;
 
-                for( j = 0; j < 4; j++ )
-                {
-                    if( quads[k].neighbors[j] )
-                        continue;
+            int closest_quad_idx = -1;
+            int closest_corner_idx = -1;
 
-                    dx = pt.x - quads[k].corners[j]->pt.x;
-                    dy = pt.y - quads[k].corners[j]->pt.y;
-                    dist = dx * dx + dy * dy;
+            float sqr_radius = cur_quad.edge_sqr_len * neighborsFinder.thresh_sqr_scale + 1;
 
-                    if( dist < min_dist &&
-                        dist <= cur_quad->edge_len*thresh_scale &&
-                        dist <= quads[k].edge_len*thresh_scale )
-                    {
-                        // check edge lengths, make sure they're compatible
-                        // edges that are different by more than 1:4 are rejected
-                        float ediff = cur_quad->edge_len - quads[k].edge_len;
-                        if (ediff > 32*cur_quad->edge_len ||
-                            ediff > 32*quads[k].edge_len)
-                        {
-                            PRINTF("Incompatible edge lengths\n");
-                            continue;
-                        }
-                        closest_corner_idx = j;
-                        closest_quad = &quads[k];
-                        min_dist = dist;
-                    }
-                }
-            }
+            cv::Point2f closest_corner_pt;
 
-            // we found a matching corner point?
-            if( closest_corner_idx >= 0 && min_dist < FLT_MAX )
-            {
-                // If another point from our current quad is closer to the found corner
-                // than the current one, then we don't count this one after all.
-                // This is necessary to support small squares where otherwise the wrong
-                // corner will get matched to closest_quad;
-                closest_corner = closest_quad->corners[closest_corner_idx];
+            bool found = neighborsFinder.findCornerNeighbor(
+                idx,
+                i,
+                pt,
+                min_sqr_dist,
+                sqr_radius,
+                closest_quad_idx,
+                closest_corner_idx,
+                closest_corner_pt);
 
-                for( j = 0; j < 4; j++ )
-                {
-                    if( cur_quad->neighbors[j] == closest_quad )
-                        break;
+            if (!found)
+                continue;
 
-                    dx = closest_corner->pt.x - cur_quad->corners[j]->pt.x;
-                    dy = closest_corner->pt.y - cur_quad->corners[j]->pt.y;
+            sqr_radius = min_sqr_dist + 1;
+            min_sqr_dist = FLT_MAX;
 
-                    if( dx * dx + dy * dy < min_dist )
-                        break;
-                }
+            int closest_closest_quad_idx = -1;
+            int closest_closest_corner_idx = -1;
 
-                if( j < 4 || cur_quad->count >= 4 || closest_quad->count >= 4 )
-                    continue;
+            cv::Point2f closest_closest_corner_pt;
 
-                // Check that each corner is a neighbor of different quads
-                for( j = 0; j < closest_quad->count; j++ )
-                {
-                    if( closest_quad->neighbors[j] == cur_quad )
-                        break;
-                }
-                if( j < closest_quad->count )
-                    continue;
+            found = neighborsFinder.findCornerNeighbor(
+                closest_quad_idx,
+                closest_corner_idx,
+                closest_corner_pt,
+                min_sqr_dist,
+                sqr_radius,
+                closest_closest_quad_idx,
+                closest_closest_corner_idx,
+                closest_closest_corner_pt);
 
-                // check whether the closest corner to closest_corner
-                // is different from cur_quad->corners[i]->pt
-                for( k = 0; k < quad_count; k++ )
-                {
-                    CvCBQuad* q = &quads[k];
-                    if( k == idx || q == closest_quad )
-                        continue;
+            if (!found)
+                continue;
 
-                    for( j = 0; j < 4; j++ )
-                        if( !q->neighbors[j] )
-                        {
-                            dx = closest_corner->pt.x - q->corners[j]->pt.x;
-                            dy = closest_corner->pt.y - q->corners[j]->pt.y;
-                            dist = dx*dx + dy*dy;
-                            if( dist < min_dist )
-                                break;
-                        }
-                    if( j < 4 )
-                        break;
-                }
+            if (closest_closest_quad_idx != idx ||
+                closest_closest_corner_idx != i ||
+                closest_closest_corner_pt != pt)
+                continue;
 
-                if( k < quad_count )
-                    continue;
+            ChessBoardQuad* closest_quad = &all_quads[closest_quad_idx];
+            ChessBoardCorner& closest_corner = *closest_quad->corners[closest_corner_idx];
+            closest_corner.pt = (pt + closest_corner_pt) * 0.5f;
 
-                closest_corner->pt.x = (pt.x + closest_corner->pt.x) * 0.5f;
-                closest_corner->pt.y = (pt.y + closest_corner->pt.y) * 0.5f;
+            // We've found one more corner - remember it
+            cur_quad.count++;
+            cur_quad.neighbors[i] = closest_quad;
+            cur_quad.corners[i] = &closest_corner;
 
-                // We've found one more corner - remember it
-                cur_quad->count++;
-                cur_quad->neighbors[i] = closest_quad;
-                cur_quad->corners[i] = closest_corner;
-
-                closest_quad->count++;
-                closest_quad->neighbors[closest_corner_idx] = cur_quad;
-            }
+            closest_quad->count++;
+            closest_quad->neighbors[closest_corner_idx] = &cur_quad;
         }
     }
 }
 
-//=====================================================================================
 
 // returns corners in clockwise order
 // corners don't necessarily start at same position on quad (e.g.,
 //   top left corner)
-
-static int
-icvGenerateQuads( CvCBQuad **out_quads, CvCBCorner **out_corners,
-                  CvMemStorage *storage, CvMat *image, int flags, int *max_quad_buf_size )
+void ChessBoardDetector::generateQuads(const cv::Mat& image_, int flags, int dilations)
 {
+    binarized_image = image_;  // save for debug purposes
+
     int quad_count = 0;
-    cv::Ptr<CvMemStorage> temp_storage;
 
-    if( out_quads )
-        *out_quads = 0;
+    all_quads.deallocate();
+    all_corners.deallocate();
 
-    if( out_corners )
-        *out_corners = 0;
+    // empiric bound for minimal allowed area for squares
+    const int min_area = 25; //cvRound( image->cols * image->rows * .03 * 0.01 * 0.92 );
 
-    CvSeq *src_contour = 0;
-    CvSeq *root;
-    CvContourEx* board = 0;
-    CvContourScanner scanner;
-    int i, idx, min_size;
+    bool filterQuads = (flags & CALIB_CB_FILTER_QUADS) != 0;
 
-    CV_Assert( out_corners && out_quads );
+    std::vector<std::vector<Point> > contours;
+    std::vector<Vec4i> hierarchy;
 
-    // empiric bound for minimal allowed perimeter for squares
-    min_size = 25; //cvRound( image->cols * image->rows * .03 * 0.01 * 0.92 );
+    cv::findContours(image_, contours, hierarchy, RETR_CCOMP, CHAIN_APPROX_SIMPLE);
 
-    // create temporary storage for contours and the sequence of pointers to found quadrangles
-    temp_storage.reset(cvCreateChildMemStorage( storage ));
-    root = cvCreateSeq( 0, sizeof(CvSeq), sizeof(CvSeq*), temp_storage );
-
-    // initialize contour retrieving routine
-    scanner = cvStartFindContours( image, temp_storage, sizeof(CvContourEx),
-                                   CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE );
-
-    // get all the contours one by one
-    while( (src_contour = cvFindNextContour( scanner )) != 0 )
+    if (contours.empty())
     {
-        CvSeq *dst_contour = 0;
-        CvRect rect = ((CvContour*)src_contour)->rect;
-
-        // reject contours with too small perimeter
-        if( CV_IS_SEQ_HOLE(src_contour) && rect.width*rect.height >= min_size )
-        {
-            const int min_approx_level = 1, max_approx_level = MAX_CONTOUR_APPROX;
-            int approx_level;
-            for( approx_level = min_approx_level; approx_level <= max_approx_level; approx_level++ )
-            {
-                dst_contour = cvApproxPoly( src_contour, sizeof(CvContour), temp_storage,
-                                            CV_POLY_APPROX_DP, (float)approx_level );
-                if( dst_contour->total == 4 )
-                    break;
-
-                // we call this again on its own output, because sometimes
-                // cvApproxPoly() does not simplify as much as it should.
-                dst_contour = cvApproxPoly( dst_contour, sizeof(CvContour), temp_storage,
-                                            CV_POLY_APPROX_DP, (float)approx_level );
-
-                if( dst_contour->total == 4 )
-                    break;
-            }
-
-            // reject non-quadrangles
-            if( dst_contour->total == 4 && cvCheckContourConvexity(dst_contour) )
-            {
-                CvPoint pt[4];
-                double d1, d2, p = cvContourPerimeter(dst_contour);
-                double area = fabs(cvContourArea(dst_contour, CV_WHOLE_SEQ));
-                double dx, dy;
-
-                for( i = 0; i < 4; i++ )
-                    pt[i] = *(CvPoint*)cvGetSeqElem(dst_contour, i);
-
-                dx = pt[0].x - pt[2].x;
-                dy = pt[0].y - pt[2].y;
-                d1 = sqrt(dx*dx + dy*dy);
-
-                dx = pt[1].x - pt[3].x;
-                dy = pt[1].y - pt[3].y;
-                d2 = sqrt(dx*dx + dy*dy);
-
-                // philipg.  Only accept those quadrangles which are more square
-                // than rectangular and which are big enough
-                double d3, d4;
-                dx = pt[0].x - pt[1].x;
-                dy = pt[0].y - pt[1].y;
-                d3 = sqrt(dx*dx + dy*dy);
-                dx = pt[1].x - pt[2].x;
-                dy = pt[1].y - pt[2].y;
-                d4 = sqrt(dx*dx + dy*dy);
-                if( !(flags & CV_CALIB_CB_FILTER_QUADS) ||
-                    (d3*4 > d4 && d4*4 > d3 && d3*d4 < area*1.5 && area > min_size &&
-                    d1 >= 0.15 * p && d2 >= 0.15 * p) )
-                {
-                    CvContourEx* parent = (CvContourEx*)(src_contour->v_prev);
-                    parent->counter++;
-                    if( !board || board->counter < parent->counter )
-                        board = parent;
-                    dst_contour->v_prev = (CvSeq*)parent;
-                    //for( i = 0; i < 4; i++ ) cvLine( debug_img, pt[i], pt[(i+1)&3], cvScalar(200,255,255), 1, CV_AA, 0 );
-                    cvSeqPush( root, &dst_contour );
-                }
-            }
-        }
+        CV_LOG_DEBUG(NULL, "calib3d(chessboard): cv::findContours() returns no contours");
+        return;
     }
 
-    // finish contour retrieving
-    cvEndFindContours( &scanner );
+    std::vector<int> contour_child_counter(contours.size(), 0);
+    int boardIdx = -1;
 
-    // allocate quad & corner buffers
-    *max_quad_buf_size = MAX(1, (root->total+root->total / 2)) * 2;
-    *out_quads = (CvCBQuad*)cvAlloc(*max_quad_buf_size * sizeof((*out_quads)[0]));
-    *out_corners = (CvCBCorner*)cvAlloc(*max_quad_buf_size * 4 * sizeof((*out_corners)[0]));
+    std::vector<QuadCountour> contour_quads;
 
-    // Create array of quads structures
-    for( idx = 0; idx < root->total; idx++ )
+    for (int idx = (int)(contours.size() - 1); idx >= 0; --idx)
     {
-        CvCBQuad* q = &(*out_quads)[quad_count];
-        src_contour = *(CvSeq**)cvGetSeqElem( root, idx );
-        if( (flags & CV_CALIB_CB_FILTER_QUADS) && src_contour->v_prev != (CvSeq*)board )
+        int parentIdx = hierarchy[idx][3];
+        if (hierarchy[idx][2] != -1 || parentIdx == -1)  // holes only (no child contours and with parent)
+            continue;
+        const std::vector<Point>& contour = contours[idx];
+
+        Rect contour_rect = boundingRect(contour);
+        if (contour_rect.area() < min_area)
             continue;
 
-        // reset group ID
-        memset( q, 0, sizeof(*q) );
-        q->group_idx = -1;
-        assert( src_contour->total == 4 );
-        for( i = 0; i < 4; i++ )
-        {
-            CvPoint2D32f pt = cvPointTo32f(*(CvPoint*)cvGetSeqElem(src_contour, i));
-            CvCBCorner* corner = &(*out_corners)[quad_count*4 + i];
+        std::vector<Point> approx_contour = contour;
 
-            memset( corner, 0, sizeof(*corner) );
-            corner->pt = pt;
-            q->corners[i] = corner;
-        }
-        q->edge_len = FLT_MAX;
-        for( i = 0; i < 4; i++ )
+        const int min_approx_level = 1, max_approx_level = MAX_CONTOUR_APPROX;
+        for (int approx_level = min_approx_level; approx_contour.size() > 4 && approx_level <= max_approx_level; approx_level++ )
         {
-            float dx = q->corners[i]->pt.x - q->corners[(i+1)&3]->pt.x;
-            float dy = q->corners[i]->pt.y - q->corners[(i+1)&3]->pt.y;
-            float d = dx*dx + dy*dy;
-            if( q->edge_len > d )
-                q->edge_len = d;
+            approxPolyDP(approx_contour, approx_contour, (float)approx_level, true);
         }
-        quad_count++;
+
+        // reject non-quadrangles
+        if (approx_contour.size() != 4)
+            continue;
+        if (!cv::isContourConvex(approx_contour))
+            continue;
+
+        cv::Point pt[4];
+        for (int i = 0; i < 4; ++i)
+            pt[i] = approx_contour[i];
+        CV_LOG_VERBOSE(NULL, 9, "... contours(" << contour_quads.size() << " added):" << pt[0] << " " << pt[1] << " " << pt[2] << " " << pt[3]);
+
+        if (filterQuads)
+        {
+            double p = cv::arcLength(approx_contour, true);
+            double area = cv::contourArea(approx_contour, false);
+
+            double d1 = sqrt(normL2Sqr<double>(pt[0] - pt[2]));
+            double d2 = sqrt(normL2Sqr<double>(pt[1] - pt[3]));
+
+            // philipg.  Only accept those quadrangles which are more square
+            // than rectangular and which are big enough
+            double d3 = sqrt(normL2Sqr<double>(pt[0] - pt[1]));
+            double d4 = sqrt(normL2Sqr<double>(pt[1] - pt[2]));
+            if (!(d3*4 > d4 && d4*4 > d3 && d3*d4 < area*1.5 && area > min_area &&
+                d1 >= 0.15 * p && d2 >= 0.15 * p))
+                continue;
+        }
+
+        contour_child_counter[parentIdx]++;
+        if (boardIdx != parentIdx && (boardIdx < 0 || contour_child_counter[boardIdx] < contour_child_counter[parentIdx]))
+            boardIdx = parentIdx;
+
+        contour_quads.emplace_back(pt, parentIdx);
     }
 
-    return quad_count;
+    size_t total = contour_quads.size();
+    size_t max_quad_buf_size = std::max((size_t)2, total * 3);
+    all_quads.allocate(max_quad_buf_size);
+    all_corners.allocate(max_quad_buf_size * 4);
+
+    // Create array of quads structures
+    for (size_t idx = 0; idx < total; ++idx)
+    {
+        QuadCountour& qc = contour_quads[idx];
+        if (filterQuads && qc.parent_contour != boardIdx)
+            continue;
+
+        int quad_idx = quad_count++;
+        ChessBoardQuad& q = all_quads[quad_idx];
+
+        // reset group ID
+        q = ChessBoardQuad();
+        for (int i = 0; i < 4; ++i)
+        {
+            Point2f pt(qc.pt[i]);
+            ChessBoardCorner& corner = all_corners[quad_idx * 4 + i];
+
+            corner = ChessBoardCorner(pt);
+            q.corners[i] = &corner;
+        }
+        q.edge_sqr_len = FLT_MAX;
+        for (int i = 0; i < 4; ++i)
+        {
+            float sqr_d = normL2Sqr<float>(q.corners[i]->pt - q.corners[(i+1)&3]->pt);
+            q.edge_sqr_len = std::min(q.edge_sqr_len, sqr_d);
+        }
+
+        const int edge_len_compensation = 2 * dilations;
+        q.edge_sqr_len += 2 * sqrt(q.edge_sqr_len) * edge_len_compensation + edge_len_compensation * edge_len_compensation;
+    }
+
+    all_quads_count = quad_count;
+
+    CV_LOG_VERBOSE(NULL, 3, "Total quad contours: " << total);
+    CV_LOG_VERBOSE(NULL, 3, "max_quad_buf_size=" << max_quad_buf_size);
+    CV_LOG_VERBOSE(NULL, 3, "filtered quad_count=" << quad_count);
+}
+
+bool ChessBoardDetector::processQuads(std::vector<cv::Point2f>& out_corners, int &prev_sqr_size)
+{
+    out_corners.resize(0);
+    if (all_quads_count <= 0)
+        return false;
+
+    size_t max_quad_buf_size = all_quads.size();
+
+    // Find quad's neighbors
+    findQuadNeighbors();
+
+    // allocate extra for adding in orderFoundQuads
+    std::vector<ChessBoardQuad*> quad_group;
+    std::vector<ChessBoardCorner*> corner_group; corner_group.reserve(max_quad_buf_size * 4);
+
+    for (int group_idx = 0; ; group_idx++)
+    {
+        findConnectedQuads(quad_group, group_idx);
+        if (quad_group.empty())
+            break;
+
+        int count = (int)quad_group.size();
+
+        // order the quad corners globally
+        // maybe delete or add some
+        DPRINTF("Starting ordering of inner quads (%d)", count);
+        count = orderFoundConnectedQuads(quad_group);
+        DPRINTF("Finished ordering of inner quads (%d)", count);
+
+        if (count == 0)
+            continue;       // haven't found inner quads
+
+        // If count is more than it should be, this will remove those quads
+        // which cause maximum deviation from a nice square pattern.
+        count = cleanFoundConnectedQuads(quad_group);
+        DPRINTF("Connected group: %d, count: %d", group_idx, count);
+
+        count = checkQuadGroup(quad_group, corner_group);
+        DPRINTF("Connected group: %d, count: %d", group_idx, count);
+
+        int n = count > 0 ? pattern_size.width * pattern_size.height : -count;
+        n = std::min(n, pattern_size.width * pattern_size.height);
+        float sum_dist = 0;
+        int total = 0;
+
+        for(int i = 0; i < n; i++ )
+        {
+            int ni = 0;
+            float sum = corner_group[i]->sumDist(ni);
+            sum_dist += sum;
+            total += ni;
+        }
+        prev_sqr_size = cvRound(sum_dist/std::max(total, 1));
+
+        if (count > 0 || (-count > (int)out_corners.size()))
+        {
+            // copy corners to output array
+            out_corners.clear();
+            out_corners.reserve(n);
+            for (int i = 0; i < n; ++i)
+                out_corners.push_back(corner_group[i]->pt);
+
+            if (count == pattern_size.width*pattern_size.height
+                    && checkBoardMonotony(out_corners))
+            {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 
-CV_IMPL void
-cvDrawChessboardCorners( CvArr* _image, CvSize pattern_size,
-                         CvPoint2D32f* corners, int count, int found )
+
+void drawChessboardCorners( InputOutputArray image, Size patternSize,
+                                InputArray _corners,
+                                bool patternWasFound )
 {
+    CV_INSTRUMENT_REGION();
+
+    int type = image.type();
+    int cn = CV_MAT_CN(type);
+    CV_CheckType(type, cn == 1 || cn == 3 || cn == 4,
+            "Number of channels must be 1, 3 or 4" );
+
+    int depth = CV_MAT_DEPTH(type);
+    CV_CheckType(type, depth == CV_8U || depth == CV_16U || depth == CV_32F,
+            "Only 8-bit, 16-bit or floating-point 32-bit images are supported");
+
+    if (_corners.empty())
+        return;
+    Mat corners = _corners.getMat();
+    const Point2f* corners_data = corners.ptr<Point2f>(0);
+    CV_DbgAssert(corners_data);
+    int nelems = corners.checkVector(2, CV_32F, true);
+    CV_Assert(nelems >= 0);
+
     const int shift = 0;
     const int radius = 4;
     const int r = radius*(1 << shift);
-    int i;
-    CvMat stub, *image;
+
     double scale = 1;
-    int type, cn, line_type;
-
-    image = cvGetMat( _image, &stub );
-
-    type = CV_MAT_TYPE(image->type);
-    cn = CV_MAT_CN(type);
-    if( cn != 1 && cn != 3 && cn != 4 )
-        CV_Error( CV_StsUnsupportedFormat, "Number of channels must be 1, 3 or 4" );
-
-    switch( CV_MAT_DEPTH(image->type) )
+    switch (depth)
     {
     case CV_8U:
         scale = 1;
@@ -2042,219 +2124,173 @@ cvDrawChessboardCorners( CvArr* _image, CvSize pattern_size,
     case CV_32F:
         scale = 1./255;
         break;
-    default:
-        CV_Error( CV_StsUnsupportedFormat,
-            "Only 8-bit, 16-bit or floating-point 32-bit images are supported" );
     }
 
-    line_type = type == CV_8UC1 || type == CV_8UC3 ? CV_AA : 8;
+    int line_type = (type == CV_8UC1 || type == CV_8UC3) ? LINE_AA : LINE_8;
 
-    if( !found )
+    if (!patternWasFound)
     {
-        CvScalar color(0,0,255,0);
-        if( cn == 1 )
-            color = cvScalarAll(200);
-        color.val[0] *= scale;
-        color.val[1] *= scale;
-        color.val[2] *= scale;
-        color.val[3] *= scale;
+        Scalar color(0,0,255,0);
+        if (cn == 1)
+            color = Scalar::all(200);
+        color *= scale;
 
-        for( i = 0; i < count; i++ )
+        for (int i = 0; i < nelems; i++ )
         {
-            CvPoint pt;
-            pt.x = cvRound(corners[i].x*(1 << shift));
-            pt.y = cvRound(corners[i].y*(1 << shift));
-            cvLine( image, cvPoint( pt.x - r, pt.y - r ),
-                    cvPoint( pt.x + r, pt.y + r ), color, 1, line_type, shift );
-            cvLine( image, cvPoint( pt.x - r, pt.y + r),
-                    cvPoint( pt.x + r, pt.y - r), color, 1, line_type, shift );
-            cvCircle( image, pt, r+(1<<shift), color, 1, line_type, shift );
+            cv::Point2i pt(
+                    cvRound(corners_data[i].x*(1 << shift)),
+                    cvRound(corners_data[i].y*(1 << shift))
+            );
+            line(image, Point(pt.x - r, pt.y - r), Point( pt.x + r, pt.y + r), color, 1, line_type, shift);
+            line(image, Point(pt.x - r, pt.y + r), Point( pt.x + r, pt.y - r), color, 1, line_type, shift);
+            circle(image, pt, r+(1<<shift), color, 1, line_type, shift);
         }
     }
     else
     {
-        int x, y;
-        CvPoint prev_pt;
         const int line_max = 7;
-        static const CvScalar line_colors[line_max] =
+        static const int line_colors[line_max][4] =
         {
-            CvScalar(0,0,255),
-            CvScalar(0,128,255),
-            CvScalar(0,200,200),
-            CvScalar(0,255,0),
-            CvScalar(200,200,0),
-            CvScalar(255,0,0),
-            CvScalar(255,0,255)
+            {0,0,255,0},
+            {0,128,255,0},
+            {0,200,200,0},
+            {0,255,0,0},
+            {200,200,0,0},
+            {255,0,0,0},
+            {255,0,255,0}
         };
 
-        for( y = 0, i = 0; y < pattern_size.height; y++ )
+        cv::Point2i prev_pt;
+        for (int y = 0, i = 0; y < patternSize.height; y++)
         {
-            CvScalar color = line_colors[y % line_max];
-            if( cn == 1 )
-                color = cvScalarAll(200);
-            color.val[0] *= scale;
-            color.val[1] *= scale;
-            color.val[2] *= scale;
-            color.val[3] *= scale;
+            const int* line_color = &line_colors[y % line_max][0];
+            Scalar color(line_color[0], line_color[1], line_color[2], line_color[3]);
+            if (cn == 1)
+                color = Scalar::all(200);
+            color *= scale;
 
-            for( x = 0; x < pattern_size.width; x++, i++ )
+            for (int x = 0; x < patternSize.width; x++, i++)
             {
-                CvPoint pt;
-                pt.x = cvRound(corners[i].x*(1 << shift));
-                pt.y = cvRound(corners[i].y*(1 << shift));
+                cv::Point2i pt(
+                        cvRound(corners_data[i].x*(1 << shift)),
+                        cvRound(corners_data[i].y*(1 << shift))
+                );
 
-                if( i != 0 )
-                    cvLine( image, prev_pt, pt, color, 1, line_type, shift );
+                if (i != 0)
+                    line(image, prev_pt, pt, color, 1, line_type, shift);
 
-                cvLine( image, cvPoint(pt.x - r, pt.y - r),
-                        cvPoint(pt.x + r, pt.y + r), color, 1, line_type, shift );
-                cvLine( image, cvPoint(pt.x - r, pt.y + r),
-                        cvPoint(pt.x + r, pt.y - r), color, 1, line_type, shift );
-                cvCircle( image, pt, r+(1<<shift), color, 1, line_type, shift );
+                line(image, Point(pt.x - r, pt.y - r), Point( pt.x + r, pt.y + r), color, 1, line_type, shift);
+                line(image, Point(pt.x - r, pt.y + r), Point( pt.x + r, pt.y - r), color, 1, line_type, shift);
+                circle(image, pt, r+(1<<shift), color, 1, line_type, shift);
                 prev_pt = pt;
             }
         }
     }
 }
 
-bool cv::findChessboardCorners( InputArray _image, Size patternSize,
-                            OutputArray corners, int flags )
+bool findCirclesGrid( InputArray _image, Size patternSize,
+                          OutputArray _centers, int flags, const Ptr<FeatureDetector> &blobDetector,
+                          const CirclesGridFinderParameters& parameters_)
 {
-    int count = patternSize.area()*2;
-    std::vector<Point2f> tmpcorners(count+1);
-    Mat image = _image.getMat(); CvMat c_image = image;
-    bool ok = cvFindChessboardCorners(&c_image, patternSize,
-        (CvPoint2D32f*)&tmpcorners[0], &count, flags ) > 0;
-    if( count > 0 )
-    {
-        tmpcorners.resize(count);
-        Mat(tmpcorners).copyTo(corners);
-    }
-    else
-        corners.release();
-    return ok;
-}
+    CV_INSTRUMENT_REGION();
 
-namespace
-{
-int quiet_error(int /*status*/, const char* /*func_name*/,
-                                       const char* /*err_msg*/, const char* /*file_name*/,
-                                       int /*line*/, void* /*userdata*/ )
-{
-  return 0;
-}
-}
+    CirclesGridFinderParameters parameters = parameters_; // parameters.gridType is amended below
 
-void cv::drawChessboardCorners( InputOutputArray _image, Size patternSize,
-                            InputArray _corners,
-                            bool patternWasFound )
-{
-    Mat corners = _corners.getMat();
-    if( corners.empty() )
-        return;
-    Mat image = _image.getMat(); CvMat c_image = _image.getMat();
-    int nelems = corners.checkVector(2, CV_32F, true);
-    CV_Assert(nelems >= 0);
-    cvDrawChessboardCorners( &c_image, patternSize, corners.ptr<CvPoint2D32f>(),
-                             nelems, patternWasFound );
-}
-
-bool cv::findCirclesGrid( InputArray _image, Size patternSize,
-                          OutputArray _centers, int flags, const Ptr<FeatureDetector> &blobDetector )
-{
     bool isAsymmetricGrid = (flags & CALIB_CB_ASYMMETRIC_GRID) ? true : false;
     bool isSymmetricGrid  = (flags & CALIB_CB_SYMMETRIC_GRID ) ? true : false;
     CV_Assert(isAsymmetricGrid ^ isSymmetricGrid);
 
-    Mat image = _image.getMat();
     std::vector<Point2f> centers;
 
-    std::vector<KeyPoint> keypoints;
-    blobDetector->detect(image, keypoints);
     std::vector<Point2f> points;
-    for (size_t i = 0; i < keypoints.size(); i++)
+    if (blobDetector)
     {
-      points.push_back (keypoints[i].pt);
+        std::vector<KeyPoint> keypoints;
+        blobDetector->detect(_image, keypoints);
+        for (size_t i = 0; i < keypoints.size(); i++)
+        {
+            points.push_back(keypoints[i].pt);
+        }
     }
-
-    if(flags & CALIB_CB_CLUSTERING)
+    else
     {
-      CirclesGridClusterFinder circlesGridClusterFinder(isAsymmetricGrid);
-      circlesGridClusterFinder.findGrid(points, patternSize, centers);
-      Mat(centers).copyTo(_centers);
-      return !centers.empty();
+        CV_CheckTypeEQ(_image.type(), CV_32FC2, "blobDetector must be provided or image must contains Point2f array (std::vector<Point2f>) with candidates");
+        _image.copyTo(points);
     }
-
-    CirclesGridFinderParameters parameters;
-    parameters.vertexPenalty = -0.6f;
-    parameters.vertexGain = 1;
-    parameters.existingVertexGain = 10000;
-    parameters.edgeGain = 1;
-    parameters.edgePenalty = -0.6f;
 
     if(flags & CALIB_CB_ASYMMETRIC_GRID)
       parameters.gridType = CirclesGridFinderParameters::ASYMMETRIC_GRID;
     if(flags & CALIB_CB_SYMMETRIC_GRID)
       parameters.gridType = CirclesGridFinderParameters::SYMMETRIC_GRID;
 
+    if(flags & CALIB_CB_CLUSTERING)
+    {
+      CirclesGridClusterFinder circlesGridClusterFinder(parameters);
+      circlesGridClusterFinder.findGrid(points, patternSize, centers);
+      Mat(centers).copyTo(_centers);
+      return !centers.empty();
+    }
+
+    bool isValid = false;
     const int attempts = 2;
     const size_t minHomographyPoints = 4;
     Mat H;
     for (int i = 0; i < attempts; i++)
     {
-      centers.clear();
-      CirclesGridFinder boxFinder(patternSize, points, parameters);
-      bool isFound = false;
-#define BE_QUIET 1
-#if BE_QUIET
-      void* oldCbkData;
-      ErrorCallback oldCbk = redirectError(quiet_error, 0, &oldCbkData);
-#endif
-      try
-      {
-        isFound = boxFinder.findHoles();
-      }
-      catch (const cv::Exception &)
-      {
-
-      }
-#if BE_QUIET
-      redirectError(oldCbk, oldCbkData);
-#endif
-      if (isFound)
-      {
-        switch(parameters.gridType)
+        centers.clear();
+        CirclesGridFinder boxFinder(patternSize, points, parameters);
+        try
         {
-          case CirclesGridFinderParameters::SYMMETRIC_GRID:
-            boxFinder.getHoles(centers);
-            break;
-          case CirclesGridFinderParameters::ASYMMETRIC_GRID:
-        boxFinder.getAsymmetricHoles(centers);
-        break;
-          default:
-            CV_Error(CV_StsBadArg, "Unkown pattern type");
+            bool isFound = boxFinder.findHoles();
+            if (isFound)
+            {
+                switch(parameters.gridType)
+                {
+                case CirclesGridFinderParameters::SYMMETRIC_GRID:
+                    boxFinder.getHoles(centers);
+                    break;
+                case CirclesGridFinderParameters::ASYMMETRIC_GRID:
+                    boxFinder.getAsymmetricHoles(centers);
+                    break;
+                default:
+                    CV_Error(Error::StsBadArg, "Unknown pattern type");
+                }
+
+                isValid = true;
+                break;  // done, return result
+            }
+        }
+        catch (const cv::Exception& e)
+        {
+            CV_UNUSED(e);
+            CV_LOG_DEBUG(NULL, "findCirclesGrid2: attempt=" << i << ": " << e.what());
+            // nothing, next attempt
         }
 
-        if (i != 0)
+        boxFinder.getHoles(centers);
+        if (i != attempts - 1)
         {
-          Mat orgPointsMat;
-          transform(centers, orgPointsMat, H.inv());
-          convertPointsFromHomogeneous(orgPointsMat, centers);
+            if (centers.size() < minHomographyPoints)
+                break;
+            H = CirclesGridFinder::rectifyGrid(boxFinder.getDetectedGridSize(), centers, points, points);
         }
-        Mat(centers).copyTo(_centers);
-        return true;
-      }
+    }
 
-      boxFinder.getHoles(centers);
-      if (i != attempts - 1)
-      {
-        if (centers.size() < minHomographyPoints)
-          break;
-        H = CirclesGridFinder::rectifyGrid(boxFinder.getDetectedGridSize(), centers, points, points);
-      }
+    if (!centers.empty() && !H.empty())  // undone rectification
+    {
+        Mat orgPointsMat;
+        transform(centers, orgPointsMat, H.inv());
+        convertPointsFromHomogeneous(orgPointsMat, centers);
     }
     Mat(centers).copyTo(_centers);
-    return false;
+    return isValid;
 }
 
+bool findCirclesGrid(InputArray _image, Size patternSize,
+                     OutputArray _centers, int flags, const Ptr<FeatureDetector> &blobDetector)
+{
+    return cv::findCirclesGrid(_image, patternSize, _centers, flags, blobDetector, CirclesGridFinderParameters());
+}
+
+} // namespace
 /* End of file. */

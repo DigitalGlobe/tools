@@ -47,17 +47,19 @@
 namespace cv
 {
 
-class MergeDebevecImpl : public MergeDebevec
+class MergeDebevecImpl CV_FINAL : public MergeDebevec
 {
 public:
     MergeDebevecImpl() :
         name("MergeDebevec"),
-        weights(tringleWeights())
+        weights(triangleWeights())
     {
     }
 
-    void process(InputArrayOfArrays src, OutputArray dst, InputArray _times, InputArray input_response)
+    void process(InputArrayOfArrays src, OutputArray dst, InputArray _times, InputArray input_response) CV_OVERRIDE
     {
+        CV_INSTRUMENT_REGION();
+
         std::vector<Mat> images;
         src.getMatVector(images);
         Mat times = _times.getMat();
@@ -85,7 +87,7 @@ public:
         CV_Assert(log_response.rows == LDR_SIZE && log_response.cols == 1 &&
                   log_response.channels() == channels);
 
-        Mat exp_values(times);
+        Mat exp_values(times.clone());
         log(exp_values, exp_values);
 
         result = Mat::zeros(size, CV_32FCC);
@@ -120,8 +122,10 @@ public:
         exp(result, result);
     }
 
-    void process(InputArrayOfArrays src, OutputArray dst, InputArray times)
+    void process(InputArrayOfArrays src, OutputArray dst, InputArray times) CV_OVERRIDE
     {
+        CV_INSTRUMENT_REGION();
+
         process(src, dst, times, Mat());
     }
 
@@ -135,7 +139,7 @@ Ptr<MergeDebevec> createMergeDebevec()
     return makePtr<MergeDebevecImpl>();
 }
 
-class MergeMertensImpl : public MergeMertens
+class MergeMertensImpl CV_FINAL : public MergeMertens
 {
 public:
     MergeMertensImpl(float _wcon, float _wsat, float _wexp) :
@@ -146,13 +150,17 @@ public:
     {
     }
 
-    void process(InputArrayOfArrays src, OutputArrayOfArrays dst, InputArray, InputArray)
+    void process(InputArrayOfArrays src, OutputArrayOfArrays dst, InputArray, InputArray) CV_OVERRIDE
     {
+        CV_INSTRUMENT_REGION();
+
         process(src, dst);
     }
 
-    void process(InputArrayOfArrays src, OutputArray dst)
+    void process(InputArrayOfArrays src, OutputArray dst) CV_OVERRIDE
     {
+        CV_INSTRUMENT_REGION();
+
         std::vector<Mat> images;
         src.getMatVector(images);
         checkImageDimensions(images);
@@ -164,106 +172,116 @@ public:
 
         std::vector<Mat> weights(images.size());
         Mat weight_sum = Mat::zeros(size, CV_32F);
+        Mutex weight_sum_mutex;
 
-        for(size_t i = 0; i < images.size(); i++) {
-            Mat img, gray, contrast, saturation, wellexp;
-            std::vector<Mat> splitted(channels);
+        parallel_for_(Range(0, static_cast<int>(images.size())), [&](const Range& range) {
+            for(int i = range.start; i < range.end; i++) {
+                Mat img, gray, contrast, saturation, wellexp;
+                std::vector<Mat> splitted(channels);
 
-            images[i].convertTo(img, CV_32F, 1.0f/255.0f);
-            if(channels == 3) {
-                cvtColor(img, gray, COLOR_RGB2GRAY);
-            } else {
-                img.copyTo(gray);
+                images[i].convertTo(img, CV_32F, 1.0f/255.0f);
+                if(channels == 3) {
+                    cvtColor(img, gray, COLOR_RGB2GRAY);
+                } else {
+                    img.copyTo(gray);
+                }
+                images[i] = img;
+                split(img, splitted);
+
+                Laplacian(gray, contrast, CV_32F);
+                contrast = abs(contrast);
+
+                Mat mean = Mat::zeros(size, CV_32F);
+                for(int c = 0; c < channels; c++) {
+                    mean += splitted[c];
+                }
+                mean /= channels;
+
+                saturation = Mat::zeros(size, CV_32F);
+                for(int c = 0; c < channels;  c++) {
+                    Mat deviation = splitted[c] - mean;
+                    pow(deviation, 2.0f, deviation);
+                    saturation += deviation;
+                }
+                sqrt(saturation, saturation);
+
+                wellexp = Mat::ones(size, CV_32F);
+                for(int c = 0; c < channels; c++) {
+                    Mat expo = splitted[c] - 0.5f;
+                    pow(expo, 2.0f, expo);
+                    expo = -expo / 0.08f;
+                    exp(expo, expo);
+                    wellexp = wellexp.mul(expo);
+                }
+
+                pow(contrast, wcon, contrast);
+                pow(saturation, wsat, saturation);
+                pow(wellexp, wexp, wellexp);
+
+                weights[i] = contrast;
+                if(channels == 3) {
+                    weights[i] = weights[i].mul(saturation);
+                }
+                weights[i] = weights[i].mul(wellexp) + 1e-12f;
+
+                AutoLock lock(weight_sum_mutex);
+                weight_sum += weights[i];
             }
-            split(img, splitted);
+        });
 
-            Laplacian(gray, contrast, CV_32F);
-            contrast = abs(contrast);
-
-            Mat mean = Mat::zeros(size, CV_32F);
-            for(int c = 0; c < channels; c++) {
-                mean += splitted[c];
-            }
-            mean /= channels;
-
-            saturation = Mat::zeros(size, CV_32F);
-            for(int c = 0; c < channels;  c++) {
-                Mat deviation = splitted[c] - mean;
-                pow(deviation, 2.0f, deviation);
-                saturation += deviation;
-            }
-            sqrt(saturation, saturation);
-
-            wellexp = Mat::ones(size, CV_32F);
-            for(int c = 0; c < channels; c++) {
-                Mat expo = splitted[c] - 0.5f;
-                pow(expo, 2.0f, expo);
-                expo = -expo / 0.08f;
-                exp(expo, expo);
-                wellexp = wellexp.mul(expo);
-            }
-
-            pow(contrast, wcon, contrast);
-            pow(saturation, wsat, saturation);
-            pow(wellexp, wexp, wellexp);
-
-            weights[i] = contrast;
-            if(channels == 3) {
-                weights[i] = weights[i].mul(saturation);
-            }
-            weights[i] = weights[i].mul(wellexp) + 1e-12f;
-            weight_sum += weights[i];
-        }
         int maxlevel = static_cast<int>(logf(static_cast<float>(min(size.width, size.height))) / logf(2.0f));
         std::vector<Mat> res_pyr(maxlevel + 1);
+        std::vector<Mutex> res_pyr_mutexes(maxlevel + 1);
 
-        for(size_t i = 0; i < images.size(); i++) {
-            weights[i] /= weight_sum;
-            Mat img;
-            images[i].convertTo(img, CV_32F, 1.0f/255.0f);
+        parallel_for_(Range(0, static_cast<int>(images.size())), [&](const Range& range) {
+            for(int i = range.start; i < range.end; i++) {
+                weights[i] /= weight_sum;
 
-            std::vector<Mat> img_pyr, weight_pyr;
-            buildPyramid(img, img_pyr, maxlevel);
-            buildPyramid(weights[i], weight_pyr, maxlevel);
+                std::vector<Mat> img_pyr, weight_pyr;
+                buildPyramid(images[i], img_pyr, maxlevel);
+                buildPyramid(weights[i], weight_pyr, maxlevel);
 
-            for(int lvl = 0; lvl < maxlevel; lvl++) {
-                Mat up;
-                pyrUp(img_pyr[lvl + 1], up, img_pyr[lvl].size());
-                img_pyr[lvl] -= up;
-            }
-            for(int lvl = 0; lvl <= maxlevel; lvl++) {
-                std::vector<Mat> splitted(channels);
-                split(img_pyr[lvl], splitted);
-                for(int c = 0; c < channels; c++) {
-                    splitted[c] = splitted[c].mul(weight_pyr[lvl]);
+                for(int lvl = 0; lvl < maxlevel; lvl++) {
+                    Mat up;
+                    pyrUp(img_pyr[lvl + 1], up, img_pyr[lvl].size());
+                    img_pyr[lvl] -= up;
                 }
-                merge(splitted, img_pyr[lvl]);
-                if(res_pyr[lvl].empty()) {
-                    res_pyr[lvl] = img_pyr[lvl];
-                } else {
-                    res_pyr[lvl] += img_pyr[lvl];
+                for(int lvl = 0; lvl <= maxlevel; lvl++) {
+                    std::vector<Mat> splitted(channels);
+                    split(img_pyr[lvl], splitted);
+                    for(int c = 0; c < channels; c++) {
+                        splitted[c] = splitted[c].mul(weight_pyr[lvl]);
+                    }
+                    merge(splitted, img_pyr[lvl]);
+
+                    AutoLock lock(res_pyr_mutexes[lvl]);
+                    if(res_pyr[lvl].empty()) {
+                        res_pyr[lvl] = img_pyr[lvl];
+                    } else {
+                        res_pyr[lvl] += img_pyr[lvl];
+                    }
                 }
             }
-        }
+        });
         for(int lvl = maxlevel; lvl > 0; lvl--) {
             Mat up;
             pyrUp(res_pyr[lvl], up, res_pyr[lvl - 1].size());
             res_pyr[lvl - 1] += up;
         }
         dst.create(size, CV_32FCC);
-        res_pyr[0].copyTo(dst.getMat());
+        res_pyr[0].copyTo(dst);
     }
 
-    float getContrastWeight() const { return wcon; }
-    void setContrastWeight(float val) { wcon = val; }
+    float getContrastWeight() const CV_OVERRIDE { return wcon; }
+    void setContrastWeight(float val) CV_OVERRIDE { wcon = val; }
 
-    float getSaturationWeight() const { return wsat; }
-    void setSaturationWeight(float val) { wsat = val; }
+    float getSaturationWeight() const CV_OVERRIDE { return wsat; }
+    void setSaturationWeight(float val) CV_OVERRIDE { wsat = val; }
 
-    float getExposureWeight() const { return wexp; }
-    void setExposureWeight(float val) { wexp = val; }
+    float getExposureWeight() const CV_OVERRIDE { return wexp; }
+    void setExposureWeight(float val) CV_OVERRIDE { wexp = val; }
 
-    void write(FileStorage& fs) const
+    void write(FileStorage& fs) const CV_OVERRIDE
     {
         writeFormat(fs);
         fs << "name" << name
@@ -272,7 +290,7 @@ public:
            << "exposure_weight" << wexp;
     }
 
-    void read(const FileNode& fn)
+    void read(const FileNode& fn) CV_OVERRIDE
     {
         FileNode n = fn["name"];
         CV_Assert(n.isString() && String(n) == name);
@@ -291,7 +309,7 @@ Ptr<MergeMertens> createMergeMertens(float wcon, float wsat, float wexp)
     return makePtr<MergeMertensImpl>(wcon, wsat, wexp);
 }
 
-class MergeRobertsonImpl : public MergeRobertson
+class MergeRobertsonImpl CV_FINAL : public MergeRobertson
 {
 public:
     MergeRobertsonImpl() :
@@ -300,8 +318,10 @@ public:
     {
     }
 
-    void process(InputArrayOfArrays src, OutputArray dst, InputArray _times, InputArray input_response)
+    void process(InputArrayOfArrays src, OutputArray dst, InputArray _times, InputArray input_response) CV_OVERRIDE
     {
+        CV_INSTRUMENT_REGION();
+
         std::vector<Mat> images;
         src.getMatVector(images);
         Mat times = _times.getMat();
@@ -318,7 +338,7 @@ public:
 
         Mat response = input_response.getMat();
         if(response.empty()) {
-            float middle = LDR_SIZE / 2.0f;
+            float middle = static_cast<float>(LDR_SIZE) / 2.0f;
             response = linearResponse(channels) / middle;
         }
         CV_Assert(response.rows == LDR_SIZE && response.cols == 1 &&
@@ -334,11 +354,13 @@ public:
             result += times.at<float>((int)i) * w.mul(im);
             wsum += times.at<float>((int)i) * times.at<float>((int)i) * w;
         }
-        result = result.mul(1 / wsum);
+        result = result.mul(1 / (wsum + Scalar::all(DBL_EPSILON)));
     }
 
-    void process(InputArrayOfArrays src, OutputArray dst, InputArray times)
+    void process(InputArrayOfArrays src, OutputArray dst, InputArray times) CV_OVERRIDE
     {
+        CV_INSTRUMENT_REGION();
+
         process(src, dst, times, Mat());
     }
 

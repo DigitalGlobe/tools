@@ -31,13 +31,22 @@
 
 #include "precomp.hpp"
 
+#include "usac.hpp"
+
 namespace cv
 {
 
-class EMEstimatorCallback : public PointSetRegistrator::Callback
+// for some compilers it takes very long time to compile
+// automatically generated code in EMEstimatorCallback::runKernel(),
+// so we temporarily disable optimizations here
+#if defined __hexagon__ && defined __clang__
+#pragma clang optimize off
+#endif
+
+class EMEstimatorCallback CV_FINAL : public PointSetRegistrator::Callback
 {
 public:
-    int runKernel( InputArray _m1, InputArray _m2, OutputArray _model ) const
+    int runKernel( InputArray _m1, InputArray _m2, OutputArray _model ) const CV_OVERRIDE
     {
         Mat q1 = _m1.getMat(), q2 = _m2.getMat();
         Mat Q1 = q1.reshape(1, (int)q1.total());
@@ -370,7 +379,7 @@ protected:
     }
 
 
-    void computeError( InputArray _m1, InputArray _m2, InputArray _model, OutputArray _err ) const
+    void computeError( InputArray _m1, InputArray _m2, InputArray _model, OutputArray _err ) const CV_OVERRIDE
     {
         Mat X1 = _m1.getMat(), X2 = _m2.getMat(), model = _model.getMat();
         const Point2d* x1ptr = X1.ptr<Point2d>();
@@ -399,12 +408,47 @@ protected:
     }
 };
 
+// restore optimizations (if any)
+#if defined __hexagon__ && defined __clang__
+#pragma clang optimize on
+#endif
+
+// Find essential matrix given undistorted points and two cameras.
+static Mat findEssentialMat_( InputArray _points1, InputArray _points2,
+                             InputArray cameraMatrix1, InputArray cameraMatrix2,
+                             int method, double prob, double threshold, OutputArray _mask)
+{
+    // Scale the points back. We use "arithmetic mean" between the supplied two camera matrices.
+    // Thanks to such 2-stage procedure RANSAC threshold still makes sense, because the undistorted
+    // and rescaled points have a similar value range to the original ones.
+    Mat _pointsTransformed1, _pointsTransformed2;
+    Mat cm1 = cameraMatrix1.getMat(), cm2 = cameraMatrix2.getMat(), cm0;
+    Mat(cm1 + cm2).convertTo(cm0, CV_64F, 0.5);
+    CV_Assert(cm0.rows == 3 && cm0.cols == 3);
+    CV_Assert(std::abs(cm0.at<double>(2, 0)) < 1e-3 &&
+              std::abs(cm0.at<double>(2, 1)) < 1e-3 &&
+              std::abs(cm0.at<double>(2, 2) - 1.) < 1e-3);
+    Mat affine = cm0.rowRange(0, 2);
+
+    transform(_points1, _pointsTransformed1, affine);
+    transform(_points2, _pointsTransformed2, affine);
+
+    return findEssentialMat(_pointsTransformed1, _pointsTransformed2, cm0, method, prob, threshold, _mask);
+}
+
 }
 
 // Input should be a vector of n 2D points or a Nx2 matrix
 cv::Mat cv::findEssentialMat( InputArray _points1, InputArray _points2, InputArray _cameraMatrix,
-                              int method, double prob, double threshold, OutputArray _mask)
+                              int method, double prob, double threshold,
+                              int maxIters, OutputArray _mask)
 {
+    CV_INSTRUMENT_REGION();
+
+    if (method >= USAC_DEFAULT && method <= USAC_MAGSAC)
+        return usac::findEssentialMat(_points1, _points2, _cameraMatrix,
+            method, prob, threshold, _mask, maxIters);
+
     Mat points1, points2, cameraMatrix;
     _points1.getMat().convertTo(points1, CV_64F);
     _points2.getMat().convertTo(points2, CV_64F);
@@ -440,23 +484,96 @@ cv::Mat cv::findEssentialMat( InputArray _points1, InputArray _points2, InputArr
 
     Mat E;
     if( method == RANSAC )
-        createRANSACPointSetRegistrator(makePtr<EMEstimatorCallback>(), 5, threshold, prob)->run(points1, points2, E, _mask);
+        createRANSACPointSetRegistrator(makePtr<EMEstimatorCallback>(), 5, threshold, prob, maxIters)->run(points1, points2, E, _mask);
     else
-        createLMeDSPointSetRegistrator(makePtr<EMEstimatorCallback>(), 5, prob)->run(points1, points2, E, _mask);
+        createLMeDSPointSetRegistrator(makePtr<EMEstimatorCallback>(), 5, prob, maxIters)->run(points1, points2, E, _mask);
 
     return E;
+}
+
+cv::Mat cv::findEssentialMat( InputArray _points1, InputArray _points2, InputArray _cameraMatrix,
+                              int method, double prob, double threshold,
+                              OutputArray _mask)
+{
+    return cv::findEssentialMat(_points1, _points2, _cameraMatrix, method, prob, threshold, 1000, _mask);
+}
+
+cv::Mat cv::findEssentialMat( InputArray _points1, InputArray _points2, double focal, Point2d pp,
+                              int method, double prob, double threshold, int maxIters, OutputArray _mask)
+{
+    CV_INSTRUMENT_REGION();
+
+    Mat cameraMatrix = (Mat_<double>(3,3) << focal, 0, pp.x, 0, focal, pp.y, 0, 0, 1);
+    return cv::findEssentialMat(_points1, _points2, cameraMatrix, method, prob, threshold, maxIters, _mask);
 }
 
 cv::Mat cv::findEssentialMat( InputArray _points1, InputArray _points2, double focal, Point2d pp,
                               int method, double prob, double threshold, OutputArray _mask)
 {
+    CV_INSTRUMENT_REGION();
+
     Mat cameraMatrix = (Mat_<double>(3,3) << focal, 0, pp.x, 0, focal, pp.y, 0, 0, 1);
-    return cv::findEssentialMat(_points1, _points2, cameraMatrix, method, prob, threshold, _mask);
+    return cv::findEssentialMat(_points1, _points2, cameraMatrix, method, prob, threshold, 1000, _mask);
 }
 
-int cv::recoverPose( InputArray E, InputArray _points1, InputArray _points2, InputArray _cameraMatrix,
-                     OutputArray _R, OutputArray _t, InputOutputArray _mask)
+cv::Mat cv::findEssentialMat( InputArray _points1, InputArray _points2,
+                              InputArray cameraMatrix1, InputArray distCoeffs1,
+                              InputArray cameraMatrix2, InputArray distCoeffs2,
+                              int method, double prob, double threshold, OutputArray _mask)
 {
+    CV_INSTRUMENT_REGION();
+
+    // Undistort image points, bring them to 3x3 identity "camera matrix"
+    Mat _pointsUndistorted1, _pointsUndistorted2;
+    undistortPoints(_points1, _pointsUndistorted1, cameraMatrix1, distCoeffs1);
+    undistortPoints(_points2, _pointsUndistorted2, cameraMatrix2, distCoeffs2);
+    return findEssentialMat_(_pointsUndistorted1, _pointsUndistorted2, cameraMatrix1, cameraMatrix2, method, prob, threshold, _mask);
+}
+
+cv::Mat cv::findEssentialMat( InputArray points1, InputArray points2,
+                      InputArray cameraMatrix1, InputArray cameraMatrix2,
+                      InputArray dist_coeff1, InputArray dist_coeff2, OutputArray mask, const UsacParams &params) {
+    Ptr<usac::Model> model;
+    usac::setParameters(model, usac::EstimationMethod::ESSENTIAL, params, mask.needed());
+    Ptr<usac::RansacOutput> ransac_output;
+    if (usac::run(model, points1, points2,
+            ransac_output, cameraMatrix1, cameraMatrix2, dist_coeff1, dist_coeff2)) {
+        usac::saveMask(mask, ransac_output->getInliersMask());
+        return ransac_output->getModel();
+    } else return Mat();
+
+}
+
+int cv::recoverPose( InputArray _points1, InputArray _points2,
+                            InputArray cameraMatrix1, InputArray distCoeffs1,
+                            InputArray cameraMatrix2, InputArray distCoeffs2,
+                            OutputArray E, OutputArray R, OutputArray t,
+                            int method, double prob, double threshold,
+                            InputOutputArray _mask)
+{
+    CV_INSTRUMENT_REGION();
+
+    // Undistort image points, bring them to 3x3 identity "camera matrix"
+    Mat _pointsUndistorted1, _pointsUndistorted2;
+    undistortPoints(_points1, _pointsUndistorted1, cameraMatrix1, distCoeffs1);
+    undistortPoints(_points2, _pointsUndistorted2, cameraMatrix2, distCoeffs2);
+
+    // Get essential matrix.
+    Mat _E = findEssentialMat_(_pointsUndistorted1, _pointsUndistorted2, cameraMatrix1, cameraMatrix2,
+                              method, prob, threshold, _mask);
+    CV_Assert(_E.cols == 3 && _E.rows == 3);
+    E.create(3, 3, _E.type());
+    _E.copyTo(E);
+
+    return recoverPose(_E, _pointsUndistorted1, _pointsUndistorted2, Mat::eye(3,3, CV_64F), R, t, _mask);
+}
+
+int cv::recoverPose( InputArray E, InputArray _points1, InputArray _points2,
+                            InputArray _cameraMatrix, OutputArray _R, OutputArray _t, double distanceThresh,
+                     InputOutputArray _mask, OutputArray triangulatedPoints)
+{
+    CV_INSTRUMENT_REGION();
+
     Mat points1, points2, cameraMatrix;
     _points1.getMat().convertTo(points1, CV_64F);
     _points2.getMat().convertTo(points2, CV_64F);
@@ -496,55 +613,64 @@ int cv::recoverPose( InputArray E, InputArray _points1, InputArray _points2, Inp
     P3(Range::all(), Range(0, 3)) = R1 * 1.0; P3.col(3) = -t * 1.0;
     P4(Range::all(), Range(0, 3)) = R2 * 1.0; P4.col(3) = -t * 1.0;
 
-    // Do the cheirality check.
+    // Do the chirality check.
     // Notice here a threshold dist is used to filter
     // out far away points (i.e. infinite points) since
-    // there depth may vary between postive and negtive.
-    double dist = 50.0;
+    // their depth may vary between positive and negative.
+    std::vector<Mat> allTriangulations(4);
     Mat Q;
+
     triangulatePoints(P0, P1, points1, points2, Q);
+    if(triangulatedPoints.needed())
+        Q.copyTo(allTriangulations[0]);
     Mat mask1 = Q.row(2).mul(Q.row(3)) > 0;
     Q.row(0) /= Q.row(3);
     Q.row(1) /= Q.row(3);
     Q.row(2) /= Q.row(3);
     Q.row(3) /= Q.row(3);
-    mask1 = (Q.row(2) < dist) & mask1;
+    mask1 = (Q.row(2) < distanceThresh) & mask1;
     Q = P1 * Q;
     mask1 = (Q.row(2) > 0) & mask1;
-    mask1 = (Q.row(2) < dist) & mask1;
+    mask1 = (Q.row(2) < distanceThresh) & mask1;
 
     triangulatePoints(P0, P2, points1, points2, Q);
+    if(triangulatedPoints.needed())
+        Q.copyTo(allTriangulations[1]);
     Mat mask2 = Q.row(2).mul(Q.row(3)) > 0;
     Q.row(0) /= Q.row(3);
     Q.row(1) /= Q.row(3);
     Q.row(2) /= Q.row(3);
     Q.row(3) /= Q.row(3);
-    mask2 = (Q.row(2) < dist) & mask2;
+    mask2 = (Q.row(2) < distanceThresh) & mask2;
     Q = P2 * Q;
     mask2 = (Q.row(2) > 0) & mask2;
-    mask2 = (Q.row(2) < dist) & mask2;
+    mask2 = (Q.row(2) < distanceThresh) & mask2;
 
     triangulatePoints(P0, P3, points1, points2, Q);
+    if(triangulatedPoints.needed())
+        Q.copyTo(allTriangulations[2]);
     Mat mask3 = Q.row(2).mul(Q.row(3)) > 0;
     Q.row(0) /= Q.row(3);
     Q.row(1) /= Q.row(3);
     Q.row(2) /= Q.row(3);
     Q.row(3) /= Q.row(3);
-    mask3 = (Q.row(2) < dist) & mask3;
+    mask3 = (Q.row(2) < distanceThresh) & mask3;
     Q = P3 * Q;
     mask3 = (Q.row(2) > 0) & mask3;
-    mask3 = (Q.row(2) < dist) & mask3;
+    mask3 = (Q.row(2) < distanceThresh) & mask3;
 
     triangulatePoints(P0, P4, points1, points2, Q);
+    if(triangulatedPoints.needed())
+        Q.copyTo(allTriangulations[3]);
     Mat mask4 = Q.row(2).mul(Q.row(3)) > 0;
     Q.row(0) /= Q.row(3);
     Q.row(1) /= Q.row(3);
     Q.row(2) /= Q.row(3);
     Q.row(3) /= Q.row(3);
-    mask4 = (Q.row(2) < dist) & mask4;
+    mask4 = (Q.row(2) < distanceThresh) & mask4;
     Q = P4 * Q;
     mask4 = (Q.row(2) > 0) & mask4;
-    mask4 = (Q.row(2) < dist) & mask4;
+    mask4 = (Q.row(2) < distanceThresh) & mask4;
 
     mask1 = mask1.t();
     mask2 = mask2.t();
@@ -555,7 +681,8 @@ int cv::recoverPose( InputArray E, InputArray _points1, InputArray _points2, Inp
     if (!_mask.empty())
     {
         Mat mask = _mask.getMat();
-        CV_Assert(mask.size() == mask1.size());
+        CV_Assert(npoints == mask.checkVector(1));
+        mask = mask.reshape(1, npoints);
         bitwise_and(mask, mask1, mask1);
         bitwise_and(mask, mask2, mask2);
         bitwise_and(mask, mask3, mask3);
@@ -577,6 +704,7 @@ int cv::recoverPose( InputArray E, InputArray _points1, InputArray _points2, Inp
 
     if (good1 >= good2 && good1 >= good3 && good1 >= good4)
     {
+        if(triangulatedPoints.needed()) allTriangulations[0].copyTo(triangulatedPoints);
         R1.copyTo(_R);
         t.copyTo(_t);
         if (_mask.needed()) mask1.copyTo(_mask);
@@ -584,6 +712,7 @@ int cv::recoverPose( InputArray E, InputArray _points1, InputArray _points2, Inp
     }
     else if (good2 >= good1 && good2 >= good3 && good2 >= good4)
     {
+        if(triangulatedPoints.needed()) allTriangulations[1].copyTo(triangulatedPoints);
         R2.copyTo(_R);
         t.copyTo(_t);
         if (_mask.needed()) mask2.copyTo(_mask);
@@ -591,6 +720,7 @@ int cv::recoverPose( InputArray E, InputArray _points1, InputArray _points2, Inp
     }
     else if (good3 >= good1 && good3 >= good2 && good3 >= good4)
     {
+        if(triangulatedPoints.needed()) allTriangulations[2].copyTo(triangulatedPoints);
         t = -t;
         R1.copyTo(_R);
         t.copyTo(_t);
@@ -599,12 +729,19 @@ int cv::recoverPose( InputArray E, InputArray _points1, InputArray _points2, Inp
     }
     else
     {
+        if(triangulatedPoints.needed()) allTriangulations[3].copyTo(triangulatedPoints);
         t = -t;
         R2.copyTo(_R);
         t.copyTo(_t);
         if (_mask.needed()) mask4.copyTo(_mask);
         return good4;
     }
+}
+
+int cv::recoverPose( InputArray E, InputArray _points1, InputArray _points2, InputArray _cameraMatrix,
+                     OutputArray _R, OutputArray _t, InputOutputArray _mask)
+{
+    return cv::recoverPose(E, _points1, _points2, _cameraMatrix, _R, _t, 50, _mask);
 }
 
 int cv::recoverPose( InputArray E, InputArray _points1, InputArray _points2, OutputArray _R,
@@ -616,6 +753,8 @@ int cv::recoverPose( InputArray E, InputArray _points1, InputArray _points2, Out
 
 void cv::decomposeEssentialMat( InputArray _E, OutputArray _R1, OutputArray _R2, OutputArray _t )
 {
+    CV_INSTRUMENT_REGION();
+
     Mat E = _E.getMat().reshape(1, 3);
     CV_Assert(E.cols == 3 && E.rows == 3);
 
