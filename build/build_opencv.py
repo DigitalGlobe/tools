@@ -1,10 +1,10 @@
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 #
 # build_opencv.py
 #
 # Summary : Builds the OpenCV library.
 #
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 import glob
 import os
@@ -16,147 +16,200 @@ from SystemManager import *
 from XmlUtils import *
 
 class Program :
-        #----------------------------------------------------------------------
-        # a description of what the script does
-        DESCRIPTION = "Builds the OpenCV library."
-        #----------------------------------------------------------------------
-        # the name of the solution file
-        _FILE_NAME_SOLUTION = "OpenCV.sln"
-        
-        #----------------------------------------------------------------------
-        # the name of the path that will contain intermediary build files
-        _PATH_NAME_BUILD = "OpenCV"
-        #----------------------------------------------------------------------
-        # the name of the path that contains the source code
-        _PATH_NAME_SOURCE = "..\\src\\OpenCV"
-        #----------------------------------------------------------------------
-                
-        _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
-        _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
-        
-        _LIBNAME = 'opencv'
-        _DEBUG_SUFFIX = '_d'
+    # ----------------------------------------------------------------------
+    # a description of what the script does
+    DESCRIPTION = "Builds the OpenCV library."
 
-        # the name of the path for all include files
-        _PATH_NAME_LIBS = 'lib'
-        
-        # the name of the path for all include files
-        _PATH_NAME_INCLUDE = 'modules'
-        #----------------------------------------------------------------------
-        # the name of the distribution path for all include files
-        _PATH_NAME_DISTRIBUTION_INCLUDE = '..\\..\\include\\opencv'
+    # ----------------------------------------------------------------------
+    # the name of the path that will contain intermediary build files
+    _PATH_NAME_BUILD = "opencv"
+    # ----------------------------------------------------------------------
+    # the name of the path that contains the source code
+    _PATH_NAME_SOURCE = "..\\src\\opencv"
+    # ----------------------------------------------------------------------
 
-        def __init__(self) :
-        
-            pass
-        #----------------------------------------------------------------------
-        
+    _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
+    _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
-        def main(self) :
-            systemManager = SystemManager()
-            pathFinder    = PathFinder()
-            xmlUtils = XmlUtils()
-            
-            # process command-line arguments
-            buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
-            
-            # initialize environment variables
-            systemManager.initializeIncludeEnvironmentVariable( buildSettings.X64Specified() )
-            systemManager.initializeLibraryEnvironmentVariable( buildSettings.X64Specified() )
-            systemManager.appendToPathEnvironmentVariable( pathFinder.getVisualStudioBinPathName( buildSettings.X64Specified() ) )
+    _LIBNAME = "opencv"
+    _DEBUG_SUFFIX = "_d"
 
-            # MSBuild is under "Program Files (x86)"
-            systemManager.appendToPathEnvironmentVariable( os.path.join( systemManager.getProgramFilesPathName(False) , \
-                                                                             "MSBuild\\14.0\\Bin") )
+    # the name of the path for all include files
+    _PATH_NAME_INCLUDE = "."
+    _PATH_NAME_INCLUDE_2 = "include"
+    # ----------------------------------------------------------------------
+    # the name of the distribution path for all include files
+    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\opencv"
+    # ----------------------------------------------------------------------
+    # the name of the path that contains the cmake files
+    _PATH_NAME_CMAKE_SOURCE = "."
+    _PATH_NAME_CMAKE_BUILD = "build"
+    _PATH_NAME_CMAKE_INSTALL = "install"
 
-            compileOutDir = ""
-            if ( buildSettings.X64Specified() ) :
-                # append path for 64-bit rc.exe
-                systemManager.appendToPathEnvironmentVariable( os.path.join( systemManager.getProgramFilesPathName(False) , \
-                                                                             "Windows Kits\\10\\bin\\x64"                 ) )
-            else:
-                # append path for 32-bit rc.exe
-                systemManager.appendToPathEnvironmentVariable( os.path.join( systemManager.getProgramFilesPathName(False) , \
-                                                                             "Windows Kits\\10\\bin\\x86"                 ) )
-            # get the paths
-            buildPathName  = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD)
-            sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
-            sdkOutDir = buildPathName + "\\..\\" + (Program._PATH_NAME_DISTRIBUTION_X64 if buildSettings.X64Specified() else Program._PATH_NAME_DISTRIBUTION_X86)
+    # --------------------------------------------------------------------------
+    # constructors
 
-            # remove build dir
-            systemManager.changeDirectory(sourcePathName)
-            systemManager.removeDirectory(buildPathName)
+    # ----------------------------------------------------------------------
+    # Constructs this program.
+    #
+    # Parameters :
+    #     self : this program
+    def __init__(self):
 
-            #copy UriParser to the Build area
-            systemManager.copyDirectory( sourcePathName, buildPathName)
-        
-            # start building
-            systemManager.changeDirectory(buildPathName)
-                   
-            # run CMake
-            if ( buildSettings.X64Specified() ) :
-                cmakeCommandLine = '"%s" -DX86_64=1 -G "Visual Studio 14 2015 Win64" "%s"' % (PathFinder.FILE_NAME_CMAKE, sourcePathName)
-            else:
-                cmakeCommandLine = '"%s" "%s"' % (PathFinder.FILE_NAME_CMAKE, sourcePathName)
-                
-            cmakeCommandLine += ' -DBUILD_DOCS=0 -DBUILD_WITH_STATIC_CRT=0 -DBUILD_opencv_apps=0'
-            
-            print("cmake: " + cmakeCommandLine)
-            
-            cmakeResult = systemManager.execute(cmakeCommandLine)
-            if (cmakeResult != 0) :
-                sys.exit(-1)
-                   
-            conf = "Release" if ( buildSettings.ReleaseSpecified() ) else "Debug"
-            platform  = 'x64' if buildSettings.X64Specified() else 'Win32'
-            # build the solution
-            solutionFileName   = os.path.join( buildPathName               , \
-                                               Program._FILE_NAME_SOLUTION )
-            msBuildCommandLine = ( "\"%s\" "                  + \
-                                     "/p:platform=%s " + \
-                                     "\"%s\""                   ) % \
-                                   ( pathFinder.getMSBuildFileName( buildSettings.X64Specified()), platform, solutionFileName )
-            
-            buildOutDir   = os.path.join( buildPathName, 'lib\\' + conf )
-            buildBinDir   = os.path.join( buildPathName, 'bin\\' + conf )
-            propfile   = os.path.join( buildPathName, 'linker.props' )
-            
-            # msBuildCommandLine += ' /p:OutDir=' + buildOutDir
-            msBuildCommandLine += ' /p:SolutionDir=' + buildPathName + '\\' 
-            msBuildCommandLine += ' /p:Configuration=' + conf
+        pass
 
-            print('cmd: ' + msBuildCommandLine)
-                       
-            msbuildResult = systemManager.execute(msBuildCommandLine)
-            if (msbuildResult != 0) :
-                sys.exit(-1)
+    # ----------------------------------------------------------------------
 
-            systemManager.removeDirectory(os.path.join( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE))
-            systemManager.distributeFiles(os.path.join( buildPathName, Program._PATH_NAME_INCLUDE),              \
-                                          os.path.join( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE), \
-                                          '*.h',                                                                 \
-                                          True, False, True) 
-            systemManager.distributeFiles(os.path.join( buildPathName, Program._PATH_NAME_INCLUDE),              \
-                                          os.path.join( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE), \
-                                          '*.hpp',                                                                 \
-                                          True, False, True) 
-                                          
-            systemManager.distributeFiles(buildOutDir,              \
-                                          sdkOutDir, \
-                                          'opencv*.lib',                                                                 \
-                                          True, False, True) 
-            systemManager.distributeFiles(buildBinDir,              \
-                                          sdkOutDir, \
-                                          'opencv*.dll',                                                                 \
-                                          True, False, True) 
-            if not buildSettings.ReleaseSpecified():
-                systemManager.distributeFiles(buildOutDir,              \
-                                              sdkOutDir, \
-                                              'opencv*.pdb',                                                                 \
-                                              True, False, True) 
-                
+    # --------------------------------------------------------------------------
+    # public methods
+
+    # ----------------------------------------------------------------------
+    # The main method of the program.
+    #
+    # Parameters :
+    #     self : this program
+    def main(self):
+
+        systemManager = SystemManager()
+        pathFinder = PathFinder()
+
+        # process command-line arguments
+        buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
+
+        # initialize environment variables
+        systemManager.initializeIncludeEnvironmentVariable(buildSettings.X64Specified())
+        systemManager.initializeLibraryEnvironmentVariable(buildSettings.X64Specified())
+
+        # MSBuild is under "Program Files (x86)"
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getMSBuildFileName(buildSettings.X64Specified())
+        )
+
+        compileOutDir = ""
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getWindowsSdkBinPathName(buildSettings.X64Specified())
+        )
+
+        # get the paths
+        buildPathName = systemManager.getCurrentRelativePathName(
+            Program._PATH_NAME_BUILD
+        )
+        sourcePathName = systemManager.getCurrentRelativePathName(
+            Program._PATH_NAME_SOURCE
+        )
+
+        buildSourceName = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
+        cmakeBuildPath = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
+        cmakeInstallPath = os.path.join(
+            cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
+        )
+
+        systemManager.removeDirectory(cmakeBuildPath)
+
+        sdkOutDir = os.path.join(
+            buildPathName,
+            "..",
+            (
+                Program._PATH_NAME_DISTRIBUTION_X64
+                if buildSettings.X64Specified()
+                else Program._PATH_NAME_DISTRIBUTION_X86
+            ),
+        )
+
+        # remove build dir
+        systemManager.changeDirectory(sourcePathName)
+        # systemManager.removeDirectory(buildPathName)
+
+        # copy APR source to the Build area
+        systemManager.copyDirectory(sourcePathName, buildPathName)
+
+        # start building
+        systemManager.changeDirectory(buildPathName)
+
+        systemManager.makeDirectory(cmakeBuildPath)
+        systemManager.changeDirectory(cmakeBuildPath)
+
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        # run CMake
+        # -DCMAKE_POLICY_VERSION_MINIMUM is to avoid min compatability errors in CMake
+        cmakeCommandLine = (
+            f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
+            + f"-A {platform} "
+            + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
+            # + f"{'-DX86_64=1' if buildSettings.X64Specified() else ''} "
+            + f"-DBUILD_SHARED_LIBS=ON "
+            + f"-DBUILD_DOCS=OFF "
+            + f"-DBUILD_EXAMPLES=OFF "
+            + f"-DBUILD_PACKAGE=OFF "
+            + f"-DBUILD_opencv_apps=OFF "
+            + f"-DBUILD_WITH_STATIC_CRT=OFF "
+            + f"-DBUILD_opencv_apps=0 "
+            + f"-DBUILD_WITH_DEBUG_INFO={"OFF" if buildSettings.ReleaseSpecified() else "ON"}"
+            + f'-DCMAKE_C_FLAGS="/FS" '
+            + f"{buildSourceName}"
+        )
+
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
+
+        cmakeCommandLine = (
+            f"{pathFinder.getCMakeFileName()} "
+            + f"--build "
+            + f". "
+            + f"--config {conf} "
+        )
+
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
+
+        cmakeCommandLine = (
+            f"{pathFinder.getCMakeFileName()} "
+            + f"--install "
+            + f". "
+            + f"--config {conf} "
+            + f"--prefix "
+            + f"{cmakeInstallPath}"
+        )
+
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
+
+        srcIncludePath = os.path.join(cmakeInstallPath, "include", "opencv2")
+        srcLibPath = os.path.join(cmakeBuildPath, "lib", conf)
+        srcBinPath = os.path.join(cmakeBuildPath, "bin", conf)
+
+        systemManager.distributeFiles(
+            srcIncludePath,
+            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            "*.h*",
+        )
+        systemManager.distributeFiles(
+            srcLibPath,
+            sdkOutDir,
+            "*.lib",
+        )
+        systemManager.distributeFiles(
+            srcBinPath,
+            sdkOutDir,
+            "*.dll",
+        )
+
+        if not buildSettings.ReleaseSpecified():
+            systemManager.distributeFiles(
+                srcLibPath,
+                sdkOutDir,
+                "*.pdb",
+            )
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 Program().main()
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------

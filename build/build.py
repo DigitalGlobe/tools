@@ -235,7 +235,7 @@ class Program :
                 # self._build(Program._FILE_NAME_BUILD_LIBGIST)
                 # self._build(Program._FILE_NAME_BUILD_LIBICONV)
                 # self._build(Program._FILE_NAME_BUILD_LIBJPEG)
-                self._build(Program._FILE_NAME_BUILD_MUPARSER)
+                # self._build(Program._FILE_NAME_BUILD_MUPARSER)
                 # self._build(Program._FILE_NAME_BUILD_NEWMAT)
                 self._build(Program._FILE_NAME_BUILD_OPENCV)
                 self._build(Program._FILE_NAME_BUILD_OPENDIS)
