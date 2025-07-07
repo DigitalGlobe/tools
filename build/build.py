@@ -114,7 +114,7 @@ class Program :
     _FILE_NAME_BUILD_PODOFO = "build_podofo.py"
     # ----------------------------------------------------------------------
     # the name of the build file to build PROJ.4
-    _FILE_NAME_BUILD_PROJ4 = "build_proj4.py"
+    _FILE_NAME_BUILD_PROJ = "build_proj.py"
     # ----------------------------------------------------------------------
     # the name of the build file to build LibPNG
     _FILE_NAME_BUILD_PTHREADS = "build_pthreads.py"
@@ -237,10 +237,10 @@ class Program :
                 # self._build(Program._FILE_NAME_BUILD_LIBJPEG)
                 # self._build(Program._FILE_NAME_BUILD_MUPARSER)
                 # self._build(Program._FILE_NAME_BUILD_NEWMAT)
-                #self._build(Program._FILE_NAME_BUILD_OPENCV)
-                self._build(Program._FILE_NAME_BUILD_OPENDIS)
-                self._build(Program._FILE_NAME_BUILD_OPENTHREADS)
-                self._build(Program._FILE_NAME_BUILD_PROJ4)
+                # self._build(Program._FILE_NAME_BUILD_OPENCV)
+                # self._build(Program._FILE_NAME_BUILD_OPENDIS)
+                # self._build(Program._FILE_NAME_BUILD_OPENTHREADS)
+                self._build(Program._FILE_NAME_BUILD_PROJ)
                 self._build(Program._FILE_NAME_BUILD_PTHREADS)
                 self._build(Program._FILE_NAME_BUILD_SZIP)
                 self._build(Program._FILE_NAME_BUILD_TBB)
