@@ -3,11 +3,12 @@
  * For conditions of distribution and use, see copyright notice in szlib.h 
  */
 
-/* @(#) $Id: example.c 36 2004-03-16 16:14:27Z epourmal $ */
+/* @(#) $Id$ */
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "SZconfig.h"
 #include "szlib.h"
 
 #define MAX_IMAGE_SIZE (1024*1024L)

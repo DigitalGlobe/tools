@@ -5,13 +5,13 @@
 #include "SZconfig.h"
 
 #ifndef HAVE_ENCODING
-#define REMOVE_SZIP_ENCODER 1 
+#define REMOVE_SZIP_ENCODER 1
 #endif
 
 #ifdef REMOVE_SZIP_ENCODER
-int szip_allow_encoding = 0; 
-extern char * szip_encoder_status = "SZIP ENCODER DISABLED";
+int szip_allow_encoding = 0;
+char * szip_encoder_status = "SZIP ENCODER DISABLED";
 #else
-int szip_allow_encoding = 1; 
-extern char * szip_encoder_status = "SZIP ENCODER ENABLED";
+int szip_allow_encoding = 1;
+char * szip_encoder_status = "SZIP ENCODER ENABLED";
 #endif

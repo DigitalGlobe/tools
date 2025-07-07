@@ -2,4 +2,4 @@
 ##                      Subdirectories to build in                         ##
 #############################################################################
 
-SUBDIRS=src test examples
+SUBDIRS=src test

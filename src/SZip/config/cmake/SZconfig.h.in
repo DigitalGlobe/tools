@@ -74,6 +74,3 @@
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */
 #cmakedefine size_t
-
-/* Define if cmake is used and building dynamic libraries */
-#cmakedefine SZIP_BUILT_AS_DYNAMIC_LIB @SZIP_BUILT_AS_DYNAMIC_LIB@
