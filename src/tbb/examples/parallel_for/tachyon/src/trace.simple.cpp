@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2021 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /*
@@ -47,20 +43,20 @@
     SUCH DAMAGE.
 */
 
-#include "machine.h"
-#include "types.h"
-#include "macros.h"
-#include "vector.h"
-#include "tgafile.h"
-#include "trace.h"
-#include "light.h"
-#include "shade.h"
-#include "camera.h"
-#include "util.h"
-#include "intersect.h"
-#include "global.h"
-#include "ui.h"
-#include "tachyon_video.h"
+#include "machine.hpp"
+#include "types.hpp"
+#include "macros.hpp"
+#include "vector.hpp"
+#include "tgafile.hpp"
+#include "trace.hpp"
+#include "light.hpp"
+#include "shade.hpp"
+#include "camera.hpp"
+#include "util.hpp"
+#include "intersect.hpp"
+#include "global.hpp"
+#include "ui.hpp"
+#include "tachyon_video.hpp"
 
 // shared but read-only so could be private too
 static thr_parms *all_parms;
@@ -72,15 +68,19 @@ static int stopy;
 static flt jitterscale;
 static int totaly;
 
-static color_t render_one_pixel (int x, int y, unsigned int *local_mbox, unsigned int &serial,
-                                 int startx, int stopx, int starty, int stopy)
-{
+static color_t render_one_pixel(int x,
+                                int y,
+                                unsigned int *local_mbox,
+                                unsigned int &serial,
+                                int startx,
+                                int stopx,
+                                int starty,
+                                int stopy) {
     /* private vars moved inside loop */
-    ray primary, sample;
-    color col, avcol;
-    int R,G,B;
+    ray primary;
+    color col;
+    int R, G, B;
     intersectstruct local_intersections;
-    int alias;
     /* end private */
 
     primary = camray(&scene, x, y);
@@ -97,28 +97,33 @@ static color_t render_one_pixel (int x, int y, unsigned int *local_mbox, unsigne
 
     /* Handle overexposure and underexposure here... */
     R = (int)(col.r * 255);
-    if ( R > 255 ) R = 255;
-    else if ( R < 0 ) R = 0;
+    if (R > 255)
+        R = 255;
+    else if (R < 0)
+        R = 0;
 
     G = (int)(col.g * 255);
-    if ( G > 255 ) G = 255;
-    else if ( G < 0 ) G = 0;
+    if (G > 255)
+        G = 255;
+    else if (G < 0)
+        G = 0;
 
     B = (int)(col.b * 255);
-    if ( B > 255 ) B = 255;
-    else if ( B < 0 ) B = 0;
+    if (B > 255)
+        B = 255;
+    else if (B < 0)
+        B = 0;
 
     return video->get_color(R, G, B);
 }
 
 #if DO_ITT_NOTIFY
-#include"ittnotify.h"
+#include "ittnotify.h"
 #endif
 
 #define RUNTIME_SERIAL 1
 #define RUNTIME_OPENMP 2
-#define RUNTIME_CILK   3
-#define RUNTIME_TBB    4
+#define RUNTIME_TBB    3
 
 #ifndef RUNTIME
 #define RUNTIME RUNTIME_TBB
@@ -127,28 +132,25 @@ static color_t render_one_pixel (int x, int y, unsigned int *local_mbox, unsigne
 #if RUNTIME == RUNTIME_OPENMP
 #include <omp.h>
 #elif RUNTIME == RUNTIME_TBB
-#include <tbb/tbb.h>
+#include "oneapi/tbb.h"
 #endif
 
-static void parallel_thread(void)
-{
-    unsigned int mboxsize = sizeof(unsigned int)*(max_objectid() + 20);
+static void parallel_thread(void) {
+    unsigned int mboxsize = sizeof(unsigned int) * (max_objectid() + 20);
 #if RUNTIME == RUNTIME_SERIAL
-    for ( int y = starty; y < stopy; y++ )
+    for (int y = starty; y < stopy; y++)
 #elif RUNTIME == RUNTIME_OPENMP
 #pragma omp parallel for
-    for ( int y = starty; y < stopy; y++ )
-#elif RUNTIME == RUNTIME_CILK
-    _Cilk_for(int y = starty; y < stopy; y++)
+    for (int y = starty; y < stopy; y++)
 #elif RUNTIME == RUNTIME_TBB
-    tbb::parallel_for(starty, stopy, [mboxsize] (int y)
+    oneapi::tbb::parallel_for(starty, stopy, [mboxsize] (int y)
 #endif
     {
         unsigned int serial = 1;
         unsigned int local_mbox[mboxsize];
         memset(local_mbox, 0, mboxsize);
         drawing_area drawing(startx, totaly - y, stopx - startx, 1);
-        for ( int x = startx; x < stopx; x++ ) {
+        for (int x = startx; x < stopx; x++) {
             color_t c = render_one_pixel(x, y, local_mbox, serial, startx, stopx, starty, stopy);
             drawing.put_pixel(c);
         }
@@ -159,8 +161,7 @@ static void parallel_thread(void)
 #endif
 }
 
-void * thread_trace(thr_parms * parms)
-{
+void *thread_trace(thr_parms *parms) {
     // shared but read-only so could be private too
     all_parms = parms;
     scene = parms->scene;
@@ -168,7 +169,7 @@ void * thread_trace(thr_parms * parms)
     stopx = parms->stopx;
     starty = parms->starty;
     stopy = parms->stopy;
-    jitterscale = 40.0*(scene.hres + scene.vres);
+    jitterscale = 40.0 * (scene.hres + scene.vres);
     totaly = parms->scene.vres - 1;
 
 #if DO_ITT_NOTIFY
@@ -179,5 +180,5 @@ void * thread_trace(thr_parms * parms)
     __itt_pause();
 #endif
 
-    return(NULL);
+    return (nullptr);
 }

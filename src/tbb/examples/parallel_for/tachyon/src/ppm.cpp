@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2023 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /*
@@ -49,81 +45,73 @@
 
 /*
  *  ppm.cpp - This file deals with PPM format image files (reading/writing)
- */ 
+ */
 
-/* For our puposes, we're interested only in the 3 byte per pixel 24 bit
+/* For our purposes, we're interested only in the 3 byte per pixel 24 bit
    truecolor sort of file..  Probably won't implement any decent checking
    at this point, probably choke on things like the # comments.. */
 
 // Try preventing lots of GCC warnings about ignored results of fscanf etc.
-#if !__INTEL_COMPILER
-
-#if __GNUC__<4 || __GNUC__==4 && __GNUC_MINOR__<5
-// For older versions of GCC, disable use of __wur in GLIBC
-#undef _FORTIFY_SOURCE
-#define _FORTIFY_SOURCE 0
-#else
-// Starting from 4.5, GCC has a suppression option
+#ifdef __GNUC__
 #pragma GCC diagnostic ignored "-Wunused-result"
 #endif
 
-#endif //__INTEL_COMPILER
+#include <cstdio>
 
-#include <stdio.h>
-#include "machine.h"
-#include "types.h"
-#include "util.h"
-#include "imageio.h" /* error codes etc */
-#include "ppm.h"
+#include "machine.hpp"
+#include "types.hpp"
+#include "util.hpp"
+#include "imageio.hpp" /* error codes etc */
+#include "ppm.hpp"
 
-static int getint(FILE * dfile) {
-  char ch[200];
-  int i;
-  int num;
+static int getint(FILE *dfile) {
+    char ch[200];
+    int i;
+    int num;
 
-  num=0; 
-  while (num==0) {
-    fscanf(dfile, "%s", ch);
-      while (ch[0]=='#') {
-        fgets(ch, 200, dfile);
-      }
-    num=sscanf(ch, "%d", &i);
-  }
-  return i;
+    num = 0;
+    while (num == 0) {
+        fscanf(dfile, "%s", ch);
+        while (ch[0] == '#') {
+            fgets(ch, 200, dfile);
+        }
+        num = sscanf(ch, "%d", &i);
+    }
+    return i;
 }
 
-int readppm(char * name, int * xres, int * yres, unsigned char **imgdata) {
-  char data[200];  
-  FILE * ifp;
-  int i;
-  size_t bytesread;
-  int datasize;
- 
-  ifp=fopen(name, "r");  
-  if (ifp==NULL) {
-    return IMAGEBADFILE; /* couldn't open the file */
-  }
-  fscanf(ifp, "%s", data);
- 
-  if (strcmp(data, "P6")) {
-     fclose(ifp);
-     return IMAGEUNSUP; /* not a format we support */
-  }
+int readppm(char *name, int *xres, int *yres, unsigned char **imgdata) {
+    char data[200];
+    FILE *ifp;
+    int i;
+    std::size_t bytesread;
+    int datasize;
 
-  *xres=getint(ifp);
-  *yres=getint(ifp);
-      i=getint(ifp); /* eat the maxval number */
-  fread(&i, 1, 1, ifp); /* eat the newline */ 
-  datasize = 3 * (*xres) * (*yres);
+    ifp = fopen(name, "r");
+    if (ifp == nullptr) {
+        return IMAGEBADFILE; /* couldn't open the file */
+    }
+    fscanf(ifp, "%s", data);
 
-  *imgdata=(unsigned char *)rt_getmem(datasize); 
+    if (strcmp(data, "P6")) {
+        fclose(ifp);
+        return IMAGEUNSUP; /* not a format we support */
+    }
 
-  bytesread=fread(*imgdata, 1, datasize, ifp);   
+    *xres = getint(ifp);
+    *yres = getint(ifp);
+    i = getint(ifp); /* eat the maxval number */
+    fread(&i, 1, 1, ifp); /* eat the newline */
+    datasize = 3 * (*xres) * (*yres);
 
-  fclose(ifp);
+    *imgdata = (unsigned char *)rt_getmem(datasize);
 
-  if (bytesread != datasize) 
-    return IMAGEREADERR;
-  
-  return IMAGENOERR;
+    bytesread = fread(*imgdata, 1, datasize, ifp);
+
+    fclose(ifp);
+
+    if (bytesread != datasize)
+        return IMAGEREADERR;
+
+    return IMAGENOERR;
 }

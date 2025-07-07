@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2021 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /*
@@ -52,78 +48,81 @@
  *           and handling subsequent calculations
  */
 
-#include "machine.h"
-#include "types.h"
-#include "macros.h"
-#include "vector.h"
-#include "tgafile.h"
-#include "trace.h"
-#include "light.h"
-#include "shade.h"
-#include "camera.h"
-#include "util.h"
-#include "intersect.h"
-#include "global.h"
-#include "ui.h"
-#include "tachyon_video.h"
+#include "machine.hpp"
+#include "types.hpp"
+#include "macros.hpp"
+#include "vector.hpp"
+#include "tgafile.hpp"
+#include "trace.hpp"
+#include "light.hpp"
+#include "shade.hpp"
+#include "camera.hpp"
+#include "util.hpp"
+#include "intersect.hpp"
+#include "global.hpp"
+#include "ui.hpp"
+#include "tachyon_video.hpp"
 
-color trace(ray * primary) {
-  if (primary->depth > 0) {
-    VNorm(&primary->d);
-    reset_intersection(primary->intstruct);
-    intersect_objects(primary);
-    return shader(primary);
-  }
+color trace(ray *primary) {
+    if (primary->depth > 0) {
+        VNorm(&primary->d);
+        reset_intersection(primary->intstruct);
+        intersect_objects(primary);
+        return shader(primary);
+    }
 
-  /* if ray is truncated, return the background as its color */
-  return primary->scene->background;
+    /* if ray is truncated, return the background as its color */
+    return primary->scene->background;
 }
 
-void * thread_io(void * parms) {
-  thr_io_parms p;
+void *thread_io(void *parms) {
+    thr_io_parms p;
 
-  p= *((thr_io_parms *) parms);
-  writetgaregion(p.tga, p.iwidth, p.iheight, p.startx, p.starty, 
-		p.stopx, p.stopy, p.buffer);
-  free(p.buffer); /* free the buffer once we are done with it.. */
-  free(parms);
+    p = *((thr_io_parms *)parms);
+    writetgaregion(p.tga, p.iwidth, p.iheight, p.startx, p.starty, p.stopx, p.stopy, p.buffer);
+    free(p.buffer); /* free the buffer once we are done with it.. */
+    free(parms);
 
-  return(NULL);
+    return (nullptr);
 }
 
 void trace_shm(scenedef scene, /*char * buffer,  */ int startx, int stopx, int starty, int stopy) {
+    thr_parms *parms;
 
-  thr_parms * parms;
+    parms = (thr_parms *)rt_getmem(sizeof(thr_parms));
 
-  parms = (thr_parms *) rt_getmem(sizeof(thr_parms));  
+    parms->tid = 0;
+    parms->nthr = 1;
+    parms->scene = scene;
+    parms->startx = startx;
+    parms->stopx = stopx;
+    parms->starty = starty;
+    parms->stopy = stopy;
 
-  parms->tid=0;
-  parms->nthr=1;
-  parms->scene=scene;
-  parms->startx=startx;
-  parms->stopx=stopx;
-  parms->starty=starty;
-  parms->stopy=stopy;
+    thread_trace(parms);
 
-  thread_trace(parms);
-
-  rt_freemem(parms);
+    rt_freemem(parms);
 }
 
-void trace_region(scenedef scene, void * tga, int startx, int starty, int stopx, int stopy) {
+void trace_region(scenedef scene, void *tga, int startx, int starty, int stopx, int stopy) {
+    if (scene.verbosemode) {
+        char msgtxt[2048];
+        sprintf(msgtxt,
+                "Node %3d tracing region  %4d, %4d  --->  %4d, %4d \n",
+                0,
+                startx,
+                starty,
+                stopx,
+                stopy);
+        rt_ui_message(MSG_0, msgtxt);
+    }
 
-  if (scene.verbosemode) {
-    char msgtxt[2048];
-    sprintf(msgtxt, "Node %3d tracing region  %4d, %4d  --->  %4d, %4d \n", 0, startx,starty,stopx,stopy);
-    rt_ui_message(MSG_0, msgtxt);
-  }
-
-  trace_shm(scene, /*buffer,*/ startx, stopx, starty, stopy);
-/* not used now
+    trace_shm(scene, /*buffer,*/ startx, stopx, starty, stopy);
+    /* not used now
   writetgaregion(tga, scene.hres, scene.vres, 
                  startx, starty, stopx, stopy, global_buffer);
 
-  if (scene.rawimage != NULL) {
+  if (scene.rawimage != nullptr) {
     int x, y;
     int totalx = stopx - startx + 1;
     for (y=starty; y<=stopy; y++) {

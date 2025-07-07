@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2024 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /*
@@ -49,99 +45,95 @@
 
 /*
  *  imageio.cpp - This file deals with reading/writing image files
- */ 
+ */
 
-/* For our puposes, we're interested only in the 3 byte per pixel 24 bit
+/* For our purposes, we're interested only in the 3 byte per pixel 24 bit
  * truecolor sort of file..
  */
 
-#include <stdio.h>
-#include "machine.h"
-#include "types.h"
-#include "util.h"
-#include "imageio.h"
-#include "ppm.h"     /* PPM files */
-#include "tgafile.h" /* Truevision Targa files */
-#include "jpeg.h"    /* JPEG files */
+#include <cstdio>
 
-static 
-int fakeimage(char * name, int * xres, int * yres, unsigned char ** imgdata) {
-  int i, imgsize;
+#include "machine.hpp"
+#include "types.hpp"
+#include "util.hpp"
+#include "imageio.hpp"
+#include "ppm.hpp" /* PPM files */
+#include "tgafile.hpp" /* Truevision Targa files */
 
-  fprintf(stderr, "Error loading image %s.  Faking it.\n", name);
-   
-  *xres = 2;
-  *yres = 2;
-  imgsize = 3 * (*xres) * (*yres);
-  *imgdata = (unsigned char *)rt_getmem(imgsize);
-  for (i=0; i<imgsize; i++) {
-    (*imgdata)[i] = 255;
-  }
+static int fakeimage(char *name, int *xres, int *yres, unsigned char **imgdata) {
+    int i, imgsize;
 
-  return IMAGENOERR;
+    fprintf(stderr, "Error loading image %s.  Faking it.\n", name);
+
+    *xres = 2;
+    *yres = 2;
+    imgsize = 3 * (*xres) * (*yres);
+    *imgdata = (unsigned char *)rt_getmem(imgsize);
+    for (i = 0; i < imgsize; i++) {
+        (*imgdata)[i] = 255;
+    }
+
+    return IMAGENOERR;
 }
 
+int readimage(rawimage *img) {
+    int rc;
+    int xres, yres;
+    unsigned char *imgdata = nullptr;
+    char *name = img->name;
 
-int readimage(rawimage * img) {
-  int rc;
-  int xres, yres;
-  unsigned char * imgdata = NULL;
-  char * name = img->name;
+    if (strstr(name, ".ppm")) {
+        rc = readppm(name, &xres, &yres, &imgdata);
+    }
+    else if (strstr(name, ".tga")) {
+        rc = readtga(name, &xres, &yres, &imgdata);
+    }
+    else if (strstr(name, ".jpg")) {
+        rc = IMAGEUNSUP;
+    }
+    else if (strstr(name, ".gif")) {
+        rc = IMAGEUNSUP;
+    }
+    else if (strstr(name, ".png")) {
+        rc = IMAGEUNSUP;
+    }
+    else if (strstr(name, ".tiff")) {
+        rc = IMAGEUNSUP;
+    }
+    else if (strstr(name, ".rgb")) {
+        rc = IMAGEUNSUP;
+    }
+    else if (strstr(name, ".xpm")) {
+        rc = IMAGEUNSUP;
+    }
+    else {
+        rc = readppm(name, &xres, &yres, &imgdata);
+    }
 
-  if (strstr(name, ".ppm")) { 
-    rc = readppm(name, &xres, &yres, &imgdata);
-  }
-  else if (strstr(name, ".tga")) {
-    rc = readtga(name, &xres, &yres, &imgdata);
-  }
-  else if (strstr(name, ".jpg")) {
-    rc = readjpeg(name, &xres, &yres, &imgdata);
-  }
-  else if (strstr(name, ".gif")) {
-    rc = IMAGEUNSUP; 
-  }
-  else if (strstr(name, ".png")) {
-    rc = IMAGEUNSUP; 
-  }
-  else if (strstr(name, ".tiff")) {
-    rc = IMAGEUNSUP; 
-  }
-  else if (strstr(name, ".rgb")) {
-    rc = IMAGEUNSUP; 
-  }
-  else if (strstr(name, ".xpm")) {
-    rc = IMAGEUNSUP; 
-  }
-  else {
-    rc = readppm(name, &xres, &yres, &imgdata);
-  } 
+    switch (rc) {
+        case IMAGEREADERR:
+            fprintf(stderr, "Short read encountered while loading image %s\n", name);
+            rc = IMAGENOERR; /* remap to non-fatal error */
+            break;
 
-  switch (rc) {
-    case IMAGEREADERR:
-      fprintf(stderr, "Short read encountered while loading image %s\n", name);
-      rc = IMAGENOERR; /* remap to non-fatal error */
-      break;
+        case IMAGEUNSUP:
+            fprintf(stderr, "Cannot read unsupported image format for image %s\n", name);
+            break;
+    }
 
-    case IMAGEUNSUP:
-      fprintf(stderr, "Cannot read unsupported image format for image %s\n", name);
-      break;
-  }    
+    /* If the image load failed, create a tiny white colored image to fake it */
+    /* this allows a scene to render even when a file can't be loaded */
+    if (rc != IMAGENOERR) {
+        rc = fakeimage(name, &xres, &yres, &imgdata);
+    }
 
-  /* If the image load failed, create a tiny white colored image to fake it */ 
-  /* this allows a scene to render even when a file can't be loaded */
-  if (rc != IMAGENOERR) {
-    rc = fakeimage(name, &xres, &yres, &imgdata);
-  }
+    /* If we succeeded in loading the image, return it. */
+    if (rc == IMAGENOERR) {
+        img->xres = xres;
+        img->yres = yres;
+        img->bpp = 3;
+        img->data = imgdata;
+    }
 
-  /* If we succeeded in loading the image, return it. */
-  if (rc == IMAGENOERR) { 
-    img->xres = xres;
-    img->yres = yres;
-    img->bpp = 3;  
-    img->data = imgdata;
-  }
-
-  return rc;
+    return rc;
 }
- 
-

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2021 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /*
@@ -50,84 +46,81 @@
 /* 
  * sphere.cpp - This file contains the functions for dealing with spheres.
  */
- 
-#include "machine.h"
-#include "types.h"
-#include "macros.h"
-#include "vector.h"
-#include "intersect.h"
-#include "util.h"
+
+#include "machine.hpp"
+#include "types.hpp"
+#include "macros.hpp"
+#include "vector.hpp"
+#include "intersect.hpp"
+#include "util.hpp"
 
 #define SPHERE_PRIVATE
-#include "sphere.h"
+#include "sphere.hpp"
 
-static object_methods sphere_methods = {
-  (void (*)(void *, void *))(sphere_intersect),
-  (void (*)(void *, void *, void *, void *))(sphere_normal),
-  sphere_bbox, 
-  free 
-};
+static object_methods sphere_methods = { (void (*)(void *, void *))(sphere_intersect),
+                                         (void (*)(void *, void *, void *, void *))(sphere_normal),
+                                         sphere_bbox,
+                                         free };
 
-object * newsphere(void * tex, vector ctr, flt rad) {
-  sphere * s;
-  
-  s=(sphere *) rt_getmem(sizeof(sphere));
-  memset(s, 0, sizeof(sphere));
-  s->methods = &sphere_methods;
+object *newsphere(void *tex, vector ctr, flt rad) {
+    sphere *s;
 
-  s->tex=(texture *)tex;
-  s->ctr=ctr;
-  s->rad=rad;
+    s = (sphere *)rt_getmem(sizeof(sphere));
+    memset(s, 0, sizeof(sphere));
+    s->methods = &sphere_methods;
 
-  return (object *) s;
+    s->tex = (texture *)tex;
+    s->ctr = ctr;
+    s->rad = rad;
+
+    return (object *)s;
 }
 
-static int sphere_bbox(void * obj, vector * min, vector * max) {
-  sphere * s = (sphere *) obj;
+static int sphere_bbox(void *obj, vector *min, vector *max) {
+    sphere *s = (sphere *)obj;
 
-  min->x = s->ctr.x - s->rad;
-  min->y = s->ctr.y - s->rad;
-  min->z = s->ctr.z - s->rad;
-  max->x = s->ctr.x + s->rad;
-  max->y = s->ctr.y + s->rad;
-  max->z = s->ctr.z + s->rad;
+    min->x = s->ctr.x - s->rad;
+    min->y = s->ctr.y - s->rad;
+    min->z = s->ctr.z - s->rad;
+    max->x = s->ctr.x + s->rad;
+    max->y = s->ctr.y + s->rad;
+    max->z = s->ctr.z + s->rad;
 
-  return 1;
+    return 1;
 }
 
-static void sphere_intersect(sphere * spr, ray * ry) {
-  flt b, disc, t1, t2, temp;
-  vector V;
+static void sphere_intersect(sphere *spr, ray *ry) {
+    flt b, disc, t1, t2, temp;
+    vector V;
 
-  VSUB(spr->ctr, ry->o, V);
-  VDOT(b, V, ry->d); 
-  VDOT(temp, V, V);  
+    VSUB(spr->ctr, ry->o, V);
+    VDOT(b, V, ry->d);
+    VDOT(temp, V, V);
 
-  disc=b*b + spr->rad*spr->rad - temp;
+    disc = b * b + spr->rad * spr->rad - temp;
 
-  if (disc<=0.0) return;
-  disc=sqrt(disc);
+    if (disc <= 0.0)
+        return;
+    disc = sqrt(disc);
 
-  t2=b+disc;
-  if (t2 <= SPEPSILON) 
-    return;
-  add_intersection(t2, (object *) spr, ry);  
+    t2 = b + disc;
+    if (t2 <= SPEPSILON)
+        return;
+    add_intersection(t2, (object *)spr, ry);
 
-  t1=b-disc;
-  if (t1 > SPEPSILON) 
-    add_intersection(t1, (object *) spr, ry);  
+    t1 = b - disc;
+    if (t1 > SPEPSILON)
+        add_intersection(t1, (object *)spr, ry);
 }
 
-static void sphere_normal(sphere * spr, vector * pnt, ray * incident, vector * N) {
-  VSub((vector *) pnt, &(spr->ctr), N);
+static void sphere_normal(sphere *spr, vector *pnt, ray *incident, vector *N) {
+    VSub((vector *)pnt, &(spr->ctr), N);
 
-  VNorm(N);
+    VNorm(N);
 
-  if (VDot(N, &(incident->d)) > 0.0)  {
-    N->x=-N->x;
-    N->y=-N->y;
-    N->z=-N->z;
-  } 
+    if (VDot(N, &(incident->d)) > 0.0) {
+        N->x = -N->x;
+        N->y = -N->y;
+        N->z = -N->z;
+    }
 }
-
-

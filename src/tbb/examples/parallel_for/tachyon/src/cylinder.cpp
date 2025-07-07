@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2021 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /*
@@ -50,222 +46,217 @@
 /* 
  * cylinder.cpp - This file contains the functions for dealing with cylinders.
  */
- 
-#include "machine.h"
-#include "types.h"
-#include "macros.h"
-#include "vector.h"
-#include "intersect.h"
-#include "util.h"
 
-#define CYLINDER_PRIVATE 
-#include "cylinder.h"
+#include "machine.hpp"
+#include "types.hpp"
+#include "macros.hpp"
+#include "vector.hpp"
+#include "intersect.hpp"
+#include "util.hpp"
 
-static object_methods cylinder_methods = {
-  (void (*)(void *, void *))(cylinder_intersect),
-  (void (*)(void *, void *, void *, void *))(cylinder_normal),
-  cylinder_bbox, 
-  free 
-};
+#define CYLINDER_PRIVATE
+#include "cylinder.hpp"
 
-static object_methods fcylinder_methods = {
-  (void (*)(void *, void *))(fcylinder_intersect),
-  (void (*)(void *, void *, void *, void *))(cylinder_normal),
-  fcylinder_bbox, 
-  free 
-};
+static object_methods cylinder_methods = { (void (*)(void *, void *))(cylinder_intersect),
+                                           (void (*)(void *, void *, void *, void *))(
+                                               cylinder_normal),
+                                           cylinder_bbox,
+                                           free };
 
+static object_methods fcylinder_methods = { (void (*)(void *, void *))(fcylinder_intersect),
+                                            (void (*)(void *, void *, void *, void *))(
+                                                cylinder_normal),
+                                            fcylinder_bbox,
+                                            free };
 
-object * newcylinder(void * tex, vector ctr, vector axis, flt rad) {
-  cylinder * c;
-  
-  c=(cylinder *) rt_getmem(sizeof(cylinder));
-  memset(c, 0, sizeof(cylinder));
-  c->methods = &cylinder_methods;
+object *newcylinder(void *tex, vector ctr, vector axis, flt rad) {
+    cylinder *c;
 
-  c->tex=(texture *) tex;
-  c->ctr=ctr;
-  c->axis=axis;
-  c->rad=rad;
-  return (object *) c;
+    c = (cylinder *)rt_getmem(sizeof(cylinder));
+    memset(c, 0, sizeof(cylinder));
+    c->methods = &cylinder_methods;
+
+    c->tex = (texture *)tex;
+    c->ctr = ctr;
+    c->axis = axis;
+    c->rad = rad;
+    return (object *)c;
 }
 
-static int cylinder_bbox(void * obj, vector * min, vector * max) {
-  return 0; /* infinite / unbounded object */
+static int cylinder_bbox(void *obj, vector *min, vector *max) {
+    return 0; /* infinite / unbounded object */
 }
 
-static void cylinder_intersect(cylinder * cyl, ray * ry) {
-  vector rc, n, D, O;  
-  flt t, s, tin, tout, ln, d; 
+static void cylinder_intersect(cylinder *cyl, ray *ry) {
+    vector rc, n, D, O;
+    flt t, s, tin, tout, ln, d;
 
-  rc.x = ry->o.x - cyl->ctr.x;
-  rc.y = ry->o.y - cyl->ctr.y;
-  rc.z = ry->o.z - cyl->ctr.z; 
+    rc.x = ry->o.x - cyl->ctr.x;
+    rc.y = ry->o.y - cyl->ctr.y;
+    rc.z = ry->o.z - cyl->ctr.z;
 
-  VCross(&ry->d, &cyl->axis, &n);
+    VCross(&ry->d, &cyl->axis, &n);
 
-  VDOT(ln, n, n);
-  ln=sqrt(ln);    /* finish length calculation */
+    VDOT(ln, n, n);
+    ln = sqrt(ln); /* finish length calculation */
 
-  if (ln == 0.0) {  /* ray is parallel to the cylinder.. */
-    VDOT(d, rc, cyl->axis);         
-    D.x = rc.x - d * cyl->axis.x; 
-    D.y = rc.y - d * cyl->axis.y;
-    D.z = rc.z - d * cyl->axis.z;
-    VDOT(d, D, D);
-    d = sqrt(d);
-    tin = -FHUGE;
-    tout = FHUGE;
-    /* if (d <= cyl->rad) then ray is inside cylinder.. else outside */
-  }
+    if (ln == 0.0) { /* ray is parallel to the cylinder.. */
+        VDOT(d, rc, cyl->axis);
+        D.x = rc.x - d * cyl->axis.x;
+        D.y = rc.y - d * cyl->axis.y;
+        D.z = rc.z - d * cyl->axis.z;
+        VDOT(d, D, D);
+        d = sqrt(d);
+        tin = -FHUGE;
+        tout = FHUGE;
+        /* if (d <= cyl->rad) then ray is inside cylinder.. else outside */
+    }
 
-  VNorm(&n);
-  VDOT(d, rc, n);
-  d = fabs(d); 
+    VNorm(&n);
+    VDOT(d, rc, n);
+    d = fabs(d);
 
-  if (d <= cyl->rad) {  /* ray intersects cylinder.. */
-    VCross(&rc, &cyl->axis, &O);
-    VDOT(t, O, n);
-    t = - t / ln;
-    VCross(&n, &cyl->axis, &O); 
-    VNorm(&O);
-    VDOT(s, ry->d, O);
-    s = fabs(sqrt(cyl->rad*cyl->rad - d*d) / s);
-    tin = t - s;
-    add_intersection(tin, (object *) cyl, ry); 
-    tout = t + s;
-    add_intersection(tout, (object *) cyl, ry);
-  }
+    if (d <= cyl->rad) { /* ray intersects cylinder.. */
+        VCross(&rc, &cyl->axis, &O);
+        VDOT(t, O, n);
+        t = -t / ln;
+        VCross(&n, &cyl->axis, &O);
+        VNorm(&O);
+        VDOT(s, ry->d, O);
+        s = fabs(sqrt(cyl->rad * cyl->rad - d * d) / s);
+        tin = t - s;
+        add_intersection(tin, (object *)cyl, ry);
+        tout = t + s;
+        add_intersection(tout, (object *)cyl, ry);
+    }
 }
 
-static void cylinder_normal(cylinder * cyl, vector * pnt, ray * incident, vector * N) {
-  vector a,b,c;
-  flt t;
+static void cylinder_normal(cylinder *cyl, vector *pnt, ray *incident, vector *N) {
+    vector a, b, c;
+    flt t;
 
-  VSub((vector *) pnt, &(cyl->ctr), &a);
+    VSub((vector *)pnt, &(cyl->ctr), &a);
 
-  c=cyl->axis;
+    c = cyl->axis;
 
-  VNorm(&c);
- 
-  VDOT(t, a, c);
+    VNorm(&c);
 
-  b.x = c.x * t + cyl->ctr.x; 
-  b.y = c.y * t + cyl->ctr.y;
-  b.z = c.z * t + cyl->ctr.z;
+    VDOT(t, a, c);
 
-  VSub(pnt, &b, N); 
-  VNorm(N);
+    b.x = c.x * t + cyl->ctr.x;
+    b.y = c.y * t + cyl->ctr.y;
+    b.z = c.z * t + cyl->ctr.z;
 
-  if (VDot(N, &(incident->d)) > 0.0)  { /* make cylinder double sided */
-    N->x=-N->x;
-    N->y=-N->y;
-    N->z=-N->z;
-  } 
+    VSub(pnt, &b, N);
+    VNorm(N);
+
+    if (VDot(N, &(incident->d)) > 0.0) { /* make cylinder double sided */
+        N->x = -N->x;
+        N->y = -N->y;
+        N->z = -N->z;
+    }
 }
 
-object * newfcylinder(void * tex, vector ctr, vector axis, flt rad) {
-  cylinder * c;
-  
-  c=(cylinder *) rt_getmem(sizeof(cylinder));
-  memset(c, 0, sizeof(cylinder));
-  c->methods = &fcylinder_methods;
+object *newfcylinder(void *tex, vector ctr, vector axis, flt rad) {
+    cylinder *c;
 
-  c->tex=(texture *) tex;
-  c->ctr=ctr;
-  c->axis=axis;
-  c->rad=rad;
+    c = (cylinder *)rt_getmem(sizeof(cylinder));
+    memset(c, 0, sizeof(cylinder));
+    c->methods = &fcylinder_methods;
 
-  return (object *) c;
+    c->tex = (texture *)tex;
+    c->ctr = ctr;
+    c->axis = axis;
+    c->rad = rad;
+
+    return (object *)c;
 }
 
-static int fcylinder_bbox(void * obj, vector * min, vector * max) {
-  cylinder * c = (cylinder *) obj;
-  vector mintmp, maxtmp;
+static int fcylinder_bbox(void *obj, vector *min, vector *max) {
+    cylinder *c = (cylinder *)obj;
+    vector mintmp, maxtmp;
 
-  mintmp.x = c->ctr.x;
-  mintmp.y = c->ctr.y;
-  mintmp.z = c->ctr.z;
-  maxtmp.x = c->ctr.x + c->axis.x;
-  maxtmp.y = c->ctr.y + c->axis.y;
-  maxtmp.z = c->ctr.z + c->axis.z;
+    mintmp.x = c->ctr.x;
+    mintmp.y = c->ctr.y;
+    mintmp.z = c->ctr.z;
+    maxtmp.x = c->ctr.x + c->axis.x;
+    maxtmp.y = c->ctr.y + c->axis.y;
+    maxtmp.z = c->ctr.z + c->axis.z;
 
-  min->x = MYMIN(mintmp.x, maxtmp.x);
-  min->y = MYMIN(mintmp.y, maxtmp.y);
-  min->z = MYMIN(mintmp.z, maxtmp.z);
-  min->x -= c->rad;
-  min->y -= c->rad;
-  min->z -= c->rad;
+    min->x = MYMIN(mintmp.x, maxtmp.x);
+    min->y = MYMIN(mintmp.y, maxtmp.y);
+    min->z = MYMIN(mintmp.z, maxtmp.z);
+    min->x -= c->rad;
+    min->y -= c->rad;
+    min->z -= c->rad;
 
-  max->x = MYMAX(mintmp.x, maxtmp.x);
-  max->y = MYMAX(mintmp.y, maxtmp.y);
-  max->z = MYMAX(mintmp.z, maxtmp.z);
-  max->x += c->rad;
-  max->y += c->rad;
-  max->z += c->rad;
+    max->x = MYMAX(mintmp.x, maxtmp.x);
+    max->y = MYMAX(mintmp.y, maxtmp.y);
+    max->z = MYMAX(mintmp.z, maxtmp.z);
+    max->x += c->rad;
+    max->y += c->rad;
+    max->z += c->rad;
 
-  return 1;
+    return 1;
 }
 
+static void fcylinder_intersect(cylinder *cyl, ray *ry) {
+    vector rc, n, O, hit, tmp2, ctmp4;
+    flt t, s, tin, tout, ln, d, tmp, tmp3;
 
-static void fcylinder_intersect(cylinder * cyl, ray * ry) {
-  vector rc, n, O, hit, tmp2, ctmp4;
-  flt t, s, tin, tout, ln, d, tmp, tmp3;
- 
-  rc.x = ry->o.x - cyl->ctr.x;  
-  rc.y = ry->o.y - cyl->ctr.y;
-  rc.z = ry->o.z - cyl->ctr.z;
- 
-  VCross(&ry->d, &cyl->axis, &n);
- 
-  VDOT(ln, n, n);
-  ln=sqrt(ln);    /* finish length calculation */
- 
-  if (ln == 0.0) {  /* ray is parallel to the cylinder.. */
-    return;       /* in this case, we want to miss or go through the "hole" */
-  }
- 
-  VNorm(&n);
-  VDOT(d, rc, n);
-  d = fabs(d);
- 
-  if (d <= cyl->rad) {  /* ray intersects cylinder.. */
-    VCross(&rc, &cyl->axis, &O);
-    VDOT(t, O, n);
-    t = - t / ln;
-    VCross(&n, &cyl->axis, &O);
-    VNorm(&O);
-    VDOT(s, ry->d, O);
-    s = fabs(sqrt(cyl->rad*cyl->rad - d*d) / s);
-    tin = t - s;
+    rc.x = ry->o.x - cyl->ctr.x;
+    rc.y = ry->o.y - cyl->ctr.y;
+    rc.z = ry->o.z - cyl->ctr.z;
 
-    RAYPNT(hit, (*ry), tin); 
+    VCross(&ry->d, &cyl->axis, &n);
 
-    ctmp4=cyl->axis;
-    VNorm(&ctmp4);
+    VDOT(ln, n, n);
+    ln = sqrt(ln); /* finish length calculation */
 
-    tmp2.x = hit.x - cyl->ctr.x;   
-    tmp2.y = hit.y - cyl->ctr.y;   
-    tmp2.z = hit.z - cyl->ctr.z;   
+    if (ln == 0.0) { /* ray is parallel to the cylinder.. */
+        return; /* in this case, we want to miss or go through the "hole" */
+    }
 
-    VDOT(tmp,  tmp2, ctmp4);
-    VDOT(tmp3, cyl->axis, cyl->axis);
+    VNorm(&n);
+    VDOT(d, rc, n);
+    d = fabs(d);
 
-    if ((tmp > 0.0) && (tmp < sqrt(tmp3))) 
-      add_intersection(tin, (object *) cyl, ry);
-    tout = t + s;
+    if (d <= cyl->rad) { /* ray intersects cylinder.. */
+        VCross(&rc, &cyl->axis, &O);
+        VDOT(t, O, n);
+        t = -t / ln;
+        VCross(&n, &cyl->axis, &O);
+        VNorm(&O);
+        VDOT(s, ry->d, O);
+        s = fabs(sqrt(cyl->rad * cyl->rad - d * d) / s);
+        tin = t - s;
 
-    RAYPNT(hit, (*ry), tout); 
+        RAYPNT(hit, (*ry), tin);
 
-    tmp2.x = hit.x - cyl->ctr.x;   
-    tmp2.y = hit.y - cyl->ctr.y;   
-    tmp2.z = hit.z - cyl->ctr.z;   
+        ctmp4 = cyl->axis;
+        VNorm(&ctmp4);
 
-    VDOT(tmp,  tmp2, ctmp4); 
-    VDOT(tmp3, cyl->axis, cyl->axis);
+        tmp2.x = hit.x - cyl->ctr.x;
+        tmp2.y = hit.y - cyl->ctr.y;
+        tmp2.z = hit.z - cyl->ctr.z;
 
-    if ((tmp > 0.0) && (tmp < sqrt(tmp3))) 
-      add_intersection(tout, (object *) cyl, ry);
-  }
+        VDOT(tmp, tmp2, ctmp4);
+        VDOT(tmp3, cyl->axis, cyl->axis);
+
+        if ((tmp > 0.0) && (tmp < sqrt(tmp3)))
+            add_intersection(tin, (object *)cyl, ry);
+        tout = t + s;
+
+        RAYPNT(hit, (*ry), tout);
+
+        tmp2.x = hit.x - cyl->ctr.x;
+        tmp2.y = hit.y - cyl->ctr.y;
+        tmp2.z = hit.z - cyl->ctr.z;
+
+        VDOT(tmp, tmp2, ctmp4);
+        VDOT(tmp3, cyl->axis, cyl->axis);
+
+        if ((tmp > 0.0) && (tmp < sqrt(tmp3)))
+            add_intersection(tout, (object *)cyl, ry);
+    }
 }
-

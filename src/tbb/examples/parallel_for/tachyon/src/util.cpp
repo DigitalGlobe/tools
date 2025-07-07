@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2021 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /*
@@ -51,22 +47,22 @@
  * util.cpp - Contains all of the timing functions for various platforms.
  */
 
-#include "machine.h"
-#include "types.h"
-#include "macros.h"
-#include "util.h"
-#include "light.h"
-#include "global.h"
-#include "ui.h"
+#include "machine.hpp"
+#include "types.hpp"
+#include "macros.hpp"
+#include "util.hpp"
+#include "light.hpp"
+#include "global.hpp"
+#include "ui.hpp"
 
 void rt_finalize(void);
 
-#if !defined( _WIN32 )
+#if !defined(_WIN32)
 #include <sys/time.h>
 #include <unistd.h>
 
 void rt_sleep(int msec) {
-    usleep(msec*1000);
+    usleep(msec * 1000);
 }
 
 #else //_WIN32
@@ -78,98 +74,95 @@ void rt_sleep(int msec) {
 #if !WIN8UI_EXAMPLE
     Sleep(msec);
 #else
-    std::chrono::milliseconds sleep_time( msec );
-    std::this_thread::sleep_for( sleep_time );
+    std::chrono::milliseconds sleep_time(msec);
+    std::this_thread::sleep_for(sleep_time);
 #endif
 }
 
 timer gettimer(void) {
-    return GetTickCount ();
+    return GetTickCount();
 }
 
 flt timertime(timer st, timer fn) {
-   double ttime, start, end;
+    double ttime, start, end;
 
-   start = ((double) st) / ((double) 1000.00);
-     end = ((double) fn) / ((double) 1000.00);
-   ttime = end - start;
+    start = ((double)st) / ((double)1000.00);
+    end = ((double)fn) / ((double)1000.00);
+    ttime = end - start;
 
-   return ttime;
+    return ttime;
 }
-#endif  /*  _WIN32  */
+#endif /*  _WIN32  */
 
 /* if we're on a Unix with gettimeofday() we'll use newer timers */
-#if defined( STDTIME )
-  struct timezone tz;
+#if defined(STDTIME)
+struct timezone tz;
 
 timer gettimer(void) {
-  timer t;
-  gettimeofday(&t, &tz);
-  return t;
-} 
-  
+    timer t;
+    gettimeofday(&t, &tz);
+    return t;
+}
+
 flt timertime(timer st, timer fn) {
-   double ttime, start, end;
+    double ttime, start, end;
 
-   start = (st.tv_sec+1.0*st.tv_usec / 1000000.0);
-     end = (fn.tv_sec+1.0*fn.tv_usec / 1000000.0);
-   ttime = end - start;
+    start = (st.tv_sec + 1.0 * st.tv_usec / 1000000.0);
+    end = (fn.tv_sec + 1.0 * fn.tv_usec / 1000000.0);
+    ttime = end - start;
 
-   return ttime;
-}  
-#endif  /*  STDTIME  */
-
-
+    return ttime;
+}
+#endif /*  STDTIME  */
 
 /* use the old fashioned Unix time functions */
-#if defined( OLDUNIXTIME )
+#if defined(OLDUNIXTIME)
 timer gettimer(void) {
-  return time(NULL);
+    return time(nullptr);
 }
 
 flt timertime(timer st, timer fn) {
-  return difftime(fn, st);;
+    return difftime(fn, st);
+    ;
 }
-#endif  /*  OLDUNIXTIME  */
-
-
+#endif /*  OLDUNIXTIME  */
 
 /* random other helper utility functions */
 int rt_meminuse(void) {
-  return rt_mem_in_use;
-}  
-
-void * rt_getmem(unsigned int bytes) {
-  void * mem;
-
-  mem=malloc( bytes );
-  if (mem!=NULL) { 
-    rt_mem_in_use += bytes;
-  } 
-  else {
-    rtbomb("No more memory!!!!");
-  }
-  return mem;
+    return rt_mem_in_use;
 }
 
-unsigned int rt_freemem(void * addr) {
-  unsigned int bytes;
+void* rt_getmem(unsigned int bytes) {
+    void* mem;
 
-  free(addr);
-
-  bytes=0;
-  rt_mem_in_use -= bytes; 
-  return bytes;
+    mem = malloc(bytes);
+    if (mem != nullptr) {
+        rt_mem_in_use += bytes;
+    }
+    else {
+        rtbomb("No more memory!!!!");
+    }
+    return mem;
 }
 
-void rtbomb(const char * msg) {
+unsigned int rt_freemem(void* addr) {
+    unsigned int bytes;
+
+    free(addr);
+
+    bytes = 0;
+    rt_mem_in_use -= bytes;
+    return bytes;
+}
+
+void rtbomb(const char* msg) {
     rt_ui_message(MSG_ERR, msg);
     rt_ui_message(MSG_ABORT, "Rendering Aborted.");
 
-  rt_finalize();
-  exit(1);
+    rt_finalize();
+    std::exit(-1);
 }
 
-void rtmesg(const char * msg) {
+void rtmesg(const char* msg) {
     rt_ui_message(MSG_0, msg);
 }

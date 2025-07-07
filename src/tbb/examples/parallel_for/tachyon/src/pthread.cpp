@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2025 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /*
@@ -50,107 +46,103 @@
 #ifdef EMULATE_PTHREADS
 
 #include <assert.h>
-#include "pthread_w.h"
+#include "pthread_w.hpp"
 
 /*
     Basics
 */
 
-int
-pthread_create (pthread_t *thread, pthread_attr_t *attr, void *(*start_routine) (void *), void *arg)
-{
+int pthread_create(pthread_t *thread,
+                   pthread_attr_t *attr,
+                   void *(*start_routine)(void *),
+                   void *arg) {
     pthread_t th;
 
-    if (thread == NULL) return EINVAL;
-    *thread = NULL;
+    if (thread == nullptr)
+        return EINVAL;
+    *thread = nullptr;
 
-    if (start_routine == NULL) return EINVAL;
+    if (start_routine == nullptr)
+        return EINVAL;
 
-    th = (pthread_t) malloc (sizeof (pthread_s));
-    memset (th, 0, sizeof (pthread_s));
+    th = (pthread_t)malloc(sizeof(pthread_s));
+    memset(th, 0, sizeof(pthread_s));
 
-    th->winthread_handle = CreateThread (
-        NULL,
-        0,
-        (LPTHREAD_START_ROUTINE) start_routine,
-        arg,
-        0,
-        &th->winthread_id);
-    if (th->winthread_handle == NULL) return EAGAIN;  /*  GetLastError()  */
+    th->winthread_handle =
+        CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)start_routine, arg, 0, &th->winthread_id);
+    if (th->winthread_handle == nullptr)
+        return EAGAIN; /*  GetLastError()  */
 
     *thread = th;
     return 0;
 }
 
-int
-pthread_join (pthread_t th, void **thread_return)
-{
+int pthread_join(pthread_t th, void **thread_return) {
     BOOL b_ret;
     DWORD dw_ret;
 
-    if (thread_return) *thread_return = NULL;
+    if (thread_return)
+        *thread_return = nullptr;
 
-    if ((th == NULL) || (th->winthread_handle == NULL)) return EINVAL;
+    if ((th == nullptr) || (th->winthread_handle == nullptr))
+        return EINVAL;
 
-    dw_ret = WaitForSingleObject (th->winthread_handle, INFINITE);
-    if (dw_ret != WAIT_OBJECT_0) return ERROR_PTHREAD;  /*  dw_ret == WAIT_FAILED; GetLastError()  */
+    dw_ret = WaitForSingleObject(th->winthread_handle, INFINITE);
+    if (dw_ret != WAIT_OBJECT_0)
+        return ERROR_PTHREAD; /*  dw_ret == WAIT_FAILED; GetLastError()  */
 
     if (thread_return) {
         BOOL e_ret;
         DWORD exit_val;
-        e_ret = GetExitCodeThread (th->winthread_handle, &exit_val);
-        if (!e_ret) return ERROR_PTHREAD;  /*  GetLastError()  */
-        *thread_return = (void *)(size_t) exit_val;
+        e_ret = GetExitCodeThread(th->winthread_handle, &exit_val);
+        if (!e_ret)
+            return ERROR_PTHREAD; /*  GetLastError()  */
+        *thread_return = (void *)(std::size_t)exit_val;
     }
 
-    b_ret = CloseHandle (th->winthread_handle);
-    if (!b_ret) return ERROR_PTHREAD;  /*  GetLastError()  */
-    memset (th, 0, sizeof (pthread_s));
-    free (th);
-    th = NULL;
+    b_ret = CloseHandle(th->winthread_handle);
+    if (!b_ret)
+        return ERROR_PTHREAD; /*  GetLastError()  */
+    memset(th, 0, sizeof(pthread_s));
+    free(th);
+    th = nullptr;
 
     return 0;
 }
 
-void
-pthread_exit (void *retval)
-{
+void pthread_exit(void *retval) {
     /*  specific to PTHREAD_TO_WINTHREAD  */
 
-    ExitThread ((DWORD) ((size_t) retval));  /*  thread becomes signalled so its death can be waited upon  */
+    /* clang-format off */
+    ExitThread((DWORD)(
+        (std::size_t)retval)); /* thread becomes signalled so its death can be waited upon */
+    /* clang-format on */
     /*NOTREACHED*/
-    assert (0); return;  /*  void fnc; can't return an error code  */
+    assert(0);
+    return; /* void fnc; can't return an error code */
 }
 
 /*
     Mutex
 */
 
-int
-pthread_mutex_init (pthread_mutex_t *mutex, pthread_mutexattr_t *mutex_attr)
-{
-    InitializeCriticalSection (&mutex->critsec);
+int pthread_mutex_init(pthread_mutex_t *mutex, pthread_mutexattr_t *mutex_attr) {
+    InitializeCriticalSection(&mutex->critsec);
     return 0;
 }
 
-int
-pthread_mutex_destroy (pthread_mutex_t *mutex)
-{
+int pthread_mutex_destroy(pthread_mutex_t *mutex) {
     return 0;
 }
 
-int
-pthread_mutex_lock (pthread_mutex_t *mutex)
-{
-    EnterCriticalSection (&mutex->critsec);
+int pthread_mutex_lock(pthread_mutex_t *mutex) {
+    EnterCriticalSection(&mutex->critsec);
     return 0;
 }
 
-int
-pthread_mutex_unlock (pthread_mutex_t *mutex)
-{
-    LeaveCriticalSection (&mutex->critsec);
+int pthread_mutex_unlock(pthread_mutex_t *mutex) {
+    LeaveCriticalSection(&mutex->critsec);
     return 0;
 }
 
-#endif  /*  EMULATE_PTHREADS  */
+#endif /*  EMULATE_PTHREADS  */

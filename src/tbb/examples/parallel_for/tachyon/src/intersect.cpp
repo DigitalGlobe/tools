@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2021 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /*
@@ -51,127 +47,119 @@
  * intersect.cpp - This file contains code for CSG and intersection routines.
  */
 
-#include "machine.h"
-#include "types.h"
-#include "intersect.h"
-#include "light.h"
-#include "util.h"
-#include "global.h"
+#include "machine.hpp"
+#include "types.hpp"
+#include "intersect.hpp"
+#include "light.hpp"
+#include "util.hpp"
+#include "global.hpp"
 
 unsigned int new_objectid(void) {
-  return numobjects++; /* global used to generate unique object ID's */
+    return numobjects++; /* global used to generate unique object ID's */
 }
 
 unsigned int max_objectid(void) {
-  return numobjects;
+    return numobjects;
 }
 
-void add_object(object * obj) {
-  object * objtemp;
+void add_object(object *obj) {
+    object *objtemp;
 
-  if (obj == NULL)
-    return;
+    if (obj == nullptr)
+        return;
 
-  obj->id = new_objectid();
+    obj->id = new_objectid();
 
-  objtemp = rootobj;
-  rootobj = obj;
-  obj->nextobj = objtemp;
+    objtemp = rootobj;
+    rootobj = obj;
+    obj->nextobj = objtemp;
 }
 
-void free_objects(object * start) {
-  object * cur;
-  object * cur2;
+void free_objects(object *start) {
+    object *cur;
+    object *cur2;
 
-  cur=start; 
-  while (cur->nextobj != NULL) { 
-    cur2=(object *)cur->nextobj;
-    cur->methods->free(cur);
-    cur=cur2;
-  }
-  free(cur);
-
+    cur = start;
+    while (cur->nextobj != nullptr) {
+        cur2 = (object *)cur->nextobj;
+        cur->methods->free(cur);
+        cur = cur2;
+    }
+    free(cur);
 }
 
 void reset_object(void) {
-  if (rootobj != NULL)
-    free_objects(rootobj);
+    if (rootobj != nullptr)
+        free_objects(rootobj);
 
-  rootobj = NULL;
-  numobjects = 0; /* set number of objects back to 0 */
+    rootobj = nullptr;
+    numobjects = 0; /* set number of objects back to 0 */
 }
 
-void intersect_objects(ray * intray) {
-  object * cur;
-  object temp;
+void intersect_objects(ray *intray) {
+    object *cur;
+    object temp;
 
-  temp.nextobj = rootobj; /* setup the initial object pointers.. */
-  cur = &temp;            /* ready, set                          */
+    temp.nextobj = rootobj; /* setup the initial object pointers.. */
+    cur = &temp; /* ready, set                          */
 
-  while ((cur=(object *)cur->nextobj) != NULL)          
-    cur->methods->intersect(cur, intray); 
+    while ((cur = (object *)cur->nextobj) != nullptr)
+        cur->methods->intersect(cur, intray);
 }
 
-void reset_intersection(intersectstruct * intstruct) {
-  intstruct->num = 0;
-  intstruct->list[0].t = FHUGE;
-  intstruct->list[0].obj = NULL;
-  intstruct->list[1].t = FHUGE;
-  intstruct->list[1].obj = NULL;
+void reset_intersection(intersectstruct *intstruct) {
+    intstruct->num = 0;
+    intstruct->list[0].t = FHUGE;
+    intstruct->list[0].obj = nullptr;
+    intstruct->list[1].t = FHUGE;
+    intstruct->list[1].obj = nullptr;
 }
 
-void add_intersection(flt t, object * obj, ray * ry) {
-  intersectstruct * intstruct = ry->intstruct;
+void add_intersection(flt t, object *obj, ray *ry) {
+    intersectstruct *intstruct = ry->intstruct;
 
-  if (t > EPSILON) {
+    if (t > EPSILON) {
+        /* if we hit something before maxdist update maxdist */
+        if (t < ry->maxdist) {
+            ry->maxdist = t;
 
-    /* if we hit something before maxdist update maxdist */
-    if (t < ry->maxdist) {
-      ry->maxdist = t;
+            /* if we hit *anything* before maxdist, and we're firing a */
+            /* shadow ray, then we are finished ray tracing the shadow */
+            if (ry->flags & RT_RAY_SHADOW)
+                ry->flags |= RT_RAY_FINISHED;
+        }
 
-      /* if we hit *anything* before maxdist, and we're firing a */
-      /* shadow ray, then we are finished ray tracing the shadow */
-      if (ry->flags & RT_RAY_SHADOW)
-        ry->flags |= RT_RAY_FINISHED;
+        intstruct->num++;
+        intstruct->list[intstruct->num].obj = obj;
+        intstruct->list[intstruct->num].t = t;
+    }
+}
+
+int closest_intersection(flt *t, object **obj, intersectstruct *intstruct) {
+    int i;
+    *t = FHUGE;
+
+    for (i = 1; i <= intstruct->num; i++) {
+        if (intstruct->list[i].t < *t) {
+            *t = intstruct->list[i].t;
+            *obj = intstruct->list[i].obj;
+        }
     }
 
-    intstruct->num++;
-    intstruct->list[intstruct->num].obj = obj;
-    intstruct->list[intstruct->num].t = t;
-  }
+    return intstruct->num;
 }
 
+int shadow_intersection(intersectstruct *intstruct, flt maxdist) {
+    int i;
 
-int closest_intersection(flt * t, object ** obj, intersectstruct * intstruct) {
-  int i;
-  *t=FHUGE;
-
-  for (i=1; i<=intstruct->num; i++) {
-    if (intstruct->list[i].t < *t) {
-        *t=intstruct->list[i].t;
-      *obj=intstruct->list[i].obj;
+    if (intstruct->num > 0) {
+        for (i = 1; i <= intstruct->num; i++) {
+            if ((intstruct->list[i].t < maxdist) &&
+                (intstruct->list[i].obj->tex->shadowcast == 1)) {
+                return 1;
+            }
+        }
     }
-  } 
 
-  return intstruct->num;
+    return 0;
 }
-
-int shadow_intersection(intersectstruct * intstruct, flt maxdist) {
-  int i;
-  
-  if (intstruct->num > 0) {
-    for (i=1; i<=intstruct->num; i++) {
-      if ((intstruct->list[i].t < maxdist) && 
-          (intstruct->list[i].obj->tex->shadowcast == 1)) {
-        return 1;
-      }
-    }
-  }
-  
-  return 0;
-}
-
-
-
-
-

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2023 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 #ifndef _itt_shared_malloc_TypeDefinitions_H_
@@ -29,7 +25,7 @@
 #       define __ARCH_ipf 1
 #   elif defined(_M_IX86)||defined(__i386__) // the latter for MinGW support
 #       define __ARCH_x86_32 1
-#   elif defined(_M_ARM)
+#   elif defined(_M_ARM) || defined(_M_ARM64) || defined(__aarch64__) // the latter for MinGW support
 #       define __ARCH_other 1
 #   else
 #       error Unknown processor architecture for Windows

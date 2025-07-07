@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2021 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /*
@@ -51,46 +47,44 @@
  * coordsys.cpp -  Routines to translate from one coordinate system to another.
  */
 
-#include "machine.h"
-#include "types.h"
-#include "coordsys.h"
+#include "machine.hpp"
+#include "types.hpp"
+#include "coordsys.hpp"
 
-void xytopolar(flt x, flt y, flt rad, flt * u, flt * v) {
-  flt r1;
-  r1=x*x + y*y;  
-  *v=sqrt(r1 / (rad*rad));
-  if (y<0.0) 
-    *u=1.0 - acos(x/sqrt(r1))/TWOPI;
-  else 
-    *u= acos(x/sqrt(r1))/TWOPI; 
+void xytopolar(flt x, flt y, flt rad, flt* u, flt* v) {
+    flt r1;
+    r1 = x * x + y * y;
+    *v = sqrt(r1 / (rad * rad));
+    if (y < 0.0)
+        *u = 1.0 - acos(x / sqrt(r1)) / TWOPI;
+    else
+        *u = acos(x / sqrt(r1)) / TWOPI;
 }
 
-void xyztocyl(vector pnt, flt height, flt * u, flt * v) {
-  flt r1;
+void xyztocyl(vector pnt, flt height, flt* u, flt* v) {
+    flt r1;
 
-  r1=pnt.x*pnt.x + pnt.y*pnt.y;
+    r1 = pnt.x * pnt.x + pnt.y * pnt.y;
 
-  *v=pnt.z / height;
-  if (pnt.y<0.0) 
-    *u=1.0 - acos(pnt.x/sqrt(r1))/TWOPI;
-  else 
-    *u=acos(pnt.x/sqrt(r1))/TWOPI;
+    *v = pnt.z / height;
+    if (pnt.y < 0.0)
+        *u = 1.0 - acos(pnt.x / sqrt(r1)) / TWOPI;
+    else
+        *u = acos(pnt.x / sqrt(r1)) / TWOPI;
 }
 
-void xyztospr(vector pnt, flt * u, flt * v) {
-  flt r1, phi, theta;
- 
-  r1=sqrt(pnt.x*pnt.x + pnt.y*pnt.y + pnt.z*pnt.z);
+void xyztospr(vector pnt, flt* u, flt* v) {
+    flt r1, phi, theta;
 
-  phi=acos(-pnt.y/r1);   
-  *v=phi/3.1415926;
+    r1 = sqrt(pnt.x * pnt.x + pnt.y * pnt.y + pnt.z * pnt.z);
 
-  theta=acos((pnt.x/r1)/sin(phi))/TWOPI;
+    phi = acos(-pnt.y / r1);
+    *v = phi / 3.1415926;
 
-  if (pnt.z > 0.0) 
-    *u = theta;
-  else 
-    *u = 1 - theta; 
+    theta = acos((pnt.x / r1) / sin(phi)) / TWOPI;
+
+    if (pnt.z > 0.0)
+        *u = theta;
+    else
+        *u = 1 - theta;
 }
-
-

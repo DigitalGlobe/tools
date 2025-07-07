@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2021 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /*
@@ -51,15 +47,15 @@
  * global.cpp - any/all global data items etc should be in this file
  */
 
-#include "types.h"
-#include "machine.h"
-#include "sphere.h"
-#include "light.h"
+#include "types.hpp"
+#include "machine.hpp"
+#include "sphere.hpp"
+#include "light.hpp"
 
 /* stuff moved from intersect.c */
-object * rootobj = NULL; /* starts out empty. */
+object* rootobj = nullptr; /* starts out empty. */
 
-point_light * lightlist[MAXLIGHTS];
+point_light* lightlist[MAXLIGHTS];
 int numlights = 0;
 
 unsigned int numobjects = 0; /* used to assign unique object ID's */
@@ -71,4 +67,3 @@ unsigned int rt_mem_in_use = 0;
 int parinitted = 0;
 
 int graphicswindowopen = 0;
-

@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2025 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /*
@@ -47,21 +43,22 @@
     SUCH DAMAGE.
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #define VIDEO_WINMAIN_ARGS
-#include "types.h"
-#include "api.h"       /* The ray tracing library API */
-#include "parse.h"     /* Support for my own file format */
-#include "ui.h"
-#include "util.h"
-#include "tachyon_video.h"
-#include "../../../common/utility/utility.h"
+#include "types.hpp"
+#include "api.hpp" /* The ray tracing library API */
+#include "parse.hpp" /* Support for my own file format */
+#include "ui.hpp"
+#include "util.hpp"
+#include "tachyon_video.hpp"
+#include "common/utility/utility.hpp"
+#include "common/utility/measurements.hpp"
 
 #if WIN8UI_EXAMPLE
-#include "tbb/tbb.h"
+#include "oneapi/tbb.h"
 volatile long global_startTime = 0;
 volatile long global_elapsedTime = 0;
 volatile bool global_isCancelled = false;
@@ -69,132 +66,128 @@ volatile int global_number_of_threads;
 #endif
 
 SceneHandle global_scene;
-int global_xsize;     /*  size of graphic image rendered in window (from hres, vres)  */
+int global_xsize; /* size of graphic image rendered in window (from hres, vres) */
 int global_ysize;
-int global_xwinsize;  /*  size of window (may be larger than above)  */
+int global_xwinsize; /* size of window (may be larger than above) */
 int global_ywinsize;
 char *global_window_title;
 bool global_usegraphics;
 
 bool silent_mode = false; /* silent mode */
 
-class tachyon_video *video = 0;
+utility::measurements *global_measurements = nullptr;
+class tachyon_video *video = nullptr;
 
 typedef struct {
-  int foundfilename;      /* was a model file name found in the args? */
-  char filename[1024];    /* model file to render */
-  int useoutfilename;     /* command line override of output filename */
-  char outfilename[1024]; /* name of output image file */
-  int verbosemode;        /* verbose flags */
-  int antialiasing;       /* antialiasing setting */
-  int displaymode;        /* display mode */
-  int boundmode;          /* bounding mode */
-  int boundthresh;        /* bounding threshold */
-  int usecamfile;         /* use camera file */
-  char camfilename[1024]; /* camera filename */
+    int repeats; /* how many times to repeat rendering for statistics */
+    int foundfilename; /* was a model file name found in the args? */
+    char filename[1024]; /* model file to render */
+    int useoutfilename; /* command line override of output filename */
+    char outfilename[1024]; /* name of output image file */
+    int verbosemode; /* verbose flags */
+    int antialiasing; /* antialiasing setting */
+    int displaymode; /* display mode */
+    int boundmode; /* bounding mode */
+    int boundthresh; /* bounding threshold */
+    int usecamfile; /* use camera file */
+    char camfilename[1024]; /* camera filename */
 } argoptions;
 
-void initoptions(argoptions * opt) {
+void initoptions(argoptions *opt) {
     memset(opt, 0, sizeof(argoptions));
+    opt->repeats = 1;
     opt->foundfilename = -1;
     opt->useoutfilename = -1;
     opt->verbosemode = -1;
     opt->antialiasing = -1;
     opt->displaymode = -1;
-    opt->boundmode = -1; 
-    opt->boundthresh = -1; 
+    opt->boundmode = -1;
+    opt->boundthresh = -1;
     opt->usecamfile = -1;
 }
 
 #if WIN8UI_EXAMPLE
 int CreateScene() {
-
-   char* filename = "Assets/balls.dat";
+    char *filename = "Assets/balls.dat";
 
     global_scene = rt_newscene();
     rt_initialize();
 
-    if ( readmodel(filename, global_scene) != 0 ) {
+    if (readmodel(filename, global_scene) != 0) {
         rt_finalize();
         return -1;
     }
 
     // need these early for create_graphics_window() so grab these here...
-    scenedef *scene = (scenedef *) global_scene;
+    scenedef *scene = (scenedef *)global_scene;
 
     // scene->hres and scene->vres should be equal to screen resolution
     scene->hres = global_xwinsize = global_xsize;
-    scene->vres = global_ywinsize = global_ysize;  
+    scene->vres = global_ywinsize = global_ysize;
 
     return 0;
 }
 
-unsigned int __stdcall example_main(void *)
-{
-    try {
+unsigned int __stdcall example_main(void *) {
+    if (CreateScene() != 0)
+        std::exit(-1);
 
-        if ( CreateScene() != 0 )
-            exit(-1);
+    tachyon_video tachyon;
+    tachyon.threaded = true;
+    tachyon.init_console();
 
-        tachyon_video tachyon;
-        tachyon.threaded = true;
-        tachyon.init_console();
+    // always using window even if(!global_usegraphics)
+    global_usegraphics = tachyon.init_window(global_xwinsize, global_ywinsize);
+    if (!tachyon.running)
+        std::exit(-1);
 
-        // always using window even if(!global_usegraphics)
-        global_usegraphics = 
-            tachyon.init_window(global_xwinsize, global_ywinsize);
-        if(!tachyon.running)
-            exit(-1);
+    video = &tachyon;
 
-        video = &tachyon;
-
-        for(;;) {
-            global_elapsedTime = 0;
-            global_startTime=(long) time(NULL);
-            global_isCancelled=false;
-            if (video)video->running = true;
-            tbb::task_scheduler_init init (global_number_of_threads);
-            memset(g_pImg, 0, sizeof(unsigned int) * global_xsize * global_ysize);
-            tachyon.main_loop();
-            global_elapsedTime = (long)(time(NULL)-global_startTime);
-            video->running=false;
-            //The timer to restart drawing then it is complete.
-            int timer=50;
-            while( (  !global_isCancelled && (timer--)>0 ) ){
-                rt_sleep( 100 );
-            }
+    for (;;) {
+        global_elapsedTime = 0;
+        global_startTime = (long)time(nullptr);
+        global_isCancelled = false;
+        if (video)
+            video->running = true;
+        oneapi::tbb::global_control c(oneapi::tbb::global_control::max_allowed_parallelism,
+                                      global_number_of_threads);
+        memset(g_pImg, 0, sizeof(unsigned int) * global_xsize * global_ysize);
+        tachyon.main_loop();
+        global_elapsedTime = (long)(time(nullptr) - global_startTime);
+        video->running = false;
+        //The timer to restart drawing then it is complete.
+        int timer = 50;
+        while ((!global_isCancelled && (timer--) > 0)) {
+            rt_sleep(100);
         }
-        return NULL;
-
-    } catch ( std::exception& e ) {
-        std::cerr<<"error occurred. error text is :\"" <<e.what()<<"\"\n";
-        return 1;
     }
+    return nullptr;
 }
 
-#elif __TBB_IOS
+#elif __ENVIRONMENT_IPHONE_OS_VERSION_MIN_REQUIRED__
 
-#include "tbb/tbb.h"
-#include "CoreFoundation/CoreFoundation.h"
+#include "oneapi/tbb.h"
+#include "CoreFoundation/CoreFoundation.hpp"
 extern "C" void get_screen_resolution(int *x, int *y);
 
 int CreateScene() {
-
-    CFURLRef balls_dat_url = CFBundleCopyResourceURL(CFBundleGetMainBundle(), CFSTR("balls"), CFSTR("dat"),NULL);
+    CFURLRef balls_dat_url =
+        CFBundleCopyResourceURL(CFBundleGetMainBundle(), CFSTR("balls"), CFSTR("dat"), nullptr);
     char filename[1024];
-    CFURLGetFileSystemRepresentation(balls_dat_url, true, (UInt8*)filename, (CFIndex)sizeof(filename));
+    CFURLGetFileSystemRepresentation(
+        balls_dat_url, true, (UInt8 *)filename, (CFIndex)sizeof(filename));
     CFRelease(balls_dat_url);
 
     global_scene = rt_newscene();
     rt_initialize();
 
-    if ( readmodel(filename, global_scene) != 0 ) {
+    if (readmodel(filename, global_scene) != 0) {
         rt_finalize();
         return -1;
     }
 
     // need these early for create_graphics_window() so grab these here...
-    scenedef *scene = (scenedef *) global_scene;
+    scenedef *scene = (scenedef *)global_scene;
 
     get_screen_resolution(&global_xsize, &global_ysize);
 
@@ -204,84 +197,83 @@ int CreateScene() {
     return 0;
 }
 
-int main (int argc, char *argv[]) {
-    try {
+int main(int argc, char *argv[]) {
+    if (CreateScene() != 0)
+        return -1;
 
-        if ( CreateScene() != 0 ) return -1;
+    tachyon_video tachyon;
+    tachyon.threaded = true;
+    tachyon.init_console();
 
-        tachyon_video tachyon;
-        tachyon.threaded = true;
-        tachyon.init_console();
+    global_usegraphics = tachyon.init_window(global_xwinsize, global_ywinsize);
+    if (!tachyon.running)
+        return -1;
 
-        global_usegraphics = tachyon.init_window(global_xwinsize, global_ywinsize);
-        if(!tachyon.running) return -1;
-
-        //TODO: add a demo loop.
-        video = &tachyon;
-        if (video)video->running = true;
-        memset(g_pImg, 0, sizeof(unsigned int) * global_xsize * global_ysize);
-        tachyon.main_loop();
-        video->running=false;
-        return NULL;
-
-    } catch ( std::exception& e ) {
-        std::cerr<<"error occurred. error text is :\"" <<e.what()<<"\"\n";
-        return 1;
-    }
+    //TODO: add a demo loop.
+    video = &tachyon;
+    if (video)
+        video->running = true;
+    memset(g_pImg, 0, sizeof(unsigned int) * global_xsize * global_ysize);
+    tachyon.main_loop();
+    video->running = false;
+    return 0;
 }
 
 #else
 
-static char *window_title_string (int argc, const char **argv)
-{
+static char *window_title_string(int argc, const char *argv[]) {
     int i;
     char *name;
 
-    name = (char *) malloc (8192);
-    char *title = getenv ("TITLE");
-    if( title ) strcpy( name, title );
+    name = (char *)malloc(8192);
+    char *title = getenv("TITLE");
+    if (title)
+        strcpy(name, title);
     else {
-        if(strrchr(argv[0], '\\')) strcpy (name, strrchr(argv[0], '\\')+1);
-        else if(strrchr(argv[0], '/')) strcpy (name, strrchr(argv[0], '/')+1);
-        else strcpy (name, *argv[0]?argv[0]:"Tachyon");
+        if (strrchr(argv[0], '\\'))
+            strcpy(name, strrchr(argv[0], '\\') + 1);
+        else if (strrchr(argv[0], '/'))
+            strcpy(name, strrchr(argv[0], '/') + 1);
+        else
+            strcpy(name, *argv[0] ? argv[0] : "Tachyon");
     }
     for (i = 1; i < argc; i++) {
-        strcat (name, " ");
-        strcat (name, argv[i]);
+        strcat(name, " ");
+        strcat(name, argv[i]);
     }
 #ifdef _DEBUG
-    strcat (name, " (DEBUG BUILD)");
+    strcat(name, " (DEBUG BUILD)");
 #endif
     return name;
 }
 
-int useoptions(argoptions * opt, SceneHandle scene) {
-  if (opt->useoutfilename == 1) {
-    rt_outputfile(scene, opt->outfilename);
-  }
+int useoptions(argoptions *opt, SceneHandle scene) {
+    if (opt->useoutfilename == 1) {
+        rt_outputfile(scene, opt->outfilename);
+    }
 
-  if (opt->verbosemode == 1) {
-    rt_verbose(scene, 1);
-  }
+    if (opt->verbosemode == 1) {
+        rt_verbose(scene, 1);
+    }
 
-  if (opt->antialiasing != -1) {
-    /* need new api code for this */
-  } 
+    if (opt->antialiasing != -1) {
+        /* need new api code for this */
+    }
 
-  if (opt->displaymode != -1) {
-    rt_displaymode(scene, opt->displaymode);
-  }
+    if (opt->displaymode != -1) {
+        rt_displaymode(scene, opt->displaymode);
+    }
 
-  if (opt->boundmode != -1) {
-    rt_boundmode(scene, opt->boundmode);
-  }
+    if (opt->boundmode != -1) {
+        rt_boundmode(scene, opt->boundmode);
+    }
 
-  if (opt->boundthresh != -1) {
-    rt_boundthresh(scene, opt->boundthresh);
-  }
+    if (opt->boundthresh != -1) {
+        rt_boundthresh(scene, opt->boundthresh);
+    }
 
-  return 0;
-}    
+    return 0;
+}
 
 argoptions ParseCommandLine(int argc, const char *argv[]) {
     argoptions opt;
@@ -291,16 +283,20 @@ argoptions ParseCommandLine(int argc, const char *argv[]) {
     bool nobounding = false;
     bool nodisp = false;
 
-    string filename;
+    std::string filename;
 
-    utility::parse_cli_arguments(argc,argv,
+    utility::parse_cli_arguments(
+        argc,
+        argv,
         utility::cli_argument_pack()
-        .positional_arg(filename,"dataset", "Model file")
-        .positional_arg(opt.boundthresh,"boundthresh","bounding threshold value")
-        .arg(nodisp,"no-display-updating","disable run-time display updating")
-        .arg(nobounding,"no-bounding","disable bounding technique")
-        .arg(silent_mode,"silent","no output except elapsed time")
-    );
+            .positional_arg(filename, "dataset", "Model file")
+            .positional_arg(opt.boundthresh, "boundthresh", "bounding threshold value")
+            .arg(nodisp, "no-display-updating", "disable run-time display updating")
+            .arg(nobounding, "no-bounding", "disable bounding technique")
+            .arg(opt.repeats,
+                 "n-of-repeats",
+                 "number of rendering repeats to collect reliable performance statistics")
+            .arg(silent_mode, "silent", "no output except elapsed time"));
 
     strcpy(opt.filename, filename.c_str());
 
@@ -320,19 +316,19 @@ int CreateScene(argoptions &opt) {
     useoptions(&opt, global_scene);
 
 #ifdef DEFAULT_MODELFILE
-#if  _WIN32||_WIN64
+#if _WIN32 || _WIN64
 #define _GLUE_FILENAME(x) "..\\dat\\" #x
 #else
 #define _GLUE_FILENAME(x) #x
 #endif
 #define GLUE_FILENAME(x) _GLUE_FILENAME(x)
-    if(opt.foundfilename == -1)
+    if (opt.foundfilename == -1)
         filename = GLUE_FILENAME(DEFAULT_MODELFILE);
     else
-#endif//DEFAULT_MODELFILE
+#endif //DEFAULT_MODELFILE
         filename = opt.filename;
 
-    if ( readmodel(filename, global_scene) != 0 ) {
+    if (readmodel(filename, global_scene) != 0) {
         fprintf(stderr, "Parser returned a non-zero error code reading %s\n", filename);
         fprintf(stderr, "Aborting Render...\n");
         rt_finalize();
@@ -340,46 +336,57 @@ int CreateScene(argoptions &opt) {
     }
 
     // need these early for create_graphics_window() so grab these here...
-    scenedef *scene = (scenedef *) global_scene;
+    scenedef *scene = (scenedef *)global_scene;
     global_xsize = scene->hres;
     global_ysize = scene->vres;
     global_xwinsize = global_xsize;
-    global_ywinsize = global_ysize;  // add some here to leave extra blank space on bottom for status etc.
+    global_ywinsize =
+        global_ysize; // add some here to leave extra blank space on bottom for status etc.
 
     return 0;
 }
 
-int main (int argc, char *argv[]) {
-    try {
-        timer mainStartTime = gettimer();
+int main(int argc, char *argv[]) {
+    timer mainStartTime = gettimer();
 
-        global_window_title = window_title_string (argc, (const char**)argv);
+    global_window_title = window_title_string(argc, (const char **)argv);
 
-        argoptions opt = ParseCommandLine(argc, (const char**)argv);
-
-        if ( CreateScene(opt) != 0 )
-            return -1;
-
-        tachyon_video tachyon;
-        tachyon.threaded = true;
-        tachyon.init_console();
-
-        tachyon.title = global_window_title;
-        // always using window even if(!global_usegraphics)
-        global_usegraphics = 
-            tachyon.init_window(global_xwinsize, global_ywinsize);
-        if(!tachyon.running)
-            return -1;
-
-        video = &tachyon;
-        tachyon.main_loop();
-
-        utility::report_elapsed_time(timertime(mainStartTime, gettimer()));
-        return 0;
-    } catch ( std::exception& e ) {
-        std::cerr<<"error occurred. error text is :\"" <<e.what()<<"\"\n";
-        return 1;
+    argoptions opt = ParseCommandLine(argc, (const char **)argv);
+    if (opt.repeats > 1) {
+        fprintf(stdout, "Repeating ray tracing %d times ...\n", opt.repeats);
     }
+    else if (opt.repeats < 1) {
+        fprintf(stderr, "Incorrect n-of-repeats=%d, exit.\n", opt.repeats);
+        return -1;
+    }
+
+    utility::measurements measurements(opt.repeats);
+    global_measurements = &measurements;
+
+    if (CreateScene(opt) != 0) {
+        fprintf(stderr, "Failed to create scene!, exit.\n");
+        return -1;
+    }
+
+    tachyon_video tachyon;
+    tachyon.threaded = true;
+    tachyon.init_console();
+
+    tachyon.title = global_window_title;
+    // always using window even if(!global_usegraphics)
+    global_usegraphics = tachyon.init_window(global_xwinsize, global_ywinsize);
+    if (!tachyon.running) {
+        fprintf(stderr, "Failed to start tracing!, exit.\n");
+        return -1;
+    }
+
+    video = &tachyon;
+    tachyon.main_loop();
+
+    if (opt.repeats > 1) {
+        utility::report_relative_error(measurements.computeRelError());
+    }
+    utility::report_elapsed_time(timertime(mainStartTime, gettimer()));
+    return 0;
 }
 #endif
-

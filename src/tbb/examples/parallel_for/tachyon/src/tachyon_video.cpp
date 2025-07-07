@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2025 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /*
@@ -47,61 +43,77 @@
     SUCH DAMAGE.
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <chrono>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
-#include "types.h"
-#include "api.h"       /* The ray tracing library API */
-#include "ui.h"
-#include "util.h"
-#include "tachyon_video.h"
+#include "types.hpp"
+#include "api.hpp" /* The ray tracing library API */
+#include "ui.hpp"
+#include "util.hpp"
+#include "tachyon_video.hpp"
+
+#include "common/utility/measurements.hpp"
 
 extern SceneHandle global_scene;
 extern char *global_window_title;
 extern bool global_usegraphics;
+extern utility::measurements *global_measurements;
 
 void tachyon_video::on_process() {
     char buf[8192];
     flt runtime;
-    scenedef *scene = (scenedef *) global_scene;
+    unsigned iterations = global_measurements->iterations();
+    scenedef *scene = (scenedef *)global_scene;
     updating_mode = scene->displaymode == RT_DISPLAY_ENABLED;
-    recycling = false;
     pausing = false;
     do {
+        recycling = false;
         updating = updating_mode;
-        timer start_timer = gettimer();
+        global_measurements->start();
         rt_renderscene(global_scene);
-        timer end_timer = gettimer();
-        runtime = timertime(start_timer, end_timer);
-        sprintf(buf, "%s: %.3f seconds", global_window_title, runtime);
+        auto duration_usec = global_measurements->stop().count();
+        sprintf(buf,
+                "%s: %.3f seconds",
+                global_window_title,
+                (double)duration_usec / std::chrono::microseconds(std::chrono::seconds(1)).count());
         rt_ui_message(MSG_0, buf);
-        title = buf; show_title(); // show time spent for rendering
-        if(!updating) {
+        title = buf;
+        show_title(); // show time spent for rendering
+
+        iterations--;
+        if (iterations > 0) {
+            updating = false;
+            recycling = true;
+        }
+        if (!updating) {
             updating = true;
             drawing_memory dm = get_drawing_memory();
-            drawing_area drawing(0, 0, dm.sizex, dm.sizey);// invalidate whole screen
+            drawing_area drawing(0, 0, dm.sizex, dm.sizey); // invalidate whole screen
         }
         rt_finalize();
-        title = global_window_title; show_title(); // reset title to default
-    } while(recycling && running);
+        title = global_window_title;
+        show_title(); // reset title to default
+    } while (recycling && running);
 }
 
 void tachyon_video::on_key(int key) {
     key &= 0xff;
     recycling = true;
-    if(key == esc_key) running = false;
-    else if(key == ' ') {
-        if(!updating) {
+    if (key == esc_key)
+        running = false;
+    else if (key == ' ') {
+        if (!updating) {
             updating = true;
             drawing_memory dm = get_drawing_memory();
-            drawing_area drawing(0, 0, dm.sizex, dm.sizey);// invalidate whole screen
+            drawing_area drawing(0, 0, dm.sizex, dm.sizey); // invalidate whole screen
         }
         updating = updating_mode = !updating_mode;
     }
-    else if(key == 'p') {
+    else if (key == 'p') {
         pausing = !pausing;
-        if(pausing) {
+        if (pausing) {
             title = "Press ESC to exit or 'p' to continue after rendering completion";
             show_title();
         }
@@ -111,10 +123,13 @@ void tachyon_video::on_key(int key) {
 void rt_finalize(void) {
     timer t0, t1;
     t0 = gettimer();
-    if(global_usegraphics)
-        do { rt_sleep(1); t1 = gettimer(); }
-        while( (timertime(t0, t1) < 10 || video->pausing) && video->next_frame());
+    if (global_usegraphics)
+        do {
+            rt_sleep(1);
+            t1 = gettimer();
+        } while ((timertime(t0, t1) < 10 || video->pausing) && video->next_frame());
 #ifdef _WINDOWS
-    else rt_sleep(10000);
+    else
+        rt_sleep(10000);
 #endif
 }

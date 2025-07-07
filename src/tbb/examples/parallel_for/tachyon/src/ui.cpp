@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2021 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /*
@@ -51,65 +47,52 @@
  * ui.cpp - Contains functions for dealing with user interfaces
  */
 
-#include "machine.h"
-#include "types.h"
-#include "macros.h"
-#include "util.h"
-#include "ui.h"
+#include "machine.hpp"
+#include "types.hpp"
+#include "macros.hpp"
+#include "util.hpp"
+#include "ui.hpp"
 
-static void (* rt_static_ui_message) (int, const char *) = NULL;
-static void (* rt_static_ui_progress) (int) = NULL;
-static int (* rt_static_ui_checkaction) (void) = NULL;
+static void (*rt_static_ui_message)(int, const char *) = nullptr;
+static void (*rt_static_ui_progress)(int) = nullptr;
+static int (*rt_static_ui_checkaction)(void) = nullptr;
 
 extern bool silent_mode;
 
-void set_rt_ui_message(void (* func) (int, const char *)) {
-  rt_static_ui_message = func;
+void set_rt_ui_message(void (*func)(int, const char *)) {
+    rt_static_ui_message = func;
 }
 
-void set_rt_ui_progress(void (* func) (int)) {
-  rt_static_ui_progress = func;
+void set_rt_ui_progress(void (*func)(int)) {
+    rt_static_ui_progress = func;
 }
 
-void rt_ui_message(int level, const char * msg) {
-  if (rt_static_ui_message == NULL) {
-    if ( !silent_mode ) {
-      fprintf(stderr, "%s\n", msg);
-      fflush (stderr);
+void rt_ui_message(int level, const char *msg) {
+    if (rt_static_ui_message == nullptr) {
+        if (!silent_mode) {
+            fprintf(stderr, "%s\n", msg);
+            fflush(stderr);
+        }
     }
-  } else {
-    rt_static_ui_message(level, msg);
-  }
+    else {
+        rt_static_ui_message(level, msg);
+    }
 }
 
 void rt_ui_progress(int percent) {
-  if (rt_static_ui_progress != NULL)
-    rt_static_ui_progress(percent);
-  else {
-    if ( !silent_mode ) {
-      fprintf(stderr, "\r %3d%% Complete            \r", percent);
-      fflush(stderr);
+    if (rt_static_ui_progress != nullptr)
+        rt_static_ui_progress(percent);
+    else {
+        if (!silent_mode) {
+            fprintf(stderr, "\r %3d%% Complete            \r", percent);
+            fflush(stderr);
+        }
     }
-  }
 }
 
 int rt_ui_checkaction(void) {
-  if (rt_static_ui_checkaction != NULL) 
-    return rt_static_ui_checkaction();
-  else
-    return 0;
+    if (rt_static_ui_checkaction != nullptr)
+        return rt_static_ui_checkaction();
+    else
+        return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

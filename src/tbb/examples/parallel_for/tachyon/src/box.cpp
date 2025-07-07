@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2021 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /*
@@ -50,119 +46,148 @@
 /* 
  * box.cpp - This file contains the functions for dealing with boxes.
  */
- 
-#include "machine.h"
-#include "types.h"
-#include "macros.h"
-#include "box.h"
-#include "vector.h"
-#include "intersect.h"
-#include "util.h"
 
-int box_bbox(void * obj, vector * min, vector * max) {
-  box * b = (box *) obj;
+#include "machine.hpp"
+#include "types.hpp"
+#include "macros.hpp"
+#include "box.hpp"
+#include "vector.hpp"
+#include "intersect.hpp"
+#include "util.hpp"
 
-  *min = b->min;
-  *max = b->max;
+int box_bbox(void *obj, vector *min, vector *max) {
+    box *b = (box *)obj;
 
-  return 1;
+    *min = b->min;
+    *max = b->max;
+
+    return 1;
 }
 
-static object_methods box_methods = {
-  (void (*)(void *, void *))(box_intersect),
-  (void (*)(void *, void *, void *, void *))(box_normal),
-  box_bbox, 
-  free 
-};
+static object_methods box_methods = { (void (*)(void *, void *))(box_intersect),
+                                      (void (*)(void *, void *, void *, void *))(box_normal),
+                                      box_bbox,
+                                      free };
 
-box * newbox(void * tex, vector min, vector max) {
-  box * b;
-  
-  b=(box *) rt_getmem(sizeof(box));
-  memset(b, 0, sizeof(box));
-  b->methods = &box_methods;
-  b->tex = (texture *)tex;
-  b->min = min; 
-  b->max = max;
+box *newbox(void *tex, vector min, vector max) {
+    box *b;
 
-  return b;
+    b = (box *)rt_getmem(sizeof(box));
+    memset(b, 0, sizeof(box));
+    b->methods = &box_methods;
+    b->tex = (texture *)tex;
+    b->min = min;
+    b->max = max;
+
+    return b;
 }
 
-void box_intersect(box * bx, ray * ry) {
-  flt a, tx1, tx2, ty1, ty2, tz1, tz2;
-  flt tnear, tfar;
+void box_intersect(box *bx, ray *ry) {
+    flt a, tx1, tx2, ty1, ty2, tz1, tz2;
+    flt tnear, tfar;
 
-  tnear= -FHUGE;
-  tfar= FHUGE;
+    tnear = -FHUGE;
+    tfar = FHUGE;
 
-  if (ry->d.x == 0.0) {
-    if ((ry->o.x < bx->min.x) || (ry->o.x > bx->max.x)) return;
-  }
-  else {
-    tx1 = (bx->min.x - ry->o.x) / ry->d.x;
-    tx2 = (bx->max.x - ry->o.x) / ry->d.x;
-    if (tx1 > tx2) { a=tx1; tx1=tx2; tx2=a; } 
-    if (tx1 > tnear) tnear=tx1;   
-    if (tx2 < tfar)   tfar=tx2;   
-  } 
-  if (tnear > tfar) return; 
-  if (tfar < 0.0) return;
-  
-  if (ry->d.y == 0.0) { 
-    if ((ry->o.y < bx->min.y) || (ry->o.y > bx->max.y)) return;
-  }
-  else {
-    ty1 = (bx->min.y - ry->o.y) / ry->d.y;
-    ty2 = (bx->max.y - ry->o.y) / ry->d.y;
-    if (ty1 > ty2) { a=ty1; ty1=ty2; ty2=a; } 
-    if (ty1 > tnear) tnear=ty1;   
-    if (ty2 < tfar)   tfar=ty2;   
-  }
-  if (tnear > tfar) return; 
-  if (tfar < 0.0) return;
- 
-  if (ry->d.z == 0.0) { 
-    if ((ry->o.z < bx->min.z) || (ry->o.z > bx->max.z)) return;
-  }
-  else {
-    tz1 = (bx->min.z - ry->o.z) / ry->d.z;
-    tz2 = (bx->max.z - ry->o.z) / ry->d.z;
-    if (tz1 > tz2) { a=tz1; tz1=tz2; tz2=a; } 
-    if (tz1 > tnear) tnear=tz1;   
-    if (tz2 < tfar)   tfar=tz2;   
-  }
-  if (tnear > tfar) return; 
-  if (tfar < 0.0) return;
+    if (ry->d.x == 0.0) {
+        if ((ry->o.x < bx->min.x) || (ry->o.x > bx->max.x))
+            return;
+    }
+    else {
+        tx1 = (bx->min.x - ry->o.x) / ry->d.x;
+        tx2 = (bx->max.x - ry->o.x) / ry->d.x;
+        if (tx1 > tx2) {
+            a = tx1;
+            tx1 = tx2;
+            tx2 = a;
+        }
+        if (tx1 > tnear)
+            tnear = tx1;
+        if (tx2 < tfar)
+            tfar = tx2;
+    }
+    if (tnear > tfar)
+        return;
+    if (tfar < 0.0)
+        return;
 
-  add_intersection(tnear, (object *) bx, ry);
-  add_intersection(tfar, (object *) bx, ry);
+    if (ry->d.y == 0.0) {
+        if ((ry->o.y < bx->min.y) || (ry->o.y > bx->max.y))
+            return;
+    }
+    else {
+        ty1 = (bx->min.y - ry->o.y) / ry->d.y;
+        ty2 = (bx->max.y - ry->o.y) / ry->d.y;
+        if (ty1 > ty2) {
+            a = ty1;
+            ty1 = ty2;
+            ty2 = a;
+        }
+        if (ty1 > tnear)
+            tnear = ty1;
+        if (ty2 < tfar)
+            tfar = ty2;
+    }
+    if (tnear > tfar)
+        return;
+    if (tfar < 0.0)
+        return;
+
+    if (ry->d.z == 0.0) {
+        if ((ry->o.z < bx->min.z) || (ry->o.z > bx->max.z))
+            return;
+    }
+    else {
+        tz1 = (bx->min.z - ry->o.z) / ry->d.z;
+        tz2 = (bx->max.z - ry->o.z) / ry->d.z;
+        if (tz1 > tz2) {
+            a = tz1;
+            tz1 = tz2;
+            tz2 = a;
+        }
+        if (tz1 > tnear)
+            tnear = tz1;
+        if (tz2 < tfar)
+            tfar = tz2;
+    }
+    if (tnear > tfar)
+        return;
+    if (tfar < 0.0)
+        return;
+
+    add_intersection(tnear, (object *)bx, ry);
+    add_intersection(tfar, (object *)bx, ry);
 }
 
-void box_normal(box * bx, vector  * pnt, ray * incident, vector * N) {
-  vector a, b, c; 
-  flt t;
- 
-  c.x=(bx->max.x + bx->min.x) / 2.0;
-  c.y=(bx->max.y + bx->min.y) / 2.0;
-  c.z=(bx->max.z + bx->min.z) / 2.0;
- 
-  VSub((vector *) pnt, &c, N);
-  b=(*N);
+void box_normal(box *bx, vector *pnt, ray *incident, vector *N) {
+    vector a, b, c;
+    flt t;
 
-  a.x=fabs(N->x);
-  a.y=fabs(N->y);
-  a.z=fabs(N->z);
- 
-  N->x=0.0;  N->y=0.0;  N->z=0.0;
+    c.x = (bx->max.x + bx->min.x) / 2.0;
+    c.y = (bx->max.y + bx->min.y) / 2.0;
+    c.z = (bx->max.z + bx->min.z) / 2.0;
 
-  t=MYMAX(a.x, MYMAX(a.y, a.z));  
+    VSub((vector *)pnt, &c, N);
+    b = (*N);
 
-  if (t==a.x) N->x=b.x;  
+    a.x = fabs(N->x);
+    a.y = fabs(N->y);
+    a.z = fabs(N->z);
 
-  if (t==a.y) N->y=b.y; 
+    N->x = 0.0;
+    N->y = 0.0;
+    N->z = 0.0;
 
-  if (t==a.z) N->z=b.z;
+    t = MYMAX(a.x, MYMAX(a.y, a.z));
 
-  VNorm(N);
+    if (t == a.x)
+        N->x = b.x;
+
+    if (t == a.y)
+        N->y = b.y;
+
+    if (t == a.z)
+        N->z = b.z;
+
+    VNorm(N);
 }
-

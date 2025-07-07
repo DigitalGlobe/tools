@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2021 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,55 +12,51 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /*
-    This file contains the TBB-based implementation of convex hull algortihm.
+    This file contains the TBB-based implementation of convex hull algorithm.
     It corresponds to the following settings in convex_hull_bench.cpp:
     - USETBB defined to 1
     - USECONCVEC defined to 1
     - INIT_ONCE defined to 0
     - only buffered version is used
 */
-#include "convex_hull.h"
 
-#include "tbb/task_scheduler_init.h"
-#include "tbb/parallel_for.h"
-#include "tbb/parallel_reduce.h"
-#include "tbb/blocked_range.h"
-#include "tbb/tick_count.h"
-#include "tbb/concurrent_vector.h"
+#include "oneapi/tbb/parallel_for.h"
+#include "oneapi/tbb/parallel_reduce.h"
+#include "oneapi/tbb/blocked_range.h"
+#include "oneapi/tbb/tick_count.h"
+#include "oneapi/tbb/concurrent_vector.h"
 
-typedef util::point<double>               point_t;
-typedef tbb::concurrent_vector< point_t > pointVec_t;
-typedef tbb::blocked_range<size_t>        range_t;
+#include "convex_hull.hpp"
 
-void appendVector(const point_t* src, size_t srcSize, pointVec_t& dest) {
+typedef util::point<double> point_t;
+typedef oneapi::tbb::concurrent_vector<point_t> pointVec_t;
+typedef oneapi::tbb::blocked_range<std::size_t> range_t;
+
+void appendVector(const point_t *src, std::size_t srcSize, pointVec_t &dest) {
     std::copy(src, src + srcSize, dest.grow_by(srcSize));
 }
 
-void appendVector(const pointVec_t& src, pointVec_t& dest) {
+void appendVector(const pointVec_t &src, pointVec_t &dest) {
     std::copy(src.begin(), src.end(), dest.grow_by(src.size()));
 }
 class FillRNDPointsVector_buf {
-    pointVec_t          &points;
+    pointVec_t &points;
+
 public:
-    static const size_t  grainSize = cfg::generateGrainSize;
+    static const std::size_t grainSize = cfg::generateGrainSize;
 
-    explicit FillRNDPointsVector_buf(pointVec_t& _points)
-        : points(_points) {}
+    explicit FillRNDPointsVector_buf(pointVec_t &_points) : points(_points) {}
 
-    void operator()(const range_t& range) const {
+    void operator()(const range_t &range) const {
         util::rng the_rng(range.begin());
-        const size_t i_end = range.end();
-        size_t count = 0, j = 0;
+        const std::size_t i_end = range.end();
+        std::size_t count = 0, j = 0;
         point_t tmp_vec[grainSize];
 
-        for(size_t i=range.begin(); i!=i_end; ++i) {
+        for (std::size_t i = range.begin(); i != i_end; ++i) {
             tmp_vec[j++] = util::GenerateRNDPoint<double>(count, the_rng, util::rng::max_rand);
         }
         //Here we have race condition. Elements being written to may be still under construction.
@@ -69,7 +65,7 @@ public:
         //Strictly speaking it is UB.
         //TODO: need to find more reliable/correct way
         points.grow_to_at_least(range.end());
-        std::copy(tmp_vec, tmp_vec+j,points.begin()+range.begin());
+        std::copy(tmp_vec, tmp_vec + j, points.begin() + range.begin());
     }
 };
 
@@ -79,40 +75,43 @@ void initialize(pointVec_t &points) {
     //It is achieved through the following points:
     //      - FillRNDPointsVector_buf instance has its own local instance
     //        of random number generator, which in turn does not use any global data
-    //      - tbb::simple_partitioner produce the same set of ranges on every call to
-    //        tbb::parallel_for
+    //      - oneapi::tbb::simple_partitioner produce the same set of ranges on every call to
+    //        oneapi::tbb::parallel_for
     //      - local RNG instances are seeded by the starting indexes of corresponding ranges
     //      - grow_to_at_least() enables putting points into the resulting vector in deterministic order
     //        (unlike concurrent push_back or grow_by).
 
-    // In the buffered version, a temporary storage for as much as grainSize elements 
+    // In the buffered version, a temporary storage for as much as grainSize elements
     // is allocated inside the body. Since auto_partitioner may increase effective
     // range size which would cause a crash, simple partitioner has to be used.
-    tbb::parallel_for(range_t(0, cfg::numberOfPoints, FillRNDPointsVector_buf::grainSize),
-                      FillRNDPointsVector_buf(points), tbb::simple_partitioner());
+    oneapi::tbb::parallel_for(range_t(0, cfg::numberOfPoints, FillRNDPointsVector_buf::grainSize),
+                              FillRNDPointsVector_buf(points),
+                              oneapi::tbb::simple_partitioner());
 }
 
 class FindXExtremum {
 public:
-    typedef enum {
-        minX, maxX
-    } extremumType;
+    typedef enum { minX, maxX } extremumType;
 
-    static const size_t  grainSize = cfg::findExtremumGrainSize;
+    static const std::size_t grainSize = cfg::findExtremumGrainSize;
 
-    FindXExtremum(const pointVec_t& points_, extremumType exType_)
-        : points(points_), exType(exType_), extrXPoint(points[0]) {}
+    FindXExtremum(const pointVec_t &points_, extremumType exType_)
+            : points(points_),
+              exType(exType_),
+              extrXPoint(points[0]) {}
 
-    FindXExtremum(const FindXExtremum& fxex, tbb::split)
-        // Can run in parallel with fxex.operator()() or fxex.join().
-        // The data race reported by tools is harmless.
-        : points(fxex.points), exType(fxex.exType), extrXPoint(fxex.extrXPoint) {}
+    FindXExtremum(const FindXExtremum &fxex, oneapi::tbb::split)
+            // Can run in parallel with fxex.operator()() or fxex.join().
+            // The data race reported by tools is harmless.
+            : points(fxex.points),
+              exType(fxex.exType),
+              extrXPoint(fxex.extrXPoint) {}
 
-    void operator()(const range_t& range) {
-        const size_t i_end = range.end();
-        if(!range.empty()) {
-            for(size_t i = range.begin(); i != i_end; ++i) {
-                if(closerToExtremum(points[i])) {
+    void operator()(const range_t &range) {
+        const std::size_t i_end = range.end();
+        if (!range.empty()) {
+            for (std::size_t i = range.begin(); i != i_end; ++i) {
+                if (closerToExtremum(points[i])) {
                     extrXPoint = points[i];
                 }
             }
@@ -120,7 +119,7 @@ public:
     }
 
     void join(const FindXExtremum &rhs) {
-        if(closerToExtremum(rhs.extrXPoint)) {
+        if (closerToExtremum(rhs.extrXPoint)) {
             extrXPoint = rhs.extrXPoint;
         }
     }
@@ -130,15 +129,13 @@ public:
     }
 
 private:
-    const pointVec_t    &points;
-    const extremumType   exType;
-    point_t              extrXPoint;
+    const pointVec_t &points;
+    const extremumType exType;
+    point_t extrXPoint;
     bool closerToExtremum(const point_t &p) const {
-        switch(exType) {
-        case minX:
-            return p.x<extrXPoint.x; break;
-        case maxX:
-            return p.x>extrXPoint.x; break;
+        switch (exType) {
+            case minX: return p.x < extrXPoint.x; break;
+            case maxX: return p.x > extrXPoint.x; break;
         }
         return false; // avoid warning
     }
@@ -147,43 +144,49 @@ private:
 template <FindXExtremum::extremumType type>
 point_t extremum(const pointVec_t &P) {
     FindXExtremum fxBody(P, type);
-    tbb::parallel_reduce(range_t(0, P.size(), FindXExtremum::grainSize), fxBody);
+    oneapi::tbb::parallel_reduce(range_t(0, P.size(), FindXExtremum::grainSize), fxBody);
     return fxBody.extremeXPoint();
 }
 
 class SplitByCP_buf {
-    const pointVec_t    &initialSet;
-    pointVec_t          &reducedSet;
-    point_t              p1, p2;
-    point_t              farPoint;
-    double               howFar;
+    const pointVec_t &initialSet;
+    pointVec_t &reducedSet;
+    point_t p1, p2;
+    point_t farPoint;
+    double howFar;
+
 public:
-    static const size_t  grainSize = cfg::divideGrainSize;
+    static const std::size_t grainSize = cfg::divideGrainSize;
 
-    SplitByCP_buf( point_t _p1, point_t _p2,
-        const pointVec_t &_initialSet, pointVec_t &_reducedSet)
-        : p1(_p1), p2(_p2),
-        initialSet(_initialSet), reducedSet(_reducedSet),
-        howFar(0), farPoint(p1) {}
+    SplitByCP_buf(point_t _p1, point_t _p2, const pointVec_t &_initialSet, pointVec_t &_reducedSet)
+            : p1(_p1),
+              p2(_p2),
+              initialSet(_initialSet),
+              reducedSet(_reducedSet),
+              howFar(0),
+              farPoint(p1) {}
 
-    SplitByCP_buf(SplitByCP_buf& sbcp, tbb::split)
-        : p1(sbcp.p1), p2(sbcp.p2),
-        initialSet(sbcp.initialSet), reducedSet(sbcp.reducedSet),
-        howFar(0), farPoint(p1) {}
+    SplitByCP_buf(SplitByCP_buf &sbcp, oneapi::tbb::split)
+            : p1(sbcp.p1),
+              p2(sbcp.p2),
+              initialSet(sbcp.initialSet),
+              reducedSet(sbcp.reducedSet),
+              howFar(0),
+              farPoint(p1) {}
 
-    void operator()(const range_t& range) {
-        const size_t i_end = range.end();
-        size_t j = 0;
+    void operator()(const range_t &range) {
+        const std::size_t i_end = range.end();
+        std::size_t j = 0;
         double cp;
         point_t tmp_vec[grainSize];
-        for(size_t i = range.begin(); i != i_end; ++i) {
-            if( (initialSet[i] != p1) && (initialSet[i] != p2) ) {            
+        for (std::size_t i = range.begin(); i != i_end; ++i) {
+            if ((initialSet[i] != p1) && (initialSet[i] != p2)) {
                 cp = util::cross_product(p1, p2, initialSet[i]);
-                if(cp>0) {
+                if (cp > 0) {
                     tmp_vec[j++] = initialSet[i];
-                    if(cp>howFar) {
+                    if (cp > howFar) {
                         farPoint = initialSet[i];
-                        howFar   = cp;
+                        howFar = cp;
                     }
                 }
             }
@@ -192,9 +195,9 @@ public:
         appendVector(tmp_vec, j, reducedSet);
     }
 
-    void join(const SplitByCP_buf& rhs) {
-        if(rhs.howFar>howFar) {
-            howFar   = rhs.howFar;
+    void join(const SplitByCP_buf &rhs) {
+        if (rhs.howFar > howFar) {
+            howFar = rhs.howFar;
             farPoint = rhs.farPoint;
         }
     }
@@ -204,31 +207,30 @@ public:
     }
 };
 
-point_t divide(const pointVec_t &P, pointVec_t &P_reduced, 
-                   const point_t &p1, const point_t &p2) {
+point_t divide(const pointVec_t &P, pointVec_t &P_reduced, const point_t &p1, const point_t &p2) {
     SplitByCP_buf sbcpb(p1, p2, P, P_reduced);
     // Must use simple_partitioner (see the comment in initialize() above)
-    tbb::parallel_reduce(range_t(0, P.size(), SplitByCP_buf::grainSize),
-                         sbcpb, tbb::simple_partitioner());
+    oneapi::tbb::parallel_reduce(
+        range_t(0, P.size(), SplitByCP_buf::grainSize), sbcpb, oneapi::tbb::simple_partitioner());
 
-    if(util::verbose) {
+    if (util::verbose) {
         std::stringstream ss;
-        ss << P.size() << " nodes in bucket"<< ", "
-            << "dividing by: [ " << p1 << ", " << p2 << " ], "
-            << "farthest node: " << sbcpb.farthestPoint();
+        ss << P.size() << " nodes in bucket"
+           << ", "
+           << "dividing by: [ " << p1 << ", " << p2 << " ], "
+           << "farthest node: " << sbcpb.farthestPoint();
         util::OUTPUT.push_back(ss.str());
     }
 
     return sbcpb.farthestPoint();
 }
 
-void divide_and_conquer(const pointVec_t &P, pointVec_t &H,
-                            point_t p1, point_t p2) {
+void divide_and_conquer(const pointVec_t &P, pointVec_t &H, point_t p1, point_t p2) {
     assert(P.size() >= 2);
     pointVec_t P_reduced;
     pointVec_t H1, H2;
     point_t p_far = divide(P, P_reduced, p1, p2);
-    if (P_reduced.size()<2) {
+    if (P_reduced.size() < 2) {
         H.push_back(p1);
         appendVector(P_reduced, H);
     }
@@ -258,37 +260,43 @@ void quickhull(const pointVec_t &points, pointVec_t &hull) {
     appendVector(H, hull);
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
+    utility::thread_number_range threads(utility::get_default_num_threads);
     util::my_time_t tm_main_begin = util::gettime();
 
-    util::ParseInputArgs(argc, argv);
+    util::ParseInputArgs(argc, argv, threads);
 
-    pointVec_t      points;
-    pointVec_t      hull;
-    int             nthreads;
+    pointVec_t points;
+    pointVec_t hull;
+    int nthreads;
 
     points.reserve(cfg::numberOfPoints);
 
-    if(!util::silent) {
-        std::cout << "Starting TBB-buffered version of QUICK HULL algorithm" << std::endl;
+    if (!util::silent) {
+        std::cout << "Starting TBB-buffered version of QUICK HULL algorithm"
+                  << "\n";
     }
 
-    for(nthreads=cfg::threads.first; nthreads<=cfg::threads.last; nthreads=cfg::threads.step(nthreads)) {
-        tbb::task_scheduler_init init(nthreads);
+    for (nthreads = threads.first; nthreads <= threads.last; nthreads = threads.step(nthreads)) {
+        oneapi::tbb::global_control c(oneapi::tbb::global_control::max_allowed_parallelism,
+                                      nthreads);
 
         points.clear();
         util::my_time_t tm_init = util::gettime();
         initialize(points);
         util::my_time_t tm_start = util::gettime();
-        if(!util::silent) {
-            std::cout <<"Init time on "<<nthreads<<" threads: "<<util::time_diff(tm_init, tm_start)<<"  Points in input: "<<points.size()<<std::endl;
+        if (!util::silent) {
+            std::cout << "Init time on " << nthreads
+                      << " threads: " << util::time_diff(tm_init, tm_start)
+                      << "  Points in input: " << points.size() << "\n";
         }
 
         tm_start = util::gettime();
         quickhull(points, hull);
         util::my_time_t tm_end = util::gettime();
-        if(!util::silent) {
-            std::cout <<"Time on "<<nthreads<<" threads: "<<util::time_diff(tm_start, tm_end)<<"  Points in hull: "<<hull.size()<<std::endl;
+        if (!util::silent) {
+            std::cout << "Time on " << nthreads << " threads: " << util::time_diff(tm_start, tm_end)
+                      << "  Points in hull: " << hull.size() << "\n";
         }
         hull.clear();
     }

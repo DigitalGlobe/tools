@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2023 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /*
@@ -49,43 +45,44 @@
 
 /*
  *  jpeg.cpp - This file deals with JPEG format image files (reading/writing)
- */ 
+ */
 
 /*
  * This code requires support from the Independent JPEG Group's libjpeg.
- * For our puposes, we're interested only in the 3 byte per pixel 24 bit
+ * For our purposes, we're interested only in the 3 byte per pixel 24 bit
  * RGB output.  Probably won't implement any decent checking at this point.
- */ 
+ */
 
-#include <stdio.h>
-#include "machine.h"
-#include "types.h"
-#include "util.h"
-#include "imageio.h" /* error codes etc */
-#include "jpeg.h"    /* the protos for this file */
+#include <cstdio>
+
+#include "machine.hpp"
+#include "types.hpp"
+#include "util.hpp"
+#include "imageio.hpp" /* error codes etc */
+#include "jpeg.hpp" /* the protos for this file */
 
 #if !defined(USEJPEG)
 
-int readjpeg(char * name, int * xres, int * yres, unsigned char **imgdata) {
-  return IMAGEUNSUP;
+int readjpeg(char *name, int *xres, int *yres, unsigned char **imgdata) {
+    return IMAGEUNSUP;
 }
 
 #else
 
-#include "jpeglib.h" /* the IJG jpeg library headers */
+#include "jpeglib.hpp" /* the IJG jpeg library headers */
 
-int readjpeg(char * name, int * xres, int * yres, unsigned char **imgdata) {
-  FILE * ifp;
-  struct jpeg_decompress_struct cinfo; /* JPEG decompression struct */
-  struct jpeg_error_mgr jerr;          /* JPEG Error handler */
-  JSAMPROW row_pointer[1];             /* output row buffer */
-  int row_stride;                      /* physical row width in output buf */
+int readjpeg(char *name, int *xres, int *yres, unsigned char **imgdata) {
+    FILE *ifp;
+    struct jpeg_decompress_struct cinfo; /* JPEG decompression struct */
+    struct jpeg_error_mgr jerr; /* JPEG Error handler */
+    JSAMPROW row_pointer[1]; /* output row buffer */
+    int row_stride; /* physical row width in output buf */
 
-  /* open input file before doing any JPEG decompression setup */
-  if ((ifp = fopen(name, "rb")) == NULL) 
-    return IMAGEBADFILE; /* Could not open image, return error */
+    /* open input file before doing any JPEG decompression setup */
+    if ((ifp = fopen(name, "rb")) == nullptr)
+        return IMAGEBADFILE; /* Could not open image, return error */
 
-  /*
+    /*
    * Note: The Independent JPEG Group's library does not have a way
    *       of returning errors without the use of setjmp/longjmp.
    *       This is a problem in multi-threaded environment, since setjmp
@@ -96,34 +93,34 @@ int readjpeg(char * name, int * xres, int * yres, unsigned char **imgdata) {
    *       or find a reasonably thread-safe way of doing setjmp/longjmp..
    */
 
-  cinfo.err = jpeg_std_error(&jerr); /* Set JPEG error handler to default */
+    cinfo.err = jpeg_std_error(&jerr); /* Set JPEG error handler to default */
 
-  jpeg_create_decompress(&cinfo);    /* Create decompression context      */ 
-  jpeg_stdio_src(&cinfo, ifp);       /* Set input mechanism to stdio type */
-  jpeg_read_header(&cinfo, TRUE);    /* Read the JPEG header for info     */
-  jpeg_start_decompress(&cinfo);     /* Prepare for actual decompression  */
+    jpeg_create_decompress(&cinfo); /* Create decompression context */
+    jpeg_stdio_src(&cinfo, ifp); /* Set input mechanism to stdio type */
+    jpeg_read_header(&cinfo, TRUE); /* Read the JPEG header for info */
+    jpeg_start_decompress(&cinfo); /* Prepare for actual decompression */
 
-  *xres = cinfo.output_width;        /* set returned image width  */
-  *yres = cinfo.output_height;       /* set returned image height */
+    *xres = cinfo.output_width; /* set returned image width */
+    *yres = cinfo.output_height; /* set returned image height */
 
-  /* Calculate the size of a row in the image */
-  row_stride = cinfo.output_width * cinfo.output_components;
+    /* Calculate the size of a row in the image */
+    row_stride = cinfo.output_width * cinfo.output_components;
 
-  /* Allocate the image buffer which will be returned to the ray tracer */
-  *imgdata = (unsigned char *) malloc(row_stride * cinfo.output_height);
+    /* Allocate the image buffer which will be returned to the ray tracer */
+    *imgdata = (unsigned char *)malloc(row_stride * cinfo.output_height);
 
-  /* decompress the JPEG, one scanline at a time into the buffer */
-  while (cinfo.output_scanline < cinfo.output_height) {
-    row_pointer[0] = &((*imgdata)[(cinfo.output_scanline)*row_stride]);
-    jpeg_read_scanlines(&cinfo, row_pointer, 1);
-  }
+    /* decompress the JPEG, one scanline at a time into the buffer */
+    while (cinfo.output_scanline < cinfo.output_height) {
+        row_pointer[0] = &((*imgdata)[(cinfo.output_scanline) * row_stride]);
+        jpeg_read_scanlines(&cinfo, row_pointer, 1);
+    }
 
-  jpeg_finish_decompress(&cinfo);   /* Tell the JPEG library to cleanup   */
-  jpeg_destroy_decompress(&cinfo);  /* Destroy JPEG decompression context */
+    jpeg_finish_decompress(&cinfo); /* Tell the JPEG library to cleanup */
+    jpeg_destroy_decompress(&cinfo); /* Destroy JPEG decompression context */
 
-  fclose(ifp); /* Close the input file */
+    fclose(ifp); /* Close the input file */
 
-  return IMAGENOERR;  /* No fatal errors */
+    return IMAGENOERR; /* No fatal errors */
 }
 
 #endif

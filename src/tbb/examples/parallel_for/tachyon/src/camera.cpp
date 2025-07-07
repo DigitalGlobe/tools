@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2021 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /*
@@ -51,59 +47,57 @@
  * camera.cpp - This file contains all of the functions for doing camera work.
  */
 
-#include "machine.h"
-#include "types.h"
-#include "macros.h"
-#include "vector.h"
-#include "camera.h"
-#include "util.h"
+#include "machine.hpp"
+#include "types.hpp"
+#include "macros.hpp"
+#include "vector.hpp"
+#include "camera.hpp"
+#include "util.hpp"
 
 ray camray(scenedef *scene, int x, int y) {
-  ray ray1, newray;
-  vector projcent;
-  vector projpixel;
-  flt px, py, sx, sy;
+    ray ray1, newray;
+    vector projcent;
+    vector projpixel;
+    flt px, py, sx, sy;
 
-  sx = (flt) scene->hres; 
-  sy = (flt) scene->vres;
+    sx = (flt)scene->hres;
+    sy = (flt)scene->vres;
 
-  /* calculate the width and height of the image plane given the */
-  /* aspect ratio, image resolution, and zoom factor */
+    /* calculate the width and height of the image plane given   */
+    /* the aspect ratio, image resolution, and zoom factor       */
 
-  px=((sx / sy) / scene->aspectratio) / scene->camzoom;
-  py=1.0 / scene->camzoom;    
+    px = ((sx / sy) / scene->aspectratio) / scene->camzoom;
+    py = 1.0 / scene->camzoom;
 
-  /* assuming viewvec is a unit vector, then the center of the */
-  /* image plane is the camera center + vievec                 */
-  projcent.x = scene->camcent.x + scene->camviewvec.x;
-  projcent.y = scene->camcent.y + scene->camviewvec.y;
-  projcent.z = scene->camcent.z + scene->camviewvec.z;
+    /* assuming viewvec is a unit vector, then the center of the */
+    /* image plane is the camera center + vievec                 */
+    projcent.x = scene->camcent.x + scene->camviewvec.x;
+    projcent.y = scene->camcent.y + scene->camviewvec.y;
+    projcent.z = scene->camcent.z + scene->camviewvec.z;
 
-  /* starting from the center of the image plane, we move the   */
-  /* center of the pel we're calculating, to                    */ 
-  /* projcent + (rightvec * x distance)                         */
-  ray1.o=projcent;
-  ray1.d=scene->camrightvec;
-  projpixel=Raypnt(&ray1, ((x*px/sx) - (px / 2.0))); 
+    /* starting from the center of the image plane, we move the   */
+    /* center of the pel we're calculating, to                    */
+    /* projcent + (rightvec * x distance)                         */
+    ray1.o = projcent;
+    ray1.d = scene->camrightvec;
+    projpixel = Raypnt(&ray1, ((x * px / sx) - (px / 2.0)));
 
-  /* starting from the horizontally translated pel, we move the */
-  /* center of the pel we're calculating, to                    */ 
-  /* projcent + (upvec * y distance)                            */
-  ray1.o=projpixel;
-  ray1.d=scene->camupvec;
-  projpixel=Raypnt(&ray1, ((y*py/sy) - (py / 2.0)));
+    /* starting from the horizontally translated pel, we move the */
+    /* center of the pel we're calculating, to                    */
+    /* projcent + (upvec * y distance)                            */
+    ray1.o = projpixel;
+    ray1.d = scene->camupvec;
+    projpixel = Raypnt(&ray1, ((y * py / sy) - (py / 2.0)));
 
-  /* now that we have the exact pel center in the image plane */
-  /* we create the real primary ray that will be used by the  */
-  /* rest of the system.                                      */
-  /* The ray is expected to be re-normalized elsewhere, we're */
-  /* only really concerned about getting its direction right. */
-  newray.o=scene->camcent;
-  VSub(&projpixel, &scene->camcent, &newray.d);
-  newray.depth = scene->raydepth;
-  newray.flags = RT_RAY_REGULAR;  /* camera only generates primary rays */
+    /* now that we have the exact pel center in the image plane */
+    /* we create the real primary ray that will be used by the  */
+    /* rest of the system.                                      */
+    /* The ray is expected to be re-normalized elsewhere, we're */
+    /* only really concerned about getting its direction right. */
+    newray.o = scene->camcent;
+    VSub(&projpixel, &scene->camcent, &newray.d);
+    newray.depth = scene->raydepth;
+    newray.flags = RT_RAY_REGULAR; /* camera only generates primary rays */
 
-  return newray;
+    return newray;
 }
-
-

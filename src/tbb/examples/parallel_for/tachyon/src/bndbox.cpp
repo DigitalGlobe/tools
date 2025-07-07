@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2021 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /*
@@ -50,133 +46,158 @@
 /* 
  * bndbox.cpp - This file contains the functions for dealing with bounding boxes.
  */
- 
-#include "machine.h"
-#include "types.h"
-#include "macros.h"
-#include "vector.h"
-#include "intersect.h"
-#include "util.h"
+
+#include "machine.hpp"
+#include "types.hpp"
+#include "macros.hpp"
+#include "vector.hpp"
+#include "intersect.hpp"
+#include "util.hpp"
 
 #define BNDBOX_PRIVATE
-#include "bndbox.h"
+#include "bndbox.hpp"
 
-static object_methods bndbox_methods = {
-  (void (*)(void *, void *))(bndbox_intersect),
-  (void (*)(void *, void *, void *, void *))(NULL),
-  bndbox_bbox, 
-  free_bndbox 
-};
+static object_methods bndbox_methods = { (void (*)(void *, void *))(bndbox_intersect),
+                                         (void (*)(void *, void *, void *, void *))(nullptr),
+                                         bndbox_bbox,
+                                         free_bndbox };
 
+bndbox *newbndbox(vector min, vector max) {
+    bndbox *b;
 
-bndbox * newbndbox(vector min, vector max) {
-  bndbox * b;
-  
-  b=(bndbox *) rt_getmem(sizeof(bndbox));
-  memset(b, 0, sizeof(bndbox));
-  b->min=min;
-  b->max=max;
-  b->methods = &bndbox_methods;
+    b = (bndbox *)rt_getmem(sizeof(bndbox));
+    memset(b, 0, sizeof(bndbox));
+    b->min = min;
+    b->max = max;
+    b->methods = &bndbox_methods;
 
-  b->objlist=NULL;
-  b->tex=NULL;
-  b->nextobj=NULL;
-  return b;
+    b->objlist = nullptr;
+    b->tex = nullptr;
+    b->nextobj = nullptr;
+    return b;
 }
 
+static int bndbox_bbox(void *obj, vector *min, vector *max) {
+    bndbox *b = (bndbox *)obj;
 
-static int bndbox_bbox(void * obj, vector * min, vector * max) {
-  bndbox * b = (bndbox *) obj;
+    *min = b->min;
+    *max = b->max;
 
-  *min = b->min;
-  *max = b->max;
-
-  return 1;
+    return 1;
 }
 
+static void free_bndbox(void *v) {
+    bndbox *b = (bndbox *)v;
 
-static void free_bndbox(void * v) {
-  bndbox * b = (bndbox *) v; 
+    free_objects(b->objlist);
 
-  free_objects(b->objlist);  
- 
-  free(b);
+    free(b);
 }
 
+static void bndbox_intersect(bndbox *bx, ray *ry) {
+    flt a, tx1, tx2, ty1, ty2, tz1, tz2;
+    flt tnear, tfar;
+    object *obj;
+    ray newray;
 
-static void bndbox_intersect(bndbox * bx, ray * ry) {
-  flt a, tx1, tx2, ty1, ty2, tz1, tz2;
-  flt tnear, tfar;
-  object * obj;
-  ray newray; 
+    /* eliminate bounded rays whose bounds do not intersect  */
+    /* the bounds of the box..                               */
+    if (ry->flags & RT_RAY_BOUNDED) {
+        if ((ry->s.x > bx->max.x) && (ry->e.x > bx->max.x))
+            return;
+        if ((ry->s.x < bx->min.x) && (ry->e.x < bx->min.x))
+            return;
 
-  /* eliminate bounded rays whose bounds do not intersect  */
-  /* the bounds of the box..                               */
-  if (ry->flags & RT_RAY_BOUNDED) {
-    if ((ry->s.x > bx->max.x) && (ry->e.x > bx->max.x)) return;
-    if ((ry->s.x < bx->min.x) && (ry->e.x < bx->min.x)) return;
-  
-    if ((ry->s.y > bx->max.y) && (ry->e.y > bx->max.y)) return;
-    if ((ry->s.y < bx->min.y) && (ry->e.y < bx->min.y)) return;
+        if ((ry->s.y > bx->max.y) && (ry->e.y > bx->max.y))
+            return;
+        if ((ry->s.y < bx->min.y) && (ry->e.y < bx->min.y))
+            return;
 
-    if ((ry->s.z > bx->max.z) && (ry->e.z > bx->max.z)) return;
-    if ((ry->s.z < bx->min.z) && (ry->e.z < bx->min.z)) return;
-  }
+        if ((ry->s.z > bx->max.z) && (ry->e.z > bx->max.z))
+            return;
+        if ((ry->s.z < bx->min.z) && (ry->e.z < bx->min.z))
+            return;
+    }
 
-  tnear= -FHUGE;
-  tfar= FHUGE;
+    tnear = -FHUGE;
+    tfar = FHUGE;
 
-  if (ry->d.x == 0.0) {
-    if ((ry->o.x < bx->min.x) || (ry->o.x > bx->max.x)) return;
-  }
-  else { 
-    tx1 = (bx->min.x - ry->o.x) / ry->d.x;
-    tx2 = (bx->max.x - ry->o.x) / ry->d.x;
-    if (tx1 > tx2) { a=tx1; tx1=tx2; tx2=a; } 
-    if (tx1 > tnear) tnear=tx1;   
-    if (tx2 < tfar)   tfar=tx2;   
-  }  
-  if (tnear > tfar) return; 
-  if (tfar < 0.0) return;
-  
-  if (ry->d.y == 0.0) { 
-    if ((ry->o.y < bx->min.y) || (ry->o.y > bx->max.y)) return;
-  }
-  else { 
-    ty1 = (bx->min.y - ry->o.y) / ry->d.y;
-    ty2 = (bx->max.y - ry->o.y) / ry->d.y;
-    if (ty1 > ty2) { a=ty1; ty1=ty2; ty2=a; } 
-    if (ty1 > tnear) tnear=ty1;   
-    if (ty2 < tfar)   tfar=ty2;   
-  } 
-  if (tnear > tfar) return; 
-  if (tfar < 0.0) return;
- 
-  if (ry->d.z == 0.0) { 
-    if ((ry->o.z < bx->min.z) || (ry->o.z > bx->max.z)) return;
-  }
-  else { 
-    tz1 = (bx->min.z - ry->o.z) / ry->d.z;
-    tz2 = (bx->max.z - ry->o.z) / ry->d.z;
-    if (tz1 > tz2) { a=tz1; tz1=tz2; tz2=a; } 
-    if (tz1 > tnear) tnear=tz1;   
-    if (tz2 < tfar)   tfar=tz2;   
-  } 
-  if (tnear > tfar) return; 
-  if (tfar < 0.0) return;
+    if (ry->d.x == 0.0) {
+        if ((ry->o.x < bx->min.x) || (ry->o.x > bx->max.x))
+            return;
+    }
+    else {
+        tx1 = (bx->min.x - ry->o.x) / ry->d.x;
+        tx2 = (bx->max.x - ry->o.x) / ry->d.x;
+        if (tx1 > tx2) {
+            a = tx1;
+            tx1 = tx2;
+            tx2 = a;
+        }
+        if (tx1 > tnear)
+            tnear = tx1;
+        if (tx2 < tfar)
+            tfar = tx2;
+    }
+    if (tnear > tfar)
+        return;
+    if (tfar < 0.0)
+        return;
 
+    if (ry->d.y == 0.0) {
+        if ((ry->o.y < bx->min.y) || (ry->o.y > bx->max.y))
+            return;
+    }
+    else {
+        ty1 = (bx->min.y - ry->o.y) / ry->d.y;
+        ty2 = (bx->max.y - ry->o.y) / ry->d.y;
+        if (ty1 > ty2) {
+            a = ty1;
+            ty1 = ty2;
+            ty2 = a;
+        }
+        if (ty1 > tnear)
+            tnear = ty1;
+        if (ty2 < tfar)
+            tfar = ty2;
+    }
+    if (tnear > tfar)
+        return;
+    if (tfar < 0.0)
+        return;
 
-  /* intersect all of the enclosed objects */
-  newray=*ry;
-  newray.flags |= RT_RAY_BOUNDED;
+    if (ry->d.z == 0.0) {
+        if ((ry->o.z < bx->min.z) || (ry->o.z > bx->max.z))
+            return;
+    }
+    else {
+        tz1 = (bx->min.z - ry->o.z) / ry->d.z;
+        tz2 = (bx->max.z - ry->o.z) / ry->d.z;
+        if (tz1 > tz2) {
+            a = tz1;
+            tz1 = tz2;
+            tz2 = a;
+        }
+        if (tz1 > tnear)
+            tnear = tz1;
+        if (tz2 < tfar)
+            tfar = tz2;
+    }
+    if (tnear > tfar)
+        return;
+    if (tfar < 0.0)
+        return;
 
-  RAYPNT(newray.s , (*ry) , tnear); 
-  RAYPNT(newray.e , (*ry) , (tfar + EPSILON)); 
- 
-  obj = bx->objlist;
-  while (obj != NULL) {
-    obj->methods->intersect(obj, &newray); 
-    obj = (object *)obj->nextobj;
-  }
+    /* intersect all of the enclosed objects */
+    newray = *ry;
+    newray.flags |= RT_RAY_BOUNDED;
+
+    RAYPNT(newray.s, (*ry), tnear);
+    RAYPNT(newray.e, (*ry), (tfar + EPSILON));
+
+    obj = bx->objlist;
+    while (obj != nullptr) {
+        obj->methods->intersect(obj, &newray);
+        obj = (object *)obj->nextobj;
+    }
 }
-

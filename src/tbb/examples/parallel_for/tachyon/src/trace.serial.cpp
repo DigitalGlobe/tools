@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2005-2016 Intel Corporation
+    Copyright (c) 2005-2021 Intel Corporation
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -12,10 +12,6 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-
-
-
 */
 
 /*
@@ -47,20 +43,20 @@
     SUCH DAMAGE.
 */
 
-#include "machine.h"
-#include "types.h"
-#include "macros.h"
-#include "vector.h"
-#include "tgafile.h"
-#include "trace.h"
-#include "light.h"
-#include "shade.h"
-#include "camera.h"
-#include "util.h"
-#include "intersect.h"
-#include "global.h"
-#include "ui.h"
-#include "tachyon_video.h"
+#include "machine.hpp"
+#include "types.hpp"
+#include "macros.hpp"
+#include "vector.hpp"
+#include "tgafile.hpp"
+#include "trace.hpp"
+#include "light.hpp"
+#include "shade.hpp"
+#include "camera.hpp"
+#include "util.hpp"
+#include "intersect.hpp"
+#include "global.hpp"
+#include "ui.hpp"
+#include "tachyon_video.hpp"
 
 // shared but read-only so could be private too
 static thr_parms *all_parms;
@@ -72,45 +68,49 @@ static int stopy;
 static flt jitterscale;
 static int totaly;
 
-static color_t render_one_pixel (int x, int y, unsigned int *local_mbox, unsigned int &serial,
-                                 int startx, int stopx, int starty, int stopy)
-{
+static color_t render_one_pixel(int x,
+                                int y,
+                                unsigned int *local_mbox,
+                                unsigned int &serial,
+                                int startx,
+                                int stopx,
+                                int starty,
+                                int stopy) {
     /* private vars moved inside loop */
     ray primary, sample;
     color col, avcol;
-    int R,G,B;
-    intersectstruct local_intersections;    
+    int R, G, B;
+    intersectstruct local_intersections;
     int alias;
     /* end private */
 
-    primary=camray(&scene, x, y);
+    primary = camray(&scene, x, y);
     primary.intstruct = &local_intersections;
     primary.flags = RT_RAY_REGULAR;
 
     serial++;
-    primary.serial = serial;  
+    primary.serial = serial;
     primary.mbox = local_mbox;
     primary.maxdist = FHUGE;
     primary.scene = &scene;
-    col=trace(&primary);  
+    col = trace(&primary);
 
     serial = primary.serial;
 
     /* perform antialiasing if enabled.. */
     if (scene.antialiasing > 0) {
-        for (alias=0; alias < scene.antialiasing; alias++) {
-
+        for (alias = 0; alias < scene.antialiasing; alias++) {
             serial++; /* increment serial number */
-            sample=primary;  /* copy the regular primary ray to start with */
-            sample.serial = serial; 
+            sample = primary; /* copy the regular primary ray to start with */
+            sample.serial = serial;
 
             {
-                sample.d.x+=((std::rand() % 100) - 50) / jitterscale;
-                sample.d.y+=((std::rand() % 100) - 50) / jitterscale;
-                sample.d.z+=((std::rand() % 100) - 50) / jitterscale;
+                sample.d.x += ((std::rand() % 100) - 50) / jitterscale;
+                sample.d.y += ((std::rand() % 100) - 50) / jitterscale;
+                sample.d.z += ((std::rand() % 100) - 50) / jitterscale;
             }
 
-            avcol=trace(&sample);  
+            avcol = trace(&sample);
 
             serial = sample.serial; /* update our overall serial # */
 
@@ -125,42 +125,49 @@ static color_t render_one_pixel (int x, int y, unsigned int *local_mbox, unsigne
     }
 
     /* Handle overexposure and underexposure here... */
-    R=(int) (col.r*255);
-    if (R > 255) R = 255;
-    else if (R < 0) R = 0;
+    R = (int)(col.r * 255);
+    if (R > 255)
+        R = 255;
+    else if (R < 0)
+        R = 0;
 
-    G=(int) (col.g*255);
-    if (G > 255) G = 255;
-    else if (G < 0) G = 0;
+    G = (int)(col.g * 255);
+    if (G > 255)
+        G = 255;
+    else if (G < 0)
+        G = 0;
 
-    B=(int) (col.b*255);
-    if (B > 255) B = 255;
-    else if (B < 0) B = 0;
+    B = (int)(col.b * 255);
+    if (B > 255)
+        B = 255;
+    else if (B < 0)
+        B = 0;
 
     return video->get_color(R, G, B);
-
 }
 
-static void parallel_thread (void)
-{
+static void parallel_thread(void) {
     // thread-local storage
     unsigned int serial = 1;
-    unsigned int mboxsize = sizeof(unsigned int)*(max_objectid() + 20);
-    unsigned int * local_mbox = (unsigned int *) alloca(mboxsize);
-    memset(local_mbox,0,mboxsize);
+    unsigned int mboxsize = sizeof(unsigned int) * (max_objectid() + 20);
+    unsigned int *local_mbox = (unsigned int *)alloca(mboxsize);
+    memset(local_mbox, 0, mboxsize);
 
-    for (int y = starty; y < stopy; y++) { {
-        drawing_area drawing(startx, totaly-y, stopx-startx, 1);
-        for (int x = startx; x < stopx; x++) {
-            color_t c = render_one_pixel (x, y, local_mbox, serial, startx, stopx, starty, stopy);
-            drawing.put_pixel(c);
-        } }
-        if(!video->next_frame()) return;
+    for (int y = starty; y < stopy; y++) {
+        {
+            drawing_area drawing(startx, totaly - y, stopx - startx, 1);
+            for (int x = startx; x < stopx; x++) {
+                color_t c =
+                    render_one_pixel(x, y, local_mbox, serial, startx, stopx, starty, stopy);
+                drawing.put_pixel(c);
+            }
+        }
+        if (!video->next_frame())
+            return;
     }
 }
 
-void * thread_trace(thr_parms * parms)
-{
+void *thread_trace(thr_parms *parms) {
     // shared but read-only so could be private too
     all_parms = parms;
     scene = parms->scene;
@@ -168,10 +175,10 @@ void * thread_trace(thr_parms * parms)
     stopx = parms->stopx;
     starty = parms->starty;
     stopy = parms->stopy;
-    jitterscale = 40.0*(scene.hres + scene.vres);
-    totaly = parms->scene.vres-1;
+    jitterscale = 40.0 * (scene.hres + scene.vres);
+    totaly = parms->scene.vres - 1;
 
-    parallel_thread ();
+    parallel_thread();
 
-    return(NULL);  
+    return (nullptr);
 }
