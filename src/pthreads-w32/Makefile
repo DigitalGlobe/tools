@@ -9,7 +9,7 @@
 # DLL_VER:
 # See pthread.h and README - This number is computed as 'current - age'
 DLL_VER	= 2
-DLL_VERD= $(DLL_VER)_d
+DLL_VERD= $(DLL_VER)d
 
 DEVROOT	= C:\pthreads
 
@@ -25,10 +25,10 @@ STATIC_STAMPS	= pthreadVCE$(DLL_VER).static pthreadVSE$(DLL_VER).static pthreadV
 				  pthreadVCE$(DLL_VERD).static pthreadVSE$(DLL_VERD).static pthreadVC$(DLL_VERD).static
 
 CC	= cl
-CPPFLAGS = /I. /DHAVE_PTW32_CONFIG_H 
-XCFLAGS = /W3 /nologo /D_TIMESPEC_DEFINED
-CFLAGS	= /O2 /Ob2 $(XCFLAGS) /MD
-CFLAGSD	= /Z7 $(XCFLAGS) /MDd
+CPPFLAGS = /I. /DHAVE_PTW32_CONFIG_H
+XCFLAGS = /W3 /MD /nologo
+CFLAGS	= /O2 /Ob2 $(XCFLAGS)
+CFLAGSD	= /Z7 $(XCFLAGS)
 
 # Uncomment this if config.h defines RETAIN_WSALASTERROR
 #XLIBS = wsock32.lib
