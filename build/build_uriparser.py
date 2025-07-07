@@ -1,10 +1,10 @@
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 #
 # build_uriparse.py
 #
 # Summary : Builds the UriParser libraries.
 #
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 import glob
 import os
@@ -16,144 +16,220 @@ from PathFinder import *
 from SystemManager import *
 from XmlUtils import *
 
-class Program :
-        DESCRIPTION = "Builds UriParse libs."
 
-        #----------------------------------------------------------------------
-        # the name of the solution file
-        _FILE_NAME_SOLUTION = "win32\Visual_Studio_2005\\uriparser.vcxproj"
-        
-        #----------------------------------------------------------------------
-        # the name of the path that will contain intermediary build files
-        _PATH_NAME_BUILD = "UriParser"
-        #----------------------------------------------------------------------
-        # the name of the path that contains the source code
-        _PATH_NAME_SOURCE = "..\\src\\UriParser"
-        #----------------------------------------------------------------------
-                
-        _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
-        _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
+class Program:
+    DESCRIPTION = "Builds UriParser libs."
 
-        #----------------------------------------------------------------------
-        # the name of the distribution path for all include files
-        _PATH_NAME_DISTRIBUTION_INCLUDE = '..\\..\\include\\xerces'
-        #----------------------------------------------------------------------
-        
-        _LIBNAME = 'uriparser'
-        _DEBUG_SUFFIX = '_d'
+    # ----------------------------------------------------------------------
+    # the name of the path that will contain intermediary build files
+    _PATH_NAME_BUILD = "uriparser"
+    # ----------------------------------------------------------------------
+    # the name of the path that contains the source code
+    _PATH_NAME_SOURCE = "..\\src\\uriparser"
+    # ----------------------------------------------------------------------
 
-        # the name of the path for all include files
-        _PATH_NAME_INCLUDE = 'include\\uriparser'
-        #----------------------------------------------------------------------
-        # the name of the distribution path for all include files
-        _PATH_NAME_DISTRIBUTION_INCLUDE = '..\\..\\include\\uriparser'
-        #----------------------------------------------------------------------
-        
-        def __init__(self) :
-        
-            pass
-        #----------------------------------------------------------------------
-        
+    _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
+    _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
-        def main(self) :
-        
-            systemManager = SystemManager()
-            pathFinder    = PathFinder()
-            xmlUtils = XmlUtils()
-            
-            # process command-line arguments
-            buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
-            
-            # initialize environment variables
-            systemManager.initializeIncludeEnvironmentVariable( buildSettings.X64Specified() )
-            systemManager.initializeLibraryEnvironmentVariable( buildSettings.X64Specified() )
-            systemManager.appendToPathEnvironmentVariable( pathFinder.getVisualStudioBinPathName( buildSettings.X64Specified() ) )
+    _LIBNAME = "uriparser"
+    _DEBUG_SUFFIX = "_d"
 
-            # MSBuild is under "Program Files (x86)"
-            systemManager.appendToPathEnvironmentVariable( os.path.join( systemManager.getProgramFilesPathName(False) , \
-                                                                             "MSBuild\\14.0\\Bin") )
+    # the name of the path for all include files
+    _PATH_NAME_INCLUDE = "include\\uriparser"
+    # ----------------------------------------------------------------------
+    # the name of the distribution path for all include files
+    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\uriparser"
+    # ----------------------------------------------------------------------
+    # ----------------------------------------------------------------------
+    # the name of the path that contains the cmake files
+    _PATH_NAME_CMAKE_SOURCE = "."
+    _PATH_NAME_CMAKE_BUILD = "build"
+    _PATH_NAME_CMAKE_INSTALL = "install"
 
-            compileOutDir = ""
-            if ( buildSettings.X64Specified() ) :
-                # append path for 64-bit rc.exe
-                systemManager.appendToPathEnvironmentVariable( os.path.join( systemManager.getProgramFilesPathName(False) , \
-                                                                             "Windows Kits\\10\\bin\\x64"                 ) )
-            else:
-                # append path for 32-bit rc.exe
-                systemManager.appendToPathEnvironmentVariable( os.path.join( systemManager.getProgramFilesPathName(False) , \
-                                                                             "Windows Kits\\10\\bin\\x86"                 ) )
+    # --------------------------------------------------------------------------
+    # constructors
 
-            # get the paths
-            buildPathName  = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD)
-            sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
-            sdkOutDir = buildPathName + "\\..\\" + (Program._PATH_NAME_DISTRIBUTION_X64 if buildSettings.X64Specified() else Program._PATH_NAME_DISTRIBUTION_X86)
+    # ----------------------------------------------------------------------
+    # Constructs this program.
+    #
+    # Parameters :
+    #     self : this program
+    def __init__(self):
+        pass
 
-            # remove build dir
-            systemManager.changeDirectory(sourcePathName)
-            systemManager.removeDirectory(buildPathName)
+    # ----------------------------------------------------------------------
 
-            #copy UriParser to the Build area
-            systemManager.copyDirectory( sourcePathName, buildPathName)
-        
-            # start building
-            systemManager.changeDirectory(buildPathName)
-                                    
-            
-            conf = "Release" if ( buildSettings.ReleaseSpecified() ) else "Debug"
-            platform  = 'x64' if buildSettings.X64Specified() else 'Win32'
-            # build the solution
-            solutionFileName   = os.path.join( buildPathName               , \
-                                               Program._FILE_NAME_SOLUTION )
-            msBuildCommandLine = ( "\"%s\" "                  + \
-                                     "/p:Configuration=\"%s\" " + \
-                                     "/p:platform=%s " + \
-                                     "\"%s\""                   ) % \
-                                   ( pathFinder.getMSBuildFileName( buildSettings.X64Specified()), conf, platform, solutionFileName )
-            
-            libName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".lib"
-            pdbName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".pdb"
+    # --------------------------------------------------------------------------
+    # public methods
 
-            buildOutDir   = os.path.join( buildPathName, 'build' )
-            propfile   = os.path.join( buildPathName, 'linker.props' )
-            
-            linkerprops = {'OutputFile':os.path.join( buildOutDir, libName )}
-            
-            msBuildCommandLine += ' /p:OutDir=' + buildOutDir
-            msBuildCommandLine += ' /p:TargetName=' + Program._LIBNAME + ('' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX)
-            msBuildCommandLine += ' /p:TargetExtension=lib'
-            msBuildCommandLine += ' /p:SolutionDir=' + buildPathName + '\\' 
-            msBuildCommandLine += ' /p:BuildProjectReferences=false'
+    # ----------------------------------------------------------------------
+    # The main method of the program.
+    #
+    # Parameters :
+    #     self : this program
+    def main(self):
 
-            
-            if buildSettings.ReleaseSpecified():
-                compprops = {'DebugInformationFormat':'None'}
-            else:
-                compprops = {'DebugInformationFormat':'ProgramDatabase', 'ProgramDataBaseFileName':os.path.join( buildOutDir, pdbName )}
+        systemManager = SystemManager()
+        pathFinder = PathFinder()
 
-            xmlUtils.buildLib(conf, platform, compprops, linkerprops, propfile)
-            msBuildCommandLine +=  ' /p:ForceImportBeforeCppTargets="' + propfile + '"'
+        # process command-line arguments
+        buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
 
-            print('cmd: ' + msBuildCommandLine)
-                       
-            msbuildResult = systemManager.execute(msBuildCommandLine)
-            if (msbuildResult != 0) :
-                sys.exit(-1)
+        # initialize environment variables
+        systemManager.initializeIncludeEnvironmentVariable(buildSettings.X64Specified())
+        systemManager.initializeLibraryEnvironmentVariable(buildSettings.X64Specified())
 
-            systemManager.removeDirectory(os.path.join( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE))
-            systemManager.distributeFiles(os.path.join( buildPathName, Program._PATH_NAME_INCLUDE),              \
-                              os.path.join( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE), \
-                              '*.h',                                                                 \
-                              True, False) 
-                
-            systemManager.copyFile( os.path.join( buildOutDir, libName ) , \
-                                    os.path.join( sdkOutDir , libName) )
-            if not buildSettings.ReleaseSpecified():
-                systemManager.copyFile( os.path.join( buildOutDir, pdbName ) , \
-                                        os.path.join( sdkOutDir , pdbName) )
+        # MSBuild is under "Program Files (x86)"
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getMSBuildFileName(buildSettings.X64Specified())
+        )
 
-                
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getNmakePathName(buildSettings.X64Specified())
+        )
+
+        compileOutDir = ""
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getWindowsSdkBinPathName(buildSettings.X64Specified())
+        )
+
+        # get the paths
+        buildPathName = systemManager.getCurrentRelativePathName(
+            Program._PATH_NAME_BUILD
+        )
+        sourcePathName = systemManager.getCurrentRelativePathName(
+            Program._PATH_NAME_SOURCE
+        )
+
+        buildSourceName = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
+        cmakeBuildPath = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
+        cmakeInstallPath = os.path.join(
+            cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
+        )
+
+        systemManager.removeDirectory(cmakeBuildPath)
+
+        sdkOutDir = os.path.join(
+            buildPathName,
+            "..",
+            (
+                Program._PATH_NAME_DISTRIBUTION_X64
+                if buildSettings.X64Specified()
+                else Program._PATH_NAME_DISTRIBUTION_X86
+            ),
+        )
+
+        # remove build dir
+        systemManager.changeDirectory(sourcePathName)
+        # systemManager.removeDirectory(buildPathName)
+
+        # copy Boost source to the Build area
+        systemManager.copyDirectory(sourcePathName, buildPathName)
+
+        # start building
+        systemManager.changeDirectory(buildPathName)
+
+        systemManager.makeDirectory(cmakeBuildPath)
+        systemManager.changeDirectory(cmakeBuildPath)
+
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        cmakeCommandLine = (
+            f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
+            + f"-A {platform} "
+            + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
+            + f"-DBUILD_SHARED_LIBS=ON "
+            + f"-DURIPARSER_BUILD_TESTS=OFF "
+            + f"-DURIPARSER_BUILD_TOOLS=OFF "
+            + f"-DURIPARSER_BUILD_DOCS=OFF "
+            + f"{buildSourceName}"
+        )
+
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
+
+        cmakeCommandLine = (
+            f"{pathFinder.getCMakeFileName()} "
+            + f"--build "
+            + f". "
+            + f"--config {conf} "
+        )
+
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
+
+        cmakeCommandLine = (
+            f"{pathFinder.getCMakeFileName()} "
+            + f"--install "
+            + f". "
+            + f"--config {conf} "
+            + f"--prefix "
+            + f"{os.path.join(cmakeBuildPath, "install")}"
+        )
+
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
+
+        dllName = (
+            f"{Program._LIBNAME}"
+            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
+            + f".dll"
+        )
+        libName = (
+            f"{Program._LIBNAME}"
+            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
+            + f".lib"
+        )
+        pdbName = (
+            f"{Program._LIBNAME}"
+            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
+            + f".pdb"
+        )
+
+        srcIncludePath = os.path.join(cmakeInstallPath, "include")
+        srcLibPath = os.path.join(cmakeInstallPath, "lib")
+        srcBinPath = os.path.join(cmakeInstallPath, "bin")
+
+        systemManager.distributeFiles(
+            srcIncludePath,
+            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            "*.h*",
+        )
+
+        systemManager.copyFile(
+            os.path.join(
+                srcLibPath,
+                f'{Program._LIBNAME}.lib',
+            ),
+            os.path.join(sdkOutDir, libName),
+        )
+
+        systemManager.copyFile(
+            os.path.join(
+                srcBinPath,
+                f"{Program._LIBNAME}.dll",
+            ),
+            os.path.join(sdkOutDir, dllName),
+        )
+
+        if not buildSettings.ReleaseSpecified():
+            systemManager.copyFile(
+                os.path.join(
+                    cmakeBuildPath,
+                    conf,
+                    f'{Program._LIBNAME}.pdb',
+                ),
+                os.path.join(sdkOutDir, pdbName),
+            )
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 Program().main()
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------

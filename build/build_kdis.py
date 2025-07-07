@@ -27,8 +27,6 @@ class Program:
     # a description of what the script does
     DESCRIPTION = "Builds the KDIS library."
     # ----------------------------------------------------------------------
-    # the name of the dynamic solution file
-    _FILE_NAME_SOLUTION = "Examples\\Building\\KDIS_DLL\\KDIS_DLL.vcxproj"
 
     # ----------------------------------------------------------------------
     # the name of the path that will contain intermediary build files

@@ -242,8 +242,8 @@ class Program :
                 # self._build(Program._FILE_NAME_BUILD_OPENTHREADS)
                 # self._build(Program._FILE_NAME_BUILD_PTHREADS)
                 # self._build(Program._FILE_NAME_BUILD_SZIP)
-                self._build(Program._FILE_NAME_BUILD_TBB)
-                self._build(Program._FILE_NAME_BUILD_URIPARSER)
+                # self._build(Program._FILE_NAME_BUILD_TBB)
+                # self._build(Program._FILE_NAME_BUILD_URIPARSER)
                 self._build(Program._FILE_NAME_BUILD_VLD)
                 self._build(Program._FILE_NAME_BUILD_ZLIB)
 
