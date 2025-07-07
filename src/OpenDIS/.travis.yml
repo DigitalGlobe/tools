@@ -1,0 +1,25 @@
+language: cpp
+
+addons:
+  apt:
+    packages:
+      - cmake 
+      - libsdl2-dev
+      - libsdl2-net-dev
+      - rpm
+
+install:
+
+
+# Run premake to generate makefiles.
+before_script:
+  - mkdir build
+  - pushd build
+  - cmake .. -DCMAKE_INSTALL_PREFIX=./install
+  - popd
+
+script:
+  - pushd build
+  - make -j install
+  - make package
+  - popd
