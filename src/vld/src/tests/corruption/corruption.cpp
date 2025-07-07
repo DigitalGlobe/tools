@@ -63,7 +63,6 @@ int main(int argc, char **argv) {
     UINT vld_options = VLDGetOptions();
     vld_options |= VLD_OPT_VALIDATE_HEAPFREE;
     VLDSetOptions(vld_options, 15, 25);
-
     ::testing::InitGoogleTest(&argc, argv);
     int res = RUN_ALL_TESTS();
     VLDMarkAllLeaksAsReported();

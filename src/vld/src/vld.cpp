@@ -122,10 +122,10 @@ PBYTE NtDllFindParamAddress(const PBYTE pAddress)
     PBYTE ptr = pAddress;
     // Test previous 32 bytes to find the begining address we need to patch
     // for 32bit find => push [ebp][14h] => parameters are pushed to stack
-    // for 64bit find => mov r8,... => parameters are moved to registers r8, rdx, rcx
+    // for 64bit find => mov r8,... => parameters are moved to registers r8, edx, rcx
     while (pAddress - --ptr < 0x20) {
 #ifdef _WIN64
-        if (((ptr[0] & 0x4D) == ptr[0]) && (ptr[1] == 0x8B) && ((ptr[2] & 0xC7) == ptr[2])) {
+        if (((ptr[0] & 0x4D) >= 0x4C) && (ptr[1] == 0x8B) && ((ptr[2] & 0xC7) == ptr[2])) {
 #else
         if ((ptr[0] == 0xFF) && (ptr[1] == 0x75) && (ptr[2] == 0x14)) {
 #endif
@@ -198,9 +198,26 @@ BOOL NtDllPatch(const PBYTE pReturnAddress, NTDLL_LDR_PATCH &NtDllPatch)
                 memset(NtDllPatch.pDetourAddress, 0x90, NtDllPatch.nDetourSize);
 #ifdef _WIN64
                 // Copy original param instructions
-                memcpy(&NtDllPatch.pDetourAddress[0], NtDllPatch.pPatchAddress, nParamSize);
+                memcpy(NtDllPatch.pDetourAddress, NtDllPatch.pPatchAddress, nParamSize);
+
+                BYTE reg = 0x00;
+
+                LPBYTE icall = NtDllPatch.pPatchAddress + nParamSize - (3 /*instruction size*/ + sizeof(DWORD));
+                if ((*(LPDWORD)icall & 0x000D8B4C) == 0x000D8B4C) {
+                    // From Windows 10 (1607) calls to the EntryPoint are dispatched through
+                    // __guard_dispatch_icall_fptr. In such case correct the relative address.
+                    DWORD fptr = *(LPDWORD)(icall + 3) + (3 /*instruction size*/ + sizeof(DWORD)) - (DWORD)(NtDllPatch.pDetourAddress - NtDllPatch.pPatchAddress);
+                    memcpy(NtDllPatch.pDetourAddress + nParamSize - sizeof(DWORD), &fptr, sizeof(DWORD));
+
+                    // Additionally in such case the EntryPoint is held in another register
+                    // that was moved to rax. In such case identify the correct register
+                    // holding the EntryPoint
+                    reg = ((*(icall - 3) & 0xF1) == 0x41 ? 0x08 : 0x00) + (*(icall - 1) & 0x07);
+                } else {
+                    reg = ((pCallAddress[0] & 0xF1) == 0x41 ? 0x08 : 0x00) + (pCallAddress[pReturnAddress - pCallAddress - 1] & 0x07);
+                }
+
                 // Copy the register that holds the EntryPoint to r9
-                BYTE reg = ((pCallAddress[0] & 0xF1) == 0x41 ? 0x08 : 0x00) + (pCallAddress[pReturnAddress - pCallAddress - 1] & 0x07);
                 ptr[0] = 0x4C + ((reg & 0x08) ? 0x01 : 0x00);
                 ptr[2] = 0xC8 + (reg & 0x07);
                 memcpy(&NtDllPatch.pDetourAddress[nParamSize], &ptr, _countof(ptr));
@@ -334,27 +351,27 @@ VisualLeakDetector::VisualLeakDetector ()
     wcsncpy_s(m_reportFilePath, MAX_PATH, VLD_DEFAULT_REPORT_FILE_NAME, _TRUNCATE);
     m_status         = 0x0;
 
-	HMODULE ntdll = GetModuleHandleW(L"ntdll.dll");
-	if (ntdll)
-	{
-		if (!IsWindows8OrGreater())
-		{
-			LdrLoadDll = (LdrLoadDll_t)GetProcAddress(ntdll, "LdrLoadDll");
-		} else
-		{
-			LdrLoadDllWin8 = (LdrLoadDllWin8_t)GetProcAddress(ntdll, "LdrLoadDll");
-			ldrLoadDllPatch[0].replacement = _LdrLoadDllWin8;
-		}
-		RtlAllocateHeap = (RtlAllocateHeap_t)GetProcAddress(ntdll, "RtlAllocateHeap");
-		RtlFreeHeap = (RtlFreeHeap_t)GetProcAddress(ntdll, "RtlFreeHeap");
-		RtlReAllocateHeap = (RtlReAllocateHeap_t)GetProcAddress(ntdll, "RtlReAllocateHeap");
+    HMODULE ntdll = GetModuleHandleW(L"ntdll.dll");
+    if (ntdll)
+    {
+        if (!IsWindows8OrGreater())
+        {
+            LdrLoadDll = (LdrLoadDll_t)GetProcAddress(ntdll, "LdrLoadDll");
+        } else
+        {
+            LdrLoadDllWin8 = (LdrLoadDllWin8_t)GetProcAddress(ntdll, "LdrLoadDll");
+            ldrLoadDllPatch[0].replacement = _LdrLoadDllWin8;
+        }
+        RtlAllocateHeap = (RtlAllocateHeap_t)GetProcAddress(ntdll, "RtlAllocateHeap");
+        RtlFreeHeap = (RtlFreeHeap_t)GetProcAddress(ntdll, "RtlFreeHeap");
+        RtlReAllocateHeap = (RtlReAllocateHeap_t)GetProcAddress(ntdll, "RtlReAllocateHeap");
 
-		LdrGetDllHandle = (LdrGetDllHandle_t)GetProcAddress(ntdll, "LdrGetDllHandle");
-		LdrGetProcedureAddress = (LdrGetProcedureAddress_t)GetProcAddress(ntdll, "LdrGetProcedureAddress");
-		LdrUnloadDll = (LdrUnloadDll_t)GetProcAddress(ntdll, "LdrUnloadDll");
-		LdrLockLoaderLock = (LdrLockLoaderLock_t)GetProcAddress(ntdll, "LdrLockLoaderLock");
-		LdrUnlockLoaderLock = (LdrUnlockLoaderLock_t)GetProcAddress(ntdll, "LdrUnlockLoaderLock");
-	}
+        LdrGetDllHandle = (LdrGetDllHandle_t)GetProcAddress(ntdll, "LdrGetDllHandle");
+        LdrGetProcedureAddress = (LdrGetProcedureAddress_t)GetProcAddress(ntdll, "LdrGetProcedureAddress");
+        LdrUnloadDll = (LdrUnloadDll_t)GetProcAddress(ntdll, "LdrUnloadDll");
+        LdrLockLoaderLock = (LdrLockLoaderLock_t)GetProcAddress(ntdll, "LdrLockLoaderLock");
+        LdrUnlockLoaderLock = (LdrUnlockLoaderLock_t)GetProcAddress(ntdll, "LdrUnlockLoaderLock");
+    }
 
     // Load configuration options.
     configure();
@@ -373,11 +390,11 @@ VisualLeakDetector::VisualLeakDetector ()
     }
     else
     {
-		if (kernelBase)
-		{
-			m_GetProcAddress = (GetProcAddress_t)GetProcAddress(kernelBase, "GetProcAddress");
-			m_GetProcAddressForCaller = (GetProcAddressForCaller_t)GetProcAddress(kernelBase, "GetProcAddressForCaller");
-		}
+        if (kernelBase)
+        {
+            m_GetProcAddress = (GetProcAddress_t)GetProcAddress(kernelBase, "GetProcAddress");
+            m_GetProcAddressForCaller = (GetProcAddressForCaller_t)GetProcAddress(kernelBase, "GetProcAddressForCaller");
+        }
         assert(m_patchTable[0].patchTable == m_kernelbasePatch);
         m_patchTable[0].exportModuleName = "kernelbase.dll";
     }
@@ -955,9 +972,9 @@ LPWSTR VisualLeakDetector::buildSymbolSearchPath ()
         delete [] env;
     }
 
-#if _MSC_VER > 1900
-#error Not supported VS
-#endif
+//#if _MSC_VER > 1900
+//#error Not supported VS
+//#endif
     // Append Visual Studio 2015/2013/2012/2010/2008 symbols cache directory.
     for (UINT n = 9; n <= 14; ++n) {
         WCHAR debuggerpath[MAX_PATH] = { 0 };
@@ -2151,7 +2168,7 @@ FARPROC VisualLeakDetector::_GetProcAddress (HMODULE module, LPCSTR procname)
 
 FARPROC VisualLeakDetector::_RGetProcAddress(HMODULE module, LPCSTR procname)
 {
-	return m_GetProcAddress(module, procname);
+    return m_GetProcAddress(module, procname);
 }
 
 // _GetProcAddress - Calls to GetProcAddress are patched through to this
@@ -2220,7 +2237,7 @@ FARPROC VisualLeakDetector::_GetProcAddressForCaller(HMODULE module, LPCSTR proc
 
 FARPROC VisualLeakDetector::_RGetProcAddressForCaller(HMODULE module, LPCSTR procname, LPVOID caller)
 {
-	return m_GetProcAddressForCaller(module, procname, caller);
+    return m_GetProcAddressForCaller(module, procname, caller);
 }
 
 // _LdrLoadDll - Calls to LdrLoadDll are patched through to this function. This

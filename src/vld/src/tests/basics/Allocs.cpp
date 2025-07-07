@@ -33,6 +33,12 @@
 #define CRTDLLNAME   _T("msvcr120d.dll")
 #elif _MSC_VER == 1900	// VS 2015
 #define CRTDLLNAME   _T("ucrtbased.dll")
+#elif _MSC_VER == 1924	// VS 2019 16.4
+#define CRTDLLNAME   _T("ucrtbased.dll")
+#elif _MSC_VER == 1927 	// VS 2019 16.7
+#define CRTDLLNAME   _T("ucrtbase.dll")
+#elif _MSC_VER >= 1933 	// VS 2022
+#define CRTDLLNAME   _T("ucrtbase.dll")//BHA
 #else
 #error Unsupported compiler
 #endif
@@ -57,6 +63,12 @@
 #define CRTDLLNAME   _T("msvcr120.dll")
 #elif _MSC_VER == 1900	// VS 2015
 #define CRTDLLNAME   _T("ucrtbase.dll")
+#elif _MSC_VER == 1924	// VS 2019 16.4
+#define CRTDLLNAME   _T("ucrtbase.dll")
+#elif _MSC_VER == 1927 	// VS 2019 16.7
+#define CRTDLLNAME   _T("ucrtbase.dll")
+#elif _MSC_VER >= 1933 	// VS 2022
+#define CRTDLLNAME   _T("ucrtbase.dll")//BHA
 #else
 #error Unsupported compiler
 #endif
