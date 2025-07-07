@@ -37,73 +37,70 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file UriIp4.h
- * Holds the IPv4 parser interface.
- * NOTE: This header includes itself twice.
- */
-
-#if (defined(URI_PASS_ANSI) && !defined(URI_IP4_TWICE_H_ANSI)) \
-	|| (defined(URI_PASS_UNICODE) && !defined(URI_IP4_TWICE_H_UNICODE)) \
+#if (defined(URI_PASS_ANSI) && !defined(URI_COMMON_H_ANSI)) \
+	|| (defined(URI_PASS_UNICODE) && !defined(URI_COMMON_H_UNICODE)) \
 	|| (!defined(URI_PASS_ANSI) && !defined(URI_PASS_UNICODE))
 /* What encodings are enabled? */
-#include "UriDefsConfig.h"
+#include <uriparser/UriDefsConfig.h>
 #if (!defined(URI_PASS_ANSI) && !defined(URI_PASS_UNICODE))
 /* Include SELF twice */
 # ifdef URI_ENABLE_ANSI
 #  define URI_PASS_ANSI 1
-#  include "UriIp4.h"
+#  include "UriCommon.h"
 #  undef URI_PASS_ANSI
 # endif
 # ifdef URI_ENABLE_UNICODE
 #  define URI_PASS_UNICODE 1
-#  include "UriIp4.h"
+#  include "UriCommon.h"
 #  undef URI_PASS_UNICODE
 # endif
 /* Only one pass for each encoding */
-#elif (defined(URI_PASS_ANSI) && !defined(URI_IP4_TWICE_H_ANSI) \
+#elif (defined(URI_PASS_ANSI) && !defined(URI_COMMON_H_ANSI) \
 	&& defined(URI_ENABLE_ANSI)) || (defined(URI_PASS_UNICODE) \
-	&& !defined(URI_IP4_TWICE_H_UNICODE) && defined(URI_ENABLE_UNICODE))
+	&& !defined(URI_COMMON_H_UNICODE) && defined(URI_ENABLE_UNICODE))
 # ifdef URI_PASS_ANSI
-#  define URI_IP4_TWICE_H_ANSI 1
-#  include "UriDefsAnsi.h"
+#  define URI_COMMON_H_ANSI 1
+#  include <uriparser/UriDefsAnsi.h>
 # else
-#  define URI_IP4_TWICE_H_UNICODE 1
-#  include "UriDefsUnicode.h"
-#  include <wchar.h>
+#  define URI_COMMON_H_UNICODE 1
+#  include <uriparser/UriDefsUnicode.h>
 # endif
 
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+/* Used to point to from empty path segments.
+ * X.first and X.afterLast must be the same non-NULL value then. */
+extern const URI_CHAR * const URI_FUNC(SafeToPointTo);
+extern const URI_CHAR * const URI_FUNC(ConstPwd);
+extern const URI_CHAR * const URI_FUNC(ConstParent);
 
 
 
-#ifndef URI_DOXYGEN
-# include "UriBase.h"
-#endif
+void URI_FUNC(ResetUri)(URI_TYPE(Uri) * uri);
 
+int URI_FUNC(CompareRange)(
+		const URI_TYPE(TextRange) * a,
+		const URI_TYPE(TextRange) * b);
 
+UriBool URI_FUNC(RemoveDotSegmentsAbsolute)(URI_TYPE(Uri) * uri,
+		UriMemoryManager * memory);
+UriBool URI_FUNC(RemoveDotSegmentsEx)(URI_TYPE(Uri) * uri,
+		UriBool relative, UriBool pathOwned, UriMemoryManager * memory);
 
-/**
- * Converts a IPv4 text representation into four bytes.
- *
- * @param octetOutput  Output destination
- * @param first        First character of IPv4 text to parse
- * @param afterLast    Position to stop parsing at
- * @return Error code or 0 on success
- */
-URI_PUBLIC int URI_FUNC(ParseIpFourAddress)(unsigned char * octetOutput,
-		const URI_CHAR * first, const URI_CHAR * afterLast);
+unsigned char URI_FUNC(HexdigToInt)(URI_CHAR hexdig);
+URI_CHAR URI_FUNC(HexToLetter)(unsigned int value);
+URI_CHAR URI_FUNC(HexToLetterEx)(unsigned int value, UriBool uppercase);
 
+UriBool URI_FUNC(IsHostSet)(const URI_TYPE(Uri) * uri);
 
+UriBool URI_FUNC(CopyPath)(URI_TYPE(Uri) * dest, const URI_TYPE(Uri) * source,
+		UriMemoryManager * memory);
+UriBool URI_FUNC(CopyAuthority)(URI_TYPE(Uri) * dest,
+		const URI_TYPE(Uri) * source, UriMemoryManager * memory);
 
-#ifdef __cplusplus
-}
-#endif
-
+UriBool URI_FUNC(FixAmbiguity)(URI_TYPE(Uri) * uri, UriMemoryManager * memory);
+void URI_FUNC(FixEmptyTrailSegment)(URI_TYPE(Uri) * uri,
+		UriMemoryManager * memory);
 
 
 #endif

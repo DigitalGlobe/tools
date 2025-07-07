@@ -2,35 +2,35 @@
  * uriparser - RFC 3986 URI parsing library
  *
  * Copyright (C) 2007, Weijia Song <songweijia@gmail.com>
- * Copyright (C) 2007, Sebastian Pipping <webmaster@hartwork.org>
+ * Copyright (C) 2007, Sebastian Pipping <sebastian@pipping.org>
  * All rights reserved.
  *
- * Redistribution  and use in source and binary forms, with or without
- * modification,  are permitted provided that the following conditions
+ * Redistribution and use in source  and binary forms, with or without
+ * modification, are permitted provided  that the following conditions
  * are met:
  *
- *     * Redistributions   of  source  code  must  retain  the   above
- *       copyright  notice, this list of conditions and the  following
- *       disclaimer.
+ *     1. Redistributions  of  source  code   must  retain  the  above
+ *        copyright notice, this list  of conditions and the following
+ *        disclaimer.
  *
- *     * Redistributions  in  binary  form must  reproduce  the  above
- *       copyright  notice, this list of conditions and the  following
- *       disclaimer   in  the  documentation  and/or  other  materials
- *       provided with the distribution.
+ *     2. Redistributions  in binary  form  must  reproduce the  above
+ *        copyright notice, this list  of conditions and the following
+ *        disclaimer  in  the  documentation  and/or  other  materials
+ *        provided with the distribution.
  *
- *     * Neither  the name of the <ORGANIZATION> nor the names of  its
- *       contributors  may  be  used to endorse  or  promote  products
- *       derived  from  this software without specific  prior  written
- *       permission.
+ *     3. Neither the  name of the  copyright holder nor the  names of
+ *        its contributors may be used  to endorse or promote products
+ *        derived from  this software  without specific  prior written
+ *        permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT  NOT
- * LIMITED  TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND  FITNESS
- * FOR  A  PARTICULAR  PURPOSE ARE DISCLAIMED. IN NO EVENT  SHALL  THE
- * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
- * INCIDENTAL,    SPECIAL,   EXEMPLARY,   OR   CONSEQUENTIAL   DAMAGES
- * (INCLUDING,  BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES;  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * "AS IS" AND  ANY EXPRESS OR IMPLIED WARRANTIES,  INCLUDING, BUT NOT
+ * LIMITED TO,  THE IMPLIED WARRANTIES OF  MERCHANTABILITY AND FITNESS
+ * FOR  A  PARTICULAR  PURPOSE  ARE  DISCLAIMED.  IN  NO  EVENT  SHALL
+ * THE  COPYRIGHT HOLDER  OR CONTRIBUTORS  BE LIABLE  FOR ANY  DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL,  EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO,  PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA,  OR PROFITS; OR BUSINESS INTERRUPTION)
  * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
  * STRICT  LIABILITY,  OR  TORT (INCLUDING  NEGLIGENCE  OR  OTHERWISE)
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
@@ -54,8 +54,8 @@
 
 /* Version */
 #define URI_VER_MAJOR           0
-#define URI_VER_MINOR           7
-#define URI_VER_RELEASE         5
+#define URI_VER_MINOR           9
+#define URI_VER_RELEASE         8
 #define URI_VER_SUFFIX_ANSI     ""
 #define URI_VER_SUFFIX_UNICODE  URI_ANSI_TO_UNICODE(URI_VER_SUFFIX_ANSI)
 
@@ -97,6 +97,25 @@
 
 
 
+/* Import/export decorator */
+#if defined(_MSC_VER)
+# if defined(URI_STATIC_BUILD)
+#  define URI_PUBLIC
+# elif defined(URI_LIBRARY_BUILD)
+#  define URI_PUBLIC __declspec(dllexport)
+# else
+#  define URI_PUBLIC __declspec(dllimport)
+# endif
+#else
+# if ! defined(URI_LIBRARY_BUILD) || ! defined(URI_VISIBILITY)
+#  define URI_PUBLIC
+# else
+#  define URI_PUBLIC __attribute__ ((visibility("default")))
+# endif
+#endif
+
+
+
 typedef int UriBool; /**< Boolean type */
 
 #define URI_TRUE     1
@@ -113,6 +132,7 @@ typedef int UriBool; /**< Boolean type */
 #define URI_ERROR_OUTPUT_TOO_LARGE         4 /* Some output is to large for the receiving buffer */
 #define URI_ERROR_NOT_IMPLEMENTED          8 /* The called function is not implemented yet */
 #define URI_ERROR_RANGE_INVALID            9 /* The parameters passed contained invalid ranges */
+#define URI_ERROR_MEMORY_MANAGER_INCOMPLETE  10 /* [>=0.9.0] The UriMemoryManager passed does not implement all needed functions */
 
 
 /* Errors specific to ToString */
@@ -125,6 +145,8 @@ typedef int UriBool; /**< Boolean type */
 #define URI_ERROR_REMOVEBASE_REL_BASE      6 /* Given base is not absolute */
 #define URI_ERROR_REMOVEBASE_REL_SOURCE    7 /* Given base is not absolute */
 
+/* Error specific to uriTestMemoryManager */
+#define URI_ERROR_MEMORY_MANAGER_FAULTY   11 /* [>=0.9.0] The UriMemoryManager given did not pass the test suite */
 
 
 #ifndef URI_DOXYGEN
@@ -153,9 +175,66 @@ typedef struct UriIp6Struct {
 } UriIp6; /**< @copydoc UriIp6Struct */
 
 
+struct UriMemoryManagerStruct;  /* foward declaration to break loop */
+
 
 /**
- * Specifies a line break conversion mode
+ * Function signature that custom malloc(3) functions must conform to
+ *
+ * @since 0.9.0
+ */
+typedef void * (*UriFuncMalloc)(struct UriMemoryManagerStruct *, size_t);
+
+/**
+ * Function signature that custom calloc(3) functions must conform to
+ *
+ * @since 0.9.0
+ */
+typedef void * (*UriFuncCalloc)(struct UriMemoryManagerStruct *, size_t, size_t);
+
+/**
+ * Function signature that custom realloc(3) functions must conform to
+ *
+ * @since 0.9.0
+ */
+typedef void * (*UriFuncRealloc)(struct UriMemoryManagerStruct *, void *, size_t);
+
+/**
+ * Function signature that custom reallocarray(3) functions must conform to
+ *
+ * @since 0.9.0
+ */
+typedef void * (*UriFuncReallocarray)(struct UriMemoryManagerStruct *, void *, size_t, size_t);
+
+/**
+ * Function signature that custom free(3) functions must conform to
+ *
+ * @since 0.9.0
+ */
+typedef void (*UriFuncFree)(struct UriMemoryManagerStruct *, void *);
+
+
+/**
+ * Class-like interface of custom memory managers
+ *
+ * @see uriCompleteMemoryManager
+ * @see uriEmulateCalloc
+ * @see uriEmulateReallocarray
+ * @see uriTestMemoryManager
+ * @since 0.9.0
+ */
+typedef struct UriMemoryManagerStruct {
+	UriFuncMalloc malloc; /**< Pointer to custom malloc(3) */
+	UriFuncCalloc calloc; /**< Pointer to custom calloc(3); to emulate using malloc and memset see uriEmulateCalloc */
+	UriFuncRealloc realloc; /**< Pointer to custom realloc(3) */
+	UriFuncReallocarray reallocarray; /**< Pointer to custom reallocarray(3); to emulate using realloc see uriEmulateReallocarray */
+	UriFuncFree free; /**< Pointer to custom free(3) */
+	void * userData; /**< Pointer to data that the other function members need access to */
+} UriMemoryManager; /**< @copydoc UriMemoryManagerStruct */
+
+
+/**
+ * Specifies a line break conversion mode.
  */
 typedef enum UriBreakConversionEnum {
 	URI_BR_TO_LF, /**< Convert to Unix line breaks ("\\x0a") */
@@ -184,5 +263,111 @@ typedef enum UriNormalizationMaskEnum {
 
 
 
-#endif /* URI_BASE_H */
+/**
+ * Specifies how to resolve %URI references.
+ */
+typedef enum UriResolutionOptionsEnum {
+	URI_RESOLVE_STRICTLY = 0, /**< Full RFC conformance */
+	URI_RESOLVE_IDENTICAL_SCHEME_COMPAT = 1 << 0 /**< Treat %URI to resolve with identical scheme as having no scheme */
+} UriResolutionOptions; /**< @copydoc UriResolutionOptionsEnum */
 
+
+
+/**
+ * Wraps a memory manager backend that only provides malloc and free
+ * to make a complete memory manager ready to be used.
+ *
+ * The core feature of this wrapper is that you don't need to implement
+ * realloc if you don't want to.  The wrapped memory manager uses
+ * backend->malloc, memcpy, and backend->free and soieof(size_t) extra
+ * bytes per allocation to emulate fallback realloc for you.
+ *
+ * memory->calloc is uriEmulateCalloc.
+ * memory->free uses backend->free and handles the size header.
+ * memory->malloc uses backend->malloc and adds a size header.
+ * memory->realloc uses memory->malloc, memcpy, and memory->free and reads
+ *                 the size header.
+ * memory->reallocarray is uriEmulateReallocarray.
+ *
+ * The internal workings behind memory->free, memory->malloc, and
+ * memory->realloc may change so the functions exposed by these function
+ * pointer sshould be consided internal and not public API.
+ *
+ * @param memory   <b>OUT</b>: Where to write the wrapped memory manager to
+ * @param backend  <b>IN</b>: Memory manager to use as a backend
+ * @return          Error code or 0 on success
+ *
+ * @see uriEmulateCalloc
+ * @see uriEmulateReallocarray
+ * @see UriMemoryManager
+ * @since 0.9.0
+ */
+URI_PUBLIC int uriCompleteMemoryManager(UriMemoryManager * memory,
+		UriMemoryManager * backend);
+
+
+
+/**
+ * Offers emulation of calloc(3) based on memory->malloc and memset.
+ * See "man 3 calloc" as well.
+ *
+ * @param memory  <b>IN</b>: Memory manager to use, should not be NULL
+ * @param nmemb   <b>IN</b>: Number of elements to allocate
+ * @param size    <b>IN</b>: Size in bytes per element
+ * @return        Pointer to allocated memory or NULL
+ *
+ * @see uriCompleteMemoryManager
+ * @see uriEmulateReallocarray
+ * @see UriMemoryManager
+ * @since 0.9.0
+ */
+URI_PUBLIC void * uriEmulateCalloc(UriMemoryManager * memory,
+		size_t nmemb, size_t size);
+
+
+
+/**
+ * Offers emulation of reallocarray(3) based on memory->realloc.
+ * See "man 3 reallocarray" as well.
+ *
+ * @param memory  <b>IN</b>: Memory manager to use, should not be NULL
+ * @param ptr     <b>IN</b>: Pointer allocated using memory->malloc/... or NULL
+ * @param nmemb   <b>IN</b>: Number of elements to allocate
+ * @param size    <b>IN</b>: Size in bytes per element
+ * @return        Pointer to allocated memory or NULL
+ *
+ * @see uriCompleteMemoryManager
+ * @see uriEmulateCalloc
+ * @see UriMemoryManager
+ * @since 0.9.0
+ */
+URI_PUBLIC void * uriEmulateReallocarray(UriMemoryManager * memory,
+		void * ptr, size_t nmemb, size_t size);
+
+
+
+/**
+ * Run multiple tests against a given memory manager.
+ * For example, one test
+ * 1. allocates a small amount of memory,
+ * 2. writes some magic bytes to it,
+ * 3. reallocates it,
+ * 4. checks that previous values are still present,
+ * 5. and frees that memory.
+ *
+ * It is recommended to compile with AddressSanitizer enabled
+ * to take full advantage of uriTestMemoryManager.
+ *
+ * @param memory  <b>IN</b>: Memory manager to use, should not be NULL
+ * @return        Error code or 0 on success
+ *
+ * @see uriEmulateCalloc
+ * @see uriEmulateReallocarray
+ * @see UriMemoryManager
+ * @since 0.9.0
+ */
+URI_PUBLIC int uriTestMemoryManager(UriMemoryManager * memory);
+
+
+
+#endif /* URI_BASE_H */

@@ -1,8 +1,8 @@
 /*
  * uriparser - RFC 3986 URI parsing library
  *
- * Copyright (C) 2007, Weijia Song <songweijia@gmail.com>
- * Copyright (C) 2007, Sebastian Pipping <sebastian@pipping.org>
+ * Copyright (C) 2018, Weijia Song <songweijia@gmail.com>
+ * Copyright (C) 2018, Sebastian Pipping <sebastian@pipping.org>
  * All rights reserved.
  *
  * Redistribution and use in source  and binary forms, with or without
@@ -37,46 +37,42 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file UriDefsUnicode.h
- * Holds definitions for the wide string pass.
- * NOTE: This header is included N times, not once.
- */
-
-/* Allow multi inclusion */
-#include "UriDefsConfig.h"
+#ifndef URI_MEMORY_H
+#define URI_MEMORY_H 1
 
 
 
-#undef URI_CHAR
-#define URI_CHAR wchar_t
-
-#undef _UT
-#define _UT(x) L##x
-
-
-
-#undef URI_FUNC
-#define URI_FUNC(x) uri##x##W
-
-#undef URI_TYPE
-#define URI_TYPE(x) Uri##x##W
-
-
-
-#undef URI_STRLEN
-#define URI_STRLEN wcslen
-#undef URI_STRCPY
-#define URI_STRCPY wcscpy
-#undef URI_STRCMP
-#define URI_STRCMP wcscmp
-#undef URI_STRNCMP
-#define URI_STRNCMP wcsncmp
-
-/* TODO Remove on next source-compatibility break */
-#undef URI_SNPRINTF
-#if (defined(__WIN32__) || defined(_WIN32) || defined(WIN32))
-# define URI_SNPRINTF _snwprintf
-#else
-# define URI_SNPRINTF swprintf
+#ifndef URI_DOXYGEN
+# include <uriparser/Uri.h>
 #endif
+
+
+
+#define URI_CHECK_MEMORY_MANAGER(memory)  \
+	do { \
+		if (memory == NULL) { \
+			memory = &defaultMemoryManager; \
+		} else if (uriMemoryManagerIsComplete(memory) != URI_TRUE) { \
+			return URI_ERROR_MEMORY_MANAGER_INCOMPLETE; \
+		} \
+	} while (0)
+
+
+
+#ifdef __cplusplus
+# define URIPARSER_EXTERN extern "C"
+#else
+# define URIPARSER_EXTERN extern
+#endif
+
+URIPARSER_EXTERN UriMemoryManager defaultMemoryManager;
+
+#undef URIPARSER_EXTERN
+
+
+
+UriBool uriMemoryManagerIsComplete(const UriMemoryManager * memory);
+
+
+
+#endif /* URI_MEMORY_H */

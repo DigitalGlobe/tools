@@ -38,45 +38,59 @@
  */
 
 /**
- * @file UriDefsUnicode.h
- * Holds definitions for the wide string pass.
- * NOTE: This header is included N times, not once.
+ * @file UriIp4Base.c
+ * Holds code independent of the encoding pass.
  */
 
-/* Allow multi inclusion */
-#include "UriDefsConfig.h"
-
-
-
-#undef URI_CHAR
-#define URI_CHAR wchar_t
-
-#undef _UT
-#define _UT(x) L##x
-
-
-
-#undef URI_FUNC
-#define URI_FUNC(x) uri##x##W
-
-#undef URI_TYPE
-#define URI_TYPE(x) Uri##x##W
-
-
-
-#undef URI_STRLEN
-#define URI_STRLEN wcslen
-#undef URI_STRCPY
-#define URI_STRCPY wcscpy
-#undef URI_STRCMP
-#define URI_STRCMP wcscmp
-#undef URI_STRNCMP
-#define URI_STRNCMP wcsncmp
-
-/* TODO Remove on next source-compatibility break */
-#undef URI_SNPRINTF
-#if (defined(__WIN32__) || defined(_WIN32) || defined(WIN32))
-# define URI_SNPRINTF _snwprintf
-#else
-# define URI_SNPRINTF swprintf
+#ifndef URI_DOXYGEN
+# include "UriIp4Base.h"
 #endif
+
+
+
+void uriStackToOctet(UriIp4Parser * parser, unsigned char * octet) {
+	switch (parser->stackCount) {
+	case 1:
+		*octet = parser->stackOne;
+		break;
+
+	case 2:
+		*octet = parser->stackOne * 10
+				+ parser->stackTwo;
+		break;
+
+	case 3:
+		*octet = parser->stackOne * 100
+				+ parser->stackTwo * 10
+				+ parser->stackThree;
+		break;
+
+	default:
+		;
+	}
+	parser->stackCount = 0;
+}
+
+
+
+void uriPushToStack(UriIp4Parser * parser, unsigned char digit) {
+	switch (parser->stackCount) {
+	case 0:
+		parser->stackOne = digit;
+		parser->stackCount = 1;
+		break;
+
+	case 1:
+		parser->stackTwo = digit;
+		parser->stackCount = 2;
+		break;
+
+	case 2:
+		parser->stackThree = digit;
+		parser->stackCount = 3;
+		break;
+
+	default:
+		;
+	}
+}

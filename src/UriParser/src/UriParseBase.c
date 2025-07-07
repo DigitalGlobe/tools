@@ -37,46 +37,54 @@
  * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file UriDefsUnicode.h
- * Holds definitions for the wide string pass.
- * NOTE: This header is included N times, not once.
- */
-
-/* Allow multi inclusion */
-#include "UriDefsConfig.h"
-
-
-
-#undef URI_CHAR
-#define URI_CHAR wchar_t
-
-#undef _UT
-#define _UT(x) L##x
-
-
-
-#undef URI_FUNC
-#define URI_FUNC(x) uri##x##W
-
-#undef URI_TYPE
-#define URI_TYPE(x) Uri##x##W
-
-
-
-#undef URI_STRLEN
-#define URI_STRLEN wcslen
-#undef URI_STRCPY
-#define URI_STRCPY wcscpy
-#undef URI_STRCMP
-#define URI_STRCMP wcscmp
-#undef URI_STRNCMP
-#define URI_STRNCMP wcsncmp
-
-/* TODO Remove on next source-compatibility break */
-#undef URI_SNPRINTF
-#if (defined(__WIN32__) || defined(_WIN32) || defined(WIN32))
-# define URI_SNPRINTF _snwprintf
-#else
-# define URI_SNPRINTF swprintf
+#ifndef URI_DOXYGEN
+# include "UriParseBase.h"
 #endif
+
+
+
+void uriWriteQuadToDoubleByte(const unsigned char * hexDigits, int digitCount, unsigned char * output) {
+	switch (digitCount) {
+	case 1:
+		/* 0x___? -> \x00 \x0? */
+		output[0] = 0;
+		output[1] = hexDigits[0];
+		break;
+
+	case 2:
+		/* 0x__?? -> \0xx \x?? */
+		output[0] = 0;
+		output[1] = 16 * hexDigits[0] + hexDigits[1];
+		break;
+
+	case 3:
+		/* 0x_??? -> \0x? \x?? */
+		output[0] = hexDigits[0];
+		output[1] = 16 * hexDigits[1] + hexDigits[2];
+		break;
+
+	case 4:
+		/* 0x???? -> \0?? \x?? */
+		output[0] = 16 * hexDigits[0] + hexDigits[1];
+		output[1] = 16 * hexDigits[2] + hexDigits[3];
+		break;
+
+	}
+}
+
+
+
+unsigned char uriGetOctetValue(const unsigned char * digits, int digitCount) {
+	switch (digitCount) {
+	case 1:
+		return digits[0];
+
+	case 2:
+		return 10 * digits[0] + digits[1];
+
+	case 3:
+	default:
+		return 100 * digits[0] + 10 * digits[1] + digits[2];
+
+	}
+}

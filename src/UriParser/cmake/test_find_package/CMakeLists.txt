@@ -1,4 +1,3 @@
-#! /usr/bin/env bash
 # uriparser - RFC 3986 URI parsing library
 #
 # Copyright (C) 2018, Sebastian Pipping <sebastian@pipping.org>
@@ -35,16 +34,44 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
 # OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-set -e
-set -u
+cmake_minimum_required(VERSION 3.5.0)
 
-PS4='# '
-top_srcdir="$(dirname "$(type -P "$0")")"
+project(test-find-package VERSION 1.0)
 
-if [[ $* =~ --help ]]; then
-    set -x
-    exec cmake --help
-else
-    set -x
-    exec cmake "$@" "${top_srcdir}"
-fi
+
+# Cover version mismatch
+find_package(uriparser 9999 CONFIG QUIET)
+if (uriparser_FOUND)
+    message(SEND_ERROR "Was not expecting for find uriparser 9999.x.x")
+endif()
+
+
+# Cover invalid required component
+find_package(uriparser 0.9.1 CONFIG QUIET
+    COMPONENTS
+        invalid123
+)
+if (uriparser_FOUND)
+    message(SEND_ERROR "Was not expecting for find uriparser with component \"invalid123\"")
+endif()
+
+
+# Cover invalid optional component
+find_package(uriparser 0.9.1 CONFIG REQUIRED
+    COMPONENTS
+        char
+        wchar_t
+    OPTIONAL_COMPONENTS
+        invalid123
+)
+if (NOT uriparser_FOUND)
+    message(SEND_ERROR "Was expecting to find uriparser. Something is off.")
+endif()
+
+
+# Compile and link some hello world using uriparser
+add_executable(hello
+    hello.c
+)
+
+target_link_libraries(hello PUBLIC uriparser::uriparser)
