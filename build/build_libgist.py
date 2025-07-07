@@ -61,7 +61,7 @@ class Program:
         # fix up the Makefile.nt to have the correct paths
         sedCommandLine = (
             f"{os.path.join(pathFinder.PATH_SED_EXECUTABLE, "sed.exe")} "
-            + f'-i.bak -E {cc32} '
+            + f"-i.bak -E {cc32} "
             + f"Makefile.NT"
         )
 
@@ -83,7 +83,7 @@ class Program:
 
         sedCommandLine = (
             f"{os.path.join(pathFinder.PATH_SED_EXECUTABLE, "sed.exe")} "
-            + f'-i.bak -E {link32} '
+            + f"-i.bak -E {link32} "
             + f"Makefile.NT"
         )
 
@@ -173,7 +173,11 @@ class Program:
         cmd = f'"{vcVars}" && {nmakeCommandLine}'
 
         systemManager.changeDirectory(os.path.join(srcdir, "libgist"))
-        self.fixnmake(buildSettings=buildSettings, systemManager=systemManager, pathFinder=pathFinder)
+        self.fixnmake(
+            buildSettings=buildSettings,
+            systemManager=systemManager,
+            pathFinder=pathFinder,
+        )
 
         print("cmd: " + cmd)
         nmakeResult = systemManager.execute(cmd)
@@ -181,7 +185,11 @@ class Program:
             sys.exit(-1)
 
         systemManager.changeDirectory(os.path.join(srcdir, "librtree"))
-        self.fixnmake(buildSettings=buildSettings, systemManager=systemManager, pathFinder=pathFinder)
+        self.fixnmake(
+            buildSettings=buildSettings,
+            systemManager=systemManager,
+            pathFinder=pathFinder,
+        )
 
         print("cmd: " + cmd)
         nmakeResult = systemManager.execute(cmd)
