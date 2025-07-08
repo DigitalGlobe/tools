@@ -130,12 +130,13 @@ class Program:
         libSuffix = f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
         externalLibs = {
             "BROTLI_INCLUDE_DIR": os.path.join(includeBase, "brotli"),
-            "BROTLIENC_LIBRARY": os.path.join(sdkOutDir, f"brotlienc{libSuffix}"),
             "BROTLIDEC_LIBRARY": os.path.join(sdkOutDir, f"brotlidec{libSuffix}"),
             "BROTLICOMMON_LIBRARY": os.path.join(sdkOutDir, f"brotlicommon{libSuffix}"),
             "LIBPSL_INCLUDE_DIR": os.path.join(includeBase, "libpsl"),
             "LIBPSL_LIBRARY": os.path.join(sdkOutDir, f"psl{libSuffix}"),
-            "NGHTTP2_INCLUDE_DIR": os.path.join(includeBase, "nghttp2"),
+            "LIBSSH2_INCLUDE_DIR": os.path.join(includeBase, "libssh2"),
+            "LIBSSH2_LIBRARY": os.path.join(sdkOutDir, f"libssh2{libSuffix}"),
+            "NGHTTP2_INCLUDE_DIR": os.path.join(includeBase),
             "NGHTTP2_LIBRARY": os.path.join(sdkOutDir, f"nghttp2{libSuffix}"),
             "ZLIB_INCLUDE_DIR": os.path.join(includeBase, "zlib"),
             "ZLIB_LIBRARY": os.path.join(sdkOutDir, f"zlib{libSuffix}"),
