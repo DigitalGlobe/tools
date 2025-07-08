@@ -3,11 +3,11 @@ MERGE statement
 -----------------
 
   Function:
-    Read data from the source and INSERT or UPDATE in the target table depending on a
+    Read data from the source and INSERT, UPDATE or DELETE in the target table depending on a
     condition.
 
   Author:
-    Adriano dos Santos Fernandes <adrianosf@uol.com.br>
+    Adriano dos Santos Fernandes <adrianosf@gmail.com>
 
   Format:
 	<merge statement> ::=
@@ -15,21 +15,31 @@ MERGE statement
 			INTO <table or view> [ [AS] <correlation name> ]
 			USING <table or view or derived table> [ [AS] <correlation name> ]
 			ON <condition>
-			[ <merge when matched> ]
-			[ <merge when not matched> ]
+			<merge when>...
+			[<plan clause>]
+			[<order by clause>]
+			[<returning clause>]
+
+	<merge when> ::=
+		<merge when matched> |
+		<merge when not matched by target> |
+		<merge when not matched by source>
 
 	<merge when matched> ::=
-		WHEN MATCHED THEN
-			UPDATE SET <assignment list>
+		WHEN MATCHED [ AND <condition> ] THEN
+			{ UPDATE SET <assignment list> | DELETE }
 
-	<merge when not matched> ::=
-		WHEN NOT MATCHED THEN
+	<merge when not matched by target> ::=
+		WHEN NOT MATCHED [ BY TARGET ] [ AND <condition> ] THEN
 			INSERT [ <left paren> <column list> <right paren> ]
 				VALUES <left paren> <value list> <right paren>
 
+	<merge when not matched by source> ::=
+		WHEN NOT MATCHED BY SOURCE [ AND <condition> ] THEN
+			{ UPDATE SET <assignment list> | DELETE }
+
   Syntax rules:
-	1. At least one of <merge when matched> and <merge when not matched> should be specified
-	   and each one should not be specified more than one time.
+	1. At least one <merge when> clause should be specified.
 
   Scope:
     DSQL, PSQL
@@ -47,9 +57,40 @@ MERGE statement
 				INSERT (id, name)
 					VALUES (cd.id, cd.name)
 
-  Notes:
-	A right join is made between INTO and USING tables using the condition.
-	UPDATE is called when a record exist in the left table (INTO), otherwise
-	INSERT is called.
+	2.
+		MERGE
+			INTO customers c
+			USING new_customers nc
+			ON (c.id = nc.id)
+			WHEN MATCHED THEN
+				UPDATE SET
+					name = cd.name
+			WHEN NOT MATCHED BY SOURCE THEN
+				DELETE
 
-	If no record is returned in the join, INSERT is not called.
+  Notes:
+	A join is made between USING and INTO tables.
+
+	The join type depends on the presence of
+	<merge when not matched by source> and <merge when not matched by target>:
+	- <merge when not matched by target> + <merge when not matched by source>: FULL JOIN
+	- <merge when not matched by source>: RIGHT JOIN
+	- <merge when not matched by target>: LEFT JOIN
+	- only <merge when matched>: INNER JOIN
+
+	As soon it's decided if the source and target has a matching, the set of the
+	corresponding (WHEN MATCHED / WHEN NOT MATCHED) statements is evaluated in the order specified,
+	to check their optional conditions. The first statement which has its condition evaluated to true
+	is the one which will be executed, and the subsequent ones will be ignored.
+
+	If no record is returned in the join, no action will be called.
+
+	<merge when matched> is called when a match between source and target exists.
+	UPDATE or DELETE will change the target table.
+
+	<merge when not matched by target> is called when a source record matches no record in target.
+	INSERT will change the target table.
+
+	<merge when not matched by source> is called when a target record matches no record in source.
+	UPDATE or DELETE will change the target table.
+	That clause is allowed only since v5.

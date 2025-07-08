@@ -14,11 +14,11 @@ checks without exclusive access to database. Online validation allows to:
 - system tables are not validated
 - other ODS checks (such as Header\PIP\TIP\Generators pages) are not run by
   online validation
-- while table (and\or its index) is validated user attachments are allowed to 
+- while table (and/or its index) is validated user attachments are allowed to 
   read this table. Attempt to INSERT\UPDATE\DELETE will wait until validation 
   finished or will return lock timeout error (depends on lock timeout of user 
   transaction)
-- while table (and\or its index) is validated any kind of garbage collection at
+- while table (and/or its index) is validated any kind of garbage collection at
   this table is disabled - background and cooperative garbage collection will 
   just skip this table, sweep will be terminated with error.
 
@@ -80,7 +80,7 @@ starting with "A". Indices are not validated. Lock wait is not performed.
 this command will validate tables TAB1 and TAB2 and all their indices. 
 Lock wait timeout is 10 sec.
 
-Note, to specify list of tables\indices it is necessary to:
+Note, to specify list of tables/indices it is necessary to:
 a) separate names by character "|"
 b) don't use spaces : TAB1 | TAB2 is wrong
 c) whole list should be enclosed in double quotes to not confuse command 

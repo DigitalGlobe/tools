@@ -45,6 +45,8 @@ fb_shut_preproviders - callback function will be called before shutting down eng
 fb_shut_postproviders - callback function will be called after shutting down engine
 fb_shut_finish - final step, callback function may wait for some activity to be terminated
 or ORed combination of them (to make same function be called in required cases).
+Non-zero mask passed to callback will be ORed with mask used in previous call (if any). Mask also
+may have special value 0 - in that case previous mask is reset and callback will never be called.
 
 Callback function has 3 parameters - reason of shutdown, actual value of mask with which it was 
 called and argument passed by user to fb_shutdown_callback(). There are 2 specially interesting 

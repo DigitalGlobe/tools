@@ -42,11 +42,13 @@ Syntax and notes :
 		| <input_parameters>, <named_parameter>
 		
 	<named_parameter> ::= 
-		  <parameter name> := <expression>
+		  [EXCESS] <parameter name> := <expression>
 
 	Syntax above introduced new parameter value binding operator ":=" to avoid 
-	clashes with future boolean expressions.
-	This syntax may be changed in release version.
+	clashes with boolean expressions.
+	Optional "EXCESS" mark indicates that given parameter allows to be not 
+	mentioned at query text. Note, all non-excess input parameters must be used 
+	by a query.
 
 - if ON EXTERNAL DATA SOURCE clause is omitted then
 	a) statement will be executed against current (local) database
@@ -74,7 +76,11 @@ Syntax and notes :
 	This transaction lifetime is bound to the lifetime of current (local) transaction 
 	and commits\rolled back the same way as current transaction.
 
-- by default COMMON TRANSACTION is used
+- by default COMMON TRANSACTION is used.
+
+- if local transaction is READ COMMITTED READ CONSISTENCY and if external data source not
+	supported this isolation mode, then external transaction will run with CONCURRENCY 
+	isolation mode.
 
 - if PASSWORD clause is omitted then 
 	a) if <user_name> is omitted, NULL or equal to CURRENT_USER value and
@@ -86,8 +92,8 @@ Syntax and notes :
 			CURRENT_USER/CURRENT_ROLE is effective user account and role
 		a3) for remote database - operating system account under which engine
 			process is currently run is effective user account.
-	b) else isc_dpb_user_name (if <user_name> is present and not empty) and isc_dpb_sql_role_name 
-	   (if <role_name> is present and not empty) will be filled in DPB and native autentication 
+	b) else isc_dpb_user_name (if <user_name> is present and not empty) and isc_dpb_sql_role_name
+	   (if <role_name> is present and not empty) will be filled in DPB and native autentication
 	   is performed.
 
 - if WITH CALLER PRIVILEGES is specified and ON EXTERNAL DATA SOURCE is omitted, then
@@ -121,15 +127,15 @@ Syntax and notes :
 				isc_arg_string, <query>,
 				isc_arg_string, <data source name>
 				
-		At PSQL level this errors could be handled using appropriate GDS code, for example
+		At PSQL level these errors could be handled using appropriate GDS code, for example
 
 			WHEN GDSCODE eds_statement
 			
-		Note, that original error codes is not accessible in WHEN statement. This could be
+		Note, that original error codes are not accessible in WHEN statement. This could be
 		improved in the future.
 			
 	b) if ON EXTERNAL DATA SOURCE clause is omitted then original status-vector with 
-		error passed to the caller PSQL code as is. For example, if dynamic statement
+		error is passed to the caller PSQL code as is. For example, if dynamic statement
 		raised isc_lock_conflict error, this error will be passed to the caller and
 		could be handled using following handler
 		
@@ -258,4 +264,33 @@ BEGIN
     INTO :A, :B, :C;
 
   SUSPEND;
+END
+
+
+4. Using EXCESS input parameters
+
+CREATE PROCEDURE P_EXCESS (A_ID INT, A_TRAN INT = NULL, A_CONN INT = NULL)
+  RETURNS (ID INT, TRAN INT, CONN INT)
+AS
+DECLARE S VARCHAR(255);
+DECLARE W VARCHAR(255) = '';
+BEGIN
+  S = 'SELECT * FROM TTT WHERE ID = :ID';
+
+  IF (A_TRAN IS NOT NULL)
+  THEN W = W || ' AND TRAN = :a';
+
+  IF (A_CONN IS NOT NULL)
+  THEN W = W || ' AND CONN = :b';
+
+  IF (W <> '')
+  THEN S = S || W;
+
+  -- could raise error if TRAN or CONN is null
+  -- FOR EXECUTE STATEMENT (:S) (a := :A_TRAN, b := A_CONN, id := A_ID)
+
+  -- OK in all cases
+  FOR EXECUTE STATEMENT (:S) (EXCESS a := :A_TRAN, EXCESS b := A_CONN, id := A_ID)
+      INTO :ID, :TRAN, :CONN
+      DO SUSPEND;
 END

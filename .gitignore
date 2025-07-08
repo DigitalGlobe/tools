@@ -98,11 +98,8 @@ build/Xerces/*
 build/ZLib/*
 build/ZStd/*
 
+ # temp while building...  remove when it all seems to work
 include/*
 sdk/x86/*
 sdk/x64/*
 firebird/*
-build/libpsl/.dir-locals.el
-build/build_brotli.py
-build/nghttp2/.clang-format
-build/libssh2/.editorconfig

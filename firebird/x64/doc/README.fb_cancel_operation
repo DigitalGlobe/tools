@@ -20,7 +20,7 @@ states of engine) try to stop running request and error-return to the user.
    - fb_cancel_disable: disable execution of fb_cancel_raise requests for given attachment. It's
 useful when your program executes some critical things (for example, cleanup).
    - fb_cancel_enable: enables previously disabled cancel delivery.
-   - fb_cancel_abort: forcible closed client side of connection. Useful if you need to close 
+   - fb_cancel_abort: forcible close client side of connection. Useful if you need to close 
 connection urgently. All active transactions will be rolled back by server. Success always
 returned to the application. Use with care ! 
 
