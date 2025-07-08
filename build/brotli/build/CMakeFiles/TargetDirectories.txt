@@ -1,0 +1,7 @@
+D:/Users/tim.tisler/tools/build/brotli/build/CMakeFiles/brotlicommon.dir
+D:/Users/tim.tisler/tools/build/brotli/build/CMakeFiles/brotlidec.dir
+D:/Users/tim.tisler/tools/build/brotli/build/CMakeFiles/brotlienc.dir
+D:/Users/tim.tisler/tools/build/brotli/build/CMakeFiles/brotli.dir
+D:/Users/tim.tisler/tools/build/brotli/build/CMakeFiles/INSTALL.dir
+D:/Users/tim.tisler/tools/build/brotli/build/CMakeFiles/ALL_BUILD.dir
+D:/Users/tim.tisler/tools/build/brotli/build/CMakeFiles/ZERO_CHECK.dir

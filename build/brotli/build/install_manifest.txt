@@ -1,0 +1,15 @@
+D:\Users\tim.tisler\tools\build\brotli\build\install/bin/brotli.exe
+D:\Users\tim.tisler\tools\build\brotli\build\install/lib/brotlienc.lib
+D:\Users\tim.tisler\tools\build\brotli\build\install/bin/brotlienc.dll
+D:\Users\tim.tisler\tools\build\brotli\build\install/lib/brotlidec.lib
+D:\Users\tim.tisler\tools\build\brotli\build\install/bin/brotlidec.dll
+D:\Users\tim.tisler\tools\build\brotli\build\install/lib/brotlicommon.lib
+D:\Users\tim.tisler\tools\build\brotli\build\install/bin/brotlicommon.dll
+D:\Users\tim.tisler\tools\build\brotli\build\install/include/brotli/decode.h
+D:\Users\tim.tisler\tools\build\brotli\build\install/include/brotli/encode.h
+D:\Users\tim.tisler\tools\build\brotli\build\install/include/brotli/port.h
+D:\Users\tim.tisler\tools\build\brotli\build\install/include/brotli/shared_dictionary.h
+D:\Users\tim.tisler\tools\build\brotli\build\install/include/brotli/types.h
+D:\Users\tim.tisler\tools\build\brotli\build\install/lib/pkgconfig/libbrotlicommon.pc
+D:\Users\tim.tisler\tools\build\brotli\build\install/lib/pkgconfig/libbrotlidec.pc
+D:\Users\tim.tisler\tools\build\brotli\build\install/lib/pkgconfig/libbrotlienc.pc

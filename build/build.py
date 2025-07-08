@@ -32,6 +32,9 @@ class Program :
     # the name of the build file to build Boost
     _FILE_NAME_BUILD_BOOST = "build_boost.py"
     # ----------------------------------------------------------------------
+    # the name of the build file to build Brotli
+    _FILE_NAME_BUILD_BROTLI = "build_brotli.py"
+    # ----------------------------------------------------------------------
     # the name of the build file to build Crypto++
     _FILE_NAME_BUILD_CRYPTO = "build_crypto.py"
     # ----------------------------------------------------------------------
@@ -224,6 +227,7 @@ class Program :
                 # self._build(Program._FILE_NAME_BUILD_APR)
                 # self._build(Program._FILE_NAME_BUILD_BISON)
                 # self._build(Program._FILE_NAME_BUILD_BOOST)
+                # self._build(Program._FILE_NAME_BUILD_BROTLI)
                 # self._build(Program._FILE_NAME_BUILD_CPPUNIT)
                 # self._build(Program._FILE_NAME_BUILD_CRYPTO)
                 # self._build(Program._FILE_NAME_BUILD_EXPAT)
@@ -253,7 +257,7 @@ class Program :
 
             # build libraries that depend on other libraries
             #     (order does matter)
-            self._build(Program._FILE_NAME_BUILD_LIBPSL)
+            # self._build(Program._FILE_NAME_BUILD_LIBPSL)
             self._build(Program._FILE_NAME_BUILD_CURL)
             self._build(Program._FILE_NAME_BUILD_FIREBIRD)
             self._build(Program._FILE_NAME_BUILD_HDF5)
