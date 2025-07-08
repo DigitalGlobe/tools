@@ -127,15 +127,20 @@ class Program:
         platform = "x64" if buildSettings.X64Specified() else "Win32"
 
         includeBase = os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..")
+        libSuffix = f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
         externalLibs = {
-            'BROTLI_INCLUDE_DIR':os.path.join(includeBase, "brotli"),
-            'BROTLIDEC_LIBRARY':os.path.join(sdkOutDir, f"brotlidec{Program._DEBUG_SUFFIX}.lib"),
-            'BROTLICOMMON_LIBRARY':os.path.join(sdkOutDir, f"brotlicommon{Program._DEBUG_SUFFIX}.lib"),
-            'LIBPSL_INCLUDE_DIR':os.path.join(includeBase, "libpsl"),
-            'LIBPSL_LIBRARY':os.path.join(sdkOutDir,  f"psl{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib"),
-            'ZLIB_INCLUDE_DIR':os.path.join(includeBase, "zlib"),
-            'ZLIB_LIBRARY_DEBUG':os.path.join(sdkOutDir, f"zlib{Program._DEBUG_SUFFIX}.lib"),
-            'ZLIB_LIBRARY_RELEASE':os.path.join(sdkOutDir, f"zlib.lib"),
+            "BROTLI_INCLUDE_DIR": os.path.join(includeBase, "brotli"),
+            "BROTLIENC_LIBRARY": os.path.join(sdkOutDir, f"brotlienc{libSuffix}"),
+            "BROTLIDEC_LIBRARY": os.path.join(sdkOutDir, f"brotlidec{libSuffix}"),
+            "BROTLICOMMON_LIBRARY": os.path.join(sdkOutDir, f"brotlicommon{libSuffix}"),
+            "LIBPSL_INCLUDE_DIR": os.path.join(includeBase, "libpsl"),
+            "LIBPSL_LIBRARY": os.path.join(sdkOutDir, f"psl{libSuffix}"),
+            "NGHTTP2_INCLUDE_DIR": os.path.join(includeBase, "nghttp2"),
+            "NGHTTP2_LIBRARY": os.path.join(sdkOutDir, f"nghttp2{libSuffix}"),
+            "ZLIB_INCLUDE_DIR": os.path.join(includeBase, "zlib"),
+            "ZLIB_LIBRARY": os.path.join(sdkOutDir, f"zlib{libSuffix}"),
+            "ZSTD_INCLUDE_DIR": os.path.join(includeBase, "zstd"),
+            "ZSTD_LIBRARY": os.path.join(sdkOutDir, f"zstd{libSuffix}"),
         }
 
         externalLibStr = ""

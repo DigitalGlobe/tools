@@ -128,6 +128,9 @@ class Program :
     # the name of the build file to build muparser
     _FILE_NAME_BUILD_MUPARSER = "build_muparser.py"
     # ----------------------------------------------------------------------
+    # the name of the build file to build NGHTTP2
+    _FILE_NAME_BUILD_NEWMAT = "build_nghttp2.py"
+    # ----------------------------------------------------------------------
     # the name of the build file to build Newmat
     _FILE_NAME_BUILD_NEWMAT = "build_newmat.py"
     # ----------------------------------------------------------------------
@@ -259,6 +262,7 @@ class Program :
             # build libraries that depend on other libraries
             #     (order does matter)
             # self._build(Program._FILE_NAME_BUILD_LIBPSL)
+            # self._build(Program._FILE_NAME_BUILD_NGHTTP2)
             self._build(Program._FILE_NAME_BUILD_CURL)
             self._build(Program._FILE_NAME_BUILD_FIREBIRD)
             self._build(Program._FILE_NAME_BUILD_HDF5)
