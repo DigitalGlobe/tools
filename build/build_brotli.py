@@ -126,30 +126,12 @@ class Program:
         conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
         platform = "x64" if buildSettings.X64Specified() else "Win32"
 
-        includeBase = os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..")
-        externalLibs = {
-            'LIBPSL_INCLUDE_DIR':os.path.join(includeBase, "libpsl"),
-            'LIBPSL_LIBRARY':os.path.join(sdkOutDir,  f"psl{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib"),
-            'ZLIB_INCLUDE_DIR':os.path.join(includeBase, "zlib"),
-            'ZLIB_LIBRARY_DEBUG':os.path.join(sdkOutDir, f"zlib{Program._DEBUG_SUFFIX}.lib"),
-            'ZLIB_LIBRARY_RELEASE':os.path.join(sdkOutDir, f"zlib.lib"),
-        }
-
-        externalLibStr = ""
-        for [key, val] in externalLibs.items():
-            externalLibStr += f'-D{key}="{val}" '
-
         cmakeCommandLine = (
             f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
             + f"-A {platform} "
             + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
             + f"-DBUILD_SHARED_LIBS=ON "
-            # + f"-DBUILD_CURL_EXE=OFF "
             + f"-DBROTLI_DISABLE_TESTS=ON "
-            # + f"-DBUILD_LIBCURL_DOCS=OFF "
-            # + f"-DBUILD_MISC_DOCS=OFF "
-            # + f"-DENABLE_CURL_MANUAL=OFF "
-            # + f"{externalLibStr} "
             + f"{buildSourceName}"
         )
 

@@ -128,6 +128,9 @@ class Program:
 
         includeBase = os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..")
         externalLibs = {
+            'BROTLI_INCLUDE_DIR':os.path.join(includeBase, "brotli"),
+            'BROTLIDEC_LIBRARY':os.path.join(sdkOutDir, f"brotlidec{Program._DEBUG_SUFFIX}.lib"),
+            'BROTLICOMMON_LIBRARY':os.path.join(sdkOutDir, f"brotlicommon{Program._DEBUG_SUFFIX}.lib"),
             'LIBPSL_INCLUDE_DIR':os.path.join(includeBase, "libpsl"),
             'LIBPSL_LIBRARY':os.path.join(sdkOutDir,  f"psl{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib"),
             'ZLIB_INCLUDE_DIR':os.path.join(includeBase, "zlib"),

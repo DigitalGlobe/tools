@@ -93,9 +93,11 @@ build/UriParser/*
 build/vld/*
 build/Xerces/*
 build/ZLib/*
+build/ZStd/*
 
 include/*
 sdk/x86/*
 sdk/x64/*
 firebird/*
 build/libpsl/.dir-locals.el
+build/build_brotli.py

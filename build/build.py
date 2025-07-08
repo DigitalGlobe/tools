@@ -35,6 +35,9 @@ class Program :
     # the name of the build file to build Brotli
     _FILE_NAME_BUILD_BROTLI = "build_brotli.py"
     # ----------------------------------------------------------------------
+    # the name of the build file to build CppUnit
+    _FILE_NAME_BUILD_CPPUNIT = "build_cppunit.py"
+    # ----------------------------------------------------------------------
     # the name of the build file to build Crypto++
     _FILE_NAME_BUILD_CRYPTO = "build_crypto.py"
     # ----------------------------------------------------------------------
@@ -44,11 +47,20 @@ class Program :
     # the name of the build file to build CURL
     _FILE_NAME_BUILD_CURL = "build_curl.py"
     # ----------------------------------------------------------------------
+    # the name of the build file to build Expat
+    _FILE_NAME_BUILD_EXPAT = "build_expat.py"
+    # ----------------------------------------------------------------------
+    # the name of the build file to build firebird
+    _FILE_NAME_BUILD_FIREBIRD = "build_firebird.py"
+    # ----------------------------------------------------------------------
     # the name of the build file to build FreeType
     _FILE_NAME_BUILD_FREETYPE = "build_freetype.py"
     # ----------------------------------------------------------------------
-    # the name of the build file to build FreeType
+    # the name of the build file to build GALib
     _FILE_NAME_BUILD_GALIB = "build_galib.py"
+    # ----------------------------------------------------------------------
+    # the name of the build file to build GDAL
+    _FILE_NAME_BUILD_GDAL = "build_gdal.py"
     # ----------------------------------------------------------------------
     # the name of the build file to build Geos
     _FILE_NAME_BUILD_GEOS = "build_geos.py"
@@ -56,8 +68,11 @@ class Program :
     # the name of the build file to build Glew
     _FILE_NAME_BUILD_GLEW = "build_glew.py"
     # ----------------------------------------------------------------------
-    # the name of the build file to build FreeType
+    # the name of the build file to build GLUT
     _FILE_NAME_BUILD_GLUT = "build_glut.py"
+    # ----------------------------------------------------------------------
+    # the name of the build file to build googletest
+    _FILE_NAME_BUILD_GOOGLETEST = "build_googletest.py"
     # ----------------------------------------------------------------------
     # the name of the build file to build GSoap
     _FILE_NAME_BUILD_GSOAP = "build_gsoap.py"
@@ -71,6 +86,9 @@ class Program :
     # the name of the build file to build KDIS
     _FILE_NAME_BUILD_KDIS = "build_kdis.py"
     # ----------------------------------------------------------------------
+    # the name of the build file to build LasZip
+    _FILE_NAME_BUILD_LASZIP = "build_laszip.py"
+    # ----------------------------------------------------------------------
     # the name of the build file to build LibGeoTIFF
     _FILE_NAME_BUILD_LIBGEOTIFF = "build_libgeotiff.py"
     # ----------------------------------------------------------------------
@@ -83,8 +101,11 @@ class Program :
     # the name of the build file to build LibJPEG
     _FILE_NAME_BUILD_LIBJPEG = "build_libjpeg.py"
     # ----------------------------------------------------------------------
-    # the name of the build file to build LibPNG
+    # the name of the build file to build LibKML
     _FILE_NAME_BUILD_LIBKML = "build_libkml.py"
+    # ----------------------------------------------------------------------
+    # the name of the build file to build LibLAS
+    _FILE_NAME_BUILD_LIBLAS = "build_liblas.py"
     # ----------------------------------------------------------------------
     # the name of the build file to build LibPNG
     _FILE_NAME_BUILD_LIBPNG = "build_libpng.py"
@@ -92,11 +113,14 @@ class Program :
     # the name of the build file to build LibPSL
     _FILE_NAME_BUILD_LIBPSL = "build_libpsl.py"
     # ----------------------------------------------------------------------
+    # the name of the build file to build LibTIFF
+    _FILE_NAME_BUILD_LIBTIFF = "build_libtiff.py"
+    # ----------------------------------------------------------------------
     # the name of the build file to build LibXML
     _FILE_NAME_BUILD_LIBXML = "build_libxml.py"
     # ----------------------------------------------------------------------
-    # the name of the build file to build LibTIFF
-    _FILE_NAME_BUILD_LIBTIFF = "build_libtiff.py"
+    # the name of the build file to build Log4cxx
+    _FILE_NAME_BUILD_LOG4CXX = "build_log4cxx.py"
     # ----------------------------------------------------------------------
     # the name of the build file to build minizip
     _FILE_NAME_BUILD_MINIZIP = "build_minizip.py"
@@ -107,11 +131,17 @@ class Program :
     # the name of the build file to build Newmat
     _FILE_NAME_BUILD_NEWMAT = "build_newmat.py"
     # ----------------------------------------------------------------------
+    # the name of the build file to build OGDI
+    _FILE_NAME_BUILD_OGDI = "build_ogdi.py"
+    # ----------------------------------------------------------------------
     # the name of the build file to build OpenCV
     _FILE_NAME_BUILD_OPENCV = "build_opencv.py"
     # ----------------------------------------------------------------------
     # the name of the build file to build OpenDIS
     _FILE_NAME_BUILD_OPENDIS = "build_opendis.py"
+    # ----------------------------------------------------------------------
+    # the name of the build file to build OpenSceneGraph
+    _FILE_NAME_BUILD_OSG = "build_osg.py"
     # ----------------------------------------------------------------------
     # the name of the build file to build OpenThreads
     _FILE_NAME_BUILD_OPENTHREADS = "build_openthreads.py"
@@ -122,7 +152,7 @@ class Program :
     # the name of the build file to build PROJ.4
     _FILE_NAME_BUILD_PROJ = "build_proj.py"
     # ----------------------------------------------------------------------
-    # the name of the build file to build LibPNG
+    # the name of the build file to build pthreads
     _FILE_NAME_BUILD_PTHREADS = "build_pthreads.py"
     # ----------------------------------------------------------------------
     # the name of the build file to build Qt
@@ -134,14 +164,17 @@ class Program :
     # the name of the build file to build QWT
     _FILE_NAME_BUILD_QWT = "build_qwt.py"
     # ----------------------------------------------------------------------
-    # the name of the build file to build GNUWin32's sed
-    _FILE_NAME_BUILD_SZIP = "build_sed.py"
+    # the name of the build file to build qxrunner
+    _FILE_NAME_BUILD_QXRUNNER = "build_qxrunner.py"
     # ----------------------------------------------------------------------
     # the name of the build file to build SZip
     _FILE_NAME_BUILD_SZIP = "build_szip.py"
     # ----------------------------------------------------------------------
     # the name of the build file to build ThreadingBuildingBlocks
     _FILE_NAME_BUILD_TBB = "build_tbb.py"
+    # ----------------------------------------------------------------------
+    # the name of the build file to build uriparser
+    _FILE_NAME_BUILD_URIPARSER = "build_uriparser.py"
     # ----------------------------------------------------------------------
     # the name of the build file to build Visual Leak Detector
     _FILE_NAME_BUILD_VLD = "build_vld.py"
@@ -152,41 +185,8 @@ class Program :
     # the name of the build file to build ZLib
     _FILE_NAME_BUILD_ZLIB = "build_zlib.py"
     # ----------------------------------------------------------------------
-    # the name of the build file to build CppUnit
-    _FILE_NAME_BUILD_CPPUNIT = "build_cppunit.py"
-    # ----------------------------------------------------------------------
-    # the name of the build file to build GDAL
-    _FILE_NAME_BUILD_GDAL = "build_gdal.py"
-    # ----------------------------------------------------------------------
-    # the name of the build file to build LasZip
-    _FILE_NAME_BUILD_LASZIP = "build_laszip.py"
-    # ----------------------------------------------------------------------
-    # the name of the build file to build LasZip
-    _FILE_NAME_BUILD_LIBLAS = "build_liblas.py"
-    # ----------------------------------------------------------------------
-    # the name of the build file to build OGDI
-    _FILE_NAME_BUILD_OGDI = "build_ogdi.py"
-    # ----------------------------------------------------------------------
-    # the name of the build file to build Expat
-    _FILE_NAME_BUILD_EXPAT = "build_expat.py"
-    # ----------------------------------------------------------------------
-    # the name of the build file to build uriparser
-    _FILE_NAME_BUILD_URIPARSER = "build_uriparser.py"
-    # ----------------------------------------------------------------------
-    # the name of the build file to build googletest
-    _FILE_NAME_BUILD_GOOGLETEST = "build_googletest.py"
-    # ----------------------------------------------------------------------
-    # the name of the build file to build OpenSceneGraph
-    _FILE_NAME_BUILD_OSG = "build_osg.py"
-    # ----------------------------------------------------------------------
-    # the name of the build file to build Log4cxx
-    _FILE_NAME_BUILD_LOG4CXX = "build_log4cxx.py"
-    # ----------------------------------------------------------------------
-    # the name of the build file to build qxrunner
-    _FILE_NAME_BUILD_QXRUNNER = "build_qxrunner.py"
-    # ----------------------------------------------------------------------
-    # the name of the build file to build firebird
-    _FILE_NAME_BUILD_FIREBIRD = "build_firebird.py"
+    # the name of the build file to build ZStd
+    _FILE_NAME_BUILD_ZSTD = "build_zstd.py"
     # ----------------------------------------------------------------------
     # the name of the Python executable file
     _FILE_NAME_PYTHON = "python.exe"
@@ -253,6 +253,7 @@ class Program :
                 # self._build(Program._FILE_NAME_BUILD_URIPARSER)
                 # self._build(Program._FILE_NAME_BUILD_VLD)
                 # self._build(Program._FILE_NAME_BUILD_ZLIB)
+                # self._build(Program._FILE_NAME_BUILD_ZSTD)
                 pass
 
             # build libraries that depend on other libraries
