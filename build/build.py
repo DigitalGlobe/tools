@@ -86,6 +86,9 @@ class Program :
     # the name of the build file to build LibPNG
     _FILE_NAME_BUILD_LIBPNG = "build_libpng.py"
     # ----------------------------------------------------------------------
+    # the name of the build file to build LibPSL
+    _FILE_NAME_BUILD_LIBPSL = "build_libpsl.py"
+    # ----------------------------------------------------------------------
     # the name of the build file to build LibXML
     _FILE_NAME_BUILD_LIBXML = "build_libxml.py"
     # ----------------------------------------------------------------------
@@ -245,10 +248,12 @@ class Program :
                 # self._build(Program._FILE_NAME_BUILD_TBB)
                 # self._build(Program._FILE_NAME_BUILD_URIPARSER)
                 # self._build(Program._FILE_NAME_BUILD_VLD)
-                self._build(Program._FILE_NAME_BUILD_ZLIB)
+                # self._build(Program._FILE_NAME_BUILD_ZLIB)
+                pass
 
             # build libraries that depend on other libraries
             #     (order does matter)
+            self._build(Program._FILE_NAME_BUILD_LIBPSL)
             self._build(Program._FILE_NAME_BUILD_CURL)
             self._build(Program._FILE_NAME_BUILD_FIREBIRD)
             self._build(Program._FILE_NAME_BUILD_HDF5)

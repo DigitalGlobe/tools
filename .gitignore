@@ -69,6 +69,7 @@ build/libJPEG/*
 build/libKML/*
 build/libLAS/*
 build/libPNG/*
+build/libpsl/*
 build/libTIFF/*
 build/libxml/*
 build/log4cxx/*
@@ -97,3 +98,4 @@ include/*
 sdk/x86/*
 sdk/x64/*
 firebird/*
+build/libpsl/.dir-locals.el
