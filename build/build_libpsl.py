@@ -177,7 +177,7 @@ class Program:
         )
 
         systemManager.distributeFiles(
-            nmakeInstallPath,
+            os.path.join(nmakeInstallPath, "include"),
             os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h",
         )

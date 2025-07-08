@@ -21,6 +21,9 @@ class Program:
     # a description of what the script does
     DESCRIPTION = "Builds the curl library."
 
+    _LIBNAME = 'libcurl'
+    _DEBUG_SUFFIX = '_d'
+
     # ----------------------------------------------------------------------
     # the name of the path that will contain built 32-bit binary files
     _PATH_NAME_BINARY_X86 = "..\\sdk\\x86\\bin"
@@ -95,6 +98,8 @@ class Program:
             cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
         )
 
+        systemManager.removeDirectory(cmakeBuildPath)
+
         sdkOutDir = os.path.join(
             buildPathName,
             "..",
@@ -121,9 +126,30 @@ class Program:
         conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
         platform = "x64" if buildSettings.X64Specified() else "Win32"
 
+        includeBase = os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..")
+        externalLibs = {
+            'LIBPSL_INCLUDE_DIR':os.path.join(includeBase, "libpsl"),
+            'LIBPSL_LIBRARY':os.path.join(sdkOutDir,  f"psl{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib"),
+            'ZLIB_INCLUDE_DIR':os.path.join(includeBase, "zlib"),
+            'ZLIB_LIBRARY_DEBUG':os.path.join(sdkOutDir, f"zlib{Program._DEBUG_SUFFIX}.lib"),
+            'ZLIB_LIBRARY_RELEASE':os.path.join(sdkOutDir, f"zlib.lib"),
+        }
+
+        externalLibStr = ""
+        for [key, val] in externalLibs.items():
+            externalLibStr += f'-D{key}="{val}" '
+
         cmakeCommandLine = (
             f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
             + f"-A {platform} "
+            + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
+            + f"-DBUILD_SHARED_LIBS=ON "
+            + f"-DBUILD_CURL_EXE=OFF "
+            + f"-DBUILD_TESTING=OFF "
+            + f"-DBUILD_LIBCURL_DOCS=OFF "
+            + f"-DBUILD_MISC_DOCS=OFF "
+            + f"-DENABLE_CURL_MANUAL=OFF "
+            + f"{externalLibStr} "
             + f"{buildSourceName}"
         )
 
@@ -158,35 +184,46 @@ class Program:
         if cmakeResult != 0:
             sys.exit(-1)
 
-        srcIncludePath = os.path.join(
-            cmakeInstallPath,
-            "include",
-            f'boost-{Program._BOOST_VERSION.replace(".", "_")}',
-            "boost",
-        )
-
         systemManager.distributeFiles(
-            srcIncludePath,
+            os.path.join( cmakeInstallPath,"include", "curl"),
             os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
         )
 
-        systemManager.distributeFiles(
-            os.path.join(cmakeInstallPath, "lib"),
-            sdkOutDir,
-            "*.lib",
+        dllName = (
+            Program._LIBNAME
+            + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
+            + ".dll"
         )
-        systemManager.distributeFiles(
-            os.path.join(cmakeInstallPath, "bin"),
-            sdkOutDir,
-            "*.dll",
+        libName = (
+            Program._LIBNAME
+            + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
+            + ".lib"
+        )
+        pdbName = (
+            Program._LIBNAME
+            + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
+            + ".pdb"
+        )
+
+        systemManager.copyFile(
+            os.path.join(cmakeInstallPath, "lib", f"{Program._LIBNAME}{"" if (buildSettings.ReleaseSpecified()) else "-d"}_imp.lib"),
+            os.path.join(sdkOutDir, libName),
+        )
+
+        systemManager.copyFile(
+            os.path.join(cmakeInstallPath, "bin", f"{Program._LIBNAME}{"" if (buildSettings.ReleaseSpecified()) else "-d"}.dll"),
+            os.path.join(sdkOutDir, dllName),
         )
         if not buildSettings.ReleaseSpecified():
-            systemManager.distributeFiles(
-                os.path.join(cmakeInstallPath, "bin"),
-                sdkOutDir,
-                "lib",
-                "*.pdb",
+            systemManager.copyFile(
+                os.path.join(
+                    cmakeBuildPath,
+                    "lib",
+                    conf,
+                    f"{Program._LIBNAME}{"" if (buildSettings.ReleaseSpecified()) else "-d"}.pdb",
+                ),
+                os.path.join(sdkOutDir, pdbName),
             )
 
 
