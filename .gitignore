@@ -43,6 +43,7 @@ build/APR/*
 build/APRUtil/*
 build/bison/*
 build/Boost/*
+build/brotli/*
 build/cppunit/*
 build/crypto/*
 build/cryptowrapper/*
