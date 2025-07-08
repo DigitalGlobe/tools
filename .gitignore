@@ -71,6 +71,7 @@ build/libKML/*
 build/libLAS/*
 build/libPNG/*
 build/libpsl/*
+build/libssh2/*
 build/libTIFF/*
 build/libxml/*
 build/log4cxx/*
@@ -104,3 +105,4 @@ firebird/*
 build/libpsl/.dir-locals.el
 build/build_brotli.py
 build/nghttp2/.clang-format
+build/libssh2/.editorconfig

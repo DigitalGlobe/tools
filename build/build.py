@@ -113,6 +113,9 @@ class Program :
     # the name of the build file to build LibPSL
     _FILE_NAME_BUILD_LIBPSL = "build_libpsl.py"
     # ----------------------------------------------------------------------
+    # the name of the build file to build LibSSH2
+    _FILE_NAME_BUILD_LIBSSH2 = "build_libssh2.py"
+    # ----------------------------------------------------------------------
     # the name of the build file to build LibTIFF
     _FILE_NAME_BUILD_LIBTIFF = "build_libtiff.py"
     # ----------------------------------------------------------------------
@@ -245,8 +248,10 @@ class Program :
                 # self._build(Program._FILE_NAME_BUILD_LIBGIST)
                 # self._build(Program._FILE_NAME_BUILD_LIBICONV)
                 # self._build(Program._FILE_NAME_BUILD_LIBJPEG)
+                # self._build(Program._FILE_NAME_BUILD_LIBPSL)
                 # self._build(Program._FILE_NAME_BUILD_MUPARSER)
                 # self._build(Program._FILE_NAME_BUILD_NEWMAT)
+                # self._build(Program._FILE_NAME_BUILD_NGHTTP2)
                 # self._build(Program._FILE_NAME_BUILD_OPENCV)
                 # self._build(Program._FILE_NAME_BUILD_OPENDIS)
                 # self._build(Program._FILE_NAME_BUILD_OPENTHREADS)
@@ -261,8 +266,7 @@ class Program :
 
             # build libraries that depend on other libraries
             #     (order does matter)
-            # self._build(Program._FILE_NAME_BUILD_LIBPSL)
-            # self._build(Program._FILE_NAME_BUILD_NGHTTP2)
+            # self._build(Program._FILE_NAME_BUILD_LIBSSH2)
             self._build(Program._FILE_NAME_BUILD_CURL)
             self._build(Program._FILE_NAME_BUILD_FIREBIRD)
             self._build(Program._FILE_NAME_BUILD_HDF5)
