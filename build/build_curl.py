@@ -136,7 +136,7 @@ class Program:
             "LIBPSL_LIBRARY": os.path.join(sdkOutDir, f"psl{libSuffix}"),
             "LIBSSH2_INCLUDE_DIR": os.path.join(includeBase, "libssh2"),
             "LIBSSH2_LIBRARY": os.path.join(sdkOutDir, f"libssh2{libSuffix}"),
-            "NGHTTP2_INCLUDE_DIR": os.path.join(includeBase),
+            "NGHTTP2_INCLUDE_DIR": os.path.join(includeBase, "nghttp2"),
             "NGHTTP2_LIBRARY": os.path.join(sdkOutDir, f"nghttp2{libSuffix}"),
             "ZLIB_INCLUDE_DIR": os.path.join(includeBase, "zlib"),
             "ZLIB_LIBRARY": os.path.join(sdkOutDir, f"zlib{libSuffix}"),
