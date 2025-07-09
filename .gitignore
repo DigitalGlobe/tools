@@ -99,7 +99,7 @@ build/ZLib/*
 build/ZStd/*
 
 # ignore the QT source
-#src/Qt/*
+src/Qt/*
 
 # temp while building...  remove when it all seems to work
 include/*
