@@ -146,13 +146,31 @@ class Program:
         conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
         platform = "x64" if buildSettings.X64Specified() else "Win32"
 
+        includeBase = os.path.join(
+            buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, ".."
+        )
+        libSuffix = (
+            f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
+        )
+        externalLibs = {
+            "ZLIB_INCLUDE_DIR": os.path.join(includeBase, "zlib"),
+            "ZLIB_LIBRARY": os.path.join(sdkOutDir, f"zlib{libSuffix}"),
+        }
+
+        externalLibStr = ""
+        for [key, val] in externalLibs.items():
+            externalLibStr += f'-D{key}="{val}" '
+
         cmakeCommandLine = (
             f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
             + f"-DBUILD_SHARED_LIBS=ON "
             + f"-DBUILD_TESTING=OFF "
             + f"-DHDF5_BUILD_EXAMPLES=OFF "
             + f"-DHDF5_BUILD_TOOLS=OFF "
+            + f"-DLIBAEC_USE_LOCALCONTENT=ON "
+            + f"-DHDF5_ENABLE_SZIP_SUPPORT=OFF "
             + f"-A {platform} "
+            + f"{externalLibStr} "
             + f"{buildSourceName}"
         )
 
@@ -211,20 +229,25 @@ class Program:
             "*.h*",
         )
 
-        systemManager.copyFile(
-            os.path.join(buildOutDir, libName), os.path.join(sdkOutDir, libName)
+        systemManager.distributeFiles(
+            os.path.join(cmakeInstallPath, "lib"),
+            os.path.join(sdkOutDir),
+            "hdf5*.lib"
         )
-        systemManager.copyFile(
-            os.path.join(buildOutDir, dllName), os.path.join(sdkOutDir, dllName)
+
+        systemManager.distributeFiles(
+            os.path.join(cmakeInstallPath, "bin"),
+            os.path.join(sdkOutDir),
+            "hdf5*.dll"
         )
+
         if not buildSettings.ReleaseSpecified():
-            systemManager.copyFile(
-                os.path.join(buildOutDir, pdbName), os.path.join(sdkOutDir, pdbName)
+            systemManager.distributeFiles(
+            os.path.join(cmakeInstallPath, "bin"),
+                os.path.join(sdkOutDir),
+                "hdf5*.pdb",
             )
-
-        # ----------------------------------------------------------------------
-
-
+        # ---------------------------------------------------------------------
 # --------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
