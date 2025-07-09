@@ -98,7 +98,10 @@ build/Xerces/*
 build/ZLib/*
 build/ZStd/*
 
- # temp while building...  remove when it all seems to work
+# ignore the QT source
+#src/Qt/*
+
+# temp while building...  remove when it all seems to work
 include/*
 sdk/x86/*
 sdk/x64/*

@@ -269,7 +269,7 @@ class Program :
             # self._build(Program._FILE_NAME_BUILD_LIBSSH2)
             # self._build(Program._FILE_NAME_BUILD_CURL)
             # self._build(Program._FILE_NAME_BUILD_FIREBIRD)
-            self._build(Program._FILE_NAME_BUILD_HDF5)
+            # self._build(Program._FILE_NAME_BUILD_HDF5)
             self._build(Program._FILE_NAME_BUILD_QT)
             self._build(Program._FILE_NAME_BUILD_QXRUNNER)
             self._build(Program._FILE_NAME_BUILD_FREETYPE)
