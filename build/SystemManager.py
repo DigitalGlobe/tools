@@ -148,6 +148,17 @@ class SystemManager:
         )
 
     # ----------------------------------------------------------------------
+    # Appends a specified path to an environment variable.
+    #
+    # Parameters :
+    #     self     : this manager
+    #     envVar   : the name of the environment variable
+    #     pathName : the name of the path to append
+    #     prepend  : if True, prepend the path to the environment variable
+    def appendToEnvironmentVariable(self, envVar, pathName, prepend=False):
+        self._appendToPathEnvironmentVariable(envVar, pathName, prepend)
+
+    # ----------------------------------------------------------------------
     # Changes to a specified directory.
     #
     # Parameters :

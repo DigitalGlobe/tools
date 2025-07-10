@@ -130,7 +130,7 @@ class Program:
         systemManager.changeDirectory(sourcePathName)
         # systemManager.removeDirectory(buildPathName)
 
-        # copy Boost source to the Build area
+        # copy source to the Build area
         systemManager.copyDirectory(sourcePathName, buildPathName)
 
         # start building

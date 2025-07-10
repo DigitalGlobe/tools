@@ -106,3 +106,4 @@ include/*
 sdk/x86/*
 sdk/x64/*
 firebird/*
+Qt/*
