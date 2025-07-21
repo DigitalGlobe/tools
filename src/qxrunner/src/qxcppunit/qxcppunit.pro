@@ -14,9 +14,10 @@ TARGET = $$QX_CPPUNITFILENAME   # From qxconfig
 #----------------------------------------------------------------------
 
 QX_LIBDIR = ../../lib           # Location of Qx libraries
+QX_INCDIR = ../../include/qxcppunit
 
 RESOURCES   += resources/qxcppunit.qrc
-DEPENDPATH  += ../../include/qxcppunit
+DEPENDPATH  += $$QX_INCDIR
 INCLUDEPATH += . $$DEPENDPATH ../../include $$(CPPUNIT)/include
 
 #----------------------------------------------------------------------
@@ -24,8 +25,8 @@ INCLUDEPATH += . $$DEPENDPATH ../../include $$(CPPUNIT)/include
 #----------------------------------------------------------------------
 
 dll {
-    LIBS += $$qxRunnerLibForLinker()
-    LIBS += $$cppUnitLibForLinker()
+    # LIBS += $$qxRunnerLibForLinker()
+    # LIBS += $$cppUnitLibForLinker()
 }
 
 #----------------------------------------------------------------------
@@ -54,10 +55,10 @@ unix {
 #----------------------------------------------------------------------
 
 HEADERS = \
-        cppunititem.h \
-        cppunitmodel.h \
-        qxcppunit_global.h \
-        testrunner.h
+        $$QX_INCDIR/cppunititem.h \
+        $$QX_INCDIR/cppunitmodel.h \
+        $$QX_INCDIR/qxcppunit_global.h \
+        $$QX_INCDIR/testrunner.h
 
 SOURCES = \
         cppunititem.cpp \

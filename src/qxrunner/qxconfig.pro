@@ -1,6 +1,6 @@
 #----------------------------------------------------------------------
 # File:    qxconfig.pro
-# Purpose: Configuration parameters and functions for Qx projects.        
+# Purpose: Configuration parameters and functions for Qx projects.
 # PreCond: TEMPLATE variable must be set.
 #----------------------------------------------------------------------
 
@@ -20,7 +20,7 @@ LANGUAGE = C++
 #                default.
 # debug_dll      Build target in debug mode. If target is a library
 #                create it as a DLL/shared image. If target is an app
-#                link it with debug DLL's/shared images. 
+#                link it with debug DLL's/shared images.
 # release_static Build target in release mode. If target is a library
 #                create it as static. If target is an app link it with
 #                release static libraries (if possible).
@@ -32,12 +32,14 @@ LANGUAGE = C++
 QX_CONFIG_MODIFIER = true
 
 #----------------------------------------------------------------------
-# CONFIG set up. Assigns unique options to the CONFIG variable.  
+# CONFIG set up. Assigns unique options to the CONFIG variable.
 #----------------------------------------------------------------------
 
 CONFIG -= debug_and_release build_all   # Not convincing
 
 CONFIG += qt warn_on
+
+QT += core widgets
 
 contains(QX_CONFIG_MODIFIER, true) {
 
@@ -120,7 +122,7 @@ debug {
 }
 
 win32:debug {
-    CPPUNITFILENAME = $${CPPUNITFILENAME}d
+    CPPUNITFILENAME = $${CPPUNITFILENAME}_d
     # No debug version of CppUnit library on Linux?
 }
 
@@ -196,7 +198,7 @@ MOC_DIR = $${RCC_DIR}/$${OBJECTS_DIR}
 defineReplace(winPath) {
 
     variable = $$1
-    variable ~= s'/'\'
+    variable ~= s|/|\\|
 
     return($$variable)
 }
@@ -210,16 +212,16 @@ defineReplace(winCopyLib) {
     excludefile = $$winPath($${DESTDIR}/xcopy_exclude.txt)
     libdir = $$winPath($$QX_LIBDIR)
     files = $$winPath($${DESTDIR}/$${TARGET}*)
-    
+
     copy_cmd  =   @echo .exp >  $$excludefile
     copy_cmd += | @echo .ilk >> $$excludefile
     copy_cmd += | xcopy/C/R/Y/EXCLUDE:$$excludefile $$files $$libdir
-    
+
     return($$copy_cmd)
 }
 
 #----------------------------------------------------------------------
-# Returns compiler options. Right now for MSVC debug mode only. 
+# Returns compiler options. Right now for MSVC debug mode only.
 #----------------------------------------------------------------------
 
 defineReplace(compilerOptions) {
@@ -234,12 +236,12 @@ defineReplace(compilerOptions) {
             compiler_options = /Fd"$$pdbfile"
         }
     }
-    
+
     return($$compiler_options)
 }
 
 #----------------------------------------------------------------------
-# Returns filename of QxRunner library suitable for input to linker. 
+# Returns filename of QxRunner library suitable for input to linker.
 #----------------------------------------------------------------------
 
 defineReplace(qxRunnerLibForLinker) {
@@ -250,12 +252,12 @@ defineReplace(qxRunnerLibForLinker) {
     unix {
         libname = -L$$QX_LIBDIR -l$$QX_RUNNERFILENAME
     }
-    
+
     return($$libname)
 }
 
 #----------------------------------------------------------------------
-# Returns filename of QxCppUnit library suitable for input to linker. 
+# Returns filename of QxCppUnit library suitable for input to linker.
 #----------------------------------------------------------------------
 
 defineReplace(qxCppUnitLibForLinker) {
@@ -266,12 +268,12 @@ defineReplace(qxCppUnitLibForLinker) {
     unix {
         libname = -L$$QX_LIBDIR -l$$QX_CPPUNITFILENAME
     }
-    
+
     return($$libname)
 }
 
 #----------------------------------------------------------------------
-# Returns filename of CppUnit library suitable for input to linker. 
+# Returns filename of CppUnit library suitable for input to linker.
 #----------------------------------------------------------------------
 
 defineReplace(cppUnitLibForLinker) {
@@ -282,6 +284,6 @@ defineReplace(cppUnitLibForLinker) {
     unix {
         libname = -L$$(CPPUNIT)/lib -l$$CPPUNITFILENAME
     }
-    
+
     return($$libname)
 }

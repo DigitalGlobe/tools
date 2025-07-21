@@ -14,9 +14,10 @@ TARGET = $$QX_RUNNERFILENAME    # From qxconfig
 #----------------------------------------------------------------------
 
 QX_LIBDIR = ../../lib           # Location of Qx libraries
+QX_INCDIR = ../../include/qxrunner
 
 RESOURCES   += resources/qxrunner.qrc
-DEPENDPATH  += ../../include/qxrunner
+DEPENDPATH  += $$QX_INCDIR
 INCLUDEPATH += . $$DEPENDPATH
 
 #----------------------------------------------------------------------
@@ -43,27 +44,27 @@ unix {
 #----------------------------------------------------------------------
 
 HEADERS = \
-        aboutdialog.h \
-        appsettings.h \
-        columnsdialog.h \
-        proxymodelcommon.h \
-        qxrunner_global.h \
-        resultsmodel.h \
-        resultsproxymodel.h \
-        resultsviewcontroller.h \
-        runner.h \
-        runneritem.h \
-        runnermodel.h \
-        runnermodelthread.h \
-        runnerproxymodel.h \
-        runnerviewcontroller.h \
-        runnerwindow.h \
-        runnerwindowclient.h \
-        settingsdialog.h \
-        statuswidget.h \
-        stoppingdialog.h \
-        utils.h \
-        viewcontrollercommon.h
+        $$QX_INCDIR/aboutdialog.h \
+        $$QX_INCDIR/appsettings.h \
+        $$QX_INCDIR/columnsdialog.h \
+        $$QX_INCDIR/proxymodelcommon.h \
+        $$QX_INCDIR/qxrunner_global.h \
+        $$QX_INCDIR/resultsmodel.h \
+        $$QX_INCDIR/resultsproxymodel.h \
+        $$QX_INCDIR/resultsviewcontroller.h \
+        $$QX_INCDIR/runner.h \
+        $$QX_INCDIR/runneritem.h \
+        $$QX_INCDIR/runnermodel.h \
+        $$QX_INCDIR/runnermodelthread.h \
+        $$QX_INCDIR/runnerproxymodel.h \
+        $$QX_INCDIR/runnerviewcontroller.h \
+        $$QX_INCDIR/runnerwindow.h \
+        $$QX_INCDIR/runnerwindowclient.h \
+        $$QX_INCDIR/settingsdialog.h \
+        $$QX_INCDIR/statuswidget.h \
+        $$QX_INCDIR/stoppingdialog.h \
+        $$QX_INCDIR/utils.h \
+        $$QX_INCDIR/viewcontrollercommon.h
 
 SOURCES = \
         aboutdialog.cpp \
@@ -88,7 +89,7 @@ SOURCES = \
         utils.cpp \
         viewcontrollercommon.cpp
 
-INTERFACES = \
+FORMS = \
         aboutdialog.ui \
         columnsdialog.ui \
         runnerwindow.ui \
