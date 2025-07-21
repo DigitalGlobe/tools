@@ -1,13 +1,12 @@
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 #
 # build_qxrunner.py
 #
 # Summary : Builds the qxrunner library.
 #
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 
-        
 import glob
 import os
 import sys
@@ -17,250 +16,186 @@ from PathFinder import *
 from SystemManager import *
 from XmlUtils import *
 
-class Program :
-        #----------------------------------------------------------------------
-        # a description of what the script does
-        DESCRIPTION = "Builds the qxrunner library."
-        #----------------------------------------------------------------------
-        # the name of the dynamic solution file
-        _FILE_NAME_SOLUTION = "src\\qxrunner\\qxrunner.vcxproj"
-        _FILE_NAME_SOLUTION_2 = "src\\qxcppunit\\qxcppunit.vcxproj"
-        
-        # the name of the path that contains QT
-        _PATH_NAME_QT_SRC = "..\\src\\qt"
-        #----------------------------------------------------------------------
-        # the name of the path that contains QT
-        _PATH_NAME_QT_EXEC_X86 = "..\\..\\..\\..\\qt\\5.7\\x86"
-        #----------------------------------------------------------------------
-        # the name of the path that contains QT
-        _PATH_NAME_QT_EXEC_X64 = "..\\..\\..\\..\\qt\\5.7\\x64"
-        #----------------------------------------------------------------------
 
-        #----------------------------------------------------------------------
-        # the name of the path that will contain intermediary build files
-        _PATH_NAME_BUILD = "qxrunner"
-        #----------------------------------------------------------------------
-        # the name of the path that contains the source code
-        _PATH_NAME_SOURCE = "..\\src\\qxrunner"
-        #----------------------------------------------------------------------
-                
-        _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
-        _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
-        
-        _LIBNAME = 'qxrunner'
-        _LIBNAME_2 = 'qxcppunit'
-        _DEBUG_SUFFIX = '_d'
+class Program:
+    # ----------------------------------------------------------------------
+    # a description of what the script does
+    DESCRIPTION = "Builds the qxrunner library."
+    _FILE_NAME_SOLUTION = "libgist.vcxproj"
 
-        _CPPUNIT_INCLUDE = '..\\..\\include'
-        _CPPUNIT_LIB = 'libcppunit'
-        
-        _QT_BASE = '..\\..\\Qt\\5.7\\'
-        
-        # the name of the path for all include files
-        _PATH_NAME_INCLUDE = 'include\\qxrunner'
-        _PATH_NAME_INCLUDE_2 = 'include\\qxcppunit'
-        #----------------------------------------------------------------------
-        # the name of the distribution path for all include files
-        _PATH_NAME_DISTRIBUTION_INCLUDE = '..\\..\\include\\qxrunner'
-        _PATH_NAME_DISTRIBUTION_INCLUDE_2 = '..\\..\\include\\qxcppunit'
-        #----------------------------------------------------------------------
+    # ----------------------------------------------------------------------
+    # the name of the path that will contain intermediary build files
+    _PATH_NAME_BUILD = "qxrunner"
+    # ----------------------------------------------------------------------
+    # the name of the path that contains the source code
+    _PATH_NAME_SOURCE = "..\\src\\qxrunner"
+    # ----------------------------------------------------------------------
 
-        def __init__(self) :
-        
-            pass
-        #----------------------------------------------------------------------
-        
+    _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
+    _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
-        def main(self) :
-            systemManager = SystemManager()
-            pathFinder    = PathFinder()
-            xmlUtils = XmlUtils()
-            
-            # process command-line arguments
-            buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
-            
-            # initialize environment variables
-            systemManager.initializeIncludeEnvironmentVariable( buildSettings.X64Specified() )
-            systemManager.initializeLibraryEnvironmentVariable( buildSettings.X64Specified() )
-            systemManager.appendToPathEnvironmentVariable( pathFinder.getVisualStudioBinPathName( buildSettings.X64Specified() ) )
+    _LIBNAME = "qxrunner"
+    _DEBUG_SUFFIX = "_d"
 
-            # MSBuild is under "Program Files (x86)"
-            systemManager.appendToPathEnvironmentVariable( os.path.join( systemManager.getProgramFilesPathName(False) , \
-                                                                             "MSBuild\\14.0\\Bin") )
-            systemManager.appendToPathEnvironmentVariable(Program._PATH_NAME_QT_EXEC_X64         \
-                                                           if ( buildSettings.X64Specified() ) \
-                                                           else Program._PATH_NAME_QT_EXEC_X86 )
-                                                           
-                                                           
-            os.environ["QTDIR"] = ( Program._PATH_NAME_QT_EXEC_X64         \
-                                   if ( buildSettings.X64Specified() ) \
-                                   else Program._PATH_NAME_QT_EXEC_X86 )
+    # the name of the path for all include files
+    _PATH_NAME_INCLUDE = "include"
+    # ----------------------------------------------------------------------
+    # the name of the distribution path for all include files
+    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\qxrunner"
 
-                                  
-            compileOutDir = ""
-            if ( buildSettings.X64Specified() ) :
-                # append path for 64-bit rc.exe
-                systemManager.appendToPathEnvironmentVariable( os.path.join( systemManager.getProgramFilesPathName(False) , \
-                                                                             "Windows Kits\\10\\bin\\x64"                 ) )
-            else:
-                # append path for 32-bit rc.exe
-                systemManager.appendToPathEnvironmentVariable( os.path.join( systemManager.getProgramFilesPathName(False) , \
-                                                                             "Windows Kits\\10\\bin\\x86"                 ) )
+    _PATH_NAME_QXRUNNER = "src\\qxrunner"
+    _PATH_NAME_QXCPPUNIT = "src\\qxcppunit"
 
-            # get the paths
-            buildPathName  = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD)
-            sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
-            includePathName = os.path.join( buildPathName, Program._PATH_NAME_INCLUDE)
-            
-            sdkOutDir = buildPathName + "\\..\\" + (Program._PATH_NAME_DISTRIBUTION_X64 if buildSettings.X64Specified() else Program._PATH_NAME_DISTRIBUTION_X86)
+    def __init__(self):
 
-            qtBase = os.path.join( buildPathName, Program._QT_BASE)
-            qtVer = os.path.join( qtBase, 'x64' if buildSettings.X64Specified() else 'x86')
-            qtInclude = os.path.join( qtVer, 'include')
-            qtWidgetsInclude = os.path.join( qtInclude, 'QtWidgets')
-            qtLib = os.path.join( qtVer, 'lib')
+        pass
 
-            
-            # remove build dir
-            systemManager.changeDirectory(sourcePathName)
-            systemManager.removeDirectory(buildPathName)
+    # ----------------------------------------------------------------------
 
-            #copy UriParser to the Build area
-            systemManager.copyDirectory( sourcePathName, buildPathName)
-        
-            # start building
-            systemManager.changeDirectory(buildPathName)
-                
-            conf = "Release_DLL" if ( buildSettings.ReleaseSpecified() ) else "Debug_DLL"
-            platform  = 'x64' if buildSettings.X64Specified() else 'Win32'
-            # build the solution
-            solutionFileName   = os.path.join( buildPathName               , \
-                                               Program._FILE_NAME_SOLUTION )
-            msBuildCommandLine = ( "\"%s\" "                  + \
-                                     "/p:platform=%s " + \
-                                     "\"%s\""                   ) % \
-                                   ( pathFinder.getMSBuildFileName( buildSettings.X64Specified()), platform, solutionFileName )
-            
-            msBuildCommandLine += ' /p:TargetName=' + Program._LIBNAME + ('' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX)
-            msBuildCommandLine += ' /p:Configuration=' + conf
+    def main(self):
+        systemManager = SystemManager()
+        pathFinder = PathFinder()
 
-            dllName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".dll"
-            libName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".lib"
-            pdbName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".pdb"
+        # process command-line arguments
+        buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
 
-            buildOutDir   = os.path.join( buildPathName, 'build' )
-            propfile   = os.path.join( buildPathName, 'linker.props' )
-            
-            msBuildCommandLine += ' /p:OutDir=' + buildOutDir
-            msBuildCommandLine += ' /p:TargetExtension=dll'
-            msBuildCommandLine += ' /p:SolutionDir=' + buildPathName + '\\' 
-            msBuildCommandLine += ' /p:TargetName=' + Program._LIBNAME + ('' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX)
-            msBuildCommandLine += ' /p:Configuration=' + conf
-            msBuildCommandLine += ' /p:BuildProjectReferences=false'
+        # initialize environment variables
+        systemManager.initializeIncludeEnvironmentVariable(buildSettings.X64Specified())
+        systemManager.initializeLibraryEnvironmentVariable(buildSettings.X64Specified())
 
-            linkerprops = {'OutputFile':os.path.join( buildOutDir, dllName )}
-            linkerprops['ImportLibrary'] = os.path.join( buildOutDir, libName )
-            if buildSettings.ReleaseSpecified():
-                linkerprops['DebugSymbols'] = 'false'
-            else:
-                linkerprops['DebugSymbols'] = 'true'
-                linkerprops['DebugType'] = 'full'
-                linkerprops['ProgramDatabaseFile'] = '$(OutDir)\\' + pdbName
-                        
-            linkerprops['AdditionalLibraryDirectories'] = '"' + sdkOutDir + '";"' + qtLib + '"; %(AdditionalLibraryDirectories)'
-  
-            compprops = {'AdditionalIncludeDirectories':'.;"' + os.path.join(buildPathName, Program._CPPUNIT_INCLUDE) + \
-            '";"' + qtInclude + '";"' + qtWidgetsInclude + '";%(AdditionalIncludeDirectories)'}
-                
-            xmlUtils.buildDll(conf, platform, compprops, linkerprops, propfile)
+        # MSBuild is under "Program Files (x86)"
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getMSBuildFileName(buildSettings.X64Specified())
+        )
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getQMakePathName(buildSettings.X64Specified())
+        )
 
-            msBuildCommandLine +=  ' /p:ForceImportBeforeCppTargets="' + propfile + '"'
+        vcVars = pathFinder.getVCVARSFileName(buildSettings.X64Specified())
 
-            print('cmd: ' + msBuildCommandLine)
-                   
-            msbuildResult = systemManager.execute(msBuildCommandLine)
-            if (msbuildResult != 0) :
-                sys.exit(-1)
+        compileOutDir = ""
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getWindowsSdkBinPathName(buildSettings.X64Specified())
+        )
 
+        # determine path names
+        buildPathName = systemManager.getCurrentRelativePathName(
+            Program._PATH_NAME_BUILD
+        )
+        sourcePathName = systemManager.getCurrentRelativePathName(
+            Program._PATH_NAME_SOURCE
+        )
 
-            systemManager.removeDirectory(os.path.join( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE))
-            systemManager.distributeFiles(os.path.join( buildPathName, Program._PATH_NAME_INCLUDE),              \
-                              os.path.join( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE), \
-                              '*.h',                                                                 \
-                              True, False, True) 
-                
-            systemManager.copyFile( os.path.join( buildOutDir, libName ) , \
-                                    os.path.join( sdkOutDir , libName) )
-            systemManager.copyFile( os.path.join( buildOutDir, dllName ) , \
-                                    os.path.join( sdkOutDir , dllName) )
-            if not buildSettings.ReleaseSpecified():
-                systemManager.copyFile( os.path.join( buildOutDir, pdbName ) , \
-                                        os.path.join( sdkOutDir , pdbName) )
+        sdkOutDir = (
+            buildPathName
+            + "\\..\\"
+            + (
+                Program._PATH_NAME_DISTRIBUTION_X64
+                if buildSettings.X64Specified()
+                else Program._PATH_NAME_DISTRIBUTION_X86
+            )
+        )
 
+        os.environ["QTDIR"] = pathFinder.getQtPathName(buildSettings.X64Specified())
 
-            # build the solution
-            solutionFileName   = os.path.join( buildPathName               , \
-                                               Program._FILE_NAME_SOLUTION_2 )
-            msBuildCommandLine = ( "\"%s\" "                  + \
-                                     "/p:platform=%s " + \
-                                     "\"%s\""                   ) % \
-                                   ( pathFinder.getMSBuildFileName( buildSettings.X64Specified()), platform, solutionFileName )
-            
-            msBuildCommandLine += ' /p:TargetName=' + Program._LIBNAME_2 + ('' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX)
-            msBuildCommandLine += ' /p:Configuration=' + conf
+        # remove build dir
+        systemManager.removeDirectory(buildPathName)
 
-            dllName = Program._LIBNAME_2 + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".dll"
-            libName = Program._LIBNAME_2 + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".lib"
-            pdbName = Program._LIBNAME_2 + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".pdb"
+        systemManager.copyDirectory(sourcePathName, buildPathName)
 
-            buildOutDir   = os.path.join( buildPathName, 'build' )
-            propfile   = os.path.join( buildPathName, 'linker.props' )
-            
-            msBuildCommandLine += ' /p:OutDir=' + buildOutDir
-            msBuildCommandLine += ' /p:TargetExtension=dll'
-            msBuildCommandLine += ' /p:SolutionDir=' + buildPathName + '\\' 
-            msBuildCommandLine += ' /p:TargetName=' + Program._LIBNAME_2 + ('' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX)
-            msBuildCommandLine += ' /p:Configuration=' + conf
-            msBuildCommandLine += ' /p:BuildProjectReferences=false'
+        systemManager.changeDirectory(os.path.join(buildPathName, Program._PATH_NAME_QXRUNNER))
 
-            linkerprops = {'OutputFile':os.path.join( buildOutDir, dllName )}
-            linkerprops['ImportLibrary'] = os.path.join( buildOutDir, libName )
-            if buildSettings.ReleaseSpecified():
-                linkerprops['DebugSymbols'] = 'false'
-            else:
-                linkerprops['DebugSymbols'] = 'true'
-                linkerprops['DebugType'] = 'full'
+        qmakeCommandLine = (
+            f'qmake -r '
+            + f'CONFIG+={"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll '
+        )
 
-            linkerprops['AdditionalLibraryDirectories'] = '"' + sdkOutDir + '";"' + qtLib + '"; %(AdditionalLibraryDirectories)'
-  
-            compprops = {'AdditionalIncludeDirectories':'.;"' + os.path.join(buildPathName, Program._CPPUNIT_INCLUDE) + \
-            '";"' + qtInclude + '";"' + qtWidgetsInclude + '";%(AdditionalIncludeDirectories)'}
-          
-            xmlUtils.buildDll(conf, platform, compprops, linkerprops, propfile)
+        cmd = f'"{vcVars}" && {qmakeCommandLine}'
+        print("cmd: " + cmd)
+        qmakeResult = systemManager.execute(cmd)
+        if qmakeResult != 0:
+            sys.exit(-1)
 
-            msBuildCommandLine +=  ' /p:ForceImportBeforeCppTargets="' + propfile + '"'
+        nmakeCommandLine = (
+            f'nmake '
+        )
 
-            print('cmd: ' + msBuildCommandLine)
-                       
-            msbuildResult = systemManager.execute(msBuildCommandLine)
-            if (msbuildResult != 0) :
-                sys.exit(-1)
-                
-            systemManager.removeDirectory(os.path.join( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE_2))
-            systemManager.distributeFiles(os.path.join( buildPathName, Program._PATH_NAME_INCLUDE_2),              \
-                              os.path.join( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE_2), \
-                              '*.h',                                                                 \
-                              True, False, True) 
+        cmd = f'"{vcVars}" && {nmakeCommandLine}'
 
-                
-            systemManager.copyFile( os.path.join( buildOutDir, libName ) , \
-                                    os.path.join( sdkOutDir , libName) )
-            systemManager.copyFile( os.path.join( buildOutDir, dllName ) , \
-                                    os.path.join( sdkOutDir , dllName) )
-            if not buildSettings.ReleaseSpecified():
-                systemManager.copyFile( os.path.join( buildOutDir, pdbName ) , \
-                                        os.path.join( sdkOutDir , pdbName) )
+        print("cmd: " + cmd)
+        nmakeResult = systemManager.execute(cmd)
+        if nmakeResult != 0:
+            sys.exit(-1)
 
-#------------------------------------------------------------------------------
+        systemManager.removeDirectory(os.path.join( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE))
+        systemManager.distributeFiles(
+            os.path.join( buildPathName, "include"),
+            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            "*.h*",
+        )
+
+        systemManager.distributeFiles(
+            os.path.join(buildPathName, Program._PATH_NAME_QXRUNNER, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
+            os.path.join(sdkOutDir),
+            "*.lib",
+        )
+        systemManager.distributeFiles(
+            os.path.join(buildPathName, Program._PATH_NAME_QXRUNNER, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
+            os.path.join(sdkOutDir),
+            "*.dll",
+        )
+
+        if not buildSettings.ReleaseSpecified():
+            systemManager.distributeFiles(
+            os.path.join(buildPathName, Program._PATH_NAME_QXRUNNER, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
+            os.path.join(sdkOutDir),
+            "*.pdb",
+            )
+
+        systemManager.changeDirectory(
+            os.path.join(buildPathName, Program._PATH_NAME_QXCPPUNIT)
+        )
+
+        qmakeCommandLine = (
+            f"qmake -r "
+            + f'CONFIG+={"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll '
+            + f"INCLUDEPATH+={os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..")} "
+            # + f"CPPUNIT={os.path.join(sdkOutDir, "..")} "
+            + f"LIBS+={os.path.join(sdkOutDir, 'qxrunner' + ('' if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX) + '.lib')} "
+            + f"LIBS+={os.path.join(sdkOutDir, 'cppunit' + ('' if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX) + '.lib')} "
+        )
+
+        cmd = f'"{vcVars}" && {qmakeCommandLine}'
+        print("cmd: " + cmd)
+        qmakeResult = systemManager.execute(cmd)
+        if qmakeResult != 0:
+            sys.exit(-1)
+
+        cmd = f'"{vcVars}" && {nmakeCommandLine}'
+
+        print("cmd: " + cmd)
+        nmakeResult = systemManager.execute(cmd)
+        if nmakeResult != 0:
+            sys.exit(-1)
+
+        systemManager.distributeFiles(
+            os.path.join(buildPathName, Program._PATH_NAME_QXCPPUNIT, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
+            os.path.join(sdkOutDir),
+            "*.lib",
+        )
+        systemManager.distributeFiles(
+            os.path.join(buildPathName, Program._PATH_NAME_QXCPPUNIT, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
+            os.path.join(sdkOutDir),
+            "*.dll",
+        )
+
+        if not buildSettings.ReleaseSpecified():
+            systemManager.distributeFiles(
+            os.path.join(buildPathName, Program._PATH_NAME_QXCPPUNIT, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
+            os.path.join(sdkOutDir),
+            "*.pdb",
+            )
+
+# ------------------------------------------------------------------------------
 Program().main()
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------

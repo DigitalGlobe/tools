@@ -67,6 +67,8 @@ class PathFinder:
     _PATH_NAME_WINDOWS_SDK_VERSION = "10.0.26100.0"
     # ----------------------------------------------------------------------
 
+    _PATH_NAME_QT = "D:\\Users\\tim.tisler\\tools\Qt\\5.15"
+    _FILE_NAME_QMAKE = "qmake.exe"
     # ----------------------------------------------------------------------
 
     # the relative path name of the Windows SDK
@@ -217,6 +219,65 @@ class PathFinder:
             "Hostx64",
             (PathFinder._PATH_NAME_X64 if x64Specified else PathFinder._PATH_NAME_X86),
             PathFinder._FILE_NAME_NMAKE,
+        )
+
+        if not os.path.exists(fileName):
+            raise Exception(f"Can't find name in {fileName}")
+        return fileName
+
+    # ----------------------------------------------------------------------
+    # Gets the name of the Nmake executable file.
+    #
+    # Parameters :
+    #     self         : this finder
+    #     x64Specified : if <code>true</code>, 64-bit is specified; if
+    #                    <code>false</code>, 32-bit is specified
+    # Returns :
+    #     the name of the Nmake executable file
+    def getQtPathName(self, x64Specified):
+
+        pathName = os.path.join(
+            PathFinder._PATH_NAME_QT,
+            PathFinder._PATH_NAME_X64 if x64Specified else PathFinder._PATH_NAME_X86,
+        )
+
+        if not os.path.exists(pathName):
+            raise Exception(f"Can't find name in {pathName}")
+        return pathName
+
+    # ----------------------------------------------------------------------
+    # Gets the name of the Nmake executable file.
+    #
+    # Parameters :
+    #     self         : this finder
+    #     x64Specified : if <code>true</code>, 64-bit is specified; if
+    #                    <code>false</code>, 32-bit is specified
+    # Returns :
+    #     the name of the Nmake executable file
+    def getQMakePathName(self, x64Specified):
+
+        pathName = os.path.join(
+            self.getQtPathName(x64Specified),
+            "bin"
+        )
+
+        if not os.path.exists(pathName):
+            raise Exception(f"Can't find name in {pathName}")
+        return pathName
+    # ----------------------------------------------------------------------
+    # Gets the name of the Nmake executable file.
+    #
+    # Parameters :
+    #     self         : this finder
+    #     x64Specified : if <code>true</code>, 64-bit is specified; if
+    #                    <code>false</code>, 32-bit is specified
+    # Returns :
+    #     the name of the Nmake executable file
+    def getQMakeFileName(self, x64Specified):
+
+        fileName = os.path.join(
+            self.getQMakePathName(x64Specified),
+            PathFinder._FILE_NAME_QMAKE,
         )
 
         if not os.path.exists(fileName):
