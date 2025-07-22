@@ -8,12 +8,12 @@ var class_qwt_linear_color_map =
     [ "QwtLinearColorMap", "class_qwt_linear_color_map.html#ae591cf441db15a021c25d0b58bfa7a5e", null ],
     [ "~QwtLinearColorMap", "class_qwt_linear_color_map.html#a82caa759e44d439aa9866bd03e2e3696", null ],
     [ "addColorStop", "class_qwt_linear_color_map.html#aa7162a034e882e752c15051439bb2c99", null ],
-    [ "color1", "class_qwt_linear_color_map.html#a3ab5066b01409f58e4ad0425474b1530", null ],
-    [ "color2", "class_qwt_linear_color_map.html#a9fa696fff9ec599f0c305f73345ecab3", null ],
-    [ "colorIndex", "class_qwt_linear_color_map.html#aa69528213eb7d484466f095c8a9a6efe", null ],
-    [ "colorStops", "class_qwt_linear_color_map.html#afaafe752db9de97ec6fba163515f51dd", null ],
-    [ "mode", "class_qwt_linear_color_map.html#a9ec309df6ec88472a63b14ac2c692c96", null ],
-    [ "rgb", "class_qwt_linear_color_map.html#ac031babccc90d8c857c707d0841ba1eb", null ],
+    [ "color1", "class_qwt_linear_color_map.html#afc26d903d0bc7a9ff3059eab9bc41c50", null ],
+    [ "color2", "class_qwt_linear_color_map.html#aedf72ce7e3d0059b5a8e6b197a67f796", null ],
+    [ "colorIndex", "class_qwt_linear_color_map.html#a29d5c17eaf6b061c679cfb472eb8f91b", null ],
+    [ "colorStops", "class_qwt_linear_color_map.html#a25ab45fbb2e2f86c7e8de92477ec43f7", null ],
+    [ "mode", "class_qwt_linear_color_map.html#a0f1252586f1a4eac8241b89f0764abba", null ],
+    [ "rgb", "class_qwt_linear_color_map.html#abc40b8e76b9efb89608a0e35d2bed688", null ],
     [ "setColorInterval", "class_qwt_linear_color_map.html#abfae35c30755c0bbd1447342055e9a13", null ],
     [ "setMode", "class_qwt_linear_color_map.html#afca7397fb6d07d05bab83e83e274a9c2", null ]
 ];

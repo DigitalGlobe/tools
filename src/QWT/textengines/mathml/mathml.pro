@@ -7,8 +7,8 @@
 # modify it under the terms of the Qwt License, Version 1.0
 ################################################################
 
-message(The qwtmathml library contains code of the MML Widget from the Qt solutions package.)
-message(Beside the Qwt license you also have to take care of its license. )
+message("The qwtmathml library contains code of the MML Widget from the Qt solutions package.")
+message("Beside the Qwt license you also have to take care of its license.")
 
 include( $${PWD}/../textengines.pri )
 
@@ -29,13 +29,18 @@ SOURCES = \
 # qwt_mml_document.h/qwt_mml_document.cpp has been stripped down from
 # the mathml widgets offered in the Qt solutions package. 
 
-HEADERS += qwt_mml_document.h
-SOURCES += qwt_mml_document.cpp
+HEADERS += qwt_mml_document.h \
+           qwt_mml_entity_table.h
+SOURCES += qwt_mml_document.cpp \
+           qwt_mml_entity_table.cpp
 
-qwtmathmlspec.files  = qwtmathml.prf
-qwtmathmlspec.path  = $${QWT_INSTALL_FEATURES}
+#qwtmathmlspec.files  = qwtmathml.prf
+#qwtmathmlspec.path  = $${QWT_INSTALL_FEATURES}
 
-INSTALLS += qwtmathmlspec
+#INSTALLS += qwtmathmlspec
+
+target.path    = $$INSTALL_DIR/lib
+INSTALLS       = target
 
 CONFIG(lib_bundle) {
 
@@ -46,8 +51,8 @@ CONFIG(lib_bundle) {
 }
 else {
 
-    headers.files  = qwt_mathml_text_engine.h
-    headers.path   = $${QWT_INSTALL_HEADERS}
+    headers.files  = $$HEADERS
+    headers.path   = $$INSTALL_DIR/include
     INSTALLS       += headers
 }
 

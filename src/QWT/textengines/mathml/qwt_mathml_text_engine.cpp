@@ -7,8 +7,6 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-// vim: expandtab
-
 #include <qstring.h>
 #include <qpainter.h>
 #include "qwt_mathml_text_engine.h"
@@ -35,8 +33,9 @@ QwtMathMLTextEngine::~QwtMathMLTextEngine()
    \return Calculated height
 */
 double QwtMathMLTextEngine::heightForWidth( const QFont& font, int flags,
-        const QString& text, double ) const
+        const QString& text, double width ) const
 {
+    Q_UNUSED( width )
     return textSize( font, flags, text ).height();
 }
 
@@ -55,13 +54,13 @@ QSizeF QwtMathMLTextEngine::textSize( const QFont &font,
     Q_UNUSED( flags );
 
     static QString t;
-    static QSize sz;
+    static QSizeF sz;
 
     if ( text != t )
     {
         QwtMathMLDocument doc;
         doc.setContent( text );
-        doc.setBaseFontPointSize( font.pointSize() );
+        doc.setBaseFontPointSize( font.pointSizeF() );
 
         sz = doc.size();
         t = text;
@@ -97,7 +96,7 @@ void QwtMathMLTextEngine::draw( QPainter *painter, const QRectF &rect,
 {
     QwtMathMLDocument doc;
     doc.setContent( text );
-    doc.setBaseFontPointSize( painter->font().pointSize() );
+    doc.setBaseFontPointSize( painter->font().pointSizeF() );
 
     const QSizeF docSize = doc.size();
 
