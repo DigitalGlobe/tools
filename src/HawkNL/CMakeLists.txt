@@ -6,8 +6,12 @@ set(CMAKE_OSX_ARCHITECTURES "i386;x86_64")
 
 file(GLOB_RECURSE HAWKNL_SOURCES ${HAWKNL_SOURCE_DIR}/src/*.c)
 include_directories(${HAWKNL_SOURCE_DIR}/include)
+
 add_library(NL SHARED ${HAWKNL_SOURCES})
-target_link_libraries(NL ${PTHREAD_LIBRARY} wsock32 ws2_32.lib)
+
+find_package(Threads REQUIRED)
+
+target_link_libraries(NL Threads::Threads wsock32 ws2_32)
 
 set_target_properties(NL PROPERTIES VERSION 1.7.1)
 

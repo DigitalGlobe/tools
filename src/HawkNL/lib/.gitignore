@@ -1,3 +1,0 @@
-# Exempt lib files because we need pthread for DLL build
-!*.lib
-
