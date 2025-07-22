@@ -1,10 +1,10 @@
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 #
 # build_qwt.py
 #
 # Summary : Builds the QWT libraries.
 #
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 import glob
 import os
@@ -15,157 +15,146 @@ from BuildSettingSet import *
 from PathFinder import *
 from SystemManager import *
 
-class Program :
-        DESCRIPTION = "Builds QWT libs and exes."
-        _PATH_NAME_BINARY_X86 = "\\x86\\bin"
-        _PATH_NAME_BINARY_X64 = "\\x64\\bin"
-        _PATH_NAME_BUILD = "QWT"
-        _PATH_NAME_DISTRIBUTION_X86 = "\\x86\\lib"
-        _PATH_NAME_DISTRIBUTION_X64 = "\\x64\\lib"
-        _PATH_NAME_SOURCE_X86Debug = "..\\src\\build-qwt-Desktop_Qt_5_7_0_MSVC2015_32bit-Debug"
-        _PATH_NAME_SOURCE_X86Release = "..\\src\\build-qwt-Desktop_Qt_5_7_0_MSVC2015_32bit-Release"
-        _PATH_NAME_SOURCE_X64Debug = "..\\src\\build-qwt-Desktop_Qt_5_7_0_MSVC2015_64bit-Debug"
-        _PATH_NAME_SOURCE_X64Release = "..\\src\\build-qwt-Desktop_Qt_5_7_0_MSVC2015_64bit-Release"
-        _PATH_NAME_DESTINATION = "..\\sdk"
-        _PATH_NAME_SDK_DIR = "..\\sdk"
-        #Path to your Jom.exe (compiler) directories - modify as necessary for your system
-        _PATH_NAME_JOM64_DIR = "C:\\Qt\\Qt5.7.0\\Tools\\QtCreator\\bin\\"
-        _PATH_NAME_JOM86_DIR = "C:\\QtX86\\Qt5.7.0\\Tools\\QtCreator\\bin\\"
-        #Path to QMake directories - modify as necessary for your system
-        #_PATH_NAME_QMAKE64_DIR = "C:\\Qt\\Qt5.7.0\\5.7\\msvc2015_64\\bin\\"
-        _PATH_NAME_QMAKE64_DIR = "..\\build\\Qt\\build\\x64\\bin\\"
-        _PATH_NAME_QMAKE86_DIR = "..\\build\\Qt\\build\\x86\\bin\\"
-        #Path to qwt.pro - modify as necessary for your system
-        _PATH_TO_QWT_PRO = "C:\\DigitalGlobeTemp\\tools\\src\\QWT\\qwt.pro"
-        _PATH_NAME_SOURCE = "..\\src\\QWT"
 
-        # the name of the path for all include files
-        _PATH_NAME_INCLUDE = 'include'
-        #----------------------------------------------------------------------
-        # the name of the distribution path for all include files
-        _PATH_NAME_DISTRIBUTION_INCLUDE = '..\\..\\include\\qwt'
-        #----------------------------------------------------------------------
+class Program:
+    DESCRIPTION = "Builds QWT libs and exes."
+    # ----------------------------------------------------------------------
+    # the name of the path that will contain intermediary build files
+    _PATH_NAME_BUILD = "qwt"
+    # ----------------------------------------------------------------------
+    # the name of the path that contains the source code
+    _PATH_NAME_SOURCE = "..\\src\\qwt"
+    # ----------------------------------------------------------------------
 
-        def __init__(self) :
-        
-            pass
-        #----------------------------------------------------------------------
-        
+    _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
+    _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
-        def main(self) :
-        
-            systemManager = SystemManager()
-            pathFinder    = PathFinder()
-            
-            # process command-line arguments
-            buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
-            
-            # initialize environment variables
-            systemManager.initializeIncludeEnvironmentVariable( buildSettings.X64Specified() )
-            systemManager.initializeLibraryEnvironmentVariable( buildSettings.X64Specified() )
-            systemManager.appendToPathEnvironmentVariable( pathFinder.getVisualStudioBinPathName( buildSettings.X64Specified() ) )
+    _LIBNAME = "qwt"
+    _DEBUG_SUFFIX = "_d"
 
-            sdkDirName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SDK_DIR)
-            if ( buildSettings.X64Specified() ) :
-                print("64bit Build")
-                pth = os.path.join( systemManager.getProgramFilesPathName(False) , "Windows Kits\\10\\bin\\x64") 
-                os.environ["PATH"] = pth + ";" + os.environ["PATH"]
-                libPath = sdkDirName + Program._PATH_NAME_DISTRIBUTION_X64
-                os.environ["LIBPATH"] = libPath 
-                #+ ";" + os.environ["LIBPATH"]
-                                                                             
-            else:
-                print("32bit Build")
-                pth = os.path.join( systemManager.getProgramFilesPathName(False) , "Windows Kits\\10\\bin\\x86") 
-                os.environ["PATH"] = pth + ";" + os.environ["PATH"]
+    # the name of the path for all include files
+    _PATH_NAME_INCLUDE = "include"
+    # ----------------------------------------------------------------------
+    # the name of the distribution path for all include files
+    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\qwt"
 
+    _PATH_NAME_QMAKE_BUILD = "build"
 
-            # get the paths
-            print("Getting Paths")
-            buildPathName  = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD)
-            sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
-            
-            #qt = os.environ.get("QT_PATH")
-            #print( "QT Path in Env: " + qt)
-            #if ( len(qt) > 0):
-            #	if ( buildSettings.X64Specified() ) :
-            #        qmakePath = qt + "\\5.7\\msvc2015_64\\bin\\qmake.exe " + buildPathName + "\\qwt.pro"
-           # 	else:
-           #         qmakePath = qt + "\\5.7\\msvc2015\\bin\\qmake.exe " + buildPathName + "\\qwt.pro"
-           # else:
-            #    print("Calculating Qt Path")
-            #    if ( buildSettings.X64Specified() ) :
-            #        qmakePath =      systemManager.getCurrentRelativePathName(Program._PATH_NAME_QMAKE64_DIR) + "\\qmake.exe " + buildPathName + "\\qwt.pro"
-            #    else:
-            #        qmakePath =      systemManager.getCurrentRelativePathName(Program._PATH_NAME_QMAKE86_DIR) + "\\qmake.exe " + buildPathName + "\\qwt.pro"		        
-            
-            print("Calculating Qt Path")
-            if ( buildSettings.X64Specified() ) :
-                qmakePath =      systemManager.getCurrentRelativePathName( "..\\QT\\5.7\\x64\\bin") + "\\qmake.exe " + buildPathName + "\\qwt.pro"
-            else:
-                qmakePath =      systemManager.getCurrentRelativePathName( "..\\QT\\5.7\\x86\\bin") + "\\qmake.exe " + buildPathName + "\\qwt.pro"		        
-            compileOutLib = ""
-            print("build path: " + buildPathName)
-            print("source path: " + sourcePathName)
-            
-            # initialize directories
-            print("removing previous build dir")
-            systemManager.changeDirectory(sourcePathName)
-            systemManager.removeDirectory(buildPathName)
+    def __init__(self):
 
-            print("copying source to build dir")
-            systemManager.copyDirectory( sourcePathName, buildPathName)
-            
-            # start building
-            systemManager.changeDirectory(buildPathName)
-            
-          	# generate the qmake command
-            cmdMake = qmakePath + " -r -spec win32-msvc2015 "
-            	
-            if (buildSettings.ReleaseSpecified()):
-            	copyMask = "*.*"
-            else:
-            	copyMask = "*_d.*"
-            	cmdMake = cmdMake + "CONFIG+=debug " + "CONFIG+=qml_debug"
-            	
-            print("qmake: " + cmdMake)
-            
-			#do qmake
-            res = systemManager.execute( cmdMake)
+        pass
 
-            if res != 0:
-                sys.exit(-1)
+    # ----------------------------------------------------------------------
 
-            #do the build
-            cmd = "nmake"
-            res = systemManager.execute( cmd)
-            if res != 0:
-                sys.exit(-1)
-            
-			#copy files
-            if ( buildSettings.X64Specified() ) :
-                distribPath = Program._PATH_NAME_DISTRIBUTION_X64
-            else:
-                distribPath = Program._PATH_NAME_DISTRIBUTION_X86
-            
-            sdkOutDir = sdkDirName + distribPath
-			
-          
-            systemManager.removeDirectory(os.path.join( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE))
-            systemManager.distributeFiles(os.path.join( buildPathName, Program._PATH_NAME_INCLUDE),              \
-                                          os.path.join( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE), \
-                                          '*.h',                                                                 \
-                                          True, False) 
+    def main(self):
+        systemManager = SystemManager()
+        pathFinder = PathFinder()
 
-          
-            print( "copying files: " + buildPathName + "\\lib\\" + copyMask)
-			
-            for file in glob.glob(buildPathName + "\\lib\\" + copyMask):
-                print( "copying " + file + " -> " + sdkOutDir)
-                shutil.copy(file, sdkOutDir)
-			
+        # process command-line arguments
+        buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
 
-                        
-#------------------------------------------------------------------------------
+        # initialize environment variables
+        systemManager.initializeIncludeEnvironmentVariable(buildSettings.X64Specified())
+        systemManager.initializeLibraryEnvironmentVariable(buildSettings.X64Specified())
+
+        # MSBuild is under "Program Files (x86)"
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getMSBuildFileName(buildSettings.X64Specified())
+        )
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getQMakePathName(buildSettings.X64Specified())
+        )
+
+        vcVars = pathFinder.getVCVARSFileName(buildSettings.X64Specified())
+
+        compileOutDir = ""
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getWindowsSdkBinPathName(buildSettings.X64Specified())
+        )
+
+        # determine path names
+        buildPathName = systemManager.getCurrentRelativePathName(
+            Program._PATH_NAME_BUILD
+        )
+        sourcePathName = systemManager.getCurrentRelativePathName(
+            Program._PATH_NAME_SOURCE
+        )
+
+        sdkOutDir = (
+            buildPathName
+            + "\\..\\"
+            + (
+                Program._PATH_NAME_DISTRIBUTION_X64
+                if buildSettings.X64Specified()
+                else Program._PATH_NAME_DISTRIBUTION_X86
+            )
+        )
+
+        os.environ["QTDIR"] = pathFinder.getQtPathName(buildSettings.X64Specified())
+
+        # remove build dir
+        systemManager.removeDirectory(buildPathName)
+
+        systemManager.copyDirectory(sourcePathName, buildPathName)
+        systemManager.changeDirectory(buildPathName)
+
+        qmakeCommandLine = (
+            f"qmake "
+            + f'"CONFIG+={"release" if  buildSettings.ReleaseSpecified() else "debug"}" '
+        )
+
+        cmd = f'"{vcVars}" && {qmakeCommandLine}'
+        print("cmd: " + cmd)
+        qmakeResult = systemManager.execute(cmd)
+        if qmakeResult != 0:
+            sys.exit(-1)
+
+        nmakeCommandLine = f"nmake "
+
+        cmd = f'"{vcVars}" && {nmakeCommandLine}'
+
+        print("cmd: " + cmd)
+        nmakeResult = systemManager.execute(cmd)
+        if nmakeResult != 0:
+            sys.exit(-1)
+
+        systemManager.removeDirectory(
+            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
+        )
+
+        systemManager.distributeFiles(
+            os.path.join(buildPathName, "src"),
+            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            "*.h*",
+        )
+
+        if buildSettings.ReleaseSpecified():
+            systemManager.distributeFiles(
+                os.path.join(
+                    buildPathName,
+                    "lib"
+                ),
+                os.path.join(sdkOutDir),
+                "*.lib",
+            )
+            systemManager.distributeFiles(
+                os.path.join(buildPathName, "lib"),
+                os.path.join(sdkOutDir),
+                "*.dll",
+            )
+        else:
+            libdir = os.path.join(buildPathName, "lib")
+
+            # we need to rename the debug libs to have a _d suffix (they have a 'd' suffix now)
+            for f in glob.glob(os.path.join(libdir, "*d.lib")):
+                systemManager.copyFile(f, os.path.join(sdkOutDir, f.replace("d.lib", "_d.lib")))
+
+            for f in glob.glob(os.path.join(libdir, "*d.dll")):
+                systemManager.copyFile(f, os.path.join(sdkOutDir, f.replace("d.dll", "_d.dll")))
+
+            for f in glob.glob(os.path.join(libdir, "*d.pdb")):
+                systemManager.copyFile(f, os.path.join(sdkOutDir, f.replace("d.pdb", "_d.pdb")))
+
+# ------------------------------------------------------------------------------
 Program().main()
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
