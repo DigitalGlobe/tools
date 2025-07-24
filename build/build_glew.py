@@ -123,6 +123,7 @@ class Program:
         # start building
         systemManager.changeDirectory(buildPathName)
 
+        systemManager.removeDirectory(cmakeBuildPath)
         systemManager.makeDirectory(cmakeBuildPath)
         systemManager.changeDirectory(cmakeBuildPath)
 

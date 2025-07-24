@@ -1,11 +1,10 @@
 # ------------------------------------------------------------------------------
 #
-# build_apr.py
+# build_openssl.py
 #
-# Summary : Builds the APR library.
+# Summary : Builds the OpenSSL library.
 #
 # ------------------------------------------------------------------------------
-
 
 import glob
 import os
@@ -14,8 +13,6 @@ import sys
 from BuildSettingSet import *
 from PathFinder import *
 from SystemManager import *
-from FileDistributor import *
-from XmlUtils import *
 
 
 # ------------------------------------------------------------------------------
@@ -27,22 +24,18 @@ class Program:
 
     # ----------------------------------------------------------------------
     # a description of what the script does
-    DESCRIPTION = "Builds the APR library."
-
-    # the name of the release makefile
-    _FILE_NAME_MAKEFILE = "Makefile.win"
-    _FILE_NAME_ICONV_MAKEFILE = "apriconv.mak"
+    DESCRIPTION = "Builds the OpenSSL library."
     # ----------------------------------------------------------------------
 
-    _LIBNAME = "libapr"
+    _LIBNAME = "openssl"
     _DEBUG_SUFFIX = "_d"
 
     # ----------------------------------------------------------------------
     # the name of the path that will contain intermediary build files
-    _PATH_NAME_BUILD = "apr"
+    _PATH_NAME_BUILD = "openssl"
     # ----------------------------------------------------------------------
     # the name of the path that contains the source code
-    _PATH_NAME_SOURCE = "..\\src\\apr"
+    _PATH_NAME_SOURCE = "..\\src\\openssl"
     # ----------------------------------------------------------------------
 
     # ----------------------------------------------------------------------
@@ -65,15 +58,9 @@ class Program:
     _PATH_NAME_INCLUDE = "."
     # ----------------------------------------------------------------------
     # the name of the distribution path for all include files
-    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\apr"
+    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\openssl"
     # ----------------------------------------------------------------------
-
     _PATH_NAME_NMAKE_INSTALL = "install"
-
-    # the name of the path that contains the cmake files
-    _PATH_NAME_CMAKE_SOURCE = "apr-util"
-    _PATH_NAME_CMAKE_BUILD = "../build"
-    _PATH_NAME_CMAKE_INSTALL = "../install"
 
     # --------------------------------------------------------------------------
     # constructors
@@ -121,11 +108,6 @@ class Program:
         )
 
         # determine path names
-        binaryPathName = (
-            systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X64)
-            if (buildSettings.X64Specified())
-            else systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X86)
-        )
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
         )
@@ -145,122 +127,96 @@ class Program:
 
         # remove build dir
         systemManager.removeDirectory(buildPathName)
-
         systemManager.copyDirectory(sourcePathName, buildPathName)
+        systemManager.changeDirectory(buildPathName)
 
-        buildSourceName = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
-        cmakeBuildPath = os.path.join(buildSourceName, Program._PATH_NAME_CMAKE_BUILD)
-        cmakeInstallPath = os.path.join(
-            cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
+        perlCommandLine = (
+            f'perl Configure '
+            + f'{"VC-WIN64A" if buildSettings.X64Specified() else "VC-WIN32" } '
+            + f'--prefix={os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL) } '
+            + f'--openssldir={os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "ssl" ) } '
+            + f'{"--release" if buildSettings.ReleaseSpecified() else "--debug"} '
+            + f'enable-brotli-dynamic '
+            + f'--with-brotli-include={os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..")} '
+            + f'--with-brotli-lib={sdkOutDir} '
+            + f'zlib-dynamic '
+            + f'--with-zlib-include={os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..","zlib")} '
+            + f'--with-zlib-lib={sdkOutDir} '
+            + f'enable-zstd-dynamic '
+            + f'--with-zstd-include={os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..","zstd")} '
+            + f'--with-zstd-lib={sdkOutDir} '
+            + f'no-makedepend '
+            + f'no-apps '
+            + f'CFLAGS="/FS /Z7" CXXFLAGS="/FS /Z7" CPPFLAGS="/FS /Z7" '
         )
 
-        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
-        platform = "x64" if buildSettings.X64Specified() else "Win32"
+        cmd = f'"{vcVars}" && {perlCommandLine}'
 
-        systemManager.changeDirectory(os.path.join(buildPathName, ""))
-
-        cmakeCommandLine = (
-            f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
-            + f"-A {platform} "
-            + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
-            + f"-DBUILD_SHARED_LIBS=ON "
-            + f"-DZSTD_BUILD_PROGRAMS=OFF "
-            + f"-DBUILD_TESTING=OFF "
-            + f"{buildSourceName}"
-        )
-
-        print("cmake: " + cmakeCommandLine)
-        cmakeResult = systemManager.execute(cmakeCommandLine)
-        if cmakeResult != 0:
+        print("cmd: " + cmd)
+        perlResult = systemManager.execute(cmd)
+        if perlResult != 0:
             sys.exit(-1)
 
-        cmakeCommandLine = (
-            f"{pathFinder.getCMakeFileName()} "
-            + f"--build "
-            + f". "
-            + f"--config {conf} "
-        )
+        nmakeCommandLine = f"nmake "
 
-        print("cmake: " + cmakeCommandLine)
-        cmakeResult = systemManager.execute(cmakeCommandLine)
-        if cmakeResult != 0:
+        cmd = f'"{vcVars}" && {nmakeCommandLine}'
+
+        print("cmd: " + cmd)
+        nmakeResult = systemManager.execute(cmd)
+        if nmakeResult != 0:
             sys.exit(-1)
 
-        # systemManager.changeDirectory(os.path.join(buildPathName, "apr"))
+        nmakeCommandLine = f"nmake install "
 
-        # nmakeCommandLine = (
-        #     f'nmake /f "{Program._FILE_NAME_MAKEFILE}" '
-        #     + f"CFG={"release" if (buildSettings.ReleaseSpecified()) else "debug"} "
-        #     + f"PREFIX={os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL) } "
-        #     + f'ARCH="{"x64" if (buildSettings.X64Specified()) else "Win32"} {"Release" if (buildSettings.ReleaseSpecified()) else "Debug"}" '
-        #     + f'USEMAK=1 '
-        #     + f" buildall install "
-        # )
+        cmd = f'"{vcVars}" && {nmakeCommandLine}'
 
-        # cmd = f'"{vcVars}" && {nmakeCommandLine}'
-
-        # print("cmd: " + cmd)
-        # nmakeResult = systemManager.execute(cmd)
-        # if nmakeResult != 0:
-        #     sys.exit(-1)
-
-        # systemManager.changeDirectory(os.path.join(buildPathName, "apr-iconv"))
-
-        # nmakeCommandLine = (
-        #     f'nmake /f "{Program._FILE_NAME_ICONV_MAKEFILE}" '
-        #     + f"PREFIX={os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL) } "
-        #     + f'CFG="apriconv - {"x64" if (buildSettings.X64Specified()) else "Win32"} {"Release" if (buildSettings.ReleaseSpecified()) else "Debug"}" '
-        #     + f"USEMAK=1 "
-        #     + f"  "
-        # )
-
-        # cmd = f'"{vcVars}" && {nmakeCommandLine}'
-
-        # print("cmd: " + cmd)
-        # nmakeResult = systemManager.execute(cmd)
-        # if nmakeResult != 0:
-        #     sys.exit(-1)
-
-        # systemManager.changeDirectory(os.path.join(buildPathName, "apr-util"))
-
-        # nmakeCommandLine = (
-        #     f'nmake /f "{Program._FILE_NAME_MAKEFILE}" '
-        #     + f"CFG='{"Release" if (buildSettings.ReleaseSpecified()) else "Debug"}' "
-        #     + f"PREFIX={os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL) } "
-        #     + f'ARCH="{"x64" if (buildSettings.X64Specified()) else "Win32"} {"Release" if (buildSettings.ReleaseSpecified()) else "Debug"}" '
-        #     + f"USEMAK=1 "
-        #     + f" buildall install "
-        # )
-
-        # cmd = f'"{vcVars}" && {nmakeCommandLine}'
-
-        # print("cmd: " + cmd)
-        # nmakeResult = systemManager.execute(cmd)
-        # if nmakeResult != 0:
-        #     sys.exit(-1)
+        print("cmd: " + cmd)
+        nmakeResult = systemManager.execute(cmd)
+        if nmakeResult != 0:
+            sys.exit(-1)
 
         systemManager.removeDirectory(
             os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
         )
+
         systemManager.distributeFiles(
             os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "include"),
             os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
-            "*.h",
+            "*.h"
         )
 
-        libdir = os.path.join(buildPathName,Program._PATH_NAME_NMAKE_INSTALL, "lib")
+        libdir = os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "lib")
         bindir = os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "bin")
 
-        # we need to rename the debug libs to have a _d suffix (they have a 'd' suffix now)
-        for f in glob.glob(os.path.join(libdir, "*.lib")):
-            systemManager.copyFile(f, os.path.join(sdkOutDir, f.replace("-1.lib", f"{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib")))
+        systemManager.distributeFiles(
+            libdir,
+            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            "*.lib",
+            suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX,
+        )
 
         for f in glob.glob(os.path.join(bindir, "*.dll")):
-            systemManager.copyFile(f, os.path.join(sdkOutDir, f.replace("-1.dll", f"{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.dll")))
+            fname = f[len(bindir) + 1 :]
+            dst = os.path.join(
+                    sdkOutDir,
+                    fname.replace(
+                        f"-3-{pathFinder.PATH_NAME_X64 if buildSettings.X64Specified() else pathFinder._PATH_NAME_X86}.dll",
+                        f"{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.dll",
+                    )
+                )
+            systemManager.copyFile(f,dst)
+
+        for f in glob.glob(os.path.join(libdir, "**/*.dll"), recursive=True):
+            fname = f[len(bindir) + 1 :]
+            systemManager.copyFile(f, os.path.join(sdkOutDir, fname.replace(f".dll", f"{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.dll")))
 
         if not buildSettings.ReleaseSpecified():
-            for f in glob.glob(os.path.join(libdir, "*.pdb")):
-                systemManager.copyFile(f, os.path.join(sdkOutDir, f.replace("-1.pdb", f"{Program._DEBUG_SUFFIX}.pdb")))
+            for f in glob.glob(os.path.join(bindir, "**/*.pdb"), recursive=True):
+                fname = f[len(bindir) + 1 :]
+                systemManager.copyFile(f, os.path.join(sdkOutDir, fname.replace(f"-3-{pathFinder.PATH_NAME_X64 if buildSettings.X64Specified() else pathFinder._PATH_NAME_X86}.pdb", f"{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.pdb")))
+            for f in glob.glob(os.path.join(libdir, "**/*.pdb"), recursive=True):
+                fname = f[len(bindir) + 1 :]
+                systemManager.copyFile(f, os.path.join(sdkOutDir, fname.replace(f".pdb", f"{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.pdb")))
 
 
 # --------------------------------------------------------------------------

@@ -37,13 +37,6 @@ class PathFinder:
     _PATH_NAME_MSBUILD = "MSBuild\\Current"
     # ----------------------------------------------------------------------
 
-    # ----------------------------------------------------------------------
-    # the relative 64-bit path
-    _PATH_NAME_X64 = "x64"
-    # ----------------------------------------------------------------------
-    # the relative 32-bit path
-    _PATH_NAME_X86 = "x86"
-    # ----------------------------------------------------------------------
     # the relative 64-bit bin path
     _PATH_NAME_BIN_X64 = "amd64"
     # ----------------------------------------------------------------------
@@ -100,6 +93,13 @@ class PathFinder:
 
     # The path to the sed.exe executable
     PATH_SED_EXECUTABLE = "D:\\Users\\tim.tisler\\Apps\\GnuWin32\\bin"
+    # ----------------------------------------------------------------------
+    # the relative 64-bit path
+    PATH_NAME_X64 = "x64"
+    # ----------------------------------------------------------------------
+    # the relative 32-bit path
+    PATH_NAME_X86 = "x86"
+    # ----------------------------------------------------------------------
 
     # --------------------------------------------------------------------------
     # constructors
@@ -194,7 +194,7 @@ class PathFinder:
             self._getMSVCPathName(x64Specified),
             "bin",
             "Hostx64",
-            (PathFinder._PATH_NAME_X64 if x64Specified else PathFinder._PATH_NAME_X86),
+            (PathFinder.PATH_NAME_X64 if x64Specified else PathFinder.PATH_NAME_X86),
             PathFinder._FILE_NAME_NMAKE
         )
 
@@ -217,7 +217,7 @@ class PathFinder:
             self._getMSVCPathName(x64Specified),
             "bin",
             "Hostx64",
-            (PathFinder._PATH_NAME_X64 if x64Specified else PathFinder._PATH_NAME_X86),
+            (PathFinder.PATH_NAME_X64 if x64Specified else PathFinder.PATH_NAME_X86),
             PathFinder._FILE_NAME_NMAKE,
         )
 
@@ -238,7 +238,7 @@ class PathFinder:
 
         pathName = os.path.join(
             PathFinder._PATH_NAME_QT,
-            PathFinder._PATH_NAME_X64 if x64Specified else PathFinder._PATH_NAME_X86,
+            PathFinder.PATH_NAME_X64 if x64Specified else PathFinder.PATH_NAME_X86,
         )
 
         if not os.path.exists(pathName):
@@ -358,7 +358,7 @@ class PathFinder:
         pathName = os.path.join(
             self.getATLPathName(x64Specified),
             "lib",
-            (PathFinder._PATH_NAME_X64 if (x64Specified) else PathFinder._PATH_NAME_BIN_X86),
+            (PathFinder.PATH_NAME_X64 if (x64Specified) else PathFinder._PATH_NAME_BIN_X86),
         )
         if not os.path.exists(pathName):
             raise Exception(f"Bad ATL include pathname {pathName}")
@@ -434,7 +434,7 @@ class PathFinder:
         pathName = os.path.join(
             self._getMSVCPathName(x64Specified),
             "lib",
-            (PathFinder._PATH_NAME_X64 if (x64Specified) else PathFinder._PATH_NAME_X86)
+            (PathFinder.PATH_NAME_X64 if (x64Specified) else PathFinder.PATH_NAME_X86)
         )
         if not os.path.exists(pathName):
             raise Exception(f"Bad MSVC pathname {pathName}")
@@ -635,7 +635,7 @@ class PathFinder:
         pathName = os.path.join(
             self._getWindowsSdkLibraryPathName(x64Specified),
             "ucrt",
-            (PathFinder._PATH_NAME_X64 if (x64Specified) else PathFinder._PATH_NAME_X86)
+            (PathFinder.PATH_NAME_X64 if (x64Specified) else PathFinder.PATH_NAME_X86)
 
         )
         if not os.path.exists(pathName):
@@ -656,7 +656,7 @@ class PathFinder:
         pathName = os.path.join(
             self._getWindowsSdkLibraryPathName(x64Specified),
             "um",
-            (PathFinder._PATH_NAME_X64 if (x64Specified) else PathFinder._PATH_NAME_X86)
+            (PathFinder.PATH_NAME_X64 if (x64Specified) else PathFinder.PATH_NAME_X86)
 
         )
         if not os.path.exists(pathName):
@@ -699,9 +699,9 @@ class PathFinder:
             "bin",
             PathFinder._PATH_NAME_WINDOWS_SDK_VERSION,
             (
-                PathFinder._PATH_NAME_X64
+                PathFinder.PATH_NAME_X64
                 if (x64Specified)
-                else PathFinder._PATH_NAME_X86
+                else PathFinder.PATH_NAME_X86
             ),
         )
         if not os.path.exists(pathName):
@@ -764,9 +764,9 @@ class PathFinder:
             "Lib",
             "um",
             (
-                PathFinder._PATH_NAME_X64
+                PathFinder.PATH_NAME_X64
                 if (x64Specified)
-                else PathFinder._PATH_NAME_X86
+                else PathFinder.PATH_NAME_X86
             ),
         )
         if not os.path.exists(pathName):

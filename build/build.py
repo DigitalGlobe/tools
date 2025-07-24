@@ -149,6 +149,9 @@ class Program :
     # the name of the build file to build OpenSceneGraph
     _FILE_NAME_BUILD_OSG = "build_osg.py"
     # ----------------------------------------------------------------------
+    # the name of the build file to build OpenSSL
+    _FILE_NAME_BUILD_OPENTHREADS = "build_openssl.py"
+    # ----------------------------------------------------------------------
     # the name of the build file to build OpenThreads
     _FILE_NAME_BUILD_OPENTHREADS = "build_openthreads.py"
     # ----------------------------------------------------------------------
@@ -266,12 +269,13 @@ class Program :
 
             # build libraries that depend on other libraries
             #     (order does matter)
+            # self._build(Program._FILE_NAME_BUILD_OPENSSL)
             # self._build(Program._FILE_NAME_BUILD_LIBSSH2)
             # self._build(Program._FILE_NAME_BUILD_CURL)
             # self._build(Program._FILE_NAME_BUILD_FIREBIRD)
             # self._build(Program._FILE_NAME_BUILD_HDF5)
             # self._build(Program._FILE_NAME_BUILD_HAWKNL)
-            self._build(Program._FILE_NAME_BUILD_QWT)
+            # self._build(Program._FILE_NAME_BUILD_QWT)
             self._build(Program._FILE_NAME_BUILD_APR_UTIL)
             self._build(Program._FILE_NAME_BUILD_CRYPTOWRAPPER)
             self._build(Program._FILE_NAME_BUILD_MINIZIP)

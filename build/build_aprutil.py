@@ -1,18 +1,18 @@
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 #
 # build_aprutil.py
 #
 # Summary : Builds the APR Util library.
 #
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 #
 # build_apr.py
 #
 # Summary : Builds the APR library.
 #
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 
 import glob
@@ -20,318 +20,171 @@ import os
 import sys
 
 from BuildSettingSet import *
-from PathFinder      import *
-from SystemManager   import *
+from PathFinder import *
+from SystemManager import *
 from FileDistributor import *
 from XmlUtils import *
 
-#------------------------------------------------------------------------------
-# The Program class represents the main class of the script.
-class Program :
 
-    #--------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# The Program class represents the main class of the script.
+class Program:
+
+    # --------------------------------------------------------------------------
     # constants
 
-        #----------------------------------------------------------------------
-        # a description of what the script does
-        DESCRIPTION = "Builds the APR Util library."
-        #----------------------------------------------------------------------
-        # the name of the dynamic solution file
-        _FILE_NAME_SOLUTION = "libexpat.vcxproj"
-        _FILE_NAME_SOLUTION_2 = "libaprutil-1.vcxproj"
-        _FILE_NAME_SOLUTION_3 = "aprutil-1.vcxproj"
+    # ----------------------------------------------------------------------
+    # a description of what the script does
+    DESCRIPTION = "Builds the APR Util library."
+    # ----------------------------------------------------------------------
+    # the name of the path that will contain intermediary build files
+    _PATH_NAME_BUILD = "aprutil"
+    # ----------------------------------------------------------------------
+    # the name of the path that contains the source code
+    _PATH_NAME_SOURCE = "..\\src\\aprutil"
+    # ----------------------------------------------------------------------
+    # the name of the release makefile
+    _FILE_NAME_MAKEFILE = "Makefile.win"
+    # ----------------------------------------------------------------------
 
-        #----------------------------------------------------------------------
-        # the name of the path that will contain intermediary build files
-        _PATH_NAME_BUILD = "APRUtil"
-        #----------------------------------------------------------------------
-        # the name of the path that contains the source code
-        _PATH_NAME_SOURCE = "..\\src\\APRUtil"
-        #----------------------------------------------------------------------
+    _DEBUG_SUFFIX = "_d"
+    # ----------------------------------------------------------------------
+    # the pattern for binary files
+    _FILE_PATTERN_BINARY = "*.exe"
+    # ----------------------------------------------------------------------
+    # the name of the path that will contain built 32-bit binary files
+    _PATH_NAME_BINARY_X86 = "..\\sdk\\x86\\bin"
+    # ----------------------------------------------------------------------
+    # the name of the path that will contain built 64-bit binary files
+    _PATH_NAME_BINARY_X64 = "..\\sdk\\x64\\bin"
 
-        # the name of the path that contains the cmake files
-        _PATH_NAME_CMAKE_SOURCE = "."
+    # the name of the path that will contain built 32-bit library files
+    _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
+    # ----------------------------------------------------------------------
+    # the name of the path that will contain built 64-bit library files
+    _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
-        _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
-        _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
+    # the name of the path for all include files
+    _PATH_NAME_INCLUDE = "."
+    # ----------------------------------------------------------------------
+    # the name of the distribution path for all include files
+    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\aprutil"
+    # ----------------------------------------------------------------------
 
-        _LIBNAME = 'libaprutil'
-        _LIBNAME_STATIC = 'aprutil'
-        _DEBUG_SUFFIX = '_d'
+    _PATH_NAME_NMAKE_INSTALL = "install"
 
-        _QT_DIR_X86 = '..\\..\\QT\\5.7\\x86\\lib\cmake\\qt5'
-        _QT_DIR_X64 = '..\\..\\QT\\5.7\\x64\\lib\cmake\\qt5'
-
-        _APR_INCLUDE_DIR = '..\\..\\include\\apr'
-
-        _APR_LIBRARY_DEBUG_x86 = '..\\..\\sdk\\x86\\lib\\libapr_d.lib'
-        _APR_LIBRARY_RELEASE_x86 = '..\\..\\sdk\\x86\\lib\\libapr.lib'
-
-        _APR_LIBRARY_DEBUG_x64 = '..\\..\\sdk\\x64\\lib\\libapr_d.lib'
-        _APR_LIBRARY_RELEASE_x64 = '..\\..\\sdk\\x64\\lib\\libapr.lib'
-
-        # the name of the path for all include files
-        _PATH_NAME_INCLUDE = '.'
-        _PATH_NAME_INCLUDE_2 = 'include'
-        #----------------------------------------------------------------------
-        # the name of the distribution path for all include files
-        _PATH_NAME_DISTRIBUTION_INCLUDE = '..\\..\\include\\aprutil'
-        #----------------------------------------------------------------------
-
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
     # constructors
 
-        #----------------------------------------------------------------------
-        # Constructs this program.
-        #
-        # Parameters :
-        #     self : this program
-        def __init__(self) :
+    # ----------------------------------------------------------------------
+    # Constructs this program.
+    #
+    # Parameters :
+    #     self : this program
+    def __init__(self):
 
-            pass
-        #----------------------------------------------------------------------
+        pass
 
-    #--------------------------------------------------------------------------
+    # ----------------------------------------------------------------------
+
+    # --------------------------------------------------------------------------
     # public methods
 
-        #----------------------------------------------------------------------
-        # The main method of the program.
-        #
-        # Parameters :
-        #     self : this program
-        def main(self) :
+    # ----------------------------------------------------------------------
+    # The main method of the program.
+    #
+    # Parameters :
+    #     self : this program
+    def main(self):
 
-            systemManager = SystemManager()
-            pathFinder    = PathFinder()
-            xmlUtils = XmlUtils()
+        systemManager = SystemManager()
+        pathFinder = PathFinder()
 
-            # process command-line arguments
-            buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
+        # process command-line arguments
+        buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
 
-            # initialize environment variables
-            systemManager.initializeIncludeEnvironmentVariable( buildSettings.X64Specified() )
-            systemManager.initializeLibraryEnvironmentVariable( buildSettings.X64Specified() )
+        # initialize environment variables
+        systemManager.initializeIncludeEnvironmentVariable(buildSettings.X64Specified())
+        systemManager.initializeLibraryEnvironmentVariable(buildSettings.X64Specified())
 
-            systemManager.appendToPathEnvironmentVariable( pathFinder.getVisualStudioBinPathName( buildSettings.X64Specified() ) )
-            systemManager.appendToPathEnvironmentVariable( Program._QT_DIR_X64 if buildSettings.X64Specified() else Program._QT_DIR_X86  + '\\bin')
+        # MSBuild is under "Program Files (x86)"
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getMSBuildFileName(buildSettings.X64Specified())
+        )
 
-            # MSBuild is under "Program Files (x86)"
-            systemManager.appendToPathEnvironmentVariable( os.path.join( systemManager.getProgramFilesPathName(False) , \
-                                                                             "MSBuild\\14.0\\Bin") )
+        vcVars = pathFinder.getVCVARSFileName(buildSettings.X64Specified())
 
-            compileOutDir = ""
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getWindowsSdkBinPathName(buildSettings.X64Specified())
+        )
 
-            systemManager.appendToPathEnvironmentVariable( pathFinder.getWindowsSdkPathName(buildSettings.X64Specified()) )
+        # determine path names
+        buildPathName = systemManager.getCurrentRelativePathName(
+            Program._PATH_NAME_BUILD
+        )
+        sourcePathName = systemManager.getCurrentRelativePathName(
+            Program._PATH_NAME_SOURCE
+        )
 
-            # get the paths
-            buildPathName  = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD)
-            sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
-            sdkOutDir = buildPathName + "\\..\\" + (Program._PATH_NAME_DISTRIBUTION_X64 if buildSettings.X64Specified() else Program._PATH_NAME_DISTRIBUTION_X86)
+        sdkOutDir = (
+            buildPathName
+            + "\\..\\"
+            + (
+                Program._PATH_NAME_DISTRIBUTION_X64
+                if buildSettings.X64Specified()
+                else Program._PATH_NAME_DISTRIBUTION_X86
+            )
+        )
 
-            # remove build dir
-            systemManager.changeDirectory(sourcePathName)
-            systemManager.removeDirectory(buildPathName)
+        # remove build dir
+        systemManager.removeDirectory(buildPathName)
 
-            #copy UriParser to the Build area
-            systemManager.copyDirectory( sourcePathName, buildPathName)
+        systemManager.copyDirectory(sourcePathName, buildPathName)
 
-            # start building
-            systemManager.changeDirectory(buildPathName)
+        systemManager.changeDirectory(buildPathName)
 
-            buildSourceName  = os.path.join( buildPathName , Program._PATH_NAME_CMAKE_SOURCE)
+        nmakeCommandLine = (
+            f'nmake /f "{Program._FILE_NAME_MAKEFILE}" '
+            + f"CFG='{"Release" if (buildSettings.ReleaseSpecified()) else "Debug"}' "
+            + f"PREFIX={os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL) } "
+            + f'ARCH="{"x64" if (buildSettings.X64Specified()) else "Win32"} {"Release" if (buildSettings.ReleaseSpecified()) else "Debug"}" '
+            + f'USEMAK=1 '
+            + f" buildall install "
+        )
 
-            # determine file names
-            if ( buildSettings.ReleaseSpecified() and \
-                 buildSettings.X64Specified()       ) :
-                 aprFileName                = os.path.join( buildPathName , \
-                                                             Program._APR_LIBRARY_RELEASE_x64                               )
-            elif ( buildSettings.ReleaseSpecified() ) :
-                 aprFileName                = os.path.join( buildPathName , \
-                                                             Program._APR_LIBRARY_RELEASE_x86                               )
-            elif ( buildSettings.X64Specified() ) :
-                 aprFileName                = os.path.join( buildPathName , \
-                                                             Program._APR_LIBRARY_DEBUG_x64                               )
-            else :
-                 aprFileName                = os.path.join( buildPathName , \
-                                                             Program._APR_LIBRARY_DEBUG_x86                               )
+        cmd = f'"{vcVars}" && {nmakeCommandLine}'
 
-            aprIncludeFileName = os.path.join( buildPathName , Program._APR_INCLUDE_DIR                               )
+        print("cmd: " + cmd)
+        nmakeResult = systemManager.execute(cmd)
+        if nmakeResult != 0:
+            sys.exit(-1)
 
+        systemManager.removeDirectory(
+            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
+        )
+        systemManager.distributeFiles(
+            os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "include"),
+            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            "*.h",
+        )
 
-            # run CMake
-            if ( buildSettings.X64Specified() ) :
+        libdir = os.path.join(buildPathName,Program._PATH_NAME_NMAKE_INSTALL, "lib")
+        bindir = os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "bin")
 
-                cmakeCommandLine = ( ( "%s "                                + \
-                                       "-G\"Visual Studio 14 2015 Win64\" " + \
-                                       "-DAPR_INCLUDE_DIR=\"" + aprIncludeFileName + "\" " + \
-                                       "-DAPR_LIBRARIES=\"" + aprFileName + "\" " + \
-                                       "\"%s\""                             ) % \
-                                     ( PathFinder.FILE_NAME_CMAKE , \
-                                       buildSourceName             ) )
+        # we need to rename the debug libs to have a _d suffix (they have a 'd' suffix now)
+        for f in glob.glob(os.path.join(libdir, "*.lib")):
+            systemManager.copyFile(f, os.path.join(sdkOutDir, f.replace("-1.lib", f"{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib")))
 
-            else :
+        for f in glob.glob(os.path.join(bindir, "*.dll")):
+            systemManager.copyFile(f, os.path.join(sdkOutDir, f.replace("-1.dll", f"{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.dll")))
 
-                cmakeCommandLine = ( ( "%s "                                + \
-                                       "-G\"Visual Studio 14 2015\" " + \
-                                       "-DAPR_INCLUDE_DIR=\"" + aprIncludeFileName + "\" " + \
-                                       "-DAPR_LIBRARIES=\"" + aprFileName + "\" " + \
-                                       "\"%s\""                             ) % \
-                                     ( PathFinder.FILE_NAME_CMAKE , \
-                                       buildSourceName             ) )
-
-
-            print('cmake: ' + cmakeCommandLine)
-            systemManager.changeDirectory(buildPathName)
-            cmakeResult = systemManager.execute(cmakeCommandLine)
-            if (cmakeResult != 0) :
-                sys.exit(-1)
-
-            conf = "Release" if ( buildSettings.ReleaseSpecified() ) else "Debug"
-            platform  = 'x64' if buildSettings.X64Specified() else 'Win32'
-
-            # build local libexpat
-            solutionFileName   = os.path.join( buildPathName               , \
-                                               Program._FILE_NAME_SOLUTION )
-            msBuildCommandLine = ( "\"%s\" "                  + \
-                                     "/p:platform=%s " ) % \
-                                   ( pathFinder.getMSBuildFileName( buildSettings.X64Specified()), platform )
+        if not buildSettings.ReleaseSpecified():
+            for f in glob.glob(os.path.join(libdir, "*.pdb")):
+                systemManager.copyFile(f, os.path.join(sdkOutDir, f.replace("-1.pdb", f"{Program._DEBUG_SUFFIX}.pdb")))
 
 
-            buildOutDir   = os.path.join( buildPathName, 'build-local' )
-            propfile   = os.path.join( buildPathName, 'linker.props' )
+# --------------------------------------------------------------------------
 
-            # msBuildCommandLine += ' /p:OutDir=' + buildOutDir
-            msBuildCommandLine += ' /p:SolutionDir=' + buildPathName + '\\'
-            msBuildCommandLine += ' /p:Configuration=' + conf
-            msBuildCommandLine += ' /p:BuildProjectReferences=false'
-            linkerprops = {}
-            if buildSettings.ReleaseSpecified():
-                linkerprops['DebugSymbols'] = 'false'
-            else:
-                linkerprops['DebugSymbols'] = 'true'
-                linkerprops['DebugType'] = 'full'
-
-            msBuildCommandLine +=  ' /p:ForceImportBeforeCppTargets="' + propfile + '"'
-            msBuildCommandLine += ' "' + solutionFileName + '"'
-
-            print('cmd: ' + msBuildCommandLine)
-
-            msbuildResult = systemManager.execute(msBuildCommandLine)
-            if (msbuildResult != 0) :
-                sys.exit(-1)
-
-
-            # Build the dynamic lib
-            solutionFileName   = os.path.join( buildPathName               , \
-                                   Program._FILE_NAME_SOLUTION_2 )
-            msBuildCommandLine = ( "\"%s\" "                  + \
-                                     "/p:platform=%s " ) % \
-                                   ( pathFinder.getMSBuildFileName( buildSettings.X64Specified()), platform )
-
-            dllName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".dll"
-            libName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".lib"
-            pdbName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".pdb"
-
-            buildOutDir   = os.path.join( buildPathName, 'build' )
-            propfile   = os.path.join( buildPathName, 'linker.props' )
-
-            msBuildCommandLine += ' /p:OutDir=' + buildOutDir
-            msBuildCommandLine += ' /p:TargetExtension=dll'
-            msBuildCommandLine += ' /p:SolutionDir=' + buildPathName + '\\'
-            msBuildCommandLine += ' /p:TargetName=' + Program._LIBNAME + ('' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX)
-            msBuildCommandLine += ' /p:Configuration=' + conf
-            msBuildCommandLine += ' /p:BuildProjectReferences=false'
-            linkerprops = {}
-            linkerprops['OutputFile'] = os.path.join( buildOutDir, dllName )
-            linkerprops['ImportLibrary'] = os.path.join( buildOutDir, libName )
-            if buildSettings.ReleaseSpecified():
-                linkerprops['DebugSymbols'] = 'false'
-            else:
-                linkerprops['DebugSymbols'] = 'true'
-                linkerprops['DebugType'] = 'full'
-                linkerprops['ProgramDatabaseFile'] = '$(OutDir)\\' + pdbName
-
-            xmlUtils.buildDll(conf, platform, {}, linkerprops, propfile)
-
-            msBuildCommandLine +=  ' /p:ForceImportBeforeCppTargets="' + propfile + '"'
-            msBuildCommandLine += ' "' + solutionFileName + '"'
-            print('cmd: ' + msBuildCommandLine)
-
-            msbuildResult = systemManager.execute(msBuildCommandLine)
-            if (msbuildResult != 0) :
-                sys.exit(-1)
-
-            systemManager.copyFile( os.path.join( buildOutDir, libName ) , \
-                                    os.path.join( sdkOutDir , libName) )
-            systemManager.copyFile( os.path.join( buildOutDir, dllName ) , \
-                                    os.path.join( sdkOutDir , dllName) )
-            if not buildSettings.ReleaseSpecified():
-                systemManager.copyFile( os.path.join( buildOutDir, pdbName ) , \
-                                        os.path.join( sdkOutDir , pdbName) )
-
-            # Build the static lib
-            solutionFileName   = os.path.join( buildPathName               , \
-                                   Program._FILE_NAME_SOLUTION_3 )
-            msBuildCommandLine = ( "\"%s\" "                  + \
-                                     "/p:platform=%s " ) % \
-                                   ( pathFinder.getMSBuildFileName( buildSettings.X64Specified()), platform )
-
-            libName = Program._LIBNAME_STATIC + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".lib"
-            pdbName = Program._LIBNAME_STATIC + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".pdb"
-
-            buildOutDir   = os.path.join( buildPathName, 'build' )
-            propfile   = os.path.join( buildPathName, 'linker.props' )
-
-            msBuildCommandLine += ' /p:OutDir=' + buildOutDir
-            msBuildCommandLine += ' /p:TargetExtension=lib'
-            msBuildCommandLine += ' /p:SolutionDir=' + buildPathName + '\\'
-            msBuildCommandLine += ' /p:TargetName=' + Program._LIBNAME_STATIC + ('' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX)
-            msBuildCommandLine += ' /p:Configuration=' + conf
-            msBuildCommandLine += ' /p:BuildProjectReferences=false'
-            linkerprops = {}
-            linkerprops['OutputFile'] = os.path.join( buildOutDir, libName )
-            if buildSettings.ReleaseSpecified():
-                linkerprops['DebugSymbols'] = 'false'
-            else:
-                linkerprops['DebugSymbols'] = 'true'
-                linkerprops['DebugType'] = 'full'
-                linkerprops['ProgramDatabaseFile'] = '$(OutDir)\\' + pdbName
-
-            if buildSettings.ReleaseSpecified():
-                compprops = {'DebugInformationFormat':'None'}
-            else:
-                compprops = {'DebugInformationFormat':'ProgramDatabase', 'ProgramDataBaseFileName':os.path.join( buildOutDir, pdbName )}
-
-            xmlUtils.buildLib(conf, platform, compprops, linkerprops, propfile)
-
-            msBuildCommandLine +=  ' /p:ForceImportBeforeCppTargets="' + propfile + '"'
-            msBuildCommandLine += ' "' + solutionFileName + '"'
-            print('cmd: ' + msBuildCommandLine)
-
-            msbuildResult = systemManager.execute(msBuildCommandLine)
-            if (msbuildResult != 0) :
-                sys.exit(-1)
-
-            systemManager.removeDirectory(os.path.join( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE))
-            systemManager.distributeFiles(os.path.join( buildPathName, Program._PATH_NAME_INCLUDE),              \
-                              os.path.join( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE), \
-                              '*.h',                                                                 \
-                              True, False)
-            systemManager.distributeFiles(os.path.join( buildPathName, Program._PATH_NAME_INCLUDE_2),              \
-                              os.path.join( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE), \
-                              '*.h',                                                                 \
-                              True, False)
-
-            systemManager.copyFile( os.path.join( buildOutDir, libName ) , \
-                                    os.path.join( sdkOutDir , libName) )
-            if not buildSettings.ReleaseSpecified():
-                systemManager.copyFile( os.path.join( buildOutDir, pdbName ) , \
-                                        os.path.join( sdkOutDir , pdbName) )
-
-            #----------------------------------------------------------------------
-
-    #--------------------------------------------------------------------------
-
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 Program().main()
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
