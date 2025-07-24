@@ -82,6 +82,7 @@ build/nghttp2/*
 build/OGDI/*
 build/OpenCV/*
 build/OpenDIS/*
+build/OpenSSL/*
 build/OpenThreads/*
 build/PoDoFo/*
 build/PROJ.4/*
