@@ -231,7 +231,7 @@ SET(dbd_drivers)
 # libaprutil-1 is shared, aprutil-1 is static
 ADD_LIBRARY(libaprutil-1 SHARED ${APR_SOURCES} ${APR_PUBLIC_HEADERS_GENERATED} libaprutil.rc)
 SET(install_targets ${install_targets} libaprutil-1)
-SET(install_bin_pdb ${install_bin_pdb} ${PROJECT_BINARY_DIR}/libaprutil-1.pdb)
+SET(install_bin_pdb ${install_bin_pdb} ${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/libaprutil-1.pdb)
 TARGET_LINK_LIBRARIES(libaprutil-1 ${APR_LIBRARIES} ${XMLLIB_LIBRARIES})
 SET_TARGET_PROPERTIES(libaprutil-1 PROPERTIES COMPILE_DEFINITIONS "APU_DECLARE_EXPORT;APR_DECLARE_IMPORT;XML_STATIC;WINNT")
 
@@ -246,7 +246,7 @@ IF(APU_HAVE_CRYPTO)
   ENDIF()
   ADD_LIBRARY(apr_crypto_openssl-1 SHARED crypto/apr_crypto_openssl.c libaprutil.rc)
   SET(install_targets ${install_targets} apr_crypto_openssl-1)
-  SET(install_bin_pdb ${install_bin_pdb} ${PROJECT_BINARY_DIR}/apr_crypto_openssl-1.pdb)
+  SET(install_bin_pdb ${install_bin_pdb} ${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/apr_crypto_openssl-1.pdb)
   SET_TARGET_PROPERTIES(apr_crypto_openssl-1 PROPERTIES INCLUDE_DIRECTORIES "${APR_INCLUDE_DIRECTORIES};${OPENSSL_INCLUDE_DIR}")
   SET_TARGET_PROPERTIES(apr_crypto_openssl-1 PROPERTIES COMPILE_DEFINITIONS "WINNT")
   SET_TARGET_PROPERTIES(apr_crypto_openssl-1 PROPERTIES COMPILE_FLAGS "-DAPR_DECLARE_IMPORT -DAPU_DECLARE_IMPORT -DDLL_NAME=apr_crypto_openssl")
@@ -256,7 +256,7 @@ ENDIF()
 IF(APU_HAVE_ODBC)
   ADD_LIBRARY(apr_dbd_odbc-1 SHARED dbd/apr_dbd_odbc.c libaprutil.rc)
   SET(install_targets ${install_targets} apr_dbd_odbc-1)
-  SET(install_bin_pdb ${install_bin_pdb} ${PROJECT_BINARY_DIR}/apr_dbd_odbc-1.pdb)
+  SET(install_bin_pdb ${install_bin_pdb} ${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/apr_dbd_odbc-1.pdb)
   SET(dbd_drivers ${dbd_drivers} odbc)
   TARGET_LINK_LIBRARIES(apr_dbd_odbc-1 libaprutil-1 ${APR_LIBRARIES} odbc32 odbccp32)
   SET_PROPERTY(TARGET apr_dbd_odbc-1 APPEND PROPERTY LINK_FLAGS /export:apr_dbd_odbc_driver)
@@ -265,10 +265,10 @@ IF(APU_HAVE_ODBC)
 ENDIF()
 
 IF(APR_HAS_LDAP)
-  ADD_LIBRARY(apr_ldap-1 SHARED ldap/apr_ldap_init.c ldap/apr_ldap_option.c 
+  ADD_LIBRARY(apr_ldap-1 SHARED ldap/apr_ldap_init.c ldap/apr_ldap_option.c
               ldap/apr_ldap_rebind.c libaprutil.rc)
   SET(install_targets ${install_targets} apr_ldap-1)
-  SET(install_bin_pdb ${install_bin_pdb} ${PROJECT_BINARY_DIR}/apr_ldap-1.pdb)
+  SET(install_bin_pdb ${install_bin_pdb} ${PROJECT_BINARY_DIR}/${CMAKE_BUILD_TYPE}/apr_ldap-1.pdb)
   TARGET_LINK_LIBRARIES(apr_ldap-1 libaprutil-1 ${APR_LIBRARIES} ${LDAP_LIBRARIES})
   SET_TARGET_PROPERTIES(apr_ldap-1 PROPERTIES COMPILE_DEFINITIONS "WINNT")
   SET_TARGET_PROPERTIES(apr_ldap-1 PROPERTIES COMPILE_FLAGS "-DAPR_DECLARE_IMPORT -DAPU_DECLARE_IMPORT -DDLL_NAME=apr_ldap")
@@ -283,9 +283,9 @@ IF(APR_BUILD_TESTAPR)
   ADD_CUSTOM_TARGET(check COMMAND ${CMAKE_CTEST_COMMAND} --verbose)
 
   # copy data files to build directory so that we can run programs from there
-  EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E make_directory 
+  EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E make_directory
                   ${PROJECT_BINARY_DIR}/data)
-  EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy_if_different 
+  EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy_if_different
                   ${PROJECT_SOURCE_DIR}/test/data/billion-laughs.xml
                   ${PROJECT_BINARY_DIR}/data/billion-laughs.xml)
 
@@ -326,6 +326,7 @@ INSTALL(TARGETS ${install_targets}
        )
 
 IF(INSTALL_PDB)
+  MESSAGE(STATUS "Installing .pdb files to bin directory  = ${install_bin_pdb}")
   INSTALL(FILES ${install_bin_pdb}
           DESTINATION bin
           CONFIGURATIONS RelWithDebInfo Debug)
@@ -342,6 +343,7 @@ MESSAGE(STATUS "  Build type ...................... : ${CMAKE_BUILD_TYPE}")
 MESSAGE(STATUS "  Install .pdb (if available)...... : ${INSTALL_PDB}")
 MESSAGE(STATUS "  Install prefix .................. : ${CMAKE_INSTALL_PREFIX}")
 MESSAGE(STATUS "  C compiler ...................... : ${CMAKE_C_COMPILER}")
+MESSAGE(STATUS "  Project binary directory ........ : ${PROJECT_BINARY_DIR}")
 MESSAGE(STATUS "  APR include directory ........... : ${APR_INCLUDE_DIR}")
 MESSAGE(STATUS "  APR libraries ................... : ${APR_LIBRARIES}")
 MESSAGE(STATUS "  DBD ODBC driver ................. : ${APU_HAVE_ODBC}")
