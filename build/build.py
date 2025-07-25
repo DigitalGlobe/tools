@@ -233,7 +233,6 @@ class Program :
             # build libraries that do not depend on other libraries
             #     (order does not matter)
             if True:
-                # self._build(Program._FILE_NAME_BUILD_APR)
                 # self._build(Program._FILE_NAME_BUILD_BISON)
                 # self._build(Program._FILE_NAME_BUILD_BOOST)
                 # self._build(Program._FILE_NAME_BUILD_BROTLI)
@@ -270,13 +269,13 @@ class Program :
             # build libraries that depend on other libraries
             #     (order does matter)
             # self._build(Program._FILE_NAME_BUILD_OPENSSL)
+            # self._build(Program._FILE_NAME_BUILD_APR)
             # self._build(Program._FILE_NAME_BUILD_LIBSSH2)
             # self._build(Program._FILE_NAME_BUILD_CURL)
             # self._build(Program._FILE_NAME_BUILD_FIREBIRD)
             # self._build(Program._FILE_NAME_BUILD_HDF5)
             # self._build(Program._FILE_NAME_BUILD_HAWKNL)
             # self._build(Program._FILE_NAME_BUILD_QWT)
-            self._build(Program._FILE_NAME_BUILD_APR_UTIL)
             self._build(Program._FILE_NAME_BUILD_CRYPTOWRAPPER)
             self._build(Program._FILE_NAME_BUILD_MINIZIP)
             self._build(Program._FILE_NAME_BUILD_LIBPNG)
