@@ -85,9 +85,9 @@ class Program:
             Program._PATH_NAME_SOURCE
         )
 
-        nmakeInstallPath = os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL)
+        nmakeInstallPath = pathFinder.path(buildPathName, Program._PATH_NAME_NMAKE_INSTALL)
 
-        sdkOutDir = os.path.join(
+        sdkOutDir = pathFinder.path(
             buildPathName,
             "..",
             (
@@ -105,13 +105,13 @@ class Program:
         systemManager.changeDirectory(buildPathName)
 
         systemManager.copyFile(
-            os.path.join(buildPathName, "include", "iconv.h.msvc-shared"),
-            os.path.join(buildPathName, "include", "iconv.h"),
+            pathFinder.path(buildPathName, "include", "iconv.h.msvc-shared"),
+            pathFinder.path(buildPathName, "include", "iconv.h"),
         )
         # start building
-        srcdir = os.path.join(buildPathName, "lib")
+        srcdir = pathFinder.path(buildPathName, "lib")
 
-        installpath = os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL)
+        installpath = pathFinder.path(buildPathName, Program._PATH_NAME_NMAKE_INSTALL)
 
         # run Nmake
         nmakeCommandLine = (
@@ -136,38 +136,38 @@ class Program:
             sys.exit(-1)
 
         systemManager.removeDirectory(
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
         )
 
         systemManager.copyFile(
-            os.path.join(
+            pathFinder.path(
                 buildPathName,
                 Program._PATH_NAME_NMAKE_INSTALL,
                 Program._PATH_NAME_INCLUDE,
                 "iconv.h",
             ),
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "iconv.h")
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "iconv.h")
         )
         systemManager.copyFile(
-            os.path.join(
+            pathFinder.path(
                 buildPathName,
                 Program._PATH_NAME_NMAKE_INSTALL,
                 Program._PATH_NAME_BIN,
                 "iconv.dll",
             ),
-            os.path.join(
+            pathFinder.path(
                 sdkOutDir,
                 f'{Program._LIBNAME}{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.dll',
             ),
         )
         systemManager.copyFile(
-            os.path.join(
+            pathFinder.path(
                 buildPathName,
                 Program._PATH_NAME_NMAKE_INSTALL,
                 Program._PATH_NAME_LIB,
                 "iconv.lib",
             ),
-            os.path.join(
+            pathFinder.path(
                 sdkOutDir,
                 f'{Program._LIBNAME}{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.lib',
             ),
@@ -175,12 +175,12 @@ class Program:
 
         if not buildSettings.ReleaseSpecified():
             systemManager.copyFile(
-                os.path.join(
+                pathFinder.path(
                     buildPathName,
                     Program._PATH_NAME_LIB,
                     "iconv.pdb",
                 ),
-                os.path.join(
+                pathFinder.path(
                     buildPathName,
                     sdkOutDir,
                     f'{Program._LIBNAME}{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.pdb',

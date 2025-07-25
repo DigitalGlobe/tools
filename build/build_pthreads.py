@@ -116,9 +116,9 @@ class Program:
             Program._PATH_NAME_SOURCE
         )
 
-        nmakeInstallPath = os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL)
+        nmakeInstallPath = pathFinder.path(buildPathName, Program._PATH_NAME_NMAKE_INSTALL)
 
-        sdkOutDir = os.path.join(
+        sdkOutDir = pathFinder.path(
             buildPathName,
             "..",
             (
@@ -150,20 +150,20 @@ class Program:
             sys.exit(-1)
 
         systemManager.removeDirectory(
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
         )
 
         systemManager.distributeFiles(
-            os.path.join(buildPathName, Program._PATH_NAME_INCLUDE),
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            pathFinder.path(buildPathName, Program._PATH_NAME_INCLUDE),
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h",
         )
 
         libName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".lib"
         libNameMake = Program._LIBNAME_MAKE + ( '' if ( buildSettings.ReleaseSpecified() )  else "d") + ".lib"
 
-        systemManager.copyFile( os.path.join( buildPathName, libNameMake ) , \
-                                os.path.join( sdkOutDir , libName) )
+        systemManager.copyFile( pathFinder.path( buildPathName, libNameMake ) , \
+                                pathFinder.path( sdkOutDir , libName) )
 # --------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------

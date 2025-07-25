@@ -124,11 +124,11 @@ class Program:
         #     + buildOutConfig
         #     + "-v140"
         # )
-        buildOutDir = os.path.join(buildPathName, "build")
+        buildOutDir = pathFinder.path(buildPathName, "build")
 
         print("build output dir: " + buildOutDir)
 
-        solutionFileName = os.path.join(buildPathName, Program._FILE_NAME_SOLUTION)
+        solutionFileName = pathFinder.path(buildPathName, Program._FILE_NAME_SOLUTION)
 
         conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
         platform = "x64" if buildSettings.X64Specified() else "Win32"
@@ -142,8 +142,8 @@ class Program:
             solutionFileName,
         )
 
-        buildOutDir = os.path.join(buildPathName, "build")
-        propfile = os.path.join(buildPathName, "linker.props")
+        buildOutDir = pathFinder.path(buildPathName, "build")
+        propfile = pathFinder.path(buildPathName, "linker.props")
 
         linkerprops = {
             # "OutputFile": "$(OutDir)\\" + dllName,
@@ -173,18 +173,18 @@ class Program:
             sys.exit(-1)
 
         systemManager.removeDirectory(
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
         )
         systemManager.distributeFiles(
-            os.path.join(buildPathName, Program._PATH_NAME_INCLUDE),
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            pathFinder.path(buildPathName, Program._PATH_NAME_INCLUDE),
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "vld.h"
         )
 
         # copy output to appropriate bin dir
         print("Copy files into SDK dir")
 
-        sdkOutDir = os.path.join(
+        sdkOutDir = pathFinder.path(
             buildPathName,
             "..",
             (
@@ -195,18 +195,18 @@ class Program:
         )
 
         systemManager.copyFile(
-            os.path.join(buildOutDir, f"vld_{"x64" if buildSettings.X64Specified() else "x86"}.lib"), os.path.join(sdkOutDir, libName)
+            pathFinder.path(buildOutDir, f"vld_{"x64" if buildSettings.X64Specified() else "x86"}.lib"), pathFinder.path(sdkOutDir, libName)
         )
         systemManager.copyFile(
-            os.path.join(buildOutDir, f"vld_{"x64" if buildSettings.X64Specified() else "x86"}.dll"), os.path.join(sdkOutDir, dllName)
+            pathFinder.path(buildOutDir, f"vld_{"x64" if buildSettings.X64Specified() else "x86"}.dll"), pathFinder.path(sdkOutDir, dllName)
         )
         if not buildSettings.ReleaseSpecified():
             systemManager.copyFile(
-                os.path.join(
+                pathFinder.path(
                     buildOutDir,
                     pdbName
                 ),
-                os.path.join(sdkOutDir, pdbName),
+                pathFinder.path(sdkOutDir, pdbName),
             )
 
 

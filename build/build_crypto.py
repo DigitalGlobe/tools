@@ -113,11 +113,11 @@ class Program:
         buildPathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD)
         sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
 
-        nmakeBuildPath = os.path.join(buildPathName, Program._PATH_NAME_BUILD_PATH)
+        nmakeBuildPath = pathFinder.path(buildPathName, Program._PATH_NAME_BUILD_PATH)
 
         systemManager.removeDirectory(nmakeBuildPath)
 
-        sdkOutDir = os.path.join(
+        sdkOutDir = pathFinder.path(
             buildPathName,
             "..",
             (
@@ -144,7 +144,7 @@ class Program:
         platform = "x64" if buildSettings.X64Specified() else "Win32"
 
         # build the solution
-        solutionFileName = os.path.join(buildPathName, Program._FILE_NAME_SOLUTION)
+        solutionFileName = pathFinder.path(buildPathName, Program._FILE_NAME_SOLUTION)
 
         msBuildCommandLine = ( f'"{pathFinder.getMSBuildFileName(buildSettings.X64Specified())}" '
                               + f'/p:platform={platform} '
@@ -154,8 +154,8 @@ class Program:
         libName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".lib"
         pdbName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".pdb"
 
-        buildOutDir   = os.path.join( buildPathName, 'build' )
-        propfile   = os.path.join( buildPathName, 'linker.props' )
+        buildOutDir   = pathFinder.path( buildPathName, 'build' )
+        propfile   = pathFinder.path( buildPathName, 'linker.props' )
 
         msBuildCommandLine += f' /p:OutDir="{buildOutDir}"'
         msBuildCommandLine += f' /p:TargetExtension=dll'
@@ -163,7 +163,7 @@ class Program:
         msBuildCommandLine += f' /p:TargetName={Program._LIBNAME}{"" if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX}'
         msBuildCommandLine += f' /p:Configuration={conf}'
 
-        linkerprops = {'OutputFile':os.path.join( buildOutDir, libName )}
+        linkerprops = {'OutputFile':pathFinder.path( buildOutDir, libName )}
         if buildSettings.ReleaseSpecified():
             linkerprops['DebugSymbols'] = 'false'
         else:
@@ -174,7 +174,7 @@ class Program:
         if buildSettings.ReleaseSpecified():
             compprops = {'DebugInformationFormat':'None'}
         else:
-            compprops = {'DebugInformationFormat':'ProgramDatabase', 'ProgramDataBaseFileName':os.path.join( buildOutDir, pdbName )}
+            compprops = {'DebugInformationFormat':'ProgramDatabase', 'ProgramDataBaseFileName':pathFinder.path( buildOutDir, pdbName )}
 
         xmlUtils.buildLib(conf, platform, compprops, linkerprops, propfile)
 
@@ -188,7 +188,7 @@ class Program:
 
         systemManager.distributeFiles(
             buildPathName,
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h",
         )
 
@@ -197,19 +197,19 @@ class Program:
         dllName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".dll"
 
         systemManager.copyFile(
-            os.path.join(buildOutDir, libName),
-            os.path.join(sdkOutDir, libName),
+            pathFinder.path(buildOutDir, libName),
+            pathFinder.path(sdkOutDir, libName),
         )
 
         # systemManager.copyFile(
-        #     os.path.join(buildOutDir, dllName),
-        #     os.path.join(sdkOutDir, dllName),
+        #     pathFinder.path(buildOutDir, dllName),
+        #     pathFinder.path(sdkOutDir, dllName),
         # )
 
         if not buildSettings.ReleaseSpecified():
             systemManager.copyFile(
-                os.path.join(buildOutDir, pdbName),
-                os.path.join(sdkOutDir, pdbName),
+                pathFinder.path(buildOutDir, pdbName),
+                pathFinder.path(sdkOutDir, pdbName),
             )
 
         # ----------------------------------------------------------------------

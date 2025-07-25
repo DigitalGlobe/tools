@@ -92,15 +92,15 @@ class Program:
             Program._PATH_NAME_SOURCE
         )
 
-        buildSourceName = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
-        cmakeBuildPath = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
-        cmakeInstallPath = os.path.join(
+        buildSourceName = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
+        cmakeBuildPath = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
+        cmakeInstallPath = pathFinder.path(
             cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
         )
 
         systemManager.removeDirectory(cmakeBuildPath)
 
-        sdkOutDir = os.path.join(
+        sdkOutDir = pathFinder.path(
             buildPathName,
             "..",
             (
@@ -126,11 +126,11 @@ class Program:
         conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
         platform = "x64" if buildSettings.X64Specified() else "Win32"
 
-        includeBase = os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..")
+        includeBase = pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..")
         libSuffix = f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
         externalLibs = {
-            "ZLIB_INCLUDE_DIR": os.path.join(includeBase, "zlib"),
-            "ZLIB_LIBRARY": os.path.join(sdkOutDir, f"zlib{libSuffix}"),
+            "ZLIB_INCLUDE_DIR": pathFinder.path(includeBase, "zlib"),
+            "ZLIB_LIBRARY": pathFinder.path(sdkOutDir, f"zlib{libSuffix}"),
         }
 
         externalLibStr = ""
@@ -160,6 +160,7 @@ class Program:
             f"{pathFinder.getCMakeFileName()} "
             + f"--build "
             + f". "
+            + f"-j 1 "
             + f"--config {conf} "
         )
 
@@ -174,7 +175,7 @@ class Program:
             + f". "
             + f"--config {conf} "
             + f"--prefix "
-            + f"{os.path.join(cmakeBuildPath, "install")}"
+            + f"{pathFinder.path(cmakeBuildPath, "install")}"
         )
 
         print("cmake: " + cmakeCommandLine)
@@ -183,29 +184,29 @@ class Program:
             sys.exit(-1)
 
         systemManager.distributeFiles(
-            os.path.join( cmakeInstallPath,"include"),
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            pathFinder.path( cmakeInstallPath,"include"),
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
         )
 
         systemManager.distributeFiles(
-            os.path.join(cmakeInstallPath, "lib"),
-            os.path.join(sdkOutDir),
+            pathFinder.path(cmakeInstallPath, "lib"),
+            pathFinder.path(sdkOutDir),
             "*.lib",
             suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX,
         )
 
         systemManager.distributeFiles(
-            os.path.join(cmakeInstallPath, "bin"),
-            os.path.join(sdkOutDir),
+            pathFinder.path(cmakeInstallPath, "bin"),
+            pathFinder.path(sdkOutDir),
             "*.dll",
             suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX,
         )
 
         if not buildSettings.ReleaseSpecified():
             systemManager.distributeFiles(
-                os.path.join(cmakeBuildPath, "src", conf),
-                os.path.join(sdkOutDir),
+                pathFinder.path(cmakeBuildPath, "src", conf),
+                pathFinder.path(sdkOutDir),
                 "*.pdb",
                 suffix=(
                     None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX

@@ -102,11 +102,11 @@ class Program:
             Program._PATH_NAME_SOURCE
         )
 
-        srcInstallDir = os.path.join(
+        srcInstallDir = pathFinder.path(
             buildPathName,
             f'output_{"x64" if buildSettings.X64Specified() else "Win32"}{"" if buildSettings.ReleaseSpecified() else "_debug"}'
         )
-        installDir = os.path.join(
+        installDir = pathFinder.path(
             buildPathName,
             (
                 Program._PATH_NAME_INSTALLATION_DIR_X64
@@ -125,7 +125,7 @@ class Program:
         # copy UriParser to the Build area
         systemManager.copyDirectory( sourcePathName, buildPathName)
 
-        buildPathName = os.path.join(buildPathName, "builds\\win32")
+        buildPathName = pathFinder.path(buildPathName, "builds\\win32")
 
         # start building
         systemManager.changeDirectory(buildPathName)
@@ -171,19 +171,19 @@ class Program:
 
         # firebird install docs recommend changing the fbclient_ms.lib to gds32_ms.lib (the borland name?), so we'll make a copy
         systemManager.copyFile(
-            os.path.join(installDir, "lib//fbclient_ms.lib"),
-            os.path.join(installDir, "lib//gds32_ms.lib"),
+            pathFinder.path(installDir, "lib//fbclient_ms.lib"),
+            pathFinder.path(installDir, "lib//gds32_ms.lib"),
         )
 
         # To use the embedded server, we need to remove fbclient.dll and rename the fbembed.dll to fbclient.dll
         # newer versions of firebird don't habe fbembed.dll anymore
-        if os.path.exists(os.path.join(installDir, "bin//fbembed.dll")):
-            systemManager.removeFile(os.path.join(installDir, "bin//fbclient.dll"))
+        if os.path.exists(pathFinder.path(installDir, "bin//fbembed.dll")):
+            systemManager.removeFile(pathFinder.path(installDir, "bin//fbclient.dll"))
             systemManager.copyFile(
-                os.path.join(installDir, "bin//fbembed.dll"),
-                os.path.join(installDir, "bin//fbclient.dll"),
+                pathFinder.path(installDir, "bin//fbembed.dll"),
+                pathFinder.path(installDir, "bin//fbclient.dll"),
             )
-            systemManager.removeFile(os.path.join(installDir, "bin//fbembed.dll"))
+            systemManager.removeFile(pathFinder.path(installDir, "bin//fbembed.dll"))
 
 
 # --------------------------------------------------------------------------

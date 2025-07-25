@@ -172,16 +172,16 @@ class Program:
             sys.exit(-1)
 
         systemManager.removeDirectory(
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
         )
         systemManager.distributeFiles(
-            os.path.join(buildPathName, Program._PATH_NAME_INCLUDE),
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            pathFinder.path(buildPathName, Program._PATH_NAME_INCLUDE),
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h"
         )
 
         systemManager.copyFile(
-            os.path.join(buildPathName, libName), os.path.join(sdkOutDir, libName)
+            pathFinder.path(buildPathName, libName), pathFinder.path(sdkOutDir, libName)
         )
 
 

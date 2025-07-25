@@ -60,7 +60,7 @@ class Program:
 
         # fix up the Makefile.nt to have the correct paths
         sedCommandLine = (
-            f"{os.path.join(pathFinder.PATH_SED_EXECUTABLE, "sed.exe")} "
+            f"{pathFinder.path(pathFinder.PATH_SED_EXECUTABLE, "sed.exe")} "
             + f"-i.bak -E {cc32} "
             + f"Makefile.NT"
         )
@@ -71,7 +71,7 @@ class Program:
             sys.exit(-1)
 
         # sedCommandLine = (
-        #     f"{os.path.join(pathFinder.PATH_SED_EXECUTABLE, "sed.exe")} "
+        #     f"{pathFinder.path(pathFinder.PATH_SED_EXECUTABLE, "sed.exe")} "
         #     + f"-i.bak -E {rc32} "
         #     + f"Makefile.NT"
         # )
@@ -82,7 +82,7 @@ class Program:
         #     sys.exit(-1)
 
         sedCommandLine = (
-            f"{os.path.join(pathFinder.PATH_SED_EXECUTABLE, "sed.exe")} "
+            f"{pathFinder.path(pathFinder.PATH_SED_EXECUTABLE, "sed.exe")} "
             + f"-i.bak -E {link32} "
             + f"Makefile.NT"
         )
@@ -93,7 +93,7 @@ class Program:
             sys.exit(-1)
 
         sedCommandLine = (
-            f"{os.path.join(pathFinder.PATH_SED_EXECUTABLE, "sed.exe")} "
+            f"{pathFinder.path(pathFinder.PATH_SED_EXECUTABLE, "sed.exe")} "
             + f"-i.bak -E {lib32} "
             + f"Makefile.NT"
         )
@@ -104,7 +104,7 @@ class Program:
             sys.exit(-1)
 
         sedCommandLine = (
-            f"{os.path.join(pathFinder.PATH_SED_EXECUTABLE, "sed.exe")} "
+            f"{pathFinder.path(pathFinder.PATH_SED_EXECUTABLE, "sed.exe")} "
             + f"-i.bak -E {cflags} "
             + f"Makefile.NT"
         )
@@ -147,9 +147,9 @@ class Program:
             Program._PATH_NAME_SOURCE
         )
 
-        nmakeInstallPath = os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL)
+        nmakeInstallPath = pathFinder.path(buildPathName, Program._PATH_NAME_NMAKE_INSTALL)
 
-        sdkOutDir = os.path.join(
+        sdkOutDir = pathFinder.path(
             buildPathName,
             "..",
             (
@@ -166,13 +166,13 @@ class Program:
         systemManager.copyDirectory(sourcePathName, buildPathName)
 
         # start building
-        srcdir = os.path.join(buildPathName, "src")
+        srcdir = pathFinder.path(buildPathName, "src")
 
         # run Nmake
         nmakeCommandLine = f"nmake -f Makefile.NT"
         cmd = f'"{vcVars}" && {nmakeCommandLine}'
 
-        systemManager.changeDirectory(os.path.join(srcdir, "libgist"))
+        systemManager.changeDirectory(pathFinder.path(srcdir, "libgist"))
         self.fixnmake(
             buildSettings=buildSettings,
             systemManager=systemManager,
@@ -184,7 +184,7 @@ class Program:
         if nmakeResult != 0:
             sys.exit(-1)
 
-        systemManager.changeDirectory(os.path.join(srcdir, "librtree"))
+        systemManager.changeDirectory(pathFinder.path(srcdir, "librtree"))
         self.fixnmake(
             buildSettings=buildSettings,
             systemManager=systemManager,
@@ -196,7 +196,7 @@ class Program:
         if nmakeResult != 0:
             sys.exit(-1)
 
-        systemManager.changeDirectory(os.path.join(srcdir, "libbtree"))
+        systemManager.changeDirectory(pathFinder.path(srcdir, "libbtree"))
         self.fixnmake(
             buildSettings=buildSettings,
             systemManager=systemManager,
@@ -209,17 +209,17 @@ class Program:
             sys.exit(-1)
 
         systemManager.removeDirectory(
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
         )
 
         systemManager.distributeFiles(
-            os.path.join(buildPathName, Program._PATH_NAME_INCLUDE),
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            pathFinder.path(buildPathName, Program._PATH_NAME_INCLUDE),
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h",
         )
 
         systemManager.distributeFiles(
-            os.path.join(buildPathName, "lib"),
+            pathFinder.path(buildPathName, "lib"),
             sdkOutDir,
             "*.lib",
             suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX,

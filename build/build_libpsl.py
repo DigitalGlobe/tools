@@ -114,9 +114,9 @@ class Program:
             Program._PATH_NAME_SOURCE
         )
 
-        nmakeInstallPath = os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL)
+        nmakeInstallPath = pathFinder.path(buildPathName, Program._PATH_NAME_NMAKE_INSTALL)
 
-        sdkOutDir = os.path.join(
+        sdkOutDir = pathFinder.path(
             buildPathName,
             "..",
             (
@@ -133,11 +133,11 @@ class Program:
         # copy UriParser to the Build area
         systemManager.copyDirectory(sourcePathName, buildPathName)
 
-        nmakeInstallPath = os.path.join(buildPathName, nmakeInstallPath)
+        nmakeInstallPath = pathFinder.path(buildPathName, nmakeInstallPath)
         systemManager.makeDirectory(nmakeInstallPath)
 
         # start building
-        systemManager.changeDirectory(os.path.join(buildPathName, "msvc"))
+        systemManager.changeDirectory(pathFinder.path(buildPathName, "msvc"))
 
         libName = (
             Program._LIBNAME
@@ -161,7 +161,7 @@ class Program:
             + f"CFG={"release" if (buildSettings.ReleaseSpecified()) else "debug"} "
             + f"DISABLE_RUNTIME=1 "
             + f"DISABLE_BUILTIN=1 "
-            + f'PREFIX="{os.path.join(buildPathName, nmakeInstallPath)}" '
+            + f'PREFIX="{pathFinder.path(buildPathName, nmakeInstallPath)}" '
             + f" install "
         )
 
@@ -173,26 +173,26 @@ class Program:
             sys.exit(-1)
 
         systemManager.removeDirectory(
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
         )
 
         systemManager.distributeFiles(
-            os.path.join(nmakeInstallPath, "include"),
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            pathFinder.path(nmakeInstallPath, "include"),
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h",
         )
 
         systemManager.copyFile(
-            os.path.join(nmakeInstallPath, "lib", Program._LIBNAME + ".lib"), os.path.join(sdkOutDir, libName)
+            pathFinder.path(nmakeInstallPath, "lib", Program._LIBNAME + ".lib"), pathFinder.path(sdkOutDir, libName)
         )
         systemManager.copyFile(
-            os.path.join(nmakeInstallPath, "bin", Program._LIBNAME + ".dll"),
-            os.path.join(sdkOutDir, dllName),
+            pathFinder.path(nmakeInstallPath, "bin", Program._LIBNAME + ".dll"),
+            pathFinder.path(sdkOutDir, dllName),
         )
         if not buildSettings.ReleaseSpecified():
             systemManager.copyFile(
-                os.path.join(nmakeInstallPath, "bin", Program._LIBNAME + ".pdb"),
-                os.path.join(sdkOutDir, pdbName),
+                pathFinder.path(nmakeInstallPath, "bin", Program._LIBNAME + ".pdb"),
+                pathFinder.path(sdkOutDir, pdbName),
             )
 
 

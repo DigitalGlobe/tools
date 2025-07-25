@@ -133,17 +133,17 @@ class Program:
         perlCommandLine = (
             f'perl Configure '
             + f'{"VC-WIN64A" if buildSettings.X64Specified() else "VC-WIN32" } '
-            + f'--prefix={os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL) } '
-            + f'--openssldir={os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "ssl" ) } '
+            + f'--prefix={pathFinder.path(buildPathName, Program._PATH_NAME_NMAKE_INSTALL) } '
+            + f'--openssldir={pathFinder.path(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "ssl" ) } '
             + f'{"--release" if buildSettings.ReleaseSpecified() else "--debug"} '
             + f'enable-brotli-dynamic '
-            + f'--with-brotli-include={os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..")} '
+            + f'--with-brotli-include={pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..")} '
             + f'--with-brotli-lib={sdkOutDir} '
             + f'zlib-dynamic '
-            + f'--with-zlib-include={os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..","zlib")} '
+            + f'--with-zlib-include={pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..","zlib")} '
             + f'--with-zlib-lib={sdkOutDir} '
             + f'enable-zstd-dynamic '
-            + f'--with-zstd-include={os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..","zstd")} '
+            + f'--with-zstd-include={pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..","zstd")} '
             + f'--with-zstd-lib={sdkOutDir} '
             + f'no-makedepend '
             + f'no-apps '
@@ -176,28 +176,33 @@ class Program:
             sys.exit(-1)
 
         systemManager.removeDirectory(
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
         )
 
         systemManager.distributeFiles(
-            os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "include"),
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            pathFinder.path(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "include", "openssl"),
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h"
         )
 
-        libdir = os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "lib")
-        bindir = os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "bin")
+        libdir = pathFinder.path(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "lib")
+        bindir = pathFinder.path(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "bin")
 
         systemManager.distributeFiles(
             libdir,
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            sdkOutDir,
             "*.lib",
             suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX,
         )
 
-        for f in glob.glob(os.path.join(bindir, "*.dll")):
+        systemManager.copyDirectory(
+            pathFinder.path(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "ssl"),
+            sdkOutDir,
+        )
+
+        for f in glob.glob(pathFinder.path(bindir, "*.dll")):
             fname = f[len(bindir) + 1 :]
-            dst = os.path.join(
+            dst = pathFinder.path(
                     sdkOutDir,
                     fname.replace(
                         f"-3-{pathFinder.PATH_NAME_X64 if buildSettings.X64Specified() else pathFinder._PATH_NAME_X86}.dll",
@@ -206,17 +211,17 @@ class Program:
                 )
             systemManager.copyFile(f,dst)
 
-        for f in glob.glob(os.path.join(libdir, "**/*.dll"), recursive=True):
+        for f in glob.glob(pathFinder.path(libdir, "**/*.dll"), recursive=True):
             fname = f[len(bindir) + 1 :]
-            systemManager.copyFile(f, os.path.join(sdkOutDir, fname.replace(f".dll", f"{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.dll")))
+            systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname.replace(f".dll", f"{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.dll")))
 
         if not buildSettings.ReleaseSpecified():
-            for f in glob.glob(os.path.join(bindir, "**/*.pdb"), recursive=True):
+            for f in glob.glob(pathFinder.path(bindir, "**/*.pdb"), recursive=True):
                 fname = f[len(bindir) + 1 :]
-                systemManager.copyFile(f, os.path.join(sdkOutDir, fname.replace(f"-3-{pathFinder.PATH_NAME_X64 if buildSettings.X64Specified() else pathFinder._PATH_NAME_X86}.pdb", f"{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.pdb")))
-            for f in glob.glob(os.path.join(libdir, "**/*.pdb"), recursive=True):
+                systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname.replace(f"-3-{pathFinder.PATH_NAME_X64 if buildSettings.X64Specified() else pathFinder._PATH_NAME_X86}.pdb", f"{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.pdb")))
+            for f in glob.glob(pathFinder.path(libdir, "**/*.pdb"), recursive=True):
                 fname = f[len(bindir) + 1 :]
-                systemManager.copyFile(f, os.path.join(sdkOutDir, fname.replace(f".pdb", f"{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.pdb")))
+                systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname.replace(f".pdb", f"{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.pdb")))
 
 
 # --------------------------------------------------------------------------

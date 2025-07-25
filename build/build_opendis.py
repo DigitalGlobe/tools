@@ -101,15 +101,15 @@ class Program:
             Program._PATH_NAME_SOURCE
         )
 
-        buildSourceName = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
-        cmakeBuildPath = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
-        cmakeInstallPath = os.path.join(
+        buildSourceName = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
+        cmakeBuildPath = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
+        cmakeInstallPath = pathFinder.path(
             cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
         )
 
         systemManager.removeDirectory(cmakeBuildPath)
 
-        sdkOutDir = os.path.join(
+        sdkOutDir = pathFinder.path(
             buildPathName,
             "..",
             (
@@ -156,6 +156,7 @@ class Program:
             f"{pathFinder.getCMakeFileName()} "
             + f"--build "
             + f". "
+            + f"-j 1 "
             + f"--config {conf} "
         )
 
@@ -178,13 +179,13 @@ class Program:
         if cmakeResult != 0:
             sys.exit(-1)
 
-        srcIncludePath = os.path.join(cmakeInstallPath, "include")
-        srcLibPath = os.path.join(cmakeInstallPath, "lib")
-        srcBinPath = os.path.join(cmakeInstallPath, "bin")
+        srcIncludePath = pathFinder.path(cmakeInstallPath, "include")
+        srcLibPath = pathFinder.path(cmakeInstallPath, "lib")
+        srcBinPath = pathFinder.path(cmakeInstallPath, "bin")
 
         systemManager.distributeFiles(
             srcIncludePath,
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
         )
 
@@ -204,7 +205,7 @@ class Program:
 
         if not buildSettings.ReleaseSpecified():
             systemManager.distributeFiles(
-                os.path.join(cmakeBuildPath, conf),
+                pathFinder.path(cmakeBuildPath, conf),
                 sdkOutDir,
                 "*.pdb",
                 suffix = None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX

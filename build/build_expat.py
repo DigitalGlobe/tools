@@ -92,14 +92,14 @@ class Program:
             Program._PATH_NAME_SOURCE
         )
 
-        buildSourceName = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
-        cmakeBuildPath = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
-        cmakeInstallPath = os.path.join(
+        buildSourceName = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
+        cmakeBuildPath = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
+        cmakeInstallPath = pathFinder.path(
             cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
         )
         systemManager.removeDirectory(cmakeBuildPath)
 
-        sdkOutDir = os.path.join(
+        sdkOutDir = pathFinder.path(
             buildPathName,
             "..",
             (
@@ -143,6 +143,7 @@ class Program:
             f"{pathFinder.getCMakeFileName()} "
             + f"--build "
             + f". "
+            + f"-j 1 "
             + f"--config {conf} "
         )
 
@@ -157,7 +158,7 @@ class Program:
             + f". "
             + f"--config {conf} "
             + f"--prefix "
-            + f"{os.path.join(cmakeBuildPath, "install")}"
+            + f"{pathFinder.path(cmakeBuildPath, "install")}"
         )
 
         print("cmake: " + cmakeCommandLine)
@@ -165,14 +166,14 @@ class Program:
         if cmakeResult != 0:
             sys.exit(-1)
 
-        srcIncludePath = os.path.join(
+        srcIncludePath = pathFinder.path(
             cmakeInstallPath,
             "include"
         )
 
         systemManager.distributeFiles(
             srcIncludePath,
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h",
         )
 
@@ -193,33 +194,33 @@ class Program:
         )
 
         systemManager.copyFile(
-            os.path.join(
+            pathFinder.path(
                 cmakeInstallPath,
                 "lib",
                 f'{Program._LIBNAME}{"" if (buildSettings.ReleaseSpecified()) else "d"}.lib',
             ),
-            os.path.join(sdkOutDir, libName),
+            pathFinder.path(sdkOutDir, libName),
         )
 
         systemManager.copyFile(
-            os.path.join(
+            pathFinder.path(
                 cmakeInstallPath,
                 "bin",
                 f'{Program._LIBNAME}{"" if (buildSettings.ReleaseSpecified()) else "d"}.dll',
             ),
-            os.path.join(sdkOutDir, dllName),
+            pathFinder.path(sdkOutDir, dllName),
         )
 
         # for some reason, the pdb doesn't get installed during "cmake --install"
         if not buildSettings.ReleaseSpecified():
             systemManager.copyFile(
-                os.path.join(
+                pathFinder.path(
                     cmakeInstallPath,
                     "..",
                     "Debug",
                     f'{Program._LIBNAME}{"" if (buildSettings.ReleaseSpecified()) else "d"}.pdb',
                 ),
-                os.path.join(sdkOutDir, pdbName),
+                pathFinder.path(sdkOutDir, pdbName),
             )
 
 

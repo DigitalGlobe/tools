@@ -84,7 +84,7 @@ class Program:
             Program._PATH_NAME_SOURCE
         )
 
-        sdkOutDir = os.path.join(
+        sdkOutDir = pathFinder.path(
             buildPathName,
             "..",
             (
@@ -106,7 +106,7 @@ class Program:
 
         # modify the vcxproj to work with our version of vscode
         sedCommandLine = (
-            f"{os.path.join(pathFinder.PATH_SED_EXECUTABLE, "sed.exe")} "
+            f"{pathFinder.path(pathFinder.PATH_SED_EXECUTABLE, "sed.exe")} "
             + f"-i.bak s/^<PlatformToolset^>v110/^<PlatformToolset^>{pathFinder.VISUAL_STUDIO_VERSION_NUM}/g "
             + f"{Program._FILE_NAME_SOLUTION}"
         )
@@ -120,7 +120,7 @@ class Program:
         platform = "x64" if buildSettings.X64Specified() else "Win32"
 
         # build the solution
-        solutionFileName = os.path.join(buildPathName, Program._FILE_NAME_SOLUTION)
+        solutionFileName = pathFinder.path(buildPathName, Program._FILE_NAME_SOLUTION)
         msBuildCommandLine = ('"%s" ' + "/p:platform=%s " + '"%s"') % (
             pathFinder.getMSBuildFileName(buildSettings.X64Specified()),
             platform,
@@ -138,8 +138,8 @@ class Program:
             + ".pdb"
         )
 
-        buildOutDir = os.path.join(buildPathName, "build")
-        propfile = os.path.join(buildPathName, "linker.props")
+        buildOutDir = pathFinder.path(buildPathName, "build")
+        propfile = pathFinder.path(buildPathName, "linker.props")
 
         msBuildCommandLine += " /p:OutDir=" + buildOutDir
         msBuildCommandLine += " /p:TargetExtension=dll"
@@ -153,8 +153,8 @@ class Program:
         msBuildCommandLine += " /p:BuildProjectReferences=false"
 
         linkerprops = {}
-        # linkerprops = ["OutputFile"] = os.path.join(buildOutDir, dllName)}
-        linkerprops["ImportLibrary"] = os.path.join(buildOutDir, libName)
+        # linkerprops = ["OutputFile"] = pathFinder.path(buildOutDir, dllName)}
+        linkerprops["ImportLibrary"] = pathFinder.path(buildOutDir, libName)
         if buildSettings.ReleaseSpecified():
             linkerprops["DebugSymbols"] = "false"
         else:
@@ -173,17 +173,17 @@ class Program:
             sys.exit(-1)
 
         systemManager.distributeFiles(
-            os.path.join(buildPathName, Program._PATH_NAME_INCLUDE),
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            pathFinder.path(buildPathName, Program._PATH_NAME_INCLUDE),
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h",
         )
 
         systemManager.copyFile(
-            os.path.join(buildOutDir, libName), os.path.join(sdkOutDir, libName)
+            pathFinder.path(buildOutDir, libName), pathFinder.path(sdkOutDir, libName)
         )
         if not buildSettings.ReleaseSpecified():
             systemManager.copyFile(
-                os.path.join(buildOutDir, pdbName), os.path.join(sdkOutDir, pdbName)
+                pathFinder.path(buildOutDir, pdbName), pathFinder.path(sdkOutDir, pdbName)
             )
 
 

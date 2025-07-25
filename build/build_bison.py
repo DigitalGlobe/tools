@@ -82,7 +82,7 @@ class Program :
                 Program._PATH_NAME_SOURCE
             )
 
-        sdkOutDir = os.path.join(
+        sdkOutDir = pathFinder.path(
             buildPathName,
             "..",
             (
@@ -100,14 +100,14 @@ class Program :
         systemManager.copyDirectory(sourcePathName, buildPathName)
 
         # start building
-        buildPathName   = os.path.join( buildPathName, 'bison' )
+        buildPathName   = pathFinder.path( buildPathName, 'bison' )
         systemManager.changeDirectory(buildPathName)
 
         conf = "Release" if ( buildSettings.ReleaseSpecified() ) else "Debug"
         platform  = 'x64' if buildSettings.X64Specified() else 'Win32'
 
         # build the solution
-        solutionFileName   = os.path.join( buildPathName               , \
+        solutionFileName   = pathFinder.path( buildPathName               , \
                                                Program._FILE_NAME_SOLUTION )
         msBuildCommandLine = ( "\"%s\" "                  + \
                                      "/p:platform=%s " + \
@@ -116,8 +116,8 @@ class Program :
 
         appName = Program._APPNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".exe"
 
-        buildOutDir   = os.path.join( buildPathName, 'build' )
-        propfile   = os.path.join( buildPathName, 'linker.props' )
+        buildOutDir   = pathFinder.path( buildPathName, 'build' )
+        propfile   = pathFinder.path( buildPathName, 'linker.props' )
 
         msBuildCommandLine += ' /p:OutDir=' + buildOutDir
         # msBuildCommandLine += ' /p:TargetExtension=dll'
@@ -126,8 +126,8 @@ class Program :
         msBuildCommandLine += ' /p:Configuration=' + conf
         # msBuildCommandLine += ' /p:BuildProjectReferences=false'
 
-        # linkerprops = {'OutputFile':os.path.join( buildOutDir, dllName )}
-        # linkerprops['ImportLibrary'] = os.path.join( buildOutDir, libName )
+        # linkerprops = {'OutputFile':pathFinder.path( buildOutDir, dllName )}
+        # linkerprops['ImportLibrary'] = pathFinder.path( buildOutDir, libName )
         # if buildSettings.ReleaseSpecified():
         #    linkerprops['DebugSymbols'] = 'false'
         # else:
@@ -146,13 +146,13 @@ class Program :
             sys.exit(-1)
 
         # systemManager.distributeFiles(
-        #     os.path.join(buildPathName, Program._PATH_NAME_INCLUDE),
-        #     os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+        #     pathFinder.path(buildPathName, Program._PATH_NAME_INCLUDE),
+        #     pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
         #     "*.h",
         # )
 
         systemManager.copyFile(
-            os.path.join(buildOutDir, appName), os.path.join(sdkOutDir, appName)
+            pathFinder.path(buildOutDir, appName), pathFinder.path(sdkOutDir, appName)
         )
 
 # ------------------------------------------------------------------------------

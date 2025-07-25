@@ -92,15 +92,15 @@ class Program:
             Program._PATH_NAME_SOURCE
         )
 
-        buildSourceName = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
-        cmakeBuildPath = os.path.join(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
-        cmakeInstallPath = os.path.join(
+        buildSourceName = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
+        cmakeBuildPath = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
+        cmakeInstallPath = pathFinder.path(
             cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
         )
 
         systemManager.removeDirectory(cmakeBuildPath)
 
-        sdkOutDir = os.path.join(
+        sdkOutDir = pathFinder.path(
             buildPathName,
             "..",
             (
@@ -126,22 +126,22 @@ class Program:
         conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
         platform = "x64" if buildSettings.X64Specified() else "Win32"
 
-        includeBase = os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..")
+        includeBase = pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..")
         libSuffix = f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
         externalLibs = {
-            "BROTLI_INCLUDE_DIR": os.path.join(includeBase, "brotli"),
-            "BROTLIDEC_LIBRARY": os.path.join(sdkOutDir, f"brotlidec{libSuffix}"),
-            "BROTLICOMMON_LIBRARY": os.path.join(sdkOutDir, f"brotlicommon{libSuffix}"),
-            "LIBPSL_INCLUDE_DIR": os.path.join(includeBase, "libpsl"),
-            "LIBPSL_LIBRARY": os.path.join(sdkOutDir, f"psl{libSuffix}"),
-            "LIBSSH2_INCLUDE_DIR": os.path.join(includeBase, "libssh2"),
-            "LIBSSH2_LIBRARY": os.path.join(sdkOutDir, f"libssh2{libSuffix}"),
-            "NGHTTP2_INCLUDE_DIR": os.path.join(includeBase, "nghttp2"),
-            "NGHTTP2_LIBRARY": os.path.join(sdkOutDir, f"nghttp2{libSuffix}"),
-            "ZLIB_INCLUDE_DIR": os.path.join(includeBase, "zlib"),
-            "ZLIB_LIBRARY": os.path.join(sdkOutDir, f"zlib{libSuffix}"),
-            "ZSTD_INCLUDE_DIR": os.path.join(includeBase, "zstd"),
-            "ZSTD_LIBRARY": os.path.join(sdkOutDir, f"zstd{libSuffix}"),
+            "BROTLI_INCLUDE_DIR": pathFinder.path(includeBase, "brotli"),
+            "BROTLIDEC_LIBRARY": pathFinder.path(sdkOutDir, f"brotlidec{libSuffix}"),
+            "BROTLICOMMON_LIBRARY": pathFinder.path(sdkOutDir, f"brotlicommon{libSuffix}"),
+            "LIBPSL_INCLUDE_DIR": pathFinder.path(includeBase, "libpsl"),
+            "LIBPSL_LIBRARY": pathFinder.path(sdkOutDir, f"psl{libSuffix}"),
+            "LIBSSH2_INCLUDE_DIR": pathFinder.path(includeBase, "libssh2"),
+            "LIBSSH2_LIBRARY": pathFinder.path(sdkOutDir, f"libssh2{libSuffix}"),
+            "NGHTTP2_INCLUDE_DIR": pathFinder.path(includeBase, "nghttp2"),
+            "NGHTTP2_LIBRARY": pathFinder.path(sdkOutDir, f"nghttp2{libSuffix}"),
+            "ZLIB_INCLUDE_DIR": pathFinder.path(includeBase, "zlib"),
+            "ZLIB_LIBRARY": pathFinder.path(sdkOutDir, f"zlib{libSuffix}"),
+            "ZSTD_INCLUDE_DIR": pathFinder.path(includeBase, "zstd"),
+            "ZSTD_LIBRARY": pathFinder.path(sdkOutDir, f"zstd{libSuffix}"),
         }
 
         externalLibStr = ""
@@ -171,6 +171,7 @@ class Program:
             f"{pathFinder.getCMakeFileName()} "
             + f"--build "
             + f". "
+            + f"-j 1 "
             + f"--config {conf} "
         )
 
@@ -185,7 +186,7 @@ class Program:
             + f". "
             + f"--config {conf} "
             + f"--prefix "
-            + f"{os.path.join(cmakeBuildPath, "install")}"
+            + f"{pathFinder.path(cmakeBuildPath, "install")}"
         )
 
         print("cmake: " + cmakeCommandLine)
@@ -194,8 +195,8 @@ class Program:
             sys.exit(-1)
 
         systemManager.distributeFiles(
-            os.path.join( cmakeInstallPath,"include", "curl"),
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            pathFinder.path( cmakeInstallPath,"include", "curl"),
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
         )
 
@@ -216,23 +217,23 @@ class Program:
         )
 
         systemManager.copyFile(
-            os.path.join(cmakeInstallPath, "lib", f"{Program._LIBNAME}{"" if (buildSettings.ReleaseSpecified()) else "-d"}_imp.lib"),
-            os.path.join(sdkOutDir, libName),
+            pathFinder.path(cmakeInstallPath, "lib", f"{Program._LIBNAME}{"" if (buildSettings.ReleaseSpecified()) else "-d"}_imp.lib"),
+            pathFinder.path(sdkOutDir, libName),
         )
 
         systemManager.copyFile(
-            os.path.join(cmakeInstallPath, "bin", f"{Program._LIBNAME}{"" if (buildSettings.ReleaseSpecified()) else "-d"}.dll"),
-            os.path.join(sdkOutDir, dllName),
+            pathFinder.path(cmakeInstallPath, "bin", f"{Program._LIBNAME}{"" if (buildSettings.ReleaseSpecified()) else "-d"}.dll"),
+            pathFinder.path(sdkOutDir, dllName),
         )
         if not buildSettings.ReleaseSpecified():
             systemManager.copyFile(
-                os.path.join(
+                pathFinder.path(
                     cmakeBuildPath,
                     "lib",
                     conf,
                     f"{Program._LIBNAME}{"" if (buildSettings.ReleaseSpecified()) else "-d"}.pdb",
                 ),
-                os.path.join(sdkOutDir, pdbName),
+                pathFinder.path(sdkOutDir, pdbName),
             )
 
 

@@ -22,7 +22,7 @@ class Program :
         #----------------------------------------------------------------------
         # the name of the dynamic solution file
         _FILE_NAME_SOLUTION = "src\\podofo_shared.vcxproj"
-        
+
         #----------------------------------------------------------------------
         # the name of the path that will contain intermediary build files
         _PATH_NAME_BUILD = "PoDoFo"
@@ -30,10 +30,10 @@ class Program :
         # the name of the path that contains the source code
         _PATH_NAME_SOURCE = "..\\src\\PoDoFo"
         #----------------------------------------------------------------------
-                
+
         _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
         _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
-        
+
         _LIBNAME = 'podofo'
         _DEBUG_SUFFIX = '_d'
 
@@ -53,7 +53,7 @@ class Program :
         # the name of the FreeType include path
         _PATH_NAME_FREETYPE_INCLUDE = "..\\src\\FreeType\\include"
         #----------------------------------------------------------------------
-        
+
         #----------------------------------------------------------------------
         # the name of the x86 debug LibPNG library file
         _FILE_NAME_LIBPNG_LIBRARY_X86_DEBUG = "..\\sdk\\x86\\lib\\libpng_d.lib"
@@ -70,7 +70,7 @@ class Program :
         # the name of the LibPNG include path
         _PATH_NAME_LIBPNG_INCLUDE = "..\\include\\LibPNG"
         #----------------------------------------------------------------------
-        
+
         #----------------------------------------------------------------------
         # the name of the x86 debug ZLib library file
         _FILE_NAME_ZLIB_LIBRARY_X86_DEBUG = "..\\sdk\\x86\\lib\\zlib_d.lib"
@@ -96,36 +96,36 @@ class Program :
         #----------------------------------------------------------------------
 
         def __init__(self) :
-        
+
             pass
         #----------------------------------------------------------------------
-        
+
 
         def main(self) :
             systemManager = SystemManager()
             pathFinder    = PathFinder()
             xmlUtils = XmlUtils()
-            
+
             # process command-line arguments
             buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
-            
+
             # initialize environment variables
             systemManager.initializeIncludeEnvironmentVariable( buildSettings.X64Specified() )
             systemManager.initializeLibraryEnvironmentVariable( buildSettings.X64Specified() )
             systemManager.appendToPathEnvironmentVariable( pathFinder.getVisualStudioBinPathName( buildSettings.X64Specified() ) )
 
             # MSBuild is under "Program Files (x86)"
-            systemManager.appendToPathEnvironmentVariable( os.path.join( systemManager.getProgramFilesPathName(False) , \
+            systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
                                                                              "MSBuild\\14.0\\Bin") )
 
             compileOutDir = ""
             if ( buildSettings.X64Specified() ) :
                 # append path for 64-bit rc.exe
-                systemManager.appendToPathEnvironmentVariable( os.path.join( systemManager.getProgramFilesPathName(False) , \
+                systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
                                                                              "Windows Kits\\10\\bin\\x64"                 ) )
             else:
                 # append path for 32-bit rc.exe
-                systemManager.appendToPathEnvironmentVariable( os.path.join( systemManager.getProgramFilesPathName(False) , \
+                systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
                                                                              "Windows Kits\\10\\bin\\x86"                 ) )
 
             # get the paths
@@ -139,39 +139,39 @@ class Program :
 
             #copy UriParser to the Build area
             systemManager.copyDirectory( sourcePathName, buildPathName)
-        
+
             # start building
             systemManager.changeDirectory(buildPathName)
-                        
+
             freeTypeIncludePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_FREETYPE_INCLUDE)
             libPngIncludePathName   = systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBPNG_INCLUDE  )
             zlibIncludePathName     = systemManager.getCurrentRelativePathName(Program._PATH_NAME_ZLIB_INCLUDE    )
-            
+
             # determine file names
             if ( buildSettings.ReleaseSpecified() and \
                  buildSettings.X64Specified()       ) :
                  freeTypeLibraryFileName     = systemManager.getCurrentRelativePathName(Program._FILE_NAME_FREETYPE_LIBRARY_X64_RELEASE)
                  libPngLibraryFileName       = systemManager.getCurrentRelativePathName(Program._FILE_NAME_LIBPNG_LIBRARY_X64_RELEASE  )
                  zlibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X64_RELEASE    )
-                 
+
             elif ( buildSettings.ReleaseSpecified() ) :
                  freeTypeLibraryFileName     = systemManager.getCurrentRelativePathName(Program._FILE_NAME_FREETYPE_LIBRARY_X86_RELEASE)
                  libPngLibraryFileName       = systemManager.getCurrentRelativePathName(Program._FILE_NAME_LIBPNG_LIBRARY_X86_RELEASE  )
                  zlibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X86_RELEASE    )
-                 
+
             elif ( buildSettings.X64Specified() ) :
                  freeTypeLibraryFileName     = systemManager.getCurrentRelativePathName(Program._FILE_NAME_FREETYPE_LIBRARY_X64_DEBUG)
                  libPngLibraryFileName       = systemManager.getCurrentRelativePathName(Program._FILE_NAME_LIBPNG_LIBRARY_X64_DEBUG  )
                  zlibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X64_DEBUG    )
-                 
+
             else :
                  freeTypeLibraryFileName     = systemManager.getCurrentRelativePathName(Program._FILE_NAME_FREETYPE_LIBRARY_X86_DEBUG)
                  libPngLibraryFileName       = systemManager.getCurrentRelativePathName(Program._FILE_NAME_LIBPNG_LIBRARY_X86_DEBUG  )
                  zlibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X86_DEBUG    )
-                 
+
             # run CMake
             if ( buildSettings.X64Specified() ) :
-            
+
                 cmakeCommandLine = ( ( "%s "                                + \
                                        "-DFREETYPE_INCLUDE_DIR=\"%s\" "     + \
                                        "-DFREETYPE_LIBRARY=\"%s\" "         + \
@@ -228,9 +228,9 @@ class Program :
                 # zlibLibraryFileName        , \
                 # zlibLibraryFileName        , \
                 # sourcePathName             ) )
-                                       
+
             else :
-            
+
                 cmakeCommandLine = ( ( "%s "                                + \
                                        "-DFREETYPE_INCLUDE_DIR=\"%s\" "     + \
                                        "-DFREETYPE_LIBRARY=\"%s\" "         + \
@@ -285,50 +285,50 @@ class Program :
                 # zlibLibraryFileName        , \
                 # zlibLibraryFileName        , \
                                        # sourcePathName             ) )
-                        
-            
+
+
             print('cmake: ' + cmakeCommandLine)
             cmakeResult = systemManager.execute(cmakeCommandLine)
-            
+
             if (cmakeResult != 0) :
                 sys.exit(-1)
-            
+
             conf = "Release" if ( buildSettings.ReleaseSpecified() ) else "Debug"
             platform  = 'x64' if buildSettings.X64Specified() else 'Win32'
             # build the solution
-            solutionFileName   = os.path.join( buildPathName               , \
+            solutionFileName   = pathFinder.path( buildPathName               , \
                                                Program._FILE_NAME_SOLUTION )
             msBuildCommandLine = ( "\"%s\" "                  + \
                                      "/p:platform=%s " + \
                                      "\"%s\""                   ) % \
                                    ( pathFinder.getMSBuildFileName( buildSettings.X64Specified()), platform, solutionFileName )
-            
+
             dllName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".dll"
             libName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".lib"
             pdbName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".pdb"
 
-            buildOutDir   = os.path.join( buildPathName, 'build' )
-            propfile   = os.path.join( buildPathName, 'linker.props' )
-            
+            buildOutDir   = pathFinder.path( buildPathName, 'build' )
+            propfile   = pathFinder.path( buildPathName, 'linker.props' )
+
             msBuildCommandLine += ' /p:OutDir=' + buildOutDir
             msBuildCommandLine += ' /p:TargetExtension=dll'
-            msBuildCommandLine += ' /p:SolutionDir=' + buildPathName + '\\' 
+            msBuildCommandLine += ' /p:SolutionDir=' + buildPathName + '\\'
             msBuildCommandLine += ' /p:TargetName=' + Program._LIBNAME + ('' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX)
             msBuildCommandLine += ' /p:Configuration=' + conf
 
-            linkerprops = {'OutputFile':os.path.join( buildOutDir, dllName )}
-            linkerprops['ImportLibrary'] = os.path.join( buildOutDir, libName )
+            linkerprops = {'OutputFile':pathFinder.path( buildOutDir, dllName )}
+            linkerprops['ImportLibrary'] = pathFinder.path( buildOutDir, libName )
             if buildSettings.ReleaseSpecified():
                 linkerprops['DebugSymbols'] = 'false'
             else:
                 linkerprops['DebugSymbols'] = 'true'
                 linkerprops['DebugType'] = 'full'
                 linkerprops['ProgramDatabaseFile'] = '$(OutDir)\\' + pdbName
-              
+
             xmlUtils.buildDll(conf, platform, {}, linkerprops, propfile)
 
             msBuildCommandLine +=  ' /p:ForceImportBeforeCppTargets="' + propfile + '"'
-            
+
 
             print('cmd: ' + msBuildCommandLine)
             msbuildResult = systemManager.execute(msBuildCommandLine)
@@ -336,19 +336,19 @@ class Program :
                 sys.exit(-1)
 
 
-            systemManager.removeDirectory(os.path.join( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE))
-            systemManager.distributeFiles(os.path.join( buildPathName, Program._PATH_NAME_INCLUDE),              \
-                              os.path.join( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE), \
+            systemManager.removeDirectory(pathFinder.path( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE))
+            systemManager.distributeFiles(pathFinder.path( buildPathName, Program._PATH_NAME_INCLUDE),              \
+                              pathFinder.path( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE), \
                               '*.h',                                                                 \
-                              True, False, True) 
-                
-            systemManager.copyFile( os.path.join( buildOutDir, libName ) , \
-                                    os.path.join( sdkOutDir , libName) )
-            systemManager.copyFile( os.path.join( buildOutDir, dllName ) , \
-                                    os.path.join( sdkOutDir , dllName) )
+                              True, False, True)
+
+            systemManager.copyFile( pathFinder.path( buildOutDir, libName ) , \
+                                    pathFinder.path( sdkOutDir , libName) )
+            systemManager.copyFile( pathFinder.path( buildOutDir, dllName ) , \
+                                    pathFinder.path( sdkOutDir , dllName) )
             if not buildSettings.ReleaseSpecified():
-                systemManager.copyFile( os.path.join( buildOutDir, pdbName ) , \
-                                        os.path.join( sdkOutDir , pdbName) )
+                systemManager.copyFile( pathFinder.path( buildOutDir, pdbName ) , \
+                                        pathFinder.path( sdkOutDir , pdbName) )
 
 #------------------------------------------------------------------------------
 Program().main()

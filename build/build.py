@@ -319,7 +319,7 @@ class Program :
             # build 32-bit debug
             ret = os.system( ( "%s \"%s\" \"%s\" \"%s\"" % \
                            ( Program._FILE_NAME_PYTHON                            , \
-                             os.path.join( systemManager.getCurrentPathName() , \
+                             pathFinder.path( systemManager.getCurrentPathName() , \
                                            buildFileName                      )   , \
                              BuildSettingSet.ARGUMENT_VALUE_BITNESS_X86           ,
                              BuildSettingSet.ARGUMENT_VALUE_CONFIGURATION_DEBUG   ) ) )
@@ -330,7 +330,7 @@ class Program :
         # build 32-bit release
         os.system( ( "%s \"%s\" \"%s\" \"%s\"" % \
                        ( Program._FILE_NAME_PYTHON                            , \
-                         os.path.join( systemManager.getCurrentPathName() , \
+                         pathFinder.path( systemManager.getCurrentPathName() , \
                                        buildFileName                      )   , \
                          BuildSettingSet.ARGUMENT_VALUE_BITNESS_X86           ,
                          BuildSettingSet.ARGUMENT_VALUE_CONFIGURATION_RELEASE ) ) )
@@ -344,7 +344,7 @@ class Program :
         else:
             os.system( ( "%s \"%s\" \"%s\" \"%s\"" % \
                            ( Program._FILE_NAME_PYTHON                            , \
-                             os.path.join( systemManager.getCurrentPathName() , \
+                             pathFinder.path( systemManager.getCurrentPathName() , \
                                            buildFileName                      )   , \
                              BuildSettingSet.ARGUMENT_VALUE_BITNESS_X64           ,
                              BuildSettingSet.ARGUMENT_VALUE_CONFIGURATION_DEBUG   ) ) )
@@ -355,7 +355,7 @@ class Program :
         # build 64-bit release
         os.system( ( "%s \"%s\" \"%s\" \"%s\"" % \
                        ( Program._FILE_NAME_PYTHON                            , \
-                         os.path.join( systemManager.getCurrentPathName() , \
+                         pathFinder.path( systemManager.getCurrentPathName() , \
                                        buildFileName                      )   , \
                          BuildSettingSet.ARGUMENT_VALUE_BITNESS_X64           ,
                          BuildSettingSet.ARGUMENT_VALUE_CONFIGURATION_RELEASE ) ) )

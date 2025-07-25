@@ -76,7 +76,7 @@ class Program:
 
         # append gnuwin32 path for flex and bison
         # Qt needs specific versions, so they are placed within the Qt source tree
-        gnuToolsPath = os.path.join(
+        gnuToolsPath = pathFinder.path(
             systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD),
             "gnuwin32",
             "bin"
@@ -84,7 +84,7 @@ class Program:
         systemManager.appendToPathEnvironmentVariable(gnuToolsPath)
 
         # Append  qtbase/bin to the path
-        qtBaseBin = os.path.join(
+        qtBaseBin = pathFinder.path(
             systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD),
             "qtbase",
             "bin"
@@ -95,11 +95,11 @@ class Program:
         print("Getting Paths")
         buildPathName = systemManager.getCurrentRelativePathName( Program._PATH_NAME_BUILD)
         sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
-        binPathName = systemManager.getCurrentRelativePathName(os.path.join("..","Qt",Program._QT_VERSION))
+        binPathName = systemManager.getCurrentRelativePathName(pathFinder.path("..","Qt",Program._QT_VERSION))
 
         # QT out-of-source builds need to be in a parallel directory
-        buildPathQTSrcName = os.path.join(buildPathName, "Qt")
-        buildPathQTBuildName = os.path.join(buildPathName, "build")
+        buildPathQTSrcName = pathFinder.path(buildPathName, "Qt")
+        buildPathQTBuildName = pathFinder.path(buildPathName, "build")
 
         print("build path: " + buildPathName)
         print("source path: " + sourcePathName)
@@ -121,30 +121,30 @@ class Program:
 
         binDir = binPathName
         if buildSettings.X64Specified():
-            binDir = os.path.join(binPathName, "x64")
+            binDir = pathFinder.path(binPathName, "x64")
         else:
-            binDir = os.path.join(binPathName, "x86")
+            binDir = pathFinder.path(binPathName, "x86")
 
         if buildSettings.ReleaseSpecified():
             buildType = "-release"
         else:
             buildType = "-debug"
 
-        firebirdBase = os.path.join(
-            os.path.join(buildPathName, Program._FIREBIRD_BASE),
+        firebirdBase = pathFinder.path(
+            pathFinder.path(buildPathName, Program._FIREBIRD_BASE),
             ("x64" if buildSettings.X64Specified() else "x86"),
         )
 
-        # firebirdBase = os.path.join(os.path.join(buildPathName, Program._FIREBIRD_BASE), 'x86')
-        firebirdInclude = os.path.join(firebirdBase, Program._FIREBIRD_INCLUDE)
-        firebirdLib = os.path.join(firebirdBase, Program._FIREBIRD_LIB_PATH)
+        # firebirdBase = pathFinder.path(pathFinder.path(buildPathName, Program._FIREBIRD_BASE), 'x86')
+        firebirdInclude = pathFinder.path(firebirdBase, Program._FIREBIRD_INCLUDE)
+        firebirdLib = pathFinder.path(firebirdBase, Program._FIREBIRD_LIB_PATH)
 
         os.environ["QMAKE_INCDIR_IBASE"] = firebirdInclude
         os.environ["QMAKE_LIBDIR_IBASE"] = firebirdLib
         os.environ["QMAKE_LIBS_IBASE"] = Program._FIREBIRD_LIB
 
         cmdConfigure = (
-            f"{os.path.join(sourcePathName, "configure")} "
+            f"{pathFinder.path(sourcePathName, "configure")} "
             + f'-prefix "{binDir}" '
             + f"{buildType} "
             + f"-mp "

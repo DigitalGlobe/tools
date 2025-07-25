@@ -119,41 +119,41 @@ class Program:
             sys.exit(-1)
 
         systemManager.removeDirectory(
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
         )
 
         systemManager.distributeFiles(
-            os.path.join(buildPathName, "src"),
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            pathFinder.path(buildPathName, "src"),
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
         )
 
         if buildSettings.ReleaseSpecified():
             systemManager.distributeFiles(
-                os.path.join(
+                pathFinder.path(
                     buildPathName,
                     "lib"
                 ),
-                os.path.join(sdkOutDir),
+                pathFinder.path(sdkOutDir),
                 "*.lib",
             )
             systemManager.distributeFiles(
-                os.path.join(buildPathName, "lib"),
-                os.path.join(sdkOutDir),
+                pathFinder.path(buildPathName, "lib"),
+                pathFinder.path(sdkOutDir),
                 "*.dll",
             )
         else:
-            libdir = os.path.join(buildPathName, "lib")
+            libdir = pathFinder.path(buildPathName, "lib")
 
             # we need to rename the debug libs to have a _d suffix (they have a 'd' suffix now)
-            for f in glob.glob(os.path.join(libdir, "*d.lib")):
-                systemManager.copyFile(f, os.path.join(sdkOutDir, f.replace("d.lib", "_d.lib")))
+            for f in glob.glob(pathFinder.path(libdir, "*d.lib")):
+                systemManager.copyFile(f, pathFinder.path(sdkOutDir, f.replace("d.lib", "_d.lib")))
 
-            for f in glob.glob(os.path.join(libdir, "*d.dll")):
-                systemManager.copyFile(f, os.path.join(sdkOutDir, f.replace("d.dll", "_d.dll")))
+            for f in glob.glob(pathFinder.path(libdir, "*d.dll")):
+                systemManager.copyFile(f, pathFinder.path(sdkOutDir, f.replace("d.dll", "_d.dll")))
 
-            for f in glob.glob(os.path.join(libdir, "*d.pdb")):
-                systemManager.copyFile(f, os.path.join(sdkOutDir, f.replace("d.pdb", "_d.pdb")))
+            for f in glob.glob(pathFinder.path(libdir, "*d.pdb")):
+                systemManager.copyFile(f, pathFinder.path(sdkOutDir, f.replace("d.pdb", "_d.pdb")))
 
 # ------------------------------------------------------------------------------
 Program().main()

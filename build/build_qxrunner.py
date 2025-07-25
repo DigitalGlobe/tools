@@ -103,7 +103,7 @@ class Program:
 
         systemManager.copyDirectory(sourcePathName, buildPathName)
 
-        systemManager.changeDirectory(os.path.join(buildPathName, Program._PATH_NAME_QXRUNNER))
+        systemManager.changeDirectory(pathFinder.path(buildPathName, Program._PATH_NAME_QXRUNNER))
 
         qmakeCommandLine = (
             f'qmake -r '
@@ -127,42 +127,42 @@ class Program:
         if nmakeResult != 0:
             sys.exit(-1)
 
-        systemManager.removeDirectory(os.path.join( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE))
+        systemManager.removeDirectory(pathFinder.path( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE))
         systemManager.distributeFiles(
-            os.path.join( buildPathName, "include"),
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            pathFinder.path( buildPathName, "include"),
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
         )
 
         systemManager.distributeFiles(
-            os.path.join(buildPathName, Program._PATH_NAME_QXRUNNER, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
-            os.path.join(sdkOutDir),
+            pathFinder.path(buildPathName, Program._PATH_NAME_QXRUNNER, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
+            pathFinder.path(sdkOutDir),
             "*.lib",
         )
         systemManager.distributeFiles(
-            os.path.join(buildPathName, Program._PATH_NAME_QXRUNNER, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
-            os.path.join(sdkOutDir),
+            pathFinder.path(buildPathName, Program._PATH_NAME_QXRUNNER, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
+            pathFinder.path(sdkOutDir),
             "*.dll",
         )
 
         if not buildSettings.ReleaseSpecified():
             systemManager.distributeFiles(
-            os.path.join(buildPathName, Program._PATH_NAME_QXRUNNER, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
-            os.path.join(sdkOutDir),
+            pathFinder.path(buildPathName, Program._PATH_NAME_QXRUNNER, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
+            pathFinder.path(sdkOutDir),
             "*.pdb",
             )
 
         systemManager.changeDirectory(
-            os.path.join(buildPathName, Program._PATH_NAME_QXCPPUNIT)
+            pathFinder.path(buildPathName, Program._PATH_NAME_QXCPPUNIT)
         )
 
         qmakeCommandLine = (
             f"qmake -r "
             + f'CONFIG+={"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll '
-            + f"INCLUDEPATH+={os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..")} "
-            # + f"CPPUNIT={os.path.join(sdkOutDir, "..")} "
-            + f"LIBS+={os.path.join(sdkOutDir, 'qxrunner' + ('' if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX) + '.lib')} "
-            + f"LIBS+={os.path.join(sdkOutDir, 'cppunit' + ('' if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX) + '.lib')} "
+            + f"INCLUDEPATH+={pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..")} "
+            # + f"CPPUNIT={pathFinder.path(sdkOutDir, "..")} "
+            + f"LIBS+={pathFinder.path(sdkOutDir, 'qxrunner' + ('' if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX) + '.lib')} "
+            + f"LIBS+={pathFinder.path(sdkOutDir, 'cppunit' + ('' if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX) + '.lib')} "
         )
 
         cmd = f'"{vcVars}" && {qmakeCommandLine}'
@@ -179,20 +179,20 @@ class Program:
             sys.exit(-1)
 
         systemManager.distributeFiles(
-            os.path.join(buildPathName, Program._PATH_NAME_QXCPPUNIT, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
-            os.path.join(sdkOutDir),
+            pathFinder.path(buildPathName, Program._PATH_NAME_QXCPPUNIT, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
+            pathFinder.path(sdkOutDir),
             "*.lib",
         )
         systemManager.distributeFiles(
-            os.path.join(buildPathName, Program._PATH_NAME_QXCPPUNIT, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
-            os.path.join(sdkOutDir),
+            pathFinder.path(buildPathName, Program._PATH_NAME_QXCPPUNIT, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
+            pathFinder.path(sdkOutDir),
             "*.dll",
         )
 
         if not buildSettings.ReleaseSpecified():
             systemManager.distributeFiles(
-            os.path.join(buildPathName, Program._PATH_NAME_QXCPPUNIT, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
-            os.path.join(sdkOutDir),
+            pathFinder.path(buildPathName, Program._PATH_NAME_QXCPPUNIT, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
+            pathFinder.path(sdkOutDir),
             "*.pdb",
             )
 

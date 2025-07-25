@@ -117,9 +117,9 @@ class Program:
             Program._PATH_NAME_SOURCE
         )
 
-        nmakeInstallPath = os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL)
+        nmakeInstallPath = pathFinder.path(buildPathName, Program._PATH_NAME_NMAKE_INSTALL)
 
-        sdkOutDir = os.path.join(
+        sdkOutDir = pathFinder.path(
             buildPathName,
             "..",
             (
@@ -171,26 +171,26 @@ class Program:
             sys.exit(-1)
 
         systemManager.removeDirectory(
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
         )
 
         systemManager.distributeFiles(
-            os.path.join(buildPathName, Program._PATH_NAME_INCLUDE),
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            pathFinder.path(buildPathName, Program._PATH_NAME_INCLUDE),
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h",
         )
         systemManager.distributeFiles(
-            os.path.join(buildPathName, Program._PATH_NAME_INCLUDE),
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            pathFinder.path(buildPathName, Program._PATH_NAME_INCLUDE),
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.C",
         )
 
         systemManager.copyFile(
-            os.path.join(buildPathName, "ga", "ga.lib"), os.path.join(sdkOutDir, libName)
+            pathFinder.path(buildPathName, "ga", "ga.lib"), pathFinder.path(sdkOutDir, libName)
         )
         if not buildSettings.ReleaseSpecified():
             systemManager.copyFile(
-                os.path.join(buildPathName, "ga", "vc140.pdb"), os.path.join(sdkOutDir, pdbName)
+                pathFinder.path(buildPathName, "ga", "vc140.pdb"), pathFinder.path(sdkOutDir, pdbName)
             )
 
 

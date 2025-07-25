@@ -117,6 +117,9 @@ class PathFinder:
     # --------------------------------------------------------------------------
     # public methods
 
+    def path(self, *args):
+        return os.path.normcase(os.path.realpath(os.path.join(*args)))
+
     def getShortPath(self, longPath):
         kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
         _GetShortPathNameW = kernel32.GetShortPathNameW

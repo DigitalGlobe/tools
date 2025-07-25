@@ -29,28 +29,28 @@ class Program :
         # the name of the distribution path for all include files
         _PATH_NAME_DISTRIBUTION_INCLUDE = '..\\..\\include\\osg'
         #----------------------------------------------------------------------
-        
+
         def __init__(self) :
-        
+
             pass
         #----------------------------------------------------------------------
-        
+
 
         def main(self) :
-        
+
             systemManager = SystemManager()
             pathFinder    = PathFinder()
-            
+
             # process command-line arguments
             buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
-            
+
             # initialize environment variables
             systemManager.initializeIncludeEnvironmentVariable( buildSettings.X64Specified() )
             systemManager.initializeLibraryEnvironmentVariable( buildSettings.X64Specified() )
             systemManager.appendToPathEnvironmentVariable( pathFinder.getVisualStudioBinPathName( buildSettings.X64Specified() ) )
 
             # MSBuild is under "Program Files (x86)"
-            systemManager.appendToPathEnvironmentVariable( os.path.join( systemManager.getProgramFilesPathName(False) , \
+            systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
                                                                              "MSBuild\\14.0\\Bin") )
 
             compileOutDir = ""
@@ -58,13 +58,13 @@ class Program :
                 print("64bit Build")
 
                 # append path for 64-bit rc.exe
-                systemManager.appendToPathEnvironmentVariable( os.path.join( systemManager.getProgramFilesPathName(False) , \
+                systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
                                                                              "Windows Kits\\10\\bin\\x64"                 ) )
             else:
                 print("32bit Build")
 
                 # append path for 32-bit rc.exe
-                systemManager.appendToPathEnvironmentVariable( os.path.join( systemManager.getProgramFilesPathName(False) , \
+                systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
                                                                              "Windows Kits\\10\\bin\\x86"                 ) )
 
             # determine path names
@@ -81,14 +81,14 @@ class Program :
 
             print("copying source to build dir")
             systemManager.copyDirectory( sourcePathName, buildPathName)
-        
+
             # start building
             systemManager.changeDirectory(buildPathName)
-        
-        
+
+
             # Call CMAKE to generate the correct VS solution files
             if ( buildSettings.X64Specified() ) :
-                cmakeCommand = "cmake -G \"Visual Studio 14 2015 Win64\"" 
+                cmakeCommand = "cmake -G \"Visual Studio 14 2015 Win64\""
                 target="x64"
             else:
                 cmakeCommand = "cmake -G \"Visual Studio 14 2015\""
@@ -118,14 +118,14 @@ class Program :
             cmakeCommand = cmakeCommand + ' -DTIFF_LIBRARY="' + buildPathName + '../../sdk/' + target + 'libtiff' + libSuffix + '.lib'
 
 
-            print( "cmake command: " + cmakeCommand)        
-        
+            print( "cmake command: " + cmakeCommand)
+
             # Run CMAKE
             res = systemManager.execute(cmakeCommand)
 
-            # MSBUILD                
+            # MSBUILD
             cmd = "msbuild OpenSceneGraph.sln "
-            
+
             # extend command line based on options
             if ( buildSettings.X64Specified() ) :
                 cmd = cmd + "/p:platform=x64 "
@@ -140,18 +140,18 @@ class Program :
 
             else:
                 cmd = cmd + "/p:configuration=Debug "
-            
+
             libOutDir = buildPathName + "\\lib"  # libs
             exeOutDir = buildPathName + "\\bin"  # exes and dlls
             #also need plugin dir
-            
+
             print("lib output dir: " + libOutDir)
             print("exe output dir: " + exeOutDir)
 
             sdkOutDir = buildPathName + "\\..\\" + distribPath
 
             cmdClean = cmd + "/t:clean"
-            
+
             print("command is: " + cmd)
             print("clean command is: " + cmdClean)
 
@@ -165,17 +165,17 @@ class Program :
             print("executing compile")
             res = systemManager.execute(cmd)
 
-            systemManager.removeDirectory(os.path.join( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE))
-            systemManager.distributeFiles(os.path.join( buildPathName, Program._PATH_NAME_INCLUDE),              \
-                                          os.path.join( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE), \
+            systemManager.removeDirectory(pathFinder.path( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE))
+            systemManager.distributeFiles(pathFinder.path( buildPathName, Program._PATH_NAME_INCLUDE),              \
+                                          pathFinder.path( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE), \
                                           '*',                                                                 \
-                                          True, False, True) 
+                                          True, False, True)
 
-            
+
             # copy output to appropriate bin dir
             print("Copy files into SDK dir")
 
-            #libs 
+            #libs
             for file in glob.glob(libOutDir + "\\*.lib"):
                 print( "copying " + file + " -> " + sdkOutDir)
                 shutil.copy(file, sdkOutDir)

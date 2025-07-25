@@ -146,7 +146,7 @@ class Program:
         nmakeCommandLine = (
             f'nmake /f "{Program._FILE_NAME_MAKEFILE}" '
             + f"CFG='{"Release" if (buildSettings.ReleaseSpecified()) else "Debug"}' "
-            + f"PREFIX={os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL) } "
+            + f"PREFIX={pathFinder.path(buildPathName, Program._PATH_NAME_NMAKE_INSTALL) } "
             + f'ARCH="{"x64" if (buildSettings.X64Specified()) else "Win32"} {"Release" if (buildSettings.ReleaseSpecified()) else "Debug"}" '
             + f'USEMAK=1 '
             + f" buildall install "
@@ -160,27 +160,27 @@ class Program:
             sys.exit(-1)
 
         systemManager.removeDirectory(
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
         )
         systemManager.distributeFiles(
-            os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "include"),
-            os.path.join(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            pathFinder.path(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "include"),
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h",
         )
 
-        libdir = os.path.join(buildPathName,Program._PATH_NAME_NMAKE_INSTALL, "lib")
-        bindir = os.path.join(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "bin")
+        libdir = pathFinder.path(buildPathName,Program._PATH_NAME_NMAKE_INSTALL, "lib")
+        bindir = pathFinder.path(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "bin")
 
         # we need to rename the debug libs to have a _d suffix (they have a 'd' suffix now)
-        for f in glob.glob(os.path.join(libdir, "*.lib")):
-            systemManager.copyFile(f, os.path.join(sdkOutDir, f.replace("-1.lib", f"{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib")))
+        for f in glob.glob(pathFinder.path(libdir, "*.lib")):
+            systemManager.copyFile(f, pathFinder.path(sdkOutDir, f.replace("-1.lib", f"{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib")))
 
-        for f in glob.glob(os.path.join(bindir, "*.dll")):
-            systemManager.copyFile(f, os.path.join(sdkOutDir, f.replace("-1.dll", f"{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.dll")))
+        for f in glob.glob(pathFinder.path(bindir, "*.dll")):
+            systemManager.copyFile(f, pathFinder.path(sdkOutDir, f.replace("-1.dll", f"{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.dll")))
 
         if not buildSettings.ReleaseSpecified():
-            for f in glob.glob(os.path.join(libdir, "*.pdb")):
-                systemManager.copyFile(f, os.path.join(sdkOutDir, f.replace("-1.pdb", f"{Program._DEBUG_SUFFIX}.pdb")))
+            for f in glob.glob(pathFinder.path(libdir, "*.pdb")):
+                systemManager.copyFile(f, pathFinder.path(sdkOutDir, f.replace("-1.pdb", f"{Program._DEBUG_SUFFIX}.pdb")))
 
 
 # --------------------------------------------------------------------------
