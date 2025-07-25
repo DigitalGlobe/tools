@@ -92,9 +92,6 @@ class Program:
         systemManager.initializeLibraryEnvironmentVariable(buildSettings.X64Specified())
 
         systemManager.appendToPathEnvironmentVariable(
-            pathFinder.getVisualStudioBinPathName(buildSettings.X64Specified())
-        )
-        systemManager.appendToPathEnvironmentVariable(
             Program._QT_DIR_X64
             if buildSettings.X64Specified()
             else Program._QT_DIR_X86 + "\\bin"
@@ -104,6 +101,8 @@ class Program:
         systemManager.appendToPathEnvironmentVariable(
             pathFinder.getMSBuildFileName(buildSettings.X64Specified())
         )
+
+        systemManager.appendToPathEnvironmentVariable(pathFinder.PATH_SED_EXECUTABLE)
 
         systemManager.appendToPathEnvironmentVariable(
             pathFinder.getWindowsSdkBinPathName(buildSettings.X64Specified())
@@ -129,7 +128,7 @@ class Program:
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
-        # systemManager.removeDirectory(buildPathName)
+        systemManager.removeDirectory(buildPathName)
 
         # copy UriParser to the Build area
         systemManager.copyDirectory(sourcePathName, buildPathName)
@@ -137,10 +136,23 @@ class Program:
         # start building
         systemManager.changeDirectory(buildPathName)
 
+
+        # modify the vcxproj to work with our version of vscode
+        sedCommandLine = (
+            f"{pathFinder.path(pathFinder.PATH_SED_EXECUTABLE, "sed.exe")} "
+            + f"-i.bak s/^<\/RuntimeLibrary^>/DLL^<\/RuntimeLibrary^>/g "
+            + f"{Program._FILE_NAME_SOLUTION}"
+        )
+
+        print("cmd: " + sedCommandLine)
+        sedResult = systemManager.execute(sedCommandLine)
+        if sedResult != 0:
+            sys.exit(-1)
+
         systemManager.makeDirectory(nmakeBuildPath)
         systemManager.changeDirectory(nmakeBuildPath)
 
-        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        conf = f'{"Release" if (buildSettings.ReleaseSpecified()) else "Debug"}'
         platform = "x64" if buildSettings.X64Specified() else "Win32"
 
         # build the solution

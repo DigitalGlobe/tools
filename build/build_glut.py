@@ -63,9 +63,6 @@ class Program:
         # initialize environment variables
         systemManager.initializeIncludeEnvironmentVariable(buildSettings.X64Specified())
         systemManager.initializeLibraryEnvironmentVariable(buildSettings.X64Specified())
-        systemManager.appendToPathEnvironmentVariable(
-            pathFinder.getVisualStudioBinPathName(buildSettings.X64Specified())
-        )
 
         # MSBuild is under "Program Files (x86)"
         systemManager.appendToPathEnvironmentVariable(

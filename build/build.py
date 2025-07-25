@@ -276,7 +276,7 @@ class Program :
             # self._build(Program._FILE_NAME_BUILD_HDF5)
             # self._build(Program._FILE_NAME_BUILD_HAWKNL)
             # self._build(Program._FILE_NAME_BUILD_QWT)
-            self._build(Program._FILE_NAME_BUILD_CRYPTOWRAPPER)
+            # self._build(Program._FILE_NAME_BUILD_CRYPTOWRAPPER)
             self._build(Program._FILE_NAME_BUILD_MINIZIP)
             self._build(Program._FILE_NAME_BUILD_LIBPNG)
             self._build(Program._FILE_NAME_BUILD_FREETYPE)
