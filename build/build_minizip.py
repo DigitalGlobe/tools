@@ -163,9 +163,6 @@ class Program:
             f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
             + f"-A {platform} "
             + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
-            + f"-DCMAKE_POLICY_DEFAULT_CMP0169=OLD "
-            + f"-DMZ_FETCH_LIBS=OFF "
-            + f"-DMZ_LIB_SUFFIX={"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX} "
             + f"{externalLibStr} "
             + f"{buildSourceName}"
         )
@@ -202,23 +199,17 @@ class Program:
         if cmakeResult != 0:
             sys.exit(-1)
 
-        libName = (
-            f"{Program._LIBNAME}"
-            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
-            + f".lib"
-        )
         pdbName = (
             f"{Program._LIBNAME}"
             + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
             + f".pdb"
         )
 
-        srcIncludePath = pathFinder.path(cmakeInstallPath, "include")
+        srcIncludePath = pathFinder.path(cmakeInstallPath, "include", f"minizip")
         srcLibPath = pathFinder.path(cmakeInstallPath, "lib")
-        srcBinPath = pathFinder.path(cmakeInstallPath, "bin")
 
         systemManager.distributeFiles(
-            pathFinder.path(srcIncludePath, f"minizip{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}"),
+            srcIncludePath,
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
         )
@@ -227,6 +218,7 @@ class Program:
             srcLibPath,
             sdkOutDir,
             "*.lib",
+            suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX,
         )
 
         if not buildSettings.ReleaseSpecified():
@@ -234,7 +226,7 @@ class Program:
                 pathFinder.path(
                     cmakeBuildPath,
                     conf,
-                    f"{Program._LIBNAME}_d.pdb",
+                    f"{Program._LIBNAME}.pdb",
                 ),
                 pathFinder.path(sdkOutDir, pdbName),
             )
