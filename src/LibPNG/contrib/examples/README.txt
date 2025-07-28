@@ -1,4 +1,3 @@
-
 This directory (contrib/examples) contains examples of libpng usage.
 
 NO COPYRIGHT RIGHTS ARE CLAIMED TO ANY OF THE FILES IN THIS DIRECTORY.
@@ -21,4 +20,4 @@ ORIGINAL AUTHORS
     of the people below claim any rights with regard to the contents of this
     directory.
 
-    John Bowler <jbowler@acm.org>
+    John Bowler <jbowler at acm.org>

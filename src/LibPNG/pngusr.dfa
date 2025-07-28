@@ -1,39 +1,14 @@
-# pngminim/encoder/pngusr.dfa
+# pngusr.dfa
 #
-# Copyright (c) 2010-2013 Glenn Randers-Pehrson
+# Build time configuration of libpng
 #
-# This code is released under the libpng license.
-# For conditions of distribution and use, see the disclaimer
-# and license in png.h
-
-# First all the build options off:
-
-everything = off
-
-# Switch on the write code - this makes a minimalist encoder
-
-option WRITE on
-
-# These 2 options are required if you need to read PBM (P1 or P4) files.
-option WRITE_INVERT on
-option WRITE_PACK on
-
-# You must choose fixed or floating point arithmetic:
-# option FLOATING_POINT on
-
-option FIXED_POINT on
-
-# You must chose the internal fixed point implementation or to
-# use the system floating point.  The latter is considerably
-# smaller (by about 1kbyte on an x86 system):
-# option FLOATING_ARITHMETIC on
-
-option FLOATING_ARITHMETIC off
-
-# Your program will probably need other options.  The example
-# program here, pnm2pngm, requires the following.  Take a look
-# at pnglibconf.h to find out the full set of what has to be
-# enabled to make the following work.
-
-option SETJMP on
-option STDIO on
+# Enter build configuration options in this file
+#
+# Security settings: by default these limits are unset, you can change them
+# here by entering the appropriate values as #defines preceded by '@' (to cause,
+# them to be passed through to the build of pnglibconf.h), for example:
+#
+# @# define PNG_USER_WIDTH_MAX 65535
+# @# define PNG_USER_HEIGHT_MAX 65535
+# @# define PNG_USER_CHUNK_CACHE_MAX 256
+# @# define PNG_USER_CHUNK_MALLOC_MAX 640000

@@ -1,6 +1,6 @@
 /*- pngtopng
  *
- * COPYRIGHT: Written by John Cunningham Bowler, 2011.
+ * COPYRIGHT: Written by John Cunningham Bowler, 2011, 2017.
  * To the extent possible under law, the author has waived all copyright and
  * related or neighboring rights to this work.  This work is published from:
  * United States.
@@ -8,8 +8,8 @@
  * Read a PNG and write it out in a fixed format, using the 'simplified API'
  * that was introduced in libpng-1.6.0.
  *
- * This sample code is just the code from the top of 'example.c' with some error
- * handling added.  See example.c for more comments.
+ * This sample code is just the code from 'example.c' with some error handling
+ * added.  See example.c in the top-level libpng directory for more comments.
  */
 #include <stddef.h>
 #include <stdlib.h>
@@ -20,10 +20,15 @@
  * ensure the code picks up the local libpng implementation:
  */
 #include "../../png.h"
-#if defined(PNG_SIMPLIFIED_READ_SUPPORTED) && \
-    defined(PNG_SIMPLIFIED_WRITE_SUPPORTED)
 
-int main(int argc, const char **argv)
+#if !defined(PNG_SIMPLIFIED_READ_SUPPORTED) || \
+    !defined(PNG_SIMPLIFIED_WRITE_SUPPORTED)
+#error This program requires libpng supporting the simplified read/write API
+#endif
+
+
+int
+main(int argc, const char **argv)
 {
    int result = 1;
 
@@ -48,37 +53,38 @@ int main(int argc, const char **argv)
 
          if (buffer != NULL)
          {
-            if (png_image_finish_read(&image, NULL/*background*/, buffer,
-               0/*row_stride*/, NULL/*colormap for PNG_FORMAT_FLAG_COLORMAP */))
+            if (png_image_finish_read(&image, NULL /*background*/, buffer,
+                                      0 /*row_stride*/, NULL /*colormap */))
             {
-               if (png_image_write_to_file(&image, argv[2],
-                  0/*convert_to_8bit*/, buffer, 0/*row_stride*/,
-                  NULL/*colormap*/))
+               if (png_image_write_to_file(
+                      &image, argv[2], 0 /*convert_to_8bit*/, buffer,
+                      0 /*row_stride*/, NULL /*colormap*/))
                   result = 0;
 
                else
                   fprintf(stderr, "pngtopng: write %s: %s\n", argv[2],
-                      image.message);
-
-               free(buffer);
+                          image.message);
             }
 
             else
-            {
                fprintf(stderr, "pngtopng: read %s: %s\n", argv[1],
-                   image.message);
+                       image.message);
 
-               /* This is the only place where a 'free' is required; libpng does
-                * the cleanup on error and success, but in this case we couldn't
-                * complete the read because of running out of memory.
-                */
-               png_image_free(&image);
-            }
+            free(buffer);
          }
 
          else
+         {
             fprintf(stderr, "pngtopng: out of memory: %lu bytes\n",
-               (unsigned long)PNG_IMAGE_SIZE(image));
+                    (unsigned long)PNG_IMAGE_SIZE(image));
+
+            /* This is the only place where a 'free' is required; libpng does
+             * the cleanup on error and success, but in this case we couldn't
+             * complete the read because of running out of memory and so libpng
+             * has not got to the point where it can do cleanup.
+             */
+            png_image_free(&image);
+         }
       }
 
       else
@@ -92,4 +98,3 @@ int main(int argc, const char **argv)
 
    return result;
 }
-#endif /* READ && WRITE */

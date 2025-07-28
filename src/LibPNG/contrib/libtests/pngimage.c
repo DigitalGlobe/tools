@@ -1,8 +1,7 @@
 /* pngimage.c
  *
+ * Copyright (c) 2021 Cosmin Truta
  * Copyright (c) 2015,2016 John Cunningham Bowler
- *
- * Last changed in libpng 1.6.22 [May 26, 2016]
  *
  * This code is released under the libpng license.
  * For conditions of distribution and use, see the disclaimer
@@ -12,6 +11,7 @@
  * using png_read_png and then write with png_write_png.  Test all possible
  * transforms.
  */
+
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
@@ -45,8 +45,19 @@
 #  define SKIP 0
 #endif
 
-#if defined(PNG_INFO_IMAGE_SUPPORTED) && defined(PNG_SEQUENTIAL_READ_SUPPORTED)\
-    && (defined(PNG_READ_PNG_SUPPORTED) || PNG_LIBPNG_VER < 10700)
+#if PNG_LIBPNG_VER < 10700
+   /* READ_PNG and WRITE_PNG were not defined, so: */
+#  ifdef PNG_INFO_IMAGE_SUPPORTED
+#     ifdef PNG_SEQUENTIAL_READ_SUPPORTED
+#        define PNG_READ_PNG_SUPPORTED
+#     endif /* SEQUENTIAL_READ */
+#     ifdef PNG_WRITE_SUPPORTED
+#        define PNG_WRITE_PNG_SUPPORTED
+#     endif /* WRITE */
+#  endif /* INFO_IMAGE */
+#endif /* pre 1.7.0 */
+
+#ifdef PNG_READ_PNG_SUPPORTED
 /* If a transform is valid on both read and write this implies that if the
  * transform is applied to read it must also be applied on write to produce
  * meaningful data.  This is because these transforms when performed on read
@@ -306,11 +317,10 @@ transform_name(int t)
 
    t &= -t; /* first set bit */
 
-   for (i=0; i<TTABLE_SIZE; ++i) if (transform_info[i].name != NULL)
-   {
-      if ((transform_info[i].transform & t) != 0)
-         return transform_info[i].name;
-   }
+   for (i=0; i<TTABLE_SIZE; ++i)
+      if (transform_info[i].name != NULL)
+         if ((transform_info[i].transform & t) != 0)
+            return transform_info[i].name;
 
    return "invalid transform";
 }
@@ -327,13 +337,16 @@ validate_T(void)
 {
    unsigned int i;
 
-   for (i=0; i<TTABLE_SIZE; ++i) if (transform_info[i].name != NULL)
+   for (i=0; i<TTABLE_SIZE; ++i)
    {
-      if (transform_info[i].when & TRANSFORM_R)
-         read_transforms |= transform_info[i].transform;
+      if (transform_info[i].name != NULL)
+      {
+         if (transform_info[i].when & TRANSFORM_R)
+            read_transforms |= transform_info[i].transform;
 
-      if (transform_info[i].when & TRANSFORM_W)
-         write_transforms |= transform_info[i].transform;
+         if (transform_info[i].when & TRANSFORM_W)
+            write_transforms |= transform_info[i].transform;
+      }
    }
 
    /* Reversible transforms are those which are supported on both read and
@@ -395,7 +408,7 @@ buffer_destroy(struct buffer *buffer)
    buffer_destroy_list(list);
 }
 
-#ifdef PNG_WRITE_SUPPORTED
+#ifdef PNG_WRITE_PNG_SUPPORTED
 static void
 buffer_start_write(struct buffer *buffer)
 {
@@ -529,6 +542,7 @@ typedef enum
 struct display
 {
    jmp_buf        error_return;      /* Where to go to on error */
+   error_level    error_code;        /* Set before longjmp */
 
    const char    *filename;          /* The name of the original file */
    const char    *operation;         /* Operation being performed */
@@ -540,7 +554,7 @@ struct display
    png_structp    original_pp;       /* used on the original read */
    png_infop      original_ip;       /* set by the original read */
 
-   png_size_t     original_rowbytes; /* of the original rows: */
+   size_t         original_rowbytes; /* of the original rows: */
    png_bytepp     original_rows;     /* from the original read */
 
    /* Original chunks valid */
@@ -565,7 +579,7 @@ struct display
    png_structp    read_pp;
    png_infop      read_ip;
 
-#  ifdef PNG_WRITE_SUPPORTED
+#  ifdef PNG_WRITE_PNG_SUPPORTED
       /* Used to write a new image (the original info_ptr is used) */
       png_structp   write_pp;
       struct buffer written_file;   /* where the file gets written */
@@ -592,7 +606,7 @@ display_init(struct display *dp)
    dp->read_ip = NULL;
    buffer_init(&dp->original_file);
 
-#  ifdef PNG_WRITE_SUPPORTED
+#  ifdef PNG_WRITE_PNG_SUPPORTED
       dp->write_pp = NULL;
       buffer_init(&dp->written_file);
 #  endif
@@ -605,7 +619,7 @@ display_clean_read(struct display *dp)
       png_destroy_read_struct(&dp->read_pp, &dp->read_ip, NULL);
 }
 
-#ifdef PNG_WRITE_SUPPORTED
+#ifdef PNG_WRITE_PNG_SUPPORTED
 static void
 display_clean_write(struct display *dp)
 {
@@ -617,7 +631,7 @@ display_clean_write(struct display *dp)
 static void
 display_clean(struct display *dp)
 {
-#  ifdef PNG_WRITE_SUPPORTED
+#  ifdef PNG_WRITE_PNG_SUPPORTED
       display_clean_write(dp);
 #  endif
    display_clean_read(dp);
@@ -635,7 +649,7 @@ static void
 display_destroy(struct display *dp)
 {
     /* Release any memory held in the display. */
-#  ifdef PNG_WRITE_SUPPORTED
+#  ifdef PNG_WRITE_PNG_SUPPORTED
       buffer_destroy(&dp->written_file);
 #  endif
 
@@ -749,7 +763,10 @@ display_log(struct display *dp, error_level level, const char *fmt, ...)
 
    /* Errors cause this routine to exit to the fail code */
    if (level > APP_FAIL || (level > ERRORS && !(dp->options & CONTINUE)))
+   {
+      dp->error_code = level;
       longjmp(dp->error_return, level);
+    }
 }
 
 /* error handler callbacks for libpng */
@@ -796,7 +813,7 @@ display_cache_file(struct display *dp, const char *filename)
 
 static void
 buffer_read(struct display *dp, struct buffer *bp, png_bytep data,
-   png_size_t size)
+   size_t size)
 {
    struct buffer_list *last = bp->current;
    size_t read_count = bp->read_count;
@@ -844,7 +861,7 @@ buffer_read(struct display *dp, struct buffer *bp, png_bytep data,
 }
 
 static void PNGCBAPI
-read_function(png_structp pp, png_bytep data, png_size_t size)
+read_function(png_structp pp, png_bytep data, size_t size)
 {
    buffer_read(get_dp(pp), get_buffer(pp), data, size);
 }
@@ -916,7 +933,7 @@ update_display(struct display *dp)
    png_structp pp;
    png_infop   ip;
 
-   /* Now perform the initial read with a 0 tranform. */
+   /* Now perform the initial read with a 0 transform. */
    read_png(dp, &dp->original_file, "original read", 0/*no transform*/);
 
    /* Move the result to the 'original' fields */
@@ -951,21 +968,24 @@ update_display(struct display *dp)
       int bd = dp->bit_depth;
       unsigned int i;
 
-      for (i=0; i<TTABLE_SIZE; ++i) if (transform_info[i].name != NULL)
+      for (i=0; i<TTABLE_SIZE; ++i)
       {
-         int transform = transform_info[i].transform;
+         if (transform_info[i].name != NULL)
+         {
+            int transform = transform_info[i].transform;
 
-         if ((transform_info[i].valid_chunks == 0 ||
-               (transform_info[i].valid_chunks & chunks) != 0) &&
-            (transform_info[i].color_mask_required & ct) ==
-               transform_info[i].color_mask_required &&
-            (transform_info[i].color_mask_absent & ct) == 0 &&
-            (transform_info[i].bit_depths & bd) != 0 &&
-            (transform_info[i].when & TRANSFORM_R) != 0)
-            active |= transform;
+            if ((transform_info[i].valid_chunks == 0 ||
+                  (transform_info[i].valid_chunks & chunks) != 0) &&
+               (transform_info[i].color_mask_required & ct) ==
+                  transform_info[i].color_mask_required &&
+               (transform_info[i].color_mask_absent & ct) == 0 &&
+               (transform_info[i].bit_depths & bd) != 0 &&
+               (transform_info[i].when & TRANSFORM_R) != 0)
+               active |= transform;
 
-         else if ((transform_info[i].when & TRANSFORM_R) != 0)
-            inactive |= transform;
+            else if ((transform_info[i].when & TRANSFORM_R) != 0)
+               inactive |= transform;
+         }
       }
 
       /* Some transforms appear multiple times in the table; the 'active' status
@@ -989,8 +1009,9 @@ compare_read(struct display *dp, int applied_transforms)
    int interlace_method, compression_method, filter_method;
    const char *e = NULL;
 
-   png_get_IHDR(dp->read_pp, dp->read_ip, &width, &height, &bit_depth,
-      &color_type, &interlace_method, &compression_method, &filter_method);
+   if (!png_get_IHDR(dp->read_pp, dp->read_ip, &width, &height, &bit_depth,
+      &color_type, &interlace_method, &compression_method, &filter_method))
+      display_log(dp, LIBPNG_BUG, "png_get_IHDR failed");
 
 #  define C(item) if (item != dp->item) \
       display_log(dp, APP_WARNING, "IHDR " #item "(%lu) changed to %lu",\
@@ -1001,7 +1022,12 @@ compare_read(struct display *dp, int applied_transforms)
    C(height);
    C(bit_depth);
    C(color_type);
-   C(interlace_method);
+#  ifdef PNG_WRITE_INTERLACING_SUPPORTED
+      /* If write interlace has been disabled, the PNG file is still
+       * written correctly, but as a regular (not-interlaced) PNG.
+       */
+      C(interlace_method);
+#  endif
    C(compression_method);
    C(filter_method);
 
@@ -1070,8 +1096,9 @@ compare_read(struct display *dp, int applied_transforms)
                size_t x;
 
                /* Find the first error */
-               for (x=0; x<rowbytes-1; ++x) if (row[x] != orig[x])
-                  break;
+               for (x=0; x<rowbytes-1; ++x)
+                  if (row[x] != orig[x])
+                     break;
 
                display_log(dp, APP_FAIL,
                   "byte(%lu,%lu) changed 0x%.2x -> 0x%.2x",
@@ -1082,6 +1109,7 @@ compare_read(struct display *dp, int applied_transforms)
       }
 
       else
+#     ifdef PNG_sBIT_SUPPORTED
       {
          unsigned long y;
          int bpp;   /* bits-per-pixel then bytes-per-pixel */
@@ -1125,6 +1153,7 @@ compare_read(struct display *dp, int applied_transforms)
                display_log(dp, LIBPNG_ERROR, "invalid colour type %d",
                   color_type);
                /*NOTREACHED*/
+               memset(sig_bits, 0, sizeof(sig_bits));
                bpp = 0;
                break;
          }
@@ -1186,7 +1215,7 @@ compare_read(struct display *dp, int applied_transforms)
                sig_bits[0] = (png_byte)b;
                break;
 
-            case 4: /* Relicate twice */
+            case 4: /* Replicate twice */
                /* Value is 1, 2, 3 or 4 */
                b = 0xf & ((0xf << 4) >> sig_bits[0]);
                b |= b << 4;
@@ -1243,15 +1272,19 @@ compare_read(struct display *dp, int applied_transforms)
             }
          } /* for y */
       }
+#     else /* !sBIT */
+         display_log(dp, INTERNAL_ERROR,
+               "active shift transform but no sBIT support");
+#     endif /* !sBIT */
    }
 
    return 1; /* compare succeeded */
 }
 
-#ifdef PNG_WRITE_SUPPORTED
+#ifdef PNG_WRITE_PNG_SUPPORTED
 static void
 buffer_write(struct display *dp, struct buffer *buffer, png_bytep data,
-   png_size_t size)
+   size_t size)
    /* Generic write function used both from the write callback provided to
     * libpng and from the generic read code.
     */
@@ -1295,7 +1328,7 @@ buffer_write(struct display *dp, struct buffer *buffer, png_bytep data,
 }
 
 static void PNGCBAPI
-write_function(png_structp pp, png_bytep data, png_size_t size)
+write_function(png_structp pp, png_bytep data, size_t size)
 {
    buffer_write(get_dp(pp), get_buffer(pp), data, size);
 }
@@ -1347,7 +1380,7 @@ write_png(struct display *dp, png_infop ip, int transforms)
     */
    display_clean_write(dp);
 }
-#endif /* WRITE_SUPPORTED */
+#endif /* WRITE_PNG */
 
 static int
 skip_transform(struct display *dp, int tr)
@@ -1409,7 +1442,7 @@ test_one_file(struct display *dp, const char *filename)
          return; /* no point testing more */
    }
 
-#ifdef PNG_WRITE_SUPPORTED
+#ifdef PNG_WRITE_PNG_SUPPORTED
    /* Second test: write the original PNG data out to a new file (to test the
     * write side) then read the result back in and make sure that it hasn't
     * changed.
@@ -1430,7 +1463,7 @@ test_one_file(struct display *dp, const char *filename)
        * unsigned, because some transforms are negative on a 16-bit system.
        */
       unsigned int active = dp->active_transforms;
-      const int exhaustive = (dp->options & EXHAUSTIVE) != 0;
+      int exhaustive = (dp->options & EXHAUSTIVE) != 0;
       unsigned int current = first_transform(active);
       unsigned int bad_transforms = 0;
       unsigned int bad_combo = ~0U;    /* bitwise AND of failing transforms */
@@ -1450,7 +1483,7 @@ test_one_file(struct display *dp, const char *filename)
           * out and read it back in again (without the reversible transforms)
           * we should get back to the place where we started.
           */
-#ifdef PNG_WRITE_SUPPORTED
+#ifdef PNG_WRITE_PNG_SUPPORTED
          if ((current & write_transforms) == current)
          {
             /* All transforms reversible: write the PNG with the transformations
@@ -1541,22 +1574,23 @@ static int
 do_test(struct display *dp, const char *file)
    /* Exists solely to isolate the setjmp clobbers */
 {
-   int ret = setjmp(dp->error_return);
+   dp->error_code = VERBOSE; /* The "lowest" level */
 
-   if (ret == 0)
+   if (setjmp(dp->error_return) == 0)
    {
       test_one_file(dp, file);
       return 0;
    }
 
-   else if (ret < ERRORS) /* shouldn't longjmp on warnings */
-      display_log(dp, INTERNAL_ERROR, "unexpected return code %d", ret);
+   else if (dp->error_code < ERRORS) /* shouldn't longjmp on warnings */
+      display_log(dp, INTERNAL_ERROR, "unexpected return code %d",
+                  dp->error_code);
 
-   return ret;
+   return dp->error_code;
 }
 
 int
-main(const int argc, const char * const * const argv)
+main(int argc, char **argv)
 {
    /* For each file on the command line test it with a range of transforms */
    int option_end, ilog = 0;
@@ -1652,13 +1686,17 @@ main(const int argc, const char * const * const argv)
             int ret = do_test(&d, argv[i]);
 
             if (ret > QUIET) /* abort on user or internal error */
+            {
+               display_clean(&d);
+               display_destroy(&d);
                return 99;
+            }
          }
 
          /* Here on any return, including failures, except user/internal issues
           */
          {
-            const int pass = (d.options & STRICT) ?
+            int pass = (d.options & STRICT) ?
                RESULT_STRICT(d.results) : RESULT_RELAXED(d.results);
 
             if (!pass)
@@ -1670,8 +1708,9 @@ main(const int argc, const char * const * const argv)
 
                printf("%s: pngimage ", pass ? "PASS" : "FAIL");
 
-               for (j=1; j<option_end; ++j) if (j != ilog)
-                  printf("%s ", argv[j]);
+               for (j=1; j<option_end; ++j)
+                  if (j != ilog)
+                     printf("%s ", argv[j]);
 
                printf("%s\n", d.filename);
             }
@@ -1686,7 +1725,7 @@ main(const int argc, const char * const * const argv)
       return errors != 0;
    }
 }
-#else /* !INFO_IMAGE || !SEQUENTIAL_READ || !READ_PNG*/
+#else /* !READ_PNG */
 int
 main(void)
 {
