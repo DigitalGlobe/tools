@@ -279,7 +279,7 @@ class Program :
             # self._build(Program._FILE_NAME_BUILD_CRYPTOWRAPPER)
             # self._build(Program._FILE_NAME_BUILD_MINIZIP)
             # self._build(Program._FILE_NAME_BUILD_LIBPNG)
-            self._build(Program._FILE_NAME_BUILD_FREETYPE)
+            # self._build(Program._FILE_NAME_BUILD_FREETYPE)
             # self._build(Program._FILE_NAME_BUILD_QT)
             # self._build(Program._FILE_NAME_BUILD_QXRUNNER)
             self._build(Program._FILE_NAME_BUILD_LIBKML)

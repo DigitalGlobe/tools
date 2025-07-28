@@ -57,7 +57,7 @@ class Program:
     _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\freetype"
     # ----------------------------------------------------------------------
     # the name of the path that contains the cmake files
-    _PATH_NAME_CMAKE_SOURCE = "build/cmake"
+    _PATH_NAME_CMAKE_SOURCE = "."
     _PATH_NAME_CMAKE_BUILD = "build"
     _PATH_NAME_CMAKE_INSTALL = "install"
 
@@ -132,11 +132,37 @@ class Program:
         conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
         platform = "x64" if buildSettings.X64Specified() else "Win32"
 
+        includeBase = pathFinder.path(
+            buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, ".."
+        )
+        libSuffix = (
+            f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
+        )
+        externalLibs = {
+            "BROTLIDEC_INCLUDE_DIRS": pathFinder.path(includeBase),
+            "BROTLIDEC_LIBRARIES": pathFinder.path(sdkOutDir, f"brotlidec{libSuffix}"),
+            "PNG_PNG_INCLUDE_DIR": pathFinder.path(includeBase, "libpng"),
+            "PNG_LIBRARY": pathFinder.path(sdkOutDir, f"libpng{libSuffix}"),
+            "ZLIB_INCLUDE_DIR": pathFinder.path(includeBase, "zlib"),
+            "ZLIB_LIBRARY": pathFinder.path(sdkOutDir, f"zlib{libSuffix}"),
+        }
+
+        externalLibStr = ""
+        for [key, val] in externalLibs.items():
+            externalLibStr += f'-D{key}="{val}" '
+
         cmakeCommandLine = (
             f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
             + f"-A {platform} "
             + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
             + f"-DBUILD_SHARED_LIBS=ON "
+            + f"-DDISABLE_FORCE_DEBUG_POSTFIX=ON "
+            + f"-DFT_REQUIRE_ZLIB=TRUE "
+            + f"-DFT_DISABLE_BZIP2=TRUE "
+            + f"-DFT_REQUIRE_PNG=TRUE "
+            + f"-DFT_DISABLE_HARFBUZZ=TRUE "
+            + f"-DFT_REQUIRE_BROTLI=TRUE "
+            + f"{externalLibStr} "
             + f"{buildSourceName}"
         )
 
@@ -173,7 +199,7 @@ class Program:
             sys.exit(-1)
 
         systemManager.distributeFiles(
-            pathFinder.path(cmakeInstallPath, "include"),
+            pathFinder.path(cmakeInstallPath, "include", "freetype2"),
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
         )
@@ -194,7 +220,7 @@ class Program:
 
         if not buildSettings.ReleaseSpecified():
             systemManager.distributeFiles(
-                pathFinder.path(cmakeBuildPath, "lib", conf),
+                pathFinder.path(cmakeBuildPath, conf),
                 pathFinder.path(sdkOutDir),
                 "*.pdb",
                 suffix=(
