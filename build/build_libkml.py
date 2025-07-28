@@ -40,7 +40,7 @@ class Program:
     _PATH_NAME_INCLUDE_2 = "include"
     # ----------------------------------------------------------------------
     # the name of the distribution path for all include files
-    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\libkml"
+    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\kml"
     # ----------------------------------------------------------------------
     # the name of the path that contains the cmake files
     _PATH_NAME_CMAKE_SOURCE = "."
@@ -133,12 +133,32 @@ class Program:
         conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
         platform = "x64" if buildSettings.X64Specified() else "Win32"
 
+        includeBase = pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..")
+        libSuffix = f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
+        externalLibs = {
+            "Boost_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase)),
+            "EXPAT_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "expat")),
+            "EXPAT_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libexpat{libSuffix}")),
+            "MINIZIP_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase)),
+            "MINIZIP_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"minizip{libSuffix}")),
+            "URIPARSER_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "uriparser")),
+            "URIPARSER_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"uriparser{libSuffix}")),
+            "ZLIB_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "zlib")),
+            "ZLIB_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"zlib{libSuffix}")),
+        }
+
+        externalLibStr = ""
+        for [key, val] in externalLibs.items():
+            externalLibStr += f'-D{key}="{val}" '
+
         # run CMake
         # -DCMAKE_POLICY_VERSION_MINIMUM is to avoid min compatability errors in CMake
         cmakeCommandLine = (
             f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
             + f"-A {platform} "
             + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
+            + f"-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} "
+            + f"{externalLibStr} "
             + f"{buildSourceName}"
         )
 
@@ -174,52 +194,27 @@ class Program:
         if cmakeResult != 0:
             sys.exit(-1)
 
-        srcIncludePath = pathFinder.path(cmakeInstallPath, "include")
+        srcIncludePath = pathFinder.path(cmakeInstallPath, "include", "kml")
+        srcLibPath = pathFinder.path(cmakeInstallPath, "lib")
 
         systemManager.distributeFiles(
             srcIncludePath,
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
         )
-
-        dllName = (
-            Program._LIBNAME
-            + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".dll"
-        )
-        libName = (
-            Program._LIBNAME
-            + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".lib"
-        )
-        libNameStatic = (
-            Program._LIBNAME_STATIC
-            + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".lib"
-        )
-        pdbName = (
-            Program._LIBNAME
-            + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".pdb"
+        systemManager.distributeFiles(
+            srcLibPath,
+            pathFinder.path(sdkOutDir),
+            "*.lib",
+            suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX,
         )
 
-        systemManager.copyFile(
-            pathFinder.path(cmakeInstallPath, "lib", f"jpeg.lib"),
-            pathFinder.path(sdkOutDir, libName),
-        )
-        systemManager.copyFile(
-            pathFinder.path(cmakeInstallPath, "lib", f"jpeg-static.lib"),
-            pathFinder.path(sdkOutDir, libNameStatic),
-        )
-
-        systemManager.copyFile(
-            pathFinder.path(cmakeInstallPath, "bin", f"jpeg62.dll"),
-            pathFinder.path(sdkOutDir, dllName),
-        )
         if not buildSettings.ReleaseSpecified():
-            systemManager.copyFile(
-                pathFinder.path(cmakeInstallPath, "bin", f"jpeg62.pdb"),
-                pathFinder.path(sdkOutDir, pdbName),
+            systemManager.distributeFiles(
+                pathFinder.path(cmakeBuildPath, "lib", conf),
+                pathFinder.path(sdkOutDir),
+                "*.pdb",
+                suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX,
             )
 
 

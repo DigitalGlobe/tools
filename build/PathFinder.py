@@ -120,6 +120,9 @@ class PathFinder:
     def path(self, *args):
         return os.path.normcase(os.path.realpath(os.path.join(*args)))
 
+    def slasher(self, path):
+        return path.replace("\\", "/")
+
     def getShortPath(self, longPath):
         kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
         _GetShortPathNameW = kernel32.GetShortPathNameW
