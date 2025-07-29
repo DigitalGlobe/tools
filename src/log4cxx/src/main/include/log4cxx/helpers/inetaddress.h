@@ -18,88 +18,75 @@
 #ifndef _LOG4CXX_HELPER_INETADDRESS_H
 #define _LOG4CXX_HELPER_INETADDRESS_H
 
-#if defined(_MSC_VER)
-#pragma warning ( push )
-#pragma warning ( disable: 4231 4251 4275 4786 )
-#endif
-
-
-
-#include <log4cxx/helpers/objectimpl.h>
-#include <log4cxx/helpers/objectptr.h>
+#include <log4cxx/helpers/object.h>
 #include <log4cxx/logstring.h>
 #include <vector>
 #include <log4cxx/helpers/exception.h>
 
-namespace log4cxx
+namespace LOG4CXX_NS
 {
-        namespace helpers
-        {
-                class LOG4CXX_EXPORT UnknownHostException : public Exception
-                {
-                public:
-                      UnknownHostException(const LogString& msg);
-                      UnknownHostException(const UnknownHostException& src);
-                      UnknownHostException& operator=(const UnknownHostException& src);
-                };
+namespace helpers
+{
+class UnknownHostException : public Exception
+{
+	public:
+		UnknownHostException(const LogString& msg);
+		UnknownHostException(const UnknownHostException& src);
+		UnknownHostException& operator=(const UnknownHostException& src);
+};
 
 
-                class InetAddress;
-                LOG4CXX_PTR_DEF(InetAddress);
-                LOG4CXX_LIST_DEF(InetAddressList, InetAddressPtr);
+class InetAddress;
+LOG4CXX_PTR_DEF(InetAddress);
+LOG4CXX_LIST_DEF(InetAddressList, InetAddressPtr);
 
-                class LOG4CXX_EXPORT InetAddress : public ObjectImpl
-                {
-                public:
-                        DECLARE_ABSTRACT_LOG4CXX_OBJECT(InetAddress)
-                        BEGIN_LOG4CXX_CAST_MAP()
-                                LOG4CXX_CAST_ENTRY(InetAddress)
-                        END_LOG4CXX_CAST_MAP()
+class LOG4CXX_EXPORT InetAddress : public Object
+{
+	public:
+		DECLARE_ABSTRACT_LOG4CXX_OBJECT(InetAddress)
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(InetAddress)
+		END_LOG4CXX_CAST_MAP()
 
-                        InetAddress(const LogString& hostName, const LogString& hostAddr);
+		InetAddress(const LogString& hostName, const LogString& hostAddr);
 
-                        /** Determines all the IP addresses of a host, given the host's name.
-                        */
-                        static InetAddressList getAllByName(const LogString& host);
+		~InetAddress();
 
-                        /** Determines the IP address of a host, given the host's name.
-                        */
-                        static InetAddressPtr getByName(const LogString& host);
+		/** Determines all the IP addresses of a host, given the host's name.
+		*/
+		static InetAddressList getAllByName(const LogString& host);
 
-                        /** Returns the IP address string "%d.%d.%d.%d".
-                        */
-                        LogString getHostAddress() const;
+		/** Determines the IP address of a host, given the host's name.
+		*/
+		static InetAddressPtr getByName(const LogString& host);
 
-                        /** Gets the host name for this IP address.
-                        */
-                        LogString getHostName() const;
+		/** Returns the IP address string "%d.%d.%d.%d".
+		*/
+		LogString getHostAddress() const;
 
-                        /** Returns the local host.
-                        */
-                        static InetAddressPtr  getLocalHost();
+		/** Gets the host name for this IP address.
+		*/
+		LogString getHostName() const;
 
-                        /** Returns an InetAddress which can be used as any
-                         *  address, for example when listening on a port from any
-                         *  remote addresss.
-                         */
-                        static InetAddressPtr anyAddress();
+		/** Returns the local host.
+		*/
+		static InetAddressPtr  getLocalHost();
 
-                        /** Converts this IP address to a String.
-                        */
-                        LogString toString() const;
+		/** Returns an InetAddress which can be used as any
+		 *  address, for example when listening on a port from any
+		 *  remote addresss.
+		 */
+		static InetAddressPtr anyAddress();
 
-                private:
-                        LogString ipAddrString;
+		/** Converts this IP address to a String.
+		*/
+		LogString toString() const;
 
-                        LogString hostNameString;
-
-                }; // class InetAddress
-        }  // namespace helpers
+	private:
+		LOG4CXX_DECLARE_PRIVATE_MEMBER_PTR(InetAddressPrivate, m_priv)
+}; // class InetAddress
+}  // namespace helpers
 } // namespace log4cxx
-
-#if defined(_MSC_VER)
-#pragma warning ( pop )
-#endif
 
 
 #endif // _LOG4CXX_HELPER_INETADDRESS_H

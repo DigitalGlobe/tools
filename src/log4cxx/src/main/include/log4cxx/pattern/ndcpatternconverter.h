@@ -20,40 +20,42 @@
 
 #include <log4cxx/pattern/loggingeventpatternconverter.h>
 
-namespace log4cxx { namespace pattern {
+namespace LOG4CXX_NS
+{
+namespace pattern
+{
 
 
 /**
  * Return the event's NDC in a StringBuffer.
  *
- * 
- * 
+ *
+ *
  */
-class LOG4CXX_EXPORT NDCPatternConverter : public LoggingEventPatternConverter {
+class LOG4CXX_EXPORT NDCPatternConverter : public LoggingEventPatternConverter
+{
+	public:
+		DECLARE_LOG4CXX_PATTERN(NDCPatternConverter)
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(NDCPatternConverter)
+		LOG4CXX_CAST_ENTRY_CHAIN(LoggingEventPatternConverter)
+		END_LOG4CXX_CAST_MAP()
 
-  /**
-   * Private constructor.
-   */
-  NDCPatternConverter();
+		NDCPatternConverter();
 
-public:
-DECLARE_LOG4CXX_PATTERN(NDCPatternConverter)
-BEGIN_LOG4CXX_CAST_MAP()
-     LOG4CXX_CAST_ENTRY(NDCPatternConverter)
-     LOG4CXX_CAST_ENTRY_CHAIN(LoggingEventPatternConverter)
-END_LOG4CXX_CAST_MAP()
+		/**
+		 * Obtains an instance of NDCPatternConverter.
+		 * @param options options, may be null.
+		 * @return instance of NDCPatternConverter.
+		 */
+		static PatternConverterPtr newInstance(
+			const std::vector<LogString>& options);
 
-  /**
-   * Obtains an instance of NDCPatternConverter.
-   * @param options options, may be null.
-   * @return instance of NDCPatternConverter.
-   */
-  static PatternConverterPtr newInstance(
-    const std::vector<LogString>& options);
+		using LoggingEventPatternConverter::format;
 
-  void format(const log4cxx::spi::LoggingEventPtr& event,
-     LogString& toAppendTo,
-     log4cxx::helpers::Pool& p) const;
+		void format(const spi::LoggingEventPtr& event,
+			LogString& toAppendTo,
+			helpers::Pool& p) const override;
 };
 }
 }

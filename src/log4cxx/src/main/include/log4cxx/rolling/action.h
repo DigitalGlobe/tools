@@ -18,70 +18,63 @@
 #if !defined(_LOG4CXX_ROLLING_ACTION_H)
 #define _LOG4CXX_ROLLING_ACTION_H
 
-#include <log4cxx/portability.h>
-#include <log4cxx/helpers/objectimpl.h>
-#include <log4cxx/helpers/mutex.h>
+#include <log4cxx/helpers/object.h>
 #include <log4cxx/helpers/pool.h>
+#include <mutex>
+#include <memory>
 
-namespace log4cxx {
-    namespace rolling {
-
-
-        /**
-         *  A file system action performed as part of a rollover event.
-         */
-        class Action : public virtual log4cxx::helpers::ObjectImpl {
-          DECLARE_ABSTRACT_LOG4CXX_OBJECT(Action)
-          BEGIN_LOG4CXX_CAST_MAP()
-                  LOG4CXX_CAST_ENTRY(Action)
-          END_LOG4CXX_CAST_MAP()
-        /**
-         * Is action complete.
-         */
-        bool complete;
-
-        /**
-         * Is action interrupted.
-         */
-        bool interrupted;
-
-        log4cxx::helpers::Pool pool;
-        log4cxx::helpers::Mutex mutex;
+namespace LOG4CXX_NS
+{
+namespace rolling
+{
 
 
-        protected:
-        /**
-         * Constructor.
-         */
-        Action();
-        virtual ~Action();
+/**
+ *  A file system action performed as part of a rollover event.
+ */
+class Action : public virtual LOG4CXX_NS::helpers::Object
+{
+		DECLARE_ABSTRACT_LOG4CXX_OBJECT(Action)
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(Action)
+		END_LOG4CXX_CAST_MAP()
 
-        public:
-        /**
-         * Perform action.
-         *
-         * @return true if successful.
-         */
-        virtual bool execute(log4cxx::helpers::Pool& pool) const = 0;
+		LOG4CXX_DECLARE_PRIVATE_MEMBER_PTR(ActionPrivate, m_priv)
 
-        void run(log4cxx::helpers::Pool& pool);
+	protected:
+		/**
+		 * Constructor.
+		 */
+		Action();
+		Action(LOG4CXX_PRIVATE_PTR(ActionPrivate) priv);
+		virtual ~Action();
 
-        void close();
+	public:
+		/**
+		 * Perform action.
+		 *
+		 * @return true if successful.
+		 */
+		virtual bool execute(LOG4CXX_NS::helpers::Pool& pool) const = 0;
 
-          /**
-           * Tests if the action is complete.
-           * @return true if action is complete.
-           */
-        bool isComplete() const;
+		void run(LOG4CXX_NS::helpers::Pool& pool);
 
-        void reportException(const std::exception&);
+		void close();
+
+		/**
+		 * Tests if the action is complete.
+		 * @return true if action is complete.
+		 */
+		bool isComplete() const;
+
+		void reportException(const std::exception&);
 
 
-        };
+};
 
-        LOG4CXX_PTR_DEF(Action);
+LOG4CXX_PTR_DEF(Action);
 
-    }
+}
 }
 #endif
 

@@ -19,84 +19,106 @@
 #define _LOG4CXX_HELPERS_ONLY_ONCE_ERROR_HANDLER_H
 
 #include <log4cxx/spi/errorhandler.h>
-#include <log4cxx/helpers/objectimpl.h>
+#include <log4cxx/helpers/object.h>
 
-namespace log4cxx
+namespace LOG4CXX_NS
 {
-        namespace helpers
-        {
-                /**
-                The <code>OnlyOnceErrorHandler</code> implements log4cxx's default
-                error handling policy which consists of emitting a message for the
-                first error in an appender and ignoring all following errors.
+namespace helpers
+{
+/**
+The <code>OnlyOnceErrorHandler</code> implements log4cxx's default
+error handling policy which consists of emitting a message for the
+first error in an appender and ignoring all following errors.
 
-                <p>The error message is printed on <code>System.err</code>.
+<p>The error message is printed on <code>System.err</code>.
 
-                <p>This policy aims at protecting an otherwise working application
-                from being flooded with error messages when logging fails
-                */
-                class LOG4CXX_EXPORT OnlyOnceErrorHandler :
-                        public virtual spi::ErrorHandler,
-                        public virtual ObjectImpl
-                {
-                private:
-                        LogString WARN_PREFIX;
-                        LogString ERROR_PREFIX;
-                        mutable bool firstTime;
+<p>This policy aims at protecting an otherwise working application
+from being flooded with error messages when logging fails
+*/
+class LOG4CXX_EXPORT OnlyOnceErrorHandler :
+	public virtual spi::ErrorHandler,
+	public virtual Object
+{
+	private:
+		LOG4CXX_DECLARE_PRIVATE_MEMBER_PTR(OnlyOnceErrorHandlerPrivate, m_priv)
 
-                public:
-                        DECLARE_LOG4CXX_OBJECT(OnlyOnceErrorHandler)
-                        BEGIN_LOG4CXX_CAST_MAP()
-                                LOG4CXX_CAST_ENTRY(spi::OptionHandler)
-                                LOG4CXX_CAST_ENTRY(spi::ErrorHandler)
-                        END_LOG4CXX_CAST_MAP()
+	public:
+		DECLARE_LOG4CXX_OBJECT(OnlyOnceErrorHandler)
+		BEGIN_LOG4CXX_CAST_MAP()
+#if 15 < LOG4CXX_ABI_VERSION
+		LOG4CXX_CAST_ENTRY(OnlyOnceErrorHandler)
+		LOG4CXX_CAST_ENTRY_CHAIN(spi::ErrorHandler)
+#else
+		LOG4CXX_CAST_ENTRY(spi::OptionHandler)
+		LOG4CXX_CAST_ENTRY(spi::ErrorHandler)
+#endif
+		END_LOG4CXX_CAST_MAP()
 
-                        OnlyOnceErrorHandler();
-                        void addRef() const;
-                        void releaseRef() const;
+		OnlyOnceErrorHandler();
 
-                        /**
-                         Does not do anything.
-                         */
-                        void setLogger(const LoggerPtr& logger);
+		~OnlyOnceErrorHandler();
 
-
-            /**
-            No options to activate.
-            */
-            void activateOptions(log4cxx::helpers::Pool& p);
-            void setOption(const LogString& option, const LogString& value);
+		/**
+		 Does not do anything.
+		 */
+		void setLogger(const LoggerPtr& logger) override;
 
 
-            /**
-            Prints the message and the stack trace of the exception on
-            <code>System.err</code>.  */
-            void error(const LogString& message, const std::exception& e,
-                                int errorCode) const;
-            /**
-            Prints the message and the stack trace of the exception on
-            <code>System.err</code>.
-            */
-            void error(const LogString& message, const std::exception& e,
-                                int errorCode, const spi::LoggingEventPtr& event) const;
+		/**
+		\copybrief spi::OptionHandler::activateOptions()
 
-            /**
-            Print a the error message passed as parameter on
-            <code>System.err</code>.
-            */
-             void error(const LogString& message) const;
+		No action is performed in this implementation.
+		*/
+		void activateOptions(helpers::Pool& p) override;
 
-            /**
-            Does not do anything.
-            */
-            void setAppender(const AppenderPtr& appender);
+		/**
+		\copybrief spi::OptionHandler::setOption()
 
-            /**
-            Does not do anything.
-            */
-            void setBackupAppender(const AppenderPtr& appender);
-                };
-        }  // namespace helpers
+		Supported options | Supported values | Default value
+		-------------- | ---------------- | ---------------
+		- | - | -
+		*/
+		void setOption(const LogString& option, const LogString& value) override;
+
+
+		/**
+		Prints the message and the stack trace of the exception on
+		<code>System.err</code>.  */
+		void error(const LogString& message, const std::exception& e,
+			int errorCode) const override;
+		/**
+		Prints the message and the stack trace of the exception on
+		<code>System.err</code>.
+		*/
+		void error(const LogString& message, const std::exception& e,
+			int errorCode, const spi::LoggingEventPtr& event) const override;
+
+		/**
+		Print a the error message passed as parameter on
+		<code>System.err</code>.
+		*/
+		void error(const LogString& message) const override;
+
+		/**
+		Does not do anything.
+		*/
+		void setAppender(const AppenderPtr& appender) override;
+
+		/**
+		Does not do anything.
+		*/
+		void setBackupAppender(const AppenderPtr& appender) override;
+
+		/**
+		Has an error been reported?
+		*/
+#if 15 < LOG4CXX_ABI_VERSION
+		bool errorReported() const override;
+#else
+		bool errorReported() const;
+#endif
+};
+}  // namespace helpers
 } // namespace log4cxx
 
 #endif //_LOG4CXX_HELPERS_ONLY_ONCE_ERROR_HANDLER_H

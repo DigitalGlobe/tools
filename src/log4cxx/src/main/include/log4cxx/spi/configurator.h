@@ -20,42 +20,59 @@
 
 #include <log4cxx/spi/loggerrepository.h>
 
-namespace log4cxx
+namespace LOG4CXX_NS
 {
-    class File;
+class File;
 
-   namespace spi
-   {
-      /**
-      Implemented by classes capable of configuring log4j using a URL.
-      */
-      class LOG4CXX_EXPORT Configurator : virtual public helpers::Object
-      {
-      public:
-         DECLARE_ABSTRACT_LOG4CXX_OBJECT(Configurator)
-         Configurator();
+namespace spi
+{
 
-         /**
-         Interpret a resource pointed by a URL and set up log4j accordingly.
+enum class ConfigurationStatus{
+	Configured,
+	NotConfigured,
+};
 
-         The configuration is done relative to the <code>hierarchy</code>
-         parameter.
+/**
+Implemented by classes capable of configuring log4j using a URL.
+*/
+class LOG4CXX_EXPORT Configurator : virtual public helpers::Object
+{
+	public:
+		DECLARE_ABSTRACT_LOG4CXX_OBJECT(Configurator)
+#if 15 < LOG4CXX_ABI_VERSION
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(Configurator)
+		END_LOG4CXX_CAST_MAP()
+#endif
 
-         @param configFileName The file to parse
-         @param repository The hierarchy to operation upon.
-         */
-         virtual void doConfigure(const File& configFileName,
-            spi::LoggerRepositoryPtr& repository) = 0;
+		/**
+		Interpret a resource pointed by a URL and set up log4j accordingly.
 
+		The configuration is done relative to the <code>hierarchy</code>
+		parameter.
 
-      private:
-         Configurator(const Configurator&);
-         Configurator& operator=(const Configurator&);
-         bool initialized;
-      };
+		@param configFileName The file to parse
+		@param repository Where the Logger instances reside.
+		*/
+		virtual ConfigurationStatus doConfigure
+			( const File&                     configFileName
+#if LOG4CXX_ABI_VERSION <= 15
+			, spi::LoggerRepositoryPtr        repository
+#else
+			, const spi::LoggerRepositoryPtr& repository = spi::LoggerRepositoryPtr()
+#endif
+			) = 0;
 
-      LOG4CXX_PTR_DEF(Configurator);
-   }
+	protected:
+		Configurator();
+
+	private:
+		Configurator(const Configurator&);
+		Configurator& operator=(const Configurator&);
+};
+
+LOG4CXX_PTR_DEF(Configurator);
+}
 }
 
 #endif // _LOG4CXX_SPI_CONFIGURATOR_H

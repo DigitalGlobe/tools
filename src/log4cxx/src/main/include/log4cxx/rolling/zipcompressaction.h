@@ -18,56 +18,58 @@
 #if !defined(_LOG4CXX_ROLLING_ZIP_COMPRESS_ACTION_H)
 #define _LOG4CXX_ROLLING_ZIP_COMPRESS_ACTION_H
 
-#if defined(_MSC_VER)
-#pragma warning ( push )
-#pragma warning ( disable: 4231 4251 4275 4786 )
-#endif
-
-
 #include <log4cxx/rolling/action.h>
 #include <log4cxx/file.h>
 
-namespace log4cxx {
-    namespace rolling {
+namespace LOG4CXX_NS
+{
+namespace rolling
+{
 
 
-        class ZipCompressAction : public Action {
-           const File source;
-           const File destination;
-           bool deleteSource;
-        public:
-          DECLARE_ABSTRACT_LOG4CXX_OBJECT(ZipCompressAction)
-          BEGIN_LOG4CXX_CAST_MAP()
-                  LOG4CXX_CAST_ENTRY(ZipCompressAction)
-                  LOG4CXX_CAST_ENTRY_CHAIN(Action)
-          END_LOG4CXX_CAST_MAP()
+class ZipCompressAction : public Action
+{
+		struct ZipCompressActionPrivate;
+	public:
+		DECLARE_ABSTRACT_LOG4CXX_OBJECT(ZipCompressAction)
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(ZipCompressAction)
+		LOG4CXX_CAST_ENTRY_CHAIN(Action)
+		END_LOG4CXX_CAST_MAP()
 
-        /**
-         * Constructor.
-         */
-        ZipCompressAction(const File& source,
-            const File& destination,
-            bool deleteSource);
+		/**
+		 * Constructor.
+		 */
+		ZipCompressAction(const File& source,
+			const File& destination,
+			bool deleteSource);
 
-        /**
-         * Perform action.
-         *
-         * @return true if successful.
-         */
-        virtual bool execute(log4cxx::helpers::Pool& pool) const;
+		/**
+		 * Perform action.
+		 *
+		 * @return true if successful.
+		 */
+		bool execute(LOG4CXX_NS::helpers::Pool& pool) const override;
 
-        private:
-        ZipCompressAction(const ZipCompressAction&);
-        ZipCompressAction& operator=(const ZipCompressAction&);
-        };
+		/**
+		 * Set to true to throw an IOException on a fork failure.  By default, this
+		 * is true.  When an IOException is thrown, this will automatically cause the
+		 * error handler to be called(which is the recommended way of handling this
+		 * problem).  By setting this to false, the ZipCompressAction effectively
+		 * turns into a FileRenameAction if any errors are encountered.
+		 *
+		 * @param throwIO
+		 */
+		void setThrowIOExceptionOnForkFailure(bool throwIO);
 
-        LOG4CXX_PTR_DEF(ZipCompressAction);
-        
-    }
+	private:
+		ZipCompressAction(const ZipCompressAction&);
+		ZipCompressAction& operator=(const ZipCompressAction&);
+};
 
-#if defined(_MSC_VER)
-#pragma warning ( pop )
-#endif
+LOG4CXX_PTR_DEF(ZipCompressAction);
+
+}
 
 }
 #endif

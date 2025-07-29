@@ -19,32 +19,32 @@
 #define _LOG4CXX_SPI_DEFAULT_REPOSITORY_SELECTOR_H
 
 #include <log4cxx/spi/repositoryselector.h>
-#include <log4cxx/helpers/objectimpl.h>
+#include <log4cxx/helpers/object.h>
 #include <log4cxx/spi/loggerrepository.h>
+#include <memory>
 
-namespace log4cxx
+namespace LOG4CXX_NS
 {
-        namespace spi
-        {
-                class LOG4CXX_EXPORT DefaultRepositorySelector :
-                        public virtual RepositorySelector,
-                        public virtual helpers::ObjectImpl
-                {
-                public:
-                        DECLARE_ABSTRACT_LOG4CXX_OBJECT(DefaultRepositorySelector)
-                        BEGIN_LOG4CXX_CAST_MAP()
-                                LOG4CXX_CAST_ENTRY(RepositorySelector)
-                        END_LOG4CXX_CAST_MAP()
+namespace spi
+{
+class LOG4CXX_EXPORT DefaultRepositorySelector :
+	public virtual RepositorySelector,
+	public virtual helpers::Object
+{
+	public:
+		DECLARE_ABSTRACT_LOG4CXX_OBJECT(DefaultRepositorySelector)
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(RepositorySelector)
+		END_LOG4CXX_CAST_MAP()
 
-                        DefaultRepositorySelector(const LoggerRepositoryPtr& repository1);
-                        void addRef() const;
-                        void releaseRef() const;
-                        virtual LoggerRepositoryPtr& getLoggerRepository();
+		DefaultRepositorySelector(const LoggerRepositoryPtr repository1);
+		~DefaultRepositorySelector();
+		LoggerRepositoryPtr getLoggerRepository() override;
 
-                private:
-                        LoggerRepositoryPtr repository;
-                };
-        }  // namespace spi
+	private:
+		LOG4CXX_DECLARE_PRIVATE_MEMBER_PTR(DefaultRepositorySelectorPrivate, m_priv)
+};
+}  // namespace spi
 } // namespace log4cxx
 
 #endif //_LOG4CXX_SPI_DEFAULT_REPOSITORY_SELECTOR_H

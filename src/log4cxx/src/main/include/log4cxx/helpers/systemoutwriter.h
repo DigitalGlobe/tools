@@ -20,38 +20,39 @@
 
 #include <log4cxx/helpers/writer.h>
 
-namespace log4cxx
+namespace LOG4CXX_NS
 {
-        namespace helpers {
+namespace helpers
+{
 
-          /**
-          *   Abstract class for writing to character streams.
-          */
-          class LOG4CXX_EXPORT SystemOutWriter : public Writer
-          {
-          public:
-                  DECLARE_LOG4CXX_OBJECT(SystemOutWriter)
-                  BEGIN_LOG4CXX_CAST_MAP()
-                          LOG4CXX_CAST_ENTRY(SystemOutWriter)
-                          LOG4CXX_CAST_ENTRY_CHAIN(Writer)
-                  END_LOG4CXX_CAST_MAP()
+/**
+*   Sends output to <code>stdout</code>.
+*/
+class LOG4CXX_EXPORT SystemOutWriter : public Writer
+{
+	public:
+		DECLARE_LOG4CXX_OBJECT(SystemOutWriter)
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(SystemOutWriter)
+		LOG4CXX_CAST_ENTRY_CHAIN(Writer)
+		END_LOG4CXX_CAST_MAP()
 
-                  SystemOutWriter();
-                  ~SystemOutWriter();
-                  
-                  virtual void close(Pool& p);
-                  virtual void flush(Pool& p);
-                  virtual void write(const LogString& str, Pool& p);
-                  
-                  static void write(const LogString& str);
-                  static void flush();
-        private:
-                  SystemOutWriter(const SystemOutWriter&);
-                  SystemOutWriter& operator=(const SystemOutWriter&);
-              static bool isWide();
-          };
+		SystemOutWriter();
+		~SystemOutWriter();
 
-        } // namespace helpers
+		void close(Pool& p) override;
+		void flush(Pool& p) override;
+		void write(const LogString& str, Pool& p) override;
+
+		static void write(const LogString& str);
+		static void flush();
+	private:
+		SystemOutWriter(const SystemOutWriter&);
+		SystemOutWriter& operator=(const SystemOutWriter&);
+		static bool isWide();
+};
+
+} // namespace helpers
 
 }  //namespace log4cxx
 

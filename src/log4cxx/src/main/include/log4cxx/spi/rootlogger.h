@@ -20,41 +20,48 @@
 
 #include <log4cxx/logger.h>
 
-namespace log4cxx
+namespace LOG4CXX_NS
 {
-        namespace spi
-        {
-        /**
-        RootLogger sits at the top of the logger hierachy. It is a
-        regular logger except that it provides several guarantees.
+namespace spi
+{
+/**
+RootLogger sits at the top of the logger hierachy. It is a
+regular logger except that it provides several guarantees.
 
-        <p>First, it cannot be assigned a null
-        level. Second, since root logger cannot have a parent, the
-        #getEffectiveLevel method always returns the value of the
-        level field without walking the hierarchy.
-        */
-        class LOG4CXX_EXPORT RootLogger : public Logger
-                {
-                public:
-            /**
-            The root logger names itself as "root". However, the root
-            logger cannot be retrieved by name.
-            */
-            RootLogger(log4cxx::helpers::Pool& pool, const LevelPtr& level);
+<p>First, it cannot be assigned a null
+level. Second, since root logger cannot have a parent, the
+#getEffectiveLevel method always returns the value of the
+level field without walking the hierarchy.
+*/
+class LOG4CXX_EXPORT RootLogger : public Logger
+{
+	public:
+		/**
+		The root logger names itself as "root". However, the root
+		logger cannot be retrieved by name.
+		*/
+		RootLogger(const LevelPtr& level);
 
-            /**
-            Return the assigned level value without walking the logger
-            hierarchy.
-            */
-            virtual const LevelPtr& getEffectiveLevel() const;
+#if LOG4CXX_ABI_VERSION <= 15
+		[[ deprecated( "Pool is no longer required" ) ]]
+		RootLogger(helpers::Pool& pool, const LevelPtr level);
+#endif
 
-            /**
-                        Setting a null value to the level of the root logger may have catastrophic
-                        results. We prevent this here.
-                        */
-            void setLevel(const LevelPtr& level);
-                };
-        }  // namespace spi
+		~RootLogger() {}
+
+		/**
+		Return the assigned level value without walking the logger
+		hierarchy.
+		*/
+		virtual const LevelPtr& getEffectiveLevel() const;
+
+		/**
+		            Setting a null value to the level of the root logger may have catastrophic
+		            results. We prevent this here.
+		            */
+		void setLevel(const LevelPtr level);
+};
+}  // namespace spi
 } // namespace log4cxx
 
 #endif //_LOG4CXX_SPI_ROOT_LOGGER_H

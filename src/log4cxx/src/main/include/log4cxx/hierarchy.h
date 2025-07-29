@@ -18,266 +18,294 @@
 #ifndef _LOG4CXX_HIERARCHY_H
 #define _LOG4CXX_HIERARCHY_H
 
-#if defined(_MSC_VER)
-#pragma warning (push)
-#pragma warning ( disable: 4231 4251 4275 4786 )
-#endif
 
 #include <log4cxx/spi/loggerrepository.h>
 #include <log4cxx/spi/loggerfactory.h>
-#include <vector>
-#include <map>
 #include <log4cxx/provisionnode.h>
-#include <log4cxx/helpers/objectimpl.h>
 #include <log4cxx/spi/hierarchyeventlistener.h>
-#include <log4cxx/helpers/pool.h>
 
-namespace log4cxx
+namespace LOG4CXX_NS
 {
-        /**
-        This class is specialized in retrieving loggers by name and also
-        maintaining the logger hierarchy.
 
-        <p><em>The casual user does not have to deal with this class
-        directly.</em>
+class Hierarchy;
+LOG4CXX_PTR_DEF(Hierarchy);
 
-        <p>The structure of the logger hierarchy is maintained by the
-        #getLogger method. The hierarchy is such that children link
-        to their parent but parents do not have any pointers to their
-        children. Moreover, loggers can be instantiated in any order, in
-        particular descendant before ancestor.
+/**
+This class is specialized in retrieving loggers by name and also
+maintaining the logger hierarchy.
 
-        <p>In case a descendant is created before a particular ancestor,
-        then it creates a provision node for the ancestor and adds itself
-        to the provision node. Other descendants of the same ancestor add
-        themselves to the previously created provision node.
-        */
-        class LOG4CXX_EXPORT Hierarchy :
-                public virtual spi::LoggerRepository,
-                public virtual helpers::ObjectImpl
-        {
-        private:
-            log4cxx::helpers::Pool pool;
-            log4cxx::helpers::Mutex mutex;
-            bool configured;
+<p><em>The casual user does not have to deal with this class
+directly.</em>
 
-            spi::LoggerFactoryPtr defaultFactory;
-            spi::HierarchyEventListenerList listeners;
+<p>The structure of the logger hierarchy is maintained by the
+#getLogger method. The hierarchy is such that children link
+to their parent but parents do not have any pointers to their
+children. Moreover, loggers can be instantiated in any order, in
+particular descendant before ancestor.
 
-            typedef std::map<LogString, LoggerPtr> LoggerMap;
-            LoggerMap* loggers;
+<p>In case a descendant is created before a particular ancestor,
+then it creates a provision node for the ancestor and adds itself
+to the provision node. Other descendants of the same ancestor add
+themselves to the previously created provision node.
+*/
+class LOG4CXX_EXPORT Hierarchy : public spi::LoggerRepository
+{
+	private:
+		LOG4CXX_DECLARE_PRIVATE_MEMBER_PTR(HierarchyPrivate, m_priv)
 
-            typedef std::map<LogString, ProvisionNode> ProvisionNodeMap;
-            ProvisionNodeMap* provisionNodes;
+	public:
+		DECLARE_ABSTRACT_LOG4CXX_OBJECT(Hierarchy)
+		BEGIN_LOG4CXX_CAST_MAP()
+#if 15 < LOG4CXX_ABI_VERSION
+		LOG4CXX_CAST_ENTRY(Hierarchy)
+		LOG4CXX_CAST_ENTRY_CHAIN(spi::LoggerRepository)
+#else
+		LOG4CXX_CAST_ENTRY(spi::LoggerRepository)
+#endif
+		END_LOG4CXX_CAST_MAP()
 
-            LoggerPtr root;
+	private:
+		/**
+		Create a new logger hierarchy.
+		*/
+		Hierarchy();
 
-            int thresholdInt;
-            LevelPtr threshold;
+	public:
+		static HierarchyPtr create();
 
-            bool emittedNoAppenderWarning;
-            bool emittedNoResourceBundleWarning;
+		~Hierarchy();
 
-        public:
-            DECLARE_ABSTRACT_LOG4CXX_OBJECT(Hierarchy)
-            BEGIN_LOG4CXX_CAST_MAP()
-                LOG4CXX_CAST_ENTRY(spi::LoggerRepository)
-            END_LOG4CXX_CAST_MAP()
+		void addHierarchyEventListener(const spi::HierarchyEventListenerPtr& listener) override;
 
-            /**
-            Create a new logger hierarchy.
-            */
-            Hierarchy();
+		/**
+		 * Remove a previously added HierarchyEventListener.
+		 *
+		 */
+#if LOG4CXX_ABI_VERSION <= 15
+		void removeHierarchyEventListener(const spi::HierarchyEventListenerPtr& listener);
+#else
+		void removeHierarchyEventListener(const spi::HierarchyEventListenerPtr& listener) override;
+#endif
+		/**
+		 * Call \c configurator if not yet configured.
+		 */
+		void ensureIsConfigured(std::function<void()> configurator) override;
 
-            ~Hierarchy();
+		/**
+		This call will clear all logger definitions from the internal
+		hashtable. Invoking this method will irrevocably mess up the
+		logger hierarchy.
 
-            void addRef() const;
-            void releaseRef() const;
+		<p>You should <em>really</em> know what you are doing before
+		invoking this method.
+		*/
+		void clear();
 
-            void addHierarchyEventListener(const spi::HierarchyEventListenerPtr& listener);
+		void emitNoAppenderWarning(const Logger* logger) override;
 
-            /**
-            This call will clear all logger definitions from the internal
-            hashtable. Invoking this method will irrevocably mess up the
-            logger hierarchy.
+		/**
+		Check if the named logger exists in the hierarchy. If so return
+		its reference, otherwise returns <code>null</code>.
 
-            <p>You should <em>really</em> know what you are doing before
-            invoking this method.
-            */
-            void clear();
+		  @param name The name of the logger to search for.
 
-            void emitNoAppenderWarning(const LoggerPtr& logger);
+		*/
+		LoggerPtr exists(const LogString& name) override;
 
-            /**
-            Check if the named logger exists in the hierarchy. If so return
-            its reference, otherwise returns <code>null</code>.
+		/**
+		The string form of {@link #setThreshold(const LevelPtr&) setThreshold}.
+		*/
+		void setThreshold(const LogString& levelStr) override;
 
-              @param name The name of the logger to search for.
+		/**
+		Enable logging for logging requests with level <code>newLevel</code> or
+		higher. By default all levels are enabled.
 
-            */
-            LoggerPtr exists(const LogString& name);
+		@param newLevel The minimum level of logging requests that are sent to appenders.
+		*/
+		void setThreshold(const LevelPtr& newLevel) override;
 
-            /**
-            The string form of {@link #setThreshold(const LevelPtr&) setThreshold}.
-            */
-            void setThreshold(const LogString& levelStr);
+		void fireAddAppenderEvent(const Logger* logger, const Appender* appender) override;
 
-            /**
-            Enable logging for logging requests with level <code>l</code> or
-            higher. By default all levels are enabled.
+		void fireRemoveAppenderEvent(const Logger* logger, const Appender* appender) override;
 
-                    @param l The minimum level for which logging requests are sent to
-            their appenders.  */
-            void setThreshold(const LevelPtr& l);
+		/**
+		Returns a Level representation of the <code>enable</code>
+		state.
+		*/
+		LevelPtr getThreshold() const override;
 
-            void fireAddAppenderEvent(const LoggerPtr& logger, const AppenderPtr& appender);
+		/**
+		Retrieve the \c name Logger instance using
+		the default factory to create it if required.
 
-            void fireRemoveAppenderEvent(const LoggerPtr& logger,
-                    const AppenderPtr& appender);
+		If a logger of that name already exists, then it will be
+		returned.  Otherwise, a new logger will be instantiated and
+		then linked with its existing ancestors as well as children.
 
-            /**
-            Returns a Level representation of the <code>enable</code>
-            state.
-            */
-            const LevelPtr& getThreshold() const;
+		@param name The name of the logger to retrieve.
 
-            /**
-            Return a new logger instance named as the first parameter using
-            the default factory.
+		*/
+		LoggerPtr getLogger(const LogString& name) override;
 
-            <p>If a logger of that name already exists, then it will be
-            returned.  Otherwise, a new logger will be instantiated and
-            then linked with its existing ancestors as well as children.
+		/**
+		Retrieve the \c name Logger instance using
+		<code>factory</code> to create it if required.
 
-            @param name The name of the logger to retrieve.
+		If a logger of that name already exists, then it will be
+		returned.  Otherwise, a new logger will be instantiated by the
+		<code>factory</code> parameter and linked with its existing
+		ancestors as well as children.
 
-            */
-            LoggerPtr getLogger(const LogString& name);
+		@param name The name of the logger to retrieve.
+		@param factory The factory that will make the new logger instance.
 
-            /**
-            Return a new logger instance named as the first parameter using
-            <code>factory</code>.
+		*/
+		LoggerPtr getLogger(const LogString& name,
+			const spi::LoggerFactoryPtr& factory) override;
 
-            <p>If a logger of that name already exists, then it will be
-            returned.  Otherwise, a new logger will be instantiated by the
-            <code>factory</code> parameter and linked with its existing
-            ancestors as well as children.
+		/**
+		Returns all the currently defined loggers in this hierarchy as
+		a LoggerList.
 
-            @param name The name of the logger to retrieve.
-            @param factory The factory that will make the new logger instance.
+		<p>The root logger is <em>not</em> included in the returned
+		LoggerList.  */
+		LoggerList getCurrentLoggers() const override;
 
-            */
-            LoggerPtr getLogger(const LogString& name,
-                   const spi::LoggerFactoryPtr& factory);
+		/**
+		Get the root of this hierarchy.
+		*/
+		LoggerPtr getRootLogger() const override;
 
-            /**
-            Returns all the currently defined loggers in this hierarchy as
-            a LoggerList.
+		/**
+		This method will return <code>true</code> if this repository is
+		disabled for <code>level</code> object passed as parameter and
+		<code>false</code> otherwise. See also the
+		{@link #setThreshold(const LevelPtr&) setThreshold} method.  */
+		bool isDisabled(int level) const override;
 
-            <p>The root logger is <em>not</em> included in the returned
-            LoggerList.  */
-            LoggerList getCurrentLoggers() const;
+		/**
+		Reset all values contained in this hierarchy instance to their
+		default.  This removes all appenders from all categories, sets
+		the level of all non-root categories to <code>null</code>,
+		sets their additivity flag to <code>true</code> and sets the level
+		of the root logger to DEBUG.  Moreover,
+		message disabling is set its default "off" value.
 
-            /**
-            Get the root of this hierarchy.
-            */
-            LoggerPtr getRootLogger() const;
+		<p>Existing categories are not removed. They are just reset.
 
-            /**
-            This method will return <code>true</code> if this repository is
-            disabled for <code>level</code> object passed as parameter and
-            <code>false</code> otherwise. See also the
-            {@link #setThreshold(const LevelPtr&) setThreshold} method.  */
-            bool isDisabled(int level) const;
+		<p>This method should be used sparingly and with care as it will
+		block all logging until it is completed.</p>
+		*/
+		void resetConfiguration() override;
 
-            /**
-            Reset all values contained in this hierarchy instance to their
-            default.  This removes all appenders from all categories, sets
-            the level of all non-root categories to <code>null</code>,
-            sets their additivity flag to <code>true</code> and sets the level
-            of the root logger to DEBUG.  Moreover,
-            message disabling is set its default "off" value.
+		/**
+		Used by subclasses to add a renderer to the hierarchy passed as parameter.
+		*/
+		/**
+		Shutting down a hierarchy will <em>safely</em> close and remove
+		all appenders in all categories including the root logger.
 
-            <p>Existing categories are not removed. They are just reset.
+		<p>Some appenders such as {@link net::XMLSocketAppender XMLSocketAppender}
+		and AsyncAppender need to be closed before the
+		application exists. Otherwise, pending logging events might be
+		lost.
 
-            <p>This method should be used sparingly and with care as it will
-            block all logging until it is completed.</p>
-            */
-            void resetConfiguration();
-
-            /**
-            Used by subclasses to add a renderer to the hierarchy passed as parameter.
-            */
-            /**
-            Shutting down a hierarchy will <em>safely</em> close and remove
-            all appenders in all categories including the root logger.
-
-            <p>Some appenders such as {@link net::SocketAppender SocketAppender}
-            and AsyncAppender need to be closed before the
-            application exists. Otherwise, pending logging events might be
-            lost.
-
-            <p>The <code>shutdown</code> method is careful to close nested
-            appenders before closing regular appenders. This is allows
-            configurations where a regular appender is attached to a logger
-            and again to a nested appender.
-            */
-            void shutdown();
-
-
-            virtual bool isConfigured();
-            virtual void setConfigured(bool configured);
+		<p>The <code>shutdown</code> method is careful to close nested
+		appenders before closing regular appenders. This is allows
+		configurations where a regular appender is attached to a logger
+		and again to a nested appender.
+		*/
+		void shutdown() override;
 
 
-        private:
+		virtual bool isConfigured() override;
+		virtual void setConfigured(bool configured) override;
 
-            /**
-            This method loops through all the *potential* parents of
-            'cat'. There 3 possible cases:
+		/**
+		Refresh the threshold in children of parent
+		*/
+		void updateChildren(const Logger* parent);
 
-            1) No entry for the potential parent of 'cat' exists
+		void clearAppenders();
 
-            We create a ProvisionNode for this potential parent and insert
-            'cat' in that provision node.
+		void addAppender(AppenderPtr appender);
 
-            2) There entry is of type Logger for the potential parent.
+		/**
+		Remove the \c name Logger from the hierarchy.
 
-            The entry is 'cat's nearest existing parent. We update cat's
-            parent field with this entry. We also break from the loop
-            because updating our parent's parent is our parent's
-            responsibility.
+		Note: The \c name Logger must be retrieved from the hierarchy
+		\b after any subsequent configuration file change
+		for the newly loaded settings to be used.
 
-            3) There entry is of type ProvisionNode for this potential parent.
+		@param name The logger to remove.
+		@param ifNotUsed If true and use_count() indicates there are other references, do not remove the Logger and return false.
+		@returns true if \c name Logger was removed from the hierarchy.
+		*/
+#if LOG4CXX_ABI_VERSION <= 15
+		bool removeLogger(const LogString& name, bool ifNotUsed = true);
+#else
+		bool removeLogger(const LogString& name, bool ifNotUsed = true) override;
+#endif
 
-            We add 'cat' to the list of children for this potential parent.
-            */
-            void updateParents(LoggerPtr logger);
+	private:
 
-            /**
-            We update the links for all the children that placed themselves
-            in the provision node 'pn'. The second argument 'cat' is a
-            reference for the newly created Logger, parent of all the
-            children in 'pn'
+		/**
+		 * Set the threshold.  The mutex must already be locked.
+		 */
+		void setThresholdInternal(const LevelPtr& l);
 
-            We loop on all the children 'c' in 'pn':
+		/**
+		 * Internal shutdown.  The mutex must already be locked.
+		 */
+		void shutdownInternal();
 
-            If the child 'c' has been already linked to a child of
-            'cat' then there is no need to update 'c'.
+		/**
+		This method loops through all the *potential* parents of
+		\c logger using the logger name.
+		For example, for a logger named "w.x.y.z",
+		loop through "w.x.y", "w.x" and "w", but not "w.x.y.z".
+		There 3 possible cases:
 
-            Otherwise, we set cat's parent field to c's parent and set
-            c's parent field to cat.
-            */
-            Hierarchy(const Hierarchy&);
-            Hierarchy& operator=(const Hierarchy&);
+		1) No entry for the potential parent of "w.x.y.z" exists
 
-            void updateChildren(ProvisionNode& pn, LoggerPtr logger);
-        };
+		We create a ProvisionNode for this potential parent and insert
+		"w.x.y.z" in that provision node.
+
+		2) There entry is of type Logger for the potential parent.
+
+		The entry is "w.x.y.z"'s nearest existing parent. We update "w.x.y.z"'s
+		parent field with this entry. We also break from the loop
+		because updating our parent's parent is our parent's
+		responsibility.
+
+		3) There entry is of type ProvisionNode for this potential parent.
+
+		We add "w.x.y.z" to the list of children for this potential parent.
+		*/
+		void updateParents(const LoggerPtr& logger, const LoggerPtr& root);
+
+		/**
+		We update the links for all the children that placed themselves
+		in the provision node 'pn'. The \c logger argument is a
+		newly created Logger, a potential parent of all the
+		children in 'pn'
+
+		We loop on all the children 'c' in 'pn':
+
+		If the child 'c' has been already linked to a child of
+		'cat' then there is no need to update 'c'.
+
+		Otherwise, we set the \c logger parent to 'c's parent and set
+		'c's parent field to \c logger.
+		*/
+		void updateChildren(ProvisionNode& pn, const LoggerPtr& logger);
+
+		Hierarchy(const Hierarchy&);
+		Hierarchy& operator=(const Hierarchy&);
+
+};
 
 }  //namespace log4cxx
-
-
-#if defined(_MSC_VER)
-#pragma warning (pop)
-#endif
 
 #endif //_LOG4CXX_HIERARCHY_H

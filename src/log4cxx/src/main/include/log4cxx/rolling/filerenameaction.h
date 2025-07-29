@@ -21,39 +21,40 @@
 #include <log4cxx/rolling/action.h>
 #include <log4cxx/file.h>
 
-namespace log4cxx {
-    namespace rolling {
+namespace LOG4CXX_NS
+{
+namespace rolling
+{
 
 
-        class FileRenameAction : public Action {
-           const File source;
-           const File destination;
-           bool renameEmptyFile;
-        public:
-          DECLARE_ABSTRACT_LOG4CXX_OBJECT(FileRenameAction)
-          BEGIN_LOG4CXX_CAST_MAP()
-                  LOG4CXX_CAST_ENTRY(FileRenameAction)
-                  LOG4CXX_CAST_ENTRY_CHAIN(Action)
-          END_LOG4CXX_CAST_MAP()
+class FileRenameAction : public Action
+{
+		struct FileRenameActionPrivate;
+	public:
+		DECLARE_ABSTRACT_LOG4CXX_OBJECT(FileRenameAction)
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(FileRenameAction)
+		LOG4CXX_CAST_ENTRY_CHAIN(Action)
+		END_LOG4CXX_CAST_MAP()
 
-        /**
-         * Constructor.
-         */
-        FileRenameAction(const File& toRename,
-            const File& renameTo,
-            bool renameEmptyFile);
+		/**
+		 * Constructor.
+		 */
+		FileRenameAction(const File& toRename,
+			const File& renameTo,
+			bool renameEmptyFile);
 
-        /**
-         * Perform action.
-         *
-         * @return true if successful.
-         */
-        virtual bool execute(log4cxx::helpers::Pool& pool) const;
-        };
+		/**
+		 * Perform action.
+		 *
+		 * @return true if successful.
+		 */
+		bool execute(LOG4CXX_NS::helpers::Pool& pool) const override;
+};
 
-        LOG4CXX_PTR_DEF(FileRenameAction);
+LOG4CXX_PTR_DEF(FileRenameAction);
 
-    }
+}
 }
 #endif
 

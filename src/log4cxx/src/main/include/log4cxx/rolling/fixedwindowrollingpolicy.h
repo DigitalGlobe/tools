@@ -23,13 +23,16 @@
 
 
 
-namespace log4cxx {
+namespace LOG4CXX_NS
+{
 
-    namespace helpers {
-      class Pool;
-    }
+namespace helpers
+{
+class Pool;
+}
 
-    namespace rolling {
+namespace rolling
+{
 
 
 /**
@@ -62,80 +65,91 @@ namespace log4cxx {
  * larger values are specified by the user.
  *
  *
- * 
- * 
+ *
+ *
  * */
-        class LOG4CXX_EXPORT FixedWindowRollingPolicy : public RollingPolicyBase {
-          DECLARE_LOG4CXX_OBJECT(FixedWindowRollingPolicy)
-          BEGIN_LOG4CXX_CAST_MAP()
-                  LOG4CXX_CAST_ENTRY(FixedWindowRollingPolicy)
-                  LOG4CXX_CAST_ENTRY_CHAIN(RollingPolicyBase)
-          END_LOG4CXX_CAST_MAP()
+class LOG4CXX_EXPORT FixedWindowRollingPolicy : public RollingPolicyBase
+{
+		DECLARE_LOG4CXX_OBJECT(FixedWindowRollingPolicy)
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(FixedWindowRollingPolicy)
+		LOG4CXX_CAST_ENTRY_CHAIN(RollingPolicyBase)
+		END_LOG4CXX_CAST_MAP()
 
-          int minIndex;
-          int maxIndex;
-          bool explicitActiveFile;
+		struct FixedWindowRollingPolicyPrivate;
 
-          /**
-           * It's almost always a bad idea to have a large window size, say over 12.
-           */
-          enum { MAX_WINDOW_SIZE = 12 };
+		/**
+		 * It's almost always a bad idea to have a large window size, say over 12.
+		 */
+		enum { MAX_WINDOW_SIZE = 12 };
 
-          bool purge(int purgeStart, int maxIndex, log4cxx::helpers::Pool& p) const;
+		bool purge(int purgeStart, int maxIndex, LOG4CXX_NS::helpers::Pool& p) const;
 
-        public:
+	public:
 
-          FixedWindowRollingPolicy();
+		FixedWindowRollingPolicy();
+		~FixedWindowRollingPolicy();
 
-          void activateOptions(log4cxx::helpers::Pool& p);
-          void setOption(const LogString& option,
-             const LogString& value);
+		/**
+		\copybrief RollingPolicyBase::activateOptions()
 
-          void rollover();
+		Logs a warning if an option is not valid.
 
-          int getMaxIndex() const;
+		\sa RollingPolicyBase::activateOptions()
+		*/
+		void activateOptions(helpers::Pool& p) override;
 
-          int getMinIndex() const;
+		/**
+		\copybrief RollingPolicyBase::setOption()
 
-          void setMaxIndex(int newVal);
-          void setMinIndex(int newVal);
+		Supported options | Supported values | Default value
+		:-------------- | :----------------: | :---------------:
+		MinIndex | 1-12 | 1
+		MaxIndex | 1-12 | 7
+		ThrowIOExceptionOnForkFailure | True,False | True
 
+		\sa RollingPolicyBase::setOption()
+		*/
+		void setOption(const LogString& option, const LogString& value) override;
 
-/**
-* Initialize the policy and return any initial actions for rolling file appender.
-*
-* @param file current value of RollingFileAppender::getFile().
-* @param append current value of RollingFileAppender::getAppend().
-* @param p pool used for any required memory allocations.
-* @return Description of the initialization, may be null to indicate
-* no initialization needed.
-* @throws SecurityException if denied access to log files.
-*/
-virtual RolloverDescriptionPtr initialize(
-const LogString& file, const bool append, log4cxx::helpers::Pool& p);
+		void rollover();
 
-/**
-* Prepare for a rollover.  This method is called prior to
-* closing the active log file, performs any necessary
-* preliminary actions and describes actions needed
-* after close of current log file.
-*
-* @param activeFile file name for current active log file.
-* @param p pool used for any required memory allocations.
-* @return Description of pending rollover, may be null to indicate no rollover
-* at this time.
-* @throws SecurityException if denied access to log files.
-*/
-virtual RolloverDescriptionPtr rollover(const LogString& activeFile, log4cxx::helpers::Pool& p);
+		int getMaxIndex() const;
 
-protected:
-             log4cxx::pattern::PatternMap getFormatSpecifiers() const;
+		int getMinIndex() const;
 
-        };
+		void setMaxIndex(int newVal);
+		void setMinIndex(int newVal);
 
-        LOG4CXX_PTR_DEF(FixedWindowRollingPolicy);
+		/**
+		 * {@inheritDoc}
+		 */
+		RolloverDescriptionPtr initialize(
+			const   LogString&              currentActiveFile,
+			const   bool                    append,
+			helpers::Pool& pool) override;
 
-     }
+		/**
+		 * {@inheritDoc}
+		 */
+		RolloverDescriptionPtr rollover(
+			const   LogString&              currentActiveFile,
+			const   bool                    append,
+			helpers::Pool& pool) override;
+
+	protected:
+		/**
+		 * A map from "i" and "index" to a integer conversion formatter.
+		 *
+		 * \sa IntegerPatternConverter
+		 */
+		LOG4CXX_NS::pattern::PatternMap getFormatSpecifiers() const override;
+
+};
+
+LOG4CXX_PTR_DEF(FixedWindowRollingPolicy);
+
+}
 }
 
 #endif

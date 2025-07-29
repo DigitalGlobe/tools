@@ -20,92 +20,103 @@
 
 #include <log4cxx/appenderskeleton.h>
 
-
-namespace log4cxx
+namespace LOG4CXX_NS
 {
-        namespace nt
-        {
-                /**
-                 * Appends log events to NT EventLog.
-                 */
-                class LOG4CXX_EXPORT NTEventLogAppender : public AppenderSkeleton
-                {
-                public:
-                        DECLARE_LOG4CXX_OBJECT(NTEventLogAppender)
-                        BEGIN_LOG4CXX_CAST_MAP()
-                            LOG4CXX_CAST_ENTRY(NTEventLogAppender)
-                            LOG4CXX_CAST_ENTRY_CHAIN(AppenderSkeleton)
-                        END_LOG4CXX_CAST_MAP()
+namespace nt
+{
+/**
+ * Appends log events to NT EventLog.
+ */
+class LOG4CXX_EXPORT NTEventLogAppender : public AppenderSkeleton
+{
+	public:
+		DECLARE_LOG4CXX_OBJECT(NTEventLogAppender)
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(NTEventLogAppender)
+		LOG4CXX_CAST_ENTRY_CHAIN(AppenderSkeleton)
+		END_LOG4CXX_CAST_MAP()
 
-                        NTEventLogAppender();
-                        NTEventLogAppender(const LogString& server, const LogString& log,
-                                const LogString& source, const LayoutPtr& layout);
+		NTEventLogAppender();
+		NTEventLogAppender(const LogString& server, const LogString& log,
+			const LogString& source, const LayoutPtr& layout);
 
-                        virtual ~NTEventLogAppender();
+		virtual ~NTEventLogAppender();
 
-                        virtual void activateOptions(log4cxx::helpers::Pool& p);
-                        virtual void close();
-                        virtual void setOption(const LogString& option, const LogString& value);
+		/**
+		\copybrief AppenderSkeleton::activateOptions()
 
-                        /**
-                         * The SocketAppender does not use a layout. Hence, this method
-                         * returns <code>false</code>.
-                         *
-                         */
-                         bool requiresLayout() const
-                                { return true; }
+		Calls <a href="https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-registereventsourcew">RegisterEventSource</a>.
+		*/
+		void activateOptions(helpers::Pool& p) override;
+		void close() override;
 
-                        void setSource(const LogString& source)
-                                { this->source.assign(source); }
+		/**
+		\copybrief AppenderSkeleton::setOption()
 
-                        const LogString& getSource() const
-                                { return source; }
+		Supported options | Supported values | Default value
+		-------------- | ---------------- | ---------------
+		Server | (\ref winapi "1") | NULL
+		Source | (\ref winapi "1") | -
+		Log | (\ref eventLog "2") | Application
 
-                        void setLog(const LogString& log)
-                                { this->log.assign(log); }
+		\anchor winapi (1) Passed to the Win32 API method <a href="https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-registereventsourcew">RegisterEventSource</a>.
 
-                        const LogString& getLog() const
-                                { return log; }
+		\anchor eventLog (2) An event log name.
 
-                        void setServer(const LogString& server)
-                                { this->server.assign(server); }
+		\sa AppenderSkeleton::setOption()
+		*/
+		void setOption(const LogString& option, const LogString& value) override;
 
-                        const LogString& getServer() const
-                                { return server; }
+		/**
+		 * The SocketAppender does not use a layout. Hence, this method
+		 * returns <code>false</code>.
+		 *
+		 */
+		bool requiresLayout() const override
+		{
+			return true;
+		}
+
+		void setSource(const LogString& source);
+
+		const LogString& getSource() const;
+
+		void setLog(const LogString& log);
+
+		const LogString& getLog() const;
+
+		void setServer(const LogString& server);
+
+		const LogString& getServer() const;
 
 
-                protected:
-                        //
-                        //   these typedef are proxies for the real Win32 definitions
-                        //     and need to be cast to the global definitions before
-                        //     use with a Win32 API call
-                        typedef void SID;
-                        typedef void* HANDLE;
+	protected:
+		//
+		//   these typedef are proxies for the real Win32 definitions
+		//     and need to be cast to the global definitions before
+		//     use with a Win32 API call
+		typedef void SID;
+		typedef void* HANDLE;
 
-                        virtual void append(const spi::LoggingEventPtr& event, log4cxx::helpers::Pool& p);
-                        static unsigned short getEventType(const spi::LoggingEventPtr& event);
-                        static unsigned short getEventCategory(const spi::LoggingEventPtr& event);
-                        /*
-                         * Add this source with appropriate configuration keys to the registry.
-                         */
-                        void addRegistryInfo();
+		void append(const spi::LoggingEventPtr& event, helpers::Pool& p) override;
+		static unsigned short getEventType(const spi::LoggingEventPtr& event);
+		static unsigned short getEventCategory(const spi::LoggingEventPtr& event);
+		/*
+		 * Add this source with appropriate configuration keys to the registry.
+		 */
+		void addRegistryInfo();
 
-                        // Data
-                        LogString server;
-                        LogString log;
-                        LogString source;
-                        HANDLE hEventLog;
-                        SID * pCurrentUserSID;
-                        static LogString getErrorString(const LogString& function);
+		struct NTEventLogAppenderPrivate;
+		static LogString getErrorString(const LogString& function);
 
-                private:
-                        NTEventLogAppender(const NTEventLogAppender&);
-                        NTEventLogAppender& operator=(const NTEventLogAppender&);
-                }; // class NTEventLogAppender
+	private:
+		NTEventLogAppender(const NTEventLogAppender&);
+		NTEventLogAppender& operator=(const NTEventLogAppender&);
+}; // class NTEventLogAppender
 
-                LOG4CXX_PTR_DEF(NTEventLogAppender);
+LOG4CXX_PTR_DEF(NTEventLogAppender);
 
-    }  // namespace nt
+}  // namespace nt
 } // namespace log4cxx
 
 #endif //_LOG4CXX_NT_EVENT_LOG_APPENDER_HEADER_

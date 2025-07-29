@@ -18,66 +18,69 @@
 #ifndef _LOG4CXX_SIMPLE_LAYOUT_H
 #define _LOG4CXX_SIMPLE_LAYOUT_H
 
-#if defined(_MSC_VER)
-#pragma warning ( push )
-#pragma warning ( disable: 4231 4251 4275 4786 )
-#endif
-
-
 #include <log4cxx/layout.h>
 
-namespace log4cxx
+namespace LOG4CXX_NS
 {
-        /**
-        SimpleLayout consists of the level of the log statement,
-        followed by " - " and then the log message itself. For example,
+/**
+SimpleLayout consists of the level of the log statement,
+followed by " - " and then the log message itself. For example,
 
-        <pre>
-                DEBUG - Hello world
-        </pre>
+<pre>
+        DEBUG - Hello world
+</pre>
 
-        <p>
+<p>
 
-        <p>PatternLayout offers a much more powerful alternative.
-        */
-        class LOG4CXX_EXPORT SimpleLayout : public Layout
-        {
-        public:
-                DECLARE_LOG4CXX_OBJECT(SimpleLayout)
-                BEGIN_LOG4CXX_CAST_MAP()
-                        LOG4CXX_CAST_ENTRY(SimpleLayout)
-                        LOG4CXX_CAST_ENTRY_CHAIN(Layout)
-                END_LOG4CXX_CAST_MAP()
+<p>PatternLayout offers a much more powerful alternative.
+*/
+class LOG4CXX_EXPORT SimpleLayout : public Layout
+{
+	public:
+		DECLARE_LOG4CXX_OBJECT(SimpleLayout)
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(SimpleLayout)
+		LOG4CXX_CAST_ENTRY_CHAIN(Layout)
+		END_LOG4CXX_CAST_MAP()
 
-                /**
-                Returns the log statement in a format consisting of the
-                <code>level</code>, followed by " - " and then the
-                <code>message</code>. For example, <pre> INFO - "A message"
-                </pre>
+		/**
+		Returns the log statement in a format consisting of the
+		<code>level</code>, followed by " - " and then the
+		<code>message</code>. For example, <pre> INFO - "A message"
+		</pre>
+		*/
+		void format(LogString& output,
+			const spi::LoggingEventPtr& event,
+			helpers::Pool& pool) const override;
 
-                @return A byte array in SimpleLayout format.
-                */
-                virtual void format(LogString& output,
-                    const spi::LoggingEventPtr& event,
-                    log4cxx::helpers::Pool& pool) const;
+		/**
+		The SimpleLayout does not handle the throwable contained within
+		{@link spi::LoggingEvent LoggingEvents}. Thus, it returns
+		<code>true</code>.
+		*/
+		bool ignoresThrowable() const override
+		{
+			return true;
+		}
 
-                /**
-                The SimpleLayout does not handle the throwable contained within
-                {@link spi::LoggingEvent LoggingEvents}. Thus, it returns
-                <code>true</code>.
-                */
-                bool ignoresThrowable() const { return true; }
+		/**
+		\copybrief spi::OptionHandler::activateOptions()
 
-                virtual void activateOptions(log4cxx::helpers::Pool& /* p */) {}
-                virtual void setOption(const LogString& /* option */,
-                     const LogString& /* value */) {}
-        };
-      LOG4CXX_PTR_DEF(SimpleLayout);
+		No action is performed in this implementation.
+		*/
+		void activateOptions(helpers::Pool& /* p */) override {}
+
+		/**
+		\copybrief spi::OptionHandler::setOption()
+
+		Supported options | Supported values | Default value
+		-------------- | ---------------- | ---------------
+		- | - | -
+		*/
+		void setOption(const LogString& /* option */,
+			const LogString& /* value */) override {}
+};
+LOG4CXX_PTR_DEF(SimpleLayout);
 }  // namespace log4cxx
-
-
-#if defined(_MSC_VER)
-#pragma warning ( pop )
-#endif
 
 #endif //_LOG4CXX_SIMPLE_LAYOUT_H

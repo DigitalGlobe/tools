@@ -24,199 +24,237 @@
 #include <log4cxx/file.h>
 #include <log4cxx/helpers/pool.h>
 
-namespace log4cxx
+namespace LOG4CXX_NS
 {
-        namespace helpers {
-            class Pool;
-        }
+namespace helpers
+{
+class Pool;
+}
 
-        /**
-        *  FileAppender appends log events to a file.
-        *
-        *  <p>Support for <code>java.io.Writer</code> and console appending
-        *  has been deprecated and then removed. See the replacement
-        *  solutions: WriterAppender and ConsoleAppender.
-        */
-        class LOG4CXX_EXPORT FileAppender : public WriterAppender
-        {
-        protected:
-                /** Append to or truncate the file? The default value for this
-                variable is <code>true</code>, meaning that by default a
-                <code>FileAppender</code> will append to an existing file and
-                not truncate it.
-                <p>This option is meaningful only if the FileAppender opens the
-                file.
-                */
-                bool fileAppend;
+/**
+*  FileAppender appends log events to a file.
+*
+*  Uses a background thread to periodically flush the output buffer
+*  when <code>BufferedIO</code> option is set <code>true</code>.
+*  Use the <code>BufferedSeconds</code> option to control the frequency,
+*  using <code>0</code> to disable the background output buffer flush.
+*  Refer to FileAppender::setOption() for more information.
+*
+*/
+class LOG4CXX_EXPORT FileAppender : public WriterAppender
+{
+	protected:
+		struct FileAppenderPriv;
 
-                /**
-                The name of the log file. */
-                LogString fileName;
+	public:
+		DECLARE_LOG4CXX_OBJECT(FileAppender)
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(FileAppender)
+		LOG4CXX_CAST_ENTRY_CHAIN(WriterAppender)
+		END_LOG4CXX_CAST_MAP()
 
-                /**
-                Do we do bufferedIO? */
-                bool bufferedIO;
+		/**
+		The default constructor does not do anything.
+		*/
+		FileAppender();
 
-                /**
-                How big should the IO buffer be? Default is 8K. */
-                int bufferSize;
+		/**
+		Instantiate a <code>FileAppender</code> and open the file
+		designated by <code>filename</code>. The opened filename will
+		become the output destination for this appender.
 
-        public:
-                DECLARE_LOG4CXX_OBJECT(FileAppender)
-                BEGIN_LOG4CXX_CAST_MAP()
-                        LOG4CXX_CAST_ENTRY(FileAppender)
-                        LOG4CXX_CAST_ENTRY_CHAIN(WriterAppender)
-                END_LOG4CXX_CAST_MAP()
+		<p>If the <code>append</code> parameter is true, the file will be
+		appended to. Otherwise, the file designated by
+		<code>filename</code> will be truncated before being opened.
 
-                /**
-                The default constructor does not do anything.
-                */
-                FileAppender();
+		<p>If the <code>bufferedIO</code> parameter is <code>true</code>,
+		then buffered IO will be used to write to the output file.
 
-                /**
-                Instantiate a <code>FileAppender</code> and open the file
-                designated by <code>filename</code>. The opened filename will
-                become the output destination for this appender.
+		*/
+		FileAppender(const LayoutPtr& layout, const LogString& filename, bool append,
+			bool bufferedIO, int bufferSize);
 
-                <p>If the <code>append</code> parameter is true, the file will be
-                appended to. Otherwise, the file designated by
-                <code>filename</code> will be truncated before being opened.
+		/**
+		Instantiate a FileAppender and open the file designated by
+		<code>filename</code>. The opened filename will become the output
+		destination for this appender.
 
-                <p>If the <code>bufferedIO</code> parameter is <code>true</code>,
-                then buffered IO will be used to write to the output file.
+		<p>If the <code>append</code> parameter is true, the file will be
+		appended to. Otherwise, the file designated by
+		<code>filename</code> will be truncated before being opened.
+		*/
+		FileAppender(const LayoutPtr& layout, const LogString& filename, bool append);
 
-                */
-                FileAppender(const LayoutPtr& layout, const LogString& filename, bool append,
-                        bool bufferedIO, int bufferSize);
+		/**
+		Instantiate a FileAppender and open the file designated by
+		<code>filename</code>. The opened filename will become the output
+		destination for this appender.
 
-                /**
-                Instantiate a FileAppender and open the file designated by
-                <code>filename</code>. The opened filename will become the output
-                destination for this appender.
+		<p>The file will be appended to.  */
+		FileAppender(const LayoutPtr& layout, const LogString& filename);
 
-                <p>If the <code>append</code> parameter is true, the file will be
-                appended to. Otherwise, the file designated by
-                <code>filename</code> will be truncated before being opened.
-                */
-                FileAppender(const LayoutPtr& layout, const LogString& filename, bool append);
+		~FileAppender();
 
-                /**
-                Instantiate a FileAppender and open the file designated by
-                <code>filename</code>. The opened filename will become the output
-                destination for this appender.
+		/**
+		The <b>File</b> property takes a string value which should be the
+		name of the file to append to.
 
-                <p>The file will be appended to.  */
-                FileAppender(const LayoutPtr& layout, const LogString& filename);
+		<p><b>Note that the special values
+		"System.out" or "System.err" are no longer honored.</b>
 
-                ~FileAppender();
+		<p>Note: Actual opening of the file is made when
+		#activateOptions is called, not when the options are set.  */
+		virtual void setFile(const LogString& file);
 
-                /**
-                The <b>File</b> property takes a string value which should be the
-                name of the file to append to.
+		/**
+		Returns the value of the <b>Append</b> option.
+		*/
+		bool getAppend() const;
 
-                <p><b>Note that the special values
-                "System.out" or "System.err" are no longer honored.</b>
+		/** Returns the value of the <b>File</b> option. */
+		LogString getFile() const;
 
-                <p>Note: Actual opening of the file is made when
-                #activateOptions is called, not when the options are set.  */
-                virtual void setFile(const LogString& file);
+		/**
+		\copybrief AppenderSkeleton::activateOptions()
 
-                /**
-                Sets and <i>opens</i> the file where the log output will
-                go. The specified file must be writable.
+		Sets and <i>opens</i> the file where the log output will
+		go. The specified file must be writable.
 
-                <p>If there was already an opened file, then the previous file
-                is closed first.
+		If there was already an opened file, then the previous file
+		is closed first.
+		*/
+		void activateOptions(helpers::Pool& p) override;
 
-                <p><b>Do not use this method directly. To configure a FileAppender
-                or one of its subclasses, set its properties one by one and then
-                call activateOptions.</b>
+		/**
+		\copybrief AppenderSkeleton::setOption()
 
-                @param file The path to the log file.
-                @param append If true will append to fileName. Otherwise will
-                truncate fileName.
-                @param bufferedIO Do we do bufferedIO?
-                @param bufferSize How big should the IO buffer be?
-                @param p memory pool for operation.
-                */
-                virtual void setFile(const LogString& file, bool append,
-                        bool bufferedIO, size_t bufferSize,
-                        log4cxx::helpers::Pool& p);
+		Supported options | Supported values | Default value
+		:-------------- | :----------------: | :---------------:
+		FileName | {any} | -
+		Append | True,False | True
+		BufferedIO | True,False | False
+		BufferedSeconds | {any} | 5
+		ImmediateFlush | True,False | False
+		BufferSize | (\ref fileSz1 "1") | 8 KB
 
-                /**
-                Returns the value of the <b>Append</b> option.
-                */
-                inline bool getAppend() const { return fileAppend; }
+		\anchor fileSz1 (1) An integer in the range 0 - 2^63.
+		 You can specify the value with the suffixes "KB", "MB" or "GB" so that the integer is
+		 interpreted being expressed respectively in kilobytes, megabytes
+		 or gigabytes. For example, the value "10KB" will be interpreted as 10240.
 
-                /** Returns the value of the <b>File</b> option. */
-                inline LogString getFile() const { return fileName; }
+		\sa AppenderSkeleton::setOption()
+		*/
+		void setOption(const LogString& option, const LogString& value) override;
 
-                /**
-                <p>Sets and <i>opens</i> the file where the log output will
-                go. The specified file must be writable.
+		/**
+		Get the value of the <b>BufferedIO</b> option.
 
-                <p>If there was already an opened file, then the previous file
-                is closed first.*/
-                void activateOptions(log4cxx::helpers::Pool& p);
-                void setOption(const LogString& option,
-                        const LogString& value);
+		<p>BufferedIO will significatnly increase performance on heavily
+		loaded systems.
 
-                /**
-                Get the value of the <b>BufferedIO</b> option.
+		*/
+		bool getBufferedIO() const;
 
-                <p>BufferedIO will significatnly increase performance on heavily
-                loaded systems.
+		/**
+		Get the size of the IO buffer.
+		*/
+		int getBufferSize() const;
 
-                */
-                inline bool getBufferedIO() const { return bufferedIO; }
+		/**
+		Get the number of seconds between file writes
+		when the <code>BufferedIO</code> option is <code>true</code>.
+		*/
+		int getBufferedSeconds() const;
 
-                /**
-                Get the size of the IO buffer.
-                */
-               inline  int getBufferSize() const { return bufferSize; }
+		/**
+		Set file open mode to \c newValue.
 
-                /**
-                The <b>Append</b> option takes a boolean value. It is set to
-                <code>true</code> by default. If true, then <code>File</code>
-                will be opened in append mode by #setFile (see
-                above). Otherwise, setFile will open
-                <code>File</code> in truncate mode.
+		The <b>Append</b> option takes a boolean value. It is set to
+		<code>true</code> by default. If true, then <code>File</code>
+		will be opened in append mode by #setFile (see
+		above). Otherwise, setFile will open
+		<code>File</code> in truncate mode.
 
-                <p>Note: Actual opening of the file is made when
-                #activateOptions is called, not when the options are set.
-                */
-                void setAppend(bool fileAppend1);
+		<p>Note: The file is opened when
+		#activateOptions is called, not when the options are set.
+		*/
+		void setAppend(bool newValue);
 
-                /**
-                The <b>BufferedIO</b> option takes a boolean value. It is set to
-                <code>false</code> by default. If true, then <code>File</code>
-                will be opened in buffered mode.
+		/**
+		Set buffered output behavior to \c newValue.
 
-                BufferedIO will significantly increase performance on heavily
-                loaded systems.
+		By default buffered output is disabled and
+		this appender writes each log message directly to the file.
+		When buffered output is enabled,
+		log messages are stored into a memory buffer
+		and written to the file periodically or when the buffer is full.
 
-                */
-                void setBufferedIO(bool bufferedIO);
+		Using buffered output will significantly reduce logging overhead.
 
-                /**
-                Set the size of the IO buffer.
-                */
-                void setBufferSize(int bufferSize1) { this->bufferSize = bufferSize1; }
+		Note: Behavior change occurs when
+		#activateOptions is called, not when the options are set.
+		*/
+		void setBufferedIO(bool newValue);
 
-                /**
-                 *   Replaces double backslashes with single backslashes
-                 *   for compatibility with paths from earlier XML configurations files.
-                 *   @param name file name
-                 *   @return corrected file name
-                 */
-                static LogString stripDuplicateBackslashes(const LogString& name);
+		/**
+		Use \c newValue as the size of the output buffer.
+		*/
+		void setBufferSize(int newValue);
 
-                private:
-                FileAppender(const FileAppender&);
-                FileAppender& operator=(const FileAppender&);
+		/**
+		Flush the output buffer every \c newValue seconds.
+		The default period is 5 seconds.
 
-        }; // class FileAppender
-        LOG4CXX_PTR_DEF(FileAppender);
+		Note: #activateOptions must be called after an option is changed
+		to activate the new frequency.
+		*/
+		void setBufferedSeconds(int newValue);
+
+		/**
+		 *   Replaces double backslashes with single backslashes
+		 *   for compatibility with paths from earlier XML configurations files.
+		 *   @param name file name
+		 *   @return corrected file name
+		 */
+		static LogString stripDuplicateBackslashes(const LogString& name);
+
+	protected:
+		void activateOptionsInternal(LOG4CXX_NS::helpers::Pool& p);
+
+		/**
+		Sets and <i>opens</i> the file where the log output will
+		go. The specified file must be writable.
+
+		<p>If there was already an opened file, then the previous file
+		is closed first.
+
+		<p><b>Do not use this method directly. To configure a FileAppender
+		or one of its subclasses, set its properties one by one and then
+		call activateOptions.</b>
+
+		The mutex must be locked before calling this function.
+
+		@param file The path to the log file.
+		@param append If true will append to fileName. Otherwise will
+		truncate fileName.
+		@param bufferedIO Do we do bufferedIO?
+		@param bufferSize How big should the IO buffer be?
+		@param p memory pool for operation.
+		*/
+		void setFileInternal(const LogString& file, bool append,
+			bool bufferedIO, size_t bufferSize,
+			LOG4CXX_NS::helpers::Pool& p);
+
+		void setFileInternal(const LogString& file);
+
+	private:
+		FileAppender(const FileAppender&);
+		FileAppender& operator=(const FileAppender&);
+	protected:
+		FileAppender(std::unique_ptr<FileAppenderPriv> priv);
+
+}; // class FileAppender
+LOG4CXX_PTR_DEF(FileAppender);
 
 }  // namespace log4cxx
 

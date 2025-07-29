@@ -19,69 +19,81 @@
 
 #include <log4cxx/spi/filter.h>
 
-namespace log4cxx
+namespace LOG4CXX_NS
 {
-    namespace rule
-    {
-        class ExpressionRule;
-        class Rule;
-        typedef helpers::ObjectPtrT < Rule > RulePtr;
-        typedef helpers::ObjectPtrT < ExpressionRule > ExpressionRulePtr;
-    }
 
-    namespace filter
-    {
+namespace filter
+{
+
 /**
- * Location information is usually specified at the appender level - all events associated
- * with an appender either create and parse stack traces or they do not.  This is
- * an expensive operation and in some cases not needed for all events associated with
- * an appender.
+ * When location information is available, individual log statements can be turned on or off
+ * depending on their source location.
  *
- * This filter creates event-level location information only if the provided expression evaluates to true.
+ * This filter allows for filtering messages based off of either the line number of the
+ * message, or the name of the method that the log mesage is in.  The 'operator' parameter
+ * may be used to determine if both the method name and line number must match.
+ * If 'operator' is set to 'AND', then both the line number and method name must match,
+ * otherwise only one needs to match.  By default, 'operator' is set to 'OR'.
  *
- * For information on expression syntax, see org.apache.log4j.rule.ExpressionRule
+ * If location information is not available, this filter does nothing.
  *
- * 
  */
-        class LOG4CXX_EXPORT LocationInfoFilter:public log4cxx::spi::Filter
-        {
-            bool convertInFixToPostFix;
-            LogString expression;
-                      log4cxx::rule::RulePtr expressionRule;
-            //HACK: Category is the last of the internal layers - pass this in as the class name
-            //in order for parsing to work correctly
-            LogString className;
+class LOG4CXX_EXPORT LocationInfoFilter: public LOG4CXX_NS::spi::Filter
+{
+		struct LocationInfoFilterPrivate;
+	public:
+		DECLARE_LOG4CXX_OBJECT(LocationInfoFilter)
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(LocationInfoFilter)
+		LOG4CXX_CAST_ENTRY_CHAIN(LOG4CXX_NS::spi::Filter)
+		END_LOG4CXX_CAST_MAP()
 
-          public:
-                      DECLARE_LOG4CXX_OBJECT(LocationInfoFilter)
-                      BEGIN_LOG4CXX_CAST_MAP()
-                      LOG4CXX_CAST_ENTRY(log4cxx::spi::Filter)
-                      END_LOG4CXX_CAST_MAP()
+		LocationInfoFilter();
 
-                      LocationInfoFilter();
+		~LocationInfoFilter();
 
-            void activateOptions(log4cxx::helpers::Pool &);
+		/**
+		\copybrief spi::OptionHandler::setOption()
 
-            void setExpression(const LogString & expression);
+		Supported options | Supported values | Default value
+		-------------- | ---------------- | ---------------
+		Method | {any} | -
+		LineNumber | {int} | -
+		Operator | (\ref andOrAny "1") | Or
+		AcceptOnMatch | True,False | True
 
-            LogString getExpression() const;
+		\anchor andOrAny (1) If "And", both method name and line number must match,
+		otherwise either method name or line number match. 
+		*/
+		void setOption(const LogString& option, const LogString& value) override;
 
-            void setConvertInFixToPostFix(bool convertInFixToPostFix);
+		void setLineNumber(int lineNum);
 
-            bool getConvertInFixToPostFix() const;
+		void setMethodName(const LogString& methodName);
 
-  /**
-   * If this event does not already contain location information,
-   * evaluate the event against the expression.
-   *
-   * If the expression evaluates to true, generate a LocationInfo instance
-   * by creating an exception and set this LocationInfo on the event.
-   *
-   * Returns {@link log4cxx::spi::Filter#NEUTRAL}
-   */
-            FilterDecision decide(const spi::LoggingEventPtr & event) const;
+		void setAcceptOnMatch(bool acceptOnMatch1);
 
-        };
-    }
+		bool getAcceptOnMatch() const;
+
+		bool getMustMatchAll() const;
+
+		void setMustMatchAll(bool mustMatchAll1);
+
+		/**
+		 * If this event does not already contain location information,
+		 * evaluate the event against the expression.
+		 *
+		 * If the expression evaluates to true, generate a LocationInfo instance
+		 * by creating an exception and set this LocationInfo on the event.
+		 *
+		 * Returns {@link log4cxx::spi::Filter#NEUTRAL}
+		 */
+		FilterDecision decide(const spi::LoggingEventPtr& event) const override;
+
+};
+
+LOG4CXX_PTR_DEF(LocationInfoFilter);
+
+}
 }
 #endif

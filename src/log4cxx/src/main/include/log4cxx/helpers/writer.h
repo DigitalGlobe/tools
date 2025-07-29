@@ -18,40 +18,42 @@
 #ifndef _LOG4CXX_HELPERS_WRITER_H
 #define _LOG4CXX_HELPERS_WRITER_H
 
-#include <log4cxx/helpers/objectimpl.h>
+#include <log4cxx/helpers/object.h>
+#include <log4cxx/helpers/outputstream.h>
 
-namespace log4cxx
+namespace LOG4CXX_NS
 {
 
-        namespace helpers {
+namespace helpers
+{
 
-          /**
-          *   Abstract class for writing to character streams.
-          */
-          class LOG4CXX_EXPORT Writer : public ObjectImpl
-          {
-          public:
-                  DECLARE_ABSTRACT_LOG4CXX_OBJECT(Writer)
-                  BEGIN_LOG4CXX_CAST_MAP()
-                          LOG4CXX_CAST_ENTRY(Writer)
-                  END_LOG4CXX_CAST_MAP()
+/**
+*   Abstract class for writing to character streams.
+*/
+class LOG4CXX_EXPORT Writer : public Object
+{
+	public:
+		DECLARE_ABSTRACT_LOG4CXX_OBJECT(Writer)
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(Writer)
+		END_LOG4CXX_CAST_MAP()
 
-          protected:
-                  Writer();
-                  virtual ~Writer();
+	protected:
+		Writer();
+		virtual ~Writer();
 
-          public:
-                  virtual void close(Pool& p) = 0;
-                  virtual void flush(Pool& p) = 0;
-                  virtual void write(const LogString& str, Pool& p) = 0;
+	public:
+		virtual void close(Pool& p) = 0;
+		virtual void flush(Pool& p) = 0;
+		virtual void write(const LogString& str, Pool& p) = 0;
 
-          private:
-                  Writer(const Writer&);
-                  Writer& operator=(const Writer&);
-          };
+	private:
+		Writer(const Writer&);
+		Writer& operator=(const Writer&);
+};
 
-          LOG4CXX_PTR_DEF(Writer);
-        } // namespace helpers
+LOG4CXX_PTR_DEF(Writer);
+} // namespace helpers
 
 }  //namespace log4cxx
 

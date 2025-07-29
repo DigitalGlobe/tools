@@ -20,7 +20,10 @@
 
 #include <log4cxx/pattern/patternconverter.h>
 
-namespace log4cxx { namespace pattern {
+namespace LOG4CXX_NS
+{
+namespace pattern
+{
 
 
 /**
@@ -28,23 +31,27 @@ namespace log4cxx { namespace pattern {
  * date pattern for a %d specifier in a file name is different than
  * the %d pattern in pattern layout.
  *
- * 
- * 
+ *
+ *
  */
-class LOG4CXX_EXPORT FileDatePatternConverter {
-  /**
-   * Private constructor.
-   */
-  FileDatePatternConverter();
+class LOG4CXX_EXPORT FileDatePatternConverter
+{
+		/**
+		 * Private constructor.
+		 */
+		FileDatePatternConverter();
 
-public:
-  /**
-   * Obtains an instance of pattern converter.
-   * @param options options, may be null.
-   * @return instance of pattern converter.
-   */
-  static PatternConverterPtr newInstance(
-    const std::vector<LogString>& options);
+	public:
+		/**
+		 * An instance of pattern converter for date conversion and formatting.
+		 *
+		 * \sa DatePatternConverter::newInstance()
+		 *
+		 * @param options If empty, used the patterm "yyyy-MM-dd".
+		 * @return The date conversion and formatting instance.
+		 */
+		static PatternConverterPtr newInstance(
+			const std::vector<LogString>& options);
 };
 }
 }

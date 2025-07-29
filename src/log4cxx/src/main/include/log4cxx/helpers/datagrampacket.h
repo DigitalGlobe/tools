@@ -18,118 +18,94 @@
 #ifndef _LOG4CXX_HELPERS_DATAGRAM_PACKET
 #define _LOG4CXX_HELPERS_DATAGRAM_PACKET
 
-#include <log4cxx/helpers/objectimpl.h>
-#include <log4cxx/helpers/objectptr.h>
+#include <log4cxx/helpers/object.h>
 #include <log4cxx/helpers/inetaddress.h>
 
-namespace log4cxx
+namespace LOG4CXX_NS
 {
-        namespace helpers
-        {
+namespace helpers
+{
 
-                /** This class represents a datagram packet.
-                <p>Datagram packets are used to implement a connectionless packet
-                delivery service. Each message is routed from one machine to another
-                based solely on information contained within that packet. Multiple
-                packets sent from one machine to another might be routed differently,
-                and might arrive in any order.
-                */
-                class LOG4CXX_EXPORT DatagramPacket : public helpers::ObjectImpl
-                {
-                protected:
-                        /** the data for this packet. */
-                        void * buf;
+/** This class represents a datagram packet.
+<p>Datagram packets are used to implement a connectionless packet
+delivery service. Each message is routed from one machine to another
+based solely on information contained within that packet. Multiple
+packets sent from one machine to another might be routed differently,
+and might arrive in any order.
+*/
+class LOG4CXX_EXPORT DatagramPacket : public helpers::Object
+{
+	private:
+		LOG4CXX_DECLARE_PRIVATE_MEMBER_PTR(DatagramPacketPriv, m_priv)
 
-                        /** The offset of the data for this packet. */
-                        int offset;
+	public:
+		DECLARE_ABSTRACT_LOG4CXX_OBJECT(DatagramPacket)
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(DatagramPacket)
+		END_LOG4CXX_CAST_MAP()
 
-                        /** The length of the data for this packet. */
-                        int length;
+		/** Constructs a DatagramPacket for receiving packets of length
+		<code>length</code>. */
+		DatagramPacket(void* buf, int length);
 
-                        /** The IP address for this packet. */
-                        InetAddressPtr address;
+		/** Constructs a datagram packet for sending packets of length
+		<code>length</code> to the specified port number on the specified
+		host. */
+		DatagramPacket(void* buf, int length, InetAddressPtr address, int port);
 
-                        /** The UDP port number of the remote host. */
-                        int port;
+		/** Constructs a DatagramPacket for receiving packets of length
+		<code>length</code>, specifying an offset into the buffer. */
+		DatagramPacket(void* buf, int offset, int length);
 
-                public:
-                        DECLARE_ABSTRACT_LOG4CXX_OBJECT(DatagramPacket)
-                        BEGIN_LOG4CXX_CAST_MAP()
-                                LOG4CXX_CAST_ENTRY(DatagramPacket)
-                        END_LOG4CXX_CAST_MAP()
+		/** Constructs a datagram packet for sending packets of length
+		<code>length</code> with offset <code>offset</code> to the
+		specified port number on the specified host. */
+		DatagramPacket(void* buf, int offset, int length, InetAddressPtr address,
+			int port);
 
-                        /** Constructs a DatagramPacket for receiving packets of length
-                        <code>length</code>. */
-                        DatagramPacket(void * buf, int length);
+		~DatagramPacket();
 
-                        /** Constructs a datagram packet for sending packets of length
-                        <code>length</code> to the specified port number on the specified
-                        host. */
-                        DatagramPacket(void * buf, int length, InetAddressPtr address, int port);
+		/** Returns the IP address of the machine to which this datagram
+		is being sent or from which the datagram was received. */
+		InetAddressPtr getAddress() const;
 
-                        /** Constructs a DatagramPacket for receiving packets of length
-                        <code>length</code>, specifying an offset into the buffer. */
-                        DatagramPacket(void * buf, int offset, int length);
+		/** Returns the data received or the data to be sent. */
+		void* getData() const;
 
-                        /** Constructs a datagram packet for sending packets of length
-                        <code>length</code> with offset <code>offset</code> to the
-                        specified port number on the specified host. */
-                        DatagramPacket(void * buf, int offset, int length, InetAddressPtr address,
-                                int port);
+		/** Returns the length of the data to be sent or the length of the
+		data received. */
+		int getLength() const;
 
-                        ~DatagramPacket();
+		/** Returns the offset of the data to be sent or the offset of the
+		data received. */
+		int getOffset() const;
 
-                        /** Returns the IP address of the machine to which this datagram
-                        is being sent or from which the datagram was received. */
-                        inline InetAddressPtr getAddress() const
-                                { return address; }
+		/** Returns the port number on the remote host to which this
+		 datagram is being sent or from which the datagram was received. */
+		int getPort() const;
 
-                        /** Returns the data received or the data to be sent. */
-                        inline void * getData() const
-                                { return buf; }
+		void setAddress(InetAddressPtr address1);
 
-                        /** Returns the length of the data to be sent or the length of the
-                        data received. */
-                        inline int getLength() const
-                                { return length; }
+		/** Set the data buffer for this packet. */
+		void setData(void* buf1);
 
-                        /** Returns the offset of the data to be sent or the offset of the
-                        data received. */
-                        inline int getOffset() const
-                                { return offset; }
+		/** Set the data buffer for this packet. */
+		void setData(void* buf1, int offset1, int length1);
 
-                        /** Returns the port number on the remote host to which this
-                         datagram is being sent or from which the datagram was received. */
-                        inline int getPort() const
-                                { return port; }
+		/** Set the length for this packet. */
+		void setLength(int length1);
 
-                        inline void setAddress(InetAddressPtr address1)
-                                { this->address = address1; }
+		void setPort(int port1);
 
-                        /** Set the data buffer for this packet. */
-                        inline void setData(void * buf1)
-                                { this->buf = buf1; }
+	private:
+		//
+		//  prevent copy and assignment statements
+		DatagramPacket(const DatagramPacket&);
+		DatagramPacket& operator=(const DatagramPacket&);
 
-                        /** Set the data buffer for this packet. */
-                        inline void setData(void * buf1, int offset1, int length1)
-                                { this->buf = buf1; this->offset = offset1; this->length = length1; }
-
-                        /** Set the length for this packet. */
-                        inline void setLength(int length1)
-                                { this->length = length1; }
-
-                        inline void setPort(int port1)
-                                { this->port = port1; }
-
-                private:
-                        //
-                        //  prevent copy and assignment statements
-                        DatagramPacket(const DatagramPacket&);
-                        DatagramPacket& operator=(const DatagramPacket&);
-
-                }; // class DatagramPacket
-            LOG4CXX_PTR_DEF(DatagramPacket);
-        }  // namespace helpers
+}; // class DatagramPacket
+LOG4CXX_PTR_DEF(DatagramPacket);
+}  // namespace helpers
 } // namespace log4cxx
 
 #endif // _LOG4CXX_HELPERS_DATAGRAM_PACKET

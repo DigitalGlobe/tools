@@ -18,18 +18,13 @@
 #ifndef _LOG4CXX_FILTER_ANDFILTER_H
 #define _LOG4CXX_FILTER_ANDFILTER_H
 
-#if defined(_MSC_VER)
-#pragma warning ( push )
-#pragma warning ( disable: 4231 4251 4275 4786 )
-#endif
-
-
 #include <log4cxx/spi/filter.h>
+#include <memory>
 
-namespace log4cxx
+namespace LOG4CXX_NS
 {
-    namespace filter
-    {
+namespace filter
+{
 
 /**
  * A filter that 'and's the results of any number of contained filters together.
@@ -43,22 +38,23 @@ namespace log4cxx
  *
  * Here is an example config that will accept only events that contain BOTH
  * a DEBUG level AND 'test' in the message:
- *
- *&lt;appender name="STDOUT" class="org.apache.log4j.ConsoleAppender"&gt;
- * &lt;filter class="org.apache.log4j.filter.AndFilter"&gt;
- *  &lt;filter class="org.apache.log4j.filter.LevelMatchFilter"&gt;
+ *<pre>
+ * &lt;appender name="STDOUT" class="org.apache.log4j.ConsoleAppender"&gt;
+ *  &lt;filter class="org.apache.log4j.filter.AndFilter"&gt;
+ *   &lt;filter class="org.apache.log4j.filter.LevelMatchFilter"&gt;
  *        &lt;param name="levelToMatch" value="DEBUG" /&gt;
  *        &lt;param name="acceptOnMatch" value="true" /&gt;
- *  &lt;/filter>
- *  &lt;filter class="org.apache.log4j.filter.StringMatchFilter"&gt;
+ *   &lt;/filter>
+ *   &lt;filter class="org.apache.log4j.filter.StringMatchFilter"&gt;
  *        &lt;param name="stringToMatch" value="test" /&gt;
  *        &lt;param name="acceptOnMatch" value="true" /&gt;
- *  &lt;/filter>
- *  &lt;param name="acceptOnMatch" value="false"/&gt;
- * &lt;/filter&gt;
- * &lt;filter class="org.apache.log4j.filter.DenyAllFilter"/&gt;
- *&lt;layout class="org.apache.log4j.SimpleLayout"/&gt;
- *&lt;/appender&gt;
+ *   &lt;/filter>
+ *   &lt;param name="acceptOnMatch" value="false"/&gt;
+ *  &lt;/filter&gt;
+ *  &lt;filter class="org.apache.log4j.filter.DenyAllFilter"/&gt;
+ * &lt;layout class="org.apache.log4j.SimpleLayout"/&gt;
+ * &lt;/appender&gt;
+ * </pre>
  *
  * To accept all events EXCEPT those events that contain a
  * DEBUG level and 'test' in the message:
@@ -72,38 +68,34 @@ namespace log4cxx
  * or
  * ! ( LEVEL == DEBUG && MSG ~= 'test' )
  *
- * 
+ *
  */
-        class LOG4CXX_EXPORT AndFilter:public log4cxx::spi::Filter
-        {
-          private:
-            log4cxx::spi::FilterPtr headFilter;
-            log4cxx::spi::FilterPtr tailFilter;
-            bool acceptOnMatch;
-                 AndFilter(const AndFilter &);
-                  AndFilter & operator=(const AndFilter &);
+class LOG4CXX_EXPORT AndFilter: public LOG4CXX_NS::spi::Filter
+{
+	private:
+		struct AndFilterPrivate;
 
+		AndFilter(const AndFilter&);
+		AndFilter& operator=(const AndFilter&);
 
-          public:
-                  DECLARE_LOG4CXX_OBJECT(AndFilter)
-                  BEGIN_LOG4CXX_CAST_MAP()
-                  LOG4CXX_CAST_ENTRY(log4cxx::spi::Filter)
-                  END_LOG4CXX_CAST_MAP()
+	public:
+		DECLARE_LOG4CXX_OBJECT(AndFilter)
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(LOG4CXX_NS::spi::Filter)
+		END_LOG4CXX_CAST_MAP()
 
-                  AndFilter();
+		AndFilter();
+		~AndFilter();
 
-            void addFilter(const log4cxx::spi::FilterPtr & filter);
+		void addFilter(const spi::FilterPtr& filter);
 
-            void setAcceptOnMatch(bool acceptOnMatch);
+		void setAcceptOnMatch(bool acceptOnMatch);
 
-            FilterDecision decide(const spi::LoggingEventPtr & event) const;
-        };
+		FilterDecision decide(const spi::LoggingEventPtr& event) const override;
+};
+LOG4CXX_PTR_DEF(AndFilter);
 
-    }
 }
-
-#if defined(_MSC_VER)
-#pragma warning ( pop )
-#endif
+}
 
 #endif

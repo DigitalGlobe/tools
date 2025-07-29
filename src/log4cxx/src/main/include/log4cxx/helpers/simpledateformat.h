@@ -18,79 +18,91 @@
 #ifndef _LOG4CXX_HELPERS_SIMPLE_DATE_FORMAT_H
 #define _LOG4CXX_HELPERS_SIMPLE_DATE_FORMAT_H
 
-#if defined(_MSC_VER)
-#pragma warning ( push )
-#pragma warning ( disable: 4231 4251 4275 4786 )
-#endif
-
-
-
 #include <log4cxx/helpers/dateformat.h>
 #include <vector>
 #include <time.h>
 
-namespace std { class locale; }
+#include <locale>
 
-namespace log4cxx
+using std::locale;
+
+namespace LOG4CXX_NS
 {
-        namespace helpers
-        {
-          namespace SimpleDateFormatImpl {
-            class PatternToken;
-        }
+namespace helpers
+{
+namespace SimpleDateFormatImpl
+{
+class PatternToken;
+}
 
-          /**
-           * Concrete class for formatting and parsing dates in a
-           * locale-sensitive manner.
-           */
-          class LOG4CXX_EXPORT SimpleDateFormat : public DateFormat
-          {
-          public:
-                  /**
-                   * Constructs a DateFormat using the given pattern and the default
-                   * time zone.
-                   *
-                   * @param pattern the pattern describing the date and time format
-                   */
-                  SimpleDateFormat(const LogString& pattern);
-                  SimpleDateFormat(const LogString& pattern, const std::locale* locale);
-                  ~SimpleDateFormat();
-
-                  virtual void format(LogString& s,
-                                      log4cxx_time_t tm,
-                                      log4cxx::helpers::Pool& p) const;
-
-                  /**
-                   * Set time zone.
-                   * @param zone new time zone.
-                   */
-                  void setTimeZone(const TimeZonePtr& zone);
-
-          private:
-                  /**
-                   * Time zone.
-                   */
-                  TimeZonePtr timeZone;
-
-                  /**
-                   * List of tokens.
-                   */
-                  LOG4CXX_LIST_DEF(PatternTokenList, log4cxx::helpers::SimpleDateFormatImpl::PatternToken*);
-
-                  PatternTokenList pattern;
-                  
-                  static void addToken(const logchar spec, const int repeat, const std::locale* locale, PatternTokenList& pattern);
-                  static void parsePattern(const LogString& spec, const std::locale* locale, PatternTokenList& pattern);
-          };
+LOG4CXX_LIST_DEF(PatternTokenList, LOG4CXX_NS::helpers::SimpleDateFormatImpl::PatternToken*);
 
 
-        }  // namespace helpers
+/**
+ * Concrete class for converting and formatting a date/time
+ * in a locale-sensitive manner.
+ *
+ * Specifier | Date/time component
+ * --------- | ---------------------
+ * G | era
+ * y | year
+ * M | month number
+ * MMM | abbreviated month name
+ * MMMM | full month name
+ * w | week in year
+ * W | week in month
+ * D | day in year
+ * d | day in month
+ * EEE | abbreviated day name
+ * EEEE | full day name
+ * a | AM or PM
+ * H | hour 0 - 23
+ * k | hour 1 - 24
+ * K | hour 0 - 11
+ * h | hour 1 - 12
+ * m | minute
+ * s | second
+ * S | millisecond
+ * z | time zone identifier
+ * Z | RFC822 time zone
+ */
+class LOG4CXX_EXPORT SimpleDateFormat : public DateFormat
+{
+	public:
+		/**
+		 * A time converter and formatter using \c pattern and the default std::locale.
+		 *
+		 * @param pattern the specifiers describing the date and time format
+		 */
+		SimpleDateFormat(const LogString& pattern);
+		/**
+		 * A time converter and formatter using \c pattern and \c locale.
+		 *
+		 * @param pattern the specifiers describing the date and time format
+		 * @param locale the user-preferred set of immutable facets
+		 */
+		SimpleDateFormat(const LogString& pattern, const std::locale* locale);
+		~SimpleDateFormat();
+
+		virtual void format(LogString& s,
+			log4cxx_time_t tm,
+			LOG4CXX_NS::helpers::Pool& p) const;
+
+		/**
+		 * Set time zone.
+		 * @param zone new time zone.
+		 */
+		void setTimeZone(const TimeZonePtr& zone);
+
+	private:
+		LOG4CXX_DECLARE_PRIVATE_MEMBER_PTR(SimpleDateFormatPrivate, m_priv)
+
+		static void addToken(const logchar spec, const int repeat, const std::locale* locale, PatternTokenList& pattern);
+		static void parsePattern(const LogString& spec, const std::locale* locale, PatternTokenList& pattern);
+};
+
+
+}  // namespace helpers
 } // namespace log4cxx
-
-#if defined(_MSC_VER)
-#pragma warning ( pop )
-#endif
-
-
 
 #endif // _LOG4CXX_HELPERS_SIMPLE_DATE_FORMAT_H

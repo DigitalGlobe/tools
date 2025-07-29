@@ -18,275 +18,204 @@
 #ifndef _LOG4CXX_ASYNC_APPENDER_H
 #define _LOG4CXX_ASYNC_APPENDER_H
 
-#if defined(_MSC_VER)
-#pragma warning ( push )
-#pragma warning ( disable: 4231 4251 4275 4786 )
-#endif
-
-
 #include <log4cxx/appenderskeleton.h>
 #include <log4cxx/helpers/appenderattachableimpl.h>
-#include <deque>
 #include <log4cxx/spi/loggingevent.h>
-#include <log4cxx/helpers/thread.h>
-#include <log4cxx/helpers/mutex.h>
-#include <log4cxx/helpers/condition.h>
 
-
-namespace log4cxx
+namespace LOG4CXX_NS
 {
+LOG4CXX_LIST_DEF(LoggingEventList, spi::LoggingEventPtr);
 
-        /**
-        The AsyncAppender lets users log events asynchronously. It uses a
-        bounded buffer to store logging events.
+/**
+The AsyncAppender decouples logging event creation from output
+by processing log events asynchronously.
 
-        <p>The AsyncAppender will collect the events sent to it and then
-        dispatch them to all the appenders that are attached to it. You can
-        attach multiple appenders to an AsyncAppender.
+The AsyncAppender stores the logging event in a bounded buffer
+and then returns control to the application.
+A separate thread forwards events to the attached appender(s).
+You can attach multiple appenders to an AsyncAppender.
 
-        <p>The AsyncAppender uses a separate thread to serve the events in
-        its bounded buffer.
+The AsyncAppender is useful when outputting to a slow event sink,
+for example, a remote SMTP server or a database.
+Attaching a FileAppender to AsyncAppender is not recommended
+as the inter-thread communication overhead
+can exceed the time to write directly to a file.
 
-        <p><b>Important note:</b> The <code>AsyncAppender</code> can only
-        be script configured using the {@link xml::DOMConfigurator DOMConfigurator}.
-        */
-        class LOG4CXX_EXPORT AsyncAppender :
-                public virtual spi::AppenderAttachable,
-                public virtual AppenderSkeleton
-        {
-        public:
-                DECLARE_LOG4CXX_OBJECT(AsyncAppender)
-                BEGIN_LOG4CXX_CAST_MAP()
-                        LOG4CXX_CAST_ENTRY(AsyncAppender)
-                        LOG4CXX_CAST_ENTRY_CHAIN(AppenderSkeleton)
-                        LOG4CXX_CAST_ENTRY(spi::AppenderAttachable)
-                END_LOG4CXX_CAST_MAP()
+When the application produces logging events faster
+than the background thread is able to process,
+the bounded buffer can become full.
+In this situation AsyncAppender will either
+block until the bounded buffer has a free slot or
+discard the event.
+The <b>Blocking</b> property controls which behaviour is used.
+When events are discarded,
+the logged output will indicate this
+with a log message prefixed with <i>Discarded</i>.
+The output may contain one <i>Discarded</i> message per logger name,
+the logging event of the highest level for each logger
+whose events have been discarded.
 
-                /**
-                 * Create new instance.
-                */
-                AsyncAppender();
-                
-                /**
-                 *  Destructor.
-                 */
-                virtual ~AsyncAppender();
+To determine whether the application produces logging events faster
+than the background thread is able to process, enable [Log4cxx internal debugging](internal-debugging.html).
+The AsyncAppender will output a histogram of queue length frequencies when closed.
 
-                void addRef() const;
-                void releaseRef() const;
+<b>Important note:</b> The <code>AsyncAppender</code> can only
+be script configured using the {@link xml::DOMConfigurator DOMConfigurator}.
+*/
+class LOG4CXX_EXPORT AsyncAppender :
+	public virtual spi::AppenderAttachable,
+	public virtual AppenderSkeleton
+{
+	protected:
+		struct AsyncAppenderPriv;
 
-                /**
-                 * Add appender.
-                 *
-                 * @param newAppender appender to add, may not be null.
-                */
-                void addAppender(const AppenderPtr& newAppender);
+	public:
+		DECLARE_LOG4CXX_OBJECT(AsyncAppender)
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(AsyncAppender)
+		LOG4CXX_CAST_ENTRY_CHAIN(AppenderSkeleton)
+		LOG4CXX_CAST_ENTRY(spi::AppenderAttachable)
+		END_LOG4CXX_CAST_MAP()
 
-                void append(const spi::LoggingEventPtr& event, log4cxx::helpers::Pool& p);
+		/**
+		 * Create new instance.
+		*/
+		AsyncAppender();
 
-                /**
-                Close this <code>AsyncAppender</code> by interrupting the
-                dispatcher thread which will process all pending events before
-                exiting.
-                */
-                void close();
+		/**
+		 *  Destructor.
+		 */
+		virtual ~AsyncAppender();
 
-                /**
-                 * Get iterator over attached appenders.
-                 * @return list of all attached appenders.
-                */
-                AppenderList getAllAppenders() const;
-                
-                /**
-                 * Get appender by name.
-                 *
-                 * @param name name, may not be null.
-                 * @return matching appender or null.
-                */
-                AppenderPtr getAppender(const LogString& name) const;
+		/**
+		 * Add appender.
+		 *
+		 * @param newAppender appender to add, may not be null.
+		*/
+		void addAppender(const AppenderPtr newAppender) override;
 
-                /**
-                 * Gets whether the location of the logging request call
-                 * should be captured.
-                 *
-                 * @return the current value of the <b>LocationInfo</b> option.
-                */
-                bool getLocationInfo() const;
-                /**
-                * Determines if specified appender is attached.
-                * @param appender appender.
-                * @return true if attached.
-                */
-                bool isAttached(const AppenderPtr& appender) const;
+		void doAppend(const spi::LoggingEventPtr& event,
+			helpers::Pool& pool1) override;
 
-                virtual bool requiresLayout() const;
-                    
-                /**
-                 * Removes and closes all attached appenders.
-                */
-                void removeAllAppenders();
+		void append(const spi::LoggingEventPtr& event, helpers::Pool& p) override;
 
-                /**
-                 * Removes an appender.
-                 * @param appender appender to remove.
-                */
-                void removeAppender(const AppenderPtr& appender);
-                /**
-                * Remove appender by name.
-                * @param name name.
-                */
-                void removeAppender(const LogString& name);                        
+		/**
+		Close this <code>AsyncAppender</code> by interrupting the
+		dispatcher thread which will process all pending events before
+		exiting.
+		*/
+		void close() override;
 
-                /**
-                * The <b>LocationInfo</b> attribute is provided for compatibility
-                * with log4j and has no effect on the log output.
-                * @param flag new value.
-                */
-                void setLocationInfo(bool flag);
+		/**
+		 * Get iterator over attached appenders.
+		 * @return list of all attached appenders.
+		*/
+		AppenderList getAllAppenders() const override;
 
-                /**
-                * The <b>BufferSize</b> option takes a non-negative integer value.
-                * This integer value determines the maximum size of the bounded
-                * buffer.
-                * */
-                void setBufferSize(int size);
+		/**
+		 * Get appender by name.
+		 *
+		 * @param name name, may not be null.
+		 * @return matching appender or null.
+		*/
+		AppenderPtr getAppender(const LogString& name) const override;
 
-                /**
-                 * Gets the current buffer size.
-                 * @return the current value of the <b>BufferSize</b> option.
-                */
-                int getBufferSize() const;
+		/**
+		 * Gets whether the location of the logging request call
+		 * should be captured.
+		 *
+		 * @return the current value of the <b>LocationInfo</b> option.
+		*/
+		bool getLocationInfo() const;
+		/**
+		* Determines if specified appender is attached.
+		* @param appender appender.
+		* @return true if attached.
+		*/
+		bool isAttached(const AppenderPtr appender) const override;
 
-                /**
-                 * Sets whether appender should wait if there is no
-                 * space available in the event buffer or immediately return.
-                 *
-                 * @param value true if appender should wait until available space in buffer.
-                 */
-                 void setBlocking(bool value);
+		bool requiresLayout() const override;
 
-                /**
-                 * Gets whether appender should block calling thread when buffer is full.
-                 * If false, messages will be counted by logger and a summary
-                 * message appended after the contents of the buffer have been appended.
-                 *
-                 * @return true if calling thread will be blocked when buffer is full.
-                 */
-                 bool getBlocking() const;
-                 
-                 
-                 /**
-                  * Set appender properties by name.
-                  * @param option property name.
-                  * @param value property value.
-                  */
-                 void setOption(const LogString& option, const LogString& value);
+		/**
+		 * Removes and closes all attached appenders.
+		*/
+		void removeAllAppenders() override;
+
+		/**
+		 * Removes an appender.
+		 * @param appender appender to remove.
+		*/
+		void removeAppender(const AppenderPtr appender) override;
+		/**
+		* Remove appender by name.
+		* @param name name.
+		*/
+		void removeAppender(const LogString& name) override;
+
+		/**
+		* The <b>LocationInfo</b> attribute is provided for compatibility
+		* with log4j and has no effect on the log output.
+		* @param flag new value.
+		*/
+		void setLocationInfo(bool flag);
+
+		/**
+		* The <b>BufferSize</b> option takes a non-negative integer value.
+		* This integer value determines the maximum size of the bounded
+		* buffer.
+		* */
+		void setBufferSize(int size);
+
+		/**
+		 * Gets the current buffer size.
+		 * @return the current value of the <b>BufferSize</b> option.
+		*/
+		int getBufferSize() const;
+
+		/**
+		 * Sets whether appender should wait if there is no
+		 * space available in the event buffer or immediately return.
+		 *
+		 * @param value true if appender should wait until available space in buffer.
+		 */
+		void setBlocking(bool value);
+
+		/**
+		 * Gets whether appender should block calling thread when buffer is full.
+		 * If false, messages will be counted by logger and a summary
+		 * message appended after the contents of the buffer have been appended.
+		 *
+		 * @return true if calling thread will be blocked when buffer is full.
+		 */
+		bool getBlocking() const;
 
 
-        private:
-                AsyncAppender(const AsyncAppender&);
-                AsyncAppender& operator=(const AsyncAppender&);
-                /**
-                 * The default buffer size is set to 128 events.
-                */
-                enum { DEFAULT_BUFFER_SIZE = 128 };
+		/**
+		\copybrief AppenderSkeleton::setOption()
 
-                /**
-                 * Event buffer.
-                */
-                LOG4CXX_LIST_DEF(LoggingEventList, log4cxx::spi::LoggingEventPtr);
-                LoggingEventList buffer;
+		Supported options | Supported values | Default value
+		-------------- | ---------------- | ---------------
+		LocationInfo | True,False | False
+		BufferSize | int  | 128
+		Blocking | True,False | True
 
-                /**
-                 *  Mutex used to guard access to buffer and discardMap.
-                 */
-                ::log4cxx::helpers::Mutex bufferMutex;
-                ::log4cxx::helpers::Condition bufferNotFull;
-                ::log4cxx::helpers::Condition bufferNotEmpty;
-    
-                class DiscardSummary {
-                private:
-                    /**
-                     * First event of the highest severity.
-                    */
-                    ::log4cxx::spi::LoggingEventPtr maxEvent;
-                    
-                    /**
-                    * Total count of messages discarded.
-                    */
-                    int count;
-                    
-                public:
-                    /**
-                     * Create new instance.
-                     *
-                     * @param event event, may not be null.
-                    */
-                    DiscardSummary(const ::log4cxx::spi::LoggingEventPtr& event);
-                    /** Copy constructor.  */
-                    DiscardSummary(const DiscardSummary& src);
-                    /** Assignment operator. */
-                    DiscardSummary& operator=(const DiscardSummary& src);
-                    
-                    /**
-                     * Add discarded event to summary.
-                     *
-                     * @param event event, may not be null.
-                    */
-                    void add(const ::log4cxx::spi::LoggingEventPtr& event);
-                    
-                    /**
-                     * Create event with summary information.
-                     *
-                     * @return new event.
-                     */
-                     ::log4cxx::spi::LoggingEventPtr createEvent(::log4cxx::helpers::Pool& p);
-                };
+		\sa AppenderSkeleton::setOption()
+		 */
+		void setOption(const LogString& option, const LogString& value) override;
 
-                /**
-                  * Map of DiscardSummary objects keyed by logger name.
-                */
-                typedef std::map<LogString, DiscardSummary> DiscardMap;
-                DiscardMap* discardMap;
-                
-                /**
-                 * Buffer size.
-                */
-                int bufferSize;
 
-                /**
-                 * Nested appenders.
-                */
-                helpers::AppenderAttachableImplPtr appenders;
+	private:
+		AsyncAppender(const AsyncAppender&);
+		AsyncAppender& operator=(const AsyncAppender&);
 
-                /**
-                 *  Dispatcher.
-                 */
-                helpers::Thread dispatcher;
+		/**
+		 *  Dispatch routine.
+		 */
+		void dispatch();
 
-                /**
-                 * Should location info be included in dispatched messages.
-                */
-                bool locationInfo;
-
-                /**
-                 * Does appender block when buffer is full.
-                */
-                bool blocking;
-
-                /**
-                 *  Dispatch routine.
-                 */
-                static void* LOG4CXX_THREAD_FUNC dispatch(apr_thread_t* thread, void* data);
-
-        }; // class AsyncAppender
-        LOG4CXX_PTR_DEF(AsyncAppender);
+}; // class AsyncAppender
+LOG4CXX_PTR_DEF(AsyncAppender);
 }  //  namespace log4cxx
-
-#if defined(_MSC_VER)
-#pragma warning ( pop )
-#endif
-
 
 #endif//  _LOG4CXX_ASYNC_APPENDER_H
 

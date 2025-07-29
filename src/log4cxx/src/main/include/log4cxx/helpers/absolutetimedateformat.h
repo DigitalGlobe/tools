@@ -20,21 +20,21 @@
 
 #include <log4cxx/helpers/simpledateformat.h>
 
-namespace log4cxx
+namespace LOG4CXX_NS
 {
-        namespace helpers
-        {
-                /**
-                Formats a date in the format <b>HH:mm:ss,SSS</b> for example,
-                "15:49:37,459".
-                */
-                class LOG4CXX_EXPORT AbsoluteTimeDateFormat : public SimpleDateFormat
-                {
-                public:
-                        AbsoluteTimeDateFormat()
-                        : SimpleDateFormat(LOG4CXX_STR("HH:mm:ss,SSS")) {}
-                };
-        }  // namespace helpers
+namespace helpers
+{
+/**
+Formats a date in the format <b>HH:mm:ss,SSS</b> for example,
+"15:49:37,459".
+*/
+class LOG4CXX_EXPORT AbsoluteTimeDateFormat : public SimpleDateFormat
+{
+	public:
+		AbsoluteTimeDateFormat()
+			: SimpleDateFormat(LOG4CXX_STR("HH:mm:ss,SSS")) {}
+};
+}  // namespace helpers
 } // namespace log4cxx
 
 #endif // _LOG4CXX_HELPERS_ABSOLUTE_TIME_DATE_FORMAT_H

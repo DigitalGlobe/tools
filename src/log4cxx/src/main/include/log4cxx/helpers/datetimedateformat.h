@@ -20,23 +20,23 @@
 
 #include <log4cxx/helpers/simpledateformat.h>
 
-namespace log4cxx
+namespace LOG4CXX_NS
 {
-        namespace helpers
-        {
-                /**
-                Formats a date in the format <b>dd MMM yyyy HH:mm:ss,SSS</b> for example,
-           "06 Nov 1994 15:49:37,459".
-                */
-                class LOG4CXX_EXPORT DateTimeDateFormat : public SimpleDateFormat
-                {
-                public:
-                        DateTimeDateFormat()
-                         : SimpleDateFormat(LOG4CXX_STR("dd MMM yyyy HH:mm:ss,SSS")) {}
-                         DateTimeDateFormat(const std::locale* locale)
-                          : SimpleDateFormat(LOG4CXX_STR("dd MMM yyyy HH:mm:ss,SSS"), locale) {}
-                };
-        }  // namespace helpers
+namespace helpers
+{
+/**
+Formats a date in the format <b>dd MMM yyyy HH:mm:ss,SSS</b> for example,
+"06 Nov 1994 15:49:37,459".
+*/
+class LOG4CXX_EXPORT DateTimeDateFormat : public SimpleDateFormat
+{
+	public:
+		DateTimeDateFormat()
+			: SimpleDateFormat(LOG4CXX_STR("dd MMM yyyy HH:mm:ss,SSS")) {}
+		DateTimeDateFormat(const std::locale* locale)
+			: SimpleDateFormat(LOG4CXX_STR("dd MMM yyyy HH:mm:ss,SSS"), locale) {}
+};
+}  // namespace helpers
 } // namespace log4cxx
 
 #endif // _LOG4CXX_HELPERS_DATE_TIME_DATE_FORMAT_H

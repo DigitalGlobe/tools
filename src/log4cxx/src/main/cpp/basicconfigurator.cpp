@@ -20,26 +20,31 @@
 #include <log4cxx/consoleappender.h>
 #include <log4cxx/logmanager.h>
 #include <log4cxx/logger.h>
+#include <log4cxx/helpers/widelife.h>
 
-using namespace log4cxx;
+using namespace LOG4CXX_NS;
 
-void BasicConfigurator::configure()
+void BasicConfigurator::configure(const LayoutPtr& layoutArg)
 {
-   LogManager::getLoggerRepository()->setConfigured(true);
-   LoggerPtr root = Logger::getRootLogger();
-        static const LogString TTCC_CONVERSION_PATTERN(LOG4CXX_STR("%r [%t] %p %c %x - %m%n"));
-   LayoutPtr layout(new PatternLayout(TTCC_CONVERSION_PATTERN));
-   AppenderPtr appender(new ConsoleAppender(layout));
-   root->addAppender(appender);
+	LogManager::getLoggerRepository()->setConfigured(true);
+	auto layout = layoutArg;
+	if (!layout)
+	{
+		LogString TTCC_CONVERSION_PATTERN{LOG4CXX_STR("%r [%t] %p %c %x - %m%n")};
+		layout = std::make_shared<PatternLayout>(TTCC_CONVERSION_PATTERN);
+	}
+	auto appender = std::make_shared<ConsoleAppender>(layout);
+	Logger::getRootLogger()->addAppender(appender);
 }
 
 void BasicConfigurator::configure(const AppenderPtr& appender)
 {
-   LoggerPtr root = Logger::getRootLogger();
-   root->addAppender(appender);
+	LogManager::getLoggerRepository()->setConfigured(true);
+	LoggerPtr root = Logger::getRootLogger();
+	root->addAppender(appender);
 }
 
 void BasicConfigurator::resetConfiguration()
 {
-   LogManager::resetConfiguration();
+	LogManager::resetConfiguration();
 }

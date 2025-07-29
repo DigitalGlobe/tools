@@ -15,123 +15,162 @@
  * limitations under the License.
  */
 
-#define LOG4CXX_TEST 1
-#include <log4cxx/private/log4cxx_private.h>
-
 #include <log4cxx/logger.h>
 #include <log4cxx/xml/domconfigurator.h>
+#include <log4cxx/fileappender.h>
+#include <log4cxx/varia/fallbackerrorhandler.h>
+#include <log4cxx/appender.h>
+#include <log4cxx/helpers/loglog.h>
 #include "../logunit.h"
 #include "../util/transformer.h"
 #include "../util/compare.h"
 #include "../util/controlfilter.h"
-#include "../util/threadfilter.h"
 #include "../util/linenumberfilter.h"
 #include <iostream>
-#include <log4cxx/file.h>
 
 using namespace log4cxx;
 using namespace log4cxx::helpers;
 using namespace log4cxx::xml;
 
-#define TEST1_A_PAT "FALLBACK - test - Message [0-9]"
-#define TEST1_B_PAT "FALLBACK - root - Message [0-9]"
-#define TEST1_2_PAT \
-        "^[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\} [0-9]\\{2\\}:[0-9]\\{2\\}:[0-9]\\{2\\},[0-9]\\{3\\} " \
-        "\\[main]\\ (DEBUG|INFO|WARN|ERROR|FATAL) .* - Message [0-9]"
-
 LOGUNIT_CLASS(ErrorHandlerTestCase)
 {
-        LOGUNIT_TEST_SUITE(ErrorHandlerTestCase);
-                LOGUNIT_TEST(test1);
-        LOGUNIT_TEST_SUITE_END();
+	LOGUNIT_TEST_SUITE(ErrorHandlerTestCase);
+	LOGUNIT_TEST(test1);
+	LOGUNIT_TEST(test2);
+	LOGUNIT_TEST_SUITE_END();
 
-        LoggerPtr root;
-        LoggerPtr logger;
-
-    static const File TEMP;
-    static const File FILTERED;
-
+	LoggerPtr root;
+	LoggerPtr logger;
+#ifdef _DEBUG
+	struct Fixture
+	{
+		Fixture() {
+			helpers::LogLog::setInternalDebugging(true);
+		}
+	} suiteFixture;
+#endif
 
 public:
-        void setUp()
-        {
-                root = Logger::getRootLogger();
-                logger = Logger::getLogger("test");
-        }
+	void setUp()
+	{
+		root = Logger::getRootLogger();
+		logger = Logger::getLogger("test");
+	}
 
-        void tearDown()
-        {
-                logger->getLoggerRepository()->resetConfiguration();
-        }
+	void tearDown()
+	{
+		auto rep = logger->getLoggerRepository();
 
-        void test1()
-        {
-                DOMConfigurator::configure("input/xml/fallback1.xml");
-                common();
+		if (rep)
+		{
+			rep->resetConfiguration();
+		}
+	}
 
-                ControlFilter cf;
-                cf << TEST1_A_PAT << TEST1_B_PAT << TEST1_2_PAT;
 
-                ThreadFilter threadFilter;
-                LineNumberFilter lineNumberFilter;
+	void test1()
+	{
+		DOMConfigurator::configure("input/xml/fallback1.xml");
+		AppenderPtr appender = root->getAppender(LOG4CXX_STR("PRIMARY"));
+		FileAppenderPtr primary = log4cxx::cast<FileAppender>(appender);
+		log4cxx::varia::FallbackErrorHandlerPtr eh;
+		log4cxx::spi::ErrorHandlerPtr errHandle = primary->getErrorHandler();
+		eh = log4cxx::cast<log4cxx::varia::FallbackErrorHandler>(errHandle);
+		LOGUNIT_ASSERT(eh != 0);
 
-                std::vector<Filter *> filters;
-                filters.push_back(&cf);
-                filters.push_back(&threadFilter);
-                filters.push_back(&lineNumberFilter);
+		common();
+		LOGUNIT_ASSERT(eh->errorReported());
 
-        common();
+		std::string TEST1_PAT =
+			"FALLBACK - (root|test) - Message {0-9}";
 
-                try
-                {
-                        Transformer::transform(TEMP, FILTERED, filters);
-                }
-                catch(UnexpectedFormatException& e)
-                {
-            std::cout << "UnexpectedFormatException :" << e.what() << std::endl;
-                        throw;
-                }
+		ControlFilter cf;
+		cf << TEST1_PAT;
 
-        const File witness("witness/fallback");
-                LOGUNIT_ASSERT(Compare::compare(FILTERED, witness));
-        }
+		LineNumberFilter lineNumberFilter;
 
-        void common()
-        {
-                int i = -1;
+		std::vector<Filter*> filters;
+		filters.push_back(&cf);
+		filters.push_back(&lineNumberFilter);
 
-        std::ostringstream os;
-        os << "Message " << ++ i;
-                LOG4CXX_DEBUG(logger, os.str());
-                LOG4CXX_DEBUG(root, os.str());
+		try
+		{
+			Transformer::transform("output/fallback1", "output/fallbackfiltered1", filters);
+		}
+		catch (UnexpectedFormatException& e)
+		{
+			std::cout << "UnexpectedFormatException :" << e.what() << std::endl;
+			throw;
+		}
 
-        os.str("");
-        os << "Message " << ++i;
-                LOG4CXX_INFO(logger, os.str());
-                LOG4CXX_INFO(root, os.str());
 
-        os.str("");
-        os << "Message " << ++i;
-                LOG4CXX_WARN(logger, os.str());
-                LOG4CXX_WARN(root, os.str());
+		LOGUNIT_ASSERT(Compare::compare("output/fallbackfiltered1", "witness/fallback1"));
+	}
 
-        os.str("");
-        os << "Message " << ++i;
-                LOG4CXX_ERROR(logger, os.str());
-                LOG4CXX_ERROR(root, os.str());
+	void test2()
+	{
+		DOMConfigurator::configure("input/xml/fallback2.xml");
+		AppenderPtr appender = root->getAppender(LOG4CXX_STR("PRIMARY"));
+		FileAppenderPtr primary = log4cxx::cast<FileAppender>(appender);
+		log4cxx::varia::FallbackErrorHandlerPtr eh;
+		log4cxx::spi::ErrorHandlerPtr errHandle = primary->getErrorHandler();
+		eh = log4cxx::cast<log4cxx::varia::FallbackErrorHandler>(errHandle);
+		LOGUNIT_ASSERT(eh != 0);
+		eh->setLogger(logger);
+		common();
+		LOGUNIT_ASSERT(eh->errorReported());
 
-        os.str("");
-        os << "Message " << ++i;
-                LOG4CXX_FATAL(logger, os.str());
-                LOG4CXX_FATAL(root, os.str());
-        }
+		std::string TEST1_PAT =
+			"FALLBACK - (root|test) - Message {0-9}";
+
+		ControlFilter cf;
+		cf << TEST1_PAT;
+
+		LineNumberFilter lineNumberFilter;
+
+		std::vector<Filter*> filters;
+		filters.push_back(&cf);
+		filters.push_back(&lineNumberFilter);
+
+		try
+		{
+			Transformer::transform("output/fallback2", "output/fallbackfiltered2", filters);
+		}
+		catch (UnexpectedFormatException& e)
+		{
+			std::cout << "UnexpectedFormatException :" << e.what() << std::endl;
+			throw;
+		}
+
+
+		LOGUNIT_ASSERT(Compare::compare("output/fallbackfiltered2", "witness/fallback1"));
+	}
+
+	void common()
+	{
+		int i = -1;
+
+		LOG4CXX_DEBUG(logger, "Message " << ++i);
+		LOG4CXX_DEBUG(root, "Message " << i);
+
+		LOG4CXX_INFO(logger, "Message " << ++i);
+		LOG4CXX_INFO(root, "Message " << i);
+
+		LOG4CXX_WARN(logger, "Message " << ++i);
+		LOG4CXX_WARN(root, "Message " << i);
+
+		LOG4CXX_ERROR(logger, "Message " << ++i);
+		LOG4CXX_ERROR(root, "Message " << i);
+
+		LOG4CXX_FATAL(logger, "Message " << ++i);
+		LOG4CXX_FATAL(root, "Message " << i);
+
+		LOG4CXX_DEBUG(logger, "Message " << ++i);
+		LOG4CXX_DEBUG(root, "Message " << i);
+
+		LOG4CXX_ERROR(logger, "Message " << ++i);
+		LOG4CXX_ERROR(root, "Message " << i);
+	}
 };
 
-//TODO: Not sure this test ever worked.  0.9.7 didn't call common
-//   had nothing that attempted to dispatch any log events
-
-//LOGUNIT_TEST_SUITE_REGISTRATION(ErrorHandlerTestCase);
-
-const File ErrorHandlerTestCase::TEMP("output/temp");
-const File ErrorHandlerTestCase::FILTERED("output/filtered");
-
+LOGUNIT_TEST_SUITE_REGISTRATION(ErrorHandlerTestCase)

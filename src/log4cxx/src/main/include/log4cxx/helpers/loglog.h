@@ -19,95 +19,103 @@
 #define _LOG4CXX_HELPERS_LOG_LOG_H
 
 #include <log4cxx/logstring.h>
-#include <log4cxx/helpers/mutex.h>
+#include <log4cxx/helpers/widelife.h>
 #include <exception>
+#include <mutex>
 
-namespace log4cxx
+namespace LOG4CXX_NS
 {
-        namespace helpers
-        {
-                /**
-                This class used to output log statements from within the log4cxx package.
+namespace helpers
+{
+/**
+This class used to output log statements from within the log4cxx package.
 
-                <p>Log4cxx components cannot make log4cxx logging calls. However, it is
-                sometimes useful for the user to learn about what log4cxx is
-                doing. You can enable log4cxx internal logging by calling the
-                <b>#setInternalDebugging</b> method.
+<p>Log4cxx components cannot make log4cxx logging calls. However, it is
+sometimes useful for the user to learn about what log4cxx is
+doing. You can enable log4cxx internal debug logging by calling the
+<b>#setInternalDebugging</b> method.
 
-                <p>All log4cxx internal debug calls go to standard output
-                where as internal error messages are sent to
-                standard error output. All internal messages are prepended with
-                the string "log4cxx: ".
-                */
-                class LOG4CXX_EXPORT LogLog
-                {
-                private:
-                        bool debugEnabled;
+<p>All LogLog messages are written to SystemErrWriter
+prepended with the string "log4cxx: ".
+*/
+class LOG4CXX_EXPORT LogLog
+{
+	private:
+		LOG4CXX_DECLARE_PRIVATE_MEMBER_PTR(LogLogPrivate, m_priv)
 
-                  /**
-                         In quietMode not even errors generate any output.
-                   */
-                        bool quietMode;
-                        Mutex mutex;
-                        LogLog();
-                        LogLog(const LogLog&);
-                        LogLog& operator=(const LogLog&);
-                        static LogLog& getInstance();
- 
+		friend WideLife<LogLog>;
+		LogLog();
+		LogLog(const LogLog&);
+		LogLog& operator=(const LogLog&);
+		static LogLog& getInstance();
 
-                public:
-                        /**
-                        Allows to enable/disable log4cxx internal logging.
-                        */
-                        static void setInternalDebugging(bool enabled);
+	public:
+		~LogLog();
 
-                        /**
-                        This method is used to output log4cxx internal debug
-                        statements. Output goes to the standard output.
-                        */
-                        static void debug(const LogString& msg);
-                        static void debug(const LogString& msg, const std::exception& e);
+		/**
+		 *  Is internal debugging enabled?
+		 **/
+		static bool isDebugEnabled();
 
+		/**
+		Use the value of \c enabled as the new internal debug logging state.
+		*/
+		static void setInternalDebugging(bool enabled);
 
-                        /**
-                        This method is used to output log4cxx internal error
-                        statements. There is no way to disable error statements.
-                        Output goes to stderr.
-                        */
-                        static void error(const LogString& msg);
-                        static void error(const LogString& msg, const std::exception& e);
+		/**
+		Output \c msg to SystemErrWriter if internal debug logging is enabled.
+		*/
+		static void debug(const LogString& msg);
+		/**
+		Output \c msg and <code>ex.what()</code> to SystemErrWriter if internal debug logging is enabled.
+		*/
+		static void debug(const LogString& msg, const std::exception& e);
 
 
-                        /**
-                        In quiet mode LogLog generates strictly no output, not even
-                        for errors.
+		/**
+		Output \c msg to SystemErrWriter unconditionally.
+		*/
+		static void error(const LogString& msg);
+		/**
+		Output \c msg and <code>ex.what()</code> to SystemErrWriter unconditionally.
+		*/
+		static void error(const LogString& msg, const std::exception& ex);
 
-                        @param quietMode <code>true</code> for no output.
-                        */
-                        static void setQuietMode(bool quietMode);     
 
-                        /**
-                        This method is used to output log4cxx internal warning
-                        statements. There is no way to disable warning statements.
-                        Output goes to stderr.
-                        */
-                        static void warn(const LogString&  msg);
-                        static void warn(const LogString&  msg, const std::exception& e);
+		/**
+		Change quiet mode to \c newValue.
 
-                        private:
-                        static void emit(const LogString& msg);
-                        static void emit(const std::exception& ex);
-                };
-        }  // namespace helpers
+		In quiet mode LogLog generates strictly no output, not even
+		for errors.
+
+		@param newValue <code>true</code> for no output.
+		*/
+		static void setQuietMode(bool newValue);
+
+		/**
+		Output \c msg to SystemErrWriter unconditionally.
+		*/
+		static void warn(const LogString&  msg);
+		/**
+		Output \c msg and <code>ex.what()</code> to SystemErrWriter unconditionally.
+		*/
+		static void warn(const LogString&  msg, const std::exception& ex);
+
+	private:
+		static void emit(const LogString& msg);
+		static void emit(const std::exception& ex);
+};
+}  // namespace helpers
 } // namespace log4cxx
 
 #define LOGLOG_DEBUG(log) { \
-        log4cxx::helpers::LogLog::debug(log) ; }
+		if (LogLog::isDebugEnabled()) \
+			LOG4CXX_NS::helpers::LogLog::debug(log) ; }
 
 #define LOGLOG_WARN(log) { \
-        log4cxx::helpers::LogLog::warn(log) ; }
+		LOG4CXX_NS::helpers::LogLog::warn(log) ; }
 
 #define LOGLOG_ERROR(log) { \
-        log4cxx::helpers::LogLog::warn(log); }
+		LOG4CXX_NS::helpers::LogLog::warn(log); }
 
 #endif //_LOG4CXX_HELPERS_LOG_LOG_H

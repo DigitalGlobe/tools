@@ -20,43 +20,43 @@
 
 #include <log4cxx/helpers/writer.h>
 
-namespace log4cxx
+namespace LOG4CXX_NS
 {
 
-        namespace helpers {
+namespace helpers
+{
 
-          /**
-          *   Writes text to a character-output stream buffering
-          *       requests to increase efficiency.
-          */
-          class LOG4CXX_EXPORT BufferedWriter : public Writer
-          {
-          private:
-                  WriterPtr out;
-                  size_t sz;
-                  LogString buf;
+/**
+*   Writes text to a character-output stream buffering
+*       requests to increase efficiency.
+*/
+class LOG4CXX_EXPORT BufferedWriter : public Writer
+{
+	private:
+		LOG4CXX_DECLARE_PRIVATE_MEMBER_PTR(BufferedWriterPriv, m_priv)
 
-          public:
-                  DECLARE_ABSTRACT_LOG4CXX_OBJECT(BufferedWriter)
-                  BEGIN_LOG4CXX_CAST_MAP()
-                          LOG4CXX_CAST_ENTRY(BufferedWriter)
-                          LOG4CXX_CAST_ENTRY_CHAIN(Writer)
-                  END_LOG4CXX_CAST_MAP()
+	public:
+		DECLARE_ABSTRACT_LOG4CXX_OBJECT(BufferedWriter)
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(BufferedWriter)
+		LOG4CXX_CAST_ENTRY_CHAIN(Writer)
+		END_LOG4CXX_CAST_MAP()
 
-                  BufferedWriter(WriterPtr& out);
-                  BufferedWriter(WriterPtr& out, size_t sz);
-                  virtual ~BufferedWriter();
+		BufferedWriter(WriterPtr& out);
+		BufferedWriter(WriterPtr& out, size_t sz);
+		virtual ~BufferedWriter();
 
-                  virtual void close(Pool& p);
-                  virtual void flush(Pool& p);
-                  virtual void write(const LogString& str, Pool& p);
+		void close(Pool& p) override;
+		void flush(Pool& p) override;
+		void write(const LogString& str, Pool& p) override;
 
-          private:
-                  BufferedWriter(const BufferedWriter&);
-                  BufferedWriter& operator=(const BufferedWriter&);
-          };
+		WriterPtr getWriter() const;
+	private:
+		BufferedWriter(const BufferedWriter&);
+		BufferedWriter& operator=(const BufferedWriter&);
+};
 
-        } // namespace helpers
+} // namespace helpers
 
 }  //namespace log4cxx
 

@@ -18,41 +18,42 @@
 #ifndef _LOG4CXX_HELPERS_OUTPUTSTREAM_H
 #define _LOG4CXX_HELPERS_OUTPUTSTREAM_H
 
-#include <log4cxx/helpers/objectimpl.h>
+#include <log4cxx/helpers/object.h>
 
-namespace log4cxx
+namespace LOG4CXX_NS
 {
 
-        namespace helpers {
-          class ByteBuffer;
+namespace helpers
+{
+class ByteBuffer;
 
-          /**
-          *   Abstract class for writing to character streams.
-          */
-          class LOG4CXX_EXPORT OutputStream : public ObjectImpl
-          {
-          public:
-                  DECLARE_ABSTRACT_LOG4CXX_OBJECT(OutputStream)
-                  BEGIN_LOG4CXX_CAST_MAP()
-                          LOG4CXX_CAST_ENTRY(OutputStream)
-                  END_LOG4CXX_CAST_MAP()
+/**
+*   Abstract class for writing to character streams.
+*/
+class LOG4CXX_EXPORT OutputStream : public Object
+{
+	public:
+		DECLARE_ABSTRACT_LOG4CXX_OBJECT(OutputStream)
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(OutputStream)
+		END_LOG4CXX_CAST_MAP()
 
-          protected:
-                  OutputStream();
-                  virtual ~OutputStream();
+	protected:
+		OutputStream();
+		virtual ~OutputStream();
 
-          public:
-                  virtual void close(Pool& p) = 0;
-                  virtual void flush(Pool& p) = 0;
-                  virtual void write(ByteBuffer& buf, Pool& p) = 0;
+	public:
+		virtual void close(Pool& p) = 0;
+		virtual void flush(Pool& p) = 0;
+		virtual void write(ByteBuffer& buf, Pool& p) = 0;
 
-          private:
-                  OutputStream(const OutputStream&);
-                  OutputStream& operator=(const OutputStream&);
-          };
+	private:
+		OutputStream(const OutputStream&);
+		OutputStream& operator=(const OutputStream&);
+};
 
-          LOG4CXX_PTR_DEF(OutputStream);
-        } // namespace helpers
+LOG4CXX_PTR_DEF(OutputStream);
+} // namespace helpers
 
 }  //namespace log4cxx
 

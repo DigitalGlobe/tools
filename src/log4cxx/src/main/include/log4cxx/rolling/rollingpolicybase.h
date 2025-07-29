@@ -18,12 +18,6 @@
 #if !defined(_LOG4CXX_ROLLING_ROLLING_POLICY_BASE_H)
 #define _LOG4CXX_ROLLING_ROLLING_POLICY_BASE_H
 
-#if defined(_MSC_VER)
-#pragma warning ( push )
-#pragma warning ( disable: 4231 4251 4275 4786 )
-#endif
-
-
 #include <log4cxx/helpers/object.h>
 #include <log4cxx/logger.h>
 #include <log4cxx/logmanager.h>
@@ -32,97 +26,107 @@
 #include <log4cxx/pattern/formattinginfo.h>
 #include <log4cxx/pattern/patternparser.h>
 
-namespace log4cxx {
-    namespace rolling {
+namespace LOG4CXX_NS
+{
+namespace rolling
+{
+LOG4CXX_LIST_DEF(PatternConverterList, LOG4CXX_NS::pattern::PatternConverterPtr);
+LOG4CXX_LIST_DEF(FormattingInfoList, LOG4CXX_NS::pattern::FormattingInfoPtr);
 
-        /**
-         * Implements methods common to most, it not all, rolling
-         * policies.
-         *
-         * 
-         * 
-         */
-        class LOG4CXX_EXPORT RollingPolicyBase :
-           public virtual RollingPolicy,
-           public virtual helpers::ObjectImpl {
-        protected:
-          DECLARE_ABSTRACT_LOG4CXX_OBJECT(RollingPolicyBase)
-          BEGIN_LOG4CXX_CAST_MAP()
-                  LOG4CXX_CAST_ENTRY(RollingPolicy)
-                  LOG4CXX_CAST_ENTRY(spi::OptionHandler)
-          END_LOG4CXX_CAST_MAP()
+/**
+ * Implements methods common to most, it not all, rolling
+ * policies.
+ *
+ *
+ *
+ */
+class LOG4CXX_EXPORT RollingPolicyBase :
+	public virtual RollingPolicy,
+	public virtual helpers::Object
+{
+	protected:
+		DECLARE_ABSTRACT_LOG4CXX_OBJECT(RollingPolicyBase)
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(RollingPolicy)
+		LOG4CXX_CAST_ENTRY(spi::OptionHandler)
+		END_LOG4CXX_CAST_MAP()
 
+		LOG4CXX_DECLARE_PRIVATE_MEMBER_PTR(RollingPolicyBasePrivate, m_priv)
 
-          private:
-          /**
-           * File name pattern converters.
-           */
-          LOG4CXX_LIST_DEF(PatternConverterList, log4cxx::pattern::PatternConverterPtr);
-          PatternConverterList patternConverters;
+	public:
+		RollingPolicyBase();
+		virtual ~RollingPolicyBase();
 
-          /**
-           * File name field specifiers.
-           */
-          LOG4CXX_LIST_DEF(FormattingInfoList, log4cxx::pattern::FormattingInfoPtr);
-          FormattingInfoList patternFields;
+		/**
+		\copybrief RollingPolicy::activateOptions()
 
-          /**
-           * File name pattern.
-           */
-          LogString fileNamePatternStr;
+		Logs a warning if FileNamePattern is not set.
 
+		\sa RollingPolicy::activateOptions()
+		*/
+		void activateOptions(helpers::Pool& p) override;
 
-          public:
-          RollingPolicyBase();
-          virtual ~RollingPolicyBase();
-          void addRef() const;
-          void releaseRef() const;
-          virtual void activateOptions(log4cxx::helpers::Pool& p) = 0;
-          virtual log4cxx::pattern::PatternMap getFormatSpecifiers() const = 0;
-
-          virtual void setOption(const LogString& option,
-               const LogString& value);
-
-          /**
-           * Set file name pattern.
-           * @param fnp file name pattern.
-           */
-           void setFileNamePattern(const LogString& fnp);
-
-           /**
-            * Get file name pattern.
-            * @return file name pattern.
-            */
-           LogString getFileNamePattern() const;
+		/**
+		A map from a name to the object implementing the (date or index) formatting.
+		*/
+		virtual pattern::PatternMap getFormatSpecifiers() const = 0;
 
 
-           protected:
-           /**
-            *   Parse file name pattern.
-            */
-           void parseFileNamePattern();
+		/**
+		\copybrief spi::OptionHandler::setOption()
 
-          /**
-           * Format file name.
-           *
-           * @param obj object to be evaluted in formatting, may not be null.
-           * @param buf string buffer to which formatted file name is appended, may not be null.
-           * @param p memory pool.
-           */
-          void formatFileName(log4cxx::helpers::ObjectPtr& obj,
-             LogString& buf, log4cxx::helpers::Pool& p) const;
+		Supported options | Supported values | Default value
+		:-------------- | :----------------: | :---------------:
+		FileNamePattern | (\ref legalChars "^") | -
+		CreateIntermediateDirectories | True,False | False
 
-           log4cxx::pattern::PatternConverterPtr getIntegerPatternConverter() const;
-           log4cxx::pattern::PatternConverterPtr getDatePatternConverter() const;
+		\anchor legalChars (^) Legal file name characters plus any conversion specifier supported by the concrete class.
 
+		\sa getFormatSpecifiers()
+		*/
+		void setOption(const LogString& option, const LogString& value) override;
 
-       };
-    }
+		/**
+		 * Set file name pattern.
+		 * @param fnp file name pattern.
+		 */
+		void setFileNamePattern(const LogString& fnp);
+
+		/**
+		 * Get file name pattern.
+		 * @return file name pattern.
+		 */
+		LogString getFileNamePattern() const;
+
+		bool getCreateIntermediateDirectories() const;
+		void setCreateIntermediateDirectories(bool createIntermediate);
+
+		PatternConverterList getPatternConverterList() const;
+
+	protected:
+		RollingPolicyBase(LOG4CXX_PRIVATE_PTR(RollingPolicyBasePrivate) priv);
+		/**
+		 *   Parse file name pattern.
+		 */
+		void parseFileNamePattern();
+
+		/**
+		 * Format file name.
+		 *
+		 * @param obj object to be evaluted in formatting, may not be null.
+		 * @param buf string buffer to which formatted file name is appended, may not be null.
+		 * @param p memory pool.
+		 */
+		void formatFileName(const helpers::ObjectPtr& obj,
+			LogString& buf, helpers::Pool& p) const;
+
+		LOG4CXX_NS::pattern::PatternConverterPtr getIntegerPatternConverter() const;
+		LOG4CXX_NS::pattern::PatternConverterPtr getDatePatternConverter() const;
+};
+
+LOG4CXX_PTR_DEF(RollingPolicyBase);
+
 }
-
-
-#if defined(_MSC_VER)
-#pragma warning ( pop )
-#endif
+}
 
 #endif

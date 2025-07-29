@@ -20,41 +20,43 @@
 
 #include <log4cxx/pattern/loggingeventpatternconverter.h>
 
-namespace log4cxx { namespace pattern {
+namespace LOG4CXX_NS
+{
+namespace pattern
+{
 
 
 /**
  * Return the event's line location information in a StringBuffer.
  *
- * 
- * 
+ *
+ *
  */
 class LOG4CXX_EXPORT MethodLocationPatternConverter
-  : public LoggingEventPatternConverter {
+	: public LoggingEventPatternConverter
+{
+	public:
+		DECLARE_LOG4CXX_PATTERN(MethodLocationPatternConverter)
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(MethodLocationPatternConverter)
+		LOG4CXX_CAST_ENTRY_CHAIN(LoggingEventPatternConverter)
+		END_LOG4CXX_CAST_MAP()
 
-  /**
-   * Private constructor.
-   */
-  MethodLocationPatternConverter();
+		MethodLocationPatternConverter();
 
-public:
-DECLARE_LOG4CXX_PATTERN(MethodLocationPatternConverter)
-BEGIN_LOG4CXX_CAST_MAP()
-     LOG4CXX_CAST_ENTRY(MethodLocationPatternConverter)
-     LOG4CXX_CAST_ENTRY_CHAIN(LoggingEventPatternConverter)
-END_LOG4CXX_CAST_MAP()
+		/**
+		 * Obtains an instance of MethodLocationPatternConverter.
+		 * @param options options, may be null.
+		 * @return instance of MethodLocationPatternConverter.
+		 */
+		static PatternConverterPtr newInstance(
+			const std::vector<LogString>& options);
 
-  /**
-   * Obtains an instance of MethodLocationPatternConverter.
-   * @param options options, may be null.
-   * @return instance of MethodLocationPatternConverter.
-   */
-  static PatternConverterPtr newInstance(
-    const std::vector<LogString>& options);
+		using LoggingEventPatternConverter::format;
 
-  void format(const log4cxx::spi::LoggingEventPtr& event,
-     LogString& toAppendTo,
-     log4cxx::helpers::Pool& p) const;
+		void format(const spi::LoggingEventPtr& event,
+			LogString& toAppendTo,
+			helpers::Pool& p) const override;
 };
 }
 }

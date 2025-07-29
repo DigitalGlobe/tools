@@ -18,31 +18,30 @@
 #ifndef _LOG4CXX_SYSLOG_WRITER_H
 #define _LOG4CXX_SYSLOG_WRITER_H
 
-
-#include <log4cxx/helpers/objectptr.h>
+#include <log4cxx/helpers/object.h>
 #include <log4cxx/helpers/inetaddress.h>
 #include <log4cxx/helpers/datagramsocket.h>
 
- namespace log4cxx
+namespace LOG4CXX_NS
 {
-        namespace helpers
-        {
-                /**
-                SyslogWriter is a wrapper around the DatagramSocket class
-                it writes text to the specified host on the port 514 (UNIX syslog)
-                */
-                class LOG4CXX_EXPORT SyslogWriter
-                {
-                public:
-                        SyslogWriter(const LogString& syslogHost);
-                        void write(const LogString& string);
+namespace helpers
+{
+/**
+SyslogWriter is a wrapper around the DatagramSocket class
+it writes text to the specified host on the port 514 (UNIX syslog)
+*/
+class LOG4CXX_EXPORT SyslogWriter
+{
+	public:
+#define SYSLOG_PORT 514
+		SyslogWriter(const LogString& syslogHost, int syslogHostPort = SYSLOG_PORT);
+		~SyslogWriter();
+		void write(const LogString& string);
 
-                private:
-                        LogString syslogHost;
-                        InetAddressPtr address;
-                        DatagramSocketPtr ds;
-                };
-        }  // namespace helpers
+	private:
+		LOG4CXX_DECLARE_PRIVATE_MEMBER_PTR(SyslogWriterPrivate, m_priv)
+};
+}  // namespace helpers
 } // namespace log4cxx
 
 #endif

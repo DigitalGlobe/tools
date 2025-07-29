@@ -21,65 +21,65 @@
 #include <log4cxx/logstring.h>
 #include <time.h>
 #include <log4cxx/helpers/pool.h>
-#include <log4cxx/helpers/thread.h>
 #include <log4cxx/file.h>
 
-namespace log4cxx
+namespace LOG4CXX_NS
 {
-        namespace helpers
-        {
+namespace helpers
+{
 
-                /**
-                Check every now and then that a certain file has not changed. If it
-                has, then call the #doOnChange method.
-                */
-                class LOG4CXX_EXPORT FileWatchdog
-                {
-                public:
-                        virtual ~FileWatchdog();
-                        /**
-                        The default delay between every file modification check, set to 60
-                        seconds.  */
-                        static long DEFAULT_DELAY /*= 60000*/;
+/**
+Check every now and then that a certain file has not changed. If it
+has, then call the #doOnChange method.
+*/
+class LOG4CXX_EXPORT FileWatchdog
+{
+	public:
+		virtual ~FileWatchdog();
+		/**
+		The default delay between every file modification check, set to 60
+		seconds.  */
+		static long DEFAULT_DELAY /*= 60000 ms*/;
 
-                protected:
-                        /**
-                        The name of the file to observe  for changes.
-                        */
-                        File file;
+	protected:
+		FileWatchdog(const File& filename);
+		virtual void doOnChange() = 0;
+		void checkAndConfigure();
+		const File& file();
 
-                        /**
-                        The delay to observe between every check.
-                        By default set DEFAULT_DELAY.*/
-                        long delay;
-                        log4cxx_time_t lastModif;
-                        bool warnedAlready;
-                        volatile unsigned int interrupted;
+	public:
+		/**
+		Use \c delay as the number of milliseconds to wait between each check for file changes.
+		*/
+		void setDelay(long delay);
 
-                protected:
-                        FileWatchdog(const File& filename);
-                        virtual void doOnChange() = 0;
-                        void checkAndConfigure();
+		/**
+		Create an asynchronous task that periodically checks for a file change after first calling doOnChange().
+		*/
+		void start();
 
-                public:
-                        /**
-                        Set the delay to observe between each check of the file changes.
-                        */
-                        void setDelay(long delay1)
-                                { this->delay = delay1; }
+		/**
+		Stop the task that periodically checks for a file change.
+		*/
+		void stop();
 
-                        void start();
+		/**
+		Is the task that periodically checks for a file change running?
+		*/
+		bool is_active();
 
-                private:
-                    static void* LOG4CXX_THREAD_FUNC run(apr_thread_t* thread, void* data);
-                        Pool pool;
-                        Thread thread;
+		/**
+		Stop all tasks that periodically check for a file change.
+		*/
+		static void stopAll();
+	private:
 
-                        FileWatchdog(const FileWatchdog&);
-                        FileWatchdog& operator=(const FileWatchdog&);
+		FileWatchdog(const FileWatchdog&);
+		FileWatchdog& operator=(const FileWatchdog&);
 
-                };
-        }  // namespace helpers
+		LOG4CXX_DECLARE_PRIVATE_MEMBER_PTR(FileWatchdogPrivate, m_priv)
+};
+}  // namespace helpers
 } // namespace log4cxx
 
 

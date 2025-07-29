@@ -22,43 +22,45 @@
 #include <log4cxx/helpers/outputstream.h>
 #include <log4cxx/helpers/charsetencoder.h>
 
-namespace log4cxx
+namespace LOG4CXX_NS
 {
 
-        namespace helpers {
+namespace helpers
+{
 
-          /**
-          *   Abstract class for writing to character streams.
-          */
-          class LOG4CXX_EXPORT OutputStreamWriter : public Writer
-          {
-          private:
-                  OutputStreamPtr out;
-                  CharsetEncoderPtr enc;
+/**
+*   Abstract class for writing to character streams.
+*/
+class LOG4CXX_EXPORT OutputStreamWriter : public Writer
+{
+	private:
+		LOG4CXX_DECLARE_PRIVATE_MEMBER_PTR(OutputStreamWriterPrivate, m_priv)
 
-          public:
-                  DECLARE_ABSTRACT_LOG4CXX_OBJECT(OutputStreamWriter)
-                  BEGIN_LOG4CXX_CAST_MAP()
-                          LOG4CXX_CAST_ENTRY(OutputStreamWriter)
-                          LOG4CXX_CAST_ENTRY_CHAIN(Writer)
-                  END_LOG4CXX_CAST_MAP()
+	public:
+		DECLARE_ABSTRACT_LOG4CXX_OBJECT(OutputStreamWriter)
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(OutputStreamWriter)
+		LOG4CXX_CAST_ENTRY_CHAIN(Writer)
+		END_LOG4CXX_CAST_MAP()
 
-                  OutputStreamWriter(OutputStreamPtr& out);
-                  OutputStreamWriter(OutputStreamPtr& out, CharsetEncoderPtr &enc);
-                  ~OutputStreamWriter();
+		OutputStreamWriter(OutputStreamPtr& out);
+		OutputStreamWriter(OutputStreamPtr& out, CharsetEncoderPtr& enc);
+		~OutputStreamWriter();
 
-                  virtual void close(Pool& p);
-                  virtual void flush(Pool& p);
-                  virtual void write(const LogString& str, Pool& p);
-                  LogString getEncoding() const;
+		void close(Pool& p) override;
+		void flush(Pool& p) override;
+		void write(const LogString& str, Pool& p) override;
+		LogString getEncoding() const;
 
-          private:
-                  OutputStreamWriter(const OutputStreamWriter&);
-                  OutputStreamWriter& operator=(const OutputStreamWriter&);
-          };
+		OutputStreamPtr getOutputStreamPtr() const;
 
-          LOG4CXX_PTR_DEF(OutputStreamWriter);
-        } // namespace helpers
+	private:
+		OutputStreamWriter(const OutputStreamWriter&);
+		OutputStreamWriter& operator=(const OutputStreamWriter&);
+};
+
+LOG4CXX_PTR_DEF(OutputStreamWriter);
+} // namespace helpers
 
 }  //namespace log4cxx
 

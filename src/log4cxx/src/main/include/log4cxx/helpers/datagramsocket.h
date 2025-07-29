@@ -18,111 +18,92 @@
 #ifndef _LOG4CXX_HELPERS_DATAGRAM_SOCKET_H
 #define _LOG4CXX_HELPERS_DATAGRAM_SOCKET_H
 
-#include <log4cxx/helpers/objectimpl.h>
-#include <log4cxx/helpers/objectptr.h>
+#include <log4cxx/helpers/object.h>
 #include <log4cxx/helpers/inetaddress.h>
 #include <log4cxx/helpers/pool.h>
 #include <log4cxx/helpers/datagrampacket.h>
 
-extern "C" { struct apr_socket_t; }
-
-namespace log4cxx
+namespace LOG4CXX_NS
 {
-        namespace helpers
-        {
-                /** This class represents a socket for sending and receiving
-                datagram packets.*/
-                class LOG4CXX_EXPORT DatagramSocket : public helpers::ObjectImpl
-                {
-                public:
-                        DECLARE_ABSTRACT_LOG4CXX_OBJECT(DatagramSocket)
-                        BEGIN_LOG4CXX_CAST_MAP()
-                                LOG4CXX_CAST_ENTRY(DatagramSocket)
-                        END_LOG4CXX_CAST_MAP()
+namespace helpers
+{
 
-                        /** Constructs a datagram socket and binds it to any available port
-                        on the local host machine.*/
-                        DatagramSocket();
+class DatagramSocket;
+LOG4CXX_PTR_DEF(DatagramSocket);
+LOG4CXX_UNIQUE_PTR_DEF(DatagramSocket);
 
-                        /** Constructs a datagram socket and binds it to the specified
-                        port on the local host machine. */
-                        DatagramSocket(int port);
+/** This class represents a socket for sending and receiving
+datagram packets.*/
+class LOG4CXX_EXPORT DatagramSocket : public helpers::Object
+{
+	protected:
+		LOG4CXX_DECLARE_PRIVATE_MEMBER_PTR(DatagramSocketPriv, m_priv)
+		DatagramSocket(LOG4CXX_PRIVATE_PTR(DatagramSocketPriv) priv);
 
-                        /**  Creates a datagram socket, bound to the specified local
-                        address. */
-                        DatagramSocket(int port, InetAddressPtr laddr);
+	public:
+		DECLARE_ABSTRACT_LOG4CXX_OBJECT(DatagramSocket)
+		BEGIN_LOG4CXX_CAST_MAP()
+		LOG4CXX_CAST_ENTRY(DatagramSocket)
+		END_LOG4CXX_CAST_MAP()
 
-                        /** ensure the socket is closed. */
-                        ~DatagramSocket();
+		/** ensure the socket is closed. */
+		virtual ~DatagramSocket();
 
-                        /**  Binds a datagram socket to a local port and address.*/
-                        void bind(int lport, InetAddressPtr laddress);
+		/**  Binds a datagram socket to a local port and address.*/
+		virtual void bind(int lport, InetAddressPtr laddress) = 0;
 
-                        /** Creates a datagram socket.*/
-                        void create();
+		/** Closes this datagram socket */
+		virtual void close();
 
-                        /** Closes this datagram socket */
-                        void close();
+		/** Connects the socket to a remote address for this socket. */
+		virtual void connect(InetAddressPtr address, int port) = 0;
 
-                        /** Connects the socket to a remote address for this socket. */
-                        void connect(InetAddressPtr address, int port);
+		/** Returns the address to which this socket is connected. */
+		InetAddressPtr getInetAddress() const;
 
-                        /** Returns the address to which this socket is connected. */
-                        inline InetAddressPtr getInetAddress() const
-                                { return address; }
+		/** Gets the local address to which the socket is bound. */
+		InetAddressPtr getLocalAddress() const;
 
-                        /** Gets the local address to which the socket is bound. */
-                        inline InetAddressPtr getLocalAddress() const
-                                { return localAddress; }
+		/**  Returns the port number on the local host to which this
+		socket is bound. */
+		int getLocalPort() const;
 
-                        /**  Returns the port number on the local host to which this
-                        socket is bound. */
-                        inline int getLocalPort() const
-                                { return localPort; }
+		/** Returns the port for this socket */
+		int getPort() const;
 
-                        /** Returns the port for this socket */
-                        inline int getPort() const
-                                { return port; }
+		/** Returns the binding state of the socket. **/
+		bool isBound() const;
 
-                        /** Returns the binding state of the socket. **/
-                        inline bool isBound() const
-                                { return localPort != 0; }
+		/** Returns wether the socket is closed or not. */
+		virtual bool isClosed() const = 0;
 
-                        /** Returns wether the socket is closed or not. */
-                        inline bool isClosed() const
-                                { return socket != 0; }
+		/** Returns the connection state of the socket. */
+		bool isConnected() const;
 
-                        /** Returns the connection state of the socket. */
-                        inline bool isConnected() const
-                                { return port != 0; }
+		/**  Receives a datagram packet from this socket. */
+		virtual void receive(DatagramPacketPtr& p) = 0;
 
-                        /**  Receives a datagram packet from this socket. */
-                        void receive(DatagramPacketPtr& p);
+		/** Sends a datagram packet from this socket. */
+		virtual void  send(DatagramPacketPtr& p) = 0;
 
-                        /** Sends a datagram packet from this socket. */
-                        void  send(DatagramPacketPtr& p);
+		/** Constructs a datagram socket and binds it to any available port
+		on the local host machine.*/
+		static DatagramSocketUniquePtr create();
 
-                private:
-                        DatagramSocket(const DatagramSocket&);
-                        DatagramSocket& operator=(const DatagramSocket&);
-                        /** The APR socket */
-                        apr_socket_t *socket;
+		/** Constructs a datagram socket and binds it to the specified
+		port on the local host machine. */
+		static DatagramSocketUniquePtr create(int port);
 
-                        /** The memory pool for the socket */
-                        Pool socketPool;
+		/**  Creates a datagram socket, bound to the specified local
+		address. */
+		static DatagramSocketUniquePtr create(int port, InetAddressPtr laddr);
 
-                        InetAddressPtr address;
+	private:
+		DatagramSocket(const DatagramSocket&);
+		DatagramSocket& operator=(const DatagramSocket&);
+};
 
-                        InetAddressPtr localAddress;
-
-                        int port;
-
-                        /** The local port number to which this socket is connected. */
-                        int localPort;
-
-                };
-            LOG4CXX_PTR_DEF(DatagramSocket);
-        }  // namespace helpers
+}  // namespace helpers
 } // namespace log4cxx
 
 #endif //_LOG4CXX_HELPERS_DATAGRAM_SOCKET_H

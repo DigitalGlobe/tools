@@ -1,0 +1,20 @@
+﻿To: dev@logging.apache.org
+Subject: [VOTE] Release Apache Log4cxx 1.4.0
+
+This is a vote to release the Apache Log4cxx 1.4.0.
+
+Website: https://logging.staged.apache.org/log4cxx/1.4.0/changelog.html
+GitHub: https://github.com/apache/logging-log4cxx
+Commit: <todo insert>
+Distribution: https://dist.apache.org/repos/dist/dev/logging/log4cxx/
+Signing key: 077E8893A6DCC33DD4A4D5B256E73BA9A0B592D0
+Review kit: https://github.com/apache/logging-log4cxx/blob/master/admin/release-review-instructions.md
+
+Please download, test, and cast your votes on this mailing list.
+
+[ ] +1, release the artifacts
+[ ] -1, don't release, because ...
+
+This vote is open for 72 hours and will pass unless getting a net negative vote count.
+All votes are welcome and we encourage everyone to test the release, but only the
+Logging Services PMC votes are officially counted.

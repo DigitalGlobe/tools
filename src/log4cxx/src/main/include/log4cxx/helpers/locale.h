@@ -19,31 +19,32 @@
 #define _LOG4CXX_HELPERS_LOCALE_H
 
 #include <log4cxx/logstring.h>
+#include <memory>
 
-namespace log4cxx
+namespace LOG4CXX_NS
 {
-        namespace helpers
-        {
-                class LOG4CXX_EXPORT Locale
-                {
-                public:
-                        Locale(const LogString& language);
-                        Locale(const LogString& language, const LogString& country);
-                        Locale(const LogString& language, const LogString& country,
-                                const LogString& variant);
+namespace helpers
+{
+class LOG4CXX_EXPORT Locale
+{
+	public:
+		Locale(const LogString& language);
+		Locale(const LogString& language, const LogString& country);
+		Locale(const LogString& language, const LogString& country,
+			const LogString& variant);
+		~Locale();
 
-                        const LogString& getLanguage() const;
-                        const LogString& getCountry() const;
-                        const LogString& getVariant() const;
+		const LogString& getLanguage() const;
+		const LogString& getCountry() const;
+		const LogString& getVariant() const;
 
-                protected:
-                        Locale(const Locale&);
-                        Locale& operator=(const Locale&);
-                        const LogString language;
-                        const LogString country;
-                        const LogString variant;
-                }; // class Locale
-        }  // namespace helpers
+	protected:
+		Locale(const Locale&);
+		Locale& operator=(const Locale&);
+		LOG4CXX_DECLARE_PRIVATE_MEMBER_PTR(LocalePrivate, m_priv)
+}; // class Locale
+}  // namespace helpers
 } // namespace log4cxx
+
 
 #endif // _LOG4CXX_HELPERS_LOCALE_H
