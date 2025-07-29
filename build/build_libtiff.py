@@ -1,10 +1,10 @@
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 #
 # build_libtiff.py
 #
 # Summary : Builds the LibTIFF library.
 #
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 import glob
 import os
@@ -14,192 +14,247 @@ from BuildSettingSet import *
 from PathFinder import *
 from SystemManager import *
 
-#------------------------------------------------------------------------------
-# The Program class represents the main class of the script.
-class Program :
 
-    #--------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# The Program class represents the main class of the script.
+class Program:
+
+    # --------------------------------------------------------------------------
     # constants
 
-        #----------------------------------------------------------------------
-        # a description of what the script does
-        DESCRIPTION = "Builds the libtiff library."
-        #----------------------------------------------------------------------
+    # ----------------------------------------------------------------------
+    # a description of what the script does
+    DESCRIPTION = "Builds the libtiff library."
+    # ----------------------------------------------------------------------
 
-        _LIBNAME = 'libtiff'
-        _LIBNAME_STATIC = 'libtiff-static'
-        _DEBUG_SUFFIX = '_d'
+    # ----------------------------------------------------------------------
+    # the name of the path that will contain intermediary build files
+    _PATH_NAME_BUILD = "libtiff"
+    # ----------------------------------------------------------------------
+    # the name of the path that contains the source code
+    _PATH_NAME_SOURCE = "..\\src\\libtiff"
+    # ----------------------------------------------------------------------
 
-        #----------------------------------------------------------------------
-        # the name of the path that will contain intermediary build files
-        _PATH_NAME_BUILD = "libTIFF"
-        #----------------------------------------------------------------------
-        # the name of the path that contains the source code
-        _PATH_NAME_SOURCE = "..\\src\\libTIFF"
-        #----------------------------------------------------------------------
+    _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
+    _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
-        #----------------------------------------------------------------------
-        # the pattern for binary files
-        _FILE_PATTERN_BINARY = "*.exe"
-        #----------------------------------------------------------------------
-        # the name of the path that will contain built 32-bit binary files
-        _PATH_NAME_BINARY_X86 = "..\\sdk\\x86\\bin"
-        #----------------------------------------------------------------------
-        # the name of the path that will contain built 64-bit binary files
-        _PATH_NAME_BINARY_X64 = "..\\sdk\\x64\\bin"
+    _BUILT_LIBNAME = "tiff"
+    _LIBNAME = "libtiff"
+    _DEBUG_SUFFIX = "_d"
 
-        # the name of the path that will contain built 32-bit library files
-        _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
-        #----------------------------------------------------------------------
-        # the name of the path that will contain built 64-bit library files
-        _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
+    # the name of the path for all include files
+    _PATH_NAME_INCLUDE = "."
+    _PATH_NAME_INCLUDE_2 = "include"
+    # ----------------------------------------------------------------------
+    # the name of the distribution path for all include files
+    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\libtiff"
+    # ----------------------------------------------------------------------
+    # the name of the path that contains the cmake files
+    _PATH_NAME_CMAKE_SOURCE = "."
+    _PATH_NAME_CMAKE_BUILD = "cmake-build"
+    _PATH_NAME_CMAKE_INSTALL = "install"
 
-        # the name of the path for all include files
-        _PATH_NAME_INCLUDE = 'libtiff'
-        #----------------------------------------------------------------------
-        # the name of the distribution path for all include files
-        _PATH_NAME_DISTRIBUTION_INCLUDE = '..\\..\\include\\libtiff'
-        #----------------------------------------------------------------------
-
-        #----------------------------------------------------------------------
-        _JPEG_INCLUDE = "..\\..\\include\\LibJPEG"
-        _JPEG_LIB_BASE = "libjpeg"
-        #----------------------------------------------------------------------
-        _ZLIB_INCLUDE = "..\\..\\include\\zlib"
-        _ZLIB_LIB_BASE = "zlib"
-
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
     # constructors
 
-        #----------------------------------------------------------------------
-        # Constructs this program.
-        #
-        # Parameters :
-        #     self : this program
-        def __init__(self) :
+    # ----------------------------------------------------------------------
+    # Constructs this program.
+    #
+    # Parameters :
+    #     self : this program
+    def __init__(self):
 
-            pass
-        #----------------------------------------------------------------------
+        pass
 
-    #--------------------------------------------------------------------------
+    # ----------------------------------------------------------------------
+
+    # --------------------------------------------------------------------------
     # public methods
 
-        #----------------------------------------------------------------------
-        # The main method of the program.
-        #
-        # Parameters :
-        #     self : this program
-        def main(self) :
+    # ----------------------------------------------------------------------
+    # The main method of the program.
+    #
+    # Parameters :
+    #     self : this program
+    def main(self):
 
-            systemManager = SystemManager()
-            pathFinder    = PathFinder()
+        systemManager = SystemManager()
+        pathFinder = PathFinder()
 
-            # process command-line arguments
-            buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
+        # process command-line arguments
+        buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
 
-            # initialize environment variables
-            systemManager.initializeIncludeEnvironmentVariable( buildSettings.X64Specified() )
-            systemManager.initializeLibraryEnvironmentVariable( buildSettings.X64Specified() )
-            systemManager.appendToPathEnvironmentVariable( pathFinder.getVisualStudioBinPathName( buildSettings.X64Specified() ) )
-            if ( buildSettings.X64Specified() ) :
-                # append path for 64-bit rc.exe
-                systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
-                                                                             "Windows Kits\\10\\bin\\x64"                 ) )
-            else:
-                # append path for 32-bit rc.exe
-                systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
-                                                                             "Windows Kits\\10\\bin\\x86"                 ) )
+        # initialize environment variables
+        systemManager.initializeIncludeEnvironmentVariable(buildSettings.X64Specified())
+        systemManager.initializeLibraryEnvironmentVariable(buildSettings.X64Specified())
 
-            # determine path names
-            binaryPathName = ( systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X64) \
-                               if ( buildSettings.X64Specified() )                                     \
-                               else systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X86) )
-            buildPathName  = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD )
-            sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
+        # MSBuild is under "Program Files (x86)"
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getMSBuildFileName(buildSettings.X64Specified())
+        )
 
-            sdkOutDir = buildPathName + "\\..\\" + (Program._PATH_NAME_DISTRIBUTION_X64 if buildSettings.X64Specified() else Program._PATH_NAME_DISTRIBUTION_X86)
+        compileOutDir = ""
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getWindowsSdkBinPathName(buildSettings.X64Specified())
+        )
 
-            # initialize directories
-            systemManager.changeDirectory(sourcePathName)
+        # get the paths
+        buildPathName = systemManager.getCurrentRelativePathName(
+            Program._PATH_NAME_BUILD
+        )
+        sourcePathName = systemManager.getCurrentRelativePathName(
+            Program._PATH_NAME_SOURCE
+        )
 
-            systemManager.removeDirectory(buildPathName)
-            systemManager.copyDirectory( sourcePathName, buildPathName  )
+        buildSourceName = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
+        cmakeBuildPath = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
+        cmakeInstallPath = pathFinder.path(
+            cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
+        )
 
-            systemManager.changeDirectory(buildPathName)
+        systemManager.removeDirectory(cmakeBuildPath)
 
-            vcvars = '"' + systemManager.getVisualStudioPath() + '"\\vcvarsall.bat ' + ("amd64"             \
-                                                                                           if ( buildSettings.X64Specified() ) \
-                                                                                        else "x86"                          )
+        sdkOutDir = pathFinder.path(
+            buildPathName,
+            "..",
+            (
+                Program._PATH_NAME_DISTRIBUTION_X64
+                if buildSettings.X64Specified()
+                else Program._PATH_NAME_DISTRIBUTION_X86
+            ),
+        )
 
-            dllName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".dll"
-            libName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".lib"
-            staticLibName = Program._LIBNAME_STATIC + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".lib"
-            pdbName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".pdb"
+        # remove build dir
+        systemManager.changeDirectory(sourcePathName)
+        # systemManager.removeDirectory(buildPathName)
 
-            os.environ['LIBTIFF'] = staticLibName
-            os.environ['LIBIMPL'] = libName
-            os.environ['DLLNAME'] = dllName
+        # copy APR source to the Build area
+        systemManager.copyDirectory(sourcePathName, buildPathName)
 
-            # initialize LibJPEG environment variables
-            #os.environ["JPEG_SUPPORT"] = '1'
-            #os.environ["JPEG_INCLUDE"] = '-I' + pathFinder.path( buildPathName, Program._JPEG_INCLUDE)
-            #os.environ["JPEG_LIB"    ] = pathFinder.path( sdkOutDir, Program._JPEG_LIB_BASE + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".lib")
+        # start building
+        systemManager.changeDirectory(buildPathName)
 
-            #os.environ["ZIP_SUPPORT"] = '1'
-            #os.environ["ZLIB_INCLUDE"] = '-I' + pathFinder.path( buildPathName, Program._ZLIB_INCLUDE)
-            #os.environ["ZLIB_LIB"    ] = pathFinder.path( sdkOutDir, Program._ZLIB_LIB_BASE + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".lib")
+        systemManager.makeDirectory(cmakeBuildPath)
+        systemManager.changeDirectory(cmakeBuildPath)
 
-            # run Nmake
-            nmakeCommandLine = 'nmake -f Makefile.vc _MSC_VER=1900'
-            if ( buildSettings.X64Specified() ) :
-                pass
-            else :
-                pass
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        includeBase = pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..")
+        libSuffix = f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
+        externalLibs = {
+            "JPEG_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libjpeg")),
+            "JPEG_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libjpeg{libSuffix}")),
+            "ZLIB_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "zlib")),
+            "ZLIB_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"zlib{libSuffix}")),
+        }
+
+        externalLibStr = ""
+        for [key, val] in externalLibs.items():
+            externalLibStr += f'-D{key}="{val}" '
+
+        # run CMake
+        # -DCMAKE_POLICY_VERSION_MINIMUM is to avoid min compatability errors in CMake
+        cmakeCommandLine = (
+            f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
+            + f"-A {platform} "
+            + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
+            + f"-Dtiff-tools=OFF "
+            + f"-Dtiff-tests=OFF "
+            + f"-Dtiff-contrib=OFF "
+            + f"-Dtiff-docs=OFF "
+            + f"-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} "
+            + f"{externalLibStr} "
+            + f"{buildSourceName}"
+        )
+
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
+
+        cmakeCommandLine = (
+            f"{pathFinder.getCMakeFileName()} "
+            + f"--build "
+            + f". "
+            + f"-j 1 "
+            + f"--config {conf} "
+        )
+
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
+
+        cmakeCommandLine = (
+            f"{pathFinder.getCMakeFileName()} "
+            + f"--install "
+            + f". "
+            + f"--config {conf} "
+            + f"--prefix "
+            + f"{cmakeInstallPath}"
+        )
+
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
+
+        dllName = (
+            f"{Program._LIBNAME}"
+            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
+            + f".dll"
+        )
+        libName = (
+            f"{Program._LIBNAME}"
+            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
+            + f".lib"
+        )
+        pdbName = (
+            f"{Program._LIBNAME}"
+            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
+            + f".pdb"
+        )
+
+        srcIncludePath = pathFinder.path(cmakeInstallPath, "include")
+        srcBinPath = pathFinder.path(cmakeInstallPath, "bin")
+        srcLibPath = pathFinder.path(cmakeInstallPath, "lib")
+
+        systemManager.distributeFiles(
+            srcIncludePath,
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            "*.h*",
+        )
+        systemManager.copyFile(
+            pathFinder.path(
+                srcLibPath,
+                f"{Program._BUILT_LIBNAME}{"" if (buildSettings.ReleaseSpecified()) else "d"}.lib",
+            ),
+            pathFinder.path(sdkOutDir, libName),
+        )
+
+        systemManager.copyFile(
+            pathFinder.path(
+                srcBinPath,
+                f"{Program._BUILT_LIBNAME}{"" if (buildSettings.ReleaseSpecified()) else "d"}.dll",
+            ),
+            pathFinder.path(sdkOutDir, dllName),
+        )
+
+        if not buildSettings.ReleaseSpecified():
+            systemManager.copyFile(
+                pathFinder.path(
+                    cmakeBuildPath,
+                    "libtiff",
+                    conf,
+                    f"{Program._BUILT_LIBNAME}d.pdb",
+                ),
+                pathFinder.path(sdkOutDir, pdbName),
+            )
 
 
-            if ( buildSettings.ReleaseSpecified() ) :
-                nmakeCommandLine += " nodebug=1"
-                nmakeCommandLine += ' LINKOPT="/DEBUG:NONE /dll" LIBOPT="" OPTFLAGS="-Ox -MD -EHsc -W3 -D_CRT_SECURE_NO_DEPRECATE"'
-            else :
-                nmakeCommandLine += ' LINKOPT="/DEBUG:FULL /dll /pdb:' + pdbName + '" LIBOPT="/debug" OPTFLAGS="-Zi -MDd"'
+# --------------------------------------------------------------------------
 
-            nmakeCommandLine += ' LIBTIFF=' + staticLibName
-            nmakeCommandLine += ' LIBIMPL=' + libName
-            nmakeCommandLine += ' DLLNAME=' + dllName
-
-            # initialize LibJPEG environment variables
-            nmakeCommandLine += ' JPEG_SUPPORT=1'
-            nmakeCommandLine += ' JPEG_INCLUDE=-I' + pathFinder.path( buildPathName, Program._JPEG_INCLUDE)
-            nmakeCommandLine += ' JPEG_LIB=' + pathFinder.path( sdkOutDir, Program._JPEG_LIB_BASE + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".lib")
-
-            nmakeCommandLine += ' ZIP_SUPPORT=1'
-            nmakeCommandLine += ' ZLIB_INCLUDE=-I' + pathFinder.path( buildPathName, Program._ZLIB_INCLUDE)
-            nmakeCommandLine += ' ZLIB_LIB=' + pathFinder.path( sdkOutDir, Program._ZLIB_LIB_BASE + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".lib")
-
-            print('cmd: ' + nmakeCommandLine)
-
-            nmakeResult = systemManager.execute(vcvars + " && " + nmakeCommandLine)
-            if nmakeResult != 0:
-                sys.exit(-1)
-
-            buildOutDir   = pathFinder.path( buildPathName, 'libtiff' )
-
-            systemManager.removeDirectory(pathFinder.path( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE))
-            systemManager.distributeFiles(pathFinder.path( buildPathName, Program._PATH_NAME_INCLUDE),              \
-                                          pathFinder.path( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE), \
-                                          '*.h',                                                                 \
-                                          True, False)
-
-            systemManager.copyFile( pathFinder.path( buildOutDir, libName ) , \
-                                    pathFinder.path( sdkOutDir , libName) )
-            systemManager.copyFile( pathFinder.path( buildOutDir, dllName ) , \
-                                    pathFinder.path( sdkOutDir , dllName) )
-            if not buildSettings.ReleaseSpecified():
-                systemManager.copyFile( pathFinder.path( buildOutDir, pdbName ) , \
-                                        pathFinder.path( sdkOutDir , pdbName) )
-
-    #--------------------------------------------------------------------------
-
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 Program().main()
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
