@@ -216,7 +216,7 @@ class Program:
             + f".pdb"
         )
 
-        srcIncludePath = pathFinder.path(cmakeInstallPath, "include")
+        srcIncludePath = pathFinder.path(cmakeInstallPath, "include", "libxml2", "libxml")
         srcBinPath = pathFinder.path(cmakeInstallPath, "bin")
         srcLibPath = pathFinder.path(cmakeInstallPath, "lib")
 

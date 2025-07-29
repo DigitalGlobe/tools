@@ -260,23 +260,28 @@ class Program:
         systemManager.makeDirectory(cmakeBuildPath)
         systemManager.changeDirectory(cmakeBuildPath)
 
+        includeBase = pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..")
+        libSuffix = f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
+        externalLibs = {
+            "APR_INCLUDE_DIR": pathFinder.path(incdir, "apr"),
+            "APR_LIBRARIES": pathFinder.path(sdkOutDir, f"libapr{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.lib"),
+            "EXPAT_LIBRARY": pathFinder.path(sdkOutDir, f"libexpat{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.lib"),
+            "EXPAT_INCLUDE_DIR": pathFinder.path(incdir, "expat"),
+            "OPENSSL_ROOT_DIR": pathFinder.path(buildPathName, "..", "openssl"),
+        }
+
+        externalLibStr = ""
+        for [key, val] in externalLibs.items():
+            externalLibStr += f'-D{key}="{val}" '
+
         cmakeCommandLine = (
             f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
             + f"-A {platform} "
             + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
             + f"-DBUILD_SHARED_LIBS=ON "
-            + f"-DAPR_INCLUDE_DIR={pathFinder.path(incdir, "apr")} "
-            + f"-DAPR_LIBRARIES={pathFinder.path(sdkOutDir, f"libapr{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.lib")} "
             + f"-DAPU_HAVE_CRYPTO=ON "
-            # + f"-DOPENSSL_CRYPTO_LIBRARY={pathFinder.path(sdkOutDir, f"libcrypto{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.lib")} "
-            # + f"-DOPENSSL_SSL_LIBRARY={pathFinder.path(sdkOutDir, f"libssl{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.lib")} "
-            # + f"-DOPENSSL_ROOT_DIR={sdkOutDir} "
-            + f"-DOPENSSL_ROOT_DIR={pathFinder.path(buildPathName, "..", "openssl")} "
-            # + f"-DOPENSSL_INCLUDE_DIR={incdir} "
-            + f"-DEXPAT_LIBRARY={pathFinder.path(sdkOutDir, f"libexpat{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.lib")} "
-            + f"-DEXPAT_INCLUDE_DIR={pathFinder.path(incdir, "expat")} "
-            # + f'CFLAGS="/FS /Z7" '
             + f"-DCMAKE_BUILD_TYPE={conf} "
+            + f"{externalLibStr} "
             + f"{buildSourceName}"
         )
         print("cmake: " + cmakeCommandLine)

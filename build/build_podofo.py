@@ -1,10 +1,10 @@
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 #
 # build_podofo.py
 #
 # Summary : Builds the PoDoFo library.
 #
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 import glob
 import os
@@ -15,341 +15,250 @@ from PathFinder import *
 from SystemManager import *
 from XmlUtils import *
 
-class Program :
-        #----------------------------------------------------------------------
-        # a description of what the script does
-        DESCRIPTION = "Builds the Podofo library."
-        #----------------------------------------------------------------------
-        # the name of the dynamic solution file
-        _FILE_NAME_SOLUTION = "src\\podofo_shared.vcxproj"
 
-        #----------------------------------------------------------------------
-        # the name of the path that will contain intermediary build files
-        _PATH_NAME_BUILD = "PoDoFo"
-        #----------------------------------------------------------------------
-        # the name of the path that contains the source code
-        _PATH_NAME_SOURCE = "..\\src\\PoDoFo"
-        #----------------------------------------------------------------------
+class Program:
+    # ----------------------------------------------------------------------
+    # a description of what the script does
+    DESCRIPTION = "Builds the Podofo library."
+    # ----------------------------------------------------------------------
+    # the name of the path that will contain intermediary build files
+    _PATH_NAME_BUILD = "podofo"
+    # ----------------------------------------------------------------------
+    # the name of the path that contains the source code
+    _PATH_NAME_SOURCE = "..\\src\\podofo"
+    # ----------------------------------------------------------------------
 
-        _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
-        _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
+    _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
+    _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
-        _LIBNAME = 'podofo'
-        _DEBUG_SUFFIX = '_d'
+    _LIBNAME = "podofo"
+    _DEBUG_SUFFIX = "_d"
 
-        #----------------------------------------------------------------------
-        # the name of the x86 debug FreeType library file
-        _FILE_NAME_FREETYPE_LIBRARY_X86_DEBUG = "..\\sdk\\x86\\lib\\freeType_d.lib"
-        #----------------------------------------------------------------------
-        # the name of the x86 release FreeType library file
-        _FILE_NAME_FREETYPE_LIBRARY_X86_RELEASE = "..\\sdk\\x86\\lib\\freeType.lib"
-        #----------------------------------------------------------------------
-        # the name of the x64 debug FreeType library file
-        _FILE_NAME_FREETYPE_LIBRARY_X64_DEBUG = "..\\sdk\\x64\\lib\\freeType_d.lib"
-        #----------------------------------------------------------------------
-        # the name of the x64 release FreeType library file
-        _FILE_NAME_FREETYPE_LIBRARY_X64_RELEASE = "..\\sdk\\x64\\lib\\freeType.lib"
-        #----------------------------------------------------------------------
-        # the name of the FreeType include path
-        _PATH_NAME_FREETYPE_INCLUDE = "..\\src\\FreeType\\include"
-        #----------------------------------------------------------------------
+    # the name of the path for all include files
+    _PATH_NAME_INCLUDE = "."
+    # ----------------------------------------------------------------------
+    # the name of the distribution path for all include files
+    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\podofo"
+    # ----------------------------------------------------------------------
+    # the name of the path that contains the cmake files
+    _PATH_NAME_CMAKE_SOURCE = "."
+    _PATH_NAME_CMAKE_BUILD = "build"
+    _PATH_NAME_CMAKE_INSTALL = "install"
 
-        #----------------------------------------------------------------------
-        # the name of the x86 debug LibPNG library file
-        _FILE_NAME_LIBPNG_LIBRARY_X86_DEBUG = "..\\sdk\\x86\\lib\\libpng_d.lib"
-        #----------------------------------------------------------------------
-        # the name of the x86 release LibPNG library file
-        _FILE_NAME_LIBPNG_LIBRARY_X86_RELEASE = "..\\sdk\\x86\\lib\\libpng.lib"
-        #----------------------------------------------------------------------
-        # the name of the x64 debug LibPNG library file
-        _FILE_NAME_LIBPNG_LIBRARY_X64_DEBUG = "..\\sdk\\x64\\lib\\libpng_d.lib"
-        #----------------------------------------------------------------------
-        # the name of the x64 release LibPNG library file
-        _FILE_NAME_LIBPNG_LIBRARY_X64_RELEASE = "..\\sdk\\x64\\lib\\libpng.lib"
-        #----------------------------------------------------------------------
-        # the name of the LibPNG include path
-        _PATH_NAME_LIBPNG_INCLUDE = "..\\include\\LibPNG"
-        #----------------------------------------------------------------------
+    # --------------------------------------------------------------------------
+    # constructors
 
-        #----------------------------------------------------------------------
-        # the name of the x86 debug ZLib library file
-        _FILE_NAME_ZLIB_LIBRARY_X86_DEBUG = "..\\sdk\\x86\\lib\\zlib_d.lib"
-        #----------------------------------------------------------------------
-        # the name of the x86 release ZLib library file
-        _FILE_NAME_ZLIB_LIBRARY_X86_RELEASE = "..\\sdk\\x86\\lib\\zlib.lib"
-        #----------------------------------------------------------------------
-        # the name of the x64 debug ZLib library file
-        _FILE_NAME_ZLIB_LIBRARY_X64_DEBUG = "..\\sdk\\x64\\lib\\zlib_d.lib"
-        #----------------------------------------------------------------------
-        # the name of the x64 release ZLib library file
-        _FILE_NAME_ZLIB_LIBRARY_X64_RELEASE = "..\\sdk\\x64\\lib\\zlib.lib"
-        #----------------------------------------------------------------------
-        # the name of the ZLib include path
-        _PATH_NAME_ZLIB_INCLUDE = "..\\src\\ZLib"
-        #----------------------------------------------------------------------
+    # ----------------------------------------------------------------------
+    # Constructs this program.
+    #
+    # Parameters :
+    #     self : this program
+    def __init__(self):
 
-        # the name of the path for all include files
-        _PATH_NAME_INCLUDE = 'src'
-        #----------------------------------------------------------------------
-        # the name of the distribution path for all include files
-        _PATH_NAME_DISTRIBUTION_INCLUDE = '..\\..\\include\\podofo'
-        #----------------------------------------------------------------------
+        pass
 
-        def __init__(self) :
+    # ----------------------------------------------------------------------
 
-            pass
-        #----------------------------------------------------------------------
+    # --------------------------------------------------------------------------
+    # public methods
 
+    # ----------------------------------------------------------------------
+    # The main method of the program.
+    #
+    # Parameters :
+    #     self : this program
+    def main(self):
 
-        def main(self) :
-            systemManager = SystemManager()
-            pathFinder    = PathFinder()
-            xmlUtils = XmlUtils()
+        systemManager = SystemManager()
+        pathFinder = PathFinder()
 
-            # process command-line arguments
-            buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
+        # process command-line arguments
+        buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
 
-            # initialize environment variables
-            systemManager.initializeIncludeEnvironmentVariable( buildSettings.X64Specified() )
-            systemManager.initializeLibraryEnvironmentVariable( buildSettings.X64Specified() )
-            systemManager.appendToPathEnvironmentVariable( pathFinder.getVisualStudioBinPathName( buildSettings.X64Specified() ) )
+        # initialize environment variables
+        systemManager.initializeIncludeEnvironmentVariable(buildSettings.X64Specified())
+        systemManager.initializeLibraryEnvironmentVariable(buildSettings.X64Specified())
 
-            # MSBuild is under "Program Files (x86)"
-            systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
-                                                                             "MSBuild\\14.0\\Bin") )
+        # MSBuild is under "Program Files (x86)"
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getMSBuildFileName(buildSettings.X64Specified())
+        )
 
-            compileOutDir = ""
-            if ( buildSettings.X64Specified() ) :
-                # append path for 64-bit rc.exe
-                systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
-                                                                             "Windows Kits\\10\\bin\\x64"                 ) )
-            else:
-                # append path for 32-bit rc.exe
-                systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
-                                                                             "Windows Kits\\10\\bin\\x86"                 ) )
+        compileOutDir = ""
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getWindowsSdkBinPathName(buildSettings.X64Specified())
+        )
 
-            # get the paths
-            buildPathName  = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD)
-            sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
-            sdkOutDir = buildPathName + "\\..\\" + (Program._PATH_NAME_DISTRIBUTION_X64 if buildSettings.X64Specified() else Program._PATH_NAME_DISTRIBUTION_X86)
+        # get the paths
+        buildPathName = systemManager.getCurrentRelativePathName(
+            Program._PATH_NAME_BUILD
+        )
+        sourcePathName = systemManager.getCurrentRelativePathName(
+            Program._PATH_NAME_SOURCE
+        )
 
-            # remove build dir
-            systemManager.changeDirectory(sourcePathName)
-            systemManager.removeDirectory(buildPathName)
+        buildSourceName = pathFinder.path(
+            buildPathName, Program._PATH_NAME_CMAKE_SOURCE
+        )
+        cmakeBuildPath = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
+        cmakeInstallPath = pathFinder.path(
+            cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
+        )
 
-            #copy UriParser to the Build area
-            systemManager.copyDirectory( sourcePathName, buildPathName)
+        systemManager.removeDirectory(cmakeBuildPath)
 
-            # start building
-            systemManager.changeDirectory(buildPathName)
+        sdkOutDir = pathFinder.path(
+            buildPathName,
+            "..",
+            (
+                Program._PATH_NAME_DISTRIBUTION_X64
+                if buildSettings.X64Specified()
+                else Program._PATH_NAME_DISTRIBUTION_X86
+            ),
+        )
 
-            freeTypeIncludePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_FREETYPE_INCLUDE)
-            libPngIncludePathName   = systemManager.getCurrentRelativePathName(Program._PATH_NAME_LIBPNG_INCLUDE  )
-            zlibIncludePathName     = systemManager.getCurrentRelativePathName(Program._PATH_NAME_ZLIB_INCLUDE    )
+        # remove build dir
+        systemManager.changeDirectory(sourcePathName)
+        # systemManager.removeDirectory(buildPathName)
 
-            # determine file names
-            if ( buildSettings.ReleaseSpecified() and \
-                 buildSettings.X64Specified()       ) :
-                 freeTypeLibraryFileName     = systemManager.getCurrentRelativePathName(Program._FILE_NAME_FREETYPE_LIBRARY_X64_RELEASE)
-                 libPngLibraryFileName       = systemManager.getCurrentRelativePathName(Program._FILE_NAME_LIBPNG_LIBRARY_X64_RELEASE  )
-                 zlibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X64_RELEASE    )
+        # copy APR source to the Build area
+        systemManager.copyDirectory(sourcePathName, buildPathName)
 
-            elif ( buildSettings.ReleaseSpecified() ) :
-                 freeTypeLibraryFileName     = systemManager.getCurrentRelativePathName(Program._FILE_NAME_FREETYPE_LIBRARY_X86_RELEASE)
-                 libPngLibraryFileName       = systemManager.getCurrentRelativePathName(Program._FILE_NAME_LIBPNG_LIBRARY_X86_RELEASE  )
-                 zlibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X86_RELEASE    )
+        # start building
+        systemManager.changeDirectory(buildPathName)
 
-            elif ( buildSettings.X64Specified() ) :
-                 freeTypeLibraryFileName     = systemManager.getCurrentRelativePathName(Program._FILE_NAME_FREETYPE_LIBRARY_X64_DEBUG)
-                 libPngLibraryFileName       = systemManager.getCurrentRelativePathName(Program._FILE_NAME_LIBPNG_LIBRARY_X64_DEBUG  )
-                 zlibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X64_DEBUG    )
+        systemManager.makeDirectory(cmakeBuildPath)
+        systemManager.changeDirectory(cmakeBuildPath)
 
-            else :
-                 freeTypeLibraryFileName     = systemManager.getCurrentRelativePathName(Program._FILE_NAME_FREETYPE_LIBRARY_X86_DEBUG)
-                 libPngLibraryFileName       = systemManager.getCurrentRelativePathName(Program._FILE_NAME_LIBPNG_LIBRARY_X86_DEBUG  )
-                 zlibLibraryFileName         = systemManager.getCurrentRelativePathName(Program._FILE_NAME_ZLIB_LIBRARY_X86_DEBUG    )
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
 
-            # run CMake
-            if ( buildSettings.X64Specified() ) :
+        includeBase = pathFinder.path(
+            buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, ".."
+        )
+        libSuffix = (
+            f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
+        )
 
-                cmakeCommandLine = ( ( "%s "                                + \
-                                       "-DFREETYPE_INCLUDE_DIR=\"%s\" "     + \
-                                       "-DFREETYPE_LIBRARY=\"%s\" "         + \
-                                       "-DFREETYPE_LIBRARY_DEBUG=\"%s\" "   + \
-                                       "-DFREETYPE_LIBRARY_RELEASE=\"%s\" " + \
-                                       "-DZLIB_INCLUDE_DIR=\"%s\" "         + \
-                                       "-DZLIB_LIBRARY=\"%s\" "             + \
-                                       "-DZLIB_LIBRARY_DEBUG=\"%s\" "       + \
-                                       "-DZLIB_LIBRARY_RELEASE=\"%s\" "     + \
-                                       "-DCPPUNIT_LIBRARIES= "  + \
-                                       "-DPODOFO_BUILD_SHARED:BOOL=FALSE "  + \
-                                       "-G\"Visual Studio 14 2015 Win64\" " + \
-                                       "\"%s\""                             ) % \
-                                     ( PathFinder.FILE_NAME_CMAKE , \
-                                       freeTypeIncludePathName    , \
-                                       freeTypeLibraryFileName    , \
-                                       freeTypeLibraryFileName    , \
-                                       freeTypeLibraryFileName    , \
-                                       zlibIncludePathName        , \
-                                       zlibLibraryFileName        , \
-                                       zlibLibraryFileName        , \
-                                       zlibLibraryFileName        , \
-                                       sourcePathName             ) )
-                # cmakeCommandLine = ( ( "%s "                                + \
-                # "-DFREETYPE_INCLUDE_DIR=\"%s\" "     + \
-                # "-DFREETYPE_LIBRARY=\"%s\" "         + \
-                # "-DFREETYPE_LIBRARY_DEBUG=\"%s\" "   + \
-                # "-DFREETYPE_LIBRARY_RELEASE=\"%s\" " + \
-                # "-DPNG_PNG_INCLUDE_DIR=\"%s\" "          + \
-                # "-DPNG_INCLUDE_DIR=\"%s\" "          + \
-                # "-DPNG_LIBRARY=\"%s\" "              + \
-                # "-DPNG_LIBRARY_DEBUG=\"%s\" "        + \
-                # "-DPNG_LIBRARY_RELEASE=\"%s\" "      + \
-                # "-DZLIB_INCLUDE_DIR=\"%s\" "         + \
-                # "-DZLIB_LIBRARY=\"%s\" "             + \
-                # "-DZLIB_LIBRARY_DEBUG=\"%s\" "       + \
-                # "-DZLIB_LIBRARY_RELEASE=\"%s\" "     + \
-                # "-DCppUnit_NOT_FOUND "  + \
-                # "-DPODOFO_BUILD_SHARED:BOOL=FALSE "  + \
-                # "-G\"Visual Studio 14 2015 Win64\" " + \
-                # "\"%s\""                             ) % \
-                # ( PathFinder.FILE_NAME_CMAKE , \
-                # freeTypeIncludePathName    , \
-                # freeTypeLibraryFileName    , \
-                # freeTypeLibraryFileName    , \
-                # freeTypeLibraryFileName    , \
-                # libPngIncludePathName      , \
-                # libPngIncludePathName      , \
-                # libPngLibraryFileName      , \
-                # libPngLibraryFileName      , \
-                # libPngLibraryFileName      , \
-                # zlibIncludePathName        , \
-                # zlibLibraryFileName        , \
-                # zlibLibraryFileName        , \
-                # zlibLibraryFileName        , \
-                # sourcePathName             ) )
+        externalLibs = {
+            "FREETYPE_INCLUDE_DIRS": pathFinder.slasher(pathFinder.path(includeBase, "freetype")),
+            "FREETYPE_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"freetype{libSuffix}")),
+            "JPEG_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libjpeg")),
+            "JPEG_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libjpeg{libSuffix}")),
+            "LIBXML2_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase)),
+            "LIBXML2_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libxml2{libSuffix}")),
+            "PNG_PNG_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libpng")),
+            "PNG_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libpng{libSuffix}")),
+            "OPENSSL_ROOT_DIR": pathFinder.path(buildPathName, "..", "openssl"),
+            "TIFF_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libtiff")),
+            "TIFF_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libtiff{libSuffix}")),
+            "ZLIB_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "zlib")),
+            "ZLIB_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"zlib{libSuffix}")),
+        }
 
-            else :
+        externalLibStr = ""
+        for [key, val] in externalLibs.items():
+            externalLibStr += f'-D{key}="{val}" '
 
-                cmakeCommandLine = ( ( "%s "                                + \
-                                       "-DFREETYPE_INCLUDE_DIR=\"%s\" "     + \
-                                       "-DFREETYPE_LIBRARY=\"%s\" "         + \
-                                       "-DFREETYPE_LIBRARY_DEBUG=\"%s\" "   + \
-                                       "-DFREETYPE_LIBRARY_RELEASE=\"%s\" " + \
-                                       "-DZLIB_INCLUDE_DIR=\"%s\" "         + \
-                                       "-DZLIB_LIBRARY=\"%s\" "             + \
-                                       "-DZLIB_LIBRARY_DEBUG=\"%s\" "       + \
-                                       "-DZLIB_LIBRARY_RELEASE=\"%s\" "     + \
-                                       "-DCPPUNIT_LIBRARIES= "  + \
-                                       "-DPODOFO_BUILD_SHARED:BOOL=FALSE "  + \
-                                       "\"%s\""                             ) % \
-                                     ( PathFinder.FILE_NAME_CMAKE , \
-                                       freeTypeIncludePathName    , \
-                                       freeTypeLibraryFileName    , \
-                                       freeTypeLibraryFileName    , \
-                                       freeTypeLibraryFileName    , \
-                                       zlibIncludePathName        , \
-                                       zlibLibraryFileName        , \
-                                       zlibLibraryFileName        , \
-                                       zlibLibraryFileName        , \
-                                       sourcePathName             ) )
-                # cmakeCommandLine = ( ( "%s "                                + \
-                # "-DFREETYPE_INCLUDE_DIR=\"%s\" "     + \
-                # "-DFREETYPE_LIBRARY=\"%s\" "         + \
-                # "-DFREETYPE_LIBRARY_DEBUG=\"%s\" "   + \
-                # "-DFREETYPE_LIBRARY_RELEASE=\"%s\" " + \
-                # "-DPNG_PNG_INCLUDE_DIR=\"%s\" "          + \
-                # "-DPNG_INCLUDE_DIR=\"%s\" "          + \
-                # "-DPNG_LIBRARY=\"%s\" "              + \
-                # "-DPNG_LIBRARY_DEBUG=\"%s\" "        + \
-                # "-DPNG_LIBRARY_RELEASE=\"%s\" "      + \
-                # "-DZLIB_INCLUDE_DIR=\"%s\" "         + \
-                # "-DZLIB_LIBRARY=\"%s\" "             + \
-                # "-DZLIB_LIBRARY_DEBUG=\"%s\" "       + \
-                # "-DZLIB_LIBRARY_RELEASE=\"%s\" "     + \
-                # "-DCPPUNIT_LIBRARIES= "  + \
-                # "-DPODOFO_BUILD_SHARED:BOOL=FALSE "  + \
-                # "\"%s\""                             ) % \
-                # ( PathFinder.FILE_NAME_CMAKE , \
-                # freeTypeIncludePathName    , \
-                # freeTypeLibraryFileName    , \
-                # freeTypeLibraryFileName    , \
-                # freeTypeLibraryFileName    , \
-                # libPngIncludePathName      , \
-                # libPngIncludePathName      , \
-                # libPngLibraryFileName      , \
-                # libPngLibraryFileName      , \
-                # libPngLibraryFileName      , \
-                # zlibIncludePathName        , \
-                # zlibLibraryFileName        , \
-                # zlibLibraryFileName        , \
-                # zlibLibraryFileName        , \
-                                       # sourcePathName             ) )
+        # run CMake
+        # -DCMAKE_POLICY_VERSION_MINIMUM is to avoid min compatability errors in CMake
+        cmakeCommandLine = (
+            f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
+            + f"-A {platform} "
+            + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
+            + f"-DPODOFO_BUILD_LIB_ONLY=ON "
+            + f"-DPODOFO_BUILD_STATIC=OFF "
+            + f"-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} "
+            + f"{externalLibStr} "
+            + f"{buildSourceName}"
+        )
+
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
+
+        cmakeCommandLine = (
+            f"{pathFinder.getCMakeFileName()} "
+            + f"--build "
+            + f". "
+            + f"-j 1 "
+            + f"--config {conf} "
+        )
+
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
+
+        cmakeCommandLine = (
+            f"{pathFinder.getCMakeFileName()} "
+            + f"--install "
+            + f". "
+            + f"--config {conf} "
+            + f"--prefix "
+            + f"{cmakeInstallPath}"
+        )
+
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
+
+        dllName = (
+            f"{Program._LIBNAME}"
+            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
+            + f".dll"
+        )
+        libName = (
+            f"{Program._LIBNAME}"
+            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
+            + f".lib"
+        )
+        pdbName = (
+            f"{Program._LIBNAME}"
+            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
+            + f".pdb"
+        )
+
+        srcIncludePath = pathFinder.path(cmakeInstallPath, "include", "podofo")
+        srcBinPath = pathFinder.path(cmakeInstallPath, "bin")
+        srcLibPath = pathFinder.path(cmakeInstallPath, "lib")
+
+        systemManager.distributeFiles(
+            srcIncludePath,
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            "*.h*",
+        )
+        systemManager.copyFile(
+            pathFinder.path(
+                srcLibPath,
+                f"{Program._LIBNAME}.lib",
+            ),
+            pathFinder.path(sdkOutDir, libName),
+        )
+
+        systemManager.copyFile(
+            pathFinder.path(
+                srcBinPath,
+                f"{Program._LIBNAME}.dll",
+            ),
+            pathFinder.path(sdkOutDir, dllName),
+        )
+
+        if not buildSettings.ReleaseSpecified():
+            systemManager.copyFile(
+                pathFinder.path(
+                    cmakeBuildPath,
+                    "src",
+                    "podofo",
+                    conf,
+                    f"{Program._LIBNAME}.pdb",
+                ),
+                pathFinder.path(sdkOutDir, pdbName),
+            )
 
 
-            print('cmake: ' + cmakeCommandLine)
-            cmakeResult = systemManager.execute(cmakeCommandLine)
-
-            if (cmakeResult != 0) :
-                sys.exit(-1)
-
-            conf = "Release" if ( buildSettings.ReleaseSpecified() ) else "Debug"
-            platform  = 'x64' if buildSettings.X64Specified() else 'Win32'
-            # build the solution
-            solutionFileName   = pathFinder.path( buildPathName               , \
-                                               Program._FILE_NAME_SOLUTION )
-            msBuildCommandLine = ( "\"%s\" "                  + \
-                                     "/p:platform=%s " + \
-                                     "\"%s\""                   ) % \
-                                   ( pathFinder.getMSBuildFileName( buildSettings.X64Specified()), platform, solutionFileName )
-
-            dllName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".dll"
-            libName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".lib"
-            pdbName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".pdb"
-
-            buildOutDir   = pathFinder.path( buildPathName, 'build' )
-            propfile   = pathFinder.path( buildPathName, 'linker.props' )
-
-            msBuildCommandLine += ' /p:OutDir=' + buildOutDir
-            msBuildCommandLine += ' /p:TargetExtension=dll'
-            msBuildCommandLine += ' /p:SolutionDir=' + buildPathName + '\\'
-            msBuildCommandLine += ' /p:TargetName=' + Program._LIBNAME + ('' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX)
-            msBuildCommandLine += ' /p:Configuration=' + conf
-
-            linkerprops = {'OutputFile':pathFinder.path( buildOutDir, dllName )}
-            linkerprops['ImportLibrary'] = pathFinder.path( buildOutDir, libName )
-            if buildSettings.ReleaseSpecified():
-                linkerprops['DebugSymbols'] = 'false'
-            else:
-                linkerprops['DebugSymbols'] = 'true'
-                linkerprops['DebugType'] = 'full'
-                linkerprops['ProgramDatabaseFile'] = '$(OutDir)\\' + pdbName
-
-            xmlUtils.buildDll(conf, platform, {}, linkerprops, propfile)
-
-            msBuildCommandLine +=  ' /p:ForceImportBeforeCppTargets="' + propfile + '"'
-
-
-            print('cmd: ' + msBuildCommandLine)
-            msbuildResult = systemManager.execute(msBuildCommandLine)
-            if (msbuildResult != 0) :
-                sys.exit(-1)
-
-
-            systemManager.removeDirectory(pathFinder.path( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE))
-            systemManager.distributeFiles(pathFinder.path( buildPathName, Program._PATH_NAME_INCLUDE),              \
-                              pathFinder.path( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE), \
-                              '*.h',                                                                 \
-                              True, False, True)
-
-            systemManager.copyFile( pathFinder.path( buildOutDir, libName ) , \
-                                    pathFinder.path( sdkOutDir , libName) )
-            systemManager.copyFile( pathFinder.path( buildOutDir, dllName ) , \
-                                    pathFinder.path( sdkOutDir , dllName) )
-            if not buildSettings.ReleaseSpecified():
-                systemManager.copyFile( pathFinder.path( buildOutDir, pdbName ) , \
-                                        pathFinder.path( sdkOutDir , pdbName) )
-
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 Program().main()
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
