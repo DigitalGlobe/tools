@@ -45,34 +45,32 @@ class Program:
 
     # ----------------------------------------------------------------------
     # a description of what the script does
-    DESCRIPTION = "Builds the libtiff library."
+    DESCRIPTION = "Builds the log4cxx library."
     # ----------------------------------------------------------------------
 
     # ----------------------------------------------------------------------
     # the name of the path that will contain intermediary build files
-    _PATH_NAME_BUILD = "libtiff"
+    _PATH_NAME_BUILD = "log4cxx"
     # ----------------------------------------------------------------------
     # the name of the path that contains the source code
-    _PATH_NAME_SOURCE = "..\\src\\libtiff"
+    _PATH_NAME_SOURCE = "..\\src\\log4cxx"
     # ----------------------------------------------------------------------
 
     _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
-    _BUILT_LIBNAME = "tiff"
-    _LIBNAME = "libtiff"
+    _LIBNAME = "log4cxx"
     _DEBUG_SUFFIX = "_d"
 
     # the name of the path for all include files
     _PATH_NAME_INCLUDE = "."
-    _PATH_NAME_INCLUDE_2 = "include"
     # ----------------------------------------------------------------------
     # the name of the distribution path for all include files
-    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\libtiff"
+    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\log4cxx"
     # ----------------------------------------------------------------------
     # the name of the path that contains the cmake files
     _PATH_NAME_CMAKE_SOURCE = "."
-    _PATH_NAME_CMAKE_BUILD = "cmake-build"
+    _PATH_NAME_CMAKE_BUILD = "build"
     _PATH_NAME_CMAKE_INSTALL = "install"
 
     # --------------------------------------------------------------------------
@@ -163,25 +161,14 @@ class Program:
         conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
         platform = "x64" if buildSettings.X64Specified() else "Win32"
 
-        includeBase = pathFinder.path(
-            buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, ".."
-        )
-        libSuffix = (
-            f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
-        )
+        includeBase = pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..")
+        libSuffix = (f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib')
+
         externalLibs = {
-            "JPEG_INCLUDE_DIR": pathFinder.slasher(
-                pathFinder.path(includeBase, "libjpeg")
-            ),
-            "JPEG_LIBRARY": pathFinder.slasher(
-                pathFinder.path(sdkOutDir, f"libjpeg{libSuffix}")
-            ),
-            "ZLIB_INCLUDE_DIR": pathFinder.slasher(
-                pathFinder.path(includeBase, "zlib")
-            ),
-            "ZLIB_LIBRARY": pathFinder.slasher(
-                pathFinder.path(sdkOutDir, f"zlib{libSuffix}")
-            ),
+            "APR_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "apr")),
+            "APR_LIBRARIES": pathFinder.slasher( pathFinder.path(sdkOutDir, f"libapr{libSuffix}")),
+            "APR_UTIL_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "apr-util")),
+            "APR_UTIL_LIBRARIES": pathFinder.slasher( pathFinder.path(sdkOutDir, f"libaprutil{libSuffix}")),
         }
 
         externalLibStr = ""
@@ -194,10 +181,7 @@ class Program:
             f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
             + f"-A {platform} "
             + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
-            + f"-Dtiff-tools=OFF "
-            + f"-Dtiff-tests=OFF "
-            + f"-Dtiff-contrib=OFF "
-            + f"-Dtiff-docs=OFF "
+            + f"-DBUILD_TESTING=OFF "
             + f"-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} "
             + f"{externalLibStr} "
             + f"{buildSourceName}"
@@ -263,7 +247,7 @@ class Program:
         systemManager.copyFile(
             pathFinder.path(
                 srcLibPath,
-                f"{Program._BUILT_LIBNAME}{"" if (buildSettings.ReleaseSpecified()) else "d"}.lib",
+                f"{Program._LIBNAME}.lib",
             ),
             pathFinder.path(sdkOutDir, libName),
         )
@@ -271,7 +255,7 @@ class Program:
         systemManager.copyFile(
             pathFinder.path(
                 srcBinPath,
-                f"{Program._BUILT_LIBNAME}{"" if (buildSettings.ReleaseSpecified()) else "d"}.dll",
+                f"{Program._LIBNAME}.dll",
             ),
             pathFinder.path(sdkOutDir, dllName),
         )
@@ -279,20 +263,14 @@ class Program:
         if not buildSettings.ReleaseSpecified():
             systemManager.copyFile(
                 pathFinder.path(
-                    cmakeBuildPath,
-                    "libtiff",
-                    conf,
-                    f"{Program._BUILT_LIBNAME}d.pdb",
+                    srcBinPath,
+                    f"{Program._LIBNAME}.pdb",
                 ),
                 pathFinder.path(sdkOutDir, pdbName),
             )
 
 
 # --------------------------------------------------------------------------
-
-# ------------------------------------------------------------------------------
-Program().main()
-# ------------------------------------------------------------------------------
 
 # ------------------------------------------------------------------------------
 Program().main()
