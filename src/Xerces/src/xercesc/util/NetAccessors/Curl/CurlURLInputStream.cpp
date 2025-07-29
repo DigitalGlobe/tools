@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: CurlURLInputStream.cpp 936316 2010-04-21 14:19:58Z borisk $
+ * $Id$
  */
 
 #if HAVE_CONFIG_H
@@ -39,6 +39,8 @@
   #include <sys/time.h>
 #endif
 
+#include <algorithm>
+
 #include <xercesc/util/XercesDefs.hpp>
 #include <xercesc/util/XMLNetAccessor.hpp>
 #include <xercesc/util/NetAccessors/Curl/CurlURLInputStream.hpp>
@@ -52,10 +54,12 @@
 
 XERCES_CPP_NAMESPACE_BEGIN
 
+#define MAX_CURL_ALLOC_SIZE 1073741824
 
 CurlURLInputStream::CurlURLInputStream(const XMLURL& urlSource, const XMLNetHTTPInfo* httpInfo/*=0*/)
       : fMulti(0)
       , fEasy(0)
+      , fHeadersList(0)
       , fMemoryManager(urlSource.getMemoryManager())
       , fURLSource(urlSource)
       , fTotalBytesRead(0)
@@ -63,29 +67,35 @@ CurlURLInputStream::CurlURLInputStream(const XMLURL& urlSource, const XMLNetHTTP
       , fBytesRead(0)
       , fBytesToRead(0)
       , fDataAvailable(false)
-      , fBufferHeadPtr(fBuffer)
-      , fBufferTailPtr(fBuffer)
+      , fBuffer(0)
+      , fBufferHeadPtr(0)
+      , fBufferTailPtr(0)
+      , fBufferSize(0)
       , fPayload(0)
       , fPayloadLen(0)
       , fContentType(0)
 {
-	// Allocate the curl multi handle
-	fMulti = curl_multi_init();
+    if (urlSource.isRelative()) {
+        ThrowXML(MalformedURLException, XMLExcepts::URL_NoProtocolPresent);
+    }
 
-	// Allocate the curl easy handle
-	fEasy = curl_easy_init();
+    // Allocate the curl multi handle
+    fMulti = curl_multi_init();
 
-	// Set URL option
+    // Allocate the curl easy handle
+    fEasy = curl_easy_init();
+
+    // Set URL option
     TranscodeToStr url(fURLSource.getURLText(), "ISO8859-1", fMemoryManager);
-	curl_easy_setopt(fEasy, CURLOPT_URL, (char*)url.str());
+    curl_easy_setopt(fEasy, CURLOPT_URL, (char*)url.str());
 
     // Set up a way to recieve the data
-	curl_easy_setopt(fEasy, CURLOPT_WRITEDATA, this);						// Pass this pointer to write function
-	curl_easy_setopt(fEasy, CURLOPT_WRITEFUNCTION, staticWriteCallback);	// Our static write function
+    curl_easy_setopt(fEasy, CURLOPT_WRITEDATA, this);						// Pass this pointer to write function
+    curl_easy_setopt(fEasy, CURLOPT_WRITEFUNCTION, staticWriteCallback);	// Our static write function
 
-	// Do redirects
-	curl_easy_setopt(fEasy, CURLOPT_FOLLOWLOCATION, (long)1);
-	curl_easy_setopt(fEasy, CURLOPT_MAXREDIRS, (long)6);
+    // Do redirects
+    curl_easy_setopt(fEasy, CURLOPT_FOLLOWLOCATION, (long)1);
+    curl_easy_setopt(fEasy, CURLOPT_MAXREDIRS, (long)6);
 
     // Add username and password if authentication is required
     const XMLCh *username = urlSource.getUser();
@@ -117,8 +127,6 @@ CurlURLInputStream::CurlURLInputStream(const XMLURL& urlSource, const XMLNetHTTP
 
         // Add custom headers
         if(httpInfo->fHeaders) {
-            struct curl_slist *headersList = 0;
-
             const char *headersBuf = httpInfo->fHeaders;
             const char *headersBufEnd = httpInfo->fHeaders + httpInfo->fHeadersLen;
 
@@ -133,7 +141,7 @@ CurlURLInputStream::CurlURLInputStream(const XMLURL& urlSource, const XMLNetHTTP
                     memcpy(header.get(), headerStart, length);
                     header.get()[length] = 0;
 
-                    headersList = curl_slist_append(headersList, header.get());
+                    fHeadersList = curl_slist_append(fHeadersList, header.get());
 
                     headersBuf += 2;
                     headerStart = headersBuf;
@@ -141,8 +149,7 @@ CurlURLInputStream::CurlURLInputStream(const XMLURL& urlSource, const XMLNetHTTP
                 }
                 ++headersBuf;
             }
-            curl_easy_setopt(fEasy, CURLOPT_HTTPHEADER, headersList);
-            curl_slist_free_all(headersList);
+            curl_easy_setopt(fEasy, CURLOPT_HTTPHEADER, fHeadersList);
         }
 
         // Set up the payload
@@ -155,16 +162,29 @@ CurlURLInputStream::CurlURLInputStream(const XMLURL& urlSource, const XMLNetHTTP
         }
     }
 
-	// Add easy handle to the multi stack
-	curl_multi_add_handle(fMulti, fEasy);
+    // Add easy handle to the multi stack
+    curl_multi_add_handle(fMulti, fEasy);
 
     // Start reading, to get the content type
-	while(fBufferHeadPtr == fBuffer)
-	{
-		int runningHandles = 0;
-        readMore(&runningHandles);
-		if(runningHandles == 0) break;
-	}
+    while(fBufferHeadPtr == fBuffer)
+    {
+    	int runningHandles = 0;
+        try
+        {
+            readMore(&runningHandles);
+        }
+        catch(const MalformedURLException&)
+        {
+            cleanup();
+            throw;
+        }
+        catch(const NetAccessorException&)
+        {
+            cleanup();
+            throw;
+        }
+    	if(runningHandles == 0) break;
+    }
 
     // Find the content type
     char *contentType8 = 0;
@@ -176,16 +196,37 @@ CurlURLInputStream::CurlURLInputStream(const XMLURL& urlSource, const XMLNetHTTP
 
 CurlURLInputStream::~CurlURLInputStream()
 {
-	// Remove the easy handle from the multi stack
-	curl_multi_remove_handle(fMulti, fEasy);
+    cleanup();
+}
 
-	// Cleanup the easy handle
-	curl_easy_cleanup(fEasy);
 
-	// Cleanup the multi handle
-	curl_multi_cleanup(fMulti);
+void CurlURLInputStream::cleanup()
+{
+    if (!fMulti )
+        return;
+
+    // Remove the easy handle from the multi stack
+    curl_multi_remove_handle(fMulti, fEasy);
+
+    // Cleanup the easy handle
+    curl_easy_cleanup(fEasy);
+    fEasy = NULL;
+
+    // Cleanup the multi handle
+    curl_multi_cleanup(fMulti);
+    fMulti = NULL;
 
     if(fContentType) fMemoryManager->deallocate(fContentType);
+    fContentType = NULL;
+
+    if(fHeadersList) curl_slist_free_all(fHeadersList);
+    fHeadersList = NULL;
+
+    if(fBuffer) fMemoryManager->deallocate(fBuffer);
+    fBuffer = NULL;
+    fBufferHeadPtr = NULL;
+    fBufferTailPtr = NULL;
+    fBufferSize = 0;
 }
 
 
@@ -231,13 +272,33 @@ CurlURLInputStream::writeCallback(char *buffer,
 	cnt				-= consume;
 	if (cnt > 0)
 	{
-		XMLSize_t bufAvail = sizeof(fBuffer) - (fBufferHeadPtr - fBuffer);
-		consume = (cnt > bufAvail) ? bufAvail : cnt;
-		memcpy(fBufferHeadPtr, buffer, consume);
-		fBufferHeadPtr	+= consume;
-		buffer			+= consume;
-		totalConsumed	+= consume;
-		//printf("write callback rebuffering %d bytes\n", consume);
+                XMLSize_t bufAvail = fBufferSize - (fBufferHeadPtr - fBuffer);
+                if (bufAvail < cnt) {
+                    // Enlarge the buffer.
+                    XMLSize_t newsize = fBufferSize + (cnt - bufAvail);
+                    if (newsize > MAX_CURL_ALLOC_SIZE) {
+                        return 0;
+                    }
+                    XMLByte* newbuf = reinterpret_cast<XMLByte*>(fMemoryManager->allocate(newsize));
+                    if (!newbuf) {
+                        // Enlarge attempt failed, signal error back to libcurl.
+                        // The dedicated error code is a recent libcurl addition so is not portable.
+                        return 0;
+                    }
+                    // Not a realloc, so we have to copy the data from old to new.
+                    memcpy(newbuf, fBuffer, fBufferHeadPtr - fBuffer);
+                    fBufferSize = newsize;
+                    //printf("enlarged buffer to %u bytes", fBufferSize);
+                    fBufferHeadPtr = newbuf + (fBufferHeadPtr - fBuffer);
+                    fMemoryManager->deallocate(fBuffer);
+                    fBuffer = fBufferTailPtr = newbuf;
+                }
+
+                memcpy(fBufferHeadPtr, buffer, cnt);
+                fBufferHeadPtr  += cnt;
+                buffer += cnt;
+                totalConsumed   += cnt;
+                //printf("write callback rebuffering %u bytes", cnt);
 	}
 
 	// Return the total amount we've consumed. If we don't consume all the bytes
@@ -306,7 +367,21 @@ bool CurlURLInputStream::readMore(int *runningHandles)
             break;
 
         default:
-            ThrowXMLwithMemMgr1(NetAccessorException, XMLExcepts::NetAcc_InternalError, fURLSource.getURLText(), fMemoryManager);
+            {
+              struct CurlError
+              {
+                  XMLCh* fErrorString;
+                  MemoryManager* fMemoryManager;
+                  CurlError(CURLMsg* msg, MemoryManager* fMemoryManager) : fErrorString(XMLString::transcode(curl_easy_strerror(msg->data.result))), fMemoryManager(fMemoryManager) {}
+                  ~CurlError() { XMLString::release(&fErrorString, fMemoryManager); }
+              };
+              CurlError curlErrorStr(msg, fMemoryManager);
+
+              XMLCh curlErrorNumberStr[128];
+              XMLString::binToText(msg->data.result, curlErrorNumberStr, 127, 10, fMemoryManager);
+
+              ThrowXMLwithMemMgr3(NetAccessorException, XMLExcepts::NetAcc_CurlError, fURLSource.getURLText(), curlErrorNumberStr, curlErrorStr.fErrorString, fMemoryManager);
+            }
             break;
         }
     }
@@ -333,8 +408,14 @@ bool CurlURLInputStream::readMore(int *runningHandles)
 
         // Wait on the file descriptors
         timeval tv;
-        tv.tv_sec  = 2;
-        tv.tv_usec = 0;
+
+        long multi_timeout = 0;
+        curl_multi_timeout(fMulti, &multi_timeout);
+        if (multi_timeout < 0)
+            multi_timeout = 1000;
+
+        tv.tv_sec = multi_timeout / 1000;
+        tv.tv_usec = (multi_timeout % 1000) * 1000;
         select(fdcnt+1, &readSet, &writeSet, &exceptSet, &tv);
     }
 

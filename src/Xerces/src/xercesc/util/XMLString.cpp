@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: XMLString.cpp 1664538 2015-03-06 01:22:07Z scantor $
+ * $Id$
  */
 
 
@@ -428,8 +428,9 @@ int XMLString::indexOf( const   char* const     toSearch
     const XMLSize_t len = strlen(toSearch);
 
     // Make sure the start index is within the XMLString bounds
-	if ((int)fromIndex > ((int)len)-1)
+    if (fromIndex > len-1) {
         ThrowXMLwithMemMgr(ArrayIndexOutOfBoundsException, XMLExcepts::Str_StartIndexPastEnd, manager);
+    }
 
     for (XMLSize_t i = fromIndex; i < len; i++)
     {
@@ -442,6 +443,10 @@ int XMLString::indexOf( const   char* const     toSearch
 int XMLString::lastIndexOf(const char* const toSearch, const char ch)
 {
     const int len = (int)strlen(toSearch);
+    if (len < 0) {
+        return -1;
+    }
+
     for (int i = len-1; i >= 0; i--)
     {
         if (toSearch[i] == ch)
@@ -458,8 +463,9 @@ int XMLString::lastIndexOf( const   char* const     toSearch
     const XMLSize_t len = strlen(toSearch);
 
     // Make sure the start index is within the XMLString bounds
-	if ((int)fromIndex > ((int)len)-1)
+    if (fromIndex > len-1) {
         ThrowXMLwithMemMgr(ArrayIndexOutOfBoundsException, XMLExcepts::Str_StartIndexPastEnd, manager);
+    }
 
     for (int i = (int)fromIndex; i >= 0; i--)
     {
@@ -1278,8 +1284,8 @@ int XMLString::patternMatch(  const XMLCh* const    toSearch
         return -1;
 
     const XMLSize_t patnLen = XMLString::stringLen(pattern);
-	if ( !patnLen )
-		return -1;
+    if ( !patnLen )
+        return -1;
 
     const XMLCh* srcPtr    = toSearch;
     const XMLCh* patnStart = toSearch;
@@ -1325,8 +1331,9 @@ int XMLString::indexOf( const   XMLCh* const    toSearch
     const XMLSize_t len = stringLen(toSearch);
 
     // Make sure the start index is within the XMLString bounds
-	if (fromIndex >= len)
+    if (fromIndex >= len) {
         ThrowXMLwithMemMgr(ArrayIndexOutOfBoundsException, XMLExcepts::Str_StartIndexPastEnd, manager);
+    }
 
     const XMLCh* srcPtr = toSearch+fromIndex;
     while (*srcPtr)
@@ -1352,8 +1359,9 @@ int XMLString::lastIndexOf( const   XMLCh* const    toSearch
                             , MemoryManager* const  manager)
 {
     const XMLSize_t len = stringLen(toSearch);
-	if (fromIndex >= len)
+    if (fromIndex >= len) {
         ThrowXMLwithMemMgr(ArrayIndexOutOfBoundsException, XMLExcepts::Str_StartIndexPastEnd, manager);
+    }
 
     const XMLCh* srcPtr = toSearch+fromIndex;
     while (srcPtr >= toSearch)
@@ -1580,6 +1588,54 @@ void XMLString::subString(XMLCh* const targetStr, const XMLCh* const srcStr
     }
 
     targetStr[copySize] = 0;
+}
+
+BaseRefVectorOf<XMLCh>* XMLString::tokenizeString(const XMLCh* const tokenizeSrc
+                                                , XMLCh delimiter
+                                                , MemoryManager*    const manager)
+{
+    XMLCh* orgText = replicate(tokenizeSrc, manager);
+    ArrayJanitor<XMLCh> janText(orgText, manager);
+    XMLCh* tokenizeStr = orgText;
+
+    RefArrayVectorOf<XMLCh>* tokenStack = new (manager) RefArrayVectorOf<XMLCh>(16, true, manager);
+
+    XMLSize_t len = stringLen(tokenizeStr);
+    XMLSize_t skip;
+    XMLSize_t index = 0;
+
+    while (index != len) {
+        // find the first non-space character
+        for (skip = index; skip < len; skip++)
+        {
+            if (tokenizeStr[skip]!=delimiter)
+                break;
+        }
+        index = skip;
+
+        // find the delimiter (space character)
+        for (; skip < len; skip++)
+        {
+            if (tokenizeStr[skip]==delimiter)
+                break;
+        }
+
+        // we reached the end of the string
+        if (skip == index)
+            break;
+
+        // these tokens are adopted in the RefVector and will be deleted
+        // when the vector is deleted by the caller
+        XMLCh* token = (XMLCh*) manager->allocate
+        (
+            (skip+1-index) * sizeof(XMLCh)
+        );//new XMLCh[skip+1-index];
+
+        XMLString::subString(token, tokenizeStr, index, skip, len, manager);
+        tokenStack->addElement(token);
+        index = skip;
+    }
+    return tokenStack;
 }
 
 BaseRefVectorOf<XMLCh>* XMLString::tokenizeString(const XMLCh*      const   tokenizeSrc

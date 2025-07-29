@@ -20,6 +20,22 @@
 
 <s1 title="Installation">
 
+    <p>Much of this documentation is historical in nature. The only
+    officially supported platforms with committed testing and maintenance
+    at this time are Windows (native, NOT Cygwin or other variants),
+    Linux, and MacOS. All other builds are unsupported and untested
+    and should be expected to require patching and build debugging.
+    Patches are accepted for other platforms, as are maintainers
+    interested in taking over responsibility for supporting them.</p>
+
+    <p>The officially supported Windows platforms consist of only those
+    Windows versions that are actively supported by Microsoft, which at
+    time of writing excludes all releases prior to Server 2008 R2.
+    The currently supported Windows compilers include Visual Studio 2015
+    and later; this set is subject to change in the future.</p>
+
+    <p>Support for C++ RTTI is an absolute requirement when building.</p>
+
     <anchor name="Windows"/>
     <s2 title="Windows">
 
@@ -197,7 +213,7 @@ tar -xfz &XercesC3SrcInstallDir;.tar.gz
       </s3>
 
       <s3 title="Binary distribution">
-        <p>Precompiled Xerces-C++ libraries for Cygwin are provide as
+        <p>Precompiled Xerces-C++ libraries for Cygwin may be provided as
            part of the Cygwin package repository. To install the binary
            distribution run Cygwin setup.exe.
            When you reach the Packages step of the Cygwin Setup wizard,

@@ -17,7 +17,7 @@
 
 //REVISIT
 /*
- * $Id: PSVIWriter.cpp 833057 2009-11-05 15:25:10Z borisk $
+ * $Id$
  */
 
 
@@ -224,12 +224,6 @@ int main(int argC, char* argV[])
 	parser->setXMLEntityResolver(handler);
     parser->setErrorHandler(handler);
 
-    //
-    //  Get the starting time and kick off the parse of the indicated
-    //  file. Catch any exceptions that might propogate out of it.
-    //
-    unsigned long duration;
-
     bool more = true;
     XERCES_STD_QUALIFIER ifstream fin;
 
@@ -270,7 +264,8 @@ int main(int argC, char* argV[])
 					if (strrchr(xmlFile, '\\')>strrchr(xmlFile, '/')) {
 						strcat(fileName, strrchr(xmlFile, '\\'));
 					} else {
-						strcat(fileName, strrchr(xmlFile, '/'));
+                        if (strrchr(xmlFile, '/'))
+                            strcat(fileName, strrchr(xmlFile, '/'));
 					}
 	                if (psviFormatter)
 	                	delete psviFormatter;
@@ -294,10 +289,7 @@ int main(int argC, char* argV[])
 
         try
         {
-            const unsigned long startMillis = XMLPlatformUtils::getCurrentMillis();
             parser->parse(xmlFile);
-            const unsigned long endMillis = XMLPlatformUtils::getCurrentMillis();
-            duration = endMillis - startMillis;
         }
         catch (const OutOfMemoryException&)
         {

@@ -7,7 +7,7 @@ dnl @author James Berry
 dnl @version 2005-05-23
 dnl @license AllPermissive
 dnl
-dnl $Id: xerces_curl_prefix.m4 1662862 2015-02-28 00:28:12Z scantor $
+dnl $Id$
 
 AC_DEFUN([XERCES_CURL_PREFIX],
 	[
@@ -66,9 +66,10 @@ AC_DEFUN([XERCES_CURL_PREFIX],
 
 			orig_libs=$LIBS
 			LIBS="$curl_libs $LIBS"
+                        CPPFLAGS="$curl_flags $CPPFLAGS"
 
 			AC_LINK_IFELSE(
-				AC_LANG_SOURCE[[
+				[AC_LANG_SOURCE([
                     #include <curl/curl.h>
                     #include <curl/multi.h>
                     #include <curl/easy.h>
@@ -78,10 +79,11 @@ AC_DEFUN([XERCES_CURL_PREFIX],
                       curl_multi_init();
                       return 0;
                     }
-				]],
+				])],
 				[], [xerces_cv_curl_present=no])
 
 			LIBS=$orig_libs
+                        CPPFLAGS=$orig_cppflags
 
 			if test x"$xerces_cv_curl_present" != x"no"; then
 				AC_MSG_RESULT([yes])

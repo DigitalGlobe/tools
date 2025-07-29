@@ -16,7 +16,7 @@
 #
 
 #
-# $Id: Makefile.am 1665397 2015-03-10 03:27:10Z scantor $
+# $Id$
 #
 
 bin_PROGRAMS =                      ${sampleprogs}
@@ -26,12 +26,18 @@ LDADD =                             ${top_builddir}/src/libxerces-c.la
 # header file when doing out-of-tree builds
 AM_CPPFLAGS =                       -I${top_builddir}/src -I${top_srcdir}/src
 
-EXTRA_DIST =                        data/personal.dtd \
+EXTRA_DIST =                        CMakeLists.txt \
+                                    data/personal.dtd \
                                     data/personal.xml \
                                     data/personal.xsd \
                                     data/personal-schema.xml \
                                     data/redirect.dtd \
-                                    data/long.xml
+                                    data/long.xml \
+                                    expected \
+                                    scripts
+
+clean-local:
+	-rm -rf observed
 
 sampleprogs =
 
@@ -120,48 +126,59 @@ sampleprogs +=                      XInclude
 XInclude_SOURCES =                  src/XInclude/XInclude.cpp \
                                     src/XInclude/XInclude.hpp
 
-#
-# Override generated rules to provide prettier make rules
-#
-# Warning: If Automake changes sufficiently, these rules may need to
-#          be regenerated from the (new) default output of Automake
-#
-if XERCES_PRETTY_MAKE
-.cpp.o:
-@am__fastdepCXX_TRUE@	@depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`; \
-@am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$$depbase.Tpo" -c -o $@ $<; \
-@am__fastdepCXX_TRUE@	then $(am__mv) "$$depbase.Tpo" "$$depbase.Po"; else rm -f "$$depbase.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	@source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ $<
 
-.cpp.obj:
-@am__fastdepCXX_TRUE@	@depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`; \
-@am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$$depbase.Tpo" -c -o $@ `$(CYGPATH_W) '$<'`; \
-@am__fastdepCXX_TRUE@	then $(am__mv) "$$depbase.Tpo" "$$depbase.Po"; else rm -f "$$depbase.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	@source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+TESTS =					scripts/SAXCount \
+					scripts/SAXCount1 \
+					scripts/SAXCount2 \
+					scripts/SAXCount3 \
+					scripts/SAXPrint \
+					scripts/SAXPrint1 \
+					scripts/SAXPrint2 \
+					scripts/SAXPrint3 \
+					scripts/SAX2Count \
+					scripts/SAX2Count1 \
+					scripts/SAX2Count2 \
+					scripts/SAX2Count3 \
+					scripts/SAX2Print \
+					scripts/SAX2Print1 \
+					scripts/SAX2Print2 \
+					scripts/SAX2Print3 \
+					scripts/SAX2Print4 \
+					scripts/SAX2Print5 \
+					scripts/MemParse \
+					scripts/MemParse1 \
+					scripts/Redirect \
+					scripts/Redirect1 \
+					scripts/DOMCount \
+					scripts/DOMCount1 \
+					scripts/DOMCount2 \
+					scripts/DOMCount3 \
+					scripts/DOMPrint \
+					scripts/DOMPrint1 \
+					scripts/DOMPrint2 \
+					scripts/DOMPrint3 \
+					scripts/DOMPrint4 \
+					scripts/DOMPrint5 \
+					scripts/StdInParse1 \
+					scripts/StdInParse2 \
+					scripts/StdInParse3 \
+					scripts/PParse \
+					scripts/PParse1 \
+					scripts/PParse2 \
+					scripts/EnumVal \
+					scripts/EnumVal1 \
+					scripts/SEnumVal \
+					scripts/SEnumVal1 \
+					scripts/CreateDOMDocument \
+					scripts/SAXPrintLong
 
-.cpp.lo:
-@am__fastdepCXX_TRUE@	@depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`; \
-@am__fastdepCXX_TRUE@	if $(LTCXXCOMPILE) -MT $@ -MD -MP -MF "$$depbase.Tpo" -c -o $@ $<; \
-@am__fastdepCXX_TRUE@	then $(am__mv) "$$depbase.Tpo" "$$depbase.Plo"; else rm -f "$$depbase.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	@source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
-
-PRETTY_MAKE=${top_srcdir}/config/pretty-make
-PRETTY_COMPILE=${PRETTY_MAKE} Compiling
-endif
-
-CXXCOMPILE = ${PRETTY_COMPILE} \
-	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
-LTCXXCOMPILE = ${PRETTY_COMPILE}  \
-	$(LIBTOOL) --quiet --tag=CXX --mode=compile \
-	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
-
-
-
+XFAIL_TESTS =				scripts/SAXCount \
+					scripts/SAXPrint \
+					scripts/SAX2Count \
+					scripts/SAX2Print \
+					scripts/Redirect \
+					scripts/DOMCount \
+					scripts/DOMPrint \
+					scripts/PParse \
+					scripts/EnumVal \
+					scripts/SEnumVal

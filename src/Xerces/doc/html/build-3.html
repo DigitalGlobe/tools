@@ -15,7 +15,7 @@
 
   <IMG border="0" height="6" hspace="0" src="resources/separator.gif" vspace="0" width="120"><BR>
 
-  <IMG alt="Xerces-C++ 3.1.4" border="0" height="17" hspace="0" name="side-sect-24" src="graphics/sect-24-label.jpg" vspace="0" width="120"><BR>
+  <IMG alt="Xerces-C++ 3.3.0" border="0" height="17" hspace="0" name="side-sect-24" src="graphics/sect-24-label.jpg" vspace="0" width="120"><BR>
 
      <A href="install-3.html" onMouseOut="rolloverOff('side-install-3');" onMouseOver="rolloverOn('side-install-3');"><IMG alt="Installation" border="0" height="12" hspace="0" name="side-install-3" onLoad="rolloverLoad('side-install-3','graphics/install-3-label-2.jpg','graphics/install-3-label-3.jpg');" src="graphics/install-3-label-3.jpg" vspace="0" width="120"></A><BR>
      <IMG alt="Build Instructions" border="0" height="12" hspace="0" src="graphics/build-3-label-1.jpg" vspace="0" width="120"><BR>
@@ -70,14 +70,379 @@
 <IMG border="0" height="14" hspace="0" src="resources/close.gif" vspace="0" width="120"><BR></TD><TD align="left" valign="top" width="500"><TABLE border="0" cellpadding="3" cellspacing="0"><TR><TD>
   <TABLE border="0" cellpadding="0" cellspacing="0" width="494"><TR><TD bgcolor="ffffff" colspan="2" width="494"><TABLE border="0" cellpadding="0" cellspacing="0" width="494"><TR><TD bgcolor="#039acc" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#039acc" height="1" width="492"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="492"></TD><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR><TR><TD bgcolor="#039acc" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#0086b2" width="492"><FONT color="#ffffff" face="arial,helvetica,sanserif" size="+1"><IMG border="0" height="2" hspace="0" src="resources/void.gif" vspace="0" width="2"><B>Build Instructions</B></FONT></TD><TD bgcolor="#017299" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR><TR><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#017299" height="1" width="492"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="492"></TD><TD bgcolor="#017299" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR></TABLE></TD></TR><TR><TD width="10">&nbsp;</TD><TD width="484"><FONT color="#000000" face="arial,helvetica,sanserif">
 
+    <P>Much of this documentation is historical in nature. The only
+    officially supported platforms with committed testing and maintenance
+    at this time are Windows (native, NOT Cygwin or other variants), 
+    Linux, and MacOS. All other builds are unsupported and untested
+    and should be expected to require patching and build debugging.
+    Patches are accepted for other platforms, as are maintainers
+    interested in taking over responsibility for supporting them.</P>
+
+    <P>While the CMake support is portable, officially the autoconf
+    support is intended to be used for Linux and MacOS and CMake used
+    for Windows.</P>
+
     <P>Build instructions are provided for the following platforms and
        compilers:</P>
 
     <UL>
+       <LI><A href="#CMake">All</A></LI>
        <LI><A href="#UNIX">UNIX/Linux/Mac OS X/Cygwin/MinGW</A></LI>
-       <LI><A href="#Windows">Windows using Microsoft Visual C++</A></LI>
-       <LI><A href="#BorlandCC">Windows using Borland C++</A></LI>
     </UL>
+
+    <A name="CMake"><!--anchor--></A>
+    <TABLE border="0" cellpadding="0" cellspacing="0" width="484"><TR><TD bgcolor="ffffff" colspan="2" width="484"><TABLE border="0" cellpadding="0" cellspacing="0" width="484"><TR><TD bgcolor="#039acc" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#039acc" height="1" width="482"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="482"></TD><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR><TR><TD bgcolor="#039acc" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#0086b2" width="482"><FONT color="#ffffff" face="arial,helvetica,sanserif"><IMG border="0" height="2" hspace="0" src="resources/void.gif" vspace="0" width="2"><B>Building on all platforms with CMake</B></FONT></TD><TD bgcolor="#017299" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR><TR><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#017299" height="1" width="482"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="482"></TD><TD bgcolor="#017299" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR></TABLE></TD></TR><TR><TD width="10">&nbsp;</TD><TD width="474"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">
+
+        <P>For building on any platform with any supported build
+           system Xerces-C++ uses the CMake build generator and
+           requires that you have <A href="https://cmake.org/">CMake</A> installed.
+           Additionally, a build tool such as <A href="http://www.gnu.org/software/make/make.html">GNU
+           make</A> or <A href="https://ninja-build.org/">Ninja</A> is required for
+           building.  CMake supports a wide range of generators for
+           several different compilers, build tools and popular IDEs,
+           including Eclipse, Kate, Visual Studio, Sublime Text and more.
+           Any of these may be used to build Xerces-C++.  Run
+           <CODE><FONT face="courier, monospaced">cmake --help</FONT></CODE> to display the full list of
+           supported generators for your platform.</P>
+
+        <P>As with all CMake projects, the build process is divided
+           into several parts: configuration and building, followed by
+           (optional) testing and installation. The configuration part is
+           performed by running the <CODE><FONT face="courier, monospaced">cmake</FONT></CODE> command.  The
+           build part is performed by invoking the chosen build tool
+           such as <CODE><FONT face="courier, monospaced">make</FONT></CODE> or <CODE><FONT face="courier, monospaced">ninja</FONT></CODE>, or by opening
+           the generated project files in your IDE, and building from
+           within the IDE.</P>
+
+        <P>Besides the standard <CODE><FONT face="courier, monospaced">cmake</FONT></CODE> <A href="https://cmake.org/cmake/help/latest/manual/cmake-variables.7.html">variables</A>,
+           Xerces-C++ provides a number of project-specific options
+           that are worth mentioning. You can specify one option for each
+           category outlined below. If you do not specify anything for a
+           particular category then <CODE><FONT face="courier, monospaced">cmake</FONT></CODE> will select the
+           most appropriate default, based upon the available options for
+           your system. At the end of its execution <CODE><FONT face="courier, monospaced">cmake</FONT></CODE>
+           prints the selected values for each category.</P>
+
+
+	<P>Net Accessor (used to access network resources):</P>
+
+        <TABLE border="0" cellpadding="2" cellspacing="2" width="100%">
+          <TR>
+            <TD align="center" bgcolor="#039acc" colspan="1" rowspan="1" valign="center"><FONT color="#ffffff" face="arial,helvetica,sanserif" size="-1"><B>Option</B>&nbsp;
+      </FONT></TD>
+            <TD align="center" bgcolor="#039acc" colspan="1" rowspan="1" valign="center"><FONT color="#ffffff" face="arial,helvetica,sanserif" size="-1"><B>Description</B>&nbsp;
+      </FONT></TD>
+          </TR>
+          <TR>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">-Dnetwork-accessor=curl</FONT></CODE>&nbsp;
+      </FONT></TD>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">use the libcurl library (only on UNIX)&nbsp;
+      </FONT></TD>
+          </TR>
+          <TR>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">-Dnetwork-accessor=socket</FONT></CODE>&nbsp;
+      </FONT></TD>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">use plain sockets (only on UNIX)&nbsp;
+      </FONT></TD>
+          </TR>
+	  <TR>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">-Dnetwork-accessor=cfurl</FONT></CODE>&nbsp;
+      </FONT></TD>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">use the CFURL API (only on Mac OS X)&nbsp;
+      </FONT></TD>
+          </TR>
+	  <TR>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">-Dnetwork-accessor=winsock</FONT></CODE>&nbsp;
+      </FONT></TD>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">use WinSock (only on Windows, Cygwin, MinGW)&nbsp;
+      </FONT></TD>
+          </TR>
+          <TR>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">-Dnetwork:BOOL=OFF</FONT></CODE>&nbsp;
+      </FONT></TD>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">disable network support&nbsp;
+      </FONT></TD>
+          </TR>
+        </TABLE>
+
+	<P>Transcoder (used to convert between internal UTF-16 and other encodings):</P>
+
+        <TABLE border="0" cellpadding="2" cellspacing="2" width="100%">
+          <TR>
+            <TD align="center" bgcolor="#039acc" colspan="1" rowspan="1" valign="center"><FONT color="#ffffff" face="arial,helvetica,sanserif" size="-1"><B>Option</B>&nbsp;
+      </FONT></TD>
+            <TD align="center" bgcolor="#039acc" colspan="1" rowspan="1" valign="center"><FONT color="#ffffff" face="arial,helvetica,sanserif" size="-1"><B>Description</B>&nbsp;
+      </FONT></TD>
+          </TR>
+          <TR>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">-Dtranscoder=gnuiconv</FONT></CODE>&nbsp;
+      </FONT></TD>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">use the GNU iconv library&nbsp;
+      </FONT></TD>
+          </TR>
+          <TR>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">-Dtranscoder=iconv</FONT></CODE>&nbsp;
+      </FONT></TD>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">use the iconv library&nbsp;
+      </FONT></TD>
+          </TR>
+          <TR>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">-Dtranscoder=icu</FONT></CODE>&nbsp;
+      </FONT></TD>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">use the ICU library&nbsp;
+      </FONT></TD>
+          </TR>
+          <TR>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">-Dtranscoder=macosunicodeconverter</FONT></CODE>&nbsp;
+      </FONT></TD>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">use Mac OS X APIs (only on Mac OS X)&nbsp;
+      </FONT></TD>
+          </TR>
+          <TR>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">-Dtranscoder=windows</FONT></CODE>&nbsp;
+      </FONT></TD>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">use Windows APIs (only on Windows and MinGW)&nbsp;
+      </FONT></TD>
+          </TR>
+        </TABLE>
+
+	<P>Message Loader (used to access diagnostics messages):</P>
+
+        <TABLE border="0" cellpadding="2" cellspacing="2" width="100%">
+          <TR>
+            <TD align="center" bgcolor="#039acc" colspan="1" rowspan="1" valign="center"><FONT color="#ffffff" face="arial,helvetica,sanserif" size="-1"><B>Option</B>&nbsp;
+      </FONT></TD>
+            <TD align="center" bgcolor="#039acc" colspan="1" rowspan="1" valign="center"><FONT color="#ffffff" face="arial,helvetica,sanserif" size="-1"><B>Description</B>&nbsp;
+      </FONT></TD>
+          </TR>
+          <TR>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">-Dmessage-loader=inmemory</FONT></CODE>&nbsp;
+      </FONT></TD>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">store the messages in memory&nbsp;
+      </FONT></TD>
+          </TR>
+          <TR>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">-Dmessage-loader=icu</FONT></CODE>&nbsp;
+      </FONT></TD>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">store the messages using the ICU resource bundles&nbsp;
+      </FONT></TD>
+          </TR>
+          <TR>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">-Dmessage-loader=iconv</FONT></CODE>&nbsp;
+      </FONT></TD>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">store the messages in the iconv message catalog&nbsp;
+      </FONT></TD>
+          </TR>
+        </TABLE>
+
+        <P>XMLCh type (UTF-16 character type):</P>
+
+        <TABLE border="0" cellpadding="2" cellspacing="2" width="100%">
+            <TR>
+                <TD align="center" bgcolor="#039acc" colspan="1" rowspan="1" valign="center"><FONT color="#ffffff" face="arial,helvetica,sanserif" size="-1"><B>Option</B>&nbsp;
+      </FONT></TD>
+                <TD align="center" bgcolor="#039acc" colspan="1" rowspan="1" valign="center"><FONT color="#ffffff" face="arial,helvetica,sanserif" size="-1"><B>Description</B>&nbsp;
+      </FONT></TD>
+            </TR>
+            <TR>
+                <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">-Dxmlch-type=char16_t</FONT></CODE>&nbsp;
+      </FONT></TD>
+                <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">use <CODE><FONT face="courier, monospaced">char16_t</FONT></CODE> (requires a C++11 compiler)&nbsp;
+      </FONT></TD>
+            </TR>
+            <TR>
+                <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">-Dxmlch-type=uint16_t</FONT></CODE>&nbsp;
+      </FONT></TD>
+                <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">use <CODE><FONT face="courier, monospaced">uint16_t</FONT></CODE> from
+                    <CODE><FONT face="courier, monospaced">&lt;cstdint&gt;</FONT></CODE> or
+                    <CODE><FONT face="courier, monospaced">&lt;stdint.h&gt;</FONT></CODE>, or another unsigned
+                    16-bit type such as <CODE><FONT face="courier, monospaced">unsigned short</FONT></CODE> if
+                    the standard types are unavailable&nbsp;
+      </FONT></TD>
+            </TR>
+            <TR>
+                <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">-Dxmlch-type=wchar_t</FONT></CODE>&nbsp;
+      </FONT></TD>
+                <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">use <CODE><FONT face="courier, monospaced">wchar_t</FONT></CODE> (Windows only)&nbsp;
+      </FONT></TD>
+            </TR>
+        </TABLE>
+
+        <P>MFC debug support is enabled by default (Windows only) and
+           can be disabled with the
+           <CODE><FONT face="courier, monospaced">-Dmfc-debug:BOOL=OFF</FONT></CODE> option.</P>
+
+        <P>Thread support is enabled by default and can be disabled
+           with the <CODE><FONT face="courier, monospaced">-Dthreads:BOOL=OFF</FONT></CODE> option.  If disabled,
+           it will not be possible to select a mutex manager other than
+           <CODE><FONT face="courier, monospaced">nothreads</FONT></CODE>.  If enabled, one of the following
+           mutex managers may be selected:</P>
+
+        <TABLE border="0" cellpadding="2" cellspacing="2" width="100%">
+          <TR>
+            <TD align="center" bgcolor="#039acc" colspan="1" rowspan="1" valign="center"><FONT color="#ffffff" face="arial,helvetica,sanserif" size="-1"><B>Option</B>&nbsp;
+      </FONT></TD>
+            <TD align="center" bgcolor="#039acc" colspan="1" rowspan="1" valign="center"><FONT color="#ffffff" face="arial,helvetica,sanserif" size="-1"><B>Description</B>&nbsp;
+      </FONT></TD>
+          </TR>
+          <TR>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">-Dmutex-manager=standard</FONT></CODE>&nbsp;
+      </FONT></TD>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">Use Standard C++ mutex (requires a C++11 compiler)&nbsp;
+      </FONT></TD>
+          </TR>
+          <TR>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">-Dmutex-manager=posix</FONT></CODE>&nbsp;
+      </FONT></TD>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">Use POSIX threads (pthreads)  mutex (only on UNIX and Cygwin)&nbsp;
+      </FONT></TD>
+          </TR>
+          <TR>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">-Dmutex-manager=windows</FONT></CODE>&nbsp;
+      </FONT></TD>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">Use Windows threads mutex (Windows and MinGW only)&nbsp;
+      </FONT></TD>
+          </TR>
+          <TR>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">-Dmutex-manager=nothreads</FONT></CODE>&nbsp;
+      </FONT></TD>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">Use dummy implementation (default if threading is disabled)&nbsp;
+      </FONT></TD>
+          </TR>
+        </TABLE>
+
+        <P>Shared libraries are built by default. You can use the
+           <CODE><FONT face="courier, monospaced">-DBUILD_SHARED_LIBS:BOOL=OFF</FONT></CODE> option to build
+           static libraries.</P>
+
+         <P>If you need to specify compiler executables that should be
+            used to build Xerces-C++, you can set the CC and CXX
+            environment variables when invoking
+            <CODE><FONT face="courier, monospaced">cmake</FONT></CODE>. Similarly, if you need to specify
+            additional compiler or linker options, you can set the
+            CFLAGS, CXXFLAGS, and LDFLAGS environment variables.  For
+            example:</P>
+
+         <DIV align="left"><TABLE border="0" cellpadding="0" cellspacing="4" width="464"><TR><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#0086b2" height="1" width="462"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="462"></TD><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR><TR><TD bgcolor="#0086b2" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#ffffff" width="462"><FONT size="-1"><PRE>CC=gcc-5.3 CXX=g++-5.3 CFLAGS=-O3 CXXFLAGS=-O3 cmake ...</PRE></FONT></TD><TD bgcolor="#0086b2" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR><TR><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#0086b2" height="1" width="462"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="462"></TD><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR></TABLE></DIV>
+
+         <TABLE border="0" cellpadding="0" cellspacing="3" width="100%"><TR><TD valign="top" width="20"><IMG alt="Note" border="0" height="24" hspace="0" src="resources/note.gif" vspace="0" width="20"></TD><TD valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><I>
+           If building on Windows, the specific Visual Studio version
+           may be selected with some generators, and this may be run
+           from a normal command prompt.  If using a generic generator
+           such as <CODE><FONT face="courier, monospaced">Ninja</FONT></CODE>, then <CODE><FONT face="courier, monospaced">cmake</FONT></CODE> should
+           be run from a Visual Studio command prompt, or in a
+           suitably configured environment, so that the correct
+           compiler will be detected.
+         </I></FONT></TD></TR></TABLE>
+
+         <P>Once the configuration part is complete you can run the
+            build tool of choice.  This may be done generically using
+            <CODE><FONT face="courier, monospaced">cmake --build . [--config=Debug|Release]</FONT></CODE>.
+            Alternatively, a specific build tool, e.g. <CODE><FONT face="courier, monospaced">make</FONT></CODE>,
+            <CODE><FONT face="courier, monospaced">gmake</FONT></CODE>, <CODE><FONT face="courier, monospaced">ninja</FONT></CODE> or
+            <CODE><FONT face="courier, monospaced">msbuild</FONT></CODE> corresponding to the chosen generator
+            may be used directly.  When invoked without a specific
+            target, it will build the Xerces-C++ library, all examples
+            and all unit tests.</P>
+
+         <P>If you would like to run the automated test suite, run
+            <CODE><FONT face="courier, monospaced">ctest [-V] [-C Debug|Release]</FONT></CODE>.  This will run
+            all tests.  Additional <A href="https://cmake.org/cmake/help/latest/manual/ctest.1.html">options</A>
+            are available, such as running a subset of the tests and
+            running the tests in parallel.  If any discrepancies in the
+            output are detected, the differences will be displayed if a
+            <CODE><FONT face="courier, monospaced">diff</FONT></CODE> program is available.</P>
+
+         <P>Finally, install the library and examples.  This may be
+            done generically using <CODE><FONT face="courier, monospaced">cmake --build . --target
+            install</FONT></CODE>.  Alternatively, a specific build tool may be
+            used, e.g. <CODE><FONT face="courier, monospaced">make install</FONT></CODE>.  To change the
+            installation directory, use the
+            <CODE><FONT face="courier, monospaced">-DCMAKE_INSTALL_PREFIX=prefix</FONT></CODE> <CODE><FONT face="courier, monospaced">cmake</FONT></CODE>
+            option.</P>
+
+         <P>Some platforms and configurations may require extra
+            <CODE><FONT face="courier, monospaced">cmake</FONT></CODE> options.  Run <CODE><FONT face="courier, monospaced">cmake -LH</FONT></CODE> to
+            list the additional options, along with a short description
+            for each.  For each of the selection categories mentioned
+            above, the help text will list the valid choices detected for
+            your platform.  Run <CODE><FONT face="courier, monospaced">cmake -LAH</FONT></CODE> for all the
+            additional advanced settings.</P>
+
+         <P>Several examples of configuring, building, testing and
+            installing with CMake using different platforms, generators,
+            and installation options are shown below:</P>
+
+      <TABLE border="0" cellpadding="2" cellspacing="2" width="100%">
+        <TR>
+          <TD align="center" bgcolor="#039acc" colspan="1" rowspan="1" valign="center"><FONT color="#ffffff" face="arial,helvetica,sanserif" size="-1"><B>Platform</B>&nbsp;
+      </FONT></TD>
+          <TD align="center" bgcolor="#039acc" colspan="1" rowspan="1" valign="center"><FONT color="#ffffff" face="arial,helvetica,sanserif" size="-1"><B>Generator</B>&nbsp;
+      </FONT></TD>
+          <TD align="center" bgcolor="#039acc" colspan="1" rowspan="1" valign="center"><FONT color="#ffffff" face="arial,helvetica,sanserif" size="-1"><B>Example</B>&nbsp;
+      </FONT></TD>
+        </TR>
+        <TR>
+          <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">Any&nbsp;
+      </FONT></TD>
+          <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">Ninja&nbsp;
+      </FONT></TD>
+          <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">mkdir build</FONT></CODE><BR>
+          <CODE><FONT face="courier, monospaced">cd build</FONT></CODE><BR>
+          <CODE><FONT face="courier, monospaced">cmake -G Ninja -DCMAKE_INSTALL_PREFIX=/opt/xerces-c -DCMAKE_BUILD_TYPE=Release -Dnetwork-accessor=curl /path/to/xerces-c/source</FONT></CODE><BR>
+          <CODE><FONT face="courier, monospaced">ninja</FONT></CODE><BR>
+          <CODE><FONT face="courier, monospaced">ctest -V -j 8</FONT></CODE><BR>
+          <CODE><FONT face="courier, monospaced">ninja install</FONT></CODE>&nbsp;
+      </FONT></TD>
+        </TR>
+        <TR>
+          <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">Unix&nbsp;
+      </FONT></TD>
+          <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">Unix Makefiles&nbsp;
+      </FONT></TD>
+          <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">mkdir build</FONT></CODE><BR>
+          <CODE><FONT face="courier, monospaced">cd build</FONT></CODE><BR>
+          <CODE><FONT face="courier, monospaced">cmake -G &quot;Unix Makefiles&quot; -DCMAKE_INSTALL_PREFIX=/opt/xerces-c -DCMAKE_BUILD_TYPE=Debug -Dmessage-loader=icu /path/to/xerces-c/source</FONT></CODE><BR>
+          <CODE><FONT face="courier, monospaced">make -j8</FONT></CODE><BR>
+          <CODE><FONT face="courier, monospaced">make test</FONT></CODE><BR>
+          <CODE><FONT face="courier, monospaced">make install</FONT></CODE>&nbsp;
+      </FONT></TD>
+        </TR>
+        <TR>
+          <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">Windows&nbsp;
+      </FONT></TD>
+          <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">msbuild with VS2015 x64&nbsp;
+      </FONT></TD>
+          <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">mkdir build</FONT></CODE><BR>
+          <CODE><FONT face="courier, monospaced">cd build</FONT></CODE><BR>
+          <CODE><FONT face="courier, monospaced">cmake -G &quot;Visual Studio 14 2015 Win64&quot; -DCMAKE_INSTALL_PREFIX=D:\libs &nbsp;&nbsp; \path\to\xerces-c\source</FONT></CODE><BR>
+          <CODE><FONT face="courier, monospaced">cmake --build . --config Debug</FONT></CODE><BR>
+          <CODE><FONT face="courier, monospaced">ctest -V -C Debug -j 4</FONT></CODE><BR>
+          <CODE><FONT face="courier, monospaced">cmake --build . --config Debug --target install</FONT></CODE>&nbsp;
+      </FONT></TD>
+        </TR>
+        </TABLE>
+        <P></P>
+
+        <TABLE border="0" cellpadding="0" cellspacing="3" width="100%"><TR><TD valign="top" width="20"><IMG alt="Note" border="0" height="24" hspace="0" src="resources/note.gif" vspace="0" width="20"></TD><TD valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><I>
+          Note that different UNIX platforms use different system
+          environment variables for finding shared libraries. On Linux
+          and Solaris, the environment variable name is
+          <CODE><FONT face="courier, monospaced">LD_LIBRARY_PATH</FONT></CODE>, on AIX it is
+          <CODE><FONT face="courier, monospaced">LIBPATH</FONT></CODE>, on Mac OS X it is
+          <CODE><FONT face="courier, monospaced">DYLD_FALLBACK_LIBRARY_PATH</FONT></CODE>, and on HP-UX it is
+          <CODE><FONT face="courier, monospaced">SHLIB_PATH</FONT></CODE>.
+        </I></FONT></TD></TR></TABLE>
+
+	<TABLE border="0" cellpadding="0" cellspacing="3" width="100%"><TR><TD valign="top" width="20"><IMG alt="Note" border="0" height="24" hspace="0" src="resources/note.gif" vspace="0" width="20"></TD><TD valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><I>
+          Note that Windows is different from the UNIX platforms in
+          the way it finds shared libraries at run time.  While UNIX
+          platforms may use the <CODE><FONT face="courier, monospaced">LD_LIBRARY_PATH</FONT></CODE>
+          environment variable, Windows uses the <CODE><FONT face="courier, monospaced">PATH</FONT></CODE>
+          environment variable if the library is not in the same
+          directory as the executable.
+        </I></FONT></TD></TR></TABLE>
+    </FONT></TD></TR></TABLE><BR>
 
     <A name="UNIX"><!--anchor--></A>
     <TABLE border="0" cellpadding="0" cellspacing="0" width="484"><TR><TD bgcolor="ffffff" colspan="2" width="484"><TABLE border="0" cellpadding="0" cellspacing="0" width="484"><TR><TD bgcolor="#039acc" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#039acc" height="1" width="482"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="482"></TD><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR><TR><TD bgcolor="#039acc" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#0086b2" width="482"><FONT color="#ffffff" face="arial,helvetica,sanserif"><IMG border="0" height="2" hspace="0" src="resources/void.gif" vspace="0" width="2"><B>Building on UNIX/Linux/Mac OS X/Cygwin/MinGW platforms</B></FONT></TD><TD bgcolor="#017299" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR><TR><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#017299" height="1" width="482"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="482"></TD><TD bgcolor="#017299" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR></TABLE></TD></TR><TR><TD width="10">&nbsp;</TD><TD width="474"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">
@@ -92,7 +457,7 @@
         <P>As with all automake-based projects the build process is divided
            into two parts: configuration and building. The configuration
            part is performed using the <CODE><FONT face="courier, monospaced">configure</FONT></CODE> script that
-           can be found in the <CODE><FONT face="courier, monospaced">xerces-c-3.1.4</FONT></CODE> directory.
+           can be found in the <CODE><FONT face="courier, monospaced">xerces-c-3.3.0</FONT></CODE> directory.
            The build part is performed by invoking <CODE><FONT face="courier, monospaced">make</FONT></CODE>.</P>
 
         <P>Besides the standard <CODE><FONT face="courier, monospaced">configure</FONT></CODE> options which
@@ -217,8 +582,77 @@
           </TR>
         </TABLE>
 
+        <P>XMLCh type (UTF-16 character type):</P>
+
+        <TABLE border="0" cellpadding="2" cellspacing="2" width="100%">
+            <TR>
+                <TD align="center" bgcolor="#039acc" colspan="1" rowspan="1" valign="center"><FONT color="#ffffff" face="arial,helvetica,sanserif" size="-1"><B>Option</B>&nbsp;
+      </FONT></TD>
+                <TD align="center" bgcolor="#039acc" colspan="1" rowspan="1" valign="center"><FONT color="#ffffff" face="arial,helvetica,sanserif" size="-1"><B>Description</B>&nbsp;
+      </FONT></TD>
+            </TR>
+            <TR>
+                <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">--enable-xmlch-char16_t</FONT></CODE>&nbsp;
+      </FONT></TD>
+                <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">use <CODE><FONT face="courier, monospaced">char16_t</FONT></CODE> (requires a C++11 compiler)&nbsp;
+      </FONT></TD>
+            </TR>
+            <TR>
+                <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">--enable-xmlch-uint16_t</FONT></CODE>&nbsp;
+      </FONT></TD>
+                <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">use <CODE><FONT face="courier, monospaced">uint16_t</FONT></CODE> from
+                    <CODE><FONT face="courier, monospaced">&lt;cstdint&gt;</FONT></CODE> or
+                    <CODE><FONT face="courier, monospaced">&lt;stdint.h&gt;</FONT></CODE>, or another unsigned
+                    16-bit type such as <CODE><FONT face="courier, monospaced">unsigned short</FONT></CODE> if
+                    the standard types are unavailable&nbsp;
+      </FONT></TD>
+            </TR>
+            <TR>
+                <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">--enable-xmlch-wchar_t</FONT></CODE>&nbsp;
+      </FONT></TD>
+                <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">use <CODE><FONT face="courier, monospaced">wchar_t</FONT></CODE> (Windows only)&nbsp;
+      </FONT></TD>
+            </TR>
+        </TABLE>
+
         <P>Thread support is enabled by default and can be disabled with the
-           <CODE><FONT face="courier, monospaced">--disable-threads</FONT></CODE> option.</P>
+           <CODE><FONT face="courier, monospaced">--disable-threads</FONT></CODE> option.  If disabled,
+           it will not be possible to select a mutex manager other than
+           <CODE><FONT face="courier, monospaced">nothreads</FONT></CODE>.  If enabled, one of the following
+           mutex managers may be selected:</P>
+
+        <TABLE border="0" cellpadding="2" cellspacing="2" width="100%">
+          <TR>
+            <TD align="center" bgcolor="#039acc" colspan="1" rowspan="1" valign="center"><FONT color="#ffffff" face="arial,helvetica,sanserif" size="-1"><B>Option</B>&nbsp;
+      </FONT></TD>
+            <TD align="center" bgcolor="#039acc" colspan="1" rowspan="1" valign="center"><FONT color="#ffffff" face="arial,helvetica,sanserif" size="-1"><B>Description</B>&nbsp;
+      </FONT></TD>
+          </TR>
+          <TR>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">--enable-mutexmgr-standard</FONT></CODE>&nbsp;
+      </FONT></TD>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">Use Standard C++ mutex (requires a C++11 compiler)&nbsp;
+      </FONT></TD>
+          </TR>
+          <TR>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">--enable-mutexmgr-posix</FONT></CODE>&nbsp;
+      </FONT></TD>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">Use POSIX threads (pthreads)  mutex (only on UNIX and Cygwin)&nbsp;
+      </FONT></TD>
+          </TR>
+          <TR>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">--enable-mutexmgr-windows</FONT></CODE>&nbsp;
+      </FONT></TD>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">Use Windows threads mutex (Windows and MinGW only)&nbsp;
+      </FONT></TD>
+          </TR>
+          <TR>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">--enable-mutexmgr-nothreads</FONT></CODE>&nbsp;
+      </FONT></TD>
+            <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">Use dummy implementation (default if threading is disabled)&nbsp;
+      </FONT></TD>
+          </TR>
+        </TABLE>
 
         <P>By default <CODE><FONT face="courier, monospaced">configure</FONT></CODE> selects both shared and static
            libraries. You can use the <CODE><FONT face="courier, monospaced">--disable-shared</FONT></CODE> and
@@ -241,15 +675,15 @@
 
          <P>Once the configuration part is complete you can run
             <CODE><FONT face="courier, monospaced">make</FONT></CODE> (or <CODE><FONT face="courier, monospaced">gmake</FONT></CODE>). Running
-            <CODE><FONT face="courier, monospaced">make</FONT></CODE> from the <CODE><FONT face="courier, monospaced">xerces-c-3.1.4</FONT></CODE>
+            <CODE><FONT face="courier, monospaced">make</FONT></CODE> from the <CODE><FONT face="courier, monospaced">xerces-c-3.3.0</FONT></CODE>
             directory builds Xerces-C++ library and examples. The
             library is placed into the <CODE><FONT face="courier, monospaced">src/.libs</FONT></CODE> directory. If
             you like to build only the library, you can run make from
-            <CODE><FONT face="courier, monospaced">xerces-c-3.1.4/src</FONT></CODE>.</P>
+            <CODE><FONT face="courier, monospaced">xerces-c-3.3.0/src</FONT></CODE>.</P>
 
          <P>If you would like to build the tests and run the
             automated test suite, run <CODE><FONT face="courier, monospaced">make check</FONT></CODE>
-            from the <CODE><FONT face="courier, monospaced">xerces-c-3.1.4</FONT></CODE>
+            from the <CODE><FONT face="courier, monospaced">xerces-c-3.3.0</FONT></CODE>
             directory. The automated test suite required
             Perl and the <CODE><FONT face="courier, monospaced">diff</FONT></CODE> command.</P>
 
@@ -311,7 +745,8 @@
           <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">IBM XL C++&nbsp;
       </FONT></TD>
           <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">./configure CXX=xlC_r CC=xlc_r</FONT></CODE><BR>
-              <CODE><FONT face="courier, monospaced">gmake libxerces_c_la_LDFLAGS=-qmkshrobj</FONT></CODE>&nbsp;
+              <CODE><FONT face="courier, monospaced">gmake libxerces_c_la_LDFLAGS=-qmkshrobj</FONT></CODE><BR>
+              (for xlC v11-v13, libxerces_c_la_LDFLAGS is not needed, but CXXFLAGS=-rtti is needed otherwise RTTI is disabled by default)&nbsp;
       </FONT></TD>
         </TR>
         <TR>
@@ -321,7 +756,8 @@
       </FONT></TD>
           <TD align="" bgcolor="#a0ddf0" colspan="1" rowspan="1" valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><CODE><FONT face="courier, monospaced">export OBJECT_MODE=64</FONT></CODE><BR>
               <CODE><FONT face="courier, monospaced">./configure CXX=xlC_r CC=xlc_r CXXFLAGS=-q64 CFLAGS=-q64</FONT></CODE><BR>
-              <CODE><FONT face="courier, monospaced">gmake libxerces_c_la_LDFLAGS=-qmkshrobj</FONT></CODE>&nbsp;
+              <CODE><FONT face="courier, monospaced">gmake libxerces_c_la_LDFLAGS=-qmkshrobj</FONT></CODE><BR>
+              (for xlC v11-v13, libxerces_c_la_LDFLAGS is not needed, but CXXFLAGS=&quot;-q64 -rtti&quot; is needed otherwise RTTI is disabled by default)&nbsp;
       </FONT></TD>
         </TR>
         <TR>
@@ -402,67 +838,8 @@
         </I></FONT></TD></TR></TABLE>
     </FONT></TD></TR></TABLE><BR>
 
-    <A name="Windows"><!--anchor--></A>
-    <TABLE border="0" cellpadding="0" cellspacing="0" width="484"><TR><TD bgcolor="ffffff" colspan="2" width="484"><TABLE border="0" cellpadding="0" cellspacing="0" width="484"><TR><TD bgcolor="#039acc" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#039acc" height="1" width="482"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="482"></TD><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR><TR><TD bgcolor="#039acc" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#0086b2" width="482"><FONT color="#ffffff" face="arial,helvetica,sanserif"><IMG border="0" height="2" hspace="0" src="resources/void.gif" vspace="0" width="2"><B>Building on Windows using Microsoft Visual C++</B></FONT></TD><TD bgcolor="#017299" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR><TR><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#017299" height="1" width="482"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="482"></TD><TD bgcolor="#017299" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR></TABLE></TD></TR><TR><TD width="10">&nbsp;</TD><TD width="474"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">
-        <P>Xerces-C++ source distribution comes with Microsoft Visual C++ projects and solutions.
-           The following describes the steps you need to build with this compiler.</P>
-
-            <P>To build Xerces-C++ from the source distribution you will
-            need to open the solution containing the project. The solutions
-            containing the Xerces-C++ project files are in the following
-            sub-directories in the <CODE><FONT face="courier, monospaced">xerces-c-3.1.4</FONT></CODE>
-            directory:</P>
-
-<DIV align="left"><TABLE border="0" cellpadding="0" cellspacing="4" width="464"><TR><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#0086b2" height="1" width="462"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="462"></TD><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR><TR><TD bgcolor="#0086b2" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#ffffff" width="462"><FONT size="-1"><PRE>
-(For VC7.1)  projects\Win32\VC7.1\xerces-all\xerces-all.sln
-(For VC8.0)  projects\Win32\VC8\xerces-all\xerces-all.sln
-(For VC9.0)  projects\Win32\VC9\xerces-all\xerces-all.sln
-(For VC10.0) projects\Win32\VC10\xerces-all\xerces-all.sln
-(For VC11.0) projects\Win32\VC11\xerces-all\xerces-all.sln
-(For VC12.0) projects\Win32\VC12\xerces-all\xerces-all.sln
-</PRE></FONT></TD><TD bgcolor="#0086b2" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR><TR><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#0086b2" height="1" width="462"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="462"></TD><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR></TABLE></DIV>
-
-            <P>Once you have the solution open, you need to build the
-               project named <CODE><FONT face="courier, monospaced">XercesLib</FONT></CODE>. You can select
-               Debug/Release, Static/DLL, and, for VC8+,
-               32/64 bit builds using the Configuration Manager dialog.
-               You can also select whether the Xerces-C++ library
-               should use ICU for transcoding.</P>
-
-            <P>When building your own applications you need to make sure
-               that you are linking your application with the
-               xerces-c_3.lib (Release) and/or
-               xerces-c_3D.lib (Debug)
-               libraries (or the static versions of them)
-               and also that the associated DLLs are somewhere in the
-               executable/DLL search path (<CODE><FONT face="courier, monospaced">PATH</FONT></CODE>).</P>
-
-            <TABLE border="0" cellpadding="0" cellspacing="3" width="100%"><TR><TD valign="top" width="20"><IMG alt="Note" border="0" height="24" hspace="0" src="resources/note.gif" vspace="0" width="20"></TD><TD valign="top"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1"><I>If you are linking your application to the static
-                  Xerces-C++ library,
-                  then you will need to compile your application with the
-                  XERCES_STATIC_LIBRARY preprocessor macro defined in order
-                  to turn off the DLL import/export mechanism.</I></FONT></TD></TR></TABLE>
-
-            <P>If you would also like to build tests and/or samples, inside
-               the solution files mentioned above, you'll find several other
-               projects which are for the tests and samples. Select all
-               the tests/samples that you would like to build and then
-               right click on the selection. Choose &quot;Build (selection
-               only)&quot; to build all the selected projects in one shot.</P>
-    </FONT></TD></TR></TABLE><BR>
-
-    <A name="BorlandCC"><!--anchor--></A>
-    <TABLE border="0" cellpadding="0" cellspacing="0" width="484"><TR><TD bgcolor="ffffff" colspan="2" width="484"><TABLE border="0" cellpadding="0" cellspacing="0" width="484"><TR><TD bgcolor="#039acc" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#039acc" height="1" width="482"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="482"></TD><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR><TR><TD bgcolor="#039acc" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#0086b2" width="482"><FONT color="#ffffff" face="arial,helvetica,sanserif"><IMG border="0" height="2" hspace="0" src="resources/void.gif" vspace="0" width="2"><B>Building on Windows using Borland C++</B></FONT></TD><TD bgcolor="#017299" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR><TR><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#017299" height="1" width="482"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="482"></TD><TD bgcolor="#017299" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR></TABLE></TD></TR><TR><TD width="10">&nbsp;</TD><TD width="474"><FONT color="#000000" face="arial,helvetica,sanserif" size="-1">
-        <P>Xerces-C++ source distribution comes with the Borland C++ makefiles. The
-           following describes the steps you need to build Xerces-C++ with this compiler.</P>
-        <OL>
-	   <LI>Change to the <CODE><FONT face="courier, monospaced">xerces-c-3.1.4\projects\Win32\BCC5\Xerces-all</FONT></CODE> directory</LI>
-           <LI>Run <CODE><FONT face="courier, monospaced">MakeBuildDirs.bat</FONT></CODE></LI>
-	   <LI><CODE><FONT face="courier, monospaced">make -f Xerces-all.mak</FONT></CODE> to build the library, examples, and tests.</LI>
-	</OL>
-    </FONT></TD></TR></TABLE><BR>
   </FONT></TD></TR></TABLE><BR>
 </TD></TR></TABLE></TD></TR></TABLE><BR><TABLE border="0" cellpadding="0" cellspacing="0" width="620"><TR><TD bgcolor="#0086b2"><IMG height="1" src="resources/dot.gif" width="1"></TD></TR><TR><TD align="center"><FONT color="#0086b2" size="-1"><I>
-              Copyright &copy; 1999-2015 The Apache Software Foundation.
+              Copyright &copy; 1999-2017 The Apache Software Foundation.
               All Rights Reserved.
             </I></FONT></TD></TR></TABLE></BODY></HTML>

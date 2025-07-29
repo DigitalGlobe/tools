@@ -20,27 +20,62 @@
 #
 
 #
-# $Id: configure.ac 1747617 2016-06-10 01:14:36Z scantor $
+# $Id$
 #
 
 AC_PREREQ(2.60)
-AC_INIT([xerces-c],[3.1.4])
+AC_INIT([xerces-c],[3.3.0])
+INTERFACE_VERSION=3.3
+GRAMMAR_SERIALIZATION_LEVEL=7
+
+XERCES_VERSION_MAJOR=$(echo $PACKAGE_VERSION | cut -d. -f1)
+XERCES_VERSION_MINOR=$(echo $PACKAGE_VERSION | cut -d. -f2)
+XERCES_VERSION_REVISION=$(echo $PACKAGE_VERSION | cut -d. -f3)
+
+INTERFACE_VERSION_MAJOR=$(echo $INTERFACE_VERSION | cut -d. -f1)
+INTERFACE_VERSION_MINOR=$(echo $INTERFACE_VERSION | cut -d. -f2)
+
+INTERFACE_VERSION_D="${INTERFACE_VERSION_MAJOR}.${INTERFACE_VERSION_MINOR}"
+INTERFACE_VERSION_U="${INTERFACE_VERSION_MAJOR}_${INTERFACE_VERSION_MINOR}"
+
+AC_SUBST([XERCES_VERSION_MAJOR])
+AC_SUBST([XERCES_VERSION_MINOR])
+AC_SUBST([XERCES_VERSION_REVISION])
+AC_SUBST([INTERFACE_VERSION_MAJOR])
+AC_SUBST([INTERFACE_VERSION_MINOR])
+AC_SUBST([INTERFACE_VERSION_D])
+AC_SUBST([INTERFACE_VERSION_U])
+
+AC_DEFINE_UNQUOTED([XERCES_VERSION_MAJOR], $XERCES_VERSION_MAJOR, [Definition of Xerces major version])
+AC_DEFINE_UNQUOTED([XERCES_VERSION_MINOR], $XERCES_VERSION_MINOR, [Definition of Xerces minor version])
+AC_DEFINE_UNQUOTED([XERCES_VERSION_REVISION], $XERCES_VERSION_REVISION, [Definition of Xerces patch version])
+
+AC_DEFINE_UNQUOTED([INTERFACE_VERSION_MAJOR], $INTERFACE_VERSION_MAJOR, [Definition of Xerces interface major version])
+AC_DEFINE_UNQUOTED([INTERFACE_VERSION_MINOR], $INTERFACE_VERSION_MINOR, [Definition of Xerces interface minor version])
+
+AC_DEFINE_UNQUOTED([XERCES_GRAMMAR_SERIALIZATION_LEVEL], $GRAMMAR_SERIALIZATION_LEVEL, [Definition of Xerces grammar serialization level])
+
 AC_CONFIG_SRCDIR([src/Makefile.am])
 AC_CONFIG_LIBOBJ_DIR([src])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h src/xercesc/util/Xerces_autoconf_config.hpp])
-AC_CONFIG_FILES([Makefile \
-                 src/Makefile \
-                 src/xercesc/util/MsgLoaders/MsgCatalog/Makefile \
-                 tests/Makefile \
-                 samples/Makefile \
-		 xerces-c.pc])
+AC_CONFIG_HEADER([src/xercesc/util/XercesVersion.hpp])
+AC_CONFIG_FILES([Makefile
+                 doc/Makefile
+                 doc/Doxyfile
+                 doc/style/dtd/entities.ent
+                 src/Makefile
+                 tests/Makefile
+                 samples/Makefile
+		 xerces-c.pc
+                 scripts/run-test])
 
 # Check the target system
 AC_CANONICAL_HOST
 
 # Initialize automake
+AM_SILENT_RULES([yes])
 AM_INIT_AUTOMAKE([foreign subdir-objects dist-bzip2 tar-ustar])
 AM_MAINTAINER_MODE
 
@@ -133,12 +168,12 @@ ACX_PTHREAD
 #AC_FUNC_STRTOD
 AC_CHECK_FUNCS([getcwd pathconf realpath \
 		getaddrinfo gethostbyaddr gethostbyname socket \
-		clock_gettime ftime gettimeofday \
+		clock_gettime ftime gettimeofday timegm gmtime_r \
 		memmove memset nl_langinfo setlocale localeconv \
 		strcasecmp strncasecmp stricmp strnicmp strchr strdup \
-		strrchr strstr strtol strtoul \
+		strrchr strstr strtol strtoul snprintf \
 		towupper towlower mblen \
-        wcsupr wcslwr wcsnicmp wcsicmp \
+		wcsupr wcslwr wcsnicmp wcsicmp \
 		])
 
 # Some Unix systems, like Gnu Hurd, don't define PATH_MAX
@@ -155,9 +190,31 @@ AC_COMPILE_IFELSE( [AC_LANG_PROGRAM([[#include <limits.h>]],
                     ]
                  )
 
+# Check for functional cstdint header
+AC_MSG_CHECKING([for cstdint])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <cstdint>]],
+[[
+  uint32_t v1 = 342;
+  int64_t v2 = -23;
+  return 0;
+]])],
+                    [
+                      AC_MSG_RESULT([yes])
+                      AC_DEFINE_UNQUOTED([XERCES_HAVE_CSTDINT], 1, [Define to 1 if cstdint is functional.])
+                    ],
+                    [
+                      AC_MSG_RESULT([no])
+                      AC_DEFINE_UNQUOTED([XERCES_HAVE_CSTDINT], 0, [Define to 1 if cstdint is functional.])
+                    ]
+                 )
+
 # The check for mbrlen, wcsrtombs and mbsrtowcs gives a false
 # positive on HP-UX, so we use a different snippet to set the
 # corresponding macro
+# Furthermore, OpenBSD 5.1 doesn't follow the standard that states
+# that the "src" pointer must be set to NULL when a \0 has been 
+# converted in the source data, a behaviour that we rely on
+# So we also check for this scenario before using these functions
 AC_MSG_CHECKING([for mbrlen])
 AC_COMPILE_IFELSE(  [AC_LANG_PROGRAM([[#include <wchar.h>]],
                                      [[mbstate_t st; mbrlen( "t", 5, &st );]])],
@@ -171,8 +228,18 @@ AC_COMPILE_IFELSE(  [AC_LANG_PROGRAM([[#include <wchar.h>]],
                     ]
                  )
 AC_MSG_CHECKING([for wcsrtombs])
-AC_COMPILE_IFELSE(  [AC_LANG_PROGRAM([[#include <wchar.h>]],
-                                     [[mbstate_t st; char buffer[2]; const wchar_t* src=0; wcsrtombs(buffer, &src, 2, &st);]])],
+AC_RUN_IFELSE(  [AC_LANG_PROGRAM([[#include <wchar.h>
+#include <string.h>]],
+                                 [[
+mbstate_t st;
+memset(&st, 0, sizeof(st));
+char buffer[32];
+const wchar_t* src=L"help";
+wcsrtombs(buffer, &src, 32, &st);
+if(src==0)
+    return 0;
+else
+    return 1;]])],
                     [
                       AC_MSG_RESULT([yes])
                       AC_DEFINE_UNQUOTED([HAVE_WCSRTOMBS], 1, [Define to 1 if you have the `wcsrtombs' function.])
@@ -180,11 +247,43 @@ AC_COMPILE_IFELSE(  [AC_LANG_PROGRAM([[#include <wchar.h>]],
                     [
                       AC_MSG_RESULT([no])
                       AC_DEFINE_UNQUOTED([HAVE_WCSRTOMBS], 0, [Define to 1 if you have the `wcsrtombs' function.])
+                    ],
+                    [
+                      AC_COMPILE_IFELSE(  [AC_LANG_PROGRAM([[#include <wchar.h>
+                            #include <string.h>]],
+                                    [[
+                            mbstate_t st;
+                            memset(&st, 0, sizeof(st));
+                            char buffer[32];
+                            const wchar_t* src=L"help";
+                            wcsrtombs(buffer, &src, 32, &st);
+                            if(src==0)
+                                return 0;
+                            else
+                                return 1;]])],
+                        [
+                          AC_MSG_RESULT([yes])
+                          AC_DEFINE_UNQUOTED([HAVE_WCSRTOMBS], 1, [Define to 1 if you have the `wcsrtombs' function.])
+                        ],
+                        [
+                          AC_MSG_RESULT([no])
+                          AC_DEFINE_UNQUOTED([HAVE_WCSRTOMBS], 0, [Define to 1 if you have the `wcsrtombs' function.])
+                        ])
                     ]
                  )
 AC_MSG_CHECKING([for mbsrtowcs])
-AC_COMPILE_IFELSE(  [AC_LANG_PROGRAM([[#include <wchar.h>]],
-                                     [[mbstate_t st; wchar_t buffer[2]; const char* src=0; mbsrtowcs(buffer, &src, 2, &st);]])],
+AC_RUN_IFELSE(  [AC_LANG_PROGRAM([[#include <wchar.h>
+#include <string.h>]],
+                                 [[
+mbstate_t st;
+memset(&st, 0, sizeof(st));
+wchar_t buffer[32];
+const char* src="help";
+mbsrtowcs(buffer, &src, 32, &st);
+if(src==0)
+    return 0;
+else
+    return 1;]])],
                     [
                       AC_MSG_RESULT([yes])
                       AC_DEFINE_UNQUOTED([HAVE_MBSRTOWCS], 1, [Define to 1 if you have the `mbsrtowcs' function.])
@@ -192,7 +291,29 @@ AC_COMPILE_IFELSE(  [AC_LANG_PROGRAM([[#include <wchar.h>]],
                     [
                       AC_MSG_RESULT([no])
                       AC_DEFINE_UNQUOTED([HAVE_MBSRTOWCS], 0, [Define to 1 if you have the `mbsrtowcs' function.])
-                    ]
+                    ],
+                    [
+                        AC_COMPILE_IFELSE(  [AC_LANG_PROGRAM([[#include <wchar.h>
+                        #include <string.h>]],
+                                [[
+                        mbstate_t st;
+                        memset(&st, 0, sizeof(st));
+                        wchar_t buffer[32];
+                        const char* src="help";
+                        mbsrtowcs(buffer, &src, 32, &st);
+                        if(src==0)
+                            return 0;
+                        else
+                            return 1;]])],
+                      [
+                        AC_MSG_RESULT([yes])
+                        AC_DEFINE_UNQUOTED([HAVE_MBSRTOWCS], 1, [Define to 1 if you have the `mbsrtowcs' function.])
+                      ],
+                      [
+                        AC_MSG_RESULT([no])
+                        AC_DEFINE_UNQUOTED([HAVE_MBSRTOWCS], 0, [Define to 1 if you have the `mbsrtowcs' function.])
+                      ])
+                    ] 
                  )
 
 AC_MSG_CHECKING([if iconv uses const pointers])
@@ -231,7 +352,6 @@ AC_SUBST(abs_top_builddir)
 # Look for availability of available packages
 ######################################################
 
-XERCES_PRETTY_MAKE
 XERCES_PATH_DELIMITERS
 
 XERCES_MUTEXMGR_SELECTION
@@ -263,6 +383,8 @@ AC_ARG_ENABLE(sse2,
 
 AC_DEFINE([XERCES_AUTOCONF], 1, [Define to true if autoconf is used in this configuration])
 
+AS_IF([test x$ac_cv_header_stdint_h = xyes],
+	AC_DEFINE([XERCES_HAVE_STDINT_H], 1, [Define to 1 if we have stdint.h]))
 AS_IF([test x$ac_cv_header_sys_types_h = xyes],
 	AC_DEFINE([XERCES_HAVE_SYS_TYPES_H], 1, [Define to 1 if we have sys/types.h]))
 AS_IF([test x$ac_cv_header_inttypes_h = xyes],
@@ -272,40 +394,23 @@ case $host in
 *-*-msdos* | *-*-mingw32* | *-*-cygwin* | *-*-windows* )
 	platform_export="__declspec(dllexport)"
 	platform_import="__declspec(dllimport)"
+        template_extern=""
 	;;
 * )
 	platform_export=""
 	platform_import=""
+        template_extern="extern"
 	;;
 esac
 
 AC_DEFINE_UNQUOTED([XERCES_PLATFORM_EXPORT], [$platform_export], [Define as the platform's export attribute])
 AC_DEFINE_UNQUOTED([XERCES_PLATFORM_IMPORT], [$platform_import], [Define as the platform's import attribute])
+AC_DEFINE_UNQUOTED([XERCES_TEMPLATE_EXTERN], [$template_extern], [Define as the platform's template extern attribute])
 
 AS_IF([test ! $ac_cv_cxx_have_bool],
 	AC_DEFINE([XERCES_NO_NATIVE_BOOL], 1, [Define if there is no native bool support in this environment]))
 
-AS_IF([test $ac_cv_cxx_have_lstring],
-	AC_DEFINE([XERCES_LSTRSUPPORT], 1, [Define if there is support for L"widestring"]))
-
-# check if the Windows API is defined as using wchar_t or unsigned short; if it's wchar_t, we need to map XMLCh to be wchar_t
-# (this is safe because on Windows wchar_t is used to store UTF-16 codepoints, while it is not true on Unix)
-AC_MSG_CHECKING([whether the Windows SDK is available and using wchar_t as wide string])
-AC_COMPILE_IFELSE(  [AC_LANG_PROGRAM([[#include <windows.h>
-                                        wchar_t file[] = L"dummy.file";]],
-                                     [[DeleteFileW(file);]])],
-                    [
-                      xerces_cv_type_xmlch=wchar_t
-                      AC_MSG_RESULT([yes])
-                      AC_DEFINE_UNQUOTED([XERCES_INCLUDE_WCHAR_H], 1, [Define to have Xerces_autoconf_config.hpp include wchar.h])
-                    ],
-                    [
-                      xerces_cv_type_xmlch=$xerces_cv_type_u16bit_int
-                      AC_MSG_RESULT([no])
-                    ]
-                 )
-
-AC_DEFINE_UNQUOTED([XERCES_XMLCH_T], [$xerces_cv_type_xmlch], [Define to the 16 bit type used to represent Xerces UTF-16 characters])
+XERCES_XMLCH_SELECTION
 
 AC_MSG_CHECKING([whether the compiler chokes on a placement operator delete])
 AC_COMPILE_IFELSE(  [AC_LANG_PROGRAM([[#include <stdlib.h>
@@ -451,12 +556,16 @@ if test "$have_sse2" = "yes"; then
 fi
 
 AS_IF([test x$ac_cv_type_size_t = xyes],
-	AC_DEFINE([XERCES_SIZE_T], [size_t], [Define as the appropriate size_t type]),
-	AC_DEFINE([XERCES_SIZE_T], [long], [Define as the appropriate size_t type]))
+	AC_DEFINE([XERCES_SIZE_T], [size_t], [Define as the appropriate size_t type])
+	AC_DEFINE([XERCES_SIZE_MAX], [SIZE_MAX], [Define as the appropriate SIZE_MAX macro]),
+	AC_DEFINE([XERCES_SIZE_T], [unsigned long], [Define as the appropriate size_t type])
+	AC_DEFINE([XERCES_SIZE_MAX], [ULONG_MAX], [Define as the appropriate SIZE_MAX macro]))
 
 AS_IF([test x$ac_cv_type_ssize_t = xyes],
-	AC_DEFINE([XERCES_SSIZE_T], [ssize_t], [Define as the appropriate ssize_t type]),
-	AC_DEFINE([XERCES_SSIZE_T], [unsigned long], [Define as the appropriate ssize_t type]))
+	AC_DEFINE([XERCES_SSIZE_T], [ssize_t], [Define as the appropriate ssize_t type])
+	AC_DEFINE([XERCES_SSIZE_MAX], [SSIZE_MAX], [Define as the appropriate SSIZE_MAX macro]),
+	AC_DEFINE([XERCES_SSIZE_T], [long], [Define as the appropriate ssize_t type])
+	AC_DEFINE([XERCES_SSIZE_MAX], [LONG_MAX], [Define as the appropriate SSIZE_MAX macro]))
 
 AS_IF([test x$ac_cv_cxx_have_namespaces = xyes],
 	AC_DEFINE([XERCES_HAS_CPP_NAMESPACE], 1, [Define if namespaces is supported by the compiler]))
@@ -477,3 +586,4 @@ AC_MSG_NOTICE([  Mutex Manager: $mutexmgr])
 AC_MSG_NOTICE([  Transcoder: $transcoder])
 AC_MSG_NOTICE([  NetAccessor: $netaccessor])
 AC_MSG_NOTICE([  Message Loader: $msgloader])
+AC_MSG_NOTICE([  XMLCh Type: $xmlch])

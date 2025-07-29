@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: XSComplexTypeDefinition.hpp 932887 2010-04-11 13:04:59Z borisk $
+ * $Id$
  */
 
 #if !defined(XERCESC_INCLUDE_GUARD_XSCOMPLEXTYPEDEFINITION_HPP)
@@ -189,7 +189,7 @@ public:
      *  The [target namespace] of this object, or <code>null</code> if it is 
      * unspecified. 
      */
-    const XMLCh* getNamespace();
+    const XMLCh* getNamespace() const;
 
     /**
      * A namespace schema information item corresponding to the target 

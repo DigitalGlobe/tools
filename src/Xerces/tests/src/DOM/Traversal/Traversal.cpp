@@ -26,7 +26,7 @@
 //
 
 /*
- * $Id: Traversal.cpp 942564 2010-05-09 17:08:09Z borisk $
+ * $Id$
  */
 
 #include <stdio.h>

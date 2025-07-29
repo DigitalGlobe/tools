@@ -1,0 +1,8 @@
+Running /Users/scantor/Documents/shibboleth5/xerces-c/tests/Char16Test  > "/Users/scantor/Documents/shibboleth5/xerces-c/tests/observed/Char16Test.log" 2> "/Users/scantor/Documents/shibboleth5/xerces-c/tests/observed/Char16Test.log" 
+Result: pass
+------
+obs=
+------
+exp=
+------
+PASS scripts/Char16Test (exit status: 0)

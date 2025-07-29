@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: XSObject.hpp 674012 2008-07-04 11:18:21Z borisk $
+ * $Id$
  */
 
 #if !defined(XERCESC_INCLUDE_GUARD_XSOBJECT_HPP)
@@ -90,7 +90,7 @@ public:
      *  The [target namespace] of this object, or <code>null</code> if it is
      * unspecified.
      */
-    virtual const XMLCh* getNamespace();
+    virtual const XMLCh* getNamespace() const;
 
     /**
      * A namespace schema information item corresponding to the target

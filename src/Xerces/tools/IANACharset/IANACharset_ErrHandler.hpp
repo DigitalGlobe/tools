@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: IANACharset_ErrHandler.hpp 470094 2006-11-01 20:41:30Z amassari $
+ * $Id$
  */
 
 #include <xercesc/util/XercesDefs.hpp>

@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: DOMDocumentFragmentImpl.hpp 641193 2008-03-26 08:06:57Z borisk $
+ * $Id$
  */
 
 #if !defined(XERCESC_INCLUDE_GUARD_DOMDOCUMENTFRAGMENTIMPL_HPP)
@@ -33,13 +33,15 @@
 
 #include <xercesc/util/XercesDefs.hpp>
 #include <xercesc/dom/DOMDocumentFragment.hpp>
+#include "DOMNodeBase.hpp"
 #include "DOMParentNode.hpp"
 #include "DOMNodeImpl.hpp"
 
 XERCES_CPP_NAMESPACE_BEGIN
 
 
-class CDOM_EXPORT DOMDocumentFragmentImpl: public DOMDocumentFragment {
+class CDOM_EXPORT DOMDocumentFragmentImpl: public DOMDocumentFragment,
+        public HasDOMNodeImpl, public HasDOMParentImpl {
 protected:
     DOMNodeImpl     fNode;
     DOMParentNode   fParent;
@@ -61,6 +63,10 @@ public:
 public:
     // Declare all of the functions from DOMNode.
     DOMNODE_FUNCTIONS;
+
+    // Add accessors for implementation bits.
+    DOMNODEIMPL_DECL;
+    DOMPARENTIMPL_DECL;
 };
 
 XERCES_CPP_NAMESPACE_END

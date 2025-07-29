@@ -18,7 +18,7 @@
 
 <!DOCTYPE book SYSTEM "sbk:/style/dtd/book.dtd">
 
-<book title="&XercesCName; Documentation" copyright="1999-2015 The Apache Software Foundation">
+<book title="&XercesCName; Documentation" copyright="1999-2017 The Apache Software Foundation">
 
   <external href="../index.html"  label="Xerces Project"/>
 

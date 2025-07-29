@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: CurlURLInputStream.hpp 835245 2009-11-12 05:57:31Z borisk $
+ * $Id$
  */
 
 #if !defined(XERCESC_INCLUDE_GUARD_CURLURLINPUTSTREAM_HPP)
@@ -61,6 +61,8 @@ private :
     CurlURLInputStream(const CurlURLInputStream&);
     CurlURLInputStream& operator=(const CurlURLInputStream&);
     
+    void cleanup();
+
     static size_t staticWriteCallback(char *buffer,
                                       size_t size,
                                       size_t nitems,
@@ -96,24 +98,26 @@ private :
     //      that readBytes must return.
     // -----------------------------------------------------------------------
 	
-    CURLM*				fMulti;
-    CURL*				fEasy;
-    
+    CURLM*              fMulti;
+    CURL*               fEasy;
+    curl_slist*         fHeadersList;
+
     MemoryManager*      fMemoryManager;
     
-    XMLURL				fURLSource;
+    XMLURL              fURLSource;
     
     XMLSize_t           fTotalBytesRead;
-    XMLByte*			fWritePtr;
+    XMLByte*            fWritePtr;
     XMLSize_t           fBytesRead;
     XMLSize_t           fBytesToRead;
-    bool				fDataAvailable;
+    bool                fDataAvailable;
     
     // Overflow buffer for when curl writes more data to us
     // than we've asked for.
-    XMLByte				fBuffer[CURL_MAX_WRITE_SIZE];
-    XMLByte*			fBufferHeadPtr;
-    XMLByte*			fBufferTailPtr;
+    XMLByte*            fBuffer;
+    XMLByte*            fBufferHeadPtr;
+    XMLByte*            fBufferTailPtr;
+    XMLSize_t           fBufferSize;
 
     // Upload data
     const char*         fPayload;

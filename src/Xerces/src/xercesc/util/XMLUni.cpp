@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: XMLUni.cpp 1726088 2016-01-21 20:18:52Z scantor $
+ * $Id$
  */
 
 
@@ -314,6 +314,11 @@ const XMLCh XMLUni::fgRequiredString[] =
 const XMLCh XMLUni::fgStandaloneString[] =
 {
     chLatin_s, chLatin_t, chLatin_a, chLatin_n, chLatin_d, chLatin_a, chLatin_l, chLatin_o, chLatin_n, chLatin_e, chNull
+};
+
+const XMLCh XMLUni::fgVersion1[] =
+{
+    chDigit_1, chPeriod, chNull
 };
 
 const XMLCh XMLUni::fgVersion1_0[] =
@@ -1044,7 +1049,8 @@ const XMLCh XMLUni::fgXercesLoadSchema[] =
     ,   chLatin_v, chLatin_a, chLatin_l, chLatin_i, chLatin_d
     ,   chLatin_a, chLatin_t, chLatin_i, chLatin_n, chLatin_g, chForwardSlash
     ,   chLatin_l, chLatin_o, chLatin_a, chLatin_d, chDash
-    ,   chLatin_s, chLatin_c, chLatin_h, chLatin_e, chLatin_m, chLatin_a, chNull
+    ,   chLatin_s, chLatin_c, chLatin_h, chLatin_e, chLatin_m, chLatin_a
+    ,   chNull
 };
 
 //Xerces: http://apache.org/xml/features/validation/identity-constraint-checking
@@ -1062,6 +1068,22 @@ const XMLCh XMLUni::fgXercesIdentityConstraintChecking[] =
     ,   chLatin_t, chLatin_r, chLatin_a, chLatin_i, chLatin_n, chLatin_t
     ,   chDash,    chLatin_c, chLatin_h, chLatin_e, chLatin_c, chLatin_k, chLatin_i
     ,   chLatin_n, chLatin_g, chNull
+};
+
+//Xerces: http://apache.org/xml/features/nonvalidating/disallow-doctype
+const XMLCh XMLUni::fgXercesDisallowDoctype[] =
+{
+        chLatin_h, chLatin_t, chLatin_t, chLatin_p, chColon, chForwardSlash
+    ,   chForwardSlash, chLatin_a, chLatin_p, chLatin_a, chLatin_c, chLatin_h
+    ,   chLatin_e, chPeriod, chLatin_o, chLatin_r, chLatin_g, chForwardSlash
+    ,   chLatin_x, chLatin_m, chLatin_l, chForwardSlash, chLatin_f, chLatin_e
+    ,   chLatin_a, chLatin_t, chLatin_u, chLatin_r, chLatin_e, chLatin_s
+    ,   chForwardSlash, chLatin_n, chLatin_o, chLatin_n
+    ,   chLatin_v, chLatin_a, chLatin_l, chLatin_i, chLatin_d
+    ,   chLatin_a, chLatin_t, chLatin_i, chLatin_n, chLatin_g, chForwardSlash
+    ,   chLatin_d, chLatin_i, chLatin_s, chLatin_a, chLatin_l, chLatin_l, chLatin_o
+    ,   chLatin_w, chDash, chLatin_d, chLatin_o, chLatin_c, chLatin_t, chLatin_y
+    ,   chLatin_p, chLatin_e, chNull
 };
 
 //Xerces: http://apache.org/xml/features/nonvalidating/load-external-dtd
@@ -1460,7 +1482,7 @@ const XMLCh XMLUni::fgDOMDisallowDoctype[] =
 {
         chLatin_d, chLatin_i, chLatin_s, chLatin_a, chLatin_l, chLatin_l, chLatin_o
     ,   chLatin_w, chDash, chLatin_d, chLatin_o, chLatin_c, chLatin_t, chLatin_y
-    ,   chLatin_e, chNull
+    ,   chLatin_p, chLatin_e, chNull
 };
 
 const XMLCh XMLUni::fgDOMElementContentWhitespace[] =

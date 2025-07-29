@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: XSTypeDefinition.hpp 527149 2007-04-10 14:56:39Z amassari $
+ * $Id$
  */
 
 #if !defined(XERCESC_INCLUDE_GUARD_XSTYPEDEFINITION_HPP)
@@ -93,7 +93,7 @@ public:
      *  The [target namespace] of this object, or <code>null</code> if it is 
      * unspecified. 
      */
-    virtual const XMLCh* getNamespace() = 0;
+    virtual const XMLCh* getNamespace() const = 0;
 
     /**
      * A namespace schema information item corresponding to the target 

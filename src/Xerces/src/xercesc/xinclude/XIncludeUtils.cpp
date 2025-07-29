@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: XIncludeUtils.cpp 933212 2010-04-12 12:17:58Z amassari $
+ * $Id$
  */
 
 #include <xercesc/xinclude/XIncludeUtils.hpp>
@@ -28,12 +28,36 @@
 #include <xercesc/util/XMLResourceIdentifier.hpp>
 #include <xercesc/util/BinInputStream.hpp>
 #include <xercesc/util/OutOfMemoryException.hpp>
+#include <xercesc/util/XMLInitializer.hpp>
 #include <xercesc/internal/XMLInternalErrorHandler.hpp>
 #include <xercesc/parsers/XercesDOMParser.hpp>
 #include <xercesc/sax/InputSource.hpp>
 #include <xercesc/framework/URLInputSource.hpp>
 
 XERCES_CPP_NAMESPACE_BEGIN
+
+// ---------------------------------------------------------------------------
+//  Local static data
+// ---------------------------------------------------------------------------
+static XMLMsgLoader*   gMsgLoader = 0;
+
+void XMLInitializer::initializeXInclude()
+{
+    gMsgLoader = XMLPlatformUtils::loadMsgSet(XMLUni::fgXMLErrDomain);
+
+    if (!gMsgLoader)
+      XMLPlatformUtils::panic(PanicHandler::Panic_CantLoadMsgDomain);
+}
+
+void XMLInitializer::terminateXInclude()
+{
+    delete gMsgLoader;
+    gMsgLoader = 0;
+}
+
+// ---------------------------------------------------------------------------
+//  XIncludeUtils: Constructors and Destructor
+// ---------------------------------------------------------------------------
 
 XIncludeUtils::XIncludeUtils(XMLErrorReporter *errorReporter){
     fErrorReporter = errorReporter;
@@ -126,8 +150,8 @@ XIncludeUtils::doDOMNodeXInclude(DOMNode *xincludeNode, DOMDocument *parsedDocum
     const XMLCh *parse = NULL;
     const XMLCh *xpointer = NULL;
     const XMLCh *encoding = NULL;
-    const XMLCh *accept = NULL;
-    const XMLCh *acceptlanguage = NULL;
+//    const XMLCh *accept = NULL;
+//    const XMLCh *acceptlanguage = NULL;
     DOMNode *includeParent = xincludeNode->getParentNode();
 
 
@@ -147,10 +171,10 @@ XIncludeUtils::doDOMNodeXInclude(DOMNode *xincludeNode, DOMDocument *parsedDocum
                 xpointer = pAttributeNode->getValue();
             } else if (XMLString::equals(attrName, XIncludeUtils::fgXIIncludeEncodingAttrName)){
                 encoding = pAttributeNode->getValue();
-            } else if (XMLString::equals(attrName, XIncludeUtils::fgXIIncludeAcceptAttrName)){
-                accept = pAttributeNode->getValue();
-            } else if (XMLString::equals(attrName, XIncludeUtils::fgXIIncludeAcceptLanguageAttrName)){
-                acceptlanguage = pAttributeNode->getValue();
+//            } else if (XMLString::equals(attrName, XIncludeUtils::fgXIIncludeAcceptAttrName)){
+//                accept = pAttributeNode->getValue();
+//            } else if (XMLString::equals(attrName, XIncludeUtils::fgXIIncludeAcceptLanguageAttrName)){
+//                acceptlanguage = pAttributeNode->getValue();
             } else {
                 /* if any other attribute is in the xi namespace, it's an error */
                 const XMLCh *attrNamespaceURI = pAttributeNode->getNamespaceURI();
@@ -198,9 +222,9 @@ XIncludeUtils::doDOMNodeXInclude(DOMNode *xincludeNode, DOMDocument *parsedDocum
     }
 
     /* set up the accept and accept-language values */
-    if (accept != NULL){
-
-    }
+//    if (accept != NULL){
+//
+//    }
 
     if (parse == NULL){
         /* use the default, as specified */
@@ -747,22 +771,20 @@ XIncludeUtils::reportError(const DOMNode* const    /*errorNode*/
         const XMLSize_t msgSize = 1023;
         XMLCh errText[msgSize + 1];
 
-        /* TODO - investigate whether this is complete */
-        XMLMsgLoader  *errMsgLoader = XMLPlatformUtils::loadMsgSet(XMLUni::fgXMLErrDomain);
         if (errorMsg == NULL){
-            if (errMsgLoader->loadMsg(errorType, errText, msgSize))
+            if (gMsgLoader->loadMsg(errorType, errText, msgSize))
             {
                     // <TBD> Probably should load a default msg here
             }
         } else {
-            if (errMsgLoader->loadMsg(errorType, errText, msgSize, errorMsg))
+            if (gMsgLoader->loadMsg(errorType, errText, msgSize, errorMsg))
             {
                     // <TBD> Probably should load a default msg here
             }
         }
 
         fErrorReporter->error(errorType
-                              , XMLUni::fgXMLErrDomain    //fgXMLErrDomain
+                              , XMLUni::fgXMLErrDomain
                               , XMLErrs::errorType(errorType)
                               , errText
                               , systemId

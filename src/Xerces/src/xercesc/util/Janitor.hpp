@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: Janitor.hpp 669844 2008-06-20 10:11:44Z borisk $
+ * $Id$
  */
 
 #if !defined(XERCESC_INCLUDE_GUARD_JANITOR_HPP)
@@ -86,7 +86,7 @@ public  :
     void orphan();
 
 	//	small amount of auto_ptr compatibility
-	T&	operator[](int index) const;
+	T&	operator[](XMLSize_t index) const;
 	T*	get() const;
 	T*	release();
 	void reset(T* p = 0);
@@ -154,8 +154,10 @@ private :
     MFPT    fToCall;
 };
 
-
-
+#if defined(__GNUC__) || (! defined(_AIX) && ! defined(__hpux) && ! defined(__sun))
+XERCES_TEMPLATE_EXTERN template class XMLUTIL_EXPORT ArrayJanitor<XMLByte>;
+XERCES_TEMPLATE_EXTERN template class XMLUTIL_EXPORT ArrayJanitor<XMLCh>;
+#endif
 
 XERCES_CPP_NAMESPACE_END
 

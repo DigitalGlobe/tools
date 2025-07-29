@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: Xlat_ICUResourceBundle.cpp 698386 2008-09-23 22:54:08Z amassari $
+ * $Id$
  */
 
 

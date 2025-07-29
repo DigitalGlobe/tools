@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: DOMDocumentImpl.hpp 1662888 2015-02-28 02:26:43Z scantor $
+ * $Id$
  */
 
 #if !defined(XERCESC_INCLUDE_GUARD_DOMDOCUMENTIMPL_HPP)
@@ -40,6 +40,7 @@
 #include <xercesc/dom/DOMDocument.hpp>
 #include <xercesc/dom/DOMUserDataHandler.hpp>
 #include <xercesc/dom/DOMMemoryManager.hpp>
+#include "DOMNodeBase.hpp"
 #include "DOMNodeImpl.hpp"
 #include "DOMStringPool.hpp"
 #include "DOMParentNode.hpp"
@@ -79,7 +80,8 @@ typedef RefVectorOf<DOMNodeIteratorImpl>     NodeIterators;
 typedef KeyRefPair<void, DOMUserDataHandler> DOMUserDataRecord;
 typedef RefStackOf<DOMNode>               DOMNodePtr;
 
-class CDOM_EXPORT DOMDocumentImpl: public XMemory, public DOMMemoryManager, public DOMDocument {
+class CDOM_EXPORT DOMDocumentImpl: public XMemory, public DOMMemoryManager, public DOMDocument,
+        public HasDOMNodeImpl, public HasDOMParentImpl {
 public:
     // -----------------------------------------------------------------------
     //  data
@@ -102,6 +104,10 @@ public:
 public:
     // Add all functions that are pure virtual in DOMNODE
     DOMNODE_FUNCTIONS;
+
+    // Add accessors for implementation bits.
+    DOMNODEIMPL_DECL;
+    DOMPARENTIMPL_DECL;
 
 public:
     // Add all functions that are pure virtual in DOMDocument
@@ -159,6 +165,8 @@ public:
     virtual void setMemoryAllocationBlockSize(XMLSize_t size);
     virtual void* allocate(XMLSize_t amount);
     virtual void* allocate(XMLSize_t amount, DOMMemoryManager::NodeObjectType type);
+    // try to remove the block from the list of allocated memory
+    virtual void release(void* oldBuffer);
     virtual void release(DOMNode* object, DOMMemoryManager::NodeObjectType type);
     virtual XMLCh* cloneString(const XMLCh *src);
 
@@ -249,7 +257,7 @@ public:
     //Return the index > 0 of ':' in the given qualified name qName="prefix:localName".
     //Return 0 if there is no ':', or -1 if qName is malformed such as ":abcd".
     static  int                  indexofQualifiedName(const XMLCh * qName);
-    static  bool                 isKidOK(DOMNode *parent, DOMNode *child);
+    static  bool                 isKidOK(const DOMNode *parent, const DOMNode *child);
 
     inline DOMNodeIDMap*         getNodeIDMap() {return fNodeIDMap;};
 
@@ -320,6 +328,7 @@ protected:
     //                  class, rather than hanging naked on Document.
     //
     void*                 fCurrentBlock;
+    void*                 fCurrentSingletonBlock;
     char*                 fFreePtr;
     XMLSize_t             fFreeBytesRemaining,
                           fHeapAllocSize;
@@ -360,6 +369,7 @@ inline const XMLCh*  DOMDocumentImpl::getPooledString(const XMLCh *in)
 {
   if (in == 0)
     return 0;
+  XMLSize_t n = XMLString::stringLen(in);
 
   DOMStringPoolEntry    **pspe;
   DOMStringPoolEntry    *spe;
@@ -368,7 +378,7 @@ inline const XMLCh*  DOMDocumentImpl::getPooledString(const XMLCh *in)
   pspe = &fNameTable[inHash];
   while (*pspe != 0)
   {
-    if (XMLString::equals((*pspe)->fString, in))
+    if ((*pspe)->fLength == n && XMLString::equals((*pspe)->fString, in))
       return (*pspe)->fString;
     pspe = &((*pspe)->fNext);
   }
@@ -380,9 +390,9 @@ inline const XMLCh*  DOMDocumentImpl::getPooledString(const XMLCh *in)
   // declared in the struct, so we don't need to add one again to
   // account for the trailing null.
   //
-  XMLSize_t n = XMLString::stringLen(in);
   XMLSize_t sizeToAllocate = sizeof(DOMStringPoolEntry) + n*sizeof(XMLCh);
   *pspe = spe = (DOMStringPoolEntry *)allocate(sizeToAllocate);
+  spe->fLength = n;
   spe->fNext = 0;
   XMLString::copyString((XMLCh*)spe->fString, in);
 
@@ -401,7 +411,7 @@ inline const XMLCh* DOMDocumentImpl::getPooledNString(const XMLCh *in, XMLSize_t
   pspe = &fNameTable[inHash];
   while (*pspe != 0)
   {
-    if (XMLString::stringLen((*pspe)->fString) == n && XMLString::equalsN((*pspe)->fString, in, n))
+    if ((*pspe)->fLength == n && XMLString::equalsN((*pspe)->fString, in, n))
       return (*pspe)->fString;
     pspe = &((*pspe)->fNext);
   }
@@ -415,6 +425,7 @@ inline const XMLCh* DOMDocumentImpl::getPooledNString(const XMLCh *in, XMLSize_t
   //
   XMLSize_t sizeToAllocate = sizeof(DOMStringPoolEntry) + n*sizeof(XMLCh);
   *pspe = spe = (DOMStringPoolEntry *)allocate(sizeToAllocate);
+  spe->fLength = n;
   spe->fNext = 0;
   XMLString::copyNString((XMLCh*)spe->fString, in, n);
 

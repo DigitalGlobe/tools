@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: XMLUTF8Transcoder.hpp 1662882 2015-02-28 02:07:25Z scantor $
+ * $Id$
  */
 
 #if !defined(XERCESC_INCLUDE_GUARD_XMLUTF8TRANSCODER_HPP)

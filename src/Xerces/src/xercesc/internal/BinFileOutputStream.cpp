@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: BinFileOutputStream.cpp 1662880 2015-02-28 01:55:31Z scantor $
+ * $Id$
  */
 
 

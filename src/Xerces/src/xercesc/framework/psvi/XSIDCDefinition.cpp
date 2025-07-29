@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: XSIDCDefinition.cpp 471747 2006-11-06 14:31:56Z amassari $
+ * $Id$
  */
 
 #include <xercesc/framework/psvi/XSIDCDefinition.hpp>
@@ -76,7 +76,7 @@ const XMLCh *XSIDCDefinition::getName() const
     return fIdentityConstraint->getIdentityConstraintName();
 }
 
-const XMLCh *XSIDCDefinition::getNamespace() 
+const XMLCh *XSIDCDefinition::getNamespace() const
 {
     return fXSModel->getURIStringPool()->getValueForId(fIdentityConstraint->getNamespaceURI());
 }

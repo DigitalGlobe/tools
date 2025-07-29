@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: URLAccessCFBinInputStream.cpp 936316 2010-04-21 14:19:58Z borisk $
+ * $Id$
  */
 
 #include <cstdlib>
@@ -35,6 +35,10 @@ URLAccessCFBinInputStream::URLAccessCFBinInputStream(const XMLURL& urlSource)
         mDataRef(NULL)
 {
     //	Figure out what we're dealing with
+    if (urlSource.isRelative()) {
+        ThrowXML(MalformedURLException, XMLExcepts::URL_NoProtocolPresent);    
+    }
+
     const XMLCh* urlText = urlSource.getURLText();
     unsigned int urlLength = XMLString::stringLen(urlText);
 
@@ -44,7 +48,7 @@ URLAccessCFBinInputStream::URLAccessCFBinInputStream(const XMLURL& urlSource)
     {
         stringRef = CFStringCreateWithCharacters(
             kCFAllocatorDefault,
-            urlText,
+            reinterpret_cast<const UniChar *>(urlText),
             urlLength
             );
     }

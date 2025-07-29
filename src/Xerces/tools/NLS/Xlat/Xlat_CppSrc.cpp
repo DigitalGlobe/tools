@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: Xlat_CppSrc.cpp 470094 2006-11-01 20:41:30Z amassari $
+ * $Id$
  */
 
 

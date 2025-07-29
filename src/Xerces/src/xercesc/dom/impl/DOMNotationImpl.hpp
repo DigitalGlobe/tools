@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: DOMNotationImpl.hpp 641193 2008-03-26 08:06:57Z borisk $
+ * $Id$
  */
 
 #if !defined(XERCESC_INCLUDE_GUARD_DOMNOTATIONIMPL_HPP)
@@ -36,13 +36,13 @@
 
 XERCES_CPP_NAMESPACE_BEGIN
 
-
+#include "DOMNodeBase.hpp"
 #include "DOMNodeImpl.hpp"
 
 class DOMDocument;
 
 
-class CDOM_EXPORT DOMNotationImpl: public DOMNotation {
+class CDOM_EXPORT DOMNotationImpl: public DOMNotation, public HasDOMNodeImpl {
 public:
     DOMNodeImpl      fNode;
 
@@ -60,6 +60,9 @@ public:
 public:
     // Declare all of the functions from DOMNode.
     DOMNODE_FUNCTIONS;
+
+    // Add accessors for implementation bits.
+    DOMNODEIMPL_DECL;
 
 public:
     //

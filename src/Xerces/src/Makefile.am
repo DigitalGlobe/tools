@@ -16,13 +16,10 @@
 #
 
 #
-# $Id: Makefile.am 1665567 2015-03-10 14:29:51Z scantor $
+# $Id$
 #
 
-include ${top_srcdir}/version.incl
-
 DEFS += -DXERCES_BUILDING_LIBRARY
-SUBDIRS =
 
 #
 #
@@ -33,7 +30,7 @@ lib_LTLIBRARIES = libxerces-c.la
 #
 AM_CPPFLAGS =
 
-libxerces_c_la_LDFLAGS = -release ${INTERFACE_VER_D}
+libxerces_c_la_LDFLAGS = -release @INTERFACE_VERSION_D@
 
 # This sets {install}/include as target for the headers
 libxerces_c_ladir = ${includedir}
@@ -48,19 +45,24 @@ ${domimpl_headers} ${framework_headers} ${internal_headers} \
 ${parsers_headers} ${sax_headers} ${sax2_headers} ${validators_headers} \
 ${xinclude_headers}
 
-# Make sure autoconf-generated Xerces_autoconf_config.hpp ends up in a
-# proper place when installed.
+# Make sure autoconf-generated Xerces_autoconf_config.hpp and
+# XercesVersion.hpp end up in a proper place when installed.
 #
 autoconfheadersdir = $(includedir)/xercesc/util
-nodist_autoconfheaders_HEADERS = ${top_builddir}/src/xercesc/util/Xerces_autoconf_config.hpp
+nodist_autoconfheaders_HEADERS = \
+	${top_builddir}/src/xercesc/util/Xerces_autoconf_config.hpp \
+	${top_builddir}/src/xercesc/util/XercesVersion.hpp
 
 # Compatibility library.
 #
-EXTRA_DIST = stricmp.h strnicmp.h towlower.h towupper.h \
+EXTRA_DIST = CMakeLists.txt \
+        XercesCConfig.cmake.in \
+        stricmp.h strnicmp.h towlower.h towupper.h \
         xercesc/NLS \
-	xercesc/util/Xerces_autoconf_config.msvc.hpp \
-	xercesc/util/Xerces_autoconf_config.borland.hpp \
-        xercesc/util/MsgLoaders/Win32 \
+        xercesc/util/Xerces_autoconf_config.hpp.cmake.in \
+        xercesc/util/XercesVersion.hpp.cmake.in \
+        xercesc/util/version.rc.cmake.in \
+        xercesc/util/MsgLoaders/MsgCatalog/XercesMessages_en_US.Msg \
         xercesc/util/MsgLoaders/ICU/resources
 
 libxerces_c_la_LIBADD = ${LTLIBOBJS}
@@ -132,7 +134,7 @@ nobase_libxerces_c_la_HEADERS += ${msgicu_headers}
 AM_CPPFLAGS += ${ICU_FLAGS}
 
 # Resource shortname
-PKGNAME=xercesc_messages_${INTERFACE_VER_U}
+PKGNAME=xercesc_messages_@INTERFACE_VERSION_U@
 
 CLEANFILES = xercesc_messages.c root_res.c root.res
 BUILT_SOURCES = xercesc_messages.c root_res.c
@@ -150,14 +152,32 @@ if XERCES_USE_MSGLOADER_ICONV
 libxerces_c_la_SOURCES += ${msgiconv_sources}
 nobase_libxerces_c_la_HEADERS += ${msgiconv_headers}
 
-SUBDIRS += xercesc/util/MsgLoaders/MsgCatalog
+# Resource shortname
+PKGNAME=XercesMessages
+
+# Resource file
+RESFILE=$(PKGNAME)_en_US.cat
+
+# Resources
+XercesMessages_en_US.cat: @srcdir@/xercesc/util/MsgLoaders/MsgCatalog/XercesMessages_en_US.Msg
+	@echo "generating $@ from @srcdir@/xercesc/util/MsgLoaders/MsgCatalog/XercesMessages_en_US.Msg"
+	gencat $@ @srcdir@/xercesc/util/MsgLoaders/MsgCatalog/XercesMessages_en_US.Msg
+
+iconv_msgdir=$(prefix)/msg
+iconv_msg_DATA = $(RESFILE)
 endif
+
 
 # Mutex Managers, conditionally built based on settings from configure
 #
 if XERCES_USE_MUTEXMGR_NOTHREAD
 libxerces_c_la_SOURCES += ${nothreadmmgr_sources}
 nobase_libxerces_c_la_HEADERS += ${nothreadmmgr_headers}
+endif
+
+if XERCES_USE_MUTEXMGR_STD
+libxerces_c_la_SOURCES += ${stdmmgr_sources}
+nobase_libxerces_c_la_HEADERS += ${stdmmgr_headers}
 endif
 
 if XERCES_USE_MUTEXMGR_POSIX
@@ -282,6 +302,7 @@ domimpl_headers	= \
 	xercesc/dom/impl/DOMImplementationListImpl.hpp \
 	xercesc/dom/impl/DOMLocatorImpl.hpp \
 	xercesc/dom/impl/DOMNamedNodeMapImpl.hpp \
+	xercesc/dom/impl/DOMNodeBase.hpp \
 	xercesc/dom/impl/DOMNodeIDMap.hpp \
 	xercesc/dom/impl/DOMNodeImpl.hpp \
 	xercesc/dom/impl/DOMNodeIteratorImpl.hpp \
@@ -680,7 +701,6 @@ util_headers = \
 	xercesc/util/ValueVectorOf.hpp \
 	xercesc/util/ValueVectorOf.c \
 	xercesc/util/XercesDefs.hpp \
-	xercesc/util/XercesVersion.hpp \
 	xercesc/util/XMemory.hpp \
 	xercesc/util/XML256TableTranscoder.hpp \
 	xercesc/util/XML88591Transcoder.hpp \
@@ -730,6 +750,7 @@ util_sources = \
 	xercesc/util/EncodingValidator.cpp \
 	xercesc/util/HeaderDummy.cpp \
 	xercesc/util/HexBin.cpp \
+        xercesc/util/JanitorExports.cpp \
 	xercesc/util/KVStringPair.cpp \
 	xercesc/util/Mutexes.cpp \
 	xercesc/util/PanicHandler.cpp \
@@ -1104,6 +1125,12 @@ nothreadmmgr_headers = \
 nothreadmmgr_sources = \
 	xercesc/util/MutexManagers/NoThreadMutexMgr.cpp
 
+stdmmgr_headers = \
+	xercesc/util/MutexManagers/StdMutexMgr.hpp
+
+stdmmgr_sources = \
+	xercesc/util/MutexManagers/StdMutexMgr.cpp
+
 posixmmgr_headers = \
 	xercesc/util/MutexManagers/PosixMutexMgr.hpp
 
@@ -1115,48 +1142,3 @@ winmmgr_headers = \
 
 winmmgr_sources = \
 	xercesc/util/MutexManagers/WindowsMutexMgr.cpp
-
-
-# Override generated rules to provide prettier make rules
-#
-# Warning: If Automake changes sufficiently, these rules may need to
-#          be regenerated from the (new) default output of Automake
-#
-if XERCES_PRETTY_MAKE
-
-.c.lo:
-@am__fastdepCC_TRUE@	@depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`; \
-@am__fastdepCC_TRUE@	if $(LTCOMPILE) -MT $@ -MD -MP -MF "$$depbase.Tpo" -c -o $@ $<; \
-@am__fastdepCC_TRUE@	then $(am__mv) "$$depbase.Tpo" "$$depbase.Plo"; else rm -f "$$depbase.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	@source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
-
-.cpp.lo:
-@am__fastdepCXX_TRUE@	@depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`; \
-@am__fastdepCXX_TRUE@	if $(LTCXXCOMPILE) -MT $@ -MD -MP -MF "$$depbase.Tpo" -c -o $@ $<; \
-@am__fastdepCXX_TRUE@	then $(am__mv) "$$depbase.Tpo" "$$depbase.Plo"; else rm -f "$$depbase.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	@source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
-
-PRETTY_MAKE=${top_srcdir}/config/pretty-make
-PRETTY_COMPILE=${PRETTY_MAKE} Compiling
-
-endif
-
-COMPILE = ${PRETTY_COMPILE} \
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-LTCOMPILE = ${PRETTY_COMPILE}  \
-	$(LIBTOOL) --quiet --tag=CC --mode=compile \
-	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
-
-CXXCOMPILE = ${PRETTY_COMPILE} \
-	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
-LTCXXCOMPILE = ${PRETTY_COMPILE}  \
-	$(LIBTOOL) --quiet --tag=CXX --mode=compile \
-	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)

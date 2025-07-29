@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: XMLDateTime.hpp 932887 2010-04-11 13:04:59Z borisk $
+ * $Id$
  */
 
 #if !defined(XERCESC_INCLUDE_GUARD_XML_DATETIME_HPP)
@@ -28,6 +28,8 @@
 #include <xercesc/util/XMLUniDefs.hpp>
 #include <xercesc/util/SchemaDateTimeException.hpp>
 #include <xercesc/util/XMLChar.hpp>
+
+#include <time.h>
 
 XERCES_CPP_NAMESPACE_BEGIN
 
@@ -65,6 +67,8 @@ public:
     XMLDateTime(MemoryManager* const manager = XMLPlatformUtils::fgMemoryManager);
     XMLDateTime(const XMLCh* const,
                 MemoryManager* const manager = XMLPlatformUtils::fgMemoryManager);
+    XMLDateTime(time_t epoch, bool duration,
+    				MemoryManager* const manager = XMLPlatformUtils::fgMemoryManager);
     ~XMLDateTime();
 
     inline void           setBuffer(const XMLCh* const);
@@ -131,6 +135,14 @@ public:
 
     static int            compareOrder(const XMLDateTime* const
                                      , const XMLDateTime* const);
+
+    int getYear() const {return fValue[CentYear];}
+    int getMonth() const {return fValue[Month];}
+    int getDay() const {return fValue[Day];}
+    int getHour() const {return fValue[Hour];}
+    int getMinute() const {return fValue[Minute];}
+    int getSecond() const {return fValue[Second];}
+    time_t getEpoch(bool duration=false) const;
 
     /***
      * Support for Serialization/De-serialization

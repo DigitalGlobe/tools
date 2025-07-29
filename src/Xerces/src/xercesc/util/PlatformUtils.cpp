@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: PlatformUtils.cpp 932877 2010-04-11 12:17:34Z borisk $
+ * $Id$
  *
  */
 
@@ -34,7 +34,7 @@
 #if HAVE_SYS_TIME_H
 #	include <sys/time.h>
 #endif
-#if HAVE_SYS_TIMEB_H
+#if !HAVE_GETTIMEOFDAY && HAVE_SYS_TIMEB_H
 #	include <sys/timeb.h>
 #endif
 #if HAVE_CPUID_H && !XERCES_HAVE_INTRIN_H
@@ -69,6 +69,9 @@
 #if XERCES_USE_MUTEXMGR_NOTHREAD
 #	include <xercesc/util/MutexManagers/NoThreadMutexMgr.hpp>
 #endif
+#if XERCES_USE_MUTEXMGR_STD
+#	include <xercesc/util/MutexManagers/StdMutexMgr.hpp>
+#endif
 #if XERCES_USE_MUTEXMGR_POSIX
 #	include <xercesc/util/MutexManagers/PosixMutexMgr.hpp>
 #endif
@@ -100,9 +103,6 @@
 #endif
 #if XERCES_USE_MSGLOADER_INMEMORY
 #	include <xercesc/util/MsgLoaders/InMemory/InMemMsgLoader.hpp>
-#endif
-#if XERCES_USE_WIN32_MSGLOADER
-#	include <xercesc/util/MsgLoaders/Win32/Win32MsgLoader.hpp>
 #endif
 
 #include <xercesc/util/TransService.hpp>
@@ -445,8 +445,6 @@ XMLMsgLoader* XMLPlatformUtils::loadAMsgSet(const XMLCh* const msgDomain)
 		ms = new ICUMsgLoader(msgDomain);
 	#elif defined (XERCES_USE_MSGLOADER_ICONV)
 		ms = new MsgCatalogLoader(msgDomain);
-    #elif defined (XERCES_USE_WIN32_MSGLOADER)
-		ms = new Win32MsgLoader(msgDomain);
 	#elif defined (XERCES_USE_MSGLOADER_INMEMORY)
 		ms = new InMemMsgLoader(msgDomain);
 	#else
@@ -726,6 +724,8 @@ XMLMutexMgr* XMLPlatformUtils::makeMutexMgr(MemoryManager* const memmgr)
 
 	#if XERCES_USE_MUTEXMGR_NOTHREAD
 		mgr = new (memmgr) NoThreadMutexMgr;
+	#elif XERCES_USE_MUTEXMGR_STD
+		mgr = new (memmgr) StdMutexMgr;
 	#elif XERCES_USE_MUTEXMGR_POSIX
 		mgr = new (memmgr) PosixMutexMgr;
 	#elif XERCES_USE_MUTEXMGR_WINDOWS
@@ -920,7 +920,10 @@ XMLCh* XMLPlatformUtils::weavePaths(const XMLCh* const    basePath
 
     XMLString::subString(tmpBuf, basePath, 0, (basePtr - basePath + 1), manager);
     tmpBuf[basePtr - basePath + 1] = 0;
-    XMLString::catString(tmpBuf, relativePath);
+    if (relativePath)
+    {
+        XMLString::catString(tmpBuf, relativePath);
+    }
 
     removeDotSlash(tmpBuf, manager);
 

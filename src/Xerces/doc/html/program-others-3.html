@@ -15,7 +15,7 @@
 
   <IMG border="0" height="6" hspace="0" src="resources/separator.gif" vspace="0" width="120"><BR>
 
-  <IMG alt="Xerces-C++ 3.1.4" border="0" height="17" hspace="0" name="side-sect-24" src="graphics/sect-24-label.jpg" vspace="0" width="120"><BR>
+  <IMG alt="Xerces-C++ 3.3.0" border="0" height="17" hspace="0" name="side-sect-24" src="graphics/sect-24-label.jpg" vspace="0" width="120"><BR>
 
      <A href="install-3.html" onMouseOut="rolloverOff('side-install-3');" onMouseOver="rolloverOn('side-install-3');"><IMG alt="Installation" border="0" height="12" hspace="0" name="side-install-3" onLoad="rolloverLoad('side-install-3','graphics/install-3-label-2.jpg','graphics/install-3-label-3.jpg');" src="graphics/install-3-label-3.jpg" vspace="0" width="120"></A><BR>
      <A href="build-3.html" onMouseOut="rolloverOff('side-build-3');" onMouseOver="rolloverOn('side-build-3');"><IMG alt="Build Instructions" border="0" height="12" hspace="0" name="side-build-3" onLoad="rolloverLoad('side-build-3','graphics/build-3-label-2.jpg','graphics/build-3-label-3.jpg');" src="graphics/build-3-label-3.jpg" vspace="0" width="120"></A><BR>
@@ -452,13 +452,13 @@ parser-&gt;parse(xmlFile2);
        (see <CODE><FONT face="courier, monospaced">src/xercesc/util/XercesDefs.hpp</FONT></CODE>):</P>
 
 <DIV align="left"><TABLE border="0" cellpadding="0" cellspacing="4" width="464"><TR><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#0086b2" height="1" width="462"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="462"></TD><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR><TR><TD bgcolor="#0086b2" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#ffffff" width="462"><FONT size="-1"><PRE>
-    #define XERCES_CPP_NAMESPACE_BEGIN    namespace xercesc_3_1 {
+    #define XERCES_CPP_NAMESPACE_BEGIN    namespace xercesc_3_3 {
     #define XERCES_CPP_NAMESPACE_END    }
-    #define XERCES_CPP_NAMESPACE_USE    using namespace xercesc_3_1;
-    #define XERCES_CPP_NAMESPACE_QUALIFIER    xercesc_3_1::
+    #define XERCES_CPP_NAMESPACE_USE    using namespace xercesc_3_3;
+    #define XERCES_CPP_NAMESPACE_QUALIFIER    xercesc_3_3::
 
-    namespace xercesc_3_1 { }
-    namespace xercesc = xercesc_3_1;
+    namespace xercesc_3_3 { }
+    namespace xercesc = xercesc_3_3;
 </PRE></FONT></TD><TD bgcolor="#0086b2" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR><TR><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#0086b2" height="1" width="462"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="462"></TD><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR></TABLE></DIV>
     </FONT></TD></TR></TABLE><BR>
 
@@ -766,7 +766,31 @@ parser-&gt;getDomConfig()-&gt;setParameter(XMLUni::fgXercesSchema, doSchema);
 
     </FONT></TD></TR></TABLE><BR>
 
+    <A name="EntityResolution"><!--anchor--></A>
+    <TABLE border="0" cellpadding="0" cellspacing="0" width="494"><TR><TD bgcolor="ffffff" colspan="2" width="494"><TABLE border="0" cellpadding="0" cellspacing="0" width="494"><TR><TD bgcolor="#039acc" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#039acc" height="1" width="492"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="492"></TD><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR><TR><TD bgcolor="#039acc" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#0086b2" width="492"><FONT color="#ffffff" face="arial,helvetica,sanserif" size="+1"><IMG border="0" height="2" hspace="0" src="resources/void.gif" vspace="0" width="2"><B>Entity Resolution and NetAccessors</B></FONT></TD><TD bgcolor="#017299" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR><TR><TD bgcolor="#0086b2" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD><TD bgcolor="#017299" height="1" width="492"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="492"></TD><TD bgcolor="#017299" height="1" width="1"><IMG border="0" height="1" hspace="0" src="resources/void.gif" vspace="0" width="1"></TD></TR></TABLE></TD></TR><TR><TD width="10">&nbsp;</TD><TD width="484"><FONT color="#000000" face="arial,helvetica,sanserif">
+
+        <P>All Xerces applications that wish to limit a wide range of security risks MUST install
+        appropriate implementations of API-specific &quot;entity/resource resolution&quot; implementations to
+        govern/police the resolution of external entities by the parser.
+        </P>   
+
+        <P>In the event that an entity resolver wants to delegate the job of resolving a particular resource
+        to the parser, Xerces will automatically handle local file references but will delegate any non-local
+        file URLs to a NetAccessor, a plugin controlled at build time supporting access to remote
+        systems. Most of the built-in implementations are limited, with the principal exception of support
+        for <A href="https://curl.haxx.se">libcurl</A> as an implementation, which supports a wide range
+        of protocols, potentially including http over TLS, which is rarely supported in other cases.</P>
+
+        <P>It is incredibly important to implement your own entity resolution code to ensure that if you
+        allow the parser to perform its own resolution, it does so only under conditions and against URLs
+        you trust. The library will NOT your application from the many potential threats
+        arising from arbitrary resource resolution.</P>
+
+        <P>Notably, entity/resource resolver implementations can be accompanied by changing the default
+        parser features to disallow &quot;default&quot; resolution, preventing the parser from executing its own
+        NetAccessors to perform these lookups.</P>
+    </FONT></TD></TR></TABLE><BR>
 </TD></TR></TABLE></TD></TR></TABLE><BR><TABLE border="0" cellpadding="0" cellspacing="0" width="620"><TR><TD bgcolor="#0086b2"><IMG height="1" src="resources/dot.gif" width="1"></TD></TR><TR><TD align="center"><FONT color="#0086b2" size="-1"><I>
-              Copyright &copy; 1999-2015 The Apache Software Foundation.
+              Copyright &copy; 1999-2017 The Apache Software Foundation.
               All Rights Reserved.
             </I></FONT></TD></TR></TABLE></BODY></HTML>

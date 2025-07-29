@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: SAX2XMLReader.hpp 984018 2010-08-10 14:12:43Z amassari $
+ * $Id$
  */
 
 #if !defined(XERCESC_INCLUDE_GUARD_SAX2XMLREADER_HPP)

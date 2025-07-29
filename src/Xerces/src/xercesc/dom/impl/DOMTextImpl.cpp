@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: DOMTextImpl.cpp 1027995 2010-10-27 15:09:39Z amassari $
+ * $Id$
  */
 
 
@@ -44,21 +44,21 @@ XERCES_CPP_NAMESPACE_BEGIN
 class DOMDocument;
 
 DOMTextImpl::DOMTextImpl(DOMDocument *ownerDoc, const XMLCh *dat)
-    : fNode(ownerDoc), fCharacterData(ownerDoc, dat)
+    : fNode(this, ownerDoc), fCharacterData(ownerDoc, dat)
 {
     fNode.setIsLeafNode(true);
 }
 
 DOMTextImpl::
 DOMTextImpl(DOMDocument *ownerDoc, const XMLCh* dat, XMLSize_t n)
-    : fNode(ownerDoc), fCharacterData(ownerDoc, dat, n)
+    : fNode(this, ownerDoc), fCharacterData(ownerDoc, dat, n)
 {
     fNode.setIsLeafNode(true);
 }
 
 DOMTextImpl::DOMTextImpl(const DOMTextImpl &other, bool)
     : DOMText(other)
-    , fNode(other.fNode)
+    , fNode(this, other.fNode)
     , fCharacterData(other.fCharacterData)
 {
     fNode.setIsLeafNode(true);
@@ -154,26 +154,26 @@ const XMLCh* DOMTextImpl::getWholeText() const
     pWalker->setCurrentNode((DOMNode*)this);
     // Logically-adjacent text nodes are Text or CDATASection nodes that can be visited sequentially in document order or in
     // reversed document order without entering, exiting, or passing over Element, Comment, or ProcessingInstruction nodes.
-	DOMNode* prevNode;
+    DOMNode* prevNode;
     while((prevNode=pWalker->previousNode())!=NULL)
     {
         if(prevNode->getNodeType()==ELEMENT_NODE || prevNode->getNodeType()==COMMENT_NODE || prevNode->getNodeType()==PROCESSING_INSTRUCTION_NODE)
             break;
     }
-	XMLBuffer buff(1023, GetDOMNodeMemoryManager);
-	DOMNode* nextNode;
+    XMLBuffer buff(1023, GetDOMNodeMemoryManager);
+    DOMNode* nextNode;
     while((nextNode=pWalker->nextNode())!=NULL)
     {
         if(nextNode->getNodeType()==ELEMENT_NODE || nextNode->getNodeType()==COMMENT_NODE || nextNode->getNodeType()==PROCESSING_INSTRUCTION_NODE)
             break;
         if(nextNode->getNodeType()==TEXT_NODE || nextNode->getNodeType()==CDATA_SECTION_NODE)
-    		buff.append(nextNode->getNodeValue());
+            buff.append(nextNode->getNodeValue());
     }
     pWalker->release();
 
-	XMLCh* wholeString = (XMLCh*)((DOMDocumentImpl*)doc)->allocate((buff.getLen()+1) * sizeof(XMLCh));
-	XMLString::copyString(wholeString, buff.getRawBuffer());
-	return wholeString;
+    XMLCh* wholeString = (XMLCh*)((DOMDocumentImpl*)doc)->allocate((buff.getLen()+1) * sizeof(XMLCh));
+    XMLString::copyString(wholeString, buff.getRawBuffer());
+    return wholeString;
 }
 
 DOMText* DOMTextImpl::replaceWholeText(const XMLCh* newText)
@@ -184,7 +184,7 @@ DOMText* DOMTextImpl::replaceWholeText(const XMLCh* newText)
     // Logically-adjacent text nodes are Text or CDATASection nodes that can be visited sequentially in document order or in
     // reversed document order without entering, exiting, or passing over Element, Comment, or ProcessingInstruction nodes.
     DOMNode* pFirstTextNode=this;
-	DOMNode* prevNode;
+    DOMNode* prevNode;
     while((prevNode=pWalker->previousNode())!=NULL)
     {
         if(prevNode->getNodeType()==ELEMENT_NODE || prevNode->getNodeType()==COMMENT_NODE || prevNode->getNodeType()==PROCESSING_INSTRUCTION_NODE)
@@ -193,7 +193,7 @@ DOMText* DOMTextImpl::replaceWholeText(const XMLCh* newText)
     }
     // before doing any change we need to check if we are going to remove an entity reference that doesn't contain just text
     DOMNode* pCurrentNode=pWalker->getCurrentNode();
-	DOMNode* nextNode;
+    DOMNode* nextNode;
     while((nextNode=pWalker->nextNode())!=NULL)
     {
         if(nextNode->getNodeType()==ELEMENT_NODE || nextNode->getNodeType()==COMMENT_NODE || nextNode->getNodeType()==PROCESSING_INSTRUCTION_NODE)
@@ -306,6 +306,10 @@ void DOMTextImpl::release()
            void*            DOMTextImpl::getFeature(const XMLCh* feature, const XMLCh* version) const {return fNode.getFeature(feature, version); }
 
 
+// Macro-in implementation accessors.
+DOMNODEIMPL_IMPL(DOMTextImpl);
+DOMCHILDIMPL_IMPL(DOMTextImpl);
+
 
 //
 //   Delegation of CharacerData functions.
@@ -327,5 +331,6 @@ void DOMTextImpl::release()
           void              DOMTextImpl::setNodeValue(const XMLCh  *nodeValue)   {fCharacterData.setNodeValue (this, nodeValue); }
 
           void              DOMTextImpl::appendData(const XMLCh *arg, XMLSize_t n) {fCharacterData.appendData(this, arg, n);}
+          void              DOMTextImpl::appendDataFast(const XMLCh *arg, XMLSize_t n) {fCharacterData.appendDataFast(this, arg, n);}
 
 XERCES_CPP_NAMESPACE_END

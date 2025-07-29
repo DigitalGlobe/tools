@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: DOMParentNode.hpp 678709 2008-07-22 10:56:56Z borisk $
+ * $Id$
  */
 
 #if !defined(XERCESC_INCLUDE_GUARD_DOMPARENTNODE_HPP)
@@ -55,14 +55,25 @@ class DOMNodeList;
 
 class CDOM_EXPORT DOMParentNode  {
 public:
+    DOMNode                *fContainingNode; // the impl object that we're contained by
     DOMDocument            *fOwnerDocument; // Document this node belongs to
     DOMNode                *fFirstChild;
     DOMNodeListImpl            fChildNodeList;      // for GetChildNodes()
 
 public:
-    DOMParentNode(DOMDocument *ownerDocument);
+    DOMParentNode(DOMNode* containingNode, DOMDocument *ownerDocument);
+    DOMParentNode(DOMNode* containingNode, const DOMParentNode &other);
+    ~DOMParentNode();
+
+private:
+    // Make sure this can't be called to corrupt the containing node ptr.
     DOMParentNode(const DOMParentNode &other);
 
+    DOMNode* getContainingNode();
+    const DOMNode* getContainingNode() const;
+    const DOMNodeImpl* getContainingNodeImpl() const;
+
+public:
     DOMDocument * getOwnerDocument() const;
     void setOwnerDocument(DOMDocument* doc);
 

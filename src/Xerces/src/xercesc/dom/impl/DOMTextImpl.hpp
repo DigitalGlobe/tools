@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: DOMTextImpl.hpp 678709 2008-07-22 10:56:56Z borisk $
+ * $Id$
  */
 
 #if !defined(XERCESC_INCLUDE_GUARD_DOMTEXTIMPL_HPP)
@@ -35,7 +35,7 @@
 
 #include <xercesc/util/XercesDefs.hpp>
 #include <xercesc/dom/DOMText.hpp>
-
+#include "DOMNodeBase.hpp"
 #include "DOMChildNode.hpp"
 #include "DOMNodeImpl.hpp"
 #include "DOMCharacterDataImpl.hpp"
@@ -43,7 +43,7 @@
 XERCES_CPP_NAMESPACE_BEGIN
 
 
-class CDOM_EXPORT DOMTextImpl: public DOMText {
+class CDOM_EXPORT DOMTextImpl: public DOMText, public HasDOMNodeImpl, public HasDOMChildImpl {
 public:
     DOMNodeImpl             fNode;
     DOMChildNode            fChild;
@@ -68,6 +68,10 @@ public:
     // Declare the functions coming from DOMNode.
     DOMNODE_FUNCTIONS;
 
+    // Add accessors for implementation bits.
+    DOMNODEIMPL_DECL;
+    DOMCHILDIMPL_DECL;
+
 public:
     // All of the functions coming from DOMCharacterData
     virtual const XMLCh*    getData() const;
@@ -86,6 +90,7 @@ public:
     // Non-standard extension.
     //
     virtual void            appendData(const XMLCh *arg, XMLSize_t n);
+    void                    appendDataFast(const XMLCh *arg, XMLSize_t n);
 
 protected:
     virtual void            setIgnorableWhitespace(bool ignorable);

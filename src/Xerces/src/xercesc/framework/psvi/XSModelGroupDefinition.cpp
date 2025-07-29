@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: XSModelGroupDefinition.cpp 471747 2006-11-06 14:31:56Z amassari $
+ * $Id$
  */
 
 #include <xercesc/framework/psvi/XSModelGroupDefinition.hpp>
@@ -56,7 +56,7 @@ const XMLCh *XSModelGroupDefinition::getName() const
     return fXSModel->getURIStringPool()->getValueForId(fGroupInfo->getNameId());
 }
 
-const XMLCh *XSModelGroupDefinition::getNamespace() 
+const XMLCh *XSModelGroupDefinition::getNamespace() const
 {
     return fXSModel->getURIStringPool()->getValueForId(fGroupInfo->getNamespaceId());
 }

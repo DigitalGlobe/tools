@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: XSObject.cpp 674012 2008-07-04 11:18:21Z borisk $
+ * $Id$
  */
 
 #include <xercesc/framework/psvi/XSObject.hpp>
@@ -53,7 +53,7 @@ const XMLCh *XSObject::getName() const
     return 0;
 }
 
-const XMLCh *XSObject::getNamespace()
+const XMLCh *XSObject::getNamespace() const
 {
     return 0;
 }

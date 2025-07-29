@@ -16,7 +16,7 @@
 #
 
 #
-# $Id: Makefile.am 1665567 2015-03-10 14:29:51Z scantor $
+# $Id$
 #
 
 check_PROGRAMS =                                ${testprogs}
@@ -26,7 +26,10 @@ LDADD =	                                        ${top_builddir}/src/libxerces-c.
 # header file when doing out-of-tree builds
 AM_CPPFLAGS =                                   -I${top_builddir}/src -I${top_srcdir}/src
 
-EXTRA_DIST =                                    src/DOM/Normalizer/expectedOutput \
+EXTRA_DIST =                                    CMakeLists.txt \
+                                                expected \
+                                                scripts \
+                                                src/DOM/Normalizer/expectedOutput \
                                                 src/DOM/TypeInfo/data/combined.dtd \
                                                 src/DOM/TypeInfo/data/combined.xml \
                                                 src/DOM/TypeInfo/data/combined.xsd \
@@ -39,6 +42,9 @@ EXTRA_DIST =                                    src/DOM/Normalizer/expectedOutpu
                                                 src/DOM/TypeInfo/data/TypeInfoNoDTD.xsd \
                                                 src/XSTSHarness/regression \
                                                 src/xinclude
+
+clean-local:
+	-rm -rf observed
 
 testprogs =
 
@@ -126,48 +132,53 @@ testprogs +=                                    XSValueTest
 XSValueTest_SOURCES =                           src/XSValueTest/XSValueTest.cpp \
                                                 src/XSValueTest/XSValueTest.hpp
 
-#
-# Override generated rules to provide prettier make rules
-#
-# Warning: If Automake changes sufficiently, these rules may need to
-#          be regenerated from the (new) default output of Automake
-#
-if XERCES_PRETTY_MAKE
-.cpp.o:
-@am__fastdepCXX_TRUE@	@depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`; \
-@am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$$depbase.Tpo" -c -o $@ $<; \
-@am__fastdepCXX_TRUE@	then $(am__mv) "$$depbase.Tpo" "$$depbase.Po"; else rm -f "$$depbase.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	@source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ $<
-
-.cpp.obj:
-@am__fastdepCXX_TRUE@	@depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.obj$$||'`; \
-@am__fastdepCXX_TRUE@	if $(CXXCOMPILE) -MT $@ -MD -MP -MF "$$depbase.Tpo" -c -o $@ `$(CYGPATH_W) '$<'`; \
-@am__fastdepCXX_TRUE@	then $(am__mv) "$$depbase.Tpo" "$$depbase.Po"; else rm -f "$$depbase.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	@source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
-
-.cpp.lo:
-@am__fastdepCXX_TRUE@	@depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.lo$$||'`; \
-@am__fastdepCXX_TRUE@	if $(LTCXXCOMPILE) -MT $@ -MD -MP -MF "$$depbase.Tpo" -c -o $@ $<; \
-@am__fastdepCXX_TRUE@	then $(am__mv) "$$depbase.Tpo" "$$depbase.Plo"; else rm -f "$$depbase.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	@source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LTCXXCOMPILE) -c -o $@ $<
-
-PRETTY_MAKE=${top_srcdir}/config/pretty-make
-PRETTY_COMPILE=${PRETTY_MAKE} Compiling
+if XERCES_USE_CHAR16
+testprogs +=                                    Char16Test
+Char16Test_SOURCES =                            src/Char16Test/Char16Test.cpp
 endif
 
-CXXCOMPILE = ${PRETTY_COMPILE} \
-	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
-LTCXXCOMPILE = ${PRETTY_COMPILE}  \
-	$(LIBTOOL) --quiet --tag=CXX --mode=compile \
-	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
-	$(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS)
 
+TESTS =					scripts/DOMTest \
+					scripts/DOMMemTest \
+					scripts/RangeTest \
+					scripts/DOMTraversalTest \
+					scripts/XSerializerTest \
+					scripts/XSerializerTest1 \
+					scripts/XSerializerTest2 \
+					scripts/XSerializerTest3 \
+					scripts/XSerializerTest4 \
+					scripts/XSerializerTest5 \
+					scripts/XSValueTest \
+					scripts/InitTermTest \
+					scripts/InitTermTest1 \
+					scripts/InitTermTest2 \
+					scripts/InitTermTest3 \
+					scripts/ThreadTest \
+					scripts/ThreadTest1 \
+					scripts/ThreadTest2 \
+					scripts/ThreadTest3 \
+					scripts/ThreadTest4 \
+					scripts/ThreadTest5 \
+					scripts/ThreadTest6 \
+					scripts/ThreadTest7 \
+					scripts/ThreadTest8 \
+					scripts/ThreadTest9 \
+					scripts/ThreadTest10 \
+					scripts/ThreadTest11 \
+					scripts/ThreadTest12 \
+					scripts/ThreadTest13 \
+					scripts/ThreadTest14 \
+					scripts/ThreadTest15 \
+					scripts/MemHandlerTest \
+					scripts/MemHandlerTest1 \
+					scripts/MemHandlerTest2 \
+					scripts/DOMTypeInfoTest
 
+if XERCES_USE_CHAR16
+TESTS += scripts/Char16Test
+endif
 
+XFAIL_TESTS =				scripts/XSerializerTest \
+					scripts/InitTermTest \
+					scripts/ThreadTest \
+					scripts/MemHandlerTest

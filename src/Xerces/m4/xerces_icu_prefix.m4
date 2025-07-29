@@ -7,7 +7,7 @@ dnl @author James Berry
 dnl @version 2005-05-23
 dnl @license AllPermissive
 dnl
-dnl $Id: xerces_icu_prefix.m4 1662872 2015-02-28 01:05:58Z scantor $
+dnl $Id$
 
 AC_DEFUN([XERCES_ICU_PREFIX],
         [
@@ -86,7 +86,7 @@ AC_DEFUN([XERCES_ICU_PREFIX],
                     LIBS="$icu_libs $LIBS"
 
                     AC_LINK_IFELSE(
-                    AC_LANG_SOURCE[[
+                    [AC_LANG_SOURCE([
                     #include <unicode/ucnv.h>
 
                     int main ()
@@ -94,7 +94,7 @@ AC_DEFUN([XERCES_ICU_PREFIX],
                       ucnv_open (0, 0);
                       return 0;
                     }
-                    ]],
+                    ])],
                     [], [xerces_cv_icu_present=no])
 
                     LIBS=$orig_libs

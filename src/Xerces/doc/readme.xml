@@ -36,9 +36,11 @@
         </p>
         <p>The parser provides high performance, modularity, and scalability.    Source
         code, samples and API documentation are provided with the parser.   For
-        portability, care has been taken to make minimal use of templates,
-        no RTTI, and minimal use of #ifdefs.</p>
+        portability, care has been taken to make minimal use of templates and minimal use of
+        #ifdefs.</p>
 
+        <note>Please note that &XercesCName; currently lacks active maintainers and
+        therefore may not be able to promptly address bugs and security vulnerabilities.</note>
     </s2>
 
     <s2 title="Applications of the &XercesCProjectName; Parser">
@@ -100,8 +102,8 @@
     </s2>
 
     <s2 title="License Information">
-       <p>The &XercesCName; Version &XercesC3Version; is available in both source distribution and
-          binary distribution.   &XercesCName; is made available under the
+       <p>The &XercesCName; Version &XercesC3Version; is available as a source
+          distribution only. &XercesCName; is made available under the
           <jump href="http://www.apache.org/licenses/LICENSE-2.0.html">Apache Software License, Version 2.0</jump>.
        </p>
     </s2>

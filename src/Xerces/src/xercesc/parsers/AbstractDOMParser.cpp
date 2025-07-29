@@ -20,7 +20,7 @@
 *  handler with the scanner. In these handler methods, appropriate DOM nodes
 *  are created and added to the DOM tree.
 *
-* $Id: AbstractDOMParser.cpp 935358 2010-04-18 15:40:35Z borisk $
+* $Id$
 *
 */
 
@@ -317,6 +317,11 @@ const XMLSize_t& AbstractDOMParser::getLowWaterMark() const
     return fScanner->getLowWaterMark();
 }
 
+bool AbstractDOMParser::getDisallowDoctype() const
+{
+    return fScanner->getDisallowDTD();
+}
+
 bool AbstractDOMParser::getLoadExternalDTD() const
 {
     return fScanner->getLoadExternalDTD();
@@ -453,6 +458,11 @@ void AbstractDOMParser::setSecurityManager(SecurityManager* const securityManage
 void AbstractDOMParser::setLowWaterMark(XMLSize_t lwm)
 {
     fScanner->setLowWaterMark(lwm);
+}
+
+void AbstractDOMParser::setDisallowDoctype(const bool newState)
+{
+    fScanner->setDisallowDTD(newState);
 }
 
 void AbstractDOMParser::setLoadExternalDTD(const bool newState)
@@ -803,7 +813,7 @@ void AbstractDOMParser::docCharacters(  const   XMLCh* const    chars
         if (fCurrentNode->getNodeType() == DOMNode::TEXT_NODE)
         {
             DOMTextImpl *node = (DOMTextImpl*)fCurrentNode;
-            node->appendData(chars, length);
+            node->appendDataFast(chars, length);
         }
         else
         {
@@ -908,25 +918,18 @@ void AbstractDOMParser::ignorableWhitespace(  const XMLCh* const    chars
     if (!fWithinElement || !fIncludeIgnorableWhitespace)
         return;
 
-    // revisit.  Not safe to slam in a null like this.
-    XMLCh savedChar = chars[length];
-    XMLCh *ncChars  = (XMLCh *)chars;   // cast off const
-    ncChars[length] = chNull;
-
     if (fCurrentNode->getNodeType() == DOMNode::TEXT_NODE)
     {
-        DOMText *node = (DOMText *)fCurrentNode;
-        node->appendData(chars);
+        DOMTextImpl *node = (DOMTextImpl *)fCurrentNode;
+        node->appendDataFast(chars, length);
     }
     else
     {
-        DOMTextImpl *node = (DOMTextImpl *)fDocument->createTextNode(chars);
+        DOMTextImpl *node = (DOMTextImpl*)createText (chars, length);
         node->setIgnorableWhitespace(true);
         castToParentImpl (fCurrentParent)->appendChildFast (node);
-
         fCurrentNode = node;
     }
-    ncChars[length] = savedChar;
 }
 
 
@@ -1664,6 +1667,8 @@ void AbstractDOMParser::notationDecl
 
         fInternalSubset.append(notDecl.getName());
 
+        bool publicKeywordPrinted = false;
+
         const XMLCh* id = notation->getPublicId();
         if (id != 0) {
             fInternalSubset.append(chSpace);
@@ -1672,16 +1677,21 @@ void AbstractDOMParser::notationDecl
             fInternalSubset.append(chDoubleQuote);
             fInternalSubset.append(id);
             fInternalSubset.append(chDoubleQuote);
+
+            publicKeywordPrinted = true;
         }
         id = notation->getSystemId();
         if (id != 0) {
             fInternalSubset.append(chSpace);
-            fInternalSubset.append(XMLUni::fgSysIDString);
-            fInternalSubset.append(chSpace);
+
+            if ( !publicKeywordPrinted ){
+				fInternalSubset.append(XMLUni::fgSysIDString);
+				fInternalSubset.append(chSpace);
+			}
+
             fInternalSubset.append(chDoubleQuote);
             fInternalSubset.append(id);
             fInternalSubset.append(chDoubleQuote);
-
         }
         fInternalSubset.append(chCloseAngle);
     }

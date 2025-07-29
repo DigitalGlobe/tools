@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: Xlat_Win32RC.cpp 698557 2008-09-24 13:19:01Z amassari $
+ * $Id$
  */
 
 

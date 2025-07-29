@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: BinHTTPURLInputStream.cpp 936316 2010-04-21 14:19:58Z borisk $
+ * $Id$
  */
 
 
@@ -293,6 +293,10 @@ BinHTTPURLInputStream::BinHTTPURLInputStream(const XMLURL& urlSource, const XMLN
       : BinHTTPInputStreamCommon(urlSource.getMemoryManager())
       , fSocketHandle(0)
 {
+    if (urlSource.isRelative()) {
+        ThrowXML(MalformedURLException, XMLExcepts::URL_NoProtocolPresent);
+    }
+
     MemoryManager *memoryManager = urlSource.getMemoryManager();
 
     // Check if we need to load the winsock library. While locking the

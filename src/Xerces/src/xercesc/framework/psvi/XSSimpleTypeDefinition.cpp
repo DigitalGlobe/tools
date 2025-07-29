@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: XSSimpleTypeDefinition.cpp 674012 2008-07-04 11:18:21Z borisk $
+ * $Id$
  */
 
 #include <xercesc/framework/psvi/XSSimpleTypeDefinition.hpp>
@@ -175,7 +175,7 @@ const XMLCh *XSSimpleTypeDefinition::getName() const
     return fDatatypeValidator->getTypeLocalName();
 }
 
-const XMLCh *XSSimpleTypeDefinition::getNamespace()
+const XMLCh *XSSimpleTypeDefinition::getNamespace() const
 {
     return fDatatypeValidator->getTypeUri();
 }

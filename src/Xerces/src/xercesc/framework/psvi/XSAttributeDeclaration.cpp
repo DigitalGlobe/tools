@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: XSAttributeDeclaration.cpp 471747 2006-11-06 14:31:56Z amassari $
+ * $Id$
  */
 
 #include <xercesc/framework/psvi/XSAttributeDeclaration.hpp>
@@ -61,7 +61,7 @@ const XMLCh *XSAttributeDeclaration::getName() const
     return fAttDef->getAttName()->getLocalPart();
 }
 
-const XMLCh *XSAttributeDeclaration::getNamespace() 
+const XMLCh *XSAttributeDeclaration::getNamespace() const
 {
     return fXSModel->getURIStringPool()->getValueForId(fAttDef->getAttName()->getURI());
 }

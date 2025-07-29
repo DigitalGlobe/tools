@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: XSNotationDeclaration.hpp 527149 2007-04-10 14:56:39Z amassari $
+ * $Id$
  */
 
 #if !defined(XERCESC_INCLUDE_GUARD_XSNOTATIONDECLARATION_HPP)
@@ -84,7 +84,7 @@ public:
      *  The [target namespace] of this object, or <code>null</code> if it is 
      * unspecified. 
      */
-    const XMLCh* getNamespace();
+    const XMLCh* getNamespace() const;
 
     /**
      * A namespace schema information item corresponding to the target 

@@ -16,12 +16,11 @@
  */
 
 /*
- * $Id: TransService.cpp 1662885 2015-02-28 02:16:39Z scantor $
+ * $Id$
  */
 // ---------------------------------------------------------------------------
 //  Includes
 // ---------------------------------------------------------------------------
-#include <xercesc/util/Janitor.hpp>
 #include <xercesc/util/TransService.hpp>
 #include <xercesc/util/XML88591Transcoder.hpp>
 #include <xercesc/util/XMLASCIITranscoder.hpp>
@@ -560,6 +559,16 @@ TranscodeToStr::TranscodeToStr(const XMLCh *in, const char *encoding,
     const XMLSize_t blockSize = 2048;
 
     XMLTranscoder* trans = XMLPlatformUtils::fgTransService->makeNewTranscoderFor(encoding, failReason, blockSize, fMemoryManager);
+    if (!trans) {
+        ThrowXMLwithMemMgr1
+        (
+            TranscodingException
+            , XMLExcepts::Trans_CantCreateCvtrFor
+            , encoding 
+            , fMemoryManager
+        );
+    }    
+
     Janitor<XMLTranscoder> janTrans(trans);
 
     transcode(in, XMLString::stringLen(in), trans);
@@ -575,6 +584,16 @@ TranscodeToStr::TranscodeToStr(const XMLCh *in, XMLSize_t length, const char *en
     const XMLSize_t blockSize = 2048;
 
     XMLTranscoder* trans = XMLPlatformUtils::fgTransService->makeNewTranscoderFor(encoding, failReason, blockSize, fMemoryManager);
+    if (!trans) {
+        ThrowXMLwithMemMgr1
+        (
+            TranscodingException
+            , XMLExcepts::Trans_CantCreateCvtrFor
+            , encoding
+            , fMemoryManager
+        );
+    }
+
     Janitor<XMLTranscoder> janTrans(trans);
 
     transcode(in, length, trans);
@@ -600,8 +619,6 @@ TranscodeToStr::TranscodeToStr(const XMLCh *in, XMLSize_t length, XMLTranscoder*
 
 TranscodeToStr::~TranscodeToStr()
 {
-    if(fString)
-        fMemoryManager->deallocate(fString);
 }
 
 // ---------------------------------------------------------------------------
@@ -612,47 +629,47 @@ void TranscodeToStr::transcode(const XMLCh *in, XMLSize_t len, XMLTranscoder* tr
     if(!in) return;
 
     XMLSize_t allocSize = (len * sizeof(XMLCh)) + 4;
-    fString = (XMLByte*)fMemoryManager->allocate(allocSize);
-    ArrayJanitor<XMLByte> janString(fString, fMemoryManager);
+    fString.reset((XMLByte*)fMemoryManager->allocate(allocSize), fMemoryManager);
 
     XMLSize_t charsDone = 0;
+    bool bufferExpanded = false;
 
     while(charsDone < len) {
         XMLSize_t charsRead = 0;
         fBytesWritten += trans->transcodeTo(in + charsDone, len - charsDone,
-                                            fString + fBytesWritten, allocSize - fBytesWritten,
+                                            fString.get() + fBytesWritten, allocSize - fBytesWritten,
                                             charsRead, XMLTranscoder::UnRep_Throw);
-        if(charsRead == 0)
-            ThrowXMLwithMemMgr(TranscodingException, XMLExcepts::Trans_BadSrcSeq, fMemoryManager);
-
-        charsDone += charsRead;
-
-        if((allocSize - fBytesWritten) < ((len - charsDone) * sizeof(XMLCh)))
+        if (charsRead == 0)
         {
+            if (bufferExpanded)
+            {
+                ThrowXMLwithMemMgr(TranscodingException, XMLExcepts::Trans_BadSrcSeq, fMemoryManager);
+            }
+            // it may have not enough space, try expanding the buffer
             allocSize *= 2;
             XMLByte *newBuf = (XMLByte*)fMemoryManager->allocate(allocSize);
-            memcpy(newBuf, fString, fBytesWritten);
-            fString = newBuf;
-            janString.reset(fString, fMemoryManager);
-        }        
+            memcpy(newBuf, fString.get(), fBytesWritten);
+            fString.reset(newBuf, fMemoryManager);
+            bufferExpanded = true;
+        }
+        else
+        {
+            charsDone += charsRead;
+            bufferExpanded = false;
+        }
     }
 
     // null terminate
-    if ((fBytesWritten + 4) > allocSize)
-    {
+    if((fBytesWritten + 4) > allocSize) {
         allocSize = fBytesWritten + 4;
         XMLByte *newBuf = (XMLByte*)fMemoryManager->allocate(allocSize);
-        memcpy(newBuf, fString, fBytesWritten);
-        fString = newBuf;
-        janString.reset(fString, fMemoryManager);
+        memcpy(newBuf, fString.get(), fBytesWritten);
+        fString.reset(newBuf, fMemoryManager);
     }
     fString[fBytesWritten + 0] = 0;
     fString[fBytesWritten + 1] = 0;
     fString[fBytesWritten + 2] = 0;
     fString[fBytesWritten + 3] = 0;
-
-    // Leave fString with ownership of the buffer
-    janString.release();
 }
 
 // ---------------------------------------------------------------------------
@@ -668,6 +685,16 @@ TranscodeFromStr::TranscodeFromStr(const XMLByte *data, XMLSize_t length, const 
     const XMLSize_t blockSize = 2048;
 
     XMLTranscoder* trans = XMLPlatformUtils::fgTransService->makeNewTranscoderFor(encoding, failReason, blockSize, fMemoryManager);
+    if (!trans) {
+        ThrowXMLwithMemMgr1
+        (
+            TranscodingException
+            , XMLExcepts::Trans_CantCreateCvtrFor
+            , encoding
+            , fMemoryManager
+        );
+    }
+
     Janitor<XMLTranscoder> janTrans(trans);
 
     transcode(data, length, trans);
@@ -684,8 +711,6 @@ TranscodeFromStr::TranscodeFromStr(const XMLByte *data, XMLSize_t length, XMLTra
 
 TranscodeFromStr::~TranscodeFromStr()
 {
-    if(fString)
-        fMemoryManager->deallocate(fString);
 }
 
 // ---------------------------------------------------------------------------
@@ -696,8 +721,7 @@ void TranscodeFromStr::transcode(const XMLByte *in, XMLSize_t length, XMLTransco
     if(!in) return;
 
     XMLSize_t allocSize = length + 1;
-    fString = (XMLCh*)fMemoryManager->allocate(allocSize * sizeof(XMLCh));
-    ArrayJanitor<XMLCh> janString(fString, fMemoryManager);
+    fString.reset((XMLCh*)fMemoryManager->allocate(allocSize * sizeof(XMLCh)), fMemoryManager);
 
     XMLSize_t csSize = allocSize;
     ArrayJanitor<unsigned char> charSizes((unsigned char*)fMemoryManager->allocate(csSize * sizeof(unsigned char)),
@@ -706,42 +730,36 @@ void TranscodeFromStr::transcode(const XMLByte *in, XMLSize_t length, XMLTransco
     XMLSize_t bytesDone = 0;
 
     while(bytesDone < length) {
-        if ((allocSize - fCharsWritten) > csSize) {
+        if((allocSize - fCharsWritten) > csSize) {
             csSize = allocSize - fCharsWritten;
             charSizes.reset((unsigned char*)fMemoryManager->allocate(csSize * sizeof(unsigned char)), fMemoryManager);
         }
         XMLSize_t bytesRead = 0;
         fCharsWritten += trans->transcodeFrom(in + bytesDone, length - bytesDone,
-                                              fString + fCharsWritten, allocSize - fCharsWritten,
+                                              fString.get() + fCharsWritten, allocSize - fCharsWritten,
                                               bytesRead, charSizes.get());
         if(bytesRead == 0)
             ThrowXMLwithMemMgr(TranscodingException, XMLExcepts::Trans_BadSrcSeq, fMemoryManager);
 
         bytesDone += bytesRead;
 
-        if (((allocSize - fCharsWritten)*sizeof(XMLCh)) < (length - bytesDone))
+        if(((allocSize - fCharsWritten)*sizeof(XMLCh)) < (length - bytesDone))
         {
             allocSize *= 2;
             XMLCh *newBuf = (XMLCh*)fMemoryManager->allocate(allocSize * sizeof(XMLCh));
-            memcpy(newBuf, fString, fCharsWritten*sizeof(XMLCh));
-            fString = newBuf;
-            janString.reset(fString, fMemoryManager);
+            memcpy(newBuf, fString.get(), fCharsWritten*sizeof(XMLCh));
+            fString.reset(newBuf, fMemoryManager);
         }
     }
 
     // null terminate
-    if ((fCharsWritten + 1) > allocSize)
-    {
+    if((fCharsWritten + 1) > allocSize) {
         allocSize = fCharsWritten + 1;
         XMLCh *newBuf = (XMLCh*)fMemoryManager->allocate(allocSize * sizeof(XMLCh));
-        memcpy(newBuf, fString, fCharsWritten*sizeof(XMLCh));
-        fString = newBuf;
-        janString.reset(fString, fMemoryManager);
+        memcpy(newBuf, fString.get(), fCharsWritten*sizeof(XMLCh));
+        fString.reset(newBuf, fMemoryManager);
     }
     fString[fCharsWritten] = 0;
-
-    // Leave fString with ownership of the buffer
-    janString.release();
 }
 
 XERCES_CPP_NAMESPACE_END

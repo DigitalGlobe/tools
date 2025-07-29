@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: NamespaceScope.hpp 729944 2008-12-29 17:03:32Z amassari $
+ * $Id$
  */
 
 #if !defined(XERCESC_INCLUDE_GUARD_NAMESPACESCOPE_HPP)
@@ -77,7 +77,7 @@ public :
     // -----------------------------------------------------------------------
     NamespaceScope(MemoryManager* const manager = XMLPlatformUtils::fgMemoryManager);
     NamespaceScope(const NamespaceScope* const initialize, MemoryManager* const manager = XMLPlatformUtils::fgMemoryManager);
-    ~NamespaceScope();
+    virtual ~NamespaceScope();
 
 
     // -----------------------------------------------------------------------

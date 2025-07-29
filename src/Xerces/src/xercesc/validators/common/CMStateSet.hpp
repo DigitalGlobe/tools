@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: CMStateSet.hpp 901107 2010-01-20 08:45:02Z borisk $
+ * $Id$
  */
 
 #if !defined(XERCESC_INCLUDE_GUARD_CMSTATESET_HPP)
@@ -32,6 +32,7 @@
 //
 
 #include <xercesc/util/ArrayIndexOutOfBoundsException.hpp>
+#include <xercesc/util/OutOfMemoryException.hpp>
 #include <xercesc/util/RuntimeException.hpp>
 #include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/framework/MemoryManager.hpp>
@@ -93,7 +94,15 @@ public :
             fDynamicBuffer->fArraySize = fBitCount / CMSTATE_BITFIELD_CHUNK;
             if (fBitCount % CMSTATE_BITFIELD_CHUNK)
                 fDynamicBuffer->fArraySize++;
-            fDynamicBuffer->fBitArray = (XMLInt32**) fDynamicBuffer->fMemoryManager->allocate(fDynamicBuffer->fArraySize*sizeof(XMLInt32*));
+            try
+            {
+                fDynamicBuffer->fBitArray = (XMLInt32**) fDynamicBuffer->fMemoryManager->allocate(fDynamicBuffer->fArraySize*sizeof(XMLInt32*));
+            }
+            catch( const OutOfMemoryException& )
+            {
+                fDynamicBuffer->fMemoryManager->deallocate(fDynamicBuffer);
+                throw;
+            }
             for(XMLSize_t index = 0; index < fDynamicBuffer->fArraySize; index++)
                 fDynamicBuffer->fBitArray[index]=NULL;
         }
@@ -165,10 +174,10 @@ public :
 #ifdef XERCES_HAVE_SSE2_INTRINSIC
             if(XMLPlatformUtils::fgSSE2ok)
             {
-                __m128i xmm1 = _mm_loadu_si128((__m128i*)fBits);
-                __m128i xmm2 = _mm_loadu_si128((__m128i*)setToOr.fBits);
+                __m128i xmm1 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(fBits));
+                __m128i xmm2 = _mm_loadu_si128(reinterpret_cast<const __m128i*>(setToOr.fBits));
                 __m128i xmm3 = _mm_or_si128(xmm1, xmm2);     //  OR  4 32-bit words
-                _mm_storeu_si128((__m128i*)fBits, xmm3);
+                _mm_storeu_si128(reinterpret_cast<__m128i*>(fBits), xmm3);
             }
             else
 #endif
@@ -207,10 +216,10 @@ public :
                         {
                             for(XMLSize_t subIndex = 0; subIndex < CMSTATE_BITFIELD_INT32_SIZE; subIndex+=4)
                             {
-                               __m128i xmm1 = _mm_load_si128((__m128i*)&other[subIndex]);
-                               __m128i xmm2 = _mm_load_si128((__m128i*)&mine[subIndex]);
+                               __m128i xmm1 = _mm_load_si128(reinterpret_cast<const __m128i*>(&other[subIndex]));
+                               __m128i xmm2 = _mm_load_si128(reinterpret_cast<const __m128i*>(&mine[subIndex]));
                                __m128i xmm3 = _mm_or_si128(xmm1, xmm2);     //  OR  4 32-bit words
-                               _mm_store_si128((__m128i*)&mine[subIndex], xmm3);
+                               _mm_store_si128(reinterpret_cast<__m128i*>(&mine[subIndex]), xmm3);
                             }
                         }
                         else

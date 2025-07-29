@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: XMLReader.cpp 1727978 2016-02-01 17:18:56Z scantor $
+ * $Id$
  */
 
 // ---------------------------------------------------------------------------
@@ -31,6 +31,7 @@
 #include <xercesc/util/XMLEBCDICTranscoder.hpp>
 #include <xercesc/util/XMLString.hpp>
 #include <xercesc/util/Janitor.hpp>
+
 XERCES_CPP_NAMESPACE_BEGIN
 
 // ---------------------------------------------------------------------------
@@ -257,7 +258,7 @@ XMLReader::XMLReader(const  XMLCh* const          pubId
             if (fRawBytesAvail < 2)
                 break;
 
-            const UTF16Ch* asUTF16 = (const UTF16Ch*)&fRawByteBuf[fRawBufIndex];
+            const UTF16Ch* asUTF16 = reinterpret_cast<const UTF16Ch*>(&fRawByteBuf[fRawBufIndex]);
             if ((*asUTF16 == chUnicodeMarker) || (*asUTF16 == chSwappedUnicodeMarker))
             {
                 fRawBufIndex += sizeof(UTF16Ch);
@@ -644,12 +645,17 @@ bool XMLReader::getName(XMLBuffer& toFill, const bool token)
     //  if its a name and not a name token that they want.
     if (!token)
     {
-        if (fXMLVersion == XMLV1_1 && ((fCharBuf[fCharIndex] >= 0xD800) && (fCharBuf[fCharIndex] <= 0xDB7F))) {
-           // make sure one more char is in the buffer, the transcoder
-           // should put only a complete surrogate pair into the buffer
-           assert(fCharIndex+1 < fCharsAvail);
-           if ((fCharBuf[fCharIndex+1] < 0xDC00) || (fCharBuf[fCharIndex+1] > 0xDFFF))
-               return false;
+        if ((fCharBuf[fCharIndex] >= 0xD800) && (fCharBuf[fCharIndex] <= 0xDB7F)) {
+            // if there isn't one more char in the buffer, read more data
+            if (fCharIndex+1 == fCharsAvail)
+            {
+                if (!refreshCharBuffer())
+                    return false;
+                // reset the start buffer to the new location of the cursor
+                charIndex_start = fCharIndex;
+            }
+            if ((fCharBuf[fCharIndex+1] < 0xDC00) || (fCharBuf[fCharIndex+1] > 0xDFFF))
+                return false;
 
             // Looks ok, so lets eat it
             fCharIndex += 2;
@@ -668,34 +674,34 @@ bool XMLReader::getName(XMLBuffer& toFill, const bool token)
     //  a non-name char.
     while (true)
     {
-        if (fXMLVersion == XMLV1_1)
+        while (fCharIndex < fCharsAvail)
         {
-            while (fCharIndex < fCharsAvail)
+            //  Check the current char and take it if its a name char. Else
+            //  break out.
+            if ( (fCharBuf[fCharIndex] >= 0xD800) && (fCharBuf[fCharIndex] <= 0xDB7F) )
             {
-                //  Check the current char and take it if its a name char. Else
-                //  break out.
-                if ( (fCharBuf[fCharIndex] >= 0xD800) && (fCharBuf[fCharIndex] <= 0xDB7F) )
+                // if there isn't one more char in the buffer, read more data
+                if (fCharIndex+1 == fCharsAvail)
                 {
-                    // make sure one more char is in the buffer, the transcoder
-                    // should put only a complete surrogate pair into the buffer
-                    assert(fCharIndex+1 < fCharsAvail);
-                    if ( (fCharBuf[fCharIndex+1] < 0xDC00) ||
-                         (fCharBuf[fCharIndex+1] > 0xDFFF)  )
-                        break;
-                    fCharIndex += 2;
+                    // but first copy the accepted character(s), and update column
+                    if (fCharIndex != charIndex_start)
+                    {
+                        fCurCol += (XMLFileLoc)(fCharIndex - charIndex_start);
+                        toFill.append(&fCharBuf[charIndex_start], fCharIndex - charIndex_start);
+                    }
 
-                }
-                else
-                {
-                    if (!isNameChar(fCharBuf[fCharIndex]))
+                    if (!refreshCharBuffer())
                         break;
-                    fCharIndex++;
+
+                    charIndex_start = fCharIndex;
                 }
+                if ( (fCharBuf[fCharIndex+1] < 0xDC00) ||
+                        (fCharBuf[fCharIndex+1] > 0xDFFF)  )
+                    break;
+                fCharIndex += 2;
+
             }
-        }
-        else // XMLV1_0
-        {
-            while (fCharIndex < fCharsAvail)
+            else
             {
                 if (!isNameChar(fCharBuf[fCharIndex]))
                     break;
@@ -731,11 +737,15 @@ bool XMLReader::getNCName(XMLBuffer& toFill)
     //  Lets check the first char for being a first name char. If not, then
     //  what's the point in living mannnn? Just give up now. We only do this
     //  if its a name and not a name token that they want.
-    if (fXMLVersion == XMLV1_1
-        && ((fCharBuf[fCharIndex] >= 0xD800) && (fCharBuf[fCharIndex] <= 0xDB7F))) {
-        // make sure one more char is in the buffer, the transcoder
-        // should put only a complete surrogate pair into the buffer
-        assert(fCharIndex+1 < fCharsAvail);
+    if ((fCharBuf[fCharIndex] >= 0xD800) && (fCharBuf[fCharIndex] <= 0xDB7F)) {
+        // if there isn't one more char in the buffer, read more data
+        if (fCharIndex+1 == fCharsAvail)
+        {
+            if (!refreshCharBuffer())
+                return false;
+            // reset the start buffer to the new location of the cursor
+            charIndex_start = fCharIndex;
+        }
         if ((fCharBuf[fCharIndex+1] < 0xDC00) || (fCharBuf[fCharIndex+1] > 0xDFFF))
             return false;
 
@@ -768,17 +778,33 @@ bool XMLReader::getNCName(XMLBuffer& toFill)
         }
 
         //  Check the current char and take it if it's a name char
-        if (fXMLVersion == XMLV1_1)
+        while(fCharIndex < fCharsAvail)
         {
-            while(fCharIndex < fCharsAvail)
+            if((fCharBuf[fCharIndex] >= 0xD800) && (fCharBuf[fCharIndex] <= 0xDB7F))
             {
-                if(isNCNameChar(fCharBuf[fCharIndex])) fCharIndex++;
-                else if((fCharBuf[fCharIndex] >= 0xD800) && (fCharBuf[fCharIndex] <= 0xDB7F) && ((fCharBuf[fCharIndex+1] < 0xDC00) || (fCharBuf[fCharIndex+1] > 0xDFFF))) fCharIndex+=2;
-		else break;
+                // if there isn't one more char in the buffer, read more data
+                if (fCharIndex+1 == fCharsAvail)
+                {
+                    // but first copy the accepted character(s), and update column
+                    if (fCharIndex != charIndex_start)
+                    {
+                        fCurCol += (XMLFileLoc)(fCharIndex - charIndex_start);
+                        toFill.append(&fCharBuf[charIndex_start], fCharIndex - charIndex_start);
+                    }
+
+                    if (!refreshCharBuffer())
+                        break;
+
+                    charIndex_start = fCharIndex;
+                }
+                if ( (fCharBuf[fCharIndex+1] < 0xDC00) ||
+                    (fCharBuf[fCharIndex+1] > 0xDFFF)  )
+                    break;
+                fCharIndex += 2;
             }
+            else if(isNCNameChar(fCharBuf[fCharIndex])) fCharIndex++;
+            else break;
         }
-        else
-            while(fCharIndex < fCharsAvail && isNCNameChar(fCharBuf[fCharIndex])) fCharIndex++;
         // if we didn't consume the entire buffer, we are done
     } while(fCharIndex == fCharsAvail);
 
@@ -1352,6 +1378,12 @@ bool XMLReader::setEncoding(const XMLCh* const newEncoding)
             fMemoryManager->deallocate(fEncodingStr);
             fEncodingStr = inputEncoding;
 
+            // Check for a pre-created transcoder to delete.
+            if (fTranscoder) {
+                delete fTranscoder;
+                fTranscoder = 0;
+            }
+
             XMLTransService::Codes failReason;
             fTranscoder = XMLPlatformUtils::fgTransService->makeNewTranscoderFor
             (
@@ -1360,6 +1392,9 @@ bool XMLReader::setEncoding(const XMLCh* const newEncoding)
                 , kCharBufSize
                 , fMemoryManager
             );
+
+            if (!fTranscoder)
+                ThrowXMLwithMemMgr1(TranscodingException, XMLExcepts::Trans_CantCreateCvtrFor, fEncodingStr, fMemoryManager);
         }
         else
         {
@@ -1455,7 +1490,7 @@ void XMLReader::doInitDecode()
             }
 
             // Look at the raw buffer as UCS4 chars
-            const UCS4Ch* asUCS = (const UCS4Ch*)fRawByteBuf;
+            const UCS4Ch* asUCS = reinterpret_cast<const UCS4Ch*>(fRawByteBuf);
 
             while (fRawBufIndex < fRawBytesAvail)
             {
@@ -1628,7 +1663,7 @@ void XMLReader::doInitDecode()
                 break;
 
             XMLSize_t postBOMIndex = 0;
-            const UTF16Ch* asUTF16 = (const UTF16Ch*)&fRawByteBuf[fRawBufIndex];
+            const UTF16Ch* asUTF16 = reinterpret_cast<const UTF16Ch*>(&fRawByteBuf[fRawBufIndex]);
             if ((*asUTF16 == chUnicodeMarker) || (*asUTF16 == chSwappedUnicodeMarker))
             {
                 fRawBufIndex += sizeof(UTF16Ch);

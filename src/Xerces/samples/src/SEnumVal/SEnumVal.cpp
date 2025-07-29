@@ -16,7 +16,7 @@
  */
 
 /*
- * $Id: SEnumVal.cpp 1662876 2015-02-28 01:36:52Z scantor $
+ * $Id$
  */
 // ---------------------------------------------------------------------------
 //  Includes
@@ -469,8 +469,8 @@ void processDatatypeValidator( const DatatypeValidator* dtValidator, bool margin
 	{
 		XERCES_STD_QUALIFIER cout << "Enumeration:\t\t\n";
 
-        int enumLength = enums->size();
-        for ( int i = 0; i < enumLength; i++)
+		XMLSize_t enumLength = enums->size();
+		for ( XMLSize_t i = 0; i < enumLength; i++)
         {
             XERCES_STD_QUALIFIER cout << "\t" << StrX( enums->elementAt(i)) << "\n";
         }
