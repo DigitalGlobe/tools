@@ -56,6 +56,7 @@ macro(test_convert_multi command infile outfile)
     message(FATAL_ERROR "Returned failed status ${TEST_STATUS}!  Output (if any) is in \"${native_outfile}\"")
   endif()
 endmacro()
+
 #
 # Test a simple command which sends output to stdout
 #
@@ -70,6 +71,19 @@ macro(test_stdout command infile outfile)
                   RESULT_VARIABLE TEST_STATUS)
   if(TEST_STATUS)
     message(FATAL_ERROR "Returned failed status ${TEST_STATUS}!  Output (if any) is in \"${native_outfile}")
+  endif()
+endmacro()
+
+#
+# Test a simple command which sends output to stdout
+#
+# test_stdout command infile outfile
+macro(test_stdout_noargs command)
+  message(STATUS "Running ${MEMCHECK} ${command}")
+  execute_process(COMMAND ${MEMCHECK} ${command}
+          RESULT_VARIABLE TEST_STATUS)
+  if(TEST_STATUS)
+    message(FATAL_ERROR "Returned failed status ${TEST_STATUS}!")
   endif()
 endmacro()
 
@@ -100,4 +114,9 @@ if(WIN32)
   get_filename_component(LIBTIFF_DIR "${LIBTIFF}" DIRECTORY)
   file(TO_NATIVE_PATH "${LIBTIFF_DIR}" LIBTIFF_DIR)
   set(ENV{PATH} "${LIBTIFF_DIR};$ENV{PATH}")
+endif()
+if(CYGWIN)
+  get_filename_component(LIBTIFF_DIR "${LIBTIFF}" DIRECTORY)
+  file(TO_NATIVE_PATH "${LIBTIFF_DIR}" LIBTIFF_DIR)
+  set(ENV{PATH} "${LIBTIFF_DIR}:$ENV{PATH}")
 endif()

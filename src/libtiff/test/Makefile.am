@@ -23,7 +23,7 @@
 
 # Process this file with automake to produce Makefile.in.
 
-AUTOMAKE_OPTIONS = 1.12 color-tests parallel-tests foreign
+AUTOMAKE_OPTIONS = 1.11 color-tests parallel-tests foreign
 
 LIBTIFF = $(top_builddir)/libtiff/libtiff.la
 
@@ -34,6 +34,7 @@ TESTS_ENVIRONMENT = \
 	MEMCHECK="$(MEMCHECK)"
 
 EXTRA_DIST = \
+	$(REFFILES) \
 	$(TESTSCRIPTS) \
 	$(IMAGES_EXTRA_DIST) \
 	CMakeLists.txt \
@@ -43,7 +44,9 @@ EXTRA_DIST = \
 	TiffTest.cmake
 
 # All of the tests to execute via 'make check'
-TESTS = $(check_PROGRAMS) $(TESTSCRIPTS)
+if TIFF_TESTS
+TESTS = $(check_PROGRAMS) $(TESTSCRIPTS_TO_RUN)
+endif
 
 # Tests which are expected to fail
 XFAIL_TESTS =
@@ -51,24 +54,54 @@ XFAIL_TESTS =
 # Extra files which should be cleaned by 'make clean'
 CLEANFILES = test_packbits.tif o-*
 
+JPEG_DEPENDENT_TESTSCRIPTS=\
+	tiff2rgba-quad-tile.jpg.sh \
+	tiff2rgba-ojpeg_zackthecat_subsamp22_single_strip.sh \
+	tiff2rgba-ojpeg_chewey_subsamp21_multi_strip.sh \
+	tiff2rgba-ojpeg_single_strip_no_rowsperstrip.sh \
+	tiff2rgba-32bpp-None-jpeg.sh \
+	tiffcp-32bpp-None-jpeg.sh \
+	tiffcrop-32bpp-None-jpeg.sh
+
 if HAVE_JPEG
+if TIFF_TOOLS
 JPEG_DEPENDENT_CHECK_PROG=raw_decode
-JPEG_DEPENDENT_TESTSCRIPTS=tiff2rgba-quad-tile.jpg.sh
+JPEG_DEPENDENT_TESTSCRIPTS_TO_RUN=$(JPEG_DEPENDENT_TESTSCRIPTS)
+endif
 else
 JPEG_DEPENDENT_CHECK_PROG=
-JPEG_DEPENDENT_TESTSCRIPTS=
+JPEG_DEPENDENT_TESTSCRIPTS_TO_RUN=
+endif
+
+JBIG_DEPENDENT_TESTSCRIPTS=\
+	tiffcp-lzw-single-strip-jbig.sh
+
+if HAVE_JBIG
+if TIFF_TOOLS
+JBIG_DEPENDENT_TESTSCRIPTS_TO_RUN=$(JBIG_DEPENDENT_TESTSCRIPTS)
+endif
+else
+JBIG_DEPENDENT_TESTSCRIPTS_TO_RUN=
+endif
+
+if BUILD_STATIC
+STATIC_CHECK_PROGS=rational_precision2double test_write_read_tags test_transferfunction_write_read
 endif
 
 # Executable programs which need to be built in order to support tests
+if TIFF_TESTS
 check_PROGRAMS = \
-	ascii_tag long_tag short_tag strip_rw rewrite custom_dir \
-	$(JPEG_DEPENDENT_CHECK_PROG)
+	ascii_tag long_tag short_tag strip_rw rewrite custom_dir custom_dir_EXIF_231 \
+	defer_strile_loading defer_strile_writing test_directory test_IFD_enlargement test_open_options \
+	test_append_to_strip test_ifd_loop_detection testtypes test_signed_tags $(JPEG_DEPENDENT_CHECK_PROG) $(STATIC_CHECK_PROGS)
+endif
 
 # Test scripts to execute
-TESTSCRIPTS = \
+BASE_TESTSCRIPTS = \
 	ppm2tiff_pbm.sh \
 	ppm2tiff_pgm.sh \
 	ppm2tiff_ppm.sh \
+	fax2tiff.sh \
 	tiffcp-g3.sh \
 	tiffcp-g3-1d.sh \
 	tiffcp-g3-1d-fill.sh \
@@ -77,6 +110,8 @@ TESTSCRIPTS = \
 	tiffcp-g4.sh \
 	tiffcp-logluv.sh \
 	tiffcp-thumbnail.sh \
+	tiffcp-lzw-compat.sh \
+	tiffcp-lzw-scanline-decode.sh \
 	tiffdump.sh \
 	tiffinfo.sh \
 	tiffcp-split.sh \
@@ -126,6 +161,9 @@ TESTSCRIPTS = \
 	tiffcrop-R90-palette-1c-8b.sh \
 	tiffcrop-R90-rgb-3c-16b.sh \
 	tiffcrop-R90-rgb-3c-8b.sh \
+	tiff2bw-palette-1c-8b.sh \
+	tiff2bw-quad-lzw-compat.sh \
+	tiff2bw-rgb-3c-8b.sh \
 	tiff2rgba-logluv-3c-16b.sh \
 	tiff2rgba-minisblack-1c-16b.sh \
 	tiff2rgba-minisblack-1c-8b.sh \
@@ -136,7 +174,32 @@ TESTSCRIPTS = \
 	tiff2rgba-palette-1c-8b.sh \
 	tiff2rgba-rgb-3c-16b.sh \
 	tiff2rgba-rgb-3c-8b.sh \
-	$(JPEG_DEPENDENT_TESTSCRIPTS)
+	testfax4.sh \
+	testfax3_bug_513.sh \
+	testdeflatelaststripextradata.sh
+
+TESTSCRIPTS =$(BASE_TESTSCRIPTS) \
+	$(JPEG_DEPENDENT_TESTSCRIPTS) \
+	$(JBIG_DEPENDENT_TESTSCRIPTS)
+
+if TIFF_TOOLS
+TESTSCRIPTS_TO_RUN=$(BASE_TESTSCRIPTS) \
+	$(JPEG_DEPENDENT_TESTSCRIPTS_TO_RUN) \
+	$(JBIG_DEPENDENT_TESTSCRIPTS_TO_RUN)
+else
+TESTSCRIPTS_TO_RUN=
+endif
+
+# This list should contain the references files
+# from the 'refs' subdirectory
+REFFILES = \
+	refs/o-tiff2ps-EPS1.ps \
+	refs/o-tiff2ps-PS1.ps \
+	refs/o-tiff2ps-PS2.ps \
+	refs/o-tiff2ps-PS3.ps \
+	refs/o-testfax4.tiff \
+	refs/o-testfax3_bug_513.tiff \
+	refs/o-deflate-last-strip-extra-data.tiff
 
 # This list should contain all of the TIFF files in the 'images'
 # subdirectory which are intended to be used as input images for
@@ -152,11 +215,22 @@ TIFFIMAGES = \
 	images/palette-1c-8b.tiff \
 	images/rgb-3c-16b.tiff \
 	images/rgb-3c-8b.tiff \
-	images/quad-tile.jpg.tiff
+	images/quad-tile.jpg.tiff \
+	images/quad-lzw-compat.tiff \
+	images/lzw-single-strip.tiff \
+	images/ojpeg_zackthecat_subsamp22_single_strip.tiff \
+	images/ojpeg_chewey_subsamp21_multi_strip.tiff \
+	images/ojpeg_single_strip_no_rowsperstrip.tiff \
+	images/testfax4.tiff \
+	images/deflate-last-strip-extra-data.tiff \
+	images/custom_dir_EXIF_GPS.tiff \
+	images/testfax3_bug_513.tiff \
+	images/32bpp-None.tiff
 
 PNMIMAGES = \
 	images/minisblack-1c-8b.pgm \
 	images/miniswhite-1c-1b.pbm \
+	images/rgb-3c-16b.ppm \
 	images/rgb-3c-8b.ppm
 
 # This list should include all of the files in the 'images'
@@ -164,11 +238,23 @@ PNMIMAGES = \
 # files which are not currently used by the tests.
 IMAGES_EXTRA_DIST = \
 	images/README.txt \
+	images/miniswhite-1c-1b.g3 \
+	images/test_float64_predictor2_le_lzw.tif \
+	images/test_float64_predictor2_be_lzw.tif \
+	images/tiff_with_subifd_chain.tif \
+	images/test_ifd_loop_to_self.tif \
+	images/test_ifd_loop_to_first.tif \
+	images/test_two_ifds.tif \
+	images/test_ifd_loop_subifd.tif \
+	images/webp_lossless_rgba_alpha_fully_opaque.tif \
+	images/32bpp-None-jpeg.tiff \
 	$(PNMIMAGES) \
 	$(TIFFIMAGES)
 
 noinst_HEADERS = tifftest.h
 
+test_signed_tags_SOURCES = test_signed_tags.c
+test_signed_tags_LDADD = $(LIBTIFF)
 ascii_tag_SOURCES = ascii_tag.c
 ascii_tag_LDADD = $(LIBTIFF)
 long_tag_SOURCES = long_tag.c check_tag.c
@@ -183,6 +269,38 @@ raw_decode_SOURCES = raw_decode.c
 raw_decode_LDADD = $(LIBTIFF)
 custom_dir_SOURCES = custom_dir.c
 custom_dir_LDADD = $(LIBTIFF)
+
+if BUILD_STATIC
+rational_precision2double_SOURCES = rational_precision2double.c
+rational_precision2double_LDADD = $(LIBTIFF)
+rational_precision2double_LDFLAGS = -static
+
+test_write_read_tags_SOURCES = test_write_read_tags.c
+test_write_read_tags_LDADD = $(LIBTIFF)
+test_write_read_tags_LDFLAGS = -static
+
+test_transferfunction_write_read_SOURCES = test_transferfunction_write_read.c
+test_transferfunction_write_read_LDADD = $(LIBTIFF)
+test_transferfunction_write_read_LDFLAGS = -static
+endif
+
+custom_dir_EXIF_231_SOURCES = custom_dir_EXIF_231.c
+custom_dir_EXIF_231_LDADD = $(LIBTIFF)
+defer_strile_loading_SOURCES = defer_strile_loading.c
+defer_strile_loading_LDADD = $(LIBTIFF)
+defer_strile_writing_SOURCES = defer_strile_writing.c
+defer_strile_writing_LDADD = $(LIBTIFF)
+test_directory_SOURCES = test_directory.c
+test_directory_LDADD = $(LIBTIFF)
+test_IFD_enlargement_SOURCES = test_IFD_enlargement.c
+test_IFD_enlargement_LDADD = $(LIBTIFF)
+test_open_options_SOURCES = test_open_options.c
+test_open_options_LDADD = $(LIBTIFF)
+test_append_to_strip_SOURCES = test_append_to_strip.c
+test_append_to_strip_LDADD = $(LIBTIFF)
+test_ifd_loop_detection_CFLAGS = -DSOURCE_DIR=\"@srcdir@\"
+test_ifd_loop_detection_SOURCES = test_ifd_loop_detection.c
+test_ifd_loop_detection_LDADD = $(LIBTIFF)
 
 AM_CPPFLAGS = -I$(top_srcdir)/libtiff
 
@@ -206,6 +324,26 @@ memcheck:
 # ptrcheck: valgrind's experimental pointer checking tool.
 ptrcheck:
 	$(MAKE) MEMCHECK='valgrind --tool=exp-ptrcheck --quiet $(VALGRIND_EXTRA_OPTS)' check
+
+# tiff2bw is pretty lame so currently only the generated scripts
+# tiff2bw-palette-1c-8b.sh, tiff2bw-quad-lzw-compat.sh, and
+# tiff2bw-rgb-3c-8b.sh pass tests.
+generate-tiff2bw-tests:
+	for file in $(TIFFIMAGES) ; \
+	do \
+	base=`basename $$file .tiff` ; \
+	testscript=$(srcdir)/tiff2bw-$$base.sh ; \
+	( \
+	  echo "#!/bin/sh" ; \
+	  echo "# Generated file, master is Makefile.am" ; \
+	  echo ". \$${srcdir:-.}/common.sh" ; \
+	  echo "infile=\"\$$srcdir/$$file\"" ; \
+	  echo "outfile=\"o-tiff2bw-$$base.tiff\"" ; \
+	  echo "f_test_convert \"\$$TIFF2BW\" \$$infile \$$outfile" ; \
+	  echo "f_tiffinfo_validate \$$outfile" ; \
+	) > $$testscript ; \
+	chmod +x $$testscript ; \
+	done
 
 generate-tiff2rgba-tests:
 	for file in $(TIFFIMAGES) ; \
@@ -303,5 +441,6 @@ generate-tiffcrop-tests: \
 	generate-tiffcrop-extractz14-tests
 
 generate-tests: \
+	generate-tiff2bw-tests \
 	generate-tiff2rgba-tests \
 	generate-tiffcrop-tests
