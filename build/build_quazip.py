@@ -221,31 +221,32 @@ class Program :
             + f".pdb"
         )
 
-        incdir = pathFinder.path(cmakeInstallPath, "include", "QuaZip-Qt5-1.5", "quazip")
+        incdir = pathFinder.path(cmakeInstallPath, "include", "QuaZip-Qt5-1.5", Program._LIBNAME)
         libdir = pathFinder.path(cmakeInstallPath, "lib")
         bindir = pathFinder.path(cmakeInstallPath, "bin")
+
         systemManager.distributeFiles(
             incdir,
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
         )
-        # we need to rename the debug libs to have a _d suffix (they have a 'd' suffix now)
+
         for f in glob.glob(pathFinder.path(libdir, "*.lib")):
             fname = f[len(libdir) + 1 :]
-            fname = f"{fname[:fname.find("quazip") + len("quazip") :]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib"
+            fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME) :]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib"
 
             systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
 
         for f in glob.glob(pathFinder.path(bindir, "*.dll")):
-            fname = f[len(libdir) + 1 :]
-            fname = f"{fname[:fname.find("quazip") + len("quazip")]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.dll"
+            fname = f[len(bindir) + 1 :]
+            fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME)]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.dll"
             systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
 
         if not buildSettings.ReleaseSpecified():
-            pdfdir = pathFinder.path(cmakeBuildPath, "quazip", conf)
+            pdfdir = pathFinder.path(cmakeBuildPath, Program._LIBNAME, conf)
             for f in glob.glob(pathFinder.path(pdfdir, "*.pdb")):
                 fname = f[len(pdfdir) + 1 :]
-                fname = f"{fname[:fname.find("quazip") + len("quazip")]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.pdb"
+                fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME)]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.pdb"
                 systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
 
 
