@@ -1,330 +1,216 @@
-/***************************************************************************
- *   Copyright (C) 2007 by Dominik Seichter                                *
- *   domseichter@web.de                                                    *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
- *   published by the Free Software Foundation; either version 2 of the    *
- *   License, or (at your option) any later version.                       *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
- *   License along with this program; if not, write to the                 *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- ***************************************************************************/
+/**
+ * Copyright (C) 2007 by Dominik Seichter <domseichter@web.de>
+ * Copyright (C) 2021 by Francesco Pretto <ceztko@gmail.com>
+ *
+ * Licensed under GNU Library General Public 2.0 or later.
+ * Some rights reserved. See COPYING, AUTHORS.
+ */
 
-#include "StringTest.h"
+#include <PdfTest.h>
 
-#include <podofo.h>
-
-#ifndef __clang__
-
+using namespace std;
 using namespace PoDoFo;
 
-// Registers the fixture into the 'registry'
-CPPUNIT_TEST_SUITE_REGISTRATION( StringTest );
+static void TestWriteEscapeSequences(const string_view& str, const string_view& expected);
 
-inline std::ostream& operator<<(std::ostream& o, const PdfString& s)
+TEST_CASE("TestEscapeAllCharacters")
 {
-    return o << s.GetStringUtf8();
+    PdfMemDocument doc;
+    doc.Load(TestUtils::GetTestInputFilePath("TestEscapeAllCharacters.pdf"));
+
+    // NOTE: Escaped new line '\n', '\r' characters are ignored
+    constexpr string_view VRefString = "\1\2\3\4\5\6\7\10\11\13\14\16\17\20\21\22\23\24\25\26\27\30\31\32\33\34\35\36\37\40\41\42\43\44\45\46\47\50\51\52\53\54\55\56\57\1\2\3\4\5\6\7\70\71\72\73\74\75\76\77\100\101\102\103\104\105\106\107\110\111\112\113\114\115\116\117\120\121\122\123\124\125\126\127\130\131\132\133\134\135\136\137\140\141\b\143\144\145\f\147\150\151\152\153\154\155\n\157\160\161\r\163\t\165\166\167\170\171\172\173\174\175\176\177\200\201\202\203\204\205\206\207\210\211\212\213\214\215\216\217\220\221\222\223\224\225\226\227\230\231\232\233\234\235\236\237\240\241\242\243\244\245\246\247\250\251\252\253\254\255\256\257\260\261\262\263\264\265\266\267\270\271\272\273\274\275\276\277\300\301\302\303\304\305\306\307\310\311\312\313\314\315\316\317\320\321\322\323\324\325\326\327\330\331\332\333\334\335\336\337\340\341\342\343\344\345\346\347\350\351\352\353\354\355\356\357\360\361\362\363\364\365\366\367\370\371\372\373\374\375\376\377"sv;
+
+    constexpr string_view TestRefString = "\1\2\3\4\5\6\7\10\11\12\13\14\15\16\17\20\21\22\23\24\25\26\27\30\31\32\33\34\35\36\37\40\41\42\43\44\45\46\47\50\51\52\53\54\55\56\57\1\2\3\4\5\6\7\70\71\72\73\74\75\76\77\100\101\102\103\104\105\106\107\110\111\112\113\114\115\116\117\120\121\122\123\124\125\126\127\130\131\132\133\134\135\136\137\140\141\b\143\144\145\f\147\150\151\152\153\154\155\n\157\160\161\r\163\t\165\166\167\170\171\172\173\174\175\176\177\200\201\202\203\204\205\206\207\210\211\212\213\214\215\216\217\220\221\222\223\224\225\226\227\230\231\232\233\234\235\236\237\240\241\242\243\244\245\246\247\250\251\252\253\254\255\256\257\260\261\262\263\264\265\266\267\270\271\272\273\274\275\276\277\300\301\302\303\304\305\306\307\310\311\312\313\314\315\316\317\320\321\322\323\324\325\326\327\330\331\332\333\334\335\336\337\340\341\342\343\344\345\346\347\350\351\352\353\354\355\356\357\360\361\362\363\364\365\366\367\370\371\372\373\374\375\376\377"sv;
+
+    auto& obj = doc.GetObjects().MustGetObject(PdfReference(5, 0));
+
+    REQUIRE(obj.GetDictionary().FindKeyAs<PdfString>("V").GetRawData() == VRefString);
+    REQUIRE(obj.GetDictionary().FindKeyAs<PdfString>("Test").GetRawData() == TestRefString);
 }
 
-void StringTest::setUp()
+TEST_CASE("TestEncryptedStringsEscaped")
 {
+    PdfMemDocument doc;
+    doc.Load(TestUtils::GetTestInputFilePath("TestEncryptedStringsEscaped.pdf"), "userpass");
+
+    REQUIRE(*doc.GetMetadata().GetTitle() == "Test title");
+
+    // This has a escaped `\r` character that shall be ignored. This currently works in Pdf.js but
+    // not on Adobe. It's a rare edge case anyway
+    REQUIRE(doc.GetMetadata().GetModifyDate()->ToString() == "D:20250403231507+02'00'");
+
+    doc.Load(TestUtils::GetTestInputFilePath("TestEncryptedStringsEscaped2.pdf"), "userpass");
+
+    // Next title has a escaped `\0`
+    REQUIRE(*doc.GetMetadata().GetTitle() == "Test title 2");
+
+    // Next producer has a escaped `\n` character that shall be ignored. This
+    // works also in Adobe
+    REQUIRE(*doc.GetMetadata().GetProducer() == "PoDoFo - https://github.com/podofo/podofo");
 }
 
-void StringTest::tearDown()
+TEST_CASE("TestStringUtf8")
 {
+    string_view str = "Hallo PoDoFo!";
+    REQUIRE(PdfString(str) == str);
+
+    string_view stringJapUtf8 = "「PoDoFo」は今から日本語も話せます。";
+    REQUIRE(PdfString(stringJapUtf8) == stringJapUtf8);
 }
 
-void StringTest::testGetStringUtf8()
+TEST_CASE("TestPdfDocEncoding")
 {
-    const std::string src1 = "Hello World!";
-    const std::string src2 = src1;
-    const std::string src3 = "「Po\tDoFo」は今から日本語も話せます。";
-
+    const string src = "This string contains PdfDocEncoding Characters: ÄÖÜ";
+    string_view ref = "(This string contains PdfDocEncoding Characters: \304\326\334)"sv;
     // Normal ascii string should be converted to UTF8
-    PdfString str1( src1.c_str() );
-    std::string res1 = str1.GetStringUtf8();
+    PdfString str(src);
+    REQUIRE(str == src);
+    REQUIRE(str.GetCharset() == PdfStringCharset::PdfDocEncoding);
 
-    CPPUNIT_ASSERT_EQUAL_MESSAGE( "testing const char* ASCII -> UTF8", src1, res1 );
+    // Serialize the string
+    string serialized;
+    str.ToString(serialized);
+    REQUIRE(serialized == ref);
 
-    // Normal std::string string should be converted to UTF8
-    PdfString str2( src2 );
-    std::string res2 = str2.GetStringUtf8();
-
-    CPPUNIT_ASSERT_EQUAL_MESSAGE( "testing std::string ASCII -> UTF8", src2, res2 );
-
-    // UTF8 data in std::string cannot be converted as we do not know it is UTF8
-    PdfString str3( src3 );
-    std::string res3 = str3.GetStringUtf8();
-
-    CPPUNIT_ASSERT_EQUAL_MESSAGE( "testing std::string UTF8 -> UTF8", (res3 != src3) , true );
-
-    // UTF8 data as pdf_utf8* must be convertible
-    PdfString str4( reinterpret_cast<const pdf_utf8*>(src3.c_str()) );
-    std::string res4 = str4.GetStringUtf8();
-
-    CPPUNIT_ASSERT_EQUAL_MESSAGE( "testing pdf_utf8* UTF8 -> UTF8", res4, src3 );    
+    // Deserialize the string (remove the surrounding parenthesis '(' ')' )
+    str = PdfString::FromRaw(serialized.substr(1, serialized.length() - 2));
+    REQUIRE(str.GetString() == src);
 }
 
-void StringTest::testUtf16beContructor()
-{
-    const char* pszStringJapUtf8 = "「PoDoFo」は今から日本語も話せます。";
-    // The same string as a NULL-terminated UTF-8 string. This is a UTF-8 literal, so your editor
-    // must be configured to handle this file as UTF-8 to see something sensible below.
-    // The same string in UTF16BE encoding
-    const char psStringJapUtf16BE[44] = { 0x30, 0x0c, 0x00, 0x50, 0x00, 0x6f, 
-                                          0x00, 0x44, 0x00, 0x6f, 0x00, 0x46, 
-                                          0x00, 0x6f, 0x30, 0x0d, 0x30, 0x6f, 
-                                          0x4e, static_cast<char>(0xca), 0x30, 0x4b, 0x30, static_cast<char>(0x89), 
-                                          0x65, static_cast<char>(0xe5), 0x67, 0x2c, static_cast<char>(0x8a), static_cast<char>(0x9e), 
-                                          0x30, static_cast<char>(0x82), static_cast<char>(0x8a), static_cast<char>(0x71), 0x30, 0x5b, 
-                                          0x30, static_cast<char>(0x7e), 0x30, 0x59, 0x30, 0x02, 
-                                          0x00, 0x00 };
-
-    PdfString strUtf8( reinterpret_cast<const pdf_utf8*>(pszStringJapUtf8) );
-    PdfString strUtf16( reinterpret_cast<const pdf_utf16be*>(psStringJapUtf16BE), 21 );
-    PdfString strUtf16b( reinterpret_cast<const pdf_utf16be*>(psStringJapUtf16BE), 21 );
-
-    /*
-    std::cout << std::endl;
-    std::cout << "utf8 :" << strUtf8 << "  " << strUtf8.GetCharacterLength() << std::endl;
-    std::cout << "utf16:" << strUtf16 << "  " << strUtf16.GetCharacterLength() <<  std::endl;
-    std::cout << "wide : ";
-    for( int i=0;i<=strUtf16.GetCharacterLength();i++ )
-        printf("%04x ", strUtf16.GetUnicode()[i]);
-    std::cout << std::endl;
-
-
-    std::cout << "wide : ";
-    for( int i=0;i<=strUtf16.GetCharacterLength();i++ )
-        printf("%4i ", i );
-    std::cout << std::endl;
-    */
-    
-    // Compare UTF16 to UTF8 string
-    CPPUNIT_ASSERT_EQUAL_MESSAGE( "Comparing string length", 
-                                  strUtf8.GetCharacterLength(), strUtf16.GetCharacterLength() );
-
-    CPPUNIT_ASSERT_EQUAL_MESSAGE( "Comparing UTF8 and UTF16 string converted to UTF8", 
-                                  strUtf8.GetStringUtf8(), strUtf16.GetStringUtf8() );
-
-    CPPUNIT_ASSERT_EQUAL_MESSAGE( "Comparing UTF8 and UTF16 string", strUtf8, strUtf16 );
-
-    // Compare two UTF16 strings
-    CPPUNIT_ASSERT_EQUAL( strUtf16.GetCharacterLength(), strUtf16b.GetCharacterLength() );
-    CPPUNIT_ASSERT_EQUAL( strUtf16.GetStringUtf8(), strUtf16b.GetStringUtf8() );
-    CPPUNIT_ASSERT_EQUAL( strUtf16, strUtf16b );
-
-}
-
-void StringTest::testWCharConstructor()
-{
-    CPPUNIT_ASSERT_EQUAL( PdfString("Hallo World"), PdfString(L"Hallo World") );
-    CPPUNIT_ASSERT_EQUAL( PdfString(L"Hallo World"), PdfString(L"Hallo World") );
-}
-
-void StringTest::testEscapeBrackets()
+TEST_CASE("TestEscapeBrackets")
 {
     // Test balanced brackets ansi
-    const char* pszAscii       = "Hello (balanced) World";
-    const char* pszAsciiExpect = "(Hello \\(balanced\\) World)";
+    string_view balanced = "Hello (balanced) World";
+    string_view balancedExpect = "(Hello \\(balanced\\) World)";
 
-    PdfString   sAscii( pszAscii );
-    PdfVariant  varAscii( sAscii );
-    std::string strAscii;
-    varAscii.ToString( strAscii );
+    PdfString pdfStrAscii(balanced);
+    PdfVariant varAscii(pdfStrAscii);
+    string strAscii;
+    varAscii.ToString(strAscii);
 
-    CPPUNIT_ASSERT_EQUAL( strAscii == pszAsciiExpect, true );
+    REQUIRE(pdfStrAscii.GetCharset() == PdfStringCharset::Ascii);
+    REQUIRE(strAscii == balancedExpect);
 
     // Test un-balanced brackets ansi
-    const char* pszAscii2       = "Hello ((unbalanced World";
-    const char* pszAsciiExpect2 = "(Hello \\(\\(unbalanced World)";
+    string_view unbalanced = "Hello ((unbalanced World";
+    string_view unbalancedExpect = "(Hello \\(\\(unbalanced World)";
 
-    PdfString   sAscii2( pszAscii2 );
-    PdfVariant  varAscii2( sAscii2 );
-    std::string strAscii2;
-    varAscii2.ToString( strAscii2 );
+    PdfString pdfStrAscii2(unbalanced);
+    PdfVariant varAscii2(pdfStrAscii2);
+    string strAscii2;
+    varAscii2.ToString(strAscii2);
 
-    CPPUNIT_ASSERT_EQUAL( strAscii2 == pszAsciiExpect2, true );
+    REQUIRE(strAscii2 == unbalancedExpect);
 
-    // Test balanced brackets unicode
-    const char* pszUnic       = "Hello (balanced) World";
-    const char pszUnicExpect[]= { 0x28, static_cast<char>(0xFE), static_cast<char>(0xFF), 0x00, 0x48, 0x00, 0x65, 0x00, 
-                                  0x6C, 0x00, 0x6C, 0x00, 0x6F, 0x00, 0x20, 0x00, 
-                                  0x5C, 0x28, 0x00, 0x62, 0x00, 0x61, 0x00, 0x6C, 
-                                  0x00, 0x61, 0x00, 0x6E, 0x00, 0x63, 0x00, 0x65, 
-                                  0x00, 0x64, 0x00, 0x5C, 0x29, 0x00, 0x20, 0x00, 
-                                  0x57, 0x00, 0x6F, 0x00, static_cast<char>(0x72), 0x00, 0x6C, 0x00, 
-                                  0x64, 0x29, 0x00, 0x00 };
-    
-    // Force unicode string
-    PdfString   sUnic( reinterpret_cast<const pdf_utf8*>(pszUnic) );
-    PdfVariant  varUnic( sUnic );
-    std::string strUnic;
-    varUnic.ToString( strUnic );
+    string_view utf16HexStr =
+        "<FEFF00480065006C006C006F0020002800280075006E00620061006C0061006E00630065006400200057006F0072006C00640029>";
 
-    CPPUNIT_ASSERT_EQUAL( memcmp( strUnic.c_str(), pszUnicExpect, strUnic.length() ) == 0, true );
-
-    // Test un-balanced brackets unicode
-    const char* pszUnic2       = "Hello ((unbalanced World";
-    const char pszUnicExpect2[]= { 0x28, static_cast<char>(0xFE), static_cast<char>(0xFF), 0x00, 0x48, 0x00, 0x65, 0x00, 
-                                   0x6C, 0x00, 0x6C, 0x00, 0x6F, 0x00, 0x20, 0x00, 
-                                   0x5C, 0x28, 0x00, 0x5C, 0x28, 0x00, 0x75, 0x00, 
-                                   0x6E, 0x00, 0x62, 0x00, 0x61, 0x00, 0x6C, 0x00, 
-                                   0x61, 0x00, 0x6E, 0x00, 0x63, 0x00, 0x65, 0x00, 
-                                   0x64, 0x00, 0x20, 0x00, 0x57, 0x00, 0x6F, 0x00, 
-                                   0x72, 0x00, 0x6C, 0x00, 0x64, 0x29 };
-    
-    // Force unicode string
-    PdfString   sUnic2( reinterpret_cast<const pdf_utf8*>(pszUnic2) );
-    PdfVariant  varUnic2( sUnic2 );
-    std::string strUnic2;
-    varUnic2.ToString( strUnic2 );
-
-    CPPUNIT_ASSERT_EQUAL( memcmp( strUnic2.c_str(), pszUnicExpect2, strUnic2.length() ) == 0, true );
-
+    string_view utf16Expected = "Hello ((unbalanced World)";
     // Test reading the unicode string back in
     PdfVariant varRead;
-    PdfTokenizer tokenizer( strUnic2.c_str(), strUnic2.length() );
-    tokenizer.GetNextVariant( varRead, NULL );
-    CPPUNIT_ASSERT_EQUAL( varRead.GetString() == sUnic2, true );
+    PdfTokenizer tokenizer;
+    SpanStreamDevice input(utf16HexStr);
+    (void)tokenizer.ReadNextVariant(input, varRead);
+    REQUIRE(varRead.GetDataType() == PdfDataType::String);
+    REQUIRE(varRead.GetString() == utf16Expected);
 }
 
-void StringTest::testWriteEscapeSequences()
+TEST_CASE("TestWriteEscapeSequences")
 {
-    TestWriteEscapeSequences("(Hello\\nWorld)", "(Hello\\nWorld)");
+    TestWriteEscapeSequences("(1Hello\\nWorld)", "(1Hello\\nWorld)");
     TestWriteEscapeSequences("(Hello\nWorld)", "(Hello\\nWorld)");
     TestWriteEscapeSequences("(Hello\012World)", "(Hello\\nWorld)");
     TestWriteEscapeSequences("(Hello\\012World)", "(Hello\\nWorld)");
 
-    TestWriteEscapeSequences("(Hello\\rWorld)", "(Hello\\rWorld)");
+    TestWriteEscapeSequences("(2Hello\\rWorld)", "(2Hello\\rWorld)");
     TestWriteEscapeSequences("(Hello\rWorld)", "(Hello\\rWorld)");
     TestWriteEscapeSequences("(Hello\015World)", "(Hello\\rWorld)");
     TestWriteEscapeSequences("(Hello\\015World)", "(Hello\\rWorld)");
 
-    TestWriteEscapeSequences("(Hello\\tWorld)", "(Hello\\tWorld)");
+    TestWriteEscapeSequences("(3Hello\\tWorld)", "(3Hello\\tWorld)");
     TestWriteEscapeSequences("(Hello\tWorld)", "(Hello\\tWorld)");
     TestWriteEscapeSequences("(Hello\011World)", "(Hello\\tWorld)");
     TestWriteEscapeSequences("(Hello\\011World)", "(Hello\\tWorld)");
 
-    TestWriteEscapeSequences("(Hello\\fWorld)", "(Hello\\fWorld)");
+    TestWriteEscapeSequences("(4Hello\\fWorld)", "(4Hello\\fWorld)");
     TestWriteEscapeSequences("(Hello\fWorld)", "(Hello\\fWorld)");
     TestWriteEscapeSequences("(Hello\014World)", "(Hello\\fWorld)");
     TestWriteEscapeSequences("(Hello\\014World)", "(Hello\\fWorld)");
 
-    TestWriteEscapeSequences("(Hello\\(World)", "(Hello\\(World)");
+    TestWriteEscapeSequences("(5Hello\\(World)", "(5Hello\\(World)");
     TestWriteEscapeSequences("(Hello\\050World)", "(Hello\\(World)");
 
-    TestWriteEscapeSequences("(Hello\\)World)", "(Hello\\)World)");
+    TestWriteEscapeSequences("(6Hello\\)World)", "(6Hello\\)World)");
     TestWriteEscapeSequences("(Hello\\051World)", "(Hello\\)World)");
 
-    TestWriteEscapeSequences("(Hello\\\\World)", "(Hello\\\\World)");
+    TestWriteEscapeSequences("(7Hello\\\\World)", "(7Hello\\\\World)");
     TestWriteEscapeSequences("(Hello\\\134World)", "(Hello\\\\World)");
 
     // Special case, \ at end of line
-    TestWriteEscapeSequences("(Hello\\\nWorld)", "(HelloWorld)");
+    TestWriteEscapeSequences("(8Hello\\\nWorld)", "(8HelloWorld)");
 
 
-    TestWriteEscapeSequences("(Hello\003World)", "(Hello\003World)");
+    TestWriteEscapeSequences("(9Hello\003World)", "(9Hello\003World)");
 }
 
-void StringTest::TestWriteEscapeSequences(const char* pszSource, const char* pszExpected)
+TEST_CASE("TestEmptyString")
 {
-    PdfVariant  variant;
-    std::string ret;
-    std::string expected = pszExpected;
-
-    printf("Testing with value: %s\n", pszSource );
-    PdfTokenizer tokenizer( pszSource, strlen( pszSource ) );
-
-    tokenizer.GetNextVariant( variant, NULL );
-    CPPUNIT_ASSERT_EQUAL( variant.GetDataType(), ePdfDataType_String );
-
-    variant.ToString( ret );
-    printf("   -> Convert To String: %s\n", ret.c_str() );
-
-    CPPUNIT_ASSERT_EQUAL( expected, ret );
-
-}
-
-void StringTest::testEmptyString()
-{
-    const char* pszEmpty = "";
-    std::string sEmpty;
-    std::string sEmpty2( pszEmpty );
+    const char* empty = "";
+    string strEmpty;
+    string strEmpty2(empty);
 
     PdfString str1;
-    PdfString str2( sEmpty );
-    PdfString str3( sEmpty2 );
-    PdfString str4( pszEmpty );
-    PdfString str5( pszEmpty, 0, false );
-    PdfString str6( reinterpret_cast<const pdf_utf8*>(pszEmpty) );
-    PdfString str7( reinterpret_cast<const pdf_utf8*>(pszEmpty), 0 );
-    PdfString str8( reinterpret_cast<const pdf_utf16be*>(L""), 0 );
+    PdfString str2(strEmpty);
+    PdfString str3(strEmpty2);
+    PdfString str4(empty);
 
-    CPPUNIT_ASSERT( !str1.IsValid() );
+    REQUIRE(str1.GetString().length() == 0u);
+    REQUIRE(str1.GetString() == strEmpty);
+    REQUIRE(str1.GetString() == strEmpty2);
 
-    CPPUNIT_ASSERT( str2.IsValid() );
-    CPPUNIT_ASSERT_EQUAL( static_cast<pdf_long>(0), str2.GetLength() );
-    CPPUNIT_ASSERT_EQUAL( static_cast<pdf_long>(0), str2.GetCharacterLength() );
-    CPPUNIT_ASSERT_EQUAL( std::string(), str2.GetStringUtf8() );
-    CPPUNIT_ASSERT_EQUAL( std::string(""), str2.GetStringUtf8() );
+    REQUIRE(str2.GetString().length() == 0u);
+    REQUIRE(str2.GetString() == strEmpty);
+    REQUIRE(str2.GetString() == strEmpty2);
 
-    CPPUNIT_ASSERT( str3.IsValid() );
-    CPPUNIT_ASSERT_EQUAL( static_cast<pdf_long>(0), str3.GetLength() );
-    CPPUNIT_ASSERT_EQUAL( static_cast<pdf_long>(0), str3.GetCharacterLength() );
-    CPPUNIT_ASSERT_EQUAL( std::string(), str3.GetStringUtf8() );
-    CPPUNIT_ASSERT_EQUAL( std::string(""), str3.GetStringUtf8() );
+    REQUIRE(str3.GetString().length() == 0u);
+    REQUIRE(str3.GetString() == strEmpty);
+    REQUIRE(str3.GetString() == strEmpty2);
 
-    CPPUNIT_ASSERT( str4.IsValid() );
-    CPPUNIT_ASSERT_EQUAL( static_cast<pdf_long>(0), str4.GetLength() );
-    CPPUNIT_ASSERT_EQUAL( static_cast<pdf_long>(0), str4.GetCharacterLength() );
-    CPPUNIT_ASSERT_EQUAL( std::string(), str4.GetStringUtf8() );
-    CPPUNIT_ASSERT_EQUAL( std::string(""), str4.GetStringUtf8() );
-
-    CPPUNIT_ASSERT( str5.IsValid() );
-    CPPUNIT_ASSERT_EQUAL( static_cast<pdf_long>(0), str5.GetLength() );
-    CPPUNIT_ASSERT_EQUAL( static_cast<pdf_long>(0), str5.GetCharacterLength() );
-    CPPUNIT_ASSERT_EQUAL( std::string(), str5.GetStringUtf8() );
-    CPPUNIT_ASSERT_EQUAL( std::string(""), str5.GetStringUtf8() );
-    
-    CPPUNIT_ASSERT( str6.IsValid() );
-    CPPUNIT_ASSERT_EQUAL( static_cast<pdf_long>(0), str6.GetLength() );
-    CPPUNIT_ASSERT_EQUAL( static_cast<pdf_long>(0), str6.GetCharacterLength() );
-    CPPUNIT_ASSERT_EQUAL( std::string(), str6.GetStringUtf8() );
-    CPPUNIT_ASSERT_EQUAL( std::string(""), str6.GetStringUtf8() );
-
-    CPPUNIT_ASSERT( str7.IsValid() );
-    CPPUNIT_ASSERT_EQUAL( static_cast<pdf_long>(0), str7.GetLength() );
-    CPPUNIT_ASSERT_EQUAL( static_cast<pdf_long>(0), str7.GetCharacterLength() );
-    CPPUNIT_ASSERT_EQUAL( std::string(), str7.GetStringUtf8() );
-    CPPUNIT_ASSERT_EQUAL( std::string(""), str7.GetStringUtf8() );
-
-    CPPUNIT_ASSERT( str8.IsValid() );
-    CPPUNIT_ASSERT_EQUAL( static_cast<pdf_long>(0), str8.GetLength() );
-    CPPUNIT_ASSERT_EQUAL( static_cast<pdf_long>(0), str8.GetCharacterLength() );
-    CPPUNIT_ASSERT_EQUAL( std::string(), str8.GetStringUtf8() );
-    CPPUNIT_ASSERT_EQUAL( std::string(""), str8.GetStringUtf8() );
-
+    REQUIRE(str4.GetString().length() == 0u);
+    REQUIRE(str4.GetString() == strEmpty);
+    REQUIRE(str4.GetString() == strEmpty2);
 }
 
-void StringTest::testInitFromUtf8()
+TEST_CASE("TestInitFromUtf8")
 {
-    const char* pszUtf8 = "This string contains UTF-8 Characters: ÄÖÜ.";
-    const PdfString str( reinterpret_cast<const pdf_utf8*>(pszUtf8) );
-    
-    CPPUNIT_ASSERT_EQUAL( true, str.IsUnicode() );
-    CPPUNIT_ASSERT_EQUAL( static_cast<pdf_long>(43*2), str.GetLength() );
-    CPPUNIT_ASSERT_EQUAL( static_cast<pdf_long>(43), str.GetCharacterLength() );
-    CPPUNIT_ASSERT_EQUAL( std::string(pszUtf8), str.GetStringUtf8() );
-    
+    string_view utf8 = "This string contains non PdfDocEncoding Characters: ЙКЛМ";
+    string_view ref = "(\376\377\0\124\0\150\0\151\0\163\0\40\0\163\0\164\0\162\0\151\0\156\0\147\0\40\0\143\0\157\0\156\0\164\0\141\0\151\0\156\0\163\0\40\0\156\0\157\0\156\0\40\0\120\0\144\0\146\0\104\0\157\0\143\0\105\0\156\0\143\0\157\0\144\0\151\0\156\0\147\0\40\0\103\0\150\0\141\0\162\0\141\0\143\0\164\0\145\0\162\0\163\0\72\0\40\4\31\4\32\4\33\4\34)"sv;
+
+    const PdfString str(utf8);
+
+    REQUIRE(str.GetCharset() == PdfStringCharset::Unicode);
+    string serialized;
+    str.ToString(serialized);
+    REQUIRE(serialized == ref);
+    REQUIRE(str.GetString().length() == utf8.length());
+    REQUIRE(str.GetString() == string(utf8));
 }
 
-#endif // __clang__
+void TestWriteEscapeSequences(const string_view& str, const string_view& expected)
+{
+    PdfVariant variant;
+    string ret;
+
+    INFO(utls::Format("Testing with value: {}", str));
+    PdfPostScriptTokenizer tokenizer;
+    SpanStreamDevice device(str);
+
+    tokenizer.TryReadNextVariant(device, variant);
+    REQUIRE(variant.GetDataType() == PdfDataType::String);
+
+    variant.ToString(ret);
+    INFO(utls::Format("   -> Convert To String: {}", ret));
+
+    REQUIRE(expected == ret);
+}

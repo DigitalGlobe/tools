@@ -1,304 +1,141 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+cmake_minimum_required(VERSION 3.23)
 
-#*****************  IMPORTANT  ************* IMPORTANT **********************
-# Look at http://www.vtk.org/Wiki/CMake_HowToDoPlatformChecks
-# and the other wiki entries before you add anything. You might not need to.
-#****************************************************************************
+project(PoDoFo)
 
-#
-# Project name and version
-#
-PROJECT(PoDoFo)
+if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.0)
+        message(FATAL_ERROR "GCC version must be at least 9.0")
+    endif()
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 7.0)
+        message(FATAL_ERROR "Clang version must be at least 7.0")
+    endif()
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "15.9")
+        message(FATAL_ERROR "MSVC version must be at least 15.9")
+    endif()
+else()
+    message(WARNING "You are using an unsupported compiler!")
+endif()
 
-SET(PODOFO_VERSION_MAJOR "0" CACHE STRING "Major part of PoDoFo version number")
-SET(PODOFO_VERSION_MINOR "9" CACHE STRING "Minor part of PoDoFo version number")
-SET(PODOFO_VERSION_PATCH "4" CACHE STRING "Patchlevel part of PoDoFo version number")
-SET(PODOFO_SOVERSION "${PODOFO_VERSION_MAJOR}.${PODOFO_VERSION_MINOR}.${PODOFO_VERSION_PATCH}")
-SET(PODOFO_LIBVERSION "${PODOFO_SOVERSION}")
+set(PODOFO_VERSION_MAJOR "1" CACHE STRING "Major part of podofo version number")
+set(PODOFO_VERSION_MINOR "0" CACHE STRING "Minor part of podofo version number")
+set(PODOFO_VERSION_PATCH "1" CACHE STRING "Patchlevel part of podofo version number")
+set(PODOFO_VERSION "${PODOFO_VERSION_MAJOR}.${PODOFO_VERSION_MINOR}.${PODOFO_VERSION_PATCH}")
+set(PODOFO_SOVERSION "3")
 
+set(DOXYGEN_PROJECT_NUMBER "${PODOFO_VERSION}")
+
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in
+    ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+    @ONLY
+)
+
+find_package(Doxygen)
+if (DOXYGEN_FOUND)
+    # TODO: Add doxygen target
+endif()
+
+if(PODOFO_BUILD_DOC_ONLY)
+    return()
+endif()
 
 #
 # Main includes
 #
-INCLUDE(CheckIncludeFile)
-INCLUDE(CheckLibraryExists)
-INCLUDE(UsePkgConfig)
-INCLUDE(TestBigEndian)
-INCLUDE(CheckTypeSize)
-
-#
-# Setup CMake Policies
-#
-
-# Prefer files in CMAKE_MODULE_PATH over shipped ones in module directory
-CMAKE_POLICY(SET CMP0017 NEW) # https://cmake.org/cmake/help/v3.0/policy/CMP0017.html
-# Do not use export_library_dependencies() anymore
-CMAKE_POLICY(SET CMP0033 NEW) # https://cmake.org/cmake/help/v3.0/policy/CMP0033.html
+include(CheckIncludeFile)
+include(CheckLibraryExists)
+include(TestBigEndian)
+include(CheckTypeSize)
+include(GNUInstallDirs)
 
 # Load modules from our source tree too
-SET(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
-
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules" "${CMAKE_CURRENT_BINARY_DIR}")
 
 # Builds must use this CMakeLists.txt, not the one in src/ or somewhere else.
 # If users try to use something else the results can be confusing. We set a
 # variable here that we require to be set elsewhere, otherwise we'll complain.
-SET(PODOFO_MAIN_CMAKELISTS_READ TRUE)
+set(PODOFO_MAIN_CMAKELISTS_READ TRUE)
 
+if(PODOFO_BUILD_LIB_ONLY)
+    set(PODOFO_BUILD_TEST FALSE)
+    set(PODOFO_BUILD_EXAMPLES FALSE)
+    set(PODOFO_BUILD_UNSUPPORTED_TOOLS FALSE)
+else()
+    if (NOT DEFINED PODOFO_BUILD_TEST)
+        set(PODOFO_BUILD_TEST TRUE)
+    endif()
 
-# If the user hasn't told use specifically what they want, build only
-# a static library.
-IF(NOT DEFINED PODOFO_BUILD_SHARED AND NOT DEFINED PODOFO_BUILD_STATIC)
-    SET(PODOFO_BUILD_STATIC TRUE)
-    SET(PODOFO_BUILD_SHARED FALSE)
-ENDIF(NOT DEFINED PODOFO_BUILD_SHARED AND NOT DEFINED PODOFO_BUILD_STATIC)
-IF(DEFINED PODOFO_BUILD_SHARED AND NOT DEFINED PODOFO_BUILD_STATIC)
-    SET(PODOFO_BUILD_SHARED NOT ${PODOFO_BUILD_SHARED})
-ENDIF(DEFINED PODOFO_BUILD_SHARED AND NOT DEFINED PODOFO_BUILD_STATIC)
-IF(NOT DEFINED PODOFO_BUILD_SHARED AND DEFINED PODOFO_BUILD_STATIC)
-    SET(PODOFO_BUILD_SHARED NOT ${PODOFO_BUILD_STATIC})
-ENDIF(NOT DEFINED PODOFO_BUILD_SHARED AND DEFINED PODOFO_BUILD_STATIC)
+    if (NOT DEFINED PODOFO_BUILD_EXAMPLES)
+        set(PODOFO_BUILD_EXAMPLES TRUE)
+    endif()
 
-IF(DEFINED LIB_SUFFIX)
-	SET(LIBDIRNAME "lib${LIB_SUFFIX}")
-ELSE(DEFINED LIB_SUFFIX)
+    if (NOT DEFINED PODOFO_BUILD_UNSUPPORTED_TOOLS)
+        set(PODOFO_BUILD_UNSUPPORTED_TOOLS FALSE)
+    endif()
 
-# Some 64 bit linux distros use /usr/lib64 for 64 bit libraries.
-# on these platforms we must
-IF(NOT DEFINED WANT_LIB64)
-	# TODO: detect 64-bit build and existance of /usr/lib64 and set to TRUE.
-	MESSAGE("WANT_LIB64 unset; assuming normal library directory names")
-	SET(WANT_LIB64 FALSE)
-ENDIF(NOT DEFINED WANT_LIB64)
+    # We assume a standalone build so we set output
+    # path to a fixed location
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/target)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/target)
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/target)
+    message(STATUS "Binary output directory is \"${CMAKE_BINARY_DIR}/target\"")
+endif()
 
-IF(WANT_LIB64)
-	SET(LIBDIRNAME "lib64")
-ELSE(WANT_LIB64)
-	SET(LIBDIRNAME "lib")
-ENDIF(WANT_LIB64)
+if (DEFINED PODOFO_BUILD_SHARED)
+    message(FATAL_ERROR "PODOFO_BUILD_SHARED shouldn't be defined externally. Set PODOFO_BUILD_STATIC to TRUE if you need a static build")
+endif()
 
-ENDIF(DEFINED LIB_SUFFIX)
-MESSAGE("Will install libraries to ${CMAKE_INSTALL_PREFIX}/${LIBDIRNAME}")
+option(PODOFO_BUILD_STATIC "Build static libraries (.a/.lib)" FALSE)
+if(PODOFO_BUILD_STATIC)
+    set(PODOFO_BUILD_SHARED FALSE)
+    add_compile_definitions(PODOFO_STATIC)
+else()
+    set(PODOFO_BUILD_SHARED TRUE)
+    add_compile_definitions(PODOFO_SHARED)
+endif()
 
-# Some headers that tend to vary a bit
-CHECK_INCLUDE_FILE("strings.h" PODOFO_HAVE_STRINGS_H) 
-CHECK_INCLUDE_FILE("arpa/inet.h" PODOFO_HAVE_ARPA_INET_H) 
-CHECK_INCLUDE_FILE("winsock2.h" PODOFO_HAVE_WINSOCK2_H) 
-CHECK_INCLUDE_FILE("mem.h" PODOFO_HAVE_MEM_H) 
-CHECK_INCLUDE_FILE("ctype.h" PODOFO_HAVE_CTYPE_H) 
-
-# Do some type size detection and provide yet another set of typedefs for fixed
-# font sizes. We can't use the c99 / c++0x uint32_t etc, because people use
-# ancient compilers that don't and will never support the standard.
-
-CHECK_INCLUDE_FILE("sys/types.h" PODOFO_HAVE_SYS_TYPES_H) 
-CHECK_INCLUDE_FILE("stdint.h" PODOFO_HAVE_STDINT_H) 
-# See: http://msdn.microsoft.com/en-us/library/aa384264(VS.85).aspx
-CHECK_INCLUDE_FILE("BaseTsd.h" PODOFO_HAVE_BASETSD_H) 
-
-CHECK_TYPE_SIZE("long int" SZ_LONG)
-
-# We cache integer type detection results, and don't repeat them
-# (and overwrite the user's manual changes) if they've been done already.
-IF(NOT PDF_INT64_TYPENAME)
-  # I hate old compilers.
-  IF(PODOFO_HAVE_STDINT_H)
-    SET(pdfint8 "int8_t")
-    SET(pdfint16 "int16_t")
-    SET(pdfint32 "int32_t")
-    SET(pdfint64 "int64_t")
-    SET(pdfuint8 "uint8_t")
-    SET(pdfuint16 "uint16_t")
-    SET(pdfuint32 "uint32_t")
-    SET(pdfuint64 "uint64_t")
-    CHECK_TYPE_SIZE("int64_t" SZ_INT64)
-  ELSE(PODOFO_HAVE_STDINT_H)
-    # No stdint.h . Try BaseTsd.h windows types.
-    IF(PODOFO_HAVE_BASETSD_H)
-       # We have BaseTsd.h, so use those types.
-       SET(pdfint8  "signed char")
-       SET(pdfint16 "short")
-       SET(pdfint32 "INT32")
-       SET(pdfint64 "INT64")
-       SET(pdfuint8 "unsigned char")
-       SET(pdfuint16 "unsigned short")
-       SET(pdfuint32 "UINT32")
-       SET(pdfuint64 "UINT64")
-       CHECK_TYPE_SIZE("INT64" SZ_INT64)
-    ELSE(PODOFO_HAVE_BASETSD_H)
-       # No BaseTsd.h either. Assume the standard types, and go poking
-       # for a sane 64-bit integer.
-       #
-       # First, though, make sure sizeof(int) = 4 and if not, scream, because
-       # hopefully this case will never be hit and we'll never have to write
-       # the horrible code check for
-       CHECK_TYPE_SIZE("signed char"        SZ_TINY_INT)
-       CHECK_TYPE_SIZE("unsigned char"      SZ_TINY_UINT)
-       CHECK_TYPE_SIZE("short int"          SZ_SHORT_INT)
-       CHECK_TYPE_SIZE("int"                SZ_INT)
-       CHECK_TYPE_SIZE("unsigned short int" SZ_UINT)
-       CHECK_TYPE_SIZE("unsigned int"       SZ_SHORT_UINT)
-       SET(smallintsok SZ_INT == 4 AND SZ_UINT == 4 AND SZ_SHORT_INT == 2 AND SZ_SHORT_UINT == 2 AND SZ_TINY_INT == 1 AND SZ_TINY_UINT == 1)
-       IF(NOT smallintsok)
-         MESSAGE(FATAL "sizeof(int) != 4 and/or sizeof(short) != 2 and no stdint.h or BaseTsd.h found. We don't know how to cope with this.")
-       ENDIF(NOT smallintsok)
-       SET(pdfint8 "signed char")
-       SET(pdfint16 "short")
-       SET(pdfint32 "int")
-       SET(pdfuint8 "unsigned char")
-       SET(pdfuint16 "unsigned short")
-       SET(pdfuint32 "unsigned int")
-       # Now we just have to figure out what 64-bit integer type we can use.
-       #
-       # Do we have VC >= 6's __uint64 and __int64?
-       # See: http://icfun.blogspot.com/2008/04/use-of-int64-variable-in-c.html
-       CHECK_TYPE_SIZE("__int64" SZ___INT64)
-       CHECK_TYPE_SIZE("__uint64"  SZ___UINT64)
-       IF(SZ___INT64 == 8 AND SZ___UINT64 == 8)
-         # MS compiler, VC6 or newer without BaseTsd.h in SDK
-         SET(pdfint64 "__int64")
-         SET(pdfuint64 "__uint64")
-	 CHECK_TYPE_SIZE("__int64" SZ_INT64)
-       ELSE(SZ___INT64 AND SZ___UINT64)
-         # Still no luck. Old unix compiler, Borland, or some other monster?
-         # Are we lucky and sizeof(long) == 8?
-         CHECK_TYPE_SIZE("unsigned long int" SZ_ULONG)
-         IF(SZ_LONG == 8 AND SZ_ULONG == 8)
-           # Must be on a LP64 platform, sizeof(long) = 8
-           SET(pdfint64 "long int")
-           SET(pdfuint64 "unsigned long int")
-	   CHECK_TYPE_SIZE("long int" SZ_INT64)
-         ELSE(SZ_LONG == 8 AND SZ_ULONG == 8)
-           # See if the compiler implements "long long int", int64_t, int64,
-           # or _int64 (in this order, __int64 check already done)
-           IF(PODOFO_HAVE_SYS_TYPES_H)
-             SET(CMAKE_EXTRA_INCLUDE_FILES "sys/types.h")
-           ENDIF(PODOFO_HAVE_SYS_TYPES_H)
-           CHECK_TYPE_SIZE("long long int"          SZ_LONG_LONG)
-           CHECK_TYPE_SIZE("unsigned long long int" SZ_UNSIGNED_LONG_LONG)
-           IF(SZ_LONG_LONG == 8 AND SZ_UNSIGNED_LONG_LONG == 8)
-             SET(pdfint64 "long long int")
-             SET(pdfuint64 "unsigned long long int")
-             CHECK_TYPE_SIZE("long long int" SZ_INT64)
-           ELSE(SZ_LONG_LONG == 8 AND SZ_UNSIGNED_LONG_LONG == 8)
-             # The standard type int64_t is normally found in stdint.h,
-             # but use a type of this name anyway if present
-             CHECK_TYPE_SIZE("int64_t"       SZ_INT64_T)
-             CHECK_TYPE_SIZE("uint64_t"      SZ_UINT64_T)
-             IF(SZ_INT64_T AND SZ_UINT64_T)
-               SET(pdfint64 "int64_t")
-               SET(pdfuint64 "uint64_t")
-	       CHECK_TYPE_SIZE("int64_t" SZ_INT64)
-             ELSE(SZ_INT64_T AND SZ_UINT64_T)
-               CHECK_TYPE_SIZE("int64"                SZ_INT64)
-               CHECK_TYPE_SIZE("uint64"               SZ_UINT64)
-               IF(SZ_INT64 AND SZ_UINT64)
-                 SET(pdfint64 "int64")
-                 SET(pdfuint64 "uint64")
-		 CHECK_TYPE_SIZE("int64" SZ_INT64)
-               ELSE(SZ_INT64 AND SZ_UINT64)
-                 CHECK_TYPE_SIZE("_int64"                SZ__INT64)
-                 CHECK_TYPE_SIZE("_uint64"               SZ__UINT64)
-                 IF(SZ__INT64 AND SZ__UINT64)
-                   SET(pdfint64 "_int64")
-                   SET(pdfuint64 "_uint64")
-		   CHECK_TYPE_SIZE("_int64" SZ_INT64)
-                 ELSE(SZ__INT64 AND SZ__UINT64)
-                   MESSAGE("Oh my lord, your compiler doesn't seem to support any of the int64 type flavours we tried.")
-                   MESSAGE(WARNING "You must set the PDF_INTxx_TYPENAME and PDF_UINTxx_TYPENAME variables manually")
-                 ENDIF(SZ__INT64 AND SZ__UINT64)
-               ENDIF(SZ_INT64 AND SZ_UINT64)
-             ENDIF(SZ_INT64_T AND SZ_UINT64_T)
-           ENDIF(SZ_LONG_LONG == 8 AND SZ_UNSIGNED_LONG_LONG == 8)
-         ENDIF(SZ_LONG == 8 AND SZ_ULONG == 8)
-       ENDIF(SZ___INT64 AND SZ___UINT64)
-    ENDIF(PODOFO_HAVE_BASETSD_H)
-  ENDIF(PODOFO_HAVE_STDINT_H)
-  SET(CMAKE_EXTRA_INCLUDE_FILES)
-ENDIF(NOT PDF_INT64_TYPENAME)
-
-IF(NOT PDF_INT64_TYPENAME AND pdfint64)
-  SET(PDF_INT64_TYPENAME  "${pdfint64}" CACHE STRING "Name of detected 64-bit signed integer type to use")
-  SET(PDF_INT32_TYPENAME  "${pdfint32}" CACHE STRING "Name of detected 32-bit signed integer type to use")
-  SET(PDF_INT16_TYPENAME  "${pdfint16}" CACHE STRING "Name of detected 16-bit signed integer type to use")
-  SET(PDF_INT8_TYPENAME   "${pdfint8}" CACHE STRING "Name of detected 8-bit signed integer type to use")
-  SET(PDF_UINT64_TYPENAME "${pdfuint64}" CACHE STRING "Name of detected 64-bit unsigned integer type to use")
-  SET(PDF_UINT32_TYPENAME "${pdfuint32}" CACHE STRING "Name of detected 32-bit unsigned integer type to use")
-  SET(PDF_UINT16_TYPENAME "${pdfuint16}" CACHE STRING "Name of detected 16-bit unsigned integer type to use")
-  SET(PDF_UINT8_TYPENAME  "${pdfuint8}" CACHE STRING "Name of detected 8-bit unsigned integer type to use")
-ENDIF(NOT PDF_INT64_TYPENAME AND pdfint64)
+message("Will install libraries to ${CMAKE_INSTALL_FULL_LIBDIR}")
 
 # Linux packagers want an uninstall target.
-CONFIGURE_FILE(
+configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
     IMMEDIATE @ONLY)
-ADD_CUSTOM_TARGET(uninstall "${CMAKE_COMMAND}"
+add_custom_target(uninstall "${CMAKE_COMMAND}"
     -P "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake")
 
-# Check if we are big endian
-TEST_BIG_ENDIAN(TEST_BIG)
+if(NOT DEFINED PLATFORM_SYSTEM_LIBRARIES)
+    set(PLATFORM_SYSTEM_LIBRARIES)
+endif()
 
-IF(WIN32)
-    # On win32 we support EITHER shared OR static builds.
-    # If both are enabled (default), turn off generation of the
-    # static library.
-    IF(PODOFO_BUILD_SHARED AND PODOFO_BUILD_STATIC)
-         MESSAGE("Both PODOFO_BUILD_SHARED and PODOFO_BUILD_STATIC set")
-         MESSAGE("  so disabling shared library generation (win32)")
-         SET(PODOFO_BUILD_SHARED FALSE)
-         SET(PODOFO_BUILD_STATIC TRUE)
-    ENDIF(PODOFO_BUILD_SHARED AND PODOFO_BUILD_STATIC)
-    # We must explicitly link to the core win32 libraries, and we need winsock2
-    # to get some byte-order conversion routines too.
-    SET(PLATFORM_SYSTEM_LIBRARIES kernel32 user32 gdi32 winspool comdlg32 advapi32 shell32 ole32 oleaut32 uuid ws2_32)
+if(WIN32)
+    # Core win32 libraries come with CMAKE_C(XX)_IMPLICIT_LINK_LIBRARIES
+    list(APPEND PLATFORM_SYSTEM_LIBRARIES ws2_32 crypt32)
+endif()
+
+# Set minimum required standard C++17, but also enforce it
+# with compiler options as CMAKE_CXX_STANDARD (or any other
+# CMake construct) won't really do it.
+# See https://discourse.cmake.org/t/how-to-limit-maximum-cxx-standard-to-prevent-accidental-c-17-or-above-code/9862/2
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS ON)
+if (MSVC)
+    # Set the compiler less permissive and add some warnings
+    # /we4287: unsigned/negative constant mismatch
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/std:c++17> $<$<COMPILE_LANGUAGE:CXX>:/Zc:__cplusplus> /permissive- /utf-8 /we4287 /W4)
+
     # Microsoft deprecate certain POSIX functions that we use.
     # for now, turn off these warnings.
-    ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE)
-    # We need a fake unistd.h for some libraries to build. They try to include <unistd.h>
-    # which is not available under win32 with MSVC++, but everything in unistd.h is defined,
-    # so an empty file solves the issue.
-    SET(EXTRA_INCLUDES ${PoDoFo_SOURCE_DIR}/vcincludes)
-ELSE(WIN32)
-    SET(PLATFORM_SYSTEM_LIBRARIES)
-    SET(EXTRA_INCLUDES)
-ENDIF(WIN32)
+    add_compile_definitions(_CRT_SECURE_NO_DEPRECATE)
+else()
+    # By default hide symbols on gcc/clang
+    # TODO: Remove -Wno-format-truncation after porting the
+    # code to std::fmt as it will be unuseful
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-std=gnu++17> $<$<COMPILE_LANGUAGE:CXX>:-Woverloaded-virtual> $<$<COMPILE_LANGUAGE:CXX>:-Wreorder> -fvisibility=hidden -Wall -Wswitch -Wcast-qual -Wwrite-strings -Wredundant-decls -Wno-format-truncation -Wno-unknown-pragmas -Wno-unknown-warning-option)
 
-IF(UNIX AND NOT PODOFO_NO_FONTMANAGER)
-    SET(WANT_FONTCONFIG TRUE CACHE INTERNAL
-        "True if PoDoFo should be built with fontconfig support")
-ELSE(UNIX AND NOT PODOFO_NO_FONTMANAGER)
-    SET(WANT_FONTCONFIG FALSE CACHE INTERNAL
-        "True if PoDoFo should be built with fontconfig support")
-ENDIF(UNIX AND NOT PODOFO_NO_FONTMANAGER)
-
-
-IF(CMAKE_COMPILER_IS_GNUCXX)
-    MESSAGE("Using gcc specific compiler options")
-    # We can be more specific about what we want out of g++
-    # than with most other compilers.
-
-    # Attempt to detect the gcc version. You must not rely on
-    # this; use the detected version as a guide only.
-    EXEC_PROGRAM(gcc ARGS --version OUTPUT_VARIABLE GCC_VERSION)
-    IF(GCC_VERSION MATCHES ".*\\(GCC\\) 4\\.[0-9].*")
-        MESSAGE("Have gcc 4.x")
-        SET(PODOFO_HAVE_GCC4 1)
-    ELSE(GCC_VERSION MATCHES ".*\\(GCC\\) 4\\.[0-9].*")
-        SET(PODOFO_HAVE_GCC4 0)
-    ENDIF(GCC_VERSION MATCHES ".*\\(GCC\\) 4\\.[0-9].*")
-
-    # If the user hasn't specifically said whether they want
-    # -fvisibility=hidden or not, turn it on for gcc4 and off
-    # for other gcc versions.
-    IF(NOT DEFINED PODOFO_USE_VISIBILITY)
-        SET(PODOFO_USE_VISIBILITY ${PODOFO_HAVE_GCC4})
-    ENDIF(NOT DEFINED PODOFO_USE_VISIBILITY)
-
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++98")
-
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Woverloaded-virtual -Wswitch-enum -Wcast-qual -Wwrite-strings -Wredundant-decls -Wreorder")
-
-    #
     # Note that we do not need debug definitions here. Set
     # -DCMAKE_BUILD_TYPE=debug or (if you want an optimised
     # release build with debug info) -DCMAKE_CXX_FLAGS="-g3"
@@ -306,245 +143,160 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
     # We add -W unless we're using gcc on win32, where it produces
     # spurious warnings about dllimport of inlines because of a dllimport
     # declaration on the whole class.
-    IF(NOT WIN32)
-        ADD_DEFINITIONS(-W)
-    ENDIF(NOT WIN32)
-    # If they've enabled the use of gcc4 symbol visibility, use it.
-    IF(PODOFO_USE_VISIBILITY)
-        ADD_DEFINITIONS(
-            -DPODOFO_HAVE_GCC_SYMBOL_VISIBILITY
-            -fvisibility=hidden
-            )
-    ENDIF(PODOFO_USE_VISIBILITY)
-ENDIF(CMAKE_COMPILER_IS_GNUCXX)
+    if(NOT WIN32)
+        add_definitions(-W)
+    endif()
 
-FIND_PACKAGE(ZLIB REQUIRED)
-MESSAGE("Found zlib headers in ${ZLIB_INCLUDE_DIR}, library at ${ZLIB_LIBRARIES}")
+    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+        # Silence warnings on use of typeid(*ptr)
+        # See https://stackoverflow.com/questions/46494928/clang-warning-on-expression-side-effects
+        add_compile_options(-Wno-potentially-evaluated-expression)
+    endif()
+endif()
 
-FIND_PACKAGE(LIBCRYPTO)
+find_package(ZLIB REQUIRED)
+message("Found zlib headers in ${ZLIB_INCLUDE_DIR}, library at ${ZLIB_LIBRARIES}")
 
-IF(LIBCRYPTO_FOUND)
-	SET(PODOFO_HAVE_OPENSSL TRUE)
-	INCLUDE_DIRECTORIES(${LIBCRYPTO_INCLUDE_DIR})
-	MESSAGE("Found OpenSSL's libCrypto headers in ${LIBCRYPTO_INCLUDE_DIR}, library at ${LIBCRYPTO_LIBRARIES}")
-ELSE(LIBCRYPTO_FOUND)
-	MESSAGE("OpenSSL's libCrypto not found. Encryption support will be disabled")
-ENDIF(LIBCRYPTO_FOUND)
+find_package(OpenSSL REQUIRED)
+message("OPENSSL_LIBRARIES: ${OPENSSL_LIBRARIES}")
 
-FIND_PACKAGE(LIBIDN)
+if (PODOFO_WANT_LCMS2)
+find_package(LCMS2)
+if(LCMS2_FOUND)
+    message("Found little-cms2 headers in ${LCMS2_INCLUDE_DIR}, library at ${LCMS2_LIBRARIES}")
+    set(PODOFO_HAVE_LCMS2 TRUE)
+    message("little-cms2 found. ICC profile reading support will be enabled")
+else()
+    message("little-cms2 not found. ICC profile reading support will be disabled")
+endif()
+endif()
 
-IF(LIBIDN_FOUND)
-  MESSAGE("Found libidn headers in ${LIBIDN_INCLUDE_DIR}, library at ${LIBIDN_LIBRARIES}")
-ENDIF(LIBIDN_FOUND)
+find_package(JPEG)
 
-IF(LIBIDN_FOUND)
-	SET(PODOFO_HAVE_LIBIDN TRUE)
-	INCLUDE_DIRECTORIES(${LIBIDN_INCLUDE_DIR})
-	MESSAGE("Libidn found. AES-256 Encryption support will be enabled")
-ELSE(LIBIDN_FOUND)
-	MESSAGE("Libidn not found. AES-256 Encryption support will be disabled")
-ENDIF(LIBIDN_FOUND)
+if(JPEG_FOUND)
+    message("Found libjpeg headers in ${JPEG_INCLUDE_DIR}, library at ${JPEG_LIBRARIES}")
+    set(PODOFO_HAVE_JPEG_LIB TRUE)
+else()
+    message("Libjpeg not found. JPEG support will be disabled")
+endif()
 
-FIND_PACKAGE(LIBJPEG)
+find_package(TIFF)
 
-IF(LIBJPEG_FOUND)
-  MESSAGE("Found libjpeg headers in ${LIBJPEG_INCLUDE_DIR}, library at ${LIBJPEG_LIBRARIES}")
-  SET(PODOFO_HAVE_JPEG_LIB TRUE)
-  INCLUDE_DIRECTORIES(${LIBJPEG_INCLUDE_DIR})
-ELSE(LIBJPEG_FOUND)
-  MESSAGE("Libjpeg not found. JPEG support will be disabled")
-ENDIF(LIBJPEG_FOUND)
+if(TIFF_FOUND)
+    message("Found libtiff headers in ${TIFF_INCLUDE_DIR}, library at ${TIFF_LIBRARIES}")
+    set(PODOFO_HAVE_TIFF_LIB TRUE)
+else()
+    message("Libtiff not found. TIFF support will be disabled")
+endif()
 
-FIND_PACKAGE(TIFF)
+find_package(PNG)
 
-IF(TIFF_FOUND)
-  MESSAGE("Found libtiff headers in ${TIFF_INCLUDE_DIR}, library at ${TIFF_LIBRARIES}")
-  SET(PODOFO_HAVE_TIFF_LIB TRUE)
-  INCLUDE_DIRECTORIES(${TIFF_INCLUDE_DIR})
-ELSE(TIFF_FOUND)
-  MESSAGE("Libtiff not found. TIFF support will be disabled")
-ENDIF(TIFF_FOUND)
+if(PNG_FOUND)
+    message("Found LibPng headers in ${PNG_INCLUDE_DIR}, library at ${PNG_LIBRARIES}")
+    set(PODOFO_HAVE_PNG_LIB TRUE)
+else()
+    message("LibPng not found. PNG support will be disabled")
+    set(PNG_LIBRARIES "")
+endif()
 
-FIND_PACKAGE(PNG)
+find_package(Freetype REQUIRED)
+message("Found freetype library at ${FREETYPE_LIBRARIES}, headers ${FREETYPE_INCLUDE_DIRS}")
 
-IF(PNG_FOUND)
-  MESSAGE("Found LibPng headers in ${PNG_INCLUDE_DIR}, library at ${PNG_LIBRARIES}")
-  SET(PODOFO_HAVE_PNG_LIB TRUE)
-  INCLUDE_DIRECTORIES(${PNG_INCLUDE_DIR})
-ELSE(PNG_FOUND)
-  MESSAGE("LibPng not found. PNG support will be disabled")
-ENDIF(PNG_FOUND)
+find_package(Fontconfig)
+if(Fontconfig_FOUND)
+    set(PODOFO_HAVE_FONTCONFIG TRUE)
+    message("Found fontconfig headers in ${Fontconfig_INCLUDE_DIRS}, library at ${Fontconfig_LIBRARIES}")
+endif()
 
-IF(NOT PODOFO_BUILD_LIB_ONLY)
+if(WIN32 AND NOT PODOFO_HAVE_FONTCONFIG OR PODOFO_WANT_WIN32GDI)
+    # Fallback to GDI if FontConfig is missing in Windows
+    set(PODOFO_HAVE_WIN32GDI TRUE)
+    message("Enabled Windows GDI API")
+endif()
 
-FIND_PACKAGE(CppUnit)
+find_package(LibXml2 REQUIRED)
+message("Found libxml2 library at ${LIBXML2_LIBRARIES}, headers ${LIBXML2_INCLUDE_DIRS}")
 
-IF(CppUnit_FOUND)
-  MESSAGE("Found cppunit. Unit tests will be built.")
-  SET(PODOFO_HAVE_CPPUNIT CppUnit_FOUND)
-  INCLUDE_DIRECTORIES(${CPPUNIT_INCLUDE_DIR})
-ELSE(CppUnit_FOUND)
-  MESSAGE("Cppunit not found. No unit tests will be built.")
-ENDIF(CppUnit_FOUND)
+# The podofo library needs to be linked to these libraries
+# NOTE: Be careful when adding/removing: the order may be
+# platform sensible, so don't modify the current order
 
-ENDIF(NOT PODOFO_BUILD_LIB_ONLY)
+set(PODOFO_PKGCONFIG_REQUIRES_PRIVATE "")
+set(PODOFO_HEADERS_DEPENDS)
+set(PODOFO_LIB_DEPENDS OpenSSL::SSL)
+string(APPEND PODOFO_PKGCONFIG_REQUIRES_PRIVATE " libssl")
+if(Fontconfig_FOUND)
+    list(APPEND PODOFO_LIB_DEPENDS Fontconfig::Fontconfig)
+    string(APPEND PODOFO_PKGCONFIG_REQUIRES_PRIVATE " fontconfig")
+endif()
+list(APPEND PODOFO_LIB_DEPENDS Freetype::Freetype)
+string(APPEND PODOFO_PKGCONFIG_REQUIRES_PRIVATE " freetype2")
+list(APPEND PODOFO_LIB_DEPENDS LibXml2::LibXml2)
+string(APPEND PODOFO_PKGCONFIG_REQUIRES_PRIVATE " libxml-2.0")
+if(PNG_FOUND)
+    list(APPEND PODOFO_LIB_DEPENDS PNG::PNG)
+    string(APPEND PODOFO_PKGCONFIG_REQUIRES_PRIVATE " libpng")
+endif()
+if(TIFF_FOUND)
+    list(APPEND PODOFO_LIB_DEPENDS TIFF::TIFF)
+    string(APPEND PODOFO_PKGCONFIG_REQUIRES_PRIVATE " libtiff-4")
+endif()
+if(JPEG_FOUND)
+    list(APPEND PODOFO_LIB_DEPENDS JPEG::JPEG)
+    string(APPEND PODOFO_PKGCONFIG_REQUIRES_PRIVATE " libjpeg")
+endif()
+list(APPEND PODOFO_LIB_DEPENDS ZLIB::ZLIB)
+string(APPEND PODOFO_PKGCONFIG_REQUIRES_PRIVATE " zlib")
+list(APPEND PODOFO_LIB_DEPENDS ${PLATFORM_SYSTEM_LIBRARIES})
 
-FIND_PACKAGE(OpenSSL)
+if(LCMS2_FOUND)
+    # little-cms2 doesn't provide targets.
+    list(APPEND PODOFO_LIB_DEPENDS ${LCMS2_LIBRARIES})
+    list(APPEND PODOFO_HEADERS_DEPENDS ${LCMS2_INCLUDE_DIR})
+    string(APPEND PODOFO_PKGCONFIG_REQUIRES_PRIVATE " lcms2")
+endif()
 
-FIND_PACKAGE(FREETYPE REQUIRED)
-MESSAGE("Found freetype library at ${FREETYPE_LIBRARIES}, headers ${FREETYPE_INCLUDE_DIR}")
+function(add_source subdir subdir_path dstsources dstheaders)
+    file(GLOB_RECURSE source_files "${subdir_path}/[^.]*")
+    # Set visual studio source group
+    source_group(${subdir} FILES ${source_files})
+    # Add subdir to source files
+    list(APPEND ${dstsources} ${source_files})
+    set(${dstsources} ${${dstsources}} PARENT_SCOPE)
 
-FIND_PACKAGE(LIBSTLPORT)
-SET(stlport_libraries_if_use_stlport)
-IF(USE_STLPORT)
-	IF(LIBSTLPORT_FOUND)
-		MESSAGE("Using STLPort")
-		INCLUDE_DIRECTORIES(${LIBSTLPORT_HEADERS})
-		LINK_DIRECTORIES(${LIBSTLPORT_LIB})
-		SET(stlport_libraries_if_use_stlport stlport)
-		# Use the threaded STLPort
-		ADD_DEFINITIONS(-D_PTHREADS)
-	ELSE(LIBSTLPORT_FOUND)
-		MESSAGE(FATAL_ERROR "STLPort use requested, but STLPort not found.")
-	ENDIF(LIBSTLPORT_FOUND)
-ENDIF(USE_STLPORT)
+    # Identity the headers and do some cleanup
+    set(headers_files ${source_files})
+    list(FILTER headers_files EXCLUDE REGEX "\.cpp$")
+    list(FILTER headers_files EXCLUDE REGEX "\.in$")
+    list(APPEND ${dstheaders} ${headers_files})
+    set(${dstheaders} ${${dstheaders}} PARENT_SCOPE)
+endfunction()
 
-IF(WANT_FONTCONFIG)
-	FIND_PACKAGE(FONTCONFIG REQUIRED)
-	SET(PODOFO_HAVE_FONTCONFIG TRUE)
-	SET(PODOFO_LIB_FONTCONFIG:STRING fontconfig)
-	IF(FONTCONFIG_FOUND)
-	  MESSAGE("Found fontconfig headers in ${FONTCONFIG_INCLUDE_DIR}, library at ${FONTCONFIG_LIBRARIES}")
-	ELSE(FONTCONFIG_FOUND)
-	  MESSAGE("Could not find fontconfig.")
-        ENDIF(FONTCONFIG_FOUND)
-ELSE(WANT_FONTCONFIG)
-	# Might as well look for it anyway. This also sets the appropriate
-	# variables to empty values.
-	FIND_PACKAGE(FONTCONFIG)
-	SET(PODOFO_LIB_FONTCONFIG:STRING)
-ENDIF(WANT_FONTCONFIG)
+add_subdirectory(3rdparty)
+add_subdirectory(src/podofo)
+include_directories(${PODOFO_INCLUDE_DIRS})
 
-IF(NOT PODOFO_BUILD_LIB_ONLY)
-FIND_PACKAGE(LUA)
-IF(LUA_FOUND)
-	# If we have lua, we can build podofoimpose.
-	MESSAGE("Lua found - PoDoFoImpose and PoDoFoColor will be built with Lua support")
-	MESSAGE(" * Lua include directory: ${LUA_INCLUDE_DIR}")
-	MESSAGE(" * Lua libraries: ${LUA_LIBRARIES}")
-	INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIR})
-	SET(PODOFO_HAVE_LUA TRUE)
-ELSE(LUA_FOUND)
-	MESSAGE("Lua not found - PoDoFoImpose and PoDoFoColor will be built without Lua support")
-ENDIF(LUA_FOUND)
-ENDIF(NOT PODOFO_BUILD_LIB_ONLY)
+if(PODOFO_BUILD_TEST)
+    enable_testing()
+    add_subdirectory(test)
+endif()
 
+if(PODOFO_BUILD_EXAMPLES)
+    add_subdirectory(examples)
+endif()
 
-# Check if we should build a multithreaded version of PoDoFo
-IF(DEFINED PODOFO_NO_MULTITHREAD)
-  MESSAGE("Building non multithreaded version of PoDoFo.")
-  SET(PODOFO_MULTI_THREAD FALSE)
-ELSE(DEFINED PODOFO_NO_MULTITHREAD)
-  MESSAGE("Building multithreaded version of PoDoFo.")
-  SET(PODOFO_MULTI_THREAD TRUE)
-  FIND_PACKAGE(Threads)
-  SET(PLATFORM_SYSTEM_LIBRARIES ${CMAKE_THREAD_LIBS_INIT} ${PLATFORM_SYSTEM_LIBRARIES})
-ENDIF(DEFINED PODOFO_NO_MULTITHREAD)
+if(PODOFO_BUILD_UNSUPPORTED_TOOLS)
+    add_subdirectory(tools)
+endif()
 
-IF(WANT_BOOST)
-    MESSAGE("Looking optional for Boost.")
-    MESSAGE("Boost is optional, so don't worry if it is not found.")
-    MESSAGE("Set the BOOST_ROOT env var if you have problems.")
-    FIND_PACKAGE(Boost)
-    IF(BOOST_FOUND)
-       SET(PODOFO_HAVE_BOOST TRUE)
-       INCLUDE_DIRECTORIES(${BOOST_INCLUDE_DIR})
-    ELSE(BOOST_FOUND)
-       MESSAGE("If you don't need graph support you can ignore the above error.")
-    ENDIF(BOOST_FOUND)
-ENDIF(WANT_BOOST)
-
-INCLUDE_DIRECTORIES(BEFORE # before toolchain include dir (to ignore installed)
-    ${PoDoFo_SOURCE_DIR}   # order will be reversed, so this is the second dir
-    ${PoDoFo_BINARY_DIR}   # because of BEFORE, this is the first include dir
-    )
-
-INCLUDE_DIRECTORIES(
-    ${PoDoFo_SOURCE_DIR}/src
-    ${FREETYPE_INCLUDE_DIR}
-    ${ZLIB_INCLUDE_DIR}
-    ${EXTRA_INCLUDES}
-     )
-LINK_DIRECTORIES(
-    ${PoDoFo_BINARY_DIR}/src/
-    )
-
-#
-# The PoDoFo library needs to be linked to these libraries,
-# as do any apps or libraries linking to PoDoFo. PODOFO_LIB
-# will include these and the correct podofo target, so clients
-# should specify only PODOFO_LIB .
-#
-SET(PODOFO_LIB_DEPENDS
-  ${ZLIB_LIBRARIES}
-  ${LIBIDN_LIBRARIES}
-  ${LIBCRYPTO_LIBRARIES}
-  ${LIBJPEG_LIBRARIES}
-  ${PLATFORM_SYSTEM_LIBRARIES}
-  ${stlport_libraries_if_use_stlport}
-  ${FREETYPE_LIBRARIES}
-  ${PNG_LIBRARIES}
-  ${TIFF_LIBRARIES}
-  )
-
-IF(FONTCONFIG_FOUND AND WANT_FONTCONFIG)
-  SET(PODOFO_LIB_DEPENDS ${FONTCONFIG_LIBRARIES} ${PODOFO_LIB_DEPENDS})
-  INCLUDE_DIRECTORIES(${FONTCONFIG_INCLUDE_DIR})
-ENDIF(FONTCONFIG_FOUND AND WANT_FONTCONFIG)
-
-SET(PODOFO_LIB
-    podofo
-    ${PODOFO_LIB_DEPENDS}
-    )
-
-#
-# Setup directories we will need
-#
-SET(MANDIR "share/man/")
-
-# Create the config file. It'll be appended to as the subdirs run though
-# then dependency information will be written to it at the end of the
-# build.
-FILE(WRITE
-     "${PoDoFo_BINARY_DIR}/PoDoFoConfig.cmake"
-     "# CMake module for PoDoFo\n"
-     )
-FILE(APPEND 
-     "${PoDoFo_BINARY_DIR}/PoDoFoConfig.cmake"
-     "SET(PODOFO_INCLUDES ${PoDoFo_SOURCE_DIR}/src)\n"
-     )
-
-ADD_SUBDIRECTORY(src)
-IF(NOT PODOFO_BUILD_LIB_ONLY)
-ADD_SUBDIRECTORY(test)
-ADD_SUBDIRECTORY(tools)
-ADD_SUBDIRECTORY(examples)
-ADD_SUBDIRECTORY(debian)
-ENDIF(NOT PODOFO_BUILD_LIB_ONLY)
-
-# Generate our configure file
-CONFIGURE_FILE(${PoDoFo_SOURCE_DIR}/podofo_config.h.in ${PoDoFo_BINARY_DIR}/podofo_config.h)
-
-# Export some variables into the config file so it's easier for others
-# to build and link against PoDoFo
-
-# To use these dependencies set PODOFO_DIR to the podofo BUILD directory in
-# your build (eg -DPODOFO_DIR=/path/to/podofo when running cmake to configure
-# the app that'll use podofo). See: FIND_PACKAGE(...) in the cmake docs.
-IF(PODOFO_BUILD_SHARED)
-  EXPORT(TARGETS podofo_shared FILE "${CMAKE_CURRENT_BINARY_DIR}/PoDoFoConfig.cmake")
-ENDIF(PODOFO_BUILD_SHARED)
-IF(PODOFO_BUILD_STATIC)
-  EXPORT(TARGETS podofo_static FILE "${CMAKE_CURRENT_BINARY_DIR}/PoDoFoConfig.cmake")
-ENDIF(PODOFO_BUILD_STATIC)
-
+# Enable packaging
+set(CPACK_PACKAGE_DESCRIPTION "A C++ PDF manipulation library")
+set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/podofo/podofo")
+set(CPACK_PACKAGE_VENDOR "Francesco Pretto")
+set(CPACK_PACKAGE_CONTACT "ceztko@gmail.com")
+set(CPACK_PACKAGE_VERSION ${PODOFO_VERSION})
+if (WIN32)
+    # Set MSI generation
+    set(CPACK_GENERATOR "WIX")
+endif()
+include(CPack)

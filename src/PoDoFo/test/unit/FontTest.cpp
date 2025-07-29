@@ -1,167 +1,295 @@
-/***************************************************************************
- *   Copyright (C) 2009 by Dominik Seichter                                *
- *   domseichter@web.de                                                    *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
- *   published by the Free Software Foundation; either version 2 of the    *
- *   License, or (at your option) any later version.                       *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
- *   License along with this program; if not, write to the                 *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- ***************************************************************************/
+/**
+ * Copyright (C) 2009 by Dominik Seichter <domseichter@web.de>
+ * Copyright (C) 2021 by Francesco Pretto <ceztko@gmail.com>
+ *
+ * Licensed under GNU Library General Public 2.0 or later.
+ * Some rights reserved. See COPYING, AUTHORS.
+ */
 
-#include "FontTest.h"
+#include <PdfTest.h>
 
-#include <cppunit/Asserter.h>
+#include <podofo/private/FreetypePrivate.h>
+#include <podofo/private/FontUtils.h>
 
-#include <ft2build.h>
-#include FT_FREETYPE_H
-
+using namespace std;
 using namespace PoDoFo;
 
-CPPUNIT_TEST_SUITE_REGISTRATION( FontTest );
+#ifdef PODOFO_HAVE_FONTCONFIG
 
-void FontTest::setUp()
+#include <fontconfig/fontconfig.h>
+
+static bool getFontInfo(FcPattern* font, string& fontFamily, string& fontPath,
+    PdfFontStyle& style);
+static void testSingleFont(FcPattern* font);
+
+TEST_CASE("TestFontConfigMatch")
 {
-    m_pDoc = new PdfMemDocument();
-    m_pVecObjects = new PdfVecObjects();
-    m_pFontCache = new PdfFontCache( m_pVecObjects );
+    // Create a simple platform invariant FC config
+    string fontconf =
+        R"(<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "fonts.dtd">
+<fontconfig>
+    <dir>FONT_DIR</dir>
+    <dir prefix="xdg">fonts</dir>
+    <cachedir>FONT_CACHE_DIR</cachedir>
+    <cachedir prefix="xdg">fontconfig</cachedir>
+</fontconfig>
+)";
+
+    utls::Replace(fontconf, "FONT_DIR", TestUtils::GetTestInputFilePath("Fonts"));
+    utls::Replace(fontconf, "FONT_CACHE_DIR", TestUtils::GetTestOutputFilePath("TestFontConfig"));
+
+    PdfFontManager::SetFontConfigWrapper(std::make_shared<PdfFontConfigWrapper>(fontconf));
+
+    {
+        PdfFontSearchParams parmas;
+
+        auto metrics = PdfFontManager::SearchFontMetrics("NotoSans-Regular", parmas);
+        REQUIRE(metrics->GetFontName() == "NotoSans-Regular");
+
+        metrics = PdfFontManager::SearchFontMetrics("LiberationSans", parmas);
+        REQUIRE(metrics->GetFontName() == "LiberationSans");
+
+        metrics = PdfFontManager::SearchFontMetrics("Liberation Sans", parmas);
+        REQUIRE(metrics->GetFontName() == "LiberationSans");
+
+        metrics = PdfFontManager::SearchFontMetrics("LiberationMono", parmas);
+        REQUIRE(metrics->GetFontName() == "LiberationMono");
+
+        parmas.Style = PdfFontStyle::Italic;
+        metrics = PdfFontManager::SearchFontMetrics("LiberationSans", parmas);
+        REQUIRE(metrics->GetFontName() == "LiberationSans-Italic");
+
+        parmas.Style = PdfFontStyle::Bold;
+        metrics = PdfFontManager::SearchFontMetrics("Noto Sans", parmas);
+        REQUIRE(metrics->GetFontName() == "NotoSans-Bold");
+
+        parmas.MatchBehavior |= PdfFontMatchBehaviorFlags::SkipMatchPostScriptName;
+        metrics = PdfFontManager::SearchFontMetrics("LiberationSans", parmas);
+        REQUIRE(metrics->GetFontName() == "LiberationSans-Bold");
+    }
 }
 
-void FontTest::tearDown()
+TEST_CASE("TestConversionPBF2CFF")
 {
-    delete m_pDoc;
-    delete m_pFontCache;
-    delete m_pVecObjects;
+    {
+        charbuff font1;
+        utls::ReadTo(font1, TestUtils::GetTestInputFilePath("FontsType1", "Lato-Regular.pfb"));
+
+        charbuff cff;
+        PoDoFo::ConvertFontType1ToCFF(font1, cff);
+
+        TestUtils::IsBufferEqual(cff, TestUtils::GetTestInputFilePath("FontsType1", "ConvCFF", "Lato-Regular.cff"));
+    }
+
+    {
+        charbuff font1;
+        utls::ReadTo(font1, TestUtils::GetTestInputFilePath("FontsType1", "lmb10.pfb"));
+
+        charbuff cff;
+        PoDoFo::ConvertFontType1ToCFF(font1, cff);
+
+        TestUtils::IsBufferEqual(cff, TestUtils::GetTestInputFilePath("FontsType1", "ConvCFF", "lmb10.cff"));
+    }
 }
 
-#if defined(PODOFO_HAVE_FONTCONFIG)
-void FontTest::testFonts()
+TEST_CASE("TestSubsetCFFDegenerate")
 {
-    FcObjectSet* objectSet = NULL;
-    FcFontSet* fontSet = NULL;
-    FcPattern* pattern = NULL;
-    FcConfig* pConfig = NULL;
+    charbuff font1;
+    utls::ReadTo(font1, TestUtils::GetTestInputFilePath("FontsType1", "Degenerate1Glyph.cff"));
+    auto metrics = PdfFontMetrics::CreateFromBuffer(font1);
 
-    // Initialize fontconfig
-    CPPUNIT_ASSERT_EQUAL( !FcInit(), false );
-    pConfig = FcInitLoadConfigAndFonts();
-    CPPUNIT_ASSERT_EQUAL( !pConfig, false );
+    vector<PdfCharGIDInfo> subsetInfos;
+    subsetInfos.push_back({ 1, 1, PdfGID(0, 0)});
 
+    PdfCIDSystemInfo cidInfo;
+    cidInfo.Registry = PdfString("Adobe");
+    cidInfo.Ordering = PdfString("Test");
+    cidInfo.Supplement = 0;
+
+    charbuff cff;
+    PoDoFo::SubsetFontCFF(*metrics, subsetInfos, cidInfo, cff);
+
+    TestUtils::IsBufferEqual(cff, TestUtils::GetTestInputFilePath("FontsType1", "SubsetDegenerate1Glyph.cff"));
+}
+
+// Disable load all fonts for now
+TEST_CASE("TestFonts", "[.]")
+{
     // Get all installed fonts
-    pattern = FcPatternCreate();
-	objectSet = FcObjectSetBuild( FC_FAMILY, FC_STYLE, FC_FILE, FC_SLANT, FC_WEIGHT, NULL );
-    fontSet = FcFontList( NULL, pattern, objectSet );
+    auto pattern = FcPatternCreate();
+    auto objectSet = FcObjectSetBuild(FC_FAMILY, FC_STYLE, FC_FILE, FC_SLANT, FC_WEIGHT, nullptr);
+    auto fontSet = FcFontList(nullptr, pattern, objectSet);
 
-    FcObjectSetDestroy( objectSet );
-	FcPatternDestroy( pattern );
+    FcObjectSetDestroy(objectSet);
+    FcPatternDestroy(pattern);
 
-    if( fontSet )
+    if (fontSet == nullptr)
     {
-        printf("Testing %i fonts\n", fontSet->nfont );
-        int	j;
-        for (j = 0; j < fontSet->nfont; j++)
-        {
-            testSingleFont( fontSet->fonts[j], pConfig );
-        }
-
-        FcFontSetDestroy( fontSet );
+        INFO("Unable to search for fonts");
+        return;
     }
 
-    // Shut fontconfig down
-    // Causes an assertion in fontconfig FcFini();
+    INFO(utls::Format("Testing {} fonts", fontSet->nfont));
+    for (int i = 0; i < fontSet->nfont; i++)
+        testSingleFont(fontSet->fonts[i]);
+
+    FcFontSetDestroy(fontSet);
 }
 
-void FontTest::testSingleFont(FcPattern* pFont, FcConfig* pConfig) 
+TEST_CASE("TestEmbedFont")
 {
-    std::string sFamily;
-    std::string sPath;
-    bool bBold;
-    bool bItalic;
+    PdfMemDocument doc;
+    doc.Load(TestUtils::GetTestInputFilePath("TestEmbedFont.pdf"));
 
-    if( GetFontInfo( pFont, sFamily, sPath, bBold, bItalic ) ) 
+    unique_ptr<PdfFont> font;
+    (void)PdfFont::TryCreateFromObject(doc.GetObjects().MustGetObject(PdfReference(6, 0)), font);
+
+    // The font is not embedded in this document
+    REQUIRE(font->GetMetrics().GetOrLoadFontFileData().size() == 0);
+
+    // Create a substitute font from a font without a "/FontFile2" entry
+    PdfFont* substituteFont;
+    REQUIRE(font->TryCreateProxyFont(substituteFont));
+    // Add all used  GIDs for this font. The following is hardcoded:
+    // this should require scanning of the entire document page contents
+    substituteFont->AddSubsetCIDs(PdfString::FromRaw("TEST"));
+
     {
-        std::string sPodofoFontPath = 
-            m_pFontCache->GetFontConfigFontPath( pConfig, sFamily.c_str(),
-                                                 bBold, bItalic );
-        
-        std::string msg = "Font failed: " + sPodofoFontPath;
-        EPdfFontType eFontType = PdfFontFactory::GetFontType( sPath.c_str() );
-        if( eFontType == ePdfFontType_TrueType ) 
-        {
-            // Only TTF fonts can use identity encoding
-            PdfFont* pFont = m_pDoc->CreateFont( sFamily.c_str(), bBold, bItalic,
-                                                 new PdfIdentityEncoding() );
-            CPPUNIT_ASSERT_EQUAL_MESSAGE( msg, pFont != NULL, true ); 
-        }
-        else if( eFontType != ePdfFontType_Unknown ) 
-        {
-            PdfFont* pFont = m_pDoc->CreateFont( sFamily.c_str(), bBold, bItalic );
-            CPPUNIT_ASSERT_EQUAL_MESSAGE( msg, pFont != NULL, true ); 
-        }
-        else
-        {
-            printf("Ignoring font: %s\n", sPodofoFontPath.c_str());
-        }
+        // Substitute existing font in the resources of the oage
+        auto& page = doc.GetPages().GetPageAt(0);
+        static_cast<PdfResourceOperations&>(page.GetResources()).AddResource(PdfResourceType::Font, "Ft0", substituteFont->GetObject());
     }
-} 
 
-void FontTest::testCreateFontFtFace()
-{
-    FT_Face face;
-    FT_Error error;
-    
-    // TODO: Find font file on disc!
-    error = FT_New_Face( m_pDoc->GetFontLibrary(), "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf", 0, &face );
+    doc.Save(TestUtils::GetTestOutputFilePath("TestEmbedFont.pdf"));
 
-    if( !error ) 
+    // Reload the file and verify the font has now font file data
+    doc.Load(TestUtils::GetTestOutputFilePath("TestEmbedFont.pdf"));
     {
-        PdfFont* pFont = m_pDoc->CreateFont( face );
-
-        CPPUNIT_ASSERT_MESSAGE( "Cannot create font from FT_Face.", pFont != NULL );
+        auto& page = doc.GetPages().GetPageAt(0);
+        auto fontObj = page.GetResources().GetResource(PdfResourceType::Font, "Ft0");
+        (void)PdfFont::TryCreateFromObject(*fontObj, font);
+        REQUIRE(font->GetMetrics().GetOrLoadFontFileData().size() != 0);
     }
 }
 
-bool FontTest::GetFontInfo( FcPattern* pFont, std::string & rsFamily, std::string & rsPath, 
-                            bool & rbBold, bool & rbItalic )
+TEST_CASE("TestCreateFontExtract")
 {
-    FcChar8* family = NULL;
-    FcChar8* file = NULL;
+    PdfMemDocument doc;
+    auto& page = doc.GetPages().CreatePage(PdfPageSize::A4);
+
+    // Play a bit with font path caching
+    auto fontPath1 = TestUtils::GetTestInputFilePath("Fonts", "LiberationSans-Regular.ttf");
+    auto fontPath2 = TestUtils::GetTestInputFilePath("Fonts", "..", "Fonts", "LiberationSans-Regular.ttf");
+    auto fontRef = &doc.GetFonts().GetOrCreateFont(fontPath1);
+    auto& font = doc.GetFonts().GetOrCreateFont(fontPath2);
+
+    PdfFont* fontFromBuffer;
+
+    {
+        charbuff fontbuffer;
+        utls::ReadTo(fontbuffer, TestUtils::GetTestInputFilePath("Fonts", "LiberationSans-Regular.ttf"));
+        fontFromBuffer = &doc.GetFonts().GetOrCreateFontFromBuffer(fontbuffer);
+    }
+
+    // The matched fonts should be the same one
+    REQUIRE(&font == fontRef);
+
+    {
+        PdfPainter painter;
+        painter.SetCanvas(page);
+
+        painter.TextState.SetFont(font, 30.0);
+        painter.DrawText("ěščř", 100, 600);
+
+        painter.TextState.SetFont(*fontFromBuffer, 30.0);
+        painter.DrawText("ěščř buffer", 100, 500);
+        painter.FinishDrawing();
+    }
+
+    auto outputpath = TestUtils::GetTestOutputFilePath("TestCreateFontExtract.pdf");
+
+    try
+    {
+        FileStreamDevice stream(outputpath, FileMode::Create);
+        doc.Save(stream);
+    }
+    catch (const PdfError& error)
+    {
+        // Don't continue further the test in this case
+        if (error.GetCode() == PdfErrorCode::UnsupportedFontFormat)
+            return;
+
+        throw;
+    }
+
+    // FIXME: The test crash if we tried to extract
+    // text directly on the original "doc" page
+
+    PdfMemDocument doc2;
+    doc2.Load(outputpath);
+
+    vector<PdfTextEntry> entries;
+    doc2.GetPages().GetPageAt(0).ExtractTextTo(entries);
+
+    REQUIRE(entries[0].Text == "ěščř");
+    REQUIRE(entries[0].X == 100);
+    REQUIRE(entries[0].Y == 600);
+
+    REQUIRE(entries[1].Text == "ěščř buffer");
+    REQUIRE(entries[1].X == 100);
+    REQUIRE(entries[1].Y == 500);
+}
+
+void testSingleFont(FcPattern* font)
+{
+    PdfMemDocument doc;
+    string fontFamily;
+    string fontPath;
+    PdfFontStyle style;
+    PdfFontConfigSearchParams fcParams;
+    auto& fcWrapper = PdfFontManager::GetFontConfigWrapper();
+
+    if (getFontInfo(font, fontFamily, fontPath, style))
+    {
+        unsigned faceIndex;
+        fcParams.Style = style;
+        fontPath = fcWrapper.SearchFontPath(fontFamily, fcParams, faceIndex);
+        if (fontPath.length() != 0)
+        {
+            PdfFontSearchParams params;
+            params.Style = style;
+            INFO(utls::Format("Font failed: {}", fontPath));
+            (void)doc.GetFonts().SearchFont(fontFamily, params);
+        }
+    }
+}
+
+bool getFontInfo(FcPattern* font, string& fontFamily, string& fontPath,
+    PdfFontStyle& style)
+{
+    FcChar8* family = nullptr;
+    FcChar8* path = nullptr;
     int slant;
     int weight;
-    
-    if( FcPatternGetString(pFont, FC_FAMILY, 0, &family) == FcResultMatch )
-    {
-        rsFamily = reinterpret_cast<char*>(family);
-        if( FcPatternGetString(pFont, FC_FILE, 0, &file) == FcResultMatch )
-        {
-            rsPath = reinterpret_cast<char*>(file);
-            
-            if( FcPatternGetInteger(pFont, FC_SLANT, 0, &slant) == FcResultMatch )
-            {
-                if(slant == FC_SLANT_ROMAN) 
-                    rbItalic = false;
-                else if(slant == FC_SLANT_ITALIC)
-                    rbItalic = true;
-                else 
-                    return false;
+    style = PdfFontStyle::Regular;
 
-                if( FcPatternGetInteger(pFont, FC_WEIGHT, 0, &weight) == FcResultMatch )
+    if (FcPatternGetString(font, FC_FAMILY, 0, &family) == FcResultMatch)
+    {
+        fontFamily = reinterpret_cast<char*>(family);
+        if (FcPatternGetString(font, FC_FILE, 0, &path) == FcResultMatch)
+        {
+            fontPath = reinterpret_cast<char*>(path);
+
+            if (FcPatternGetInteger(font, FC_SLANT, 0, &slant) == FcResultMatch)
+            {
+                if (slant == FC_SLANT_ITALIC || slant == FC_SLANT_OBLIQUE)
+                    style |= PdfFontStyle::Italic;
+
+                if (FcPatternGetInteger(font, FC_WEIGHT, 0, &weight) == FcResultMatch)
                 {
-                    if(weight == FC_WEIGHT_MEDIUM)
-                        rbBold = false;
-                    else if(weight == FC_WEIGHT_BOLD)
-                        rbBold = true;
-                    else 
-                        return false;
+                    if (weight >= FC_WEIGHT_BOLD)
+                        style |= PdfFontStyle::Bold;
 
                     return true;
                 }
@@ -174,4 +302,4 @@ bool FontTest::GetFontInfo( FcPattern* pFont, std::string & rsFamily, std::strin
     return false;
 }
 
-#endif
+#endif // PODOFO_HAVE_FONTCONFIG

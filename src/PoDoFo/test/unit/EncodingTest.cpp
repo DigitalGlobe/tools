@@ -1,394 +1,310 @@
-/***************************************************************************
- *   Copyright (C) 2008 by Dominik Seichter                                *
- *   domseichter@web.de                                                    *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU Library General Public License as       *
- *   published by the Free Software Foundation; either version 2 of the    *
- *   License, or (at your option) any later version.                       *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU Library General Public     *
- *   License along with this program; if not, write to the                 *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- ***************************************************************************/
+/**
+ * Copyright (C) 2008 by Dominik Seichter <domseichter@web.de>
+ * Copyright (C) 2021 by Francesco Pretto <ceztko@gmail.com>
+ *
+ * Licensed under GNU Library General Public 2.0 or later.
+ * Some rights reserved. See COPYING, AUTHORS.
+ */
 
-#include <podofo.h>
+#include <PdfTest.h>
 
 #include <ostream>
+#include <iostream>
 
+using namespace std;
 using namespace PoDoFo;
 
-inline std::ostream& operator<<(std::ostream& o, const PdfVariant& s)
+static void outofRangeHelper(PdfEncoding& encoding);
+
+namespace PoDoFo
 {
-    std::string str;
-    s.ToString(str);
-    return o << str;
+    class PdfEncodingTest
+    {
+    public:
+        static void TestToUnicodeParse();
+        static void TestDifferencesObject();
+    };
 }
 
-// Needs to be included after the redifition of operator<<
-// or it won't compile using clang
-#include "EncodingTest.h"
+METHOD_AS_TEST_CASE(PdfEncodingTest::TestToUnicodeParse, "TestToUnicodeParse")
+METHOD_AS_TEST_CASE(PdfEncodingTest::TestDifferencesObject, "TestDifferencesObject")
 
-// Registers the fixture into the 'registry'
-CPPUNIT_TEST_SUITE_REGISTRATION( EncodingTest );
-
-void EncodingTest::setUp()
+TEST_CASE("TestDifferences")
 {
-}
-
-void EncodingTest::tearDown()
-{
-}
-
-void EncodingTest::testDifferences()
-{
-    PdfEncodingDifference difference;
+    PdfDifferenceMap difference;
 
     // Newly created encoding should be empty
-    CPPUNIT_ASSERT_EQUAL( static_cast<int>(difference.GetCount()), 0 );
-
+    REQUIRE(difference.GetCount() == 0);
 
     // Adding 0 should work
-    difference.AddDifference( 0, 0, PdfName("A") );
-    CPPUNIT_ASSERT_EQUAL( static_cast<int>(difference.GetCount()), 1 );
+    difference.AddDifference(0, u'A');
+    REQUIRE(difference.GetCount() == 1);
 
     // Adding 255 should work
-    difference.AddDifference( 255, 0, PdfName("B") );
-    CPPUNIT_ASSERT_EQUAL( static_cast<int>(difference.GetCount()), 2 );
-
-    // Adding out of range should throw exception
-    CPPUNIT_ASSERT_THROW( difference.AddDifference( -1, 0, PdfName("C") );, PdfError );
-    CPPUNIT_ASSERT_THROW( difference.AddDifference( 256, 0, PdfName("D") );, PdfError );
-
-    CPPUNIT_ASSERT_EQUAL( static_cast<int>(difference.GetCount()), 2 );
+    difference.AddDifference(255, u'B');
+    REQUIRE(difference.GetCount() == 2);
 
     // Convert to array
     PdfArray data;
     PdfArray expected;
-    expected.push_back( static_cast<pdf_int64>(0LL) );
-    expected.push_back( PdfName("A") );
-    expected.push_back( static_cast<pdf_int64>(255LL) );
-    expected.push_back( PdfName("B") );
+    expected.Add(static_cast<int64_t>(0));
+    expected.Add(PdfName("A"));
+    expected.Add(static_cast<int64_t>(255));
+    expected.Add(PdfName("B"));
 
-    difference.ToArray( data );
+    difference.ToArray(data);
 
-    CPPUNIT_ASSERT_EQUAL( data.GetSize(), expected.GetSize() );
-    for( unsigned int i=0;i<data.GetSize(); i++ )
-        CPPUNIT_ASSERT_EQUAL( data[i], expected[i] );
+    REQUIRE(expected.GetSize() == data.GetSize());
+    for (unsigned int i = 0; i < data.GetSize(); i++)
+        REQUIRE(expected[i] == data[i]);
 
 
     // Test replace
     expected.Clear();
-    expected.push_back( static_cast<pdf_int64>(0LL) );
-    expected.push_back( PdfName("A") );
-    expected.push_back( static_cast<pdf_int64>(255LL) );
-    expected.push_back( PdfName("X") );
+    expected.Add(static_cast<int64_t>(0));
+    expected.Add(PdfName("A"));
+    expected.Add(static_cast<int64_t>(255));
+    expected.Add(PdfName("X"));
 
-    difference.AddDifference( 255, 0, PdfName("X") );
+    difference.AddDifference(255, u'X');
 
-    difference.ToArray( data );
+    difference.ToArray(data);
 
-    CPPUNIT_ASSERT_EQUAL( data.GetSize(), expected.GetSize() );
-    for( unsigned int i=0;i<data.GetSize(); i++ )
-        CPPUNIT_ASSERT_EQUAL( data[i], expected[i] );
+    REQUIRE(expected.GetSize() == data.GetSize());
+    for (unsigned int i = 0; i < data.GetSize(); i++)
+        REQUIRE(expected[i] == data[i]);
 
 
     // Test more complicated array
     expected.Clear();
-    expected.push_back( static_cast<pdf_int64>(0LL) );
-    expected.push_back( PdfName("A") );
-    expected.push_back( PdfName("B") );
-    expected.push_back( PdfName("C") );
-    expected.push_back( static_cast<pdf_int64>(4LL) );
-    expected.push_back( PdfName("D") );
-    expected.push_back( PdfName("E") );
-    expected.push_back( static_cast<pdf_int64>(9LL) );
-    expected.push_back( PdfName("F") );
-    expected.push_back( static_cast<pdf_int64>(255LL) );
-    expected.push_back( PdfName("X") );
+    expected.Add(static_cast<int64_t>(0));
+    expected.Add(PdfName("A"));
+    expected.Add(PdfName("B"));
+    expected.Add(PdfName("C"));
+    expected.Add(static_cast<int64_t>(4));
+    expected.Add(PdfName("D"));
+    expected.Add(PdfName("E"));
+    expected.Add(static_cast<int64_t>(9));
+    expected.Add(PdfName("F"));
+    expected.Add(static_cast<int64_t>(255));
+    expected.Add(PdfName("X"));
 
-    difference.AddDifference( 1, 0, PdfName("B") );
-    difference.AddDifference( 2, 0, PdfName("C") );
-    difference.AddDifference( 4, 0, PdfName("D") );
-    difference.AddDifference( 5, 0, PdfName("E") );
-    difference.AddDifference( 9, 0, PdfName("F") );
+    difference.AddDifference(1, u'B');
+    difference.AddDifference(2, u'C');
+    difference.AddDifference(4, u'D');
+    difference.AddDifference(5, u'E');
+    difference.AddDifference(9, u'F');
 
-    difference.ToArray( data );
+    difference.ToArray(data);
 
-    CPPUNIT_ASSERT_EQUAL( data.GetSize(), expected.GetSize() );
-    for( unsigned int i=0;i<data.GetSize(); i++ )
-        CPPUNIT_ASSERT_EQUAL( data[i], expected[i] );
-
+    REQUIRE(expected.GetSize() == data.GetSize());
+    for (unsigned int i = 0; i < data.GetSize(); i++)
+        REQUIRE(expected[i] == data[i]);
 
     // Test if contains works correctly
-    PdfName name;
-    pdf_utf16be value;
-    CPPUNIT_ASSERT_EQUAL( difference.Contains( 0, name, value ), true );
-    CPPUNIT_ASSERT_EQUAL( name, PdfName("A") ); 
-#ifdef PODOFO_IS_LITTLE_ENDIAN
-    CPPUNIT_ASSERT_EQUAL( static_cast<int>(value), 0x4100 ); 
-#else
-    CPPUNIT_ASSERT_EQUAL( static_cast<int>(value), 0x0041 ); 
-#endif //PODOFO_IS_LITTLE_ENDIAN
+    const PdfName* name;
+    CodePointSpan codepoints;
+    REQUIRE(difference.TryGetMappedName(0, name, codepoints));
+    REQUIRE(*name == "A");
+    REQUIRE(static_cast<int>(*codepoints) == 0x41);
 
-    CPPUNIT_ASSERT_EQUAL( difference.Contains( 9, name, value ), true );
-    CPPUNIT_ASSERT_EQUAL( name, PdfName("F") ); 
-#ifdef PODOFO_IS_LITTLE_ENDIAN
-    CPPUNIT_ASSERT_EQUAL( static_cast<int>(value), 0x4600 ); 
-#else
-    CPPUNIT_ASSERT_EQUAL( static_cast<int>(value), 0x0046 ); 
-#endif //PODOFO_IS_LITTLE_ENDIAN
+    REQUIRE(difference.TryGetMappedName(9, name, codepoints));
+    REQUIRE(*name == "F");
+    REQUIRE(static_cast<int>(*codepoints) == 0x46);
 
-    CPPUNIT_ASSERT_EQUAL( difference.Contains( 255, name, value ), true );
-    CPPUNIT_ASSERT_EQUAL( name, PdfName("X") ); 
-#ifdef PODOFO_IS_LITTLE_ENDIAN
-    CPPUNIT_ASSERT_EQUAL( static_cast<int>(value), 0x5800 ); 
-#else
-    CPPUNIT_ASSERT_EQUAL( static_cast<int>(value), 0x0058 ); 
-#endif //PODOFO_IS_LITTLE_ENDIAN
+    REQUIRE(difference.TryGetMappedName(255, name, codepoints));
+    REQUIRE(*name  == "X");
+    REQUIRE(static_cast<int>(*codepoints) == 0x58);
 
-    CPPUNIT_ASSERT_EQUAL( difference.Contains( 100, name,value ), false );
-   
+    REQUIRE(!difference.TryGetMappedName(100, name, codepoints));
 }
 
-void EncodingTest::testDifferencesObject()
+void PdfEncodingTest::TestDifferencesObject()
 {
-    PdfMemDocument doc;
-    PdfEncodingDifference difference;
-    difference.AddDifference( 1, 0, PdfName("B") );
-    difference.AddDifference( 2, 0, PdfName("C") );
-    difference.AddDifference( 4, 0, PdfName("D") );
-    difference.AddDifference( 5, 0, PdfName("E") );
-    difference.AddDifference( 9, 0, PdfName("F") );
+    PdfDifferenceMap differences;
+    differences.AddDifference(1, 'B');
+    differences.AddDifference(2, 'C');
+    differences.AddDifference(4, 'D');
+    differences.AddDifference(5, 'E');
+    differences.AddDifference(9, 'F');
 
-    PdfDifferenceEncoding encoding( difference, PdfDifferenceEncoding::eBaseEncoding_MacRoman, &doc );
+    PdfDifferenceEncoding encoding(PdfEncodingMapFactory::GetMacRomanEncodingInstancePtr(), std::move(differences));
 
     // Check for encoding key
-    PdfObject* pObj = doc.GetObjects().CreateObject();
-    encoding.AddToDictionary( pObj->GetDictionary() );
-
-    CPPUNIT_ASSERT_EQUAL( true, pObj->GetDictionary().HasKey( PdfName("Encoding") ) );
-
-    PdfObject* pKey = pObj->GetDictionary().GetKey( PdfName("Encoding") );
-    CPPUNIT_ASSERT_EQUAL( true, pKey->IsReference() );
-
-    PdfObject* pEncoding = doc.GetObjects().GetObject( pKey->GetReference() );
+    PdfMemDocument doc;
+    PdfName name;
+    PdfObject* encodingObj;
+    REQUIRE(encoding.TryGetExportObject(doc.GetObjects(), name, encodingObj));
+    REQUIRE(encodingObj != nullptr);
 
     // Test BaseEncoding
-    PdfObject* pBase = pEncoding->GetDictionary().GetKey( PdfName("BaseEncoding" ) );
-    CPPUNIT_ASSERT_EQUAL( pBase->GetName(), PdfName("MacRomanEncoding") );
-    
+    PdfObject* baseObj = encodingObj->GetDictionary().GetKey("BaseEncoding");
+    REQUIRE(baseObj->GetName() == "MacRomanEncoding");
+
     // Test differences
-    PdfObject* pDiff = pEncoding->GetDictionary().GetKey( PdfName("Differences" ) );
-    PdfArray   expected;
+    PdfObject* diff = encodingObj->GetDictionary().GetKey("Differences");
+    PdfArray expected;
 
-    expected.push_back( static_cast<pdf_int64>(1LL) );
-    expected.push_back( PdfName("B") );
-    expected.push_back( PdfName("C") );
-    expected.push_back( static_cast<pdf_int64>(4LL) );
-    expected.push_back( PdfName("D") );
-    expected.push_back( PdfName("E") );
-    expected.push_back( static_cast<pdf_int64>(9LL) );
-    expected.push_back( PdfName("F") );
+    expected.Add(static_cast<int64_t>(1));
+    expected.Add(PdfName("B"));
+    expected.Add(PdfName("C"));
+    expected.Add(static_cast<int64_t>(4));
+    expected.Add(PdfName("D"));
+    expected.Add(PdfName("E"));
+    expected.Add(static_cast<int64_t>(9));
+    expected.Add(PdfName("F"));
 
-    const PdfArray & data = pDiff->GetArray();
-    CPPUNIT_ASSERT_EQUAL( data.GetSize(), expected.GetSize() );
-    for( unsigned int i=0;i<data.GetSize(); i++ )
-        CPPUNIT_ASSERT_EQUAL( data[i], expected[i] );
+    const PdfArray& data = diff->GetArray();
+    REQUIRE(expected.GetSize() == data.GetSize());
+    for (unsigned int i = 0; i < data.GetSize(); i++)
+        REQUIRE(expected[i] == data[i]);
 }
 
-void EncodingTest::testDifferencesEncoding()
+TEST_CASE("TestDifferencesEncoding")
 {
+    // Create a differences encoding where A and B are exchanged
+    PdfDifferenceMap differences;
+    differences.AddDifference((unsigned char)'A', 'B');
+    differences.AddDifference((unsigned char)'B', 'A');
+    differences.AddDifference((unsigned char)'C', 'D');
+
     PdfMemDocument doc;
 
-    // Create a differences encoding where A and B are exchanged
-    PdfEncodingDifference difference;
-    difference.AddDifference( 0x0041, 0, PdfName("B") );
-    difference.AddDifference( 0x0042, 0, PdfName("A") );
-    difference.AddDifference( 0x0043, 0, PdfName("D") );
+    PdfFontCreateParams params;
+    params.Encoding = PdfEncoding(std::make_shared<PdfDifferenceEncoding>(PdfEncodingMapFactory::GetWinAnsiEncodingInstancePtr(), std::move(differences)));
+    auto& font = doc.GetFonts().GetStandard14Font(PdfStandard14FontType::Helvetica, params);
 
-    PdfDifferenceEncoding encoding( difference, PdfDifferenceEncoding::eBaseEncoding_WinAnsi, &doc );
-
-    PdfString unicodeStr = encoding.ConvertToUnicode( PdfString("BAABC"), NULL );
-    CPPUNIT_ASSERT_EQUAL( PdfString("ABBAD"), unicodeStr );
-
-    PdfRefCountedBuffer encodingStr = encoding.ConvertToEncoding( PdfString("ABBAD"), NULL );
-    CPPUNIT_ASSERT_EQUAL( static_cast<size_t>(5), encodingStr.GetSize() );
-    PdfString str(reinterpret_cast<pdf_utf16be*>(encodingStr.GetBuffer()), encodingStr.GetSize());
-    CPPUNIT_ASSERT_EQUAL( memcmp("BAABC", encodingStr.GetBuffer(), encodingStr.GetSize()), 0 );
+    charbuff encoded;
+    INFO("'C' in \"BAABC\" is already reserved for mapping in 'D'");
+    REQUIRE(!font.GetEncoding().TryConvertToEncoded("BAABC", encoded));
+    encoded = font.GetEncoding().ConvertToEncoded("BAABI");
+    REQUIRE(encoded == "ABBAI");
+    auto unicode = params.Encoding.ConvertToUtf8(PdfString::FromRaw(encoded));
+    REQUIRE(unicode == "BAABI");
 }
 
-void EncodingTest::testUnicodeNames()
+TEST_CASE("TestGetCharCode")
 {
-    // List of items which are defined twice and cause
-    // other ids to be returned than those which where send in
-    const char* pszDuplicated[] = {
-        "Delta",
-        "fraction",
-        "hyphen",
-        "macron",
-        "mu",
-        "Omega",
-        "periodcentered",
-        "scedilla",
-        "Scedilla",
-        "space",
-        "tcommaaccent",
-        "Tcommaaccent",
-        "exclamsmall",
-        "dollaroldstyle",
-        "zerooldstyle",
-        "oneoldstyle",
-        "twooldstyle",
-        "threeoldstyle",
-        "fouroldstyle",
-        "fiveoldstyle",
-        "sixoldstyle",
-        "sevenoldstyle",
-        "eightoldstyle",
-        "nineoldstyle",
-        "ampersandsmall",
-        "questionsmall",
-        NULL
+    auto winAnsiEncoding = PdfEncodingFactory::CreateWinAnsiEncoding();
+    INFO("WinAnsiEncoding");
+    outofRangeHelper(winAnsiEncoding);
+
+    auto macRomanEncoding = PdfEncodingFactory::CreateMacRomanEncoding();
+    INFO("MacRomanEncoding");
+    outofRangeHelper(macRomanEncoding);
+
+    PdfDifferenceMap differences;
+    differences.AddDifference((unsigned char)'A', 'B');
+    differences.AddDifference((unsigned char)'B', 'A');
+    PdfEncoding differenceEncoding(std::make_shared<PdfDifferenceEncoding>(PdfEncodingMapFactory::GetWinAnsiEncodingInstancePtr(), std::move(differences)));
+    outofRangeHelper(differenceEncoding);
+}
+
+TEST_CASE("CMapIdentityTest")
+{
+    constexpr string_view OneByteIdentity = R"(
+/CIDInit /ProcSet findresource begin
+12 dict begin
+begincmap
+/CIDSystemInfo 3 dict dup begin
+/Registry (Adobe) def
+/Ordering (Identity) def
+/Supplement 0 def
+end def
+/CMapName /OneByteIdentityH def
+/CMapVersion 1.000 def
+/CMapType 1 def
+/UIDOffset 0 def
+/XUID [1 10 25404 9999] def
+/WMode 0 def
+1 begincodespacerange
+<00> <FF>
+endcodespacerange
+1 begincidrange
+<00> <FF> 0
+endcidrange
+endcmap
+CMapName currentdict /CMap defineresource pop
+end
+end
+)";
+
+    SpanStreamDevice device(OneByteIdentity);
+    auto map = PdfCMapEncoding::Parse(device);
+    REQUIRE(map.GetCharMap().IsTrivialIdentity());
+}
+
+void PdfEncodingTest::TestToUnicodeParse()
+{
+    string_view toUnicode =
+        "3 beginbfrange\n"
+        "<0001> <0004> <1001>\n"
+        "<0005> <000A> [<000A> <0009> <0008> <0007> <0006> <0005>]\n"
+        "<000B> <000F> <100B>\n"
+        "endbfrange\n";
+    charbuff encodedStr("\x00\x01\x00\x02\x00\x03\x00\x04\x00\x05\x00\x06\x00\x07\x00\x08\x00\x09\x00\x0A\x00\x0B\x00\x0C\x00\x0D\x00\x0E\x00\x0F"sv);
+    string expected("\xE1\x80\x81\xE1\x80\x82\xE1\x80\x83\xE1\x80\x84\x0A\x09\x08\x07\x06\x05\xE1\x80\x8B\xE1\x80\x8C\xE1\x80\x8D\xE1\x80\x8E\xE1\x80\x8F"sv);
+
+    PdfMemDocument doc;
+    auto& toUnicodeObj = doc.GetObjects().CreateDictionaryObject();
+    toUnicodeObj.GetOrCreateStream().SetData(toUnicode);
+
+    PdfEncoding encoding(PdfEncodingMapConstPtr(new PdfIdentityEncoding(PdfEncodingMapType::Indeterminate, 2)), PdfEncodingMapFactory::ParseCMapEncoding(toUnicodeObj));
+
+    auto utf8str = encoding.ConvertToUtf8(PdfString::FromRaw(encodedStr));
+    REQUIRE(utf8str == expected);
+
+    const char* toUnicodeInvalidTests[] =
+    {
+        // missing object numbers
+        "beginbfrange\n",
+        "beginbfchar\n",
+
+        // invalid hex digits
+        "2 beginbfrange <WXYZ> endbfrange\n",
+        "2 beginbfrange <-123> endbfrange\n",
+        "2 beginbfrange <<00>> endbfrange\n",
+
+        // missing hex digits
+        "2 beginbfrange <> endbfrange\n",
+
+        // empty array
+        "2 beginbfrange [] endbfrange\n",
+
+        nullptr
     };
 
-    int nCount = 0;
-    for( int i = 0;i<=0xFFFF; i++ ) 
+    for (size_t i = 0; toUnicodeInvalidTests[i] != nullptr; i++)
     {
-        PdfName name = PdfDifferenceEncoding::UnicodeIDToName( static_cast<pdf_utf16be>(i) );
-
-        pdf_utf16be id = PdfDifferenceEncoding::NameToUnicodeID( name );
-
-        bool bFound = false;
-        const char** pszDup = pszDuplicated;
-        while( *pszDup ) 
+        try
         {
-            if( PdfName( *pszDup ) == name ) 
-            {
-                bFound = true;
-                break;
-            }
+            PdfIndirectObjectList invalidList;
+            auto& invalidObject = invalidList.CreateDictionaryObject();
+            invalidObject.GetOrCreateStream().SetData(bufferview(toUnicodeInvalidTests[i], char_traits<char>::length(toUnicodeInvalidTests[i])));
 
-            ++pszDup;
+            PdfEncoding encodingTestInvalid(PdfEncodingMapConstPtr(new PdfIdentityEncoding(PdfEncodingMapType::Indeterminate, 2)), PdfEncodingMapFactory::ParseCMapEncoding(invalidObject));
+
+            auto unicodeStringTestInvalid = encodingTestInvalid.ConvertToUtf8(PdfString::FromRaw(encodedStr));
+
+            // exception not thrown - should never get here
+            // TODO not all invalid input throws an exception (e.g. no hex digits in <WXYZ>)
+            FAIL();
         }
-
-        if( !bFound )
+        catch (PdfError&)
         {
-            // Does not work because of 2 many duplicates...
-            //CPPUNIT_ASSERT_EQUAL_MESSAGE( name.GetName(), id, static_cast<pdf_utf16be>(i) );
-            if( id == static_cast<pdf_utf16be>(i) )
-                ++nCount;
+            // parsing every invalid test string should throw an exception
+        }
+        catch (exception&)
+        {
+            FAIL("Unexpected exception type");
         }
     }
-
-    CPPUNIT_ASSERT_EQUAL_MESSAGE( "Compared codes count", 65422, nCount );
 }
 
-void EncodingTest::testGetCharCode()
+void outofRangeHelper(PdfEncoding& encoding)
 {
-    std::string msg;
-    bool        ret;
-
-    PdfWinAnsiEncoding cWinAnsiEncoding;
-    ret = outofRangeHelper( &cWinAnsiEncoding, msg, "PdfWinAnsiEncoding" );
-    CPPUNIT_ASSERT_EQUAL_MESSAGE( msg, ret, true );
-
-    PdfMacRomanEncoding cMacRomanEncoding;
-    ret = outofRangeHelper( &cMacRomanEncoding, msg, "PdfMacRomanEncoding" );
-    CPPUNIT_ASSERT_EQUAL_MESSAGE( msg, ret, true );
-
-    PdfIdentityEncoding cIdentityEncoding;
-    ret = outofRangeHelper( &cIdentityEncoding, msg, "PdfIdentityEncoding" );
-    CPPUNIT_ASSERT_EQUAL_MESSAGE( msg, ret, true );
-
-    PdfVecObjects vec;
-    vec.SetAutoDelete( true );
-    PdfEncodingDifference difference;
-    difference.AddDifference( 0x0041, 0, PdfName("B") );
-    difference.AddDifference( 0x0042, 0, PdfName("A") );
-    PdfDifferenceEncoding cDifferenceEncoding( difference, PdfDifferenceEncoding::eBaseEncoding_WinAnsi, &vec );
-    ret = outofRangeHelper( &cDifferenceEncoding, msg, "PdfDifferenceEncoding" );
-    CPPUNIT_ASSERT_EQUAL_MESSAGE( msg, ret, true );
-
-#ifdef PODOFO_IS_LITTLE_ENDIAN
-    CPPUNIT_ASSERT_EQUAL( static_cast<pdf_utf16be>(0x4200), cDifferenceEncoding.GetCharCode( 0x0041 ) );
-    CPPUNIT_ASSERT_EQUAL( static_cast<pdf_utf16be>(0x4100), cDifferenceEncoding.GetCharCode( 0x0042 ) );
-#else
-    CPPUNIT_ASSERT_EQUAL( static_cast<pdf_utf16be>(0x0042), cDifferenceEncoding.GetCharCode( 0x0041 ) );
-    CPPUNIT_ASSERT_EQUAL( static_cast<pdf_utf16be>(0x0041), cDifferenceEncoding.GetCharCode( 0x0042 ) );
-#endif // PODOFO_IS_LITTLE_ENDIAN
-}
-
-bool EncodingTest::outofRangeHelper( PdfEncoding* pEncoding, std::string & rMsg, const char* pszName )
-{
-    bool exception = false;
-
-    try {
-	pEncoding->GetCharCode( pEncoding->GetFirstChar() );
-    } 
-    catch( const PdfError & rError ) 
-    {
-	// This may not throw!
-	rMsg = "pEncoding->GetCharCode( pEncoding->GetFirstChar() ) failed";
-	return false;
-    }
-
-    try {
-	pEncoding->GetCharCode( pEncoding->GetFirstChar() - 1 );
-    } 
-    catch( const PdfError & rError ) 
-    {
-	// This has to throw!
-	exception = true;
-    }
-
-    if( !exception ) 
-    {
-	rMsg = "pEncoding->GetCharCode( pEncoding->GetFirstChar() - 1 ); failed";
-	return false;
-    }
-
-    try {
-	pEncoding->GetCharCode( pEncoding->GetLastChar() );
-    } 
-    catch( const PdfError & rError ) 
-    {
-	// This may not throw!
-	rMsg = "pEncoding->GetCharCode( pEncoding->GetLastChar()  ); failed";
-	return false;
-    }
-
-    exception = false;
-    try {
-	pEncoding->GetCharCode( pEncoding->GetLastChar() + 1 );
-    } 
-    catch( const PdfError & rError ) 
-    {
-	// This has to throw!
-	exception = true;
-    }
-
-    if( !exception ) 
-    {
-	rMsg = "pEncoding->GetCharCode( pEncoding->GetLastChar() + 1 ); failed";
-	return false;
-    }
-
-    PdfEncoding::const_iterator it = pEncoding->begin();
-    int nCount = pEncoding->GetFirstChar();
-    while( it != pEncoding->end() ) 
-    {
-	CPPUNIT_ASSERT_EQUAL_MESSAGE( pszName, *it, pEncoding->GetCharCode( nCount ) );
-
-	++nCount;
-	++it;
-    }
-
-    return true;
+    (void)encoding.GetCodePoint(encoding.GetFirstChar());
+    REQUIRE(encoding.GetCodePoint(encoding.GetFirstChar().Code - 1) == U'\0');
+    (void)encoding.GetCodePoint(encoding.GetLastChar());
+    REQUIRE(encoding.GetCodePoint(encoding.GetLastChar().Code + 1) == U'\0');
 }

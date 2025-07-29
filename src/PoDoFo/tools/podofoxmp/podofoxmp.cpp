@@ -1,22 +1,9 @@
-/***************************************************************************
- *   Copyright (C) 2010 by Ian Ashley                                      *
- *   Ian Ashley <Ian.Ashley@opentext.com>                                  *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
- ***************************************************************************/
+/**
+ * SPDX-FileCopyrightText: (C) 2010 Ian Ashley <Ian.Ashley@opentext.com>
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ */
+
+#include <podofo/private/PdfDeclarationsPrivate.h>
 
 #include <iostream>
 #include <iterator>
@@ -25,103 +12,132 @@
 #include <cstdio>
 
 #ifdef _MSC_VER
-	#include <io.h>
-	#include <fcntl.h>
+#include <io.h>
+#include <fcntl.h>
 #endif
 
-#include <podofo.h>
+#include <podofo/podofo.h>
 
 using namespace std;
+using namespace PoDoFo;
 
-int main (int argc, char *argv[])
+void Main(const cspan<string_view>& args)
 {
-	PoDoFo::PdfError::EnableDebug(false);
-	if (argc != 2 && argc != 4)
+    PdfMemDocument* doc = nullptr;
+    PdfCommon::SetMaxLoggingSeverity(PdfLogSeverity::None);
+    if (args.size() != 2 && args.size() != 4)
     {
-		cout << "Syntax" << endl;
-		cout << "  " << argv[0] << " <pdf file> - display the XMP in a file (use \"-\" to specify stdin)" << endl;
-		cout << "or" << endl;
-		cout << "  " << argv[0] << " <src pdf file> <xmp file> <new pdf file> - create a new PDF with the XMP in" << endl;
-		return EXIT_FAILURE;
+        cout << "Syntax" << endl;
+        cout << "  " << args[0] << " <pdf file> - display the XMP in a file (use \"-\" to specify stdin)" << endl;
+        cout << "or" << endl;
+        cout << "  " << args[0] << " <src pdf file> <xmp file> <new pdf file> - create a new PDF with the XMP in" << endl;
+        exit(-1);
     }
 
-	PoDoFo::PdfMemDocument *doc;
-
-	if ( string("-") == argv[1] )
-	{
-		cin >> std::noskipws;
-		#ifdef _MSC_VER
-			_setmode(_fileno(stdin), _O_BINARY); // @TODO: MSVC specific binary setmode -- not sure if other platforms need it
-			cin.sync_with_stdio();
-		#endif
-		istream_iterator<char> it(std::cin);
-		istream_iterator<char> end;
-		string buffer(it, end);
-		doc = new PoDoFo::PdfMemDocument();
-		doc->Load( buffer.c_str(), (long)buffer.size() );
-	} 
-	else 
-	{
-		doc = new PoDoFo::PdfMemDocument(argv[1]);
-	}
-
-
-	if (argc == 2)
+    if (args[1] == "-")
     {
-		PoDoFo::PdfObject *metadata;
-		if ((metadata = doc->GetMetadata()) == NULL)
-			cout << "No metadata" << endl;
-		else
+        cin >> noskipws;
+#ifdef _MSC_VER
+        _setmode(_fileno(stdin), _O_BINARY); // @TODO: MSVC specific binary setmode -- not sure if other platforms need it
+        cin.sync_with_stdio();
+#endif
+        istream_iterator<char> it(cin);
+        istream_iterator<char> end;
+        string buffer(it, end);
+        doc = new PdfMemDocument();
+        doc->LoadFromBuffer(buffer);
+    }
+    else
+    {
+        doc = new PdfMemDocument();
+        doc->Load(args[1]);
+    }
+
+
+    if (args.size() == 2)
+    {
+        auto metadata = doc->GetCatalog().GetMetadataObject();
+        if (metadata == nullptr)
         {
-			PoDoFo::PdfStream *str = metadata->GetStream();
-			if (str != NULL)
+            cout << "No metadata" << endl;
+        }
+        else
+        {
+            auto stream = metadata->GetStream();
+            if (stream != nullptr)
             {
-				char *buf;
-				PoDoFo::pdf_long len;
-	
-				str->GetFilteredCopy(&buf, &len);
-				for (PoDoFo::pdf_long i = 0; i < len; ++i)
-					printf("%c", buf[i]);
-				printf("\n");
-				fflush(stdout);
-				free(buf);
+                charbuff buffer = stream->GetCopy();
+                printf("%s", buffer.data());
+                printf("\n");
+                fflush(stdout);
             }
         }
     }
 
-	if (argc == 4)
+    if (args.size() == 4)
     {
-		char *xmpBuf;
-		FILE *fp;
+        char* xmpBuf;
+        FILE* fp;
 
-		if ((fp = fopen(argv[2], "rb")) == NULL)
-			cout << "Cannot open " << argv[2] << endl;
-		else
+        if ((fp = fopen(args[2].data(), "rb")) == nullptr)
+            cout << "Cannot open " << args[2] << endl;
+        else
         {
-			fseek(fp, 0, SEEK_END);
-			long xmpLen = ftell(fp);
-			xmpBuf = new char[xmpLen];
-			fseek(fp, 0, SEEK_SET);
-			fread(xmpBuf, 1, xmpLen, fp);
-			fclose(fp);
-
-			PoDoFo::PdfObject *metadata;
-			if ((metadata = doc->GetMetadata()) != NULL)
-				metadata->GetStream()->Set(xmpBuf, xmpLen, PoDoFo::TVecFilters());
-			else
+            if (fseek(fp, 0, SEEK_END) == -1)
             {
-				metadata = doc->GetObjects().CreateObject("Metadata");
-				metadata->GetDictionary().AddKey(PoDoFo::PdfName("Subtype"), PoDoFo::PdfName("XML"));
-				metadata->GetStream()->Set(xmpBuf, xmpLen, PoDoFo::TVecFilters());
-				doc->GetCatalog()->GetDictionary().AddKey(PoDoFo::PdfName("Metadata"), metadata->Reference());
+                fclose(fp);
+                PODOFO_RAISE_ERROR_INFO(PdfErrorCode::IOError, "Failed to seek to the end of the file");
             }
-			delete[] xmpBuf;
 
-			doc->Write(argv[3]);
+            long rc = ftell(fp);
+            if (rc == -1)
+            {
+                fclose(fp);
+                PODOFO_RAISE_ERROR_INFO(PdfErrorCode::IOError, "Failed to read size of the file");
+            }
+
+            size_t xmpLen = (size_t)rc;
+            xmpBuf = new char[xmpLen];
+            if (!xmpBuf)
+            {
+                fclose(fp);
+                PODOFO_RAISE_ERROR(PdfErrorCode::OutOfMemory);
+            }
+
+            if (fseek(fp, 0, SEEK_SET) == -1)
+            {
+                delete[] xmpBuf;
+                fclose(fp);
+
+                PODOFO_RAISE_ERROR_INFO(PdfErrorCode::IOError, "Failed to seek to the beginning of the file");
+            }
+
+            if (fread(xmpBuf, 1, xmpLen, fp) != xmpLen)
+            {
+                delete[] xmpBuf;
+                fclose(fp);
+
+                PODOFO_RAISE_ERROR_INFO(PdfErrorCode::IOError, "Failed to read whole file into the memory");
+            }
+
+            auto metadata = doc->GetCatalog().GetMetadataObject();
+            if (metadata != nullptr)
+            {
+                metadata->GetOrCreateStream().SetData({ xmpBuf, xmpLen });
+            }
+            else
+            {
+                metadata = &doc->GetObjects().CreateDictionaryObject("Metadata");
+                metadata->GetDictionary().AddKey("Subtype", PdfName("XML"));
+                metadata->GetOrCreateStream().SetData({ xmpBuf, xmpLen });
+                doc->GetCatalog().GetDictionary().AddKey("Metadata", metadata->GetIndirectReference());
+            }
+
+            delete[] xmpBuf;
+            doc->Save(args[3]);
         }
     }
 
-	delete doc;
-
-	return EXIT_SUCCESS;
+    if (doc)
+        delete doc;
 }
