@@ -14,7 +14,7 @@ var srcDirUtils = "..";
 var baseName = "libxml2";
 /* Configure file which contains the version and the output file where
    we can store our build configuration. */
-var configFile = srcDirXml + "\\configure.ac";
+var libxmlVersionFile = srcDirXml + "\\VERSION";
 var versionFile = ".\\config.msvc";
 /* Input and output files regarding the libxml features. */
 var optsFileIn = srcDirXml + "\\include\\libxml\\xmlversion.h.in";
@@ -28,14 +28,11 @@ var verMicroSuffix;
 var verCvs;
 var useCvsVer = true;
 /* Libxml features. */
-var withTrio = false;
 var withThreads = "native";
-var withFtp = true;
 var withHttp = true;
 var withHtml = true;
 var withC14n = true;
 var withCatalog = true;
-var withDocb = true;
 var withXpath = true;
 var withXptr = true;
 var withXinclude = true;
@@ -45,11 +42,10 @@ var withIso8859x = false;
 var withZlib = false;
 var withLzma = false;
 var withDebug = true;
-var withMemDebug = false;
-var withRunDebug = false;
 var withSchemas = true;
 var withSchematron = true;
 var withRegExps = true;
+var withRelaxNg = true;
 var withModules = true;
 var withTree = true;
 var withReader = true;
@@ -114,14 +110,11 @@ function usage()
 	txt += "Options can be specified in the form <option>=<value>, where the value is\n";
 	txt += "either 'yes' or 'no', if not stated otherwise.\n\n";
 	txt += "\nXML processor options, default value given in parentheses:\n\n";
-	txt += "  trio:       Enable TRIO string manipulator (" + (withTrio? "yes" : "no")  + ")\n";
 	txt += "  threads:    Enable thread safety [no|ctls|native|posix] (" + (withThreads)  + ") \n";
-	txt += "  ftp:        Enable FTP client (" + (withFtp? "yes" : "no")  + ")\n";
 	txt += "  http:       Enable HTTP client (" + (withHttp? "yes" : "no")  + ")\n";
 	txt += "  html:       Enable HTML processor (" + (withHtml? "yes" : "no")  + ")\n";
 	txt += "  c14n:       Enable C14N support (" + (withC14n? "yes" : "no")  + ")\n";
 	txt += "  catalog:    Enable catalog support (" + (withCatalog? "yes" : "no")  + ")\n";
-	txt += "  docb:       Enable DocBook support (" + (withDocb? "yes" : "no")  + ")\n";
 	txt += "  xpath:      Enable XPath support (" + (withXpath? "yes" : "no")  + ")\n";
 	txt += "  xptr:       Enable XPointer support (" + (withXptr? "yes" : "no")  + ")\n";
 	txt += "  xinclude:   Enable XInclude support (" + (withXinclude? "yes" : "no")  + ")\n";
@@ -131,9 +124,8 @@ function usage()
 	txt += "  zlib:       Enable zlib support (" + (withZlib? "yes" : "no")  + ")\n";
 	txt += "  lzma:       Enable lzma support (" + (withLzma? "yes" : "no")  + ")\n";
 	txt += "  xml_debug:  Enable XML debbugging module (" + (withDebug? "yes" : "no")  + ")\n";
-	txt += "  mem_debug:  Enable memory debugger (" + (withMemDebug? "yes" : "no")  + ")\n";
-	txt += "  run_debug:  Enable memory debugger (" + (withRunDebug? "yes" : "no")  + ")\n";
 	txt += "  regexps:    Enable regular expressions (" + (withRegExps? "yes" : "no") + ")\n";
+	txt += "  relaxng:    Enable RELAX NG support (" + (withRelaxNg ? "yes" : "no") + ")\n";
 	txt += "  modules:    Enable module support (" + (withModules? "yes" : "no") + ")\n";
 	txt += "  tree:       Enable tree api (" + (withTree? "yes" : "no") + ")\n";
 	txt += "  reader:     Enable xmlReader api (" + (withReader? "yes" : "no") + ")\n";
@@ -165,14 +157,14 @@ function usage()
 	txt += "              installed (" + buildLibPrefix + ")\n";
 	txt += "  sodir:      Directory where shared libraries should be installed\n"; 
 	txt += "              (" + buildSoPrefix + ")\n";
-	txt += "  include:    Additional search path for the compiler, particularily\n";
+	txt += "  include:    Additional search path for the compiler, particularly\n";
 	txt += "              where iconv headers can be found (" + buildInclude + ")\n";
-	txt += "  lib:        Additional search path for the linker, particularily\n";
+	txt += "  lib:        Additional search path for the linker, particularly\n";
 	txt += "              where iconv library can be found (" + buildLib + ")\n";
 	WScript.Echo(txt);
 }
 
-/* Discovers the version we are working with by reading the apropriate
+/* Discovers the version we are working with by reading the appropriate
    configuration file. Despite its name, this also writes the configuration
    file included by our makefile. */
 function discoverVersion()
@@ -180,21 +172,7 @@ function discoverVersion()
 	var fso, cf, vf, ln, s, iDot, iSlash;
 	fso = new ActiveXObject("Scripting.FileSystemObject");
 	verCvs = "";
-	if (useCvsVer && fso.FileExists("..\\CVS\\Entries")) {
-		cf = fso.OpenTextFile("..\\CVS\\Entries", 1);
-		while (cf.AtEndOfStream != true) {
-			ln = cf.ReadLine();
-			s = new String(ln);
-			if (s.search(/^\/ChangeLog\//) != -1) {
-				iDot = s.indexOf(".");
-				iSlash = s.indexOf("/", iDot);
-				verCvs = "CVS" + s.substring(iDot + 1, iSlash);
-				break;
-			}
-		}
-		cf.Close();
-	}
-	cf = fso.OpenTextFile(configFile, 1);
+	cf = fso.OpenTextFile(libxmlVersionFile, 1);
 	if (compiler == "msvc")
 		versionFile = ".\\config.msvc";
 	else if (compiler == "mingw")
@@ -208,31 +186,22 @@ function discoverVersion()
 	while (cf.AtEndOfStream != true) {
 		ln = cf.ReadLine();
 		s = new String(ln);
-		if (s.search(/^LIBXML_MAJOR_VERSION=/) != -1) {
-			vf.WriteLine(s);
-			verMajor = s.substring(s.indexOf("=") + 1, s.length)
-		} else if(s.search(/^LIBXML_MINOR_VERSION=/) != -1) {
-			vf.WriteLine(s);
-			verMinor = s.substring(s.indexOf("=") + 1, s.length)
-		} else if(s.search(/^LIBXML_MICRO_VERSION=/) != -1) {
-			vf.WriteLine(s);
-			verMicro = s.substring(s.indexOf("=") + 1, s.length)
-		} else if(s.search(/^LIBXML_MICRO_VERSION_SUFFIX=/) != -1) {
-			vf.WriteLine(s);
-			verMicroSuffix = s.substring(s.indexOf("=") + 1, s.length)
-		}
+		versionSplit = s.split(".");
+		verMajor = versionSplit[0];
+		vf.WriteLine("LIBXML_MAJOR_VERSION=" + verMajor);
+		verMinor = versionSplit[1];
+		vf.WriteLine("LIBXML_MINOR_VERSION=" + verMinor);
+		verMicro = versionSplit[2];
+		vf.WriteLine("LIBXML_MICRO_VERSION=" + verMicro);
 	}
 	cf.Close();
 	vf.WriteLine("XML_SRCDIR=" + srcDirXml);
 	vf.WriteLine("UTILS_SRCDIR=" + srcDirUtils);
-	vf.WriteLine("WITH_TRIO=" + (withTrio? "1" : "0"));
 	vf.WriteLine("WITH_THREADS=" + withThreads);
-	vf.WriteLine("WITH_FTP=" + (withFtp? "1" : "0"));
 	vf.WriteLine("WITH_HTTP=" + (withHttp? "1" : "0"));
 	vf.WriteLine("WITH_HTML=" + (withHtml? "1" : "0"));
 	vf.WriteLine("WITH_C14N=" + (withC14n? "1" : "0"));
 	vf.WriteLine("WITH_CATALOG=" + (withCatalog? "1" : "0"));
-	vf.WriteLine("WITH_DOCB=" + (withDocb? "1" : "0"));
 	vf.WriteLine("WITH_XPATH=" + (withXpath? "1" : "0"));
 	vf.WriteLine("WITH_XPTR=" + (withXptr? "1" : "0"));
 	vf.WriteLine("WITH_XINCLUDE=" + (withXinclude? "1" : "0"));
@@ -242,11 +211,10 @@ function discoverVersion()
 	vf.WriteLine("WITH_ZLIB=" + (withZlib? "1" : "0"));
 	vf.WriteLine("WITH_LZMA=" + (withLzma? "1" : "0"));
 	vf.WriteLine("WITH_DEBUG=" + (withDebug? "1" : "0"));
-	vf.WriteLine("WITH_MEM_DEBUG=" + (withMemDebug? "1" : "0"));
-	vf.WriteLine("WITH_RUN_DEBUG=" + (withRunDebug? "1" : "0"));
 	vf.WriteLine("WITH_SCHEMAS=" + (withSchemas? "1" : "0"));
 	vf.WriteLine("WITH_SCHEMATRON=" + (withSchematron? "1" : "0"));
 	vf.WriteLine("WITH_REGEXPS=" + (withRegExps? "1" : "0"));
+	vf.WriteLine("WITH_RELAXNG=" + (withRelaxNg ? "1" : "0"));
 	vf.WriteLine("WITH_MODULES=" + (withModules? "1" : "0"));
 	vf.WriteLine("WITH_TREE=" + (withTree? "1" : "0"));
 	vf.WriteLine("WITH_READER=" + (withReader? "1" : "0"));
@@ -280,6 +248,18 @@ function discoverVersion()
 		vf.WriteLine("DYNRUNTIME=" + (dynruntime? "1" : "0"));
 	}
 	vf.Close();
+	versionFile = "rcVersion.h";
+	vf = fso.CreateTextFile(versionFile, true);
+	vf.WriteLine("/*");
+	vf.WriteLine("  " + versionFile);
+	vf.WriteLine("  This file is generated automatically by " + WScript.ScriptName + ".");
+	vf.WriteLine("*/");
+	vf.WriteBlankLines(1);
+	vf.WriteLine("#define LIBXML_MAJOR_VERSION " + verMajor);
+	vf.WriteLine("#define LIBXML_MINOR_VERSION " + verMinor);
+	vf.WriteLine("#define LIBXML_MICRO_VERSION " + verMicro);
+	vf.WriteLine("#define LIBXML_DOTTED_VERSION " + "\"" + verMajor + "." + verMinor + "." + verMicro + "\"");
+	vf.Close();
 }
 
 /* Configures libxml. This one will generate xmlversion.h from xmlversion.h.in
@@ -301,14 +281,10 @@ function configureLibxml()
 				verMajor*10000 + verMinor*100 + verMicro*1));
 		} else if (s.search(/\@LIBXML_VERSION_EXTRA\@/) != -1) {
 			of.WriteLine(s.replace(/\@LIBXML_VERSION_EXTRA\@/, verCvs));
-		} else if (s.search(/\@WITH_TRIO\@/) != -1) {
-			of.WriteLine(s.replace(/\@WITH_TRIO\@/, withTrio? "1" : "0"));
 		} else if (s.search(/\@WITH_THREADS\@/) != -1) {
 			of.WriteLine(s.replace(/\@WITH_THREADS\@/, withThreads == "no"? "0" : "1"));
 		} else if (s.search(/\@WITH_THREAD_ALLOC\@/) != -1) {
 			of.WriteLine(s.replace(/\@WITH_THREAD_ALLOC\@/, "0"));
-		} else if (s.search(/\@WITH_FTP\@/) != -1) {
-			of.WriteLine(s.replace(/\@WITH_FTP\@/, withFtp? "1" : "0"));
 		} else if (s.search(/\@WITH_HTTP\@/) != -1) {
 			of.WriteLine(s.replace(/\@WITH_HTTP\@/, withHttp? "1" : "0"));
 		} else if (s.search(/\@WITH_HTML\@/) != -1) {
@@ -317,8 +293,6 @@ function configureLibxml()
 			of.WriteLine(s.replace(/\@WITH_C14N\@/, withC14n? "1" : "0"));
 		} else if (s.search(/\@WITH_CATALOG\@/) != -1) {
 			of.WriteLine(s.replace(/\@WITH_CATALOG\@/, withCatalog? "1" : "0"));
-		} else if (s.search(/\@WITH_DOCB\@/) != -1) {
-			of.WriteLine(s.replace(/\@WITH_DOCB\@/, withDocb? "1" : "0"));
 		} else if (s.search(/\@WITH_XPATH\@/) != -1) {
 			of.WriteLine(s.replace(/\@WITH_XPATH\@/, withXpath? "1" : "0"));
 		} else if (s.search(/\@WITH_XPTR\@/) != -1) {
@@ -337,16 +311,14 @@ function configureLibxml()
 			of.WriteLine(s.replace(/\@WITH_LZMA\@/, withLzma? "1" : "0"));
 		} else if (s.search(/\@WITH_DEBUG\@/) != -1) {
 			of.WriteLine(s.replace(/\@WITH_DEBUG\@/, withDebug? "1" : "0"));
-		} else if (s.search(/\@WITH_MEM_DEBUG\@/) != -1) {
-			of.WriteLine(s.replace(/\@WITH_MEM_DEBUG\@/, withMemDebug? "1" : "0"));
-		} else if (s.search(/\@WITH_RUN_DEBUG\@/) != -1) {
-			of.WriteLine(s.replace(/\@WITH_RUN_DEBUG\@/, withRunDebug? "1" : "0"));
 		} else if (s.search(/\@WITH_SCHEMAS\@/) != -1) {
 			of.WriteLine(s.replace(/\@WITH_SCHEMAS\@/, withSchemas? "1" : "0"));
 		} else if (s.search(/\@WITH_SCHEMATRON\@/) != -1) {
 			of.WriteLine(s.replace(/\@WITH_SCHEMATRON\@/, withSchematron? "1" : "0"));
 		} else if (s.search(/\@WITH_REGEXPS\@/) != -1) {
 			of.WriteLine(s.replace(/\@WITH_REGEXPS\@/, withRegExps? "1" : "0"));
+		} else if (s.search(/\@WITH_RELAXNG\@/) != -1) {
+			of.WriteLine(s.replace(/\@WITH_RELAXNG\@/, withRelaxNg? "1" : "0"));
 		} else if (s.search(/\@WITH_MODULES\@/) != -1) {
 			of.WriteLine(s.replace(/\@WITH_MODULES\@/, withModules? "1" : "0"));
 		} else if (s.search(/\@MODULE_EXTENSION\@/) != -1) {
@@ -396,6 +368,14 @@ function configureLibxmlPy()
 			of.WriteLine(s.replace(/\@prefix\@/, buildPrefix));
 		} else if (s.search(/\@WITH_THREADS\@/) != -1) {
 			of.WriteLine(s.replace(/\@WITH_THREADS\@/, withThreads == "no"? "0" : "1"));
+		} else if (s.search(/\@WITH_ZLIB\@/) != -1) {
+			of.WriteLine(s.replace(/\@WITH_ZLIB\@/, withZlib? "1" : "0"));
+		} else if (s.search(/\@WITH_LZMA\@/) != -1) {
+			of.WriteLine(s.replace(/\@WITH_LZMA\@/, withLzma? "1" : "0"));
+		} else if (s.search(/\@WITH_ICONV\@/) != -1) {
+            of.WriteLine(s.replace(/\@WITH_ICONV\@/, withIconv? "1" : "0"));
+		} else if (s.search(/\@WITH_ICU\@/) != -1) {
+			of.WriteLine(s.replace(/\@WITH_ICU\@/, withIcu? "1" : "0"));
 		} else
 			of.WriteLine(ln);
 	}
@@ -418,7 +398,7 @@ function genReadme(bname, ver, file)
 	f.WriteLine("platform.");
 	f.WriteBlankLines(1);
 	f.WriteLine("  The files in this package do not require any special installation");
-	f.WriteLine("steps. Extract the contents of the archive whereever you wish and");
+	f.WriteLine("steps. Extract the contents of the archive wherever you wish and");
 	f.WriteLine("make sure that your tools which use " + bname + " can find it.");
 	f.WriteBlankLines(1);
 	f.WriteLine("  For example, if you want to run the supplied utilities from the command");
@@ -450,12 +430,8 @@ for (i = 0; (i < WScript.Arguments.length) && (error == 0); i++) {
 	if (opt.length == 0)
 		opt = arg.substring(0, arg.indexOf(":"));
 	if (opt.length > 0) {
-		if (opt == "trio")
-			withTrio = strToBool(arg.substring(opt.length + 1, arg.length));
-		else if (opt == "threads")
+		if (opt == "threads")
 			withThreads = arg.substring(opt.length + 1, arg.length);
-		else if (opt == "ftp")
-			withFtp = strToBool(arg.substring(opt.length + 1, arg.length));
 		else if (opt == "http")
 			withHttp = strToBool(arg.substring(opt.length + 1, arg.length));
 		else if (opt == "html")
@@ -464,8 +440,6 @@ for (i = 0; (i < WScript.Arguments.length) && (error == 0); i++) {
 			withC14n = strToBool(arg.substring(opt.length + 1, arg.length));
 		else if (opt == "catalog")
 			withCatalog = strToBool(arg.substring(opt.length + 1, arg.length));
-		else if (opt == "docb")
-			withDocb = strToBool(arg.substring(opt.length + 1, arg.length));
 		else if (opt == "xpath")
 			withXpath = strToBool(arg.substring(opt.length + 1, arg.length));
 		else if (opt == "xptr")
@@ -484,16 +458,14 @@ for (i = 0; (i < WScript.Arguments.length) && (error == 0); i++) {
 			withLzma = strToBool(arg.substring(opt.length + 1, arg.length));
 		else if (opt == "xml_debug")
 			withDebug = strToBool(arg.substring(opt.length + 1, arg.length));
-		else if (opt == "mem_debug")
-			withMemDebug = strToBool(arg.substring(opt.length + 1, arg.length));
-		else if (opt == "run_debug")
-			withRunDebug = strToBool(arg.substring(opt.length + 1, arg.length));
 		else if (opt == "schemas")
 			withSchemas = strToBool(arg.substring(opt.length + 1, arg.length));
 		else if (opt == "schematron")
 			withSchematron = strToBool(arg.substring(opt.length + 1, arg.length));
 		else if (opt == "regexps")
 			withRegExps = strToBool(arg.substring(opt.length + 1, arg.length));
+		else if (opt == "relaxng")
+			withRelaxNg = strToBool(arg.substring(opt.length + 1, arg.length));
 		else if (opt == "modules")
 			withModules = strToBool(arg.substring(opt.length + 1, arg.length));
 		else if (opt == "tree")
@@ -532,8 +504,6 @@ for (i = 0; (i < WScript.Arguments.length) && (error == 0); i++) {
 			buildStatic = strToBool(arg.substring(opt.length + 1, arg.length));
 		else if (opt == "prefix")
 			buildPrefix = arg.substring(opt.length + 1, arg.length);
-		else if (opt == "incdir")
-			buildIncPrefix = arg.substring(opt.length + 1, arg.length);
 		else if (opt == "bindir")
 			buildBinPrefix = arg.substring(opt.length + 1, arg.length);
 		else if (opt == "libdir")
@@ -636,7 +606,7 @@ if (f) {
 fso.CopyFile(makefile, new_makefile, true);
 WScript.Echo("Created Makefile.");
 // Create the config.h.
-var confighsrc = "..\\include\\win32config.h";
+var confighsrc = "win32config.h";
 var configh = "..\\config.h";
 var f = fso.FileExists(configh);
 if (f) {
@@ -650,14 +620,11 @@ WScript.Echo("Created config.h.");
 // Display the final configuration. 
 var txtOut = "\nXML processor configuration\n";
 txtOut += "---------------------------\n";
-txtOut += "              Trio: " + boolToStr(withTrio) + "\n";
 txtOut += "     Thread safety: " + withThreads + "\n";
-txtOut += "        FTP client: " + boolToStr(withFtp) + "\n";
 txtOut += "       HTTP client: " + boolToStr(withHttp) + "\n";
 txtOut += "    HTML processor: " + boolToStr(withHtml) + "\n";
 txtOut += "      C14N support: " + boolToStr(withC14n) + "\n";
 txtOut += "   Catalog support: " + boolToStr(withCatalog) + "\n";
-txtOut += "   DocBook support: " + boolToStr(withDocb) + "\n";
 txtOut += "     XPath support: " + boolToStr(withXpath) + "\n";
 txtOut += "  XPointer support: " + boolToStr(withXptr) + "\n";
 txtOut += "  XInclude support: " + boolToStr(withXinclude) + "\n";
@@ -667,9 +634,8 @@ txtOut += "  iso8859x support: " + boolToStr(withIso8859x) + "\n";
 txtOut += "      zlib support: " + boolToStr(withZlib) + "\n";
 txtOut += "      lzma support: " + boolToStr(withLzma) + "\n";
 txtOut += "  Debugging module: " + boolToStr(withDebug) + "\n";
-txtOut += "  Memory debugging: " + boolToStr(withMemDebug) + "\n";
-txtOut += " Runtime debugging: " + boolToStr(withRunDebug) + "\n";
 txtOut += "    Regexp support: " + boolToStr(withRegExps) + "\n";
+txtOut += "  Relax NG support: " + boolToStr(withRelaxNg) + "\n";
 txtOut += "    Module support: " + boolToStr(withModules) + "\n";
 txtOut += "      Tree support: " + boolToStr(withTree) + "\n";
 txtOut += "    Reader support: " + boolToStr(withReader) + "\n";
@@ -702,6 +668,10 @@ txtOut += "Put static libs in: " + buildLibPrefix + "\n";
 txtOut += "Put shared libs in: " + buildSoPrefix + "\n";
 txtOut += "      Include path: " + buildInclude + "\n";
 txtOut += "          Lib path: " + buildLib + "\n";
+txtOut += "\n";
+txtOut += "DEPRECATION WARNING: The build system in the win32 directory is\n";
+txtOut += "deprecated and will be removed in a future release. Please switch\n";
+txtOut += "to CMake.\n";
 WScript.Echo(txtOut);
 
 //
