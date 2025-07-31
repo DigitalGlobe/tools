@@ -1,10 +1,10 @@
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 #
 # build_ogdi.py
 #
 # Summary : Builds the Open Geographic Datastore Interface library
 #
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 
 import glob
@@ -16,195 +16,171 @@ from PathFinder import *
 from SystemManager import *
 from XmlUtils import *
 
-class Program :
-        #----------------------------------------------------------------------
-        # a description of what the script does
-        DESCRIPTION = "Builds the OGDI library."
-        #----------------------------------------------------------------------
-        # the name of the dynamic solution file
-        _FILE_NAME_SOLUTION = "librpc\\librpc.vcxproj"
-        _FILE_NAME_SOLUTION_2 = "libogdi\\libOGDI.vcxproj"
 
-        #----------------------------------------------------------------------
-        # the name of the path that will contain intermediary build files
-        _PATH_NAME_BUILD = "OGDI"
-        #----------------------------------------------------------------------
-        # the name of the path that contains the source code
-        _PATH_NAME_SOURCE = "..\\src\\OGDI"
-        #----------------------------------------------------------------------
+class Program:
+    # ----------------------------------------------------------------------
+    # a description of what the script does
+    DESCRIPTION = "Builds the OGDI library."
+    # the name of the release makefile
+    _FILE_NAME_MAKEFILE = "makefile"
+    # ----------------------------------------------------------------------
 
-        _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
-        _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
+    _LIBNAME = "ogdi"
+    _DEBUG_SUFFIX = "_d"
 
-        _LIBNAME = 'librpc'
-        _LIBNAME_2 = 'libOGDI'
-        _DEBUG_SUFFIX = '_d'
+    # ----------------------------------------------------------------------
+    # the name of the path that will contain intermediary build files
+    _PATH_NAME_BUILD = "ogdi"
+    # ----------------------------------------------------------------------
+    # the name of the path that contains the source code
+    _PATH_NAME_SOURCE = "..\\src\\ogdi"
+    # ----------------------------------------------------------------------
 
-        # the name of the path for all include files
-        _PATH_NAME_INCLUDE = '..\\include\\win32'
-        #----------------------------------------------------------------------
-        # the name of the distribution path for all include files
-        _PATH_NAME_DISTRIBUTION_INCLUDE = '..\\..\\..\\include\\ogdi'
+    # ----------------------------------------------------------------------
+    # the pattern for binary files
+    _FILE_PATTERN_BINARY = "*.exe"
+    # ----------------------------------------------------------------------
+    # the name of the path that will contain built 32-bit binary files
+    _PATH_NAME_BINARY_X86 = "..\\sdk\\x86\\bin"
+    # ----------------------------------------------------------------------
+    # the name of the path that will contain built 64-bit binary files
+    _PATH_NAME_BINARY_X64 = "..\\sdk\\x64\\bin"
 
-        def __init__(self) :
+    # the name of the path that will contain built 32-bit library files
+    _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
+    # ----------------------------------------------------------------------
+    # the name of the path that will contain built 64-bit library files
+    _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
-            pass
-        #----------------------------------------------------------------------
+    # the name of the path for all include files
+    _PATH_NAME_INCLUDE = "."
+    # ----------------------------------------------------------------------
+    # the name of the distribution path for all include files
+    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\ogdi"
+    # ----------------------------------------------------------------------
+
+    # --------------------------------------------------------------------------
+    # constructors
+
+    # ----------------------------------------------------------------------
+    # Constructs this program.
+    #
+    # Parameters :
+    #     self : this program
+    def __init__(self):
+
+        pass
+
+    # ----------------------------------------------------------------------
+
+    # --------------------------------------------------------------------------
+    # public methods
+
+    # ----------------------------------------------------------------------
+    # The main method of the program.
+    #
+    # Parameters :
+    #     self : this program
+    def main(self):
+
+        systemManager = SystemManager()
+        pathFinder = PathFinder()
+
+        # process command-line arguments
+        buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
+
+        # initialize environment variables
+        systemManager.initializeIncludeEnvironmentVariable(buildSettings.X64Specified())
+        systemManager.initializeLibraryEnvironmentVariable(buildSettings.X64Specified())
+
+        # MSBuild is under "Program Files (x86)"
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getMSBuildFileName(buildSettings.X64Specified())
+        )
+
+        systemManager.appendToPathEnvironmentVariable(pathFinder.PATH_GNU_TOOLS)
+
+        vcVars = pathFinder.getVCVARSFileName(buildSettings.X64Specified())
+
+        compileOutDir = ""
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getWindowsSdkBinPathName(buildSettings.X64Specified())
+        )
+
+        # determine path names
+        binaryPathName = (
+            systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X64)
+            if (buildSettings.X64Specified())
+            else systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X86)
+        )
+        buildPathName = systemManager.getCurrentRelativePathName(
+            Program._PATH_NAME_BUILD
+        )
+        sourcePathName = systemManager.getCurrentRelativePathName(
+            Program._PATH_NAME_SOURCE
+        )
+
+        os.environ["TOPDIR"] = buildPathName
+
+        sdkOutDir = (
+            buildPathName
+            + "\\..\\"
+            + (
+                Program._PATH_NAME_DISTRIBUTION_X64
+                if buildSettings.X64Specified()
+                else Program._PATH_NAME_DISTRIBUTION_X86
+            )
+        )
+
+        # remove build dir
+        systemManager.removeDirectory(buildPathName)
+        systemManager.copyDirectory(sourcePathName, buildPathName)
+        systemManager.changeDirectory(buildPathName)
+
+        dllName = (
+            Program._LIBNAME
+            + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
+            + ".dll"
+        )
+        libName = (
+            Program._LIBNAME
+            + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
+            + ".lib"
+        )
+        pdbName = (
+            Program._LIBNAME
+            + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
+            + ".pdb"
+        )
+
+        nmakeCommandLine = (
+            f'make '
+            + f"_MSC_VER=1900 "
+            + f"TARGET=win32 "
+            + f'{"nodebug=1" if (buildSettings.ReleaseSpecified()) else ""} '
+        )
+
+        cmd = f'"{vcVars}" && {nmakeCommandLine}'
+
+        print("cmd: " + cmd)
+        nmakeResult = systemManager.execute(cmd)
+        if nmakeResult != 0:
+            sys.exit(-1)
+
+        systemManager.removeDirectory(
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE)
+        )
+        systemManager.distributeFiles(
+            pathFinder.path(buildPathName, Program._PATH_NAME_INCLUDE),
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            "*.h",
+        )
+
+        systemManager.copyFile(
+            pathFinder.path(buildPathName, libName), pathFinder.path(sdkOutDir, libName)
+        )
 
 
-        def main(self) :
-            systemManager = SystemManager()
-            pathFinder    = PathFinder()
-            xmlUtils = XmlUtils()
-
-            # process command-line arguments
-            buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
-
-            # initialize environment variables
-            systemManager.initializeIncludeEnvironmentVariable( buildSettings.X64Specified() )
-            systemManager.initializeLibraryEnvironmentVariable( buildSettings.X64Specified() )
-            systemManager.appendToPathEnvironmentVariable( pathFinder.getVisualStudioBinPathName( buildSettings.X64Specified() ) )
-
-            # MSBuild is under "Program Files (x86)"
-            systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
-                                                                             "MSBuild\\14.0\\Bin") )
-
-            compileOutDir = ""
-            if ( buildSettings.X64Specified() ) :
-                # append path for 64-bit rc.exe
-                systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
-                                                                             "Windows Kits\\10\\bin\\x64"                 ) )
-            else:
-                # append path for 32-bit rc.exe
-                systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
-                                                                             "Windows Kits\\10\\bin\\x86"                 ) )
-
-            # get the paths
-            buildPathName  = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD)
-            sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
-            sdkOutDir = buildPathName + "\\..\\" + (Program._PATH_NAME_DISTRIBUTION_X64 if buildSettings.X64Specified() else Program._PATH_NAME_DISTRIBUTION_X86)
-
-
-            # remove build dir
-            systemManager.changeDirectory(sourcePathName)
-            systemManager.removeDirectory(buildPathName)
-
-            #copy UriParser to the Build area
-            systemManager.copyDirectory( sourcePathName, buildPathName)
-
-            # start building
-            buildPathName = pathFinder.path(buildPathName, 'OGDI')
-
-            systemManager.changeDirectory(buildPathName)
-
-
-            conf = "Release" if ( buildSettings.ReleaseSpecified() ) else "Debug"
-            platform  = 'x64' if buildSettings.X64Specified() else 'x86'
-
-            # Build the static lib
-            solutionFileName   = pathFinder.path( buildPathName               , \
-                                   Program._FILE_NAME_SOLUTION )
-            msBuildCommandLine = ( "\"%s\" "                  + \
-                                     "/p:platform=%s " ) % \
-                                   ( pathFinder.getMSBuildFileName( buildSettings.X64Specified()), platform )
-
-            libName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".lib"
-            pdbName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".pdb"
-
-            buildOutDir   = pathFinder.path( buildPathName, 'build' )
-            propfile   = pathFinder.path( buildPathName, 'linker.props' )
-
-            msBuildCommandLine += ' /p:OutDir=' + buildOutDir
-            msBuildCommandLine += ' /p:TargetExtension=lib'
-            msBuildCommandLine += ' /p:SolutionDir=' + buildPathName + '\\'
-            msBuildCommandLine += ' /p:TargetName=' + Program._LIBNAME + ('' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX)
-            msBuildCommandLine += ' /p:Configuration=' + conf
-            msBuildCommandLine += ' /p:BuildProjectReferences=false'
-            linkerprops = {}
-            linkerprops['OutputFile'] = pathFinder.path( buildOutDir, libName )
-            if buildSettings.ReleaseSpecified():
-                linkerprops['DebugSymbols'] = 'false'
-            else:
-                linkerprops['DebugSymbols'] = 'true'
-                linkerprops['DebugType'] = 'full'
-                #linkerprops['ProgramDatabaseFile'] = '$(OutDir)\\' + pdbName
-
-            if buildSettings.ReleaseSpecified():
-                compprops = {'DebugInformationFormat':'None'}
-            else:
-                compprops = {'DebugInformationFormat':'ProgramDatabase', 'ProgramDataBaseFileName':pathFinder.path( buildOutDir, pdbName )}
-
-            xmlUtils.buildLib(conf, platform, compprops, linkerprops, propfile)
-
-            msBuildCommandLine +=  ' /p:ForceImportBeforeCppTargets="' + propfile + '"'
-            msBuildCommandLine += ' "' + solutionFileName + '"'
-            print('cmd: ' + msBuildCommandLine)
-
-            msbuildResult = systemManager.execute(msBuildCommandLine)
-            if (msbuildResult != 0) :
-                sys.exit(-1)
-
-            systemManager.copyFile( pathFinder.path( buildOutDir, libName ) , \
-                                    pathFinder.path( sdkOutDir , libName) )
-            #if not buildSettings.ReleaseSpecified():
-            #    systemManager.copyFile( pathFinder.path( buildOutDir, pdbName ) , \
-            #                            pathFinder.path( sdkOutDir , pdbName) )
-
-            # Build the dynamic lib
-            solutionFileName   = pathFinder.path( buildPathName               , \
-                                   Program._FILE_NAME_SOLUTION_2 )
-            msBuildCommandLine = ( "\"%s\" "                  + \
-                                     "/p:platform=%s " ) % \
-                                   ( pathFinder.getMSBuildFileName( buildSettings.X64Specified()), platform )
-
-            libName = Program._LIBNAME_2 + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".lib"
-            pdbName = Program._LIBNAME_2 + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".pdb"
-
-            buildOutDir   = pathFinder.path( buildPathName, 'build' )
-            propfile   = pathFinder.path( buildPathName, 'linker.props' )
-
-            msBuildCommandLine += ' /p:OutDir=' + buildOutDir
-            msBuildCommandLine += ' /p:TargetExtension=lib'
-            msBuildCommandLine += ' /p:SolutionDir=' + buildPathName + '\\'
-            msBuildCommandLine += ' /p:TargetName=' + Program._LIBNAME_2 + ('' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX)
-            msBuildCommandLine += ' /p:Configuration=' + conf
-            msBuildCommandLine += ' /p:BuildProjectReferences=false'
-            linkerprops = {}
-            linkerprops['OutputFile'] = pathFinder.path( buildOutDir, libName )
-            if buildSettings.ReleaseSpecified():
-                linkerprops['DebugSymbols'] = 'false'
-            else:
-                linkerprops['DebugSymbols'] = 'true'
-                linkerprops['DebugType'] = 'full'
-                linkerprops['ProgramDatabaseFile'] = '$(OutDir)\\' + pdbName
-
-            if buildSettings.ReleaseSpecified():
-                compprops = {'DebugInformationFormat':'None'}
-            else:
-                compprops = {'DebugInformationFormat':'ProgramDatabase', 'ProgramDataBaseFileName':pathFinder.path( buildOutDir, pdbName )}
-
-            xmlUtils.buildLib(conf, platform, compprops, linkerprops, propfile)
-
-            msBuildCommandLine +=  ' /p:ForceImportBeforeCppTargets="' + propfile + '"'
-            msBuildCommandLine += ' "' + solutionFileName + '"'
-            print('cmd: ' + msBuildCommandLine)
-
-            msbuildResult = systemManager.execute(msBuildCommandLine)
-            if (msbuildResult != 0) :
-                sys.exit(-1)
-
-            systemManager.removeDirectory(pathFinder.path( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE))
-            systemManager.distributeFiles(pathFinder.path( buildPathName, Program._PATH_NAME_INCLUDE),              \
-                              pathFinder.path( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE), \
-                              '*.h',                                                                 \
-                              True, False, True)
-
-            systemManager.copyFile( pathFinder.path( buildOutDir, libName ) , \
-                                    pathFinder.path( sdkOutDir , libName) )
-            #if not buildSettings.ReleaseSpecified():
-            #    systemManager.copyFile( pathFinder.path( buildOutDir, pdbName ) , \
-            #                            pathFinder.path( sdkOutDir , pdbName) )
-
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 Program().main()
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------

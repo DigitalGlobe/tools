@@ -102,7 +102,7 @@ class Program:
             pathFinder.getMSBuildFileName(buildSettings.X64Specified())
         )
 
-        systemManager.appendToPathEnvironmentVariable(pathFinder.PATH_SED_EXECUTABLE)
+        systemManager.appendToPathEnvironmentVariable(pathFinder.PATH_GNU_TOOLS)
 
         systemManager.appendToPathEnvironmentVariable(
             pathFinder.getWindowsSdkBinPathName(buildSettings.X64Specified())
@@ -139,7 +139,7 @@ class Program:
 
         # modify the vcxproj to work with our version of vscode
         sedCommandLine = (
-            f"{pathFinder.path(pathFinder.PATH_SED_EXECUTABLE, "sed.exe")} "
+            f"{pathFinder.path(pathFinder.PATH_GNU_TOOLS, "sed.exe")} "
             + f"-i.bak s/^<\/RuntimeLibrary^>/DLL^<\/RuntimeLibrary^>/g "
             + f"{Program._FILE_NAME_SOLUTION}"
         )

@@ -24,7 +24,7 @@ class Program:
 
     # ----------------------------------------------------------------------
     # a description of what the script does
-    DESCRIPTION = "Builds the ZLib library."
+    DESCRIPTION = "Builds the newmat library."
     # ----------------------------------------------------------------------
 
     # the name of the release makefile

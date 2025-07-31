@@ -84,7 +84,7 @@ class Program:
         )
 
         systemManager.appendToPathEnvironmentVariable(
-            pathFinder.PATH_SED_EXECUTABLE
+            pathFinder.PATH_GNU_TOOLS
         )
 
         vcVars = pathFinder.getVCVARSFileName(buildSettings.X64Specified())

@@ -60,7 +60,7 @@ class Program:
 
         # fix up the Makefile.nt to have the correct paths
         sedCommandLine = (
-            f"{pathFinder.path(pathFinder.PATH_SED_EXECUTABLE, "sed.exe")} "
+            f"{pathFinder.path(pathFinder.PATH_GNU_TOOLS, "sed.exe")} "
             + f"-i.bak -E {cc32} "
             + f"Makefile.NT"
         )
@@ -71,7 +71,7 @@ class Program:
             sys.exit(-1)
 
         # sedCommandLine = (
-        #     f"{pathFinder.path(pathFinder.PATH_SED_EXECUTABLE, "sed.exe")} "
+        #     f"{pathFinder.path(pathFinder.PATH_GNU_TOOLS, "sed.exe")} "
         #     + f"-i.bak -E {rc32} "
         #     + f"Makefile.NT"
         # )
@@ -82,7 +82,7 @@ class Program:
         #     sys.exit(-1)
 
         sedCommandLine = (
-            f"{pathFinder.path(pathFinder.PATH_SED_EXECUTABLE, "sed.exe")} "
+            f"{pathFinder.path(pathFinder.PATH_GNU_TOOLS, "sed.exe")} "
             + f"-i.bak -E {link32} "
             + f"Makefile.NT"
         )
@@ -93,7 +93,7 @@ class Program:
             sys.exit(-1)
 
         sedCommandLine = (
-            f"{pathFinder.path(pathFinder.PATH_SED_EXECUTABLE, "sed.exe")} "
+            f"{pathFinder.path(pathFinder.PATH_GNU_TOOLS, "sed.exe")} "
             + f"-i.bak -E {lib32} "
             + f"Makefile.NT"
         )
@@ -104,7 +104,7 @@ class Program:
             sys.exit(-1)
 
         sedCommandLine = (
-            f"{pathFinder.path(pathFinder.PATH_SED_EXECUTABLE, "sed.exe")} "
+            f"{pathFinder.path(pathFinder.PATH_GNU_TOOLS, "sed.exe")} "
             + f"-i.bak -E {cflags} "
             + f"Makefile.NT"
         )

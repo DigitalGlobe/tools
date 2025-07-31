@@ -92,7 +92,7 @@ class PathFinder:
     VISUAL_STUDIO_VERSION_NUM = "v143"
 
     # The path to the sed.exe executable
-    PATH_SED_EXECUTABLE = "D:\\Users\\tim.tisler\\Apps\\GnuWin32\\bin"
+    PATH_GNU_TOOLS = "D:\\Users\\tim.tisler\\Apps\\GnuWin32\\bin"
     # ----------------------------------------------------------------------
     # the relative 64-bit path
     PATH_NAME_X64 = "x64"
