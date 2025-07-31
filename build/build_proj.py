@@ -42,7 +42,6 @@ class Program:
 
     # the name of the path for all include files
     _PATH_NAME_INCLUDE = "."
-    _PATH_NAME_INCLUDE_2 = "include"
     # ----------------------------------------------------------------------
     # the name of the distribution path for all include files
     _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\proj"
@@ -104,7 +103,9 @@ class Program:
             Program._PATH_NAME_SOURCE
         )
 
-        buildSourceName = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
+        buildSourceName = pathFinder.path(
+            buildPathName, Program._PATH_NAME_CMAKE_SOURCE
+        )
         cmakeBuildPath = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
         cmakeInstallPath = pathFinder.path(
             cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
@@ -138,6 +139,27 @@ class Program:
         conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
         platform = "x64" if buildSettings.X64Specified() else "Win32"
 
+        includeBase = pathFinder.path(
+            buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, ".."
+        )
+        libSuffix = (
+            f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
+        )
+
+        externalLibs = {
+            "CURL_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase)),
+            "CURL_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libcurl{libSuffix}")),
+            "SQLite3_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "sqlite3")),
+            "SQLite3_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"sqlite3{libSuffix}")),
+            "EXE_SQLITE3": pathFinder.slasher(pathFinder.path(sdkOutDir, f"sqlite3.exe")),
+            "TIFF_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libtiff")),
+            "TIFF_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libtiff{libSuffix}")),
+        }
+
+        externalLibStr = ""
+        for [key, val] in externalLibs.items():
+            externalLibStr += f'-D{key}="{val}" '
+
         # run CMake
         # -DCMAKE_POLICY_VERSION_MINIMUM is to avoid min compatability errors in CMake
         cmakeCommandLine = (
@@ -145,8 +167,10 @@ class Program:
             + f"-A {platform} "
             + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
             + f"-DBUILD_SHARED_LIBS=ON "
-            + f"-DBUILD_EXAMPLES=OFF "
-            + f"-DBUILD_TESTS=OFF "
+            + f"-DBUILD_TESTING=OFF "
+            + f"{"" if (buildSettings.ReleaseSpecified()) else "-DEXPORT_PDB=ON "}"
+            + f"-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} "
+            + f"{externalLibStr} "
             + f"{buildSourceName}"
         )
 
@@ -182,39 +206,52 @@ class Program:
         if cmakeResult != 0:
             sys.exit(-1)
 
-        srcIncludePath = pathFinder.path(cmakeInstallPath, "include")
-        srcLibPath = pathFinder.path(cmakeInstallPath, "lib")
-        srcBinPath = pathFinder.path(cmakeInstallPath, "bin")
+        dllName = (
+            f"{Program._LIBNAME}"
+            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
+            + f".dll"
+        )
+        libName = (
+            f"{Program._LIBNAME}"
+            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
+            + f".lib"
+        )
+        pdbName = (
+            f"{Program._LIBNAME}"
+            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
+            + f".pdb"
+        )
+
+        incdir = pathFinder.path(cmakeInstallPath, "include")
+        bindir = pathFinder.path(cmakeInstallPath, "bin")
+        libdir = pathFinder.path(cmakeInstallPath, "lib")
 
         systemManager.distributeFiles(
-            srcIncludePath,
+            incdir,
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
         )
-
         systemManager.distributeFiles(
-            srcLibPath,
-            sdkOutDir,
-            "*.lib",
-            suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX,
+            pathFinder.path(cmakeInstallPath, "share", "proj"),
+            pathFinder.path(sdkOutDir, "..", "proj"),
+            "*",
         )
+        for f in glob.glob(pathFinder.path(libdir, "*.lib")):
+            fname = f[len(libdir) + 1 :]
+            fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME) :]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib"
 
-        systemManager.distributeFiles(
-            srcBinPath,
-            sdkOutDir,
-            "*.dll",
-            suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX,
-        )
+            systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
+
+        for f in glob.glob(pathFinder.path(bindir, "*.dll")):
+            fname = f[len(bindir) + 1 :]
+            fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME)]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.dll"
+            systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
 
         if not buildSettings.ReleaseSpecified():
-            systemManager.distributeFiles(
-                pathFinder.path(cmakeBuildPath, conf),
-                sdkOutDir,
-                "*.pdb",
-                suffix=(
-                    None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX
-                ),
-            )
+            for f in glob.glob(pathFinder.path(libdir, "*.pdb")):
+                fname = f[len(libdir) + 1 :]
+                fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME)]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.pdb"
+                systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
 
 
 # --------------------------------------------------------------------------

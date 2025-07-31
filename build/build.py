@@ -176,6 +176,9 @@ class Program :
     # the name of the build file to build qxrunner
     _FILE_NAME_BUILD_QXRUNNER = "build_qxrunner.py"
     # ----------------------------------------------------------------------
+    # the name of the build file to build SQLite3
+    _FILE_NAME_BUILD_SQLITE3 = "build_sqlite3.py"
+    # ----------------------------------------------------------------------
     # the name of the build file to build SZip
     _FILE_NAME_BUILD_SZIP = "build_szip.py"
     # ----------------------------------------------------------------------
@@ -258,6 +261,7 @@ class Program :
                 # self._build(Program._FILE_NAME_BUILD_OPENDIS)
                 # self._build(Program._FILE_NAME_BUILD_OPENTHREADS)
                 # self._build(Program._FILE_NAME_BUILD_PTHREADS)
+                #self._build(Program._FILE_NAME_BUILD_SQLITE3)
                 # self._build(Program._FILE_NAME_BUILD_SZIP)
                 # self._build(Program._FILE_NAME_BUILD_TBB)
                 # self._build(Program._FILE_NAME_BUILD_URIPARSER)
@@ -289,7 +293,7 @@ class Program :
             # self._build(Program._FILE_NAME_BUILD_PODOFO)
             # self._build(Program._FILE_NAME_BUILD_QUAZIP)
             # self._build(Program._FILE_NAME_BUILD_XERCES)
-            self._build(Program._FILE_NAME_BUILD_PROJ)
+            # self._build(Program._FILE_NAME_BUILD_PROJ)
             self._build(Program._FILE_NAME_BUILD_LIBGEOTIFF)
             self._build(Program._FILE_NAME_BUILD_OGDI)
             self._build(Program._FILE_NAME_BUILD_GDAL)
