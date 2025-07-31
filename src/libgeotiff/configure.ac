@@ -1,22 +1,29 @@
 
-
-m4_define([VERSION_MAJOR], [1])
-m4_define([VERSION_MINOR], [4])
-m4_define([VERSION_POINT], [2])
-m4_define([GEOTIFF_VERSION],
-          [VERSION_MAJOR.VERSION_MINOR.VERSION_POINT])
-
 m4_include([m4/ax_prog_doxygen.m4])
 
 AC_PREREQ([2.59])
-AC_INIT([libgeotiff], [GEOTIFF_VERSION], [warmerdam@pobox.com])
+AC_INIT([libgeotiff], [1.7.4], [warmerdam@pobox.com])
 AC_CANONICAL_BUILD
 
 AC_CONFIG_MACRO_DIR([m4])
 
-RELEASE_VERSION=GEOTIFF_VERSION
-AC_SUBST([RELEASE_VERSION])
-AC_CONFIG_HEADER(geo_config.h)
+LIBGEOTIFF_MAJOR_VERSION=1
+LIBGEOTIFF_MINOR_VERSION=7
+LIBGEOTIFF_PATCH_VERSION=4
+LIBGEOTIFF_REV_VERSION=0
+
+LIBGEOTIFF_STRING_VERSION=${LIBGEOTIFF_MAJOR_VERSION}.${LIBGEOTIFF_MINOR_VERSION}.${LIBGEOTIFF_PATCH_VERSION}
+LIBGEOTIFF_VERSION="${LIBGEOTIFF_MAJOR_VERSION}${LIBGEOTIFF_MINOR_VERSION}${LIBGEOTIFF_PATCH_VERSION}${LIBGEOTIFF_REV_VERSION}"
+
+AC_SUBST(LIBGEOTIFF_MAJOR_VERSION)
+AC_SUBST(LIBGEOTIFF_MINOR_VERSION)
+AC_SUBST(LIBGEOTIFF_PATCH_VERSION)
+AC_SUBST(LIBGEOTIFF_REV_VERSION)
+AC_SUBST(LIBGEOTIFF_STRING_VERSION)
+AC_SUBST(LIBGEOTIFF_VERSION)
+
+AC_CONFIG_HEADERS([geo_config.h])
+AC_CONFIG_FILES([geotiff.h])
 
 dnl #########################################################################
 dnl Checks for programs.
@@ -25,19 +32,10 @@ dnl #########################################################################
 AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
 AC_PROG_CC
-AC_PROG_CXX
-AC_PROG_CXXCPP
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_MAKE_SET
 AC_PROG_LIBTOOL
-
-dnl AC_PROG_CC
-dnl AC_COMPILER_WFLAGS
-
-dnl AC_PROG_RANLIB
-dnl AC_COMPILER_PIC
-dnl AC_LD_SHARED
 
 dnl #########################################################################
 dnl Default compilation flags
@@ -46,7 +44,6 @@ dnl #########################################################################
 m4_define([debug_default],[no])
 
 CFLAGS="$CFLAGS"
-CXXFLAGS="$CXXFLAGS"
 
 dnl We want to honor the users wishes with regard to linking.
 LIBS="$LDFLAGS $LIBS"
@@ -55,7 +52,11 @@ dnl #########################################################################
 dnl Checks for header files.
 dnl #########################################################################
 
-AC_CHECK_HEADERS([string.h],[HAVE_STRING_H=1], [AC_MSG_ERROR([cannot find string.h, bailing out])])
+dnl AC_CHECK_HEADERS([string.h],[HAVE_STRING_H=1], [AC_MSG_ERROR([cannot find string.h, bailing out])])
+AC_CHECK_HEADERS([strings.h],[GEOTIFF_HAVE_STRINGS_H=1])
+AC_DEFINE_UNQUOTED(GEOTIFF_HAVE_STRINGS_H, 1,
+          [Define if you have the <strings.h> header file.])
+
 AC_CHECK_HEADERS([stdio.h],, [AC_MSG_ERROR([cannot find stdio.h, bailing out])])
 AC_CHECK_HEADERS([stdlib.h],, [AC_MSG_ERROR([cannot find stdlib.h, bailing out])])
 
@@ -77,16 +78,14 @@ dnl #########################################################################
 
 AC_ARG_ENABLE([debug],
     AC_HELP_STRING([--enable-debug=ARG], [Enable debug compilation mode @<:@yes|no@:>@, default=debug_default]),,)
-    
+
 AC_MSG_CHECKING([for debug enabled])
 
 if test "x$enable_debug" = "xyes"; then
     CFLAGS="$CFLAGS -g -DDEBUG -Wall"
-    CXXFLAGS="$CXXFLAGS -g -DDEBUG -Wall"
     AC_MSG_RESULT(yes)
 else
     CFLAGS="$CFLAGS -O3 -DNDEBUG"
-    CXXFLAGS="$CXXFLAGS -O3 -DNDEBUG"
     AC_MSG_RESULT(no)
 fi
 
@@ -140,6 +139,7 @@ if test "${ZIP_CONFIG}" != "no" ; then
             AC_MSG_RESULT([using zlib from $with_zip/include]) 
             HAVE_ZLIB="yes"
             ZIP_CONFIG="yes"
+            LIBS="-L${with_zip}/lib -lz $LIBS"
         fi
     fi
 
@@ -215,16 +215,18 @@ if test "$with_libtiff" != "" ; then
 libgeotiff. Please upgrade or use an older version of libgeotiff.]),-lm)
   LIBS="$LIBS_SAVED"
 else
-  AC_CHECK_LIB(tiff,TIFFOpen,[TIFF_CONFIG=yes],
-               AC_MSG_ERROR([You will need to substantially rewrite libxtiff to
+  PKG_CHECK_MODULES(LIBTIFF, libtiff-4,
+                    [TIFF_INC="$LIBTIFF_CFLAGS" LIBS="$LIBS $LIBTIFF_LIBS" TIFF_CONFIG="yes"],
+                    [AC_CHECK_LIB(tiff,TIFFOpen,[TIFF_CONFIG=yes],
+                                  AC_MSG_ERROR([You will need to substantially rewrite libxtiff to
 build libgeotiff without libtiff]),-lm)
-  LIBS_SAVED="$LIBS"
-  AC_CHECK_LIB(tiff,TIFFMergeFieldInfo,[TIFF_CONFIG=yes],
-               AC_MSG_ERROR([Libtiff 3.6.0 Beta or later required for this version of
+                    LIBS_SAVED="$LIBS"
+                    AC_CHECK_LIB(tiff,TIFFMergeFieldInfo,[TIFF_CONFIG=yes],
+                                 AC_MSG_ERROR([Libtiff 3.6.0 Beta or later required for this version of
 libgeotiff. Please upgrade libtiff or use an older version of libgeotiff.]),-lm)
-  LIBS="$LIBS -ltiff"
-  TIFF_INC=
-  TIFF_CONFIG="yes"
+                    LIBS="$LIBS -ltiff"
+                    TIFF_INC=
+                    TIFF_CONFIG="yes"])
 fi
 
 
@@ -232,92 +234,114 @@ AC_SUBST([TIFF_INC])
 AC_SUBST([TIFF_PREFIX])
 AM_CONDITIONAL([TIFF_IS_CONFIG], [test ! x$TIFF_CONFIG = xno])
 
-dnl
-dnl Try and find libproj.a, and projects.h
-dnl
+dnl ---------------------------------------------------------------------------
+dnl PROJ.6 related stuff
+dnl ---------------------------------------------------------------------------
 
-PROJ_CONFIG="no"
+AC_MSG_CHECKING([for PROJ >= 6 library])
 
-AC_ARG_WITH(proj, [  --with-proj[=ARG]       Use PROJ.4 library (ARG=no or path)],[PROJ_HOME=$withval],[PROJ_HOME=])
+AC_ARG_WITH(proj,[  --with-proj=ARG Compile with PROJ.x (ARG=yes or path)],,)
 
-if test "$PROJ_HOME" != "" -a "$PROJ_HOME" != "no" ; then
-  if test -d "$PROJ_HOME/src/pj_init.c" ; then
-    PROJ_HOME=$PROJ_HOME/src
-  fi
+PROJ_INCLUDE=""
+if test "x$with_proj" = "xno" ; then
 
-  dnl Old PROJ.4 build tree, without automake
-  if test -f "$PROJ_HOME/libproj.a" -a -f "$PROJ_HOME/proj_api.h" ; then
-    PROJ_LIB=$PROJ_HOME/libproj.a
-    PROJ_INC=$PROJ_HOME
-    PROJ_CONFIG="yes"
+  AC_MSG_ERROR([PROJ 6 is a required dependency.])
 
-  dnl New PROJ.4 build tree, with automake
-  elif test -f "$PROJ_HOME/.libs/libproj.a" -a -f "$PROJ_HOME/proj_api.h" ; then
-    PROJ_LIB=$PROJ_HOME/.libs/libproj.a
-    PROJ_INC=$PROJ_HOME
+else
 
-    PROJ_CONFIG="yes"
-    
-  dnl Installed tree in an odd place
-  elif test \( -f "$PROJ_HOME/lib/libproj.a" -o -f "$PROJ_HOME/lib/libproj.so" \) -a -f "$PROJ_HOME/include/proj_api.h"; then
-    PROJ_LIB="-L$PROJ_HOME/lib -lproj"
-    PROJ_INC=$PROJ_HOME/include 
-
-    PROJ_CONFIG="yes"
+  if test "x$with_proj" = "xyes" -o "x$with_proj" = "x"; then
+    PKG_CHECK_MODULES(PROJ, proj, [LIBS="$LIBS $PROJ_LIBS" PROJ_FOUND=yes], [PROJ_FOUND=no])
+    if test "$PROJ_FOUND" = "no"; then
+        ORIG_LIBS="$LIBS"
+        LIBS="-lproj $ORIG_LIBS"
+        AC_CHECK_LIB(proj,proj_create_from_wkt,PROJ_FOUND=yes,PROJ_FOUND=no,)
+    fi
+    if test "$PROJ_FOUND" = "no"; then
+        AC_CHECK_LIB(proj,internal_proj_create_from_wkt,PROJ_FOUND=yes,PROJ_FOUND=no,)
+        if test "$PROJ_FOUND" = "yes"; then
+            PROJ_INCLUDE="-DPROJ_RENAME_SYMBOLS"
+        fi
+    fi
+    if test "$PROJ_FOUND" = "no"; then
+        LIBS="-linternalproj $ORIG_LIBS"
+        AC_CHECK_LIB(internalproj,internal_proj_create_from_wkt,PROJ_FOUND=yes,PROJ_FOUND=no,)
+        if test "$PROJ_FOUND" = "yes"; then
+            PROJ_INCLUDE="-DPROJ_RENAME_SYMBOLS"
+        fi
+    fi
+    if test "$PROJ_FOUND" = "no"; then
+        AC_MSG_ERROR([PROJ 6 symbols not found])
+    fi
+    AC_CHECK_HEADERS([proj.h])
+    if test "$ac_cv_header_proj_h" = "yes" ; then
+        AC_MSG_NOTICE([proj.h found])
+    else
+        AC_MSG_ERROR([proj.h not found])
+    fi
   else
-    echo "PROJ_HOME=$PROJ_HOME, but either proj_api.h or libproj.a not found!"
+
+    ORIG_LIBS="$LIBS"
+    LIBS="-L$with_proj/lib -lproj $ORIG_LIBS"
+    AC_CHECK_LIB(proj,proj_create_from_wkt,PROJ_FOUND=yes,PROJ_FOUND=no,)
+    if test "$PROJ_FOUND" = "no"; then
+        LIBS="-L$with_proj/lib -lproj -lsqlite3 $ORIG_LIBS"
+        unset ac_cv_lib_proj_proj_create_from_wkt
+        AC_CHECK_LIB(proj,proj_create_from_wkt,PROJ_FOUND=yes,PROJ_FOUND=no,)
+    fi
+    if test "$PROJ_FOUND" = "no"; then
+        LIBS="-L$with_proj/lib -lproj $ORIG_LIBS"
+        AC_CHECK_LIB(proj,internal_proj_create_from_wkt,PROJ_FOUND=yes,PROJ_FOUND=no,)
+        if test "$PROJ_FOUND" = "no"; then
+            LIBS="-L$with_proj/lib -lproj -lsqlite3 $ORIG_LIBS"
+            unset ac_cv_lib_proj_internal_proj_create_from_wkt
+            AC_CHECK_LIB(proj,internal_proj_create_from_wkt,PROJ_FOUND=yes,PROJ_FOUND=no,)
+        fi
+        if test "$PROJ_FOUND" = "yes"; then
+            PROJ_INCLUDE="-DPROJ_RENAME_SYMBOLS"
+        fi
+    fi
+    if test "$PROJ_FOUND" = "no"; then
+        LIBS="-L$with_proj/lib -linternalproj $ORIG_LIBS"
+        AC_CHECK_LIB(internalproj,internal_proj_create_from_wkt,PROJ_FOUND=yes,PROJ_FOUND=no,)
+        if test "$PROJ_FOUND" = "no"; then
+            LIBS="-L$with_proj/lib -linternalproj -lsqlite3 $ORIG_LIBS"
+            unset ac_cv_lib_internal_proj_internal_proj_create_from_wkt
+            AC_CHECK_LIB(internalproj,internal_proj_create_from_wkt,PROJ_FOUND=yes,PROJ_FOUND=no,)
+        fi
+        if test "$PROJ_FOUND" = "yes"; then
+            PROJ_INCLUDE="-DPROJ_RENAME_SYMBOLS"
+        fi
+    fi
+    if test "$PROJ_FOUND" = "no"; then
+        AC_MSG_ERROR([PROJ 6 symbols not found])
+    fi
+    if test -r "$with_proj/include/proj.h" ; then
+        PROJ_INCLUDE="$PROJ_INCLUDE -I$with_proj/include"
+        AC_MSG_NOTICE([proj.h found])
+    else
+        AC_MSG_ERROR([proj.h not found])
+    fi
   fi
 fi
 
-
-if test "$PROJ_HOME" = "no" ; then
-  echo "PROJ.4 support disabled."
-
-elif test "$PROJ_LIB" != "" -a "$PROJ_INC" != "" ; then
-  echo "Found $PROJ_LIB"
-  echo "Found $PROJ_INC/proj_api.h"
-
-  LIBS="$PROJ_LIB $LIBS"
-  PROJ_INC=-I$PROJ_INC
-
-  AC_SUBST(PROJ_INC,$PROJ_INC)
-  AC_DEFINE(HAVE_PROJECTS_H)
-  AC_DEFINE(HAVE_LIBPROJ)
-  AC_SUBST([HAVE_LIBPROJ])
-  PROJ_CONFIG="yes"
-
-else
-  AC_CHECK_LIB(proj,pj_init,,,-lm)
-  AC_CHECK_HEADERS(proj_api.h,,)
-  PROJ_CONFIG="yes"
-fi
-
-AM_CONDITIONAL([PROJ_IS_CONFIG], [test ! x$PROJ_CONFIG = xno])
-AM_CONDITIONAL([PROJECTS_H_IS_CONFIG], [test ! x$PROJECTS_H_CONFIG = xno])
+AC_SUBST(PROJ_INCLUDE)
 
 
-dnl
-dnl Has the user requested "incode" EPSG tables, overriding the
-dnl default use of EPSG tables in csv files?  Temporarily unvailable.
-dnl
+AC_ARG_ENABLE(towgs84, [  --disable-towgs84       Disable WGS84 parameters for binary compatibility with pre-1.4.1], AC_DEFINE([GEO_NORMALIZE_DISABLE_TOWGS84], [], [Disable WGS84 parameters]))
 
-CSV_CONFIG="no"
-AC_ARG_ENABLE(incode-epsg, [  --enable-incode-epsg    Use C code EPSG tables],, enable_incode_epsg=no)
-
-if test "$enable_incode_epsg" != "no"  -o "$enable_incode_epsg" = ""  ; then
-
-    AC_MSG_CHECKING([if EPSG tables will be read from .csv files])
+AC_MSG_CHECKING([if libtool needs -no-undefined flag to build shared libraries])
+case "${host}" in
+   *-*-cygwin* | *-*-mingw*|*-*-aix*)
+    ## Add in the -no-undefined flag to LDFLAGS for libtool.
     AC_MSG_RESULT([yes])
-    CSV_CONFIG="yes"
-else
-    AC_MSG_CHECKING([if EPSG tables will be read from .csv files])
+    NOUNDEFINED=" -no-undefined"
+    ;;
+  *)
+    ## Don't add in anything.
     AC_MSG_RESULT([no])
-
-fi
-AM_CONDITIONAL([CSV_IS_CONFIG], [test ! x$CSV_CONFIG = xno])
-
-
-AC_ARG_ENABLE(towgs84, [  --disable-towgs84       Disable WGS84 parameters for binary compatibility with pre-1.4.1], AC_DEFINE(GEO_NORMALIZE_DISABLE_TOWGS84))
+    ;;
+esac
+AC_SUBST([NOUNDEFINED])
 
 dnl #########################################################################
 dnl Doxygen settings
@@ -347,6 +371,8 @@ AC_CONFIG_FILES([
     man/Makefile
     man/man1/Makefile
     cmake/Makefile
+    test/Makefile
+    libgeotiff.pc
 ])
 
 AC_OUTPUT
@@ -361,7 +387,6 @@ LOC_MSG()
 LOC_MSG([  Version..................: ${RELEASE_VERSION}])
 LOC_MSG([  Installation directory...: ${prefix}])
 LOC_MSG([  C compiler...............: ${CC} ${CFLAGS}])
-LOC_MSG([  C++ compiler.............: ${CXX} ${CXXFLAGS}])
 
 LOC_MSG([  Debugging support........: ${enable_debug}])
 LOC_MSG()
@@ -371,10 +396,8 @@ LOC_MSG([  jpeg support......: ${JPEG_CONFIG}])
 LOC_MSG([  TIFF support......: ${TIFF_CONFIG}])
 LOC_MSG([    -INCLUDE .......: ${TIFF_INC}])
 LOC_MSG([    -PREFIX ........: ${TIFF_PREFIX}])
-LOC_MSG([  PROJ support......: ${PROJ_CONFIG}])
-LOC_MSG([    -INCLUDE .......: ${PROJ_INC}])
-LOC_MSG([    -PREFIX ........: ${PROJ_PREFIX}])
-LOC_MSG([  Incode CSV support: ${CSV_CONFIG}])
+LOC_MSG([  PROJ support......: yes])
+LOC_MSG([    -INCLUDE .......: ${PROJ_INCLUDE}])
 
 LOC_MSG([  LIBS.....................: ${LIBS}])
 LOC_MSG()

@@ -24,7 +24,7 @@
  *                    tags in memory, without depending on libtiff.
  *
  *****************************************************************************/
- 
+
 #include "geotiff.h"    /* public GTIFF interface */
 #include "geo_simpletags.h"
 
@@ -38,12 +38,12 @@ static int        _GTIFSetField (tiff_t *tif, pinfo_t tag, int  count, void *val
 static tagtype_t  _GTIFTagType  (tiff_t *tif, pinfo_t tag);
 
 /*
- * Set up default TIFF handlers. 
+ * Set up default TIFF handlers.
  */
 void GTIFSetSimpleTagsMethods(TIFFMethod *method)
 {
 	if (!method) return;
-	
+
 	method->get = _GTIFGetField;
 	method->set = _GTIFSetField;
 	method->type = _GTIFTagType;
@@ -56,33 +56,32 @@ void GTIFSetSimpleTagsMethods(TIFFMethod *method)
  */
 static int _GTIFGetField (tiff_t *tif, pinfo_t tag, int *count, void *val )
 {
-    int item_size, data_type;
-    void *internal_value, *ret_value;
-
-    if( !ST_GetKey( (ST_TIFF*) tif, (int) tag, count, &data_type, 
+    int data_type;
+    void *internal_value;
+    if( !ST_GetKey( (ST_TIFF*) tif, (int) tag, count, &data_type,
                     &internal_value ) )
         return 0;
 
     if( data_type != ST_TagType( tag ) )
         return 0;
 
-    item_size = ST_TypeSize( data_type );
+    const int item_size = ST_TypeSize( data_type );
 
-    ret_value = (char *)_GTIFcalloc( *count * item_size );
+    void *ret_value = (char *)_GTIFcalloc( *count * item_size );
     if (!ret_value) return 0;
 
     _TIFFmemcpy( ret_value, internal_value,  item_size * *count );
-	
+
     *(void **)val = ret_value;
     return 1;
 }
 
-/* 
+/*
  * Set a GeoTIFF TIFF field.
  */
 static int _GTIFSetField (tiff_t *tif, pinfo_t tag, int count, void *value )
 {
-    int st_type = ST_TagType( tag );
+    const int st_type = ST_TagType( tag );
 
     return ST_SetKey( (ST_TIFF *) tif, (int) tag, count, st_type, value );
 }
@@ -98,10 +97,9 @@ static int _GTIFSetField (tiff_t *tif, pinfo_t tag, int count, void *value )
  */
 static tagtype_t  _GTIFTagType  (tiff_t *tif, pinfo_t tag)
 {
-	tagtype_t ttype;
-
 	(void) tif; /* dummy reference */
-	
+
+	tagtype_t ttype;
 	switch (tag)
 	{
 		case GTIFF_ASCIIPARAMS:    ttype=TYPE_ASCII; break;
@@ -112,7 +110,7 @@ static tagtype_t  _GTIFTagType  (tiff_t *tif, pinfo_t tag)
 		case GTIFF_GEOKEYDIRECTORY: ttype=TYPE_SHORT; break;
 		default: ttype = TYPE_UNKNOWN;
 	}
-	
+
 	return ttype;
 }
 
@@ -124,19 +122,19 @@ int ST_TagType( int tag )
 {
     switch (tag)
     {
-      case GTIFF_ASCIIPARAMS:    
+      case GTIFF_ASCIIPARAMS:
         return STT_ASCII;
 
       case GTIFF_PIXELSCALE:
       case GTIFF_TRANSMATRIX:
       case GTIFF_TIEPOINTS:
-      case GTIFF_DOUBLEPARAMS:   
+      case GTIFF_DOUBLEPARAMS:
         return STT_DOUBLE;
 
       case GTIFF_GEOKEYDIRECTORY:
         return STT_SHORT;
     }
-    
+
     return -1;
 }
 
@@ -152,9 +150,7 @@ static int ST_TypeSize( int st_type )
         return 1;
     else if( st_type == STT_SHORT )
         return 2;
-    else if( st_type == STT_DOUBLE )
-        return 8;
-    else
+    else /* if( st_type == STT_DOUBLE ) */
         return 8;
 }
 
@@ -175,9 +171,7 @@ ST_TIFF *ST_Create()
 void ST_Destroy( ST_TIFF *st )
 
 {
-    int i;
-
-    for( i = 0; i < st->key_count; i++ )
+    for( int i = 0; i < st->key_count; i++ )
         free( st->key_list[i].data );
 
     if( st->key_list )
@@ -192,12 +186,10 @@ void ST_Destroy( ST_TIFF *st )
 int ST_SetKey( ST_TIFF *st, int tag, int count, int st_type, void *data )
 
 {
-    int i, item_size = ST_TypeSize( st_type );
-
 /* -------------------------------------------------------------------- */
 /*      We should compute the length if we were not given a count       */
 /* -------------------------------------------------------------------- */
-    if (count == 0 && st_type == STT_ASCII ) 
+    if (count == 0 && st_type == STT_ASCII )
     {
         count = (int)strlen((char*)data)+1;
     }
@@ -205,7 +197,8 @@ int ST_SetKey( ST_TIFF *st, int tag, int count, int st_type, void *data )
 /* -------------------------------------------------------------------- */
 /*      If we already have a value for this tag, replace it.            */
 /* -------------------------------------------------------------------- */
-    for( i = 0; i < st->key_count; i++ )
+    const int item_size = ST_TypeSize( st_type );
+    for( int i = 0; i < st->key_count; i++ )
     {
         if( st->key_list[i].tag == tag )
         {
@@ -231,7 +224,7 @@ int ST_SetKey( ST_TIFF *st, int tag, int count, int st_type, void *data )
     /* +1 to make clang static analyzer not warn about potential malloc(0) */
     st->key_list[st->key_count-1].data = malloc(item_size * count+1);
     memcpy( st->key_list[st->key_count-1].data, data, item_size * count );
-    
+
     return 1;
 }
 
@@ -239,13 +232,11 @@ int ST_SetKey( ST_TIFF *st, int tag, int count, int st_type, void *data )
 /*                             ST_GetKey()                              */
 /************************************************************************/
 
-int ST_GetKey( ST_TIFF *st, int tag, int *count, 
+int ST_GetKey( ST_TIFF *st, int tag, int *count,
                int *st_type, void **data_ptr )
 
 {
-    int i;
-
-    for( i = 0; i < st->key_count; i++ )
+    for( int i = 0; i < st->key_count; i++ )
     {
         if( st->key_list[i].tag == tag )
         {
@@ -261,4 +252,3 @@ int ST_GetKey( ST_TIFF *st, int tag, int *count,
 
     return 0;
 }
-

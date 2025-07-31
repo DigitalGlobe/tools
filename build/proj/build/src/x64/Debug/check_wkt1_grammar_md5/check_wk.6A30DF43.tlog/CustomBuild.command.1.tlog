@@ -1,0 +1,24 @@
+^D:\USERS\TIM.TISLER\TOOLS\BUILD\PROJ\BUILD\CMAKEFILES\727C4640A977DD522BD6A5D258CDF872\CHECK_WKT1_GRAMMAR_MD5.RULE
+setlocal
+cd D:\Users\tim.tisler\tools\build\proj\src
+if %errorlevel% neq 0 goto :cmEnd
+D:
+if %errorlevel% neq 0 goto :cmEnd
+D:\Users\tim.tisler\Apps\CMake\bin\cmake.exe -DIN_FILE=wkt1_grammar.y -DTARGET=generate_wkt1_parser -DEXPECTED_MD5SUM=5b4495c1ec6d2ae26b7028a9bb5d8819 -P D:/Users/tim.tisler/tools/build/proj/src/check_md5sum.cmake
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
+^D:\USERS\TIM.TISLER\TOOLS\BUILD\PROJ\SRC\CMAKELISTS.TXT
+setlocal
+D:\Users\tim.tisler\Apps\CMake\bin\cmake.exe -SD:/Users/tim.tisler/tools/build/proj -BD:/users/tim.tisler/tools/build/proj/build --check-stamp-file D:/users/tim.tisler/tools/build/proj/build/src/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

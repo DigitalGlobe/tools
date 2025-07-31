@@ -33,29 +33,25 @@
 /*	Standard include files.						*/
 /* ==================================================================== */
 
-#include <geo_config.h>
+#include "geo_config.h"
 #include <stdio.h>
 
 #include <math.h>
 
-#ifdef HAVE_STRING_H
-#  include <string.h>
-#endif
-#if defined(HAVE_STRINGS_H) && !defined(_WIN32)
+#include <string.h>
+#if defined(GEOTIFF_HAVE_STRINGS_H) && !defined(_WIN32)
 #  include <strings.h>
 #endif
-#ifdef HAVE_STDLIB_H
-#  include <stdlib.h>
-#endif
+#include <stdlib.h>
 
 /**********************************************************************
  * Do we want to build as a DLL on windows?
  **********************************************************************/
-#if !defined(CPL_DLL)
+#if !defined(GTIF_DLL)
 #  if defined(_WIN32) && defined(BUILD_AS_DLL)
-#    define CPL_DLL     __declspec(dllexport)
+#    define GTIF_DLL     __declspec(dllexport)
 #  else
-#    define CPL_DLL
+#    define GTIF_DLL
 #  endif
 #endif
 
@@ -83,8 +79,8 @@
 #endif
 
 #ifndef MAX
-#  define MIN(a,b)      ((a<b) ? a : b)
-#  define MAX(a,b)      ((a>b) ? a : b)
+#  define MIN(a,b)      (((a)<(b)) ? (a) : (b))
+#  define MAX(a,b)      (((a)>(b)) ? (a) : (b))
 #endif
 
 #ifndef NULL
@@ -92,7 +88,7 @@
 #endif
 
 #ifndef ABS
-#  define ABS(x)        ((x<0) ? (-1*(x)) : x)
+#  define ABS(x)        (((x)<0) ? (-1*(x)) : (x))
 #endif
 
 #ifndef EQUAL
@@ -127,21 +123,21 @@
 #define VSIFRead        fread
 
 #ifndef notdef
-#define VSICalloc(x,y)	_GTIFcalloc(x*y)
+#define VSICalloc(x,y)	_GTIFcalloc((x)*(y))
 #define VSIMalloc	_GTIFcalloc
 #define VSIFree	        _GTIFFree
 #define VSIRealloc      _GTIFrealloc
 #else
-#define VSICalloc(x,y)	(((char *) _GTIFcalloc(x*y+4)) + 4)
+#define VSICalloc(x,y)	(((char *) _GTIFcalloc((x)*(y)+4)) + 4)
 #define VSIMalloc(x)	(((char *) _GTIFcalloc((x)+4)) + 4)
 #define VSIFree(x)      _GTIFFree(((char *) (x)) - 4)
-#define VSIRealloc(p,n) (((char *) _GTIFrealloc(((char *)p)-4,(n)+4)) + 4)
+#define VSIRealloc(p,n) (((char *) _GTIFrealloc(((char *)(p))-4,(n)+4)) + 4)
 #endif
 
 
-#if !defined(GTIFAtof) 
-#  define GTIFAtof atof 
-#endif 
+#if !defined(GTIFAtof)
+#  define GTIFAtof atof
+#endif
 
 
 /* -------------------------------------------------------------------- */
@@ -155,10 +151,10 @@ CPL_C_START
 #define CPLRealloc gtCPLRealloc
 #define CPLStrdup  gtCPLStrdup
 
-void CPL_DLL *CPLMalloc( int );
-void CPL_DLL *CPLCalloc( int, int );
-void CPL_DLL *CPLRealloc( void *, int );
-char CPL_DLL *CPLStrdup( const char * );
+void GTIF_DLL *CPLMalloc( int );
+void GTIF_DLL *CPLCalloc( int, int );
+void GTIF_DLL *CPLRealloc( void *, int );
+char GTIF_DLL *CPLStrdup( const char * );
 
 #define CPLFree(x)	{ if( x != NULL ) VSIFree(x); }
 
@@ -174,7 +170,7 @@ double GTIFStrtod(const char *nptr, char **endptr);
 
 #define CPLReadLine gtCPLReadLine
 
-const char CPL_DLL *CPLReadLine( FILE * );
+const char GTIF_DLL *CPLReadLine( FILE * );
 
 /*=====================================================================
                    Error handling functions (cpl_error.c)
@@ -196,13 +192,13 @@ typedef enum
 #define CPLSetErrorHandler gtCPLSetErrorHandler
 #define _CPLAssert    gt_CPLAssert
 
-void CPL_DLL CPLError(CPLErr eErrClass, int err_no, const char *fmt, ...);
-void CPL_DLL CPLErrorReset();
-int  CPL_DLL CPLGetLastErrorNo();
-const char CPL_DLL * CPLGetLastErrorMsg();
-void CPL_DLL CPLSetErrorHandler(void(*pfnErrorHandler)(CPLErr,int,
+void GTIF_DLL CPLError(CPLErr eErrClass, int err_no, const char *fmt, ...);
+void GTIF_DLL CPLErrorReset();
+int  GTIF_DLL CPLGetLastErrorNo();
+const char GTIF_DLL * CPLGetLastErrorMsg();
+void GTIF_DLL CPLSetErrorHandler(void(*pfnErrorHandler)(CPLErr,int,
                                                        const char *));
-void CPL_DLL _CPLAssert( const char *, const char *, int );
+void GTIF_DLL _CPLAssert( const char *, const char *, int );
 
 #ifdef DEBUG
 #  define CPLAssert(expr)  ((expr) ? (void)(0) : _CPLAssert(#expr,__FILE__,__LINE__))
@@ -238,55 +234,24 @@ CPL_C_START
 #define CSLTokenizeString gtCSLTokenizeString
 #define CSLTokenizeStringComplex gtCSLTokenizeStringComplex
 
-char CPL_DLL   **CSLAddString(char **papszStrList, const char *pszNewString);
-int  CPL_DLL   CSLCount(char **papszStrList);
-const char CPL_DLL *CSLGetField( char **, int );
-void CPL_DLL   CSLDestroy(char **papszStrList);
-char CPL_DLL   **CSLDuplicate(char **papszStrList);
+char GTIF_DLL   **CSLAddString(char **papszStrList, const char *pszNewString);
+int  GTIF_DLL   CSLCount(char **papszStrList);
+const char GTIF_DLL *CSLGetField( char **, int );
+void GTIF_DLL   CSLDestroy(char **papszStrList);
+char GTIF_DLL   **CSLDuplicate(char **papszStrList);
 
-char CPL_DLL   **CSLTokenizeString(const char *pszString );
-char CPL_DLL   **CSLTokenizeStringComplex(const char *pszString,
+char GTIF_DLL   **CSLTokenizeString(const char *pszString );
+char GTIF_DLL   **CSLTokenizeStringComplex(const char *pszString,
                                    const char *pszDelimiter,
                                    int bHonourStrings, int bAllowEmptyTokens );
 
-/* ==================================================================== */
-/*      .csv file related functions (from cpl_csv.c)                    */
-/* ==================================================================== */
-
-typedef enum {
-    CC_ExactString,
-    CC_ApproxString,
-    CC_Integer
-} CSVCompareCriteria;
-
-#define CSVFilename gtCSVFilename
-#define CSVReadParseLine gtCSVReadParseLine
-#define CSVScanLines gtCSVScanLines
-#define CSVScanFile gtCSVScanFile
-#define CSVScanFileByName gtCSVScanFileByName
-#define CSVGetFieldId gtCSVGetFieldId
-#define CSVDeaccess gtCSVDeaccess
-#define CSVGetField gtCSVGetField
+/*
+ * The following functions were used up to libgeotiff 1.4.X series, but
+ * are now no-operation, since there is no longer any CSV use in libgeotiff.
+ */
 #define SetCSVFilenameHook gtSetCSVFilenameHook
-#define CSVGetFileFieldId gtCSVGetFileFieldId
+void GTIF_DLL SetCSVFilenameHook( const char *(*CSVFileOverride)(const char *) );
 
-const char CPL_DLL *CSVFilename( const char * );
-
-char CPL_DLL **CSVReadParseLine( FILE * );
-char CPL_DLL **CSVScanLines( FILE *, int, const char *, CSVCompareCriteria );
-char CPL_DLL **CSVScanFile( const char *, int, const char *,
-                            CSVCompareCriteria );
-char CPL_DLL **CSVScanFileByName( const char *, const char *, const char *,
-                                  CSVCompareCriteria );
-int CPL_DLL CSVGetFieldId( FILE *, const char * );
-int CPL_DLL CSVGetFileFieldId( const char *, const char * );
-
-void CPL_DLL CSVDeaccess( const char * );
-
-const char CPL_DLL *CSVGetField( const char *, const char *, const char *,
-                                 CSVCompareCriteria, const char * );
-
-void CPL_DLL SetCSVFilenameHook( const char *(*)(const char *) );
 
 CPL_C_END
 

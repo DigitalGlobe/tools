@@ -15,6 +15,7 @@
 #include "geo_tiffp.h" /* external TIFF interface */
 #include "geo_keyp.h"  /* private interface       */
 
+#include "proj.h"
 
 /**********************************************************************
  *
@@ -23,10 +24,10 @@
  **********************************************************************/
 
 /**
-  
+
 This function deallocates an existing GeoTIFF access handle previously
 created with GTIFNew().  If the handle was
-used to write GeoTIFF keys to the TIFF file, the 
+used to write GeoTIFF keys to the TIFF file, the
 GTIFWriteKeys() function should be used
 to flush results to the file before calling GTIFFree().  GTIFFree()
 should be called before XTIFFClose() is
@@ -36,18 +37,16 @@ called on the corresponding TIFF file handle.<p>
 
 void GTIFFree(GTIF* gtif)
 {
-    int     i;
-	
     if (!gtif) return;
-	
+
     /* Free parameter arrays */
     if (gtif->gt_double) _GTIFFree (gtif->gt_double);
     if (gtif->gt_short) _GTIFFree (gtif->gt_short);
-	
+
     /* Free GeoKey arrays */
     if (gtif->gt_keys)
     {
-        for (i = 0; i < MAX_KEYS; i++)
+        for (int i = 0; i < MAX_KEYS; i++)
         {
             if (gtif->gt_keys[i].gk_type == TYPE_ASCII)
             {
@@ -57,6 +56,11 @@ void GTIFFree(GTIF* gtif)
         _GTIFFree (gtif->gt_keys);
     }
     if (gtif->gt_keyindex) _GTIFFree (gtif->gt_keyindex);
-	
+
+    if (gtif->own_pj_context)
+    {
+        proj_context_destroy(gtif->pj_context);
+    }
+
     _GTIFFree (gtif);
 }

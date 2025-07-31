@@ -7,8 +7,6 @@
 /* the macro ValuePair() must be defined   */
 /* by the enclosing include file           */
 
-/*  Revised 28 Sep 1995   NDR -- Added Rev. 1.0 aliases. */
-
 /* 6.2.1 GeoTIFF Configuration Keys */
 
 ValuePair(  GTModelTypeGeoKey,	1024) /* Section 6.3.1.1 Codes       */
@@ -68,10 +66,13 @@ ValuePair(  ProjStraightVertPoleLongGeoKey, 3095) /* GeogAngularUnit */
 ValuePair(  ProjRectifiedGridAngleGeoKey, 3096)   /* GeogAngularUnit */
 
 /* 6.2.4 Vertical CS Keys */
-   
+
 ValuePair(  VerticalCSTypeGeoKey,	4096)  /* Section 6.3.4.1 codes   */
 ValuePair(  VerticalCitationGeoKey,	4097)  /* documentation */
 ValuePair(  VerticalDatumGeoKey,	4098)  /* Section 6.3.4.2 codes   */
 ValuePair(  VerticalUnitsGeoKey,	4099)  /* Section 6.3.1 (.x) codes   */
+
+/* See https://github.com/opengeospatial/geotiff/pull/99 */
+ValuePair(  CoordinateEpochGeoKey, 5120)  /* GeoKey of type double */
 
 /* End of Data base */

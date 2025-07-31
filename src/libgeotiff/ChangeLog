@@ -1,3 +1,122 @@
+Changelog entries are no longer updated. Use git history for detailed changes
+
+2018-12-11 Even Rouault <even dot rouault at spatialys dot com>
+
+	* geo_print.c: fix wrong test in DefaultRead() that caused erroenous
+	error message to be emitted.
+	* Prepare for 1.4.3RC2
+
+2018-12-07 Even Rouault <even dot rouault at spatialys dot com>
+
+	* Prepare for 1.4.3	
+
+2018-05-23 Even Rouault <even dot rouault at spatialys dot com>
+
+	* geo_set.c: when rewriting a ASCII key with a string value longer than
+	the original value, do not add a dummy "0 0 0 0" entry in the GeoKeyDirectory
+	(fixes https://github.com/OSGeo/gdal/issues/641)
+
+2018-05-11 Even Rouault <even dot rouault at spatialys dot com>
+
+	* geo_set.c: remove useless va_end() as spotted by clang-tidy
+
+2018-02-06 Even Rouault <even dot rouault at spatialys dot com>
+
+	* geo_new.c: reject files where the GTIFF_DOUBLEPARAMS tags has
+	more than MAX_VALUES=1000 values to avoid potential out-of-bounds
+	read overflow. Fixes
+	https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=6035
+	Credit to OSS Fuzz
+
+2018-01-26 Even Rouault <even dot rouault at spatialys dot com>
+
+	* geo_normalize.c: use ProjScaleAtCenterGeoKey for CT_Mercator if
+	ProjScaleAtNatOriginGeoKey is not set.
+	Fixes https://github.com/OSGeo/gdal/pull/296
+
+2018-01-09 Even Rouault <even dot rouault at spatialys dot com>
+
+	* geo_normalize.c: fix potential stack buffer overflow in
+	GTIFAngleToDD()
+	Fixes https://bugs.chromium.org/p/oss-fuzz/issues/detail?id=5059
+	Credit to OSS Fuzz
+
+2017-12-17 Even Rouault <even dot rouault at spatialys dot com>
+
+	* csv/*: update to EPSG v9.2
+
+2017-06-08 Even Rouault <even dot rouault at spatialys dot com>
+
+	* geotiff.h, geo_keyp.h, geo_normalize.c, geo_new.c:
+	add GTIFNewEx() and GTIFNewWithMethodsEx() functions that
+	accept a user-provided error printing callback (only called
+	by geo_normalize right now, instead of fprintf(stderr))
+	and a user data handle. Add GTIFGetUserData().
+	Upgrade LIBGEOTIFF_VERSION to 1430.
+
+2017-04-14 Even Rouault <even dot rouault at spatialys dot com>
+
+	* *.h, libxtiff/xtiffio.h: replace CPL_DLL by GTIF_DLL
+
+2017-01-10 Even Rouault <even dot rouault at spatialys dot com>
+
+	* csv/*: update to EPSG v9.0 (#83)
+
+2017-01-10 Even Rouault <even dot rouault at spatialys dot com>
+
+	* csv/datum_shift_pref.csv: add overrides for PCS 2065
+	(S-JTSK (Ferro) / Krovak)
+	Fixes https://trac.osgeo.org/gdal/ticket/4762 and
+	https://github.com/OSGeo/proj.4/issues/185
+
+2017-01-10 Even Rouault <even dot rouault at spatialys dot com>
+
+	* csv/datum_shift_pref.csv: add overrides for PCS 2397/2398/2399
+	(Pulkovo 1942(83) / 3-degree Gauss-Kruger zone 3,4,5)
+	Fixes https://github.com/OSGeo/proj.4/issues/235
+
+2017-01-10 Even Rouault <even dot rouault at spatialys dot com>
+
+	* csv/datum_shift_pref.csv: add overrides for PCS 31251,31252,31253
+	(MGI (Ferro) / Austria)
+	Fixes https://github.com/OSGeo/proj.4/issues/254
+
+2017-01-10 Even Rouault <even dot rouault at spatialys dot com>
+
+	* csv/build_pcs.py, csv/datum_shift_pref.csv: add mechanism to define
+	TOWGS84 parameters per PCS (instead of only relying on the TOWGS84
+	parameters of the underlying GCS).
+	Add override for EPSG:3844 ("Pulkovo 1942(58) / Stereo70" Romania)
+	Fixes https://trac.osgeo.org/geotiff/ticket/52
+
+2017-01-10 Even Rouault <even dot rouault at spatialys dot com>
+
+	* csv/datum_shift_pref.csv: add override for CH1903 (EPSG:4149)
+	Fixes https://trac.osgeo.org/geotiff/ticket/73
+
+2016-11-23 Even Rouault <even dot rouault at spatialys dot com>
+
+	* geo_new.c, geo_print.c, geo_set.c, bin/applygeo.c, bin/geotifcp.c,
+	bin/makegeo.c: cppcheck fixes (signed vs unsigned printf/sscanf,
+	redundantAssignment)
+
+2016-11-21 Even Rouault <even dot rouault at spatialys dot com>
+
+	* geo_print.c: secure sscanf()/fscanf() uses.
+
+2016-11-20 Even Rouault <even dot rouault at spatialys dot com>
+
+	* geo_simpletags.c: add cppcheck-suppress duplicateBranch annotation.
+
+2016-09-04 Even Rouault <even dot rouault at spatialys dot com>
+
+	* White space fixes in .h and .c
+
+2016-09-01 Even Rouault <even dot rouault at spatialys dot com>
+
+	* geotiff.h cpl_serv.h: Partial revert of r2736 to revert back including
+	 "geo_config.h" (#81)
+
 2016-08-18 Even Rouault <even dot rouault at spatialys dot com>
 
 	* Makefile.am: Fix build issue on Windows with cmake by not

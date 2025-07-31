@@ -1,0 +1,15 @@
+{
+	"InstallScripts" : 
+	[
+		"D:/users/tim.tisler/tools/build/proj/build/cmake_install.cmake",
+		"D:/users/tim.tisler/tools/build/proj/build/data/cmake_install.cmake",
+		"D:/users/tim.tisler/tools/build/proj/build/include/cmake_install.cmake",
+		"D:/users/tim.tisler/tools/build/proj/build/include/proj/cmake_install.cmake",
+		"D:/users/tim.tisler/tools/build/proj/build/src/cmake_install.cmake",
+		"D:/users/tim.tisler/tools/build/proj/build/src/apps/cmake_install.cmake",
+		"D:/users/tim.tisler/tools/build/proj/build/man/cmake_install.cmake",
+		"D:/users/tim.tisler/tools/build/proj/build/cmake/cmake_install.cmake",
+		"D:/users/tim.tisler/tools/build/proj/build/scripts/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
