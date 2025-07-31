@@ -34,6 +34,7 @@ class Program:
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
     _LIBNAME = "libiconv"
+    _LIBNAME_CHARSET = "charset"
     _DEBUG_SUFFIX = "_d"
 
     # the name of the path for all include files
@@ -170,6 +171,18 @@ class Program:
             pathFinder.path(
                 sdkOutDir,
                 f'{Program._LIBNAME}{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.lib',
+            ),
+        )
+        systemManager.copyFile(
+            pathFinder.path(
+                buildPathName,
+                Program._PATH_NAME_NMAKE_INSTALL,
+                Program._PATH_NAME_LIB,
+                "charset.lib",
+            ),
+            pathFinder.path(
+                sdkOutDir,
+                f'{Program._LIBNAME_CHARSET}{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.lib',
             ),
         )
 
