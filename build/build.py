@@ -295,7 +295,7 @@ class Program :
             # self._build(Program._FILE_NAME_BUILD_XERCES)
             # self._build(Program._FILE_NAME_BUILD_PROJ)
             # self._build(Program._FILE_NAME_BUILD_LIBGEOTIFF)
-            self._build(Program._FILE_NAME_BUILD_OGDI)
+            # self._build(Program._FILE_NAME_BUILD_OGDI)
             self._build(Program._FILE_NAME_BUILD_GDAL)
             self._build(Program._FILE_NAME_BUILD_LIBLAS)
             self._build(Program._FILE_NAME_BUILD_OSG)

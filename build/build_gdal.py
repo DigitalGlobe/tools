@@ -1,10 +1,10 @@
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 #
 # build_gdal.py
 #
 # Summary : Builds the GDAL Library
 #
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 import glob
 import os
@@ -15,303 +15,279 @@ from PathFinder import *
 from SystemManager import *
 
 class Program :
-        DESCRIPTION = "Builds the GDAL library"
-        _PATH_NAME_BINARY_X86 = "..\\sdk\\x86\\bin"
-        _PATH_NAME_BINARY_X64 = "..\\sdk\\x64\\bin"
-        _PATH_NAME_BUILD = "GDAL-1.11.5"
-        _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
-        _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
-        _PATH_NAME_SOURCE = "..\\src\\GDAL-1.11.5"
-
-        _PATH_NAME_BUILD_FILEGDB = "FileGDB"
-        _PATH_NAME_SOURCE_FILEGDB = "..\\src\\FileGDB"
-
-        _INLCUDE_BASE = '..\\..\\include'
-        _LIB_BASE = '..\\..\\sdk\\'
-        _LIB_BASE_2 = 'lib'
-
-        _LIBICONV_INCLUDE = 'libiconv'
-        _LIBICONV_LIB = 'libiconv'
-
-        _JPEG_INCLUDE = 'libjpeg'
-        _JPEG_LIB = 'libjpeg'
-
-        _PNG_INCLUDE = 'libpng'
-        _PNG_LIB = 'libpng'
-
-        _LIBKML_INCLUDE = ['kml', '.']
-        _LIBKML_LIBS = ['libkmlbase', 'libkmlconvenience', 'libkmldom', 'libkmlengine', 'libkmlregionator', 'libkmlxsd', 'minizip', 'libexpat', 'uriparser', 'zlib']
-
-        _TIFF_INCLUDE = 'libtiff'
-        _TIFF_LIB = 'libtiff'
-
-        _GEOTIFF_INCLUDE = 'libgeotiff'
-        _GEOTIFF_LIB = 'libgeotiff'
-
-        _OGDI_INCLUDE = 'ogdi'
-        _OGDI_LIB = 'libogdi'
-
-        _EXPAT_INCLUDE = 'expat'
-        _EXPAT_LIB = 'libexpat'
-
-        _XERCES_INCLUDE = 'xerces'
-        _XERCES_LIB = 'xerces-c'
-
-        _HDF5_INCLUDE = 'hdf5'
-        _HDF5_LIB = 'hdf5'
-
-        _PROJ_INCLUDE = 'proj4'
-        _PROJ_LIB = 'proj'
-
-        _CURL_INCLUDE = '.'
-        _CURL_LIB = 'libcurl'
-        _CURL_LIB_2 = ['wsock32.lib', 'wldap32.lib', 'winmm.lib']
-
-        _GEOS_INCLUDE = 'geos'
-        _GEOS_LIB = 'geos'
-
-        _PODOFO_INCLUDE = 'podofo'
-        _PODOFO_LIB = ['podofo','freetype']
-        _PODOFO_LIB_2 = ['gdi32.lib']
-
-        # the name of the path for all include files
-        _PATH_NAME_INCLUDE = '.'
-        #----------------------------------------------------------------------
-        # the name of the distribution path for all include files
-        _PATH_NAME_DISTRIBUTION_INCLUDE = '..\\..\\include\\gdal'
-        #----------------------------------------------------------------------
-
-        def __init__(self) :
-
-            pass
-        #----------------------------------------------------------------------
-
-
-        def main(self) :
-
-            systemManager = SystemManager()
-            pathFinder    = PathFinder()
-
-            # process command-line arguments
-            buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
-
-            # initialize environment variables
-            systemManager.initializeIncludeEnvironmentVariable( buildSettings.X64Specified() )
-            systemManager.initializeLibraryEnvironmentVariable( buildSettings.X64Specified() )
-            systemManager.appendToPathEnvironmentVariable( pathFinder.getVisualStudioBinPathName( buildSettings.X64Specified() ), True )
-
-            # MSBuild is under "Program Files (x86)"
-            systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
-                                                                             "MSBuild\\14.0\\Bin") )
-
-            compileOutDir = ""
-            if ( buildSettings.X64Specified() ) :
-                print("64bit Build")
-
-                # append path for 64-bit rc.exe
-                systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
-                                                                             "Windows Kits\\10\\bin\\x64"                 ) )
-            else:
-                print("32bit Build")
-
-                # append path for 32-bit rc.exe
-                systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
-                                                                             "Windows Kits\\10\\bin\\x86"                 ) )
-
-            # determine path names
-            print("Getting Paths")
-            buildPathName  = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD)
-            sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
-
-            buildPathNameFileGDB  = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD_FILEGDB)
-            sourcePathNameFileGDB = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE_FILEGDB)
-
-            print("build path: " + buildPathName)
-            print("source path: " + sourcePathName)
-
-            # initialize directories
-            print("removing previous build dir")
-            systemManager.changeDirectory(sourcePathName)
-            systemManager.removeDirectory(buildPathName)
-            systemManager.removeDirectory(buildPathNameFileGDB)
-
-            print("copying File GDB source to build dir")
-            systemManager.copyDirectory( sourcePathNameFileGDB, buildPathNameFileGDB)
-
-            print("copying source to build dir")
-            systemManager.copyDirectory( sourcePathName, buildPathName)
-
-            # start building
-            systemManager.changeDirectory(buildPathName)
-            cmd = "nmake -f makefile.vc MSVC_VER=1900 GDAL_HOME=" + buildPathName + ' '
-            cmd = cmd + "FGDB_SDK=" + buildPathNameFileGDB + " "
-
-            if buildSettings.ReleaseSpecified():
-                cmd += ' GDALSTATICLIB=gdal-static.lib'
-                cmd += ' GDALDYNLIB=gdal.lib'
-                cmd += ' GDAL_DLL=gdal$(VERSION).dll'
-            else:
-                cmd += ' GDALSTATICLIB=gdal-static_d.lib'
-                cmd += ' GDALDYNLIB=gdal_d.lib'
-                cmd += ' GDAL_DLL=gdal$(VERSION)_d.dll'
-
-            suffix = ""
-
-            # extend command line based on options
-            if ( buildSettings.X64Specified() ) :
-                cmd = cmd + " WIN64=YES "
-                distribPath = Program._PATH_NAME_DISTRIBUTION_X64
-                exePath = Program._PATH_NAME_BINARY_X64
-
-                if buildSettings.ReleaseSpecified():
-                    suffix = ""
-                else:
-                    cmd = cmd + " DEBUG=1 "
-                    suffix = "_d"
-
-            else :
-                distribPath = Program._PATH_NAME_DISTRIBUTION_X86
-                exePath = Program._PATH_NAME_BINARY_X86
-
-                if buildSettings.ReleaseSpecified():
-                    suffix = ""
-                else:
-                    cmd = cmd + " DEBUG=1 "
-                    suffix = "_d"
-
-            incpath = pathFinder.path(buildPathName, Program._INLCUDE_BASE)
-            libpath = pathFinder.path(pathFinder.path(pathFinder.path(buildPathName, Program._LIB_BASE), ('x64' if buildSettings.X64Specified() else 'x86')), Program._LIB_BASE_2)
-            libsuffix = suffix + '.lib'
-
-            #cmd += ' LIBICONV_INCLUDE=-I' + pathFinder.path(incpath, Program._LIBICONV_INCLUDE)
-            #cmd += ' LIBICONV_LIB=' + pathFinder.path(libpath, Program._LIBICONV_LIB) + libsuffix
-            #cmd += ' LIBICONV_CFLAGS=-DICONV_CONST=const'
-
-
-            cmd += ' JPEG_LIB=' + pathFinder.path(libpath, Program._JPEG_LIB) + libsuffix
-            cmd += ' JPEGDIR=' + pathFinder.path(incpath, Program._JPEG_INCLUDE)
-            cmd += ' JPEG_EXTERNAL_LIB=1'
-
-            cmd += ' PNG_LIB=' + pathFinder.path(libpath, Program._PNG_LIB) + libsuffix
-            cmd += ' PNGDIR=' + pathFinder.path(incpath, Program._PNG_LIB)
-            cmd += ' PNG_EXTERNAL_LIB=1'
-
-            _LIBKML_INCLUDE = ['kml', '.']
-            _LIBKML_LIBS = ['libkmlbase', 'libkmlconvenience', 'libkmldom', 'libkmlengine', 'libkmlregionator', 'libkmlxsd', 'minizip', 'libexpat', 'uriparser', 'zlib']
-
-            cmd += ' LIBKML_INCLUDE="'
-            for i in Program._LIBKML_INCLUDE:
-               cmd += ' -I' + pathFinder.path(incpath, i)
-            cmd += '"'
-
-            cmd += ' LIBKML_LIBS="'
-            for i in Program._LIBKML_LIBS:
-               cmd += ' ' + pathFinder.path(libpath, i) + libsuffix
-            cmd += '"'
-
-            cmd += ' TIFF_INC=-I' + pathFinder.path(incpath, Program._TIFF_INCLUDE)
-            cmd += ' TIFF_LIB=' + pathFinder.path(libpath, Program._TIFF_LIB) + libsuffix
-            cmd += ' TIFF_OPTS=-DBIGTIFF_SUPPORT'
-
-            cmd += ' GEOTIFF_INC=-I' + pathFinder.path(incpath, Program._GEOTIFF_INCLUDE)
-            cmd += ' GEOTIFF_LIB=' + pathFinder.path(libpath, Program._GEOTIFF_LIB) + libsuffix
-
-            cmd += ' OGDI_INCLUDE=-I' + pathFinder.path(incpath, Program._OGDI_INCLUDE)
-            cmd += ' OGDILIB=' + pathFinder.path(libpath, Program._OGDI_LIB) + libsuffix
-            cmd += ' OGDIVER=32'
-
-            #cmd += ' EXPAT_INCLUDE=-I' + pathFinder.path(incpath, Program._EXPAT_INCLUDE)
-            #cmd += ' EXPAT_LIB=' + pathFinder.path(libpath, Program._EXPAT_LIB) + libsuffix
-
-            cmd += ' XERCES_INCLUDE=-I' + pathFinder.path(incpath, Program._XERCES_INCLUDE)
-            cmd += ' XERCES_LIB=' + pathFinder.path(libpath, Program._XERCES_LIB) + libsuffix
-
-            cmd += ' HDF5_LIB=' + pathFinder.path(libpath, Program._HDF5_LIB) + libsuffix
-            cmd += ' HDF5_PLUGIN=NO'
-
-            cmd += ' PROJ_INCLUDE=-I' + pathFinder.path(incpath, Program._PROJ_INCLUDE)
-            cmd += ' PROJ_LIBRARY=' + pathFinder.path(libpath, Program._PROJ_LIB) + libsuffix
-
-            cmd += ' CURL_INC=-I' + pathFinder.path(incpath, Program._CURL_INCLUDE)
-            cmd += ' CURL_LIB="' + pathFinder.path(libpath, Program._CURL_LIB) + libsuffix
-            for i in Program._CURL_LIB_2:
-               cmd += ' ' + i
-            cmd += '"'
-
-            cmd += ' GEOS_CFLAGS="-I' + pathFinder.path(incpath, Program._GEOS_INCLUDE)
-            cmd += ' -DHAVE_GEOS"'
-            cmd += ' GEOS_LIB=' + pathFinder.path(libpath, Program._GEOS_LIB) + libsuffix
-
-            #cmd += ' PODOFO_CFLAGS=-I' + pathFinder.path(incpath, Program._PODOFO_INCLUDE)
-            #cmd += ' PODOFO_LIBS="'
-            #for i in Program._PODOFO_LIB:
-            #   cmd += ' ' + pathFinder.path(libpath, i) + libsuffix
-            #for i in Program._PODOFO_LIB_2:
-            #   cmd += ' ' + i
-            #cmd += '"'
-            #cmd += ' PODOFO_ENABLED=YES'
-
-            sdkOutDir = buildPathName + "\\..\\" + distribPath
-            exeOutDir = buildPathName + '\\..\\' + exePath
-
-            print("command is: " + cmd)
-
-            # build
-            res = systemManager.execute(cmd)
-            if (res != 0) :
-                sys.exit(-1)
-
-            systemManager.removeDirectory(pathFinder.path( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE))
-            systemManager.distributeFiles(pathFinder.path( buildPathName, Program._PATH_NAME_INCLUDE),              \
-                                          pathFinder.path( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE), \
-                                          '*.h',                                                                 \
-                                          True, False, True, True)
-            systemManager.distributeFiles(pathFinder.path( buildPathName, Program._PATH_NAME_INCLUDE),              \
-                                          pathFinder.path( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE), \
-                                          '*.inc',                                                                 \
-                                          True, False, True, True)
-
-            # copy output to appropriate bin dir
-            print("Copy files into SDK dir")
-            shutil.copy( buildPathName + "\\gdal111" + suffix + ".dll", sdkOutDir + "\\gdal111" + suffix + ".dll")
-            shutil.copy( buildPathName + "\\gdal" + suffix + ".exp", sdkOutDir + "\\gdal" + suffix + ".exp")
-            shutil.copy( buildPathName + "\\gdal" + suffix + ".lib", sdkOutDir + "\\gdal" + suffix + ".lib")
-            shutil.copy( buildPathName + "\\gdal-static" + suffix + ".lib", sdkOutDir + "\\gdal-static" + suffix + ".lib")
-            if not buildSettings.ReleaseSpecified():
-                    shutil.copy( buildPathName + "\\gdal111" + suffix + ".pdb", sdkOutDir + "\\gdal111" + suffix + ".pdb")
-
-			# Apps
-            for file in glob.glob(buildPathName + "\\apps\\*.exe"):
-                print( "copying " + file + " -> " + exeOutDir)
-                shutil.copy(file, exeOutDir)
-
-			# FileGDB plugin
-            for file in glob.glob(buildPathName + "\\ogr\\ogrsf_frmts\\filegdb\\ogr_FileGDB.*"):
-                print( "copying " + file + " -> " + sdkOutDir)
-                shutil.copy(file, sdkOutDir)
-
-			# ESRI DLL's
-            if ( buildSettings.X64Specified() ):
-            	for file in glob.glob(buildPathNameFileGDB + "\\bin64\\*.*"):
-            		print( "copying " + file + " -> " + sdkOutDir)
-            		shutil.copy(file, sdkOutDir)
-            else:
-            	for file in glob.glob(buildPathNameFileGDB + "\\bin\\*.*"):
-            		print( "copying " + file + " -> " + sdkOutDir)
-            		shutil.copy(file, sdkOutDir)
-
-
-            #for file in glob.glob(compileOutDir + "\\*.dll"):
-            #    print( "copying " + file + " -> " + sdkOutDir)
-            #    shutil.copy(file, sdkOutDir)
-            #for file in glob.glob(compileOutDir + "\\*.pdb"):
-            #    print( "copying " + file + " -> " + sdkOutDir)
-            #    shutil.copy(file, sdkOutDir)
-
-
-
-
-
-#------------------------------------------------------------------------------
+    DESCRIPTION = "Builds the GDAL library"
+
+    # ----------------------------------------------------------------------
+    # the name of the path that will contain intermediary build files
+    _PATH_NAME_BUILD = "gdal"
+    # ----------------------------------------------------------------------
+    # the name of the path that contains the source code
+    _PATH_NAME_SOURCE = "..\\src\\gdal"
+    # ----------------------------------------------------------------------
+
+    _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
+    _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
+
+    _LIBNAME = "libgdal"
+    _DEBUG_SUFFIX = "_d"
+
+    # the name of the path for all include files
+    _PATH_NAME_INCLUDE = "."
+    # ----------------------------------------------------------------------
+    # the name of the distribution path for all include files
+    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\gdal"
+    # ----------------------------------------------------------------------
+    # the name of the path that contains the cmake files
+    _PATH_NAME_CMAKE_SOURCE = "."
+    _PATH_NAME_CMAKE_BUILD = "build"
+    _PATH_NAME_CMAKE_INSTALL = "install"
+
+    # --------------------------------------------------------------------------
+    # constructors
+
+    # ----------------------------------------------------------------------
+    # Constructs this program.
+    #
+    # Parameters :
+    #     self : this program
+    def __init__(self):
+
+        pass
+
+    # ----------------------------------------------------------------------
+
+    # --------------------------------------------------------------------------
+    # public methods
+
+    # ----------------------------------------------------------------------
+    # The main method of the program.
+    #
+    # Parameters :
+    #     self : this program
+    def main(self):
+
+        systemManager = SystemManager()
+        pathFinder = PathFinder()
+
+        # process command-line arguments
+        buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
+
+        # initialize environment variables
+        systemManager.initializeIncludeEnvironmentVariable(buildSettings.X64Specified())
+        systemManager.initializeLibraryEnvironmentVariable(buildSettings.X64Specified())
+
+        # MSBuild is under "Program Files (x86)"
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getMSBuildFileName(buildSettings.X64Specified())
+        )
+
+        compileOutDir = ""
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getWindowsSdkBinPathName(buildSettings.X64Specified())
+        )
+
+        # get the paths
+        buildPathName = systemManager.getCurrentRelativePathName(
+            Program._PATH_NAME_BUILD
+        )
+        sourcePathName = systemManager.getCurrentRelativePathName(
+            Program._PATH_NAME_SOURCE
+        )
+
+        buildSourceName = pathFinder.path(
+            buildPathName, Program._PATH_NAME_CMAKE_SOURCE
+        )
+        cmakeBuildPath = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
+        cmakeInstallPath = pathFinder.path(
+            cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
+        )
+
+        systemManager.removeDirectory(cmakeBuildPath)
+
+        sdkOutDir = pathFinder.path(
+            buildPathName,
+            "..",
+            (
+                Program._PATH_NAME_DISTRIBUTION_X64
+                if buildSettings.X64Specified()
+                else Program._PATH_NAME_DISTRIBUTION_X86
+            ),
+        )
+
+        # remove build dir
+        systemManager.changeDirectory(sourcePathName)
+        # systemManager.removeDirectory(buildPathName)
+
+        # copy APR source to the Build area
+        systemManager.copyDirectory(sourcePathName, buildPathName)
+
+        # start building
+        systemManager.changeDirectory(buildPathName)
+
+        systemManager.removeDirectory(cmakeBuildPath)
+        systemManager.makeDirectory(cmakeBuildPath)
+        systemManager.changeDirectory(cmakeBuildPath)
+
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        includeBase = pathFinder.path(
+            buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, ".."
+        )
+        libSuffix = (
+            f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
+        )
+        exeSuffix = (
+            f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.exe'
+        )
+
+        externalLibs = {
+            "BISON_EXECUTABLE": pathFinder.slasher(pathFinder.path(sdkOutDir, "..", "bin", f"bison{exeSuffix}")),
+            "CURL_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase)),
+            "CURL_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libcurl{libSuffix}")),
+            "CRYPTOPP_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "crypto")),
+            "CRYPTOPP_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"crypto{libSuffix}")),
+            "CRYPTOPP_TEST_KNOWNBUG": "TRUE",
+            "EXPAT_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "expat")),
+            "EXPAT_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libexpat{libSuffix}")),
+            "GEOS_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "geos")),
+            "GEOS_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"geos_c{libSuffix}")),
+            "GEOTIFF_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "geotiff")),
+            "GEOTIFF_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"geotiff{libSuffix}")),
+            "HDF5_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "hdf5")),
+            "HDF5_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"hdf5{libSuffix}")),
+            "Iconv_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libiconv")),
+            "Iconv_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libiconv{libSuffix}")),
+            "Iconv_CHARSET_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"charset{libSuffix}")),
+            "JPEG_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libjpeg")),
+            "JPEG_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libjpeg{libSuffix}")),
+            "LIBKML_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libkml")),
+            "LIBKML_BASE_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"kmlbase{libSuffix}")),
+            "LIBKML_DOM_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"kmldom{libSuffix}")),
+            "LIBKML_ENGINE_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"kmlengine{libSuffix}")),
+            "LIBXML2_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libxml")),
+            "LIBXML2_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libxml{libSuffix}")),
+            "XercesC_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "xerces")),
+            "XercesC_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"xerces{libSuffix}")),
+            "XercesC_VERSION": "3.3.0",
+            "SQLite3_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "sqlite3")),
+            "SQLite3_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"sqlite3{libSuffix}")),
+            "MUPARSER_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "muparser")),
+            "MUPARSER_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"muparser{libSuffix}")),
+            # "EXE_SQLITE3": pathFinder.slasher(pathFinder.path(sdkOutDir, f"sqlite3.exe")),
+            "OPENSSL_ROOT_DIR": pathFinder.path(buildPathName, "..", "openssl"),
+            "PNG_PNG_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libpng")),
+            "PNG_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libpng{libSuffix}")),
+            "PODOFO_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "podofo")),
+            "PODOFO_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"podofo{libSuffix}")),
+            "PROJ_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "proj")),
+            "PROJ_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"proj{libSuffix}")),
+            "TIFF_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libtiff")),
+            "TIFF_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libtiff{libSuffix}")),
+            "ZLIB_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "zlib")),
+            "ZLIB_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"zlib{libSuffix}")),
+            "ZSTD_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "zstd")),
+            "ZSTD_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"zstd{libSuffix}")),
+        }
+
+        externalLibStr = ""
+        for [key, val] in externalLibs.items():
+            externalLibStr += f'-D{key}="{val}" '
+
+        # run CMake
+        # -DCMAKE_POLICY_VERSION_MINIMUM is to avoid min compatability errors in CMake
+        cmakeCommandLine = (
+            f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
+            + f"-A {platform} "
+            + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
+            + f"-DBUILD_PYTHON_BINDINGS=OFF "
+            + f"-DBUILD_TESTING=OFF "
+            # + f"{"" if (buildSettings.ReleaseSpecified()) else "-DEXPORT_PDB=ON "}"
+            + f"-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} "
+            + f"{externalLibStr} "
+            + f"{buildSourceName}"
+        )
+
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
+
+        cmakeCommandLine = (
+            f"{pathFinder.getCMakeFileName()} "
+            + f"--build "
+            + f". "
+            + f"-j 1 "
+            + f"--config {conf} "
+        )
+
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
+
+        cmakeCommandLine = (
+            f"{pathFinder.getCMakeFileName()} "
+            + f"--install "
+            + f". "
+            + f"--config {conf} "
+            + f"--prefix "
+            + f"{cmakeInstallPath}"
+        )
+
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
+
+        dllName = (
+            f"{Program._LIBNAME}"
+            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
+            + f".dll"
+        )
+        libName = (
+            f"{Program._LIBNAME}"
+            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
+            + f".lib"
+        )
+        pdbName = (
+            f"{Program._LIBNAME}"
+            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
+            + f".pdb"
+        )
+
+        incdir = pathFinder.path(cmakeInstallPath, "include")
+        bindir = pathFinder.path(cmakeInstallPath, "bin")
+        libdir = pathFinder.path(cmakeInstallPath, "lib")
+
+        systemManager.distributeFiles(
+            incdir,
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            "*.h*",
+        )
+        systemManager.distributeFiles(
+            pathFinder.path(cmakeInstallPath, "share", "proj"),
+            pathFinder.path(sdkOutDir, "..", "proj"),
+            "*",
+        )
+        for f in glob.glob(pathFinder.path(libdir, "*.lib")):
+            fname = f[len(libdir) + 1 :]
+            fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME) :]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib"
+
+            systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
+
+        for f in glob.glob(pathFinder.path(bindir, "*.dll")):
+            fname = f[len(bindir) + 1 :]
+            fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME)]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.dll"
+            systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
+
+        if not buildSettings.ReleaseSpecified():
+            for f in glob.glob(pathFinder.path(libdir, "*.pdb")):
+                fname = f[len(libdir) + 1 :]
+                fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME)]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.pdb"
+                systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
+
+
+# ------------------------------------------------------------------------------
 Program().main()
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
