@@ -16,8 +16,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: utils.c,v $
- * Revision 1.10  2016/06/28 14:32:45  erouault
+ * $Log$
+ * Revision 1.10  2016-06-28 14:32:45  erouault
  * Fix all warnings about unused variables raised by GCC 4.8
  *
  * Revision 1.9  2007/02/12 16:09:06  cbalint
@@ -51,7 +51,7 @@
 
 #include "rpf.h"
 
-ECS_CVSID("$Id: utils.c,v 1.10 2016/06/28 14:32:45 erouault Exp $");
+ECS_CVSID("$Id$");
 
 void dyn_string_tolower(char *);
 

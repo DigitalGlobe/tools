@@ -1186,7 +1186,7 @@ vpf_table_type table;
 
    if (table.fp != NULL) {
      fpos = index_pos(row_number,table);
-     if ( fpos != (long)NULL) {
+     if ( fpos != 0 ) {
        fseek(table.fp,fpos,SEEK_SET);
        return read_next_row(table);
      } else {

@@ -16,8 +16,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: asyncsvr.c,v $
- * Revision 1.7  2016/06/28 14:32:45  erouault
+ * $Log$
+ * Revision 1.7  2016-06-28 14:32:45  erouault
  * Fix all warnings about unused variables raised by GCC 4.8
  *
  * Revision 1.6  2007/02/12 21:01:48  cbalint
@@ -52,7 +52,7 @@
 
 #include <ogdi_macro.h>
 
-ECS_CVSID("$Id: asyncsvr.c,v 1.7 2016/06/28 14:32:45 erouault Exp $");
+ECS_CVSID("$Id$");
 
 #ifdef _WINDOWS
 #  include "rpc/pmap_cln.h"
@@ -454,7 +454,10 @@ dispatchno_1(rqstp, transp)
     }
     
     /* Reap zombie children */
-    while (waitpid(-1, NULL, WNOHANG) > 0);
+    while (waitpid(-1, NULL, WNOHANG) > 0)
+    {
+        /* wait */
+    }
     ogdi_system(temp);
 
     /* Rtourner le resultat au client, mais auparavent on laisse le

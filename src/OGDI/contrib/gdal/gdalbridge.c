@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalbridge.c,v 1.1 2001/05/04 03:13:35 warmerda Exp $
+ * $Id$
  *
  * Project:  GDAL Bridge 
  * Purpose:  Implementation of GDALBridgeInitialize()
@@ -29,8 +29,8 @@
  * DEALINGS IN THE SOFTWARE.
  ******************************************************************************
  *
- * $Log: gdalbridge.c,v $
- * Revision 1.1  2001/05/04 03:13:35  warmerda
+ * $Log$
+ * Revision 1.1  2001-05-04 03:13:35  warmerda
  * New
  *
  * Revision 1.1  2000/10/25 16:43:20  warmerda
@@ -71,6 +71,7 @@
 #include "gdalbridge.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #ifdef _WIN32
 #define PATH_SEP '\\'

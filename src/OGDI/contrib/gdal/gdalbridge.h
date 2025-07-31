@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: gdalbridge.h,v 1.1 2001/05/04 03:13:35 warmerda Exp $
+ * $Id$
  *
  * Project:  GDAL Bridge 
  * Purpose:  Declarations for GDAL Bridge support.
@@ -29,8 +29,8 @@
  * DEALINGS IN THE SOFTWARE.
  ******************************************************************************
  *
- * $Log: gdalbridge.h,v $
- * Revision 1.1  2001/05/04 03:13:35  warmerda
+ * $Log$
+ * Revision 1.1  2001-05-04 03:13:35  warmerda
  * New
  *
  * Revision 1.1  2000/10/25 16:43:20  warmerda

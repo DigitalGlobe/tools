@@ -97,7 +97,6 @@ struct ecs_RasterConversion {
 		u_int coef_len;
 		double *coef_val;
 	} coef;
-	int isProjEqual;
 	ecs_Resampling r_method;
 	ecs_Transformation t_method;
 };
@@ -402,9 +401,6 @@ extern  ecs_Result * getglobalbound_1_svc(void *, struct svc_req *);
 #define	SETSERVERLANGUAGE ((unsigned long)(15))
 extern  ecs_Result * setserverlanguage_1(u_int *, CLIENT *);
 extern  ecs_Result * setserverlanguage_1_svc(u_int *, struct svc_req *);
-#define	SETSERVERPROJECTION ((unsigned long)(16))
-extern  ecs_Result * setserverprojection_1(char **, CLIENT *);
-extern  ecs_Result * setserverprojection_1_svc(char **, struct svc_req *);
 #define	SETRASTERCONVERSION ((unsigned long)(17))
 extern  ecs_Result * setrasterconversion_1(ecs_RasterConversion *, CLIENT *);
 extern  ecs_Result * setrasterconversion_1_svc(ecs_RasterConversion *, struct svc_req *);
@@ -462,9 +458,6 @@ extern  ecs_Result * getglobalbound_1_svc();
 #define	SETSERVERLANGUAGE ((unsigned long)(15))
 extern  ecs_Result * setserverlanguage_1();
 extern  ecs_Result * setserverlanguage_1_svc();
-#define	SETSERVERPROJECTION ((unsigned long)(16))
-extern  ecs_Result * setserverprojection_1();
-extern  ecs_Result * setserverprojection_1_svc();
 #define	SETRASTERCONVERSION ((unsigned long)(17))
 extern  ecs_Result * setrasterconversion_1();
 extern  ecs_Result * setrasterconversion_1_svc();
@@ -526,9 +519,6 @@ extern  ecs_Result * proxy_getglobalbound_1_svc(void *, struct svc_req *);
 #define	PROXY_SETSERVERLANGUAGE ((unsigned long)(15))
 extern  ecs_Result * proxy_setserverlanguage_1(u_int *, CLIENT *);
 extern  ecs_Result * proxy_setserverlanguage_1_svc(u_int *, struct svc_req *);
-#define	PROXY_SETSERVERPROJECTION ((unsigned long)(16))
-extern  ecs_Result * proxy_setserverprojection_1(char **, CLIENT *);
-extern  ecs_Result * proxy_setserverprojection_1_svc(char **, struct svc_req *);
 #define	PROXY_SETRASTERCONVERSION ((unsigned long)(17))
 extern  ecs_Result * proxy_setrasterconversion_1(ecs_RasterConversion *, CLIENT *);
 extern  ecs_Result * proxy_setrasterconversion_1_svc(ecs_RasterConversion *, struct svc_req *);
@@ -586,9 +576,6 @@ extern  ecs_Result * proxy_getglobalbound_1_svc();
 #define	PROXY_SETSERVERLANGUAGE ((unsigned long)(15))
 extern  ecs_Result * proxy_setserverlanguage_1();
 extern  ecs_Result * proxy_setserverlanguage_1_svc();
-#define	PROXY_SETSERVERPROJECTION ((unsigned long)(16))
-extern  ecs_Result * proxy_setserverprojection_1();
-extern  ecs_Result * proxy_setserverprojection_1_svc();
 #define	PROXY_SETRASTERCONVERSION ((unsigned long)(17))
 extern  ecs_Result * proxy_setrasterconversion_1();
 extern  ecs_Result * proxy_setrasterconversion_1_svc();

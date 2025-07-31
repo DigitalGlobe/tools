@@ -35,10 +35,10 @@ AR		= ar cr
 # Compilation and linking flags
 #
 SHLIB_CFLAGS	= @C_PIC@
-COMMON_CFLAGS	= $(OPTIMIZATION) @CFLAGS@ @C_WFLAGS@ -DUNIX=1
+COMMON_CFLAGS	= $(OPTIMIZATION) @CFLAGS@ @C_WFLAGS@ -DUNIX=1 @C_PIC@ @RPC_CFLAGS@
 
 SHLIB_LDFLAGS	= -shared 
-COMMON_LDFLAGS  = $(OPTIMIZATION) 
+COMMON_LDFLAGS  = $(OPTIMIZATION) @LDFLAGS@
 
 RPC_INCLUDES = @RPC_INCLUDES@
 
@@ -61,23 +61,12 @@ INST_BIN	= @bindir@
 #
 #RPC_LINKLIB	= -lrpcsvc -lnsl -lsocket
 #RPC_LINKLIB	=	-ldl -ldbmalloc
-RPC_LINKLIB	=	@LIBS@
+RPC_LINKLIB	=	@LIBS@ @RPC_LIBS@
 
 #
 # Endian definition, could be little or big
 #
 BIG_ENDIAN          = @BIG_ENDIAN@
-
-#
-# Handle internal/external PROJ.4 library usage.
-#
-
-PROJ_SETTING=@PROJ_SETTING@
-
-ifeq ($(PROJ_SETTING),external)
-PROJ_INCLUDE :=	@PROJ_INCLUDE@
-PROJ_STATICLIB := @PROJ_LIB@
-endif
 
 #
 # Handle internal/external ZLIB library usage.

@@ -32,7 +32,7 @@
  * From: @(#)rpc_hout.c 1.12 89/02/22 (C) 1987 SMI
  */
 char hout_rcsid[] = 
-  "$Id: rpc_hout.c,v 1.1.1.1 2000/10/29 20:55:03 warmerda Exp $";
+  "$Id$";
 
 /*
  * rpc_hout.c, Header file outputter for the RPC protocol compiler 

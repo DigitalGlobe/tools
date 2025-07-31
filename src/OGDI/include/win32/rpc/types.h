@@ -69,8 +69,7 @@ extern char *malloc();
 #include <sys/types.h>
 #endif
 #ifndef WIN32
-//include <sys/time.h>
-#include <time.h>
+#include <sys/time.h>
 #endif
 
 #ifndef INADDR_LOOPBACK

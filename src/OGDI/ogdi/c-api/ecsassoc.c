@@ -17,8 +17,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: ecsassoc.c,v $
- * Revision 1.6  2016/07/06 08:59:46  erouault
+ * $Log$
+ * Revision 1.6  2016-07-06 08:59:46  erouault
  * ecs_SetError(): display error message on stderr if memory allocation fails
  *
  * Revision 1.5  2016/07/04 17:33:49  erouault
@@ -43,7 +43,7 @@
 
 #include "ecs.h"
 
-ECS_CVSID("$Id: ecsassoc.c,v 1.6 2016/07/06 08:59:46 erouault Exp $");
+ECS_CVSID("$Id$");
 
 char memory_error[] = "not enough memory";
 

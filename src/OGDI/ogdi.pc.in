@@ -6,7 +6,7 @@ includedir=@includedir@
 Name: ogdi
 Description: Open Geographic Datastore Interface
 Version: @OGDI_VERSION@
-Cflags: -I${includedir}/ogdi
+Cflags: -I${includedir}/ogdi @RPC_CFLAGS@
 Libs: -L${libdir} -logdi
-Libs.private: -lproj -lexpat -lz
+Libs.private: -lexpat -lz @RPC_LIBS@
 

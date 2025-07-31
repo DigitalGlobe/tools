@@ -16,8 +16,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: ecs_dyna.c,v $
- * Revision 1.6  2016/07/11 09:15:53  erouault
+ * $Log$
+ * Revision 1.6  2016-07-11 09:15:53  erouault
  * fix ecs_OpenDynamicLib on 64 bit Windows (OGDI #72)
  *
  * Revision 1.5  2007/02/12 18:06:31  cbalint
@@ -34,7 +34,7 @@
 
 #include "ecs.h"
 
-ECS_CVSID("$Id: ecs_dyna.c,v 1.6 2016/07/11 09:15:53 erouault Exp $");
+ECS_CVSID("$Id$");
 
 #if !defined(MISSING_DLFCN_H)
 #include <dlfcn.h>

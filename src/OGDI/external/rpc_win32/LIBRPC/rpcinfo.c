@@ -43,13 +43,7 @@ static	char sccsid[] = "@(#)rpcinfo.c 1.22 87/08/12 SMI";
 
 #include <rpc/rpc.h>
 #include <stdio.h>
-
-#ifdef WIN32
 #include <sys/socket.h>
-#else
-#include <sys/socket.h>
-#endif
-
 #ifdef WIN32
 #include <rpc/pmap_pro.h>
 #include <rpc/pmap_cln.h>

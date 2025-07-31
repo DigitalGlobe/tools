@@ -10,7 +10,7 @@
  *********************************************************************/
 
 #if !defined(lint) && !defined(_NOIDENT)
-static char rcsid[] = "@(#)$RCSfile: portmap.c,v $ $Revision: 1.1.1.1 $ (OSF) $Date: 2000/10/29 20:54:58 $";
+static char rcsid[] = "@(#)$RCSfile$ $Revision$ (OSF) $Date$";
 #endif
 #ifndef lint
 static	char sccsid[] = "@(#)portmap.c 1.2 85/03/13 Copyr 1984 Sun Micro";

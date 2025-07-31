@@ -16,8 +16,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: ecssplit.c,v $
- * Revision 1.3  2003/08/27 05:27:21  warmerda
+ * $Log$
+ * Revision 1.3  2003-08-27 05:27:21  warmerda
  * Modified ecs_SplitURL() so that calling with a NULL url indicates it
  * should free the resources associated with the static regular expressions.
  * This makes memory leak debugging with OGDI more convenient.
@@ -28,8 +28,9 @@
  */
 
 #include "ecs.h"
+#include <string.h>
 
-ECS_CVSID("$Id: ecssplit.c,v 1.3 2003/08/27 05:27:21 warmerda Exp $");
+ECS_CVSID("$Id$");
 
 /* 
    -------------------------------------------------
@@ -64,39 +65,29 @@ void ecs_freeSplitURL(type,machine,path)
   }
 }
 
-/* 
-   -------------------------------------------------
-  
-   ecs_GetRegex: Allocate and set a string with the
-   values contained in the regex.
-
-   IN: 
-      ecs_regexp *reg: A pointer to ecs_regexp structure
-         (initialize in ecs_SplitURL).
-      int index: Index of the table contained in ecs_regexp
-   OUT:
-      char **chaine: String returned value
-      return int: Error code
-          TRUE: success
-          FALSE: failure
-
-   -------------------------------------------------
-   */
-
-int ecs_GetRegex(reg,index,chaine)
-     ecs_regexp *reg;
-     int index;
-     char **chaine;
+static int parse_server_path(const char* url, char **server, char **path)
 {
-  int chaine_len;
+    int i;
+    for( i = 0; url[i]; i++ )
+    {
+        if ( !( (url[i] >= '0' && url[i] <= '9') ||
+                (url[i] >= 'a' && url[i] <= 'z') ||
+                (url[i] >= 'A' && url[i] <= 'Z') ||
+                url[i] == '.' ) )
+        {
+            break;
+        }
+    }
+    if( i == 0 )
+        return FALSE;
 
-  chaine_len = reg->endp[index] - reg->startp[index] ;
-  *chaine = (char *) malloc(chaine_len+1);
-  if (*chaine ==NULL)
-    return FALSE;
-  strncpy(*chaine,reg->startp[index],chaine_len);
-  (*chaine)[chaine_len] = '\0';
-  return TRUE;
+    *server = malloc( i + 1 );
+    memcpy(*server, url, i );
+    (*server)[i] = 0;
+
+    *path = malloc( strlen(url + i) + 1 );
+    strcpy(*path, url + i);
+    return TRUE;
 }
 
 /* 
@@ -123,56 +114,36 @@ int ecs_GetRegex(reg,index,chaine)
    */
 
 int ecs_SplitURL(url,machine,server,path)
-     char *url;
+     const char *url;
      char **machine;
      char **server;
      char **path;
 {
-  static int compiled = 0;
-  static ecs_regexp *local,*remote;
-  int msg;
-
   if( url == NULL ) { /* Cleanup */
-      if( compiled ) {
-          compiled = 0;
-          free( local );
-          free( remote );
-          local = NULL;
-          remote = NULL;
-      }
       return FALSE;
-  }
-
-  if (!compiled) {
-    remote = EcsRegComp("gltp://([0-9a-zA-Z\\.\\-]+)/([0-9a-zA-Z\\.]+)(.*)");
-    local = EcsRegComp("gltp:/([0-9a-zA-Z\\.]+)(.*)");
-    compiled = 1;
   }
 
   *machine = NULL;
   *server = NULL;
   *path = NULL;
 
-  if (strncmp(url,"gltp://",7) != 0) {
-    if (EcsRegExec(local,url,NULL) == 0)
-      return FALSE;
-    if (((msg = ecs_GetRegex(local,1,server)) == FALSE) ||
-	((msg = ecs_GetRegex(local,2,path)) == FALSE)) {
-      ecs_freeSplitURL(machine,server,path);
-      return msg;
+  if(strncmp(url,"gltp://",7) == 0) {
+    const char* slash;
+    url += 7;
+    slash = strchr(url, '/');
+    if( !slash ) {
+        return FALSE;
     }
+    *machine = malloc(slash - url + 1);
+    memcpy(*machine, url, slash - url);
+    (*machine)[slash - url] = 0;
+
+    return parse_server_path(slash + 1, server, path);
+  } else if (strncmp(url,"gltp:/",6) == 0) {
+    return parse_server_path(url + 6, server, path);
   } else {
-    if (EcsRegExec(remote,url,NULL) == 0)
       return FALSE;
-    if (((msg = ecs_GetRegex(remote,1,machine)) == FALSE) ||
-	((msg = ecs_GetRegex(remote,2,server)) == FALSE) ||
- 	((msg = ecs_GetRegex(remote,3,path)) == FALSE)) {
-      ecs_freeSplitURL(machine,server,path);
-      return msg;
-    }
   }
-							 
-  return TRUE;
 }
 
 

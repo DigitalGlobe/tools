@@ -69,8 +69,6 @@ xdr_ecs_RasterConversion(register XDR *xdrs, ecs_RasterConversion *objp)
 	if (!xdr_array(xdrs, (char **)&objp->coef.coef_val, (u_int *) &objp->coef.coef_len, ~0,
 		sizeof (double), (xdrproc_t) xdr_double))
 		return (FALSE);
-	if (!xdr_int(xdrs, &objp->isProjEqual))
-		return (FALSE);
 	if (!xdr_ecs_Resampling(xdrs, &objp->r_method))
 		return (FALSE);
 	if (!xdr_ecs_Transformation(xdrs, &objp->t_method))

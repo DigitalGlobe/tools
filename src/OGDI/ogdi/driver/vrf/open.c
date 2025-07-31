@@ -16,8 +16,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: open.c,v $
- * Revision 1.6  2001/06/21 20:30:15  warmerda
+ * $Log$
+ * Revision 1.6  2001-06-21 20:30:15  warmerda
  * added ECS_CVSID
  *
  * Revision 1.5  2001/06/13 17:33:59  warmerda
@@ -28,7 +28,7 @@
 #include "ecs.h"
 #include "vrf.h"
 
-ECS_CVSID("$Id: open.c,v 1.6 2001/06/21 20:30:15 warmerda Exp $");
+ECS_CVSID("$Id$");
 
 /*
  *  --------------------------------------------------------------------------

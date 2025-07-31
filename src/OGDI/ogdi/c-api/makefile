@@ -19,19 +19,19 @@ else
 TARGETGEN=$(DYNAGEN)
 endif
 
-SOURCES = ecs_dyna.c ecsregex.c ecssplit.c \
-          ecsassoc.c ecshash.c ecstile.c server.c ecsdist.c \
+SOURCES = ecs_dyna.c ecssplit.c \
+          ecsassoc.c ecstile.c server.c ecsdist.c \
           ecslist.c ecsinfo.c ecsgeo.c ecs_xdr.c ecs_xdrz.c\
           matrix.c client.c ecs_capabilities.c
 
 INCLUDES = $(CURRENT_INCLUDE) $(GENERAL_INCLUDE) $(OGDI_INCLUDE) \
-		$(GRASS_INCLUDE) $(ZLIB_INCLUDE) $(PROJ_INCLUDE) \
+		$(GRASS_INCLUDE) $(ZLIB_INCLUDE) \
 		$(EXPAT_INCLUDE)
 
 CFLAGS 	= $(INCLUDES) $(COMMON_CFLAGS) -DMODULES_PATH="\"$(INST_LIB)/ogdi/\""
 
 LINK_LIBS= $(RPC_LINKLIB) $(ZLIB_LINKLIB) $(EXPAT_LINKLIB) $(WIN_LINKLIB) \
-		$(PROJ_STATICLIB) $(MATH_LINKLIB)
+		$(MATH_LINKLIB)
 
 EXTRA_INSTALL_TARGETS	=	install-so-link
 

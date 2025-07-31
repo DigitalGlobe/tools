@@ -16,8 +16,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: adrg.c,v $
- * Revision 1.10  2016/06/27 22:01:46  erouault
+ * $Log$
+ * Revision 1.10  2016-06-27 22:01:46  erouault
  * Fix memory leak in ADRG driver
  *
  * Revision 1.9  2007/02/12 16:09:06  cbalint
@@ -58,7 +58,7 @@
 #include "datadict.h"
 #include <assert.h>
 
-ECS_CVSID("$Id: adrg.c,v 1.10 2016/06/27 22:01:46 erouault Exp $");
+ECS_CVSID("$Id$");
 
 static void	_releaseAllLayers _ANSI_ARGS_((ecs_Server *s));
 int colorintensity[6] = {0,63,105,147,189,255};
@@ -696,7 +696,7 @@ ecs_Result *dyn_UpdateDictionary(s,info)
     {
         ecs_AddText(&(s->result),
                     "<?xml version=\"1.0\" ?>\n"
-                    "<OGDI_Capabilities version=\"3.1\">\n"
+                    "<OGDI_Capabilities version=\"4.0\">\n"
                     "</OGDI_Capabilities>\n" );
         ecs_SetSuccess(&(s->result));
     }
@@ -710,7 +710,7 @@ ecs_Result *dyn_UpdateDictionary(s,info)
 
         ecs_AddText(&(s->result),
                     "<?xml version=\"1.0\" ?>\n"
-                    "<OGDI_Capabilities version=\"3.1\">\n" );
+                    "<OGDI_Capabilities version=\"4.0\">\n" );
         ecs_AddText(&(s->result),
                     "   <FeatureTypeList>\n"
                     "      <Operations>\n"

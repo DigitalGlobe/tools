@@ -1,4 +1,5 @@
 #ifdef _WINDOWS
+#undef _WINREG_
 #include <windows.h>
 #endif
 #include <stdlib.h>

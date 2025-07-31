@@ -79,7 +79,6 @@ struct ecs_RasterConversion {
 		u_int coef_len;
 		double *coef_val;
 	} coef;
-	int isProjEqual;
 	ecs_Resampling r_method;
 	ecs_Transformation t_method;
 };
@@ -344,8 +343,6 @@ extern  ecs_Result * getserverprojection_1();
 extern  ecs_Result * getglobalbound_1();
 #define	SETSERVERLANGUAGE ((unsigned long)(15))
 extern  ecs_Result * setserverlanguage_1();
-#define	SETSERVERPROJECTION ((unsigned long)(16))
-extern  ecs_Result * setserverprojection_1();
 #define	SETRASTERCONVERSION ((unsigned long)(17))
 extern  ecs_Result * setrasterconversion_1();
 extern int ecsprog_1_freeresult();

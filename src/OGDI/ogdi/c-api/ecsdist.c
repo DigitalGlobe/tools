@@ -16,8 +16,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: ecsdist.c,v $
- * Revision 1.5  2001/04/12 19:25:27  warmerda
+ * $Log$
+ * Revision 1.5  2001-04-12 19:25:27  warmerda
  * added RGB<->Pixel functions
  *
  * Revision 1.4  2001/04/09 15:04:34  warmerda
@@ -29,7 +29,7 @@
 #include <math.h>
 #include "ecs.h"
 
-ECS_CVSID("$Id: ecsdist.c,v 1.5 2001/04/12 19:25:27 warmerda Exp $");
+ECS_CVSID("$Id$");
 
 double currenttolerance = 0.0;
 

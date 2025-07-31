@@ -21,8 +21,8 @@
  * Cleanup, other hackery, Summer '92, Brian Moran , brianmo@microsoft.com 
  ******************************************************************************
  *
- * $Log: opendir.h,v $
- * Revision 1.2  2001/04/09 15:04:34  warmerda
+ * $Log$
+ * Revision 1.2  2001-04-09 15:04:34  warmerda
  * applied new source headers
  *
  */

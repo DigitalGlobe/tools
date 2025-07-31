@@ -235,21 +235,6 @@ setserverlanguage_1(u_int *argp, CLIENT *clnt)
 }
 
 ecs_Result *
-setserverprojection_1(char **argp, CLIENT *clnt)
-{
-	static ecs_Result clnt_res;
-
-	memset((char *)&clnt_res, 0, sizeof (clnt_res));
-	if (clnt_call(clnt, SETSERVERPROJECTION,
-		(xdrproc_t) xdr_wrapstring, (caddr_t) argp,
-		(xdrproc_t) xdr_ecs_Result, (caddr_t) &clnt_res,
-		TIMEOUT) != RPC_SUCCESS) {
-		return (NULL);
-	}
-	return (&clnt_res);
-}
-
-ecs_Result *
 setrasterconversion_1(ecs_RasterConversion *argp, CLIENT *clnt)
 {
 	static ecs_Result clnt_res;

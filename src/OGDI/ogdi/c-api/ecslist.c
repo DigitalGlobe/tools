@@ -16,15 +16,15 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: ecslist.c,v $
- * Revision 1.2  2001/04/09 15:04:34  warmerda
+ * $Log$
+ * Revision 1.2  2001-04-09 15:04:34  warmerda
  * applied new source headers
  *
  */
 
 #include "ecs.h"
 
-ECS_CVSID("$Id: ecslist.c,v 1.2 2001/04/09 15:04:34 warmerda Exp $");
+ECS_CVSID("$Id$");
 
 #define UCHAR(c) ((unsigned char) (c))
 
@@ -166,7 +166,7 @@ ecs_Backslash(src, readPtr)
  */
 
 int ecs_FindElement(list, elementPtr, nextPtr, sizePtr, bracePtr)
-     register char *list;	/* String containing Tcl list with zero
+     char *list;	/* String containing Tcl list with zero
 				 * or more elements (possibly in braces). */
      char **elementPtr;		/* Fill in with location of first significant
 				 * character in first element of list. */
@@ -350,8 +350,8 @@ void
 ecs_CopyAndCollapse(count, src, dst)
     int count;			/* Total number of characters to copy
 				 * from src. */
-    register char *src;		/* Copy from here... */
-    register char *dst;		/* ... to here. */
+    char *src;		/* Copy from here... */
+    char *dst;		/* ... to here. */
 {
     register char c;
     int numRead;

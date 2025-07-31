@@ -121,13 +121,6 @@ ecs_Result *setserverlanguage_1(args,rqstp)
   return svr_SetServerLanguage(mptr, *args);
 }
 
-ecs_Result * setserverprojection_1(args,rqstp)
-     char **args;
-     struct svc_req *rqstp;
-{
-  return svr_SetServerProjection(mptr, *args);
-}
-
 ecs_Result * setrasterconversion_1(args,rqstp)
      ecs_RasterConversion *args;
      struct svc_req *rqstp;

@@ -172,7 +172,7 @@ int32 npath;
    linked_list_type rlist;
    vpf_relate_struct rstruct;
    set_type fcset;
-   char tablename[255], *buf, expr[255];
+   char tablename[255], *buf, expr[1024];
    row_type row;
    int32 i, rownum, n;
    int32 TABLE1_, KEY1_, TABLE2_, KEY2_;
@@ -251,7 +251,7 @@ int32 npath;
 #else
      while (strcasecmp(tablename, end_table) != 0) {
 #endif
-      sprintf(expr,"FEATURE_CLASS = %s AND TABLE1 = %s AND TABLE2 <> %s",
+      snprintf(expr, sizeof(expr), "FEATURE_CLASS = %s AND TABLE1 = %s AND TABLE2 <> %s",
               fcname,tablename,prevstr);
 
       fcset = query_table(expr,fcs);
@@ -440,7 +440,7 @@ int32 tile_id;
 
    if (table2.header[KEY2_].type == 'T')
       {
-      keystring = (char*)xvt_malloc (strlen((char*)keyval1));
+      keystring = (char*)xvt_malloc (1+strlen((char*)keyval1));
       strcpy (keystring, (char*)keyval1);
 
       rightjust(keystring);
@@ -487,7 +487,7 @@ int32 tile_id;
       } else if (table2.header[KEY2_].type == 'T') {
      if (table2.header[KEY2_].count==1) {
         get_table_element(KEY2_,row,table2,&cval,&n);
-        if (memcmp(&cval,keyval1,sizeof(ival))==0) rowid = i;
+        if (memcmp(&cval,keyval1,sizeof(cval))==0) rowid = i;
      } else {
         tval = get_table_element(KEY2_,row,table2,NULL,&n);
             rightjust(tval);
@@ -609,9 +609,11 @@ int32 tile_id;
             start = set_min(idxset);
             end = set_max(idxset);
             for (i=start;i<end;i++)
+            {
                if (set_member(i,idxset))
                   ll_insert(&i,sizeof(i),ll_last(rowlist));
-               set_nuke(&idxset);
+            }
+            set_nuke(&idxset);
             return rowlist;
             }
          }
@@ -667,7 +669,7 @@ int32 tile_id;
 
    if (table2.header[KEY2_].type == 'T')
       {
-      keystring = (char*)xvt_malloc (strlen ((char*)keyval1));
+      keystring = (char*)xvt_malloc (1+strlen ((char*)keyval1));
       strcpy (keystring, (char*)keyval1);
 
       rightjust(keystring);
@@ -731,7 +733,7 @@ int32 tile_id;
             if (table2.header[KEY2_].count==1)
                {
                get_table_element(KEY2_,row,table2,&cval,&n);
-               if (memcmp(&cval,keyval1,sizeof(ival))==0)
+               if (memcmp(&cval,keyval1,sizeof(cval))==0)
                   ll_insert(&i,sizeof(i),ll_last(rowlist));
                }
             else

@@ -17,8 +17,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: client.c,v $
- * Revision 1.17  2016/06/28 14:32:45  erouault
+ * $Log$
+ * Revision 1.17  2016-06-28 14:32:45  erouault
  * Fix all warnings about unused variables raised by GCC 4.8
  *
  * Revision 1.16  2008/05/28 01:34:30  cbalint
@@ -68,7 +68,7 @@
 #include "matrix.h"
 #include <assert.h>
 
-ECS_CVSID("$Id: client.c,v 1.17 2016/06/28 14:32:45 erouault Exp $");
+ECS_CVSID("$Id$");
 
 /* 
    Definitions specific to c_interface 
@@ -153,28 +153,6 @@ void cln_FreeClient(cln)
       free((*cln)->mask);
       (*cln)->mask = NULL;
     }
-    if ((*cln)->target != NULL)
-    {
-      pj_free((*cln)->target);
-      (*cln)->target = NULL;
-    }
-    if ((*cln)->target_proj != NULL)
-    {
-      free((*cln)->target_proj);
-      (*cln)->target_proj = NULL;
-    }
-    if ((*cln)->source != NULL)
-    {
-      pj_free((*cln)->source);
-      (*cln)->source = NULL;
-    }
-    if ((*cln)->dthandle != NULL && ((*cln)->nad_close != NULL)) {
-      ((*cln)->nad_close)((*cln)->privdatuminfo);
-      ecs_CloseDynamicLib((*cln)->dthandle);
-      (*cln)->privdatuminfo = NULL;
-      (*cln)->nad_close = NULL;
-      (*cln)->dthandle = NULL;
-    }      
 
     if( (*cln)->global_extensions != NULL )
     {
@@ -302,25 +280,14 @@ int cln_AllocClient(URL, error_code)
     cln->autoCache = NULL;
     cln->selectCache = NULL;
     cln->tclprocname = NULL;
-    cln->target = NULL;
-    cln->source = NULL;
-    cln->target_proj = NULL;
-    cln->isSourceLL = FALSE;
-    cln->isTargetLL = FALSE;
-    cln->isProjEqual = FALSE;
     cln->currentSelectionFamily = 0;
     cln->isCurrentRegionSet = FALSE;
     cln->targetdatum = nodatum;
     cln->sourcedatum = nodatum;
     strcpy(cln->datumtable,"");
-    cln->dthandle = NULL;
-    cln->nad_init = NULL;
-    cln->nad_forward = NULL;
-    cln->nad_reverse = NULL;
-    cln->nad_close = NULL;
     cln->mask = NULL;
-    strcpy( cln->server_version_str, "3.0" );
-    cln->server_version = 3000;
+    strcpy( cln->server_version_str, "4.0" );
+    cln->server_version = 4000;
   }
 
   if ((cln == NULL) || (cln->url == NULL)) {
@@ -375,7 +342,6 @@ ecs_Result *cln_CreateClient(ReturnedID,URL)
   int i;
   ecs_Result *res;
   int error_code;
-  char *projection;
   
   if (multiblock != 0) {
     res = &cln_dummy_result;
@@ -390,31 +356,6 @@ ecs_Result *cln_CreateClient(ReturnedID,URL)
 
   if ((i = cln_GetClientIdFromURL(URL)) >= 0) {
     *ReturnedID = i;
-
-    /* 
-       Because the CreateClient could be call more than one time for a client,
-       it is possible the projection change. Specially for the unknown projections.
-       */
-
-    cln = soc[*ReturnedID];
-    res = svr_GetServerProjection(&(cln->s));
-    if ((res->error == 0) && (res->res.type == AText)) {
-      projection = (char *) malloc(strlen(res->res.ecs_ResultUnion_u.s)+1);
-      if (projection != NULL) {
-	strcpy(projection,res->res.ecs_ResultUnion_u.s);
-	res = cln_SetClientProjection(*ReturnedID,projection);
-	free(projection);
-      } else {
-	res = &cln_dummy_result;
-	ecs_SetError(res,1,cln_messages[1]);
-	cln_FreeClient(&cln);
-	soc[*ReturnedID] = NULL;
-	*ReturnedID = -1;
-      }
-    } else {
-      return res;
-    }
-
     ecs_SetSuccess(&cln_dummy_result);
     return &cln_dummy_result;
   } 
@@ -435,28 +376,6 @@ ecs_Result *cln_CreateClient(ReturnedID,URL)
       cln_FreeClient(&cln);
       soc[*ReturnedID] = NULL;
       *ReturnedID = -1;
-    } else {
-      /* 
-       * The CreateServer is a success. Now get the source projection
-       * and set the target projection with this projection as a
-       * default value. 
-       */
-      
-      res = svr_GetServerProjection(&(cln->s));
-      if ((res->error == 0) && (res->res.type == AText)) {
-	projection = (char *) malloc(strlen(res->res.ecs_ResultUnion_u.s)+1);
-	if (projection != NULL) {
-	  strcpy(projection,res->res.ecs_ResultUnion_u.s);
-	  res = cln_SetClientProjection(*ReturnedID,projection);
-	  free(projection);
-	} else {
-	  res = &cln_dummy_result;
-	  ecs_SetError(res,1,cln_messages[1]);
-	  cln_FreeClient(&cln);
-	  soc[*ReturnedID] = NULL;
-	  *ReturnedID = -1;
-	}
-      }
     }
   }
 
@@ -535,7 +454,6 @@ ecs_Result *cln_SelectLayer(ClientID, ls)
   ecs_CtlPoints *cpts;
   ecs_Region region;
   int regionset = FALSE;
-  int code;
 
   if (multiblock != 0) {
     res = &cln_dummy_result;
@@ -596,12 +514,6 @@ ecs_Result *cln_SelectLayer(ClientID, ls)
 	region.west != region.east &&
 	region.ew_res != 0.0 &&
 	region.ns_res != 0.0) {
-      code = cln_ConvRegion(ClientID,&region,ECS_STOT);
-      if (code != 0) {
-	res = &cln_dummy_result;
-	ecs_SetError(res,1,cln_messages[code]);
-	return res;
-      }
     } else {
       res = &cln_dummy_result;
       ecs_SetError(res,1,cln_messages[13]);
@@ -695,7 +607,6 @@ ecs_Result *cln_SelectRegion(ClientID, gr)
      ecs_Region *gr;
 {
   ecs_Result *msg;
-  ecs_Region tmpgr;
   register ecs_Client *cln;
   char *error_message;
   ecs_CtlPoints *cpts;
@@ -713,13 +624,6 @@ ecs_Result *cln_SelectRegion(ClientID, gr)
     return msg;
   }
 
-  tmpgr.north = gr->north;
-  tmpgr.south = gr->south;
-  tmpgr.east = gr->east;
-  tmpgr.west = gr->west;
-  tmpgr.ns_res = gr->ns_res;
-  tmpgr.ew_res = gr->ew_res;
-
   cln->currentRegion.north = gr->north;
   cln->currentRegion.south = gr->south;
   cln->currentRegion.east = gr->east;
@@ -727,10 +631,9 @@ ecs_Result *cln_SelectRegion(ClientID, gr)
   cln->currentRegion.ns_res = gr->ns_res;
   cln->currentRegion.ew_res = gr->ew_res;
 
-  cln_ConvRegion(ClientID,&(tmpgr),ECS_TTOS);
   cln->isCurrentRegionSet = TRUE;
 
-  msg = svr_SelectRegion(&(cln->s),&tmpgr);
+  msg = svr_SelectRegion(&(cln->s),gr);
 
   if (cln->autoCache != NULL) {
     cln_FreeCache(cln->autoCache);
@@ -1033,26 +936,12 @@ ecs_Result *cln_GetNextObject(ClientID)
     pos = cache->currentpos - cache->startpos;
     if (pos >= 0 && pos < cache->size) {
       msg = cache->o[pos];
-      if (msg->res.type == Object) {
-	code = cln_ChangeProjection(ClientID, &(msg->res.ecs_ResultUnion_u.dob));
-	if (code > 0) {
-	  msg = &cln_dummy_result;
-	  ecs_SetError(msg,1,cln_messages[code]);
-	}
-      }
 
       while (!(cln_IsGeoObjectInsideMask(ClientID,msg)) && !(msg->error)) {
 	cache->currentpos++;
 	pos = cache->currentpos - cache->startpos;
 	if (pos >= 0 && pos < cache->size-1) {
 	  msg = cache->o[pos];
-	  if (msg->res.type == Object) {
-	    code = cln_ChangeProjection(ClientID, &(msg->res.ecs_ResultUnion_u.dob));
-	    if (code > 0) {
-	      msg = &cln_dummy_result;
-	      ecs_SetError(msg,1,cln_messages[code]);
-	    }
-	  }
 	} else {
 	  msg = &cln_dummy_result;
 	  ecs_SetSuccess(msg);
@@ -1081,13 +970,6 @@ ecs_Result *cln_GetNextObject(ClientID)
 
   if (msg == NULL) {
     msg = svr_GetNextObject(&(cln->s));
-    if (msg->res.type == Object) {
-      code = cln_ChangeProjection(ClientID, &(msg->res.ecs_ResultUnion_u.dob));
-      if (code > 0) {
-	msg = &cln_dummy_result;
-	ecs_SetError(msg,1,cln_messages[code]);
-      }
-    }
 
     /* 
      *  Apply the filter of the mask if not MultiResult 
@@ -1095,13 +977,6 @@ ecs_Result *cln_GetNextObject(ClientID)
 
     while ((msg->res.type != MultiResult) && !(msg->error) && !(cln_IsGeoObjectInsideMask(ClientID,msg))) {
       msg = svr_GetNextObject(&(cln->s));
-      if (msg->res.type == Object) {
-	code = cln_ChangeProjection(ClientID, &(msg->res.ecs_ResultUnion_u.dob));
-	if (code > 0) {
-	  msg = &cln_dummy_result;
-	  ecs_SetError(msg,1,cln_messages[code]);
-	}
-      }
     }
 
     /*
@@ -1303,7 +1178,6 @@ ecs_Result *cln_GetObject(ClientID,id)
 {
   ecs_Result *msg;
   register ecs_Client *cln;
-  int code;
 
   if (multiblock != 0) {
     msg = &cln_dummy_result;
@@ -1320,13 +1194,6 @@ ecs_Result *cln_GetObject(ClientID,id)
   }
 
   msg = svr_GetObject(&(cln->s),id);
-  if (msg->res.type == Object) {
-    code = cln_ChangeProjection(ClientID, &(msg->res.ecs_ResultUnion_u.dob));
-    if (code > 0) {
-      msg = &cln_dummy_result;
-      ecs_SetError(msg,1,cln_messages[code]);
-    }
-  }
 
   return msg;
 }
@@ -1351,11 +1218,9 @@ ecs_Result *cln_GetObjectIdFromCoord(ClientID, coord)
      int ClientID;
      ecs_Coordinate *coord;
 {
-  double dx,dy;
   int position;
   double distance;
   double mindist;
-  int error_code;
   register ecs_Client *cln;
   ecs_Result *msg;
   char *id;
@@ -1374,16 +1239,6 @@ ecs_Result *cln_GetObjectIdFromCoord(ClientID, coord)
     return msg;
   }
 
-  dx = coord->x;
-  dy = coord->y;
-  if ((error_code = cln_ConvTtoS(ClientID, &dx, &dy)) > 0) {
-    msg = &cln_dummy_result;
-    ecs_SetError(msg,1,cln_messages[error_code]);
-    return msg;    
-  }
-  coord->x = dx;
-  coord->y = dy;
-
   if (cln->selectCache == NULL) {
     msg = svr_GetObjectIdFromCoord(&(cln->s),coord);
   } else {
@@ -1398,14 +1253,14 @@ ecs_Result *cln_GetObjectIdFromCoord(ClientID, coord)
     case Text:
     case Point:
       position = 0;
-      distance = ecs_DistanceObject(&(cln->selectCache->o[position]->res.ecs_ResultUnion_u.dob),dx,dy);
+      distance = ecs_DistanceObject(&(cln->selectCache->o[position]->res.ecs_ResultUnion_u.dob),coord->x,coord->y);
       if (distance>=0.0) 
 	mindist = distance; 
       else 
 	mindist = HUGE_VAL;
       cln->selectCache->currentpos = 0;
       for(position=1;position<cln->selectCache->size;position++) {
-	distance = ecs_DistanceObject(&(cln->selectCache->o[position]->res.ecs_ResultUnion_u.dob),dx,dy);
+	distance = ecs_DistanceObject(&(cln->selectCache->o[position]->res.ecs_ResultUnion_u.dob),coord->x,coord->y);
 	if (mindist>distance && distance>=0.0) {
 	  mindist=distance;
 	  cln->selectCache->currentpos = position;
@@ -1483,7 +1338,6 @@ ecs_Result *cln_GetGlobalBound(ClientID)
 {
   ecs_Result *res;
   register ecs_Client *cln;
-  int code;
 
   if (multiblock != 0) {
     res = &cln_dummy_result;
@@ -1505,11 +1359,6 @@ ecs_Result *cln_GetGlobalBound(ClientID)
 	res->res.ecs_ResultUnion_u.gr.west != res->res.ecs_ResultUnion_u.gr.east &&
 	res->res.ecs_ResultUnion_u.gr.ew_res != 0.0 &&
 	res->res.ecs_ResultUnion_u.gr.ns_res != 0.0) {
-      code = cln_ConvRegion(ClientID,&(res->res.ecs_ResultUnion_u.gr),ECS_STOT);
-      if (code != 0) {
-	res = &cln_dummy_result;
-	ecs_SetError(res,1,cln_messages[code]);
-      }
     } else {
       res = &cln_dummy_result;
       ecs_SetError(res,1,cln_messages[13]);
@@ -1559,75 +1408,6 @@ ecs_Result *cln_SetServerLanguage(ClientID,language)
 /*
  *----------------------------------------------------------------------
  *
- * cln_SetServerProjection: Set the server projection
- *
- * IN 
- *	int ClientID: Client identifier
- *	char *projection: Server projection applied
- *      
- * OUT
- *	return ecs_Result: Operation result
- *
- *----------------------------------------------------------------------
- */
-
-ecs_Result *cln_SetServerProjection(ClientID,projection)
-     int ClientID;
-     char *projection;
-{
-  register ecs_Client *cln;
-  char *error_message;
-  ecs_CtlPoints *cpts;
-  ecs_Result *res;
-  PJ *tempproj;
-
-  if (multiblock != 0) {
-    res = &cln_dummy_result;
-    ecs_SetError(res,1,cln_messages[14]);
-    return res;
-  }
-  
-  if (projection != NULL) {
-    while(projection[0]==' ')
-      projection++;
-  }
-
-  cln = soc[ClientID];
-  if (cln == NULL) {
-    ecs_SetError(&cln_dummy_result,1,cln_messages[2]);
-    return &cln_dummy_result;
-  }
-
-  /* Check if the projection is valid */
-
-  if (strncmp(projection,PROJ_LONGLAT,13) != 0) {
-    tempproj = (PJ *) cln_ProjInit(projection);
-    if(tempproj == NULL) {
-      res = &cln_dummy_result;
-      ecs_SetError(res,1,"This projection string is invalid");
-      return res;
-    }
-    pj_free(tempproj);
-  }
-
-  res = svr_SetServerProjection(&(cln->s),projection);
-  if ((res->error == 0) && ((cln->currentSelectionFamily == Matrix) || 
-			    (cln->currentSelectionFamily == Image))) {
-    cpts = NULL;
-    if (!cln_SetRasterConversion(ClientID,&cpts,nn,projective,&error_message)) {
-      res = &cln_dummy_result;
-      ecs_SetError(res,1,error_message);
-      return res;
-    }
-  }
-
-
-  return res;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * cln_GetServerProjection: Get the server projection.
  *
  * IN
@@ -1660,526 +1440,6 @@ ecs_Result *cln_GetServerProjection(ClientID)
 
   msg = svr_GetServerProjection(&(cln->s));
   return msg;
-}
-
-/*
-  ----------------------------------------------------------------------
-  
-   cln_SetClientProjection --
-   
-  	Set the target (client) projection. In return, if the operation
-  	is a success, it will return the current region transformed in
-  	the new projection.
-   
-   PARAMETERS
-      INPUT
-  	int ClientID: Client's identifier
-  	char *projection: Projection string
-   
-   RETURN_VALUE
-      ecs_Result *: A structure with the result information
-   
-   PSEUDO_CODE
-   
-   1. Verify if the client id is valid. If not, return an error
-   message
-   
-   2. Keep the old projection initiator and the different flags of the
-   client structure related to the projection and the nad.  If a
-   problem appear in the current function, the function will be able
-   to get back to is original stage.
-   
-   3. Change the client region into the projection of the source. This
-   way, when the projection will be completely set, we will be able to
-   know the region of the current region in the new projection.
-   
-   4. Set the isProjEqual (the indicator of projection to FALSE).
-   Totalitarian algorithm.
-   
-   5. Check if target (client) projection is "unknown". If it's the
-   case, set the isProjEqual to true and return a success message.
-   
-   6. Check if the target (client) projection is "longlat". If it's
-   the case
-   Begin
-      6.1. Set isTargetLL to TRUE
-   End
-   7. Else
-   Begin
-      7.1. Set isTargetLL to FALSE
-
-      7.2. Call cln_ProjInit to set the cln->target. If an error
-      occur, go to 99.
-   End
-   
-   8. Get the driver projection from the source. If an error occur,
-   return an error.
-   
-   9. Check if the source (driver) projection is "longlat". If it's
-   the case
-   Begin
-      9.1. Set isSourceLL to TRUE
-   End
-   10. Else
-   Begin
-      10.1. Set isSourceLL to FALSE
-
-      10.2. Call cln_ProjInit to set the cln->source. If an error
-      occur, go to 99.
-   End
-   
-   11. If a link to a datum converter already exist, close the old one
-   but keep the old converter information in memory if a problem
-   appear.
-   
-   12. Datum initialization. Check the string of the target projection
-   and the source projection and extract the nad item descriptor
-   (nad27 or nad83).
-   
-   13. If the nads are differents 
-   Begin
-      13.1. Extract the table indicator from the target projection.
-   
-      13.2. If the table indicator don't exist, use the default one.
-      
-      13.3. Open a link to the nad converter driver named after the
-      table indicator and call nad_init. If an error occur, return an
-      error message and goto 99.
-   End
-   
-   14. Check if an azimuth is defined in the projection definition. If
-   it's the case, get the value and set target_azimuth with the
-   value. Take care to apply a modulo of 360 to this value.
-
-   15. Change the current client region previously calculated in the
-   driver projection to the new projection. If the current region is
-   not set, use the global region. If an error occur, goto 99.
-   
-   16. Free the old source and target
-   
-   17. Return the region calculated in 15.
-   
-   99. Free the new target and source and set the projection
-   attributes to the value kept in 2. Restore also the old datum
-   environment.  Return an error message.
-
-   MOD: Bruno Savard, INFOMAR INC., bsavard@infomar.com, 1998/09/21
-   Description:  The result of ecsGetDynamicLibFunction() has been cast
-                 to type (dtfunc *).  The original cas to (void *)
-                 seems incorrect.
-  
-  ----------------------------------------------------------------------
-  */
-
-ecs_Result *cln_SetClientProjection(ClientID,projection)
-     int ClientID;
-     char *projection;
-{
-  ecs_Result *res;
-  register ecs_Client *cln;
-  char *server_proj;
-  PJ *oldtarget,*oldsource;
-  ecs_Region oldreg;
-  int oldisprojequal;
-  int oldisTargetLL;
-  int oldisSourceLL;
-  int code = 0;
-  int result;
-  char olddatumtable[10],datumtable[10];
-  char filename[15];
-  ecs_Datum oldtargetdatum=0;
-  ecs_Datum oldsourcedatum=0;
-  char *ptr,*ptr1=NULL;
-  char *temp;
-  int tempint;
-
-  if (multiblock != 0) {
-    res = &cln_dummy_result;
-    ecs_SetError(res,1,cln_messages[14]);
-    return res;
-  }
-  
-  cln = soc[ClientID];
-  if (cln == NULL) {
-    res = &cln_dummy_result;
-    ecs_SetError(res,1,cln_messages[2]);
-    return res;
-  }
-
-  if (projection != NULL) {
-    while(projection[0]==' ')
-      projection++;
-  }
-
-  /* If the old projection string is the same, don't change anything */
-
-  if (cln->target_proj != NULL && strcmp(cln->target_proj,projection) == 0) {
-    res = &cln_dummy_result;
-    ecs_SetSuccess(res);
-    return res;    
-  }
-
-  /* keep the old values */
-
-  oldisprojequal = cln->isProjEqual;
-  oldisTargetLL= cln->isTargetLL;
-  oldisSourceLL= cln->isSourceLL;
-  oldtarget = cln->target;
-  oldsource = cln->source;
-
-  /* Change the current client region to the projection of the driver */
-
-  if (cln->isCurrentRegionSet == TRUE) {
-    oldreg.north = cln->currentRegion.north;
-    oldreg.south = cln->currentRegion.south;
-    oldreg.east = cln->currentRegion.east;
-    oldreg.west = cln->currentRegion.west;
-    oldreg.ns_res = cln->currentRegion.ns_res;
-    oldreg.ew_res = cln->currentRegion.ew_res;
-    result = cln_ConvRegion(ClientID,&(oldreg),ECS_TTOS);
-    if (result != 0) {
-      code = 10;
-      goto setprojerror;
-    }
-  }
-
-
-  /* 
-   * Strategy: 
-   * Keep the old projection until the new projection is correctly set. 
-   * If a problem appear, nothing will change.
-   */
-
-  cln->isProjEqual = FALSE;
-
-  /*
-   * Set the client projection
-   */
-
-  cln->target = NULL;
-
-  /* Check if client projection is "unknown" */
-
-  if (strncmp(projection,PROJ_UNKNOWN,7) == 0) {
-    cln->isProjEqual = TRUE;
-    res = &cln_dummy_result;
-    ecs_SetGeoRegion(res,cln->currentRegion.north, 
-		     cln->currentRegion.south, 
-		     cln->currentRegion.east,
-		     cln->currentRegion.west, 
-		     cln->currentRegion.ns_res, 
-		     cln->currentRegion.ew_res);  
-    ecs_SetSuccess(res);
-    return res;    
-  }
-
-  /* Check the projection if not unknown */
-
-  if (strncmp(projection,PROJ_LONGLAT,13) != 0) {
-    cln->isTargetLL = FALSE;
-    cln->target = (PJ *) cln_ProjInit(projection);
-    if(cln->target == NULL) {
-      goto setprojerror;
-    }
-  } else {  
-    cln->isTargetLL = TRUE;
-  }
-
-  /*
-   * Get the server projection
-   */
-
-  res = cln_GetServerProjection(ClientID);
-  if ((res->res.type == AText) || (res->res.ecs_ResultUnion_u.s != NULL)) {
-    server_proj = res->res.ecs_ResultUnion_u.s;
-    while(server_proj[0]==' ')
-      server_proj++;
-  } else {
-    return res;
-  }
-
-  /*
-   * Set the server projection
-   */
-
-  cln->source = NULL;
-
-  /* Check if server projection is "unknown" */
-
-  if (strncmp(server_proj,PROJ_UNKNOWN,7) == 0) {
-    cln->isProjEqual = TRUE;
-    res = &cln_dummy_result;
-    ecs_SetGeoRegion(res,cln->currentRegion.north, 
-		     cln->currentRegion.south, 
-		     cln->currentRegion.east,
-		     cln->currentRegion.west, 
-		     cln->currentRegion.ns_res, 
-		     cln->currentRegion.ew_res);  
-    ecs_SetSuccess(res);
-    return res;    
-  }
-
-  /* Check the projection if not unknown */
-
-  if (strncmp(server_proj,PROJ_LONGLAT,13) != 0) {
-    cln->isSourceLL = FALSE;
-    cln->source = (PJ *) cln_ProjInit(server_proj);
-    if(cln->source == NULL) {
-      goto setprojerror;
-    }
-
-  } else {  
-    cln->isSourceLL = TRUE;
-  }
-
-  /*
-   * 11. If a link to a datum converter already exist, close the old one but
-   * keep the old converter in memory if a problem appear.
-   */
-
-  if (cln->dthandle != NULL && (cln->nad_close != NULL)) {
-    (cln->nad_close)(cln->privdatuminfo);
-    ecs_CloseDynamicLib(cln->dthandle);
-  }      
-  strcpy(olddatumtable,cln->datumtable);
-  oldtargetdatum = cln->targetdatum;
-  oldsourcedatum = cln->sourcedatum;
-  strcpy(cln->datumtable,"");
-  cln->dthandle = NULL;
-
-  /*
-   * 12. Datum initialization. Check the string of the target projection
-   * and the source projection and extract the nad item descriptor (nad27
-   * or nad83).
-   */
-
-  cln->targetdatum = cln_GetDatumInfo(projection);
-  cln->sourcedatum = cln_GetDatumInfo(server_proj);
-
-  if ((cln->targetdatum == nad27 && cln->sourcedatum == nad83) ||
-      (cln->targetdatum == nad83 && cln->sourcedatum == nad27)) {
-    /*
-     * 13.1. Extract the table indicator from the target projection. 
-     */
-    
-    strcpy(datumtable,"conus");
-    ptr = projection;
-    while(ptr[0] != '\0') {
-#ifdef _WINDOWS
-      if (_strnicmp(ptr,"+datumconv",10) == 0) 
-#else
-	if (strncasecmp(ptr,"+datumconv",10) == 0)
-#endif
-	  {
-	    ptr+=11;
-	    if (ptr != '\0') {
-	      ptr1 = ptr;
-	      while(ptr1[0] != '\0' && ptr1[0] != ' ') 
-		ptr1++;
-	    }
-	    if ((int) (ptr1-ptr) < 10) {
-	      strncpy(datumtable,ptr,(int) (ptr1-ptr));
-	      datumtable[(int) (ptr1-ptr)] = '\0';
-	    } 
-	  }
-      ptr++;
-    }    
-
-#ifdef _WINDOWS
-    if (_stricmp(datumtable,"canada") == 0)
-#else
-      if (strncasecmp(datumtable,"canada",10) == 0)
-#endif
-	{
-	  strcpy(filename,"dtcanada");
-	} else {
-	  strcpy(filename,"dtusa");
-	}
-    
-    cln->dthandle = ecs_OpenDynamicLib(filename);
-    if (cln->dthandle != NULL) {
-/**MOD START**/
-      cln->nad_init = (dtfunc *) ecs_GetDynamicLibFunction(cln->dthandle,"dyn_nad_init");
-      cln->nad_forward = (dtfunc *) ecs_GetDynamicLibFunction(cln->dthandle,"dyn_nad_forward");
-      cln->nad_reverse = (dtfunc *) ecs_GetDynamicLibFunction(cln->dthandle,"dyn_nad_reverse");
-      cln->nad_close = (dtfunc *) ecs_GetDynamicLibFunction(cln->dthandle,"dyn_nad_close");
-/**MOD END**/
-
-      if (cln->nad_init == NULL || cln->nad_forward == NULL ||
-	  cln->nad_reverse == NULL || cln->nad_close == NULL) {
-      } else {
-	if ((cln->nad_init)(&(cln->privdatuminfo),datumtable) != TRUE) {
-	}
-      }
-    } 
-  }
-
-  /*
-    Check if in the target there is a azimuth defined
-    */
-
-  ptr = projection;
-  cln->target_azimuth = 0.0;
-  while(ptr[0] != '\0') {
-#ifdef _WINDOWS
-    if (_strnicmp(ptr,"+azimuth",8) == 0) 
-#else
-      if (strncasecmp(ptr,"+azimuth",8) == 0)
-#endif
-	{
-	  ptr+=9;
-	  if (ptr != '\0') {
-	    sscanf(ptr,"%d",&tempint);
-	    cln->target_azimuth = (double) tempint;
-	    cln->target_azimuth = cln->target_azimuth*PI/180.0;
-	    cln->sinazimuth = sin(cln->target_azimuth);
-	    cln->cosazimuth = cos(cln->target_azimuth);
-	  }
-	}
-    ptr++;
-  }
-
-  /*
-   * Compare both projections and see if they are equals
-   */
-
-  cln->isProjEqual = cln_CompareProjections(ClientID);
-
-  /*
-   * Get the global bound and put it on currentRegion
-   */
-
-  /*
-   * Change the current client region previously calculated 
-   * in the driver projection to the new projection
-   */
-
-  if (cln->isCurrentRegionSet == TRUE) {
-    if (cln_ConvRegion(ClientID,&oldreg,ECS_STOT) == 0) {
-      cln->currentRegion.north  = oldreg.north;
-      cln->currentRegion.south  = oldreg.south;
-      cln->currentRegion.east   = oldreg.east;
-      cln->currentRegion.west   = oldreg.west;
-      cln->currentRegion.ns_res = oldreg.ns_res;
-      cln->currentRegion.ew_res = oldreg.ew_res;  
-      res = cln_SelectRegion(ClientID,&(cln->currentRegion));
-    } else {
-      code = 10;
-      goto setprojerror;
-    }
-  } else {
-    res = cln_GetGlobalBound(ClientID);
-    if ((res->error == 0) && (res->res.type == GeoRegion)) {
-      cln->currentRegion.north  = ECSRESULT(res).gr.north;
-      cln->currentRegion.south  = ECSRESULT(res).gr.south;
-      cln->currentRegion.east   = ECSRESULT(res).gr.east;
-      cln->currentRegion.west   = ECSRESULT(res).gr.west;
-      cln->currentRegion.ns_res = ECSRESULT(res).gr.ns_res;
-      cln->currentRegion.ew_res = ECSRESULT(res).gr.ew_res;
-      
-      res = cln_SelectRegion(ClientID,&(cln->currentRegion));
-    } else {
-      code = 11;
-      goto setprojerror;
-    }
-  }
-
-  if (cln->mask != NULL) {
-    if (cln->mask->c.c_val != NULL)
-      free(cln->mask->c.c_val);
-    free(cln->mask);
-    cln->mask = NULL;
-  }
-
-  temp = malloc(strlen(projection)+1);
-  if (temp == NULL) {
-    code = 2;
-    goto setprojerror;
-  }
-  if (cln->target_proj != NULL)
-    free(cln->target_proj);
-  cln->target_proj = temp;
-  strcpy(cln->target_proj,projection);
-
-  if (oldtarget != NULL) 
-    pj_free(oldtarget);
-  if (oldsource != NULL) 
-    pj_free(oldsource);
-
-  res = &cln_dummy_result;
-  ecs_SetGeoRegion(res,cln->currentRegion.north, 
-		   cln->currentRegion.south, 
-		   cln->currentRegion.east,
-		   cln->currentRegion.west, 
-		   cln->currentRegion.ns_res, 
-		   cln->currentRegion.ew_res);  
-
-  ecs_SetSuccess(res);
-  return res;
-
-setprojerror:
-
-  if (cln->target != NULL) 
-    pj_free(cln->target);      
-  if (cln->source != NULL) 
-    pj_free(cln->source);      
-  cln->isProjEqual = oldisprojequal;      
-  cln->isTargetLL  = oldisTargetLL;
-  cln->isSourceLL  = oldisSourceLL;
-  cln->target      = oldtarget;
-  cln->source      = oldsource;
-
-  /*
-   * Datum reinitiator
-   */
-
-  if (strlen(olddatumtable) != 0) {
-#ifdef _WINDOWS
-    if (_stricmp(olddatumtable,"canada") == 0)
-#else
-      if (strncasecmp(olddatumtable,"canada",10) == 0)
-#endif
-	{
-	  strcpy(filename,"dtcanada");
-	} else {
-	  strcpy(filename,"dtusa");
-	}
-    
-
-    cln->dthandle = ecs_OpenDynamicLib(filename);
-
-    if (cln->dthandle != NULL) {
-      cln->dthandle = NULL;
-    } else {
-      cln->nad_init = (void *) ecs_GetDynamicLibFunction(cln->dthandle,"dyn_nad_init");
-      cln->nad_forward = (void *) ecs_GetDynamicLibFunction(cln->dthandle,"dyn_nad_forward");
-      cln->nad_reverse = (void *) ecs_GetDynamicLibFunction(cln->dthandle,"dyn_nad_reverse");
-      cln->nad_close = (void *) ecs_GetDynamicLibFunction(cln->dthandle,"dyn_nad_close");
-      
-      if (cln->nad_init == NULL || cln->nad_forward == NULL ||
-	  cln->nad_reverse == NULL || cln->nad_close == NULL) {
-	ecs_CloseDynamicLib(cln->dthandle);
-	cln->dthandle = NULL;
-      } else {
-	if ((cln->nad_init)(&(cln->privdatuminfo),olddatumtable) != TRUE) {
-	  ecs_CloseDynamicLib(cln->dthandle);
-	  cln->dthandle = NULL;	  
-	}
-      }
-    }
-  } else {
-    cln->dthandle = NULL;
-  }
-  cln->targetdatum = oldtargetdatum;
-  cln->sourcedatum = oldsourcedatum;
-  
-  res = &cln_dummy_result;
-  if (code == 0)
-    ecs_SetError(res,1,cln_messages[4]);
-  else
-    ecs_SetError(res,1,cln_messages[code]);
-
-  return res;  
 }
 
 /*
@@ -2239,14 +1499,14 @@ ecs_Datum cln_GetDatumInfo(projection)
   while(ptr[0]!='\0') {
     
 #ifdef _WINDOWS
-    if (_strnicmp(ptr,"+datum=nad27",12) == 0) 
+    if (strnicmp(ptr,"+datum=nad27",12) == 0) 
 #else
       if (strncasecmp(ptr,"+datum=nad27",12) == 0)
 #endif
 	return nad27;
 
 #ifdef _WINDOWS
-    if (_strnicmp(ptr,"+datum=nad83",12) == 0) 
+    if (strnicmp(ptr,"+datum=nad83",12) == 0) 
 #else
       if (strncasecmp(ptr,"+datum=nad83",12) == 0)
 #endif
@@ -2325,124 +1585,6 @@ char *cln_GetTclProc(ClientID)
 /*
  *----------------------------------------------------------------------
  *
- *  cln_ProjInit: Initialize a projection
- *
- *  IN
- *	char *d: Projection name
- *
- *  OUT
- *	return PJ *: New projection structure. If NULL, the operation
- *	is a failure.
- *
- *----------------------------------------------------------------------
- */
-
-PJ *cln_ProjInit(d)
-     char *d;
-{
-  int i,n;
-  char **tableau;
-  char *l;
-  int longueur;
-  char *c;
-  PJ *retour;
-  
-  if ((c = (char *) malloc(strlen(d)+3)) == NULL) {
-    return NULL;
-  }
-  strcpy(c,d);
-
-  n=0;
-  l = c;
-
-  longueur = strlen(c);
-  if ((tableau = (char **) malloc(sizeof(char *)*longueur)) == NULL) {
-    free(c);
-    return NULL;
-  }
-  for(i=0; i<longueur; i++) {
-    if (c[i] == ' ') {
-      c[i]= '\0';
-      tableau[n] = l;
-      l = &c[i+1];
-      if (strncmp(tableau[n],"+",1) == 0) 
-	tableau[n]++;
-      n++;
-    }
-  }
-  
-  if (strlen(l)>0) {
-    tableau[n] = l;
-    if (strncmp(tableau[n],"+",1) == 0) 
-      tableau[n]++;
-    n++;
-  }
-
-  retour = (PJ *) pj_init(n, (char **) tableau);
-  free(c);
-  free(tableau);
-
-  return retour;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- *  cln_CompareProjections: Compare target and source projections of a client
- *  and indicate if they are equals.
- *
- *  IN
- *	int ClientID: Client's identifier
- *
- *  OUT
- *	return int: Flag indicate if both projections are equals.
- *
- *----------------------------------------------------------------------
- */
-
-int cln_CompareProjections(ClientID)
-     int ClientID;
-{
-  ecs_Region *gr;
-  register ecs_Client *cln;
-  ecs_Result *res;
-
-  cln = soc[ClientID];
-
-  if (cln == NULL)
-    return FALSE;
-
-  if(cln->isTargetLL == TRUE ||
-     cln->isSourceLL == TRUE)
-    return FALSE;
-
-  /*
-   * Strategy: Extract the default region and compare the four corners in it.
-   * If the four corners are equivalent in both projections, the projections
-   * will be considered as equivalent.
-   */
-
-  res = svr_GetGlobalBound(&(cln->s));
-  if ((res->error != 0) || (res->res.type != GeoRegion)) {
-    return FALSE;
-  }
-
-  gr = &(res->res.ecs_ResultUnion_u.gr);
-
-  if (!cln_PointValid(ClientID,gr->west,gr->south) &&
-      !cln_PointValid(ClientID,gr->east,gr->north) &&
-      !cln_PointValid(ClientID,gr->west,gr->north) &&
-      !cln_PointValid(ClientID,gr->east,gr->south)) {
-    return FALSE;
-  }
-  
-  return TRUE;
-}
-
-
-/*
- *----------------------------------------------------------------------
- *
  * cln_UpdateMaxRegion: The function update a geographic region "gr"
  * in a projection "A" and update it with a point (x,y) taken
  * in a projection "B". If "direction" is ECS_TTOS, projection "A" will
@@ -2473,19 +1615,8 @@ int cln_UpdateMaxRegion(ClientID,x,y,gr,direction,first)
      int direction;
      int first;
 {
-  int error_code = 0;
   double temp_x = x;
   double temp_y = y;
-
-  if (direction == ECS_STOT) {
-    if ((error_code = cln_ConvStoT(ClientID, &temp_x, &temp_y)) != 0) {
-      return error_code;
-    }
-  } else {
-    if ((error_code = cln_ConvTtoS(ClientID, &temp_x, &temp_y)) != 0) {
-      return error_code;
-    }
-  }
 
   if (first==TRUE) {
     gr->north = temp_y;
@@ -2584,695 +1715,6 @@ int cln_ConvMBR(ClientID,xl,yl,xu,yu,direction)
 /*
  *----------------------------------------------------------------------
  *
- * cln_ConvRegion: Convert a geographic region from a projection "A" to 
- * a projection "B". If "direction" is ECS_TTOS, projection "A" will
- * be the target projection and "B" the source. If "direction" is ECS_TTOS, 
- * projection "A" will be the target projection and "B" the source. 
- *
- * IN
- *	int ClientID : Client's identifier
- *	gr           : Geographical region to convert (already allocated)
- *	direction    : Direction of convertion
- *
- *  OUT
- *	return int   : If 0, the operation is a success. Hense,
- *		       an error code is send. This error code correspond
- *		       to a position in cln_messages.
- *
- *----------------------------------------------------------------------
- */
-
-int cln_ConvRegion(ClientID,gr,direction)
-     int ClientID;
-     ecs_Region *gr;
-     int direction;
-{
-  double width,height;
-  int ret = 0;
-  int intwidth,intheight;
-  register ecs_Client *cln;
-  double ox,oy,dx,dy,temp;
-  int i;
-
-  cln = soc[ClientID];
-  if (cln == NULL)
-    return 2;
-
-  width = (gr->east - gr->west) / gr->ew_res;
-  height = (gr->north - gr->south) / gr->ns_res;
-
-  intwidth = (int) floor(width+0.5);
-  intheight = (int) floor(height+0.5);
-
-  /*
-   * Calculate resolution. For that, calculate four points in
-   * the middle of the original region. Convert these points
-   * and calculate the resolution.
-   */
-
-  /* Calculate ew_res */
-
-  ox = gr->west;
-  dx = gr->east - 0.00001;
-  temp = (ox + dx)/2.0;
-  oy = dy = (gr->north + gr->south) / 2.0;
-
-  gr->ew_res = 1.0;
-  for(i=0;i<4;i++) {
-    if (direction == ECS_STOT) {
-      if ((cln_ConvStoT(ClientID, &ox, &oy) == 0) &&
-	  (cln_ConvStoT(ClientID, &dx, &dy) == 0)) {
-	gr->ew_res = (sqrt(((dx-ox)*(dx-ox)) + ((dy-oy)*(dy-oy))) / 
-		      (width/(i+1)));
-	break;
-      }
-    } else {
-      if ((cln_ConvTtoS(ClientID, &ox, &oy) == 0) &&
-	  (cln_ConvTtoS(ClientID, &dx, &dy) == 0)) {
-	gr->ew_res = (sqrt(((dx-ox)*(dx-ox)) + ((dy-oy)*(dy-oy))) / 
-		      (width/(i+1)));
-	break;
-      }
-    }
-    /* Divide the distance to the central point by 2 */
-    
-    ox = ox + temp / 2.0;
-    dx = dx + temp / 2.0;
-  }
-
-  /* Calculate ns_res */
-
-  oy = gr->south;
-  dy = gr->north - 0.00001;
-  temp = (oy + dy) / 2.0;
-  ox = dx = (gr->west + gr->east) / 2.0;
-
-  gr->ns_res = 1.0;
-  for(i=0;i<4;i++) {
-    if (direction == ECS_STOT) {
-      if ((cln_ConvStoT(ClientID, &ox, &oy) == 0) &&
-	  (cln_ConvStoT(ClientID, &dx, &dy) == 0)) {
-	gr->ns_res = (sqrt(((dx-ox)*(dx-ox)) + ((dy-oy)*(dy-oy))) / 
-		      (height/(i+1)));
-	break;
-      }
-    } else {
-      if ((cln_ConvTtoS(ClientID, &ox, &oy) == 0) &&
-	  (cln_ConvTtoS(ClientID, &dx, &dy) == 0)) {
-	gr->ns_res = (sqrt(((dx-ox)*(dx-ox)) + ((dy-oy)*(dy-oy))) / 
-		      (height/(i+1)));
-	break;
-      }
-    }
-    /* Divide the distance to the central point by 2 */
-    
-    oy = oy + temp / 2.0;
-    dy = dy + temp / 2.0;
-  }
-
-  /* Calculate bounding box */
-
-  ret = cln_ConvMBR(ClientID,&(gr->west),&(gr->south),
-		    &(gr->east),&(gr->north),direction);
-
-  /* Check the resolution. If the new width and height of the 
-     region is 10X smaller than the original one, then simply
-     make the calculation with the width and the height. Also
-     check if the resolution is negative */
-
-  gr->ew_res = (gr->east - gr->west)/(double) intwidth;
-  gr->ns_res = (gr->north - gr->south)/(double) intheight;
-
-  return ret;
-}     
-
-/*
-  ----------------------------------------------------------------------
-  
-  
-   FUNCTION_INFORMATION
-  
-   NAME
-      cln_ConvTtoS
-      
-   DESCRIPTION
-      Convert a geographical point from the target geographic
-      projection (client) to the source projectioné
-   END_DESCRIPTION
-  
-   PARAMETERS
-      INPUT
-         int ClientID: Client's identifier
-      IN/OUT
-         double *X: Pointer to X, the x coordinate of the geographic point to convert
-         double *Y: Pointer to Y, the y coordinate of the geographic point to convert
-  
-   END_PARAMETERS
-  
-   RETURN_VALUE
-      int: If 0, the operation is a success. Hense an error code is send. This error code correspond to a position in cln_messages.
-  
-   END_FUNCTION_INFORMATION
-  
-   PSEUDO_CODE
-  
-    1. If the projections are not equal (isProjEqual == FALSE)
-    Begin
-
-       1.1. Apply the conter-rotation if the target_azimuth is different of 0.
-       The equations are x1 = x*cos(target_azimuth) + y*sin(target_azimuth)
-       and y1 = y*cos(target_azimuth) - x*sin(target_azimuth). 
- 
-       1.2. If the target projection is not longlat
-       Begin
-           1.2.1. Convert the point using pj_inv. If an error occur,
-           return an error.
-       End
-       1.3. Else
-       Begin
-           1.3.1. Check the range of the point. If outside, return an error
-       End
-  
-       At this point, the coordinate is in longlat
-       
-       1.4. Convert the point nad with nad_converter if the link exist.
-       
-       1.5. If the target projection is not longlat
-       Begin
-           1.5.1. Convert the point using pj_fwd. If an error occur,
-           return an error.
-       End
-       1.6. Else
-       Begin
-           1.6.1. Check the range of the point. If outside, return an error
-       End
-    End
-  
-  ----------------------------------------------------------------------
- */
-
-int cln_ConvTtoS(ClientID, X, Y)
-     int ClientID;
-     double *X;
-     double *Y;
-{
-  projUV data1,data2;
-  register ecs_Client *cln;
-  double temp_x,temp_y,temp1_x,temp1_y;
-
-  cln = soc[ClientID];
-
-  if (cln == NULL)
-    return 2;
-  
-  if (cln->isProjEqual == FALSE) {
-
-    /*
-      Apply the conter-rotation
-      */
-    
-    temp_x = *X;
-    temp_y = *Y;
-
-    if (cln->target_azimuth != 0.0) {
-      temp1_x = ((temp_x * cln->cosazimuth) - 
-		 temp_y * cln->sinazimuth);
-      temp1_y = ((temp_x * cln->sinazimuth) + 
-		 temp_y * cln->cosazimuth);
-      temp_x = temp1_x;
-      temp_y = temp1_y;
-    }
-
-    /*
-      Projection change
-      */
-
-    if (cln->isTargetLL == FALSE) {
-      data1.u = temp_x;
-      data1.v = temp_y;
-      data2 = pj_inv(data1,cln->target);
-      if ((data2.u == HUGE_VAL) || (data2.v == HUGE_VAL)) 
-	return 8;
-    } else {
-      if (temp_y <= -90.0)
-	temp_y = -89.9999;
-      if (temp_y >= 90.0)
-	temp_y = 89.9999;
-      if (temp_x <= -180.0)
-	temp_x = -179.9999;
-      if (temp_x >= 180.0)
-	temp_x = 179.9999;
-      data2.u = temp_x * DEG_TO_RAD;
-      data2.v = temp_y * DEG_TO_RAD;
-    }
-
-    if (cln->dthandle != NULL) {
-      temp_x = data2.u * RAD_TO_DEG;
-      temp_y = data2.v * RAD_TO_DEG;
-      if (cln->targetdatum == nad27 && cln->sourcedatum == nad83) {
-	(cln->nad_forward)(cln->privdatuminfo,&temp_x,&temp_y);
-      }
-      if (cln->targetdatum == nad83 && cln->sourcedatum == nad27) {
-	(cln->nad_reverse)(cln->privdatuminfo,&temp_x,&temp_y);
-      }
-      data2.u = temp_x * DEG_TO_RAD;
-      data2.v = temp_y * DEG_TO_RAD;
-    }
-
-    if (cln->isSourceLL == FALSE) {
-      data1 = pj_fwd(data2,cln->source);
-      if (data1.u == HUGE_VAL || data1.v == HUGE_VAL) {
-	if (data2.v >= 1.5707)
-	  data2.v = 1.5707;
-	if (data2.v <= -1.5707)
-	  data2.v = -1.5707;
-	data1 = pj_fwd(data2,cln->source);
-	if (data1.u == HUGE_VAL || data1.v == HUGE_VAL) {
-	  return 8;
-	}
-      }
-      *X = data1.u;
-      *Y = data1.v;
-    } else {
-      *X = data2.u * RAD_TO_DEG;
-      *Y = data2.v * RAD_TO_DEG;
-      if (*X < -180.0) 
-	*X = -180.0;
-      if (*X > 180.0) 
-	*X = 180.0;
-      if (*Y < -90.0)
-	*Y = -90.0;
-      if (*Y > 90.0)
-	*Y = 90.0;
-    }
-  }
-  return 0;
-}
-
-
-/*
-  ----------------------------------------------------------------------
-  
-   FUNCTION_INFORMATION
-  
-   NAME
-      cln_ConvStoT
-      
-   DESCRIPTION
-      Convert a geographical point from the source geographic
-      projection (client) to the target projection.
-   END_DESCRIPTION
-  
-   PARAMETERS
-      INPUT
-         int ClientID: Client's identifier
-      IN/OUT
-         double *X: Pointer to X, the x coordinate of the geographic point to convert
-         double *Y: Pointer to Y, the y coordinate of the geographic point to convert
-  
-   END_PARAMETERS
-  
-    RETURN_VALUE
-      int: If 0, the operation is a success. Hense an error code is send. This error code correspond to a position in cln_messages.
-  
-   END_FUNCTION_INFORMATION
-  
-   PSEUDO_CODE
-  
-    1. If the projections are not equal (isProjEqual == FALSE)
-    Begin
-       1.1. If the source projection is not longlat
-       Begin
-           1.1.1. Convert the point using pj_inv. If an error occur,
-           return an error.
-       End
-       1.2. Else
-       Begin
-           1.2.1. Check the range of the point. If outside, return an error
-       End
-  
-       At this point, the coordinate is in longlat
-        
-       1.3. Convert the point nad with nad_converter if the link exist.
-       
-       1.4. If the source projection is not longlat
-       Begin
-           1.4.1. Convert the point using pj_fwd. If an error occur,
-           return an error.
-       End
-       1.5. Else
-       Begin
-           1.5.1. Check the range of the point. If outside, return an error
-       End
-
-       1.6. Apply the rotation if the cln->target_azimuth is different of 0.
-       The equations are x1 = x*cos(target_azimuth) - y*sin(target_azimuth)
-       and y1 = y*cos(target_azimuth) + x*sin(target_azimuth). Take care also
-       of the quadrant where the angle is.
- 
-    End
-  
-  ----------------------------------------------------------------------
- */
-
-int cln_ConvStoT(ClientID, X, Y)
-     int ClientID;
-     double *X;
-     double *Y;
-{
-  projUV data1,data2;
-  register ecs_Client *cln;
-  double temp_x,temp_y,temp1_x,temp1_y;
-
-  cln = soc[ClientID];
-  
-  if (cln == NULL)
-    return 2;
-
-  if (cln->isProjEqual == FALSE) {
-
-    /*
-      Projection change
-      */
-
-    if (cln->isSourceLL == FALSE) {
-      data1.u = *X;
-      data1.v = *Y;
-      data2 = pj_inv(data1,cln->source);
-      if (data2.u == HUGE_VAL || data2.v == HUGE_VAL) 
-	return 8;
-    } else {
-      if (*Y <= -90.0)
-	*Y = -89.9999;
-      if (*Y >= 90.0)
-	*Y = 89.9999;
-      if (*X <= -180.0)
-	*X = -179.9999;
-      if (*X >= 180.0)
-	*X = 179.9999;
-      data2.u = *X * DEG_TO_RAD;
-      data2.v = *Y * DEG_TO_RAD;
-    }
-
-    if (cln->dthandle != NULL) {
-      temp_x = data2.u * RAD_TO_DEG;
-      temp_y = data2.v * RAD_TO_DEG;
-      if (cln->targetdatum == nad27 && cln->sourcedatum == nad83) {
-	(cln->nad_reverse)(cln->privdatuminfo,&temp_x,&temp_y);
-      }
-      if (cln->targetdatum == nad83 && cln->sourcedatum == nad27) {
-	(cln->nad_forward)(cln->privdatuminfo,&temp_x,&temp_y);
-      }
-      data2.u = temp_x * DEG_TO_RAD;
-      data2.v = temp_y * DEG_TO_RAD;
-    }
-
-    if (cln->isTargetLL == FALSE) {
-      data1 = pj_fwd(data2,cln->target);
-      if (data1.u == HUGE_VAL || data1.v == HUGE_VAL) {
-	if (data2.v >= 1.5707)
-	  data2.v = 1.5707;
-	if (data2.v <= -1.5707)
-	  data2.v = -1.5707;
-	data1 = pj_fwd(data2,cln->target);
-	if (data1.u == HUGE_VAL || data1.v == HUGE_VAL) {
-	  return 8;
-	}
-      }
-      *X = data1.u;
-      *Y = data1.v;
-    } else {
-      *X = data2.u * RAD_TO_DEG;
-      *Y = data2.v * RAD_TO_DEG;
-      if (*X < -180.0) 
-	*X = -180.0;
-      if (*X > 180.0) 
-	*X = 180.0;
-      if (*Y < -90.0)
-	*Y = -90.0;
-      if (*Y > 90.0)
-	*Y = 90.0;
-    }
-
-    /*
-      Apply the conter-rotation
-      */
-    
-    temp_x = *X;
-    temp_y = *Y;
-
-    if (cln->target_azimuth != 0.0) {
-      temp1_x = (temp_x * cln->cosazimuth + 
-		 temp_y * cln->sinazimuth);
-      temp1_y = (temp_y * cln->cosazimuth - 
-		 temp_x * cln->sinazimuth);
-      *X = temp1_x;
-      *Y = temp1_y;
-    }
-
-
-  }
-  return 0;
-}
-
-
-/*
- *----------------------------------------------------------------------
- *
- *  cln_ChangeProjection: Change the geographic projection of an object
- *  from source projection to target projection.
- *
- *  IN
- *	int ClientID : Client's identifier
- *	ecs_Object *obj: Pointer to object
- *      
- *  OUT
- *	return int   : error code. If 0, the operation is succes. Else,
- *	an error code correspond to a position in the cln_messages.
- *
- *----------------------------------------------------------------------
- */
-
-int cln_ChangeProjection(ClientID,obj)
-     int ClientID;
-     ecs_Object *obj;
-{ 
-  int code;
-  register ecs_Client *cln;
-
-  cln = soc[ClientID];
-
-  if (cln->isProjEqual == TRUE)
-    return 0;
-
-  /* Change the MBR of the object */
-
-  code = cln_ConvMBR(ClientID,&(obj->xmin),&(obj->ymin),
-		     &(obj->xmax),&(obj->ymax),ECS_STOT);
-  if (code != 0)
-    return code;
-
-  /* Change the geom attribute */
-
-  switch (obj->geom.family) {
-  case Area:
-    code = cln_ChangeProjectionArea(ClientID,
-				    &(obj->geom.ecs_Geometry_u.area));
-    break;
-  case Line:
-    code = cln_ChangeProjectionLine(ClientID,
-				    &(obj->geom.ecs_Geometry_u.line));
-    break;
-  case Point:
-    code = cln_ChangeProjectionPoint(ClientID,
-				     &(obj->geom.ecs_Geometry_u.point));
-    break;
-  case Text:
-    code = cln_ChangeProjectionText(ClientID,
-				    &(obj->geom.ecs_Geometry_u.text));
-    break;
-  case Matrix:
-    code = cln_ChangeProjectionMatrix(ClientID,
-				      &(obj->geom.ecs_Geometry_u.matrix));
-    break;
-  case Image:
-    code = cln_ChangeProjectionImage(ClientID,
-				     &(obj->geom.ecs_Geometry_u.image));
-    break;
-  default:
-    break;
-  }
-  return code;
-}
-
-
-/*
- *----------------------------------------------------------------------
- *
- *  cln_ChangeProjectionArea: Change the geographic projection of an area
- *  from source projection to target projection.
- *
- *  IN
- *      int ClientID : Client's identifier
- *      ecs_Area *obj: Pointer to area object
- *      
- *  OUT
- *      return int   : error code. If 0, the operation is success. Else,
- *      an error code correspond to a position in the cln_messages.
- *
- *----------------------------------------------------------------------
- */
-
-int cln_ChangeProjectionArea(ClientID,obj)
-     int ClientID;
-     ecs_Area *obj;
-{ 
-  register int i,j;
-  int code;
-
-  for(i=0;(int) i<(int) obj->ring.ring_len; i++) {
-    if ((code = cln_ConvStoT(ClientID, &(obj->ring.ring_val[i].centroid.x), 
-			     &(obj->ring.ring_val[i].centroid.y))) != 0) {
-      return code;
-    }  
-
-    for(j=0; (int) j< (int) obj->ring.ring_val[i].c.c_len; j++) {
-      if ((code = cln_ConvStoT(ClientID, 
-			       &(obj->ring.ring_val[i].c.c_val[j].x), 
-			       &(obj->ring.ring_val[i].c.c_val[j].y))) != 0) {
-	return code;
-      }  
-    }    
-  }
-
-  return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * cln_ChangeProjectionLine: Change the geographic projection of an line
- * from source projection to target projection.
- *
- * IN
- *	int ClientID : Client's identifier
- *	ecs_Line *obj: Pointer to line object
- *      
- * OUT
- *	return int   : error code. If 0, the operation is success. Else,
- *	an error code correspond to a position in the cln_messages.
- *
- *----------------------------------------------------------------------
- */
-
-int cln_ChangeProjectionLine(ClientID,obj)
-     int ClientID;
-     ecs_Line *obj;
-{ 
-  register int i;
-  int code;
-
-  for(i=0;(int) i<(int) obj->c.c_len; i++) {
-    if ((code = cln_ConvStoT(ClientID, 
-			     &(obj->c.c_val[i].x), 
-			     &(obj->c.c_val[i].y))) != 0) {
-      return code;
-    }  
-  }
-
-  return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * cln_ChangeProjectionPoint: Change the geographic projection of an point
- * from source projection to target projection.
- *
- * IN
- *	int ClientID : Client's identifier
- *	ecs_Point *obj: Pointer to point object
- *      
- *  OUT
- *	return int   : error code. If 0, the operation is success. Else,
- *	an error code correspond to a position in the cln_messages.
- *
- *----------------------------------------------------------------------
- */
-
-int cln_ChangeProjectionPoint(ClientID,obj)
-     int ClientID;
-     ecs_Point *obj;
-{ 
-  int code;
-
-  if ((code = cln_ConvStoT(ClientID,&(obj->c.x),&(obj->c.y))) != 0) {
-    return code;
-  }  
-
-  return 0;
-}
-
-
-/*
- *----------------------------------------------------------------------
- *
- * cln_ChangeProjectionText: Change the geographic projection of an text
- * from source projection to target projection.
- *
- * IN
- *	int ClientID : Client's identifier
- *	ecs_Text *obj: Pointer to text object
- *      
- * OUT
- *	return int   : error code. If 0, the operation is success. Else,
- *	an error code correspond to a position in the cln_messages.
- *
- *----------------------------------------------------------------------
- */
-
-int cln_ChangeProjectionText(ClientID,obj)
-     int ClientID;
-     ecs_Text *obj;
-{ 
-  int code;
-
-  if ((code = cln_ConvStoT(ClientID,&(obj->c.x),&(obj->c.y))) != 0) {
-    return code;
-  }  
-
-  return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * cln_ChangeProjectionMatrix: Change the geographic projection of an matrix
- * from source projection to target projection.
- *
- * IN
- *	int ClientID : Client's identifier
- *	ecs_Matrix *obj: Pointer to matrix object
- *      
- * OUT
- *	return int   : error code. If 0, the operation is success. Else,
- *	an error code correspond to a position in the cln_messages.
- *
- *----------------------------------------------------------------------
- */
-
-int cln_ChangeProjectionMatrix(ClientID,obj)
-     int ClientID;
-     ecs_Matrix *obj;
-{ 
-  ClientID = 0;
-  obj = NULL;
-  return 0;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * cln_ChangeProjectionImage: Change the geographic projection of an image
  * from source projection to target projection.
  *
@@ -3331,9 +1773,6 @@ int cln_PointValid(ClientID, x, y)
   oy = y;
   cx = x;
   cy = y;
-  if (cln_ConvStoT(ClientID, &cx, &cy) != 0) {
-    return FALSE;
-  }
   dx = ox-cx;
   if (dx<0) 
     dx*=-1;
@@ -3345,12 +1784,8 @@ int cln_PointValid(ClientID, x, y)
   if (oy<0)
     oy*=-1;
 
-  if (cln->dthandle == NULL) {
-    if (((dx/ox) > COMPARETOLERANCE) || ((dy/oy) > COMPARETOLERANCE)) {
+  if (((dx/ox) > COMPARETOLERANCE) || ((dy/oy) > COMPARETOLERANCE)) {
       return FALSE;
-    } 
-  } else {
-    return FALSE;
   }
 
   return TRUE;
@@ -3869,7 +2304,6 @@ int cln_CalcCtlPoint(ClientID,server_region,SI,SJ,pt)
 {
   double X,Y;
   register ecs_Client *cln;
-  int error_code;
 
   cln = soc[ClientID];
   if (cln == NULL) {
@@ -3880,12 +2314,6 @@ int cln_CalcCtlPoint(ClientID,server_region,SI,SJ,pt)
 
   X = cln->currentRegion.west + SI * cln->currentRegion.ew_res;
   Y = cln->currentRegion.north - SJ * cln->currentRegion.ns_res;
-  
-  /* Convert this point in server projection */
-
-  if ((error_code = cln_ConvTtoS(ClientID, &X, &Y)) != 0) {
-    return FALSE;        
-  }
 
   /* Found the corresponding position of this point in server region */
 
@@ -3973,7 +2401,6 @@ int cln_CalcCtlPoints(ClientID,pts,error_message)
   server_region.west = cln->currentRegion.west;
   server_region.ns_res = cln->currentRegion.ns_res;
   server_region.ew_res = cln->currentRegion.ew_res;
-  cln_ConvRegion(ClientID,&(server_region),ECS_TTOS);
 
   /* Calculate raster width and height */
 
@@ -4171,12 +2598,6 @@ int cln_SetRasterConversion(ClientID,pts,resampling,trans,error_message)
   }
   
   /* Puts information in ecs_RasterConversion */
-
-  if(cln->isTargetLL == TRUE &&
-     cln->isSourceLL == TRUE)
-    rc.isProjEqual = TRUE;
-  else
-    rc.isProjEqual = cln->isProjEqual;
   rc.r_method = resampling;
   rc.t_method = trans;
   rc.coef.coef_len = 8;
@@ -4335,8 +2756,8 @@ ecs_Result *cln_LoadCapabilities(int ClientID, const char *arg,
       ecs_SetSuccess(&cln_dummy_result);
       
       cln->have_server_capabilities = TRUE;
-      strcpy( cln->server_version_str, "3.0" );
-      cln->server_version = 3000;
+      strcpy( cln->server_version_str, "4.0" );
+      cln->server_version = 4000;
       
       cln->have_capabilities = TRUE;
 
@@ -4347,7 +2768,7 @@ ecs_Result *cln_LoadCapabilities(int ClientID, const char *arg,
    * Make a copy of the document so nothing weird happens as our static
    * result object is modified during parsing.
    */
-  cap_doc = _strdup(ECSTEXT(result));
+  cap_doc = strdup(ECSTEXT(result));
   if (cap_doc == NULL) {
       ecs_SetError(&cln_dummy_result,1,cln_messages[1]);
       return &cln_dummy_result;

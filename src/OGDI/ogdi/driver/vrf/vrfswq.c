@@ -17,8 +17,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: vrfswq.c,v $
- * Revision 1.7  2007/05/09 20:46:28  cbalint
+ * $Log$
+ * Revision 1.7  2007-05-09 20:46:28  cbalint
  * From: Even Rouault <even.rouault@mines-paris.org>
  * Date: Friday 21:14:18
  *
@@ -89,7 +89,7 @@
 #include "vrf.h"
 #include "swq.h"
 
-ECS_CVSID("$Id: vrfswq.c,v 1.7 2007/05/09 20:46:28 cbalint Exp $");
+ECS_CVSID("$Id$");
 
 #ifndef __LINKLIST_H__
 #include "linklist.h"

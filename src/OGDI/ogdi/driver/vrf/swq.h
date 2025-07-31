@@ -17,8 +17,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: swq.h,v $
- * Revision 1.1  2001/06/20 21:49:16  warmerda
+ * $Log$
+ * Revision 1.1  2001-06-20 21:49:16  warmerda
  * New
  *
  */

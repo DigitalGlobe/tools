@@ -18,8 +18,8 @@
  *    Changes made by Gordon Chaffee (chaffee@bugs-bunny.cs.berkeley.edu)
  ******************************************************************************
  *
- * $Log: opendir.c,v $
- * Revision 1.2  2001/04/09 15:04:34  warmerda
+ * $Log$
+ * Revision 1.2  2001-04-09 15:04:34  warmerda
  * applied new source headers
  *
  */

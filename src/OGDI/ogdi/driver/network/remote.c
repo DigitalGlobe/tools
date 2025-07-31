@@ -566,40 +566,6 @@ ecs_Result *dyn_SetServerLanguage(s,language)
    ------------------------------------------------------------------------
    */
 
-ecs_Result *dyn_SetServerProjection(s,projection)
-     ecs_Server *s;
-     char *projection;
-{
-  ecs_Remote *rc;
-
-  rc = (ecs_Remote *) s->priv;
-  if (rc == NULL) {
-    ecs_SetError(&(s->result),1,"Server not initialized");
-    return &(s->result);   
-  }
-
-  /* Free old rc->result */
-
-  if (rc->result != NULL) {
-    xdr_free((xdrproc_t) xdr_ecs_Result,(char *) rc->result);
-    rc->result = NULL;
-  }
-
-  rc->result = (ecs_Result *) (setserverprojection_1(&projection,rc->handle));  
-
-  if (rc->result == NULL) {
-    ecs_SetError(&(s->result),
-		 1,"No answer from server when setserverprojection is called.");
-    return &(s->result);
-  } 
-
-  return rc->result;
-}
-
-/*
-   ------------------------------------------------------------------------
-   */
-
 ecs_Result *dyn_GetObjectIdFromCoord(s,c)
      ecs_Server *s;
      ecs_Coordinate *c;

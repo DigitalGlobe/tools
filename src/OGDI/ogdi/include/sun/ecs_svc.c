@@ -91,7 +91,6 @@ ecsprog_1(rqstp, transp)
 		ecs_Coordinate getobjectidfromcoord_1_arg;
 		char *updatedictionary_1_arg;
 		u_int setserverlanguage_1_arg;
-		char *setserverprojection_1_arg;
 		ecs_RasterConversion setrasterconversion_1_arg;
 	} argument;
 	char *result;
@@ -194,12 +193,6 @@ ecsprog_1(rqstp, transp)
 		xdr_argument = xdr_u_int;
 		xdr_result = xdr_ecs_Result;
 		local = (char *(*)()) setserverlanguage_1;
-		break;
-
-	case SETSERVERPROJECTION:
-		xdr_argument = xdr_wrapstring;
-		xdr_result = xdr_ecs_Result;
-		local = (char *(*)()) setserverprojection_1;
 		break;
 
 	case SETRASTERCONVERSION:

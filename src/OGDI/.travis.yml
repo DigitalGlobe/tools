@@ -1,0 +1,29 @@
+compiler: gcc
+language: cpp
+
+cache:
+    apt: true
+    directories:
+        - $HOME/.ccache
+
+before_install:
+  - sudo apt install libz-dev libexpat-dev ccache
+
+install:
+  - export TOPDIR=$PWD
+  - CC="ccache gcc" ./configure --with-zlib --with-expat --prefix=$HOME/install-ogdi
+  - make
+  - make install -j3
+
+script:
+  - echo "done"
+
+notifications:
+  #email:
+  #  recipients:
+  #    - gdal-commits@lists.osgeo.org
+
+  irc:
+    channels:
+      - "irc.freenode.org#gdal"
+    use_notice: true

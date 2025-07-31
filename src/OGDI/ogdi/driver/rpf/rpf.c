@@ -16,8 +16,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: rpf.c,v $
- * Revision 1.14  2016/07/08 10:22:55  erouault
+ * $Log$
+ * Revision 1.14  2016-07-08 10:22:55  erouault
  * Fix various compilation problems on Windows (contributed by Jerome Siot)
  *
  * Revision 1.13  2007/02/24 16:58:17  cbalint
@@ -54,7 +54,7 @@
 #include "rpf.h"
 #include "datadict.h"
 
-ECS_CVSID("$Id: rpf.c,v 1.14 2016/07/08 10:22:55 erouault Exp $");
+ECS_CVSID("$Id$");
 
 int colorintensity[6] = {0,63,105,147,189,255};
 
@@ -182,11 +182,7 @@ void dyn_freelayerpriv(lpriv)
       lpriv->buffertile = NULL;
     }
     
-#ifdef notdef
-   /* FIXME? ecs_TileDeleteAllLines does not exist */
-   /* empty tilestruct */
    ecs_TileDeleteAllLines (&(lpriv->tilestruct));
-#endif
     
     if (lpriv->ff != NULL) 
       free(lpriv->ff);
@@ -887,7 +883,7 @@ ecs_Result *dyn_UpdateDictionary(s,info)
     {
         ecs_AddText(&(s->result),
                     "<?xml version=\"1.0\" ?>\n"
-                    "<OGDI_Capabilities version=\"3.1\">\n"
+                    "<OGDI_Capabilities version=\"4.0\">\n"
                     "</OGDI_Capabilities>\n" );
         ecs_SetSuccess(&(s->result));
     }
@@ -898,7 +894,7 @@ ecs_Result *dyn_UpdateDictionary(s,info)
 
         ecs_AddText(&(s->result),
                     "<?xml version=\"1.0\" ?>\n"
-                    "<OGDI_Capabilities version=\"3.1\">\n" );
+                    "<OGDI_Capabilities version=\"4.0\">\n" );
         ecs_AddText(&(s->result),
                     "   <FeatureTypeList>\n"
                     "      <Operations>\n"

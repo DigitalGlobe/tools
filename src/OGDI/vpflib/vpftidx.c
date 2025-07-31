@@ -785,15 +785,15 @@ char *idx_set;
     if ( tablename[i] == DIR_SEPARATOR ) break ;
   if ( tablename[i] == DIR_SEPARATOR )
 #ifdef _MSDOS
-    strncpy ( h.vpf_table_name, strupr ( &tablename[i+1] ), 13 ) ;
+    snprintf(h.vpf_table_name, sizeof(h.vpf_table_name), "%s", strupr ( &tablename[i+1] ));
 #else
-    strncpy ( h.vpf_table_name, &tablename[i+1], 13 ) ;
+    snprintf(h.vpf_table_name, sizeof(h.vpf_table_name), "%s", &tablename[i+1]);
 #endif
   else
 #ifdef _MSDOS
-    strncpy( h.vpf_table_name, strupr ( tablename), 13 );
+    snprintf(h.vpf_table_name, sizeof(h.vpf_table_name), "%s", strupr ( tablename));
 #else
-    strncpy( h.vpf_table_name, tablename, 13 );
+    snprintf(h.vpf_table_name, sizeof(h.vpf_table_name), "%s", tablename);
 #endif
   
   for ( i=strlen(h.vpf_table_name); i < 12 ; i++ )
@@ -1850,17 +1850,17 @@ char *idx_set;
     if ( tablename[i] == DIR_SEPARATOR ) break ;
   if ( tablename[i] == DIR_SEPARATOR )
 #ifdef _MSDOS
-    strncpy ( gi.vpf_table_name, strupr ( &tablename[i+1] ), 13 ) ;
+    snprintf(gi.vpf_table_name, sizeof(gi.vpf_table_name), "%s", strupr ( &tablename[i+1] )) ;
 #else
-    strncpy ( gi.vpf_table_name, &tablename[i+1], 13 ) ;
+    snprintf(gi.vpf_table_name, sizeof(gi.vpf_table_name), "%s", &tablename[i+1]) ;
 #endif
   else
 #ifdef _MSDOS
-    strncpy(gi.vpf_table_name, strupr ( tablename), 13 );
+    snprintf(gi.vpf_table_name, sizeof(gi.vpf_table_name), "%s", strupr ( tablename));
 #else
-    strncpy(gi.vpf_table_name, tablename, 13);
+    snprintf(gi.vpf_table_name, sizeof(gi.vpf_table_name), "%s", tablename);
 #endif
-  strncpy(gi.vpf_column_name, columnname,25);
+  snprintf(gi.vpf_column_name, sizeof(gi.vpf_column_name), "%s", columnname);
 
   gi.column_type = 'T';
   gi.index_type  = 'G';

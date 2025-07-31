@@ -16,8 +16,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: object.c,v $
- * Revision 1.3  2001/04/12 19:22:46  warmerda
+ * $Log$
+ * Revision 1.3  2001-04-12 19:22:46  warmerda
  * applied DND support Image type support
  *
  */
@@ -25,7 +25,7 @@
 #include "ecs.h"
 #include "rpf.h"
 
-ECS_CVSID("$Id: object.c,v 1.3 2001/04/12 19:22:46 warmerda Exp $");
+ECS_CVSID("$Id$");
 
 /*
 *******************************************************************

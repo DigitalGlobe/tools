@@ -15,7 +15,7 @@ include $(TOPDIR)/config/common.mak
 #
 # Sub-directories that need to be built
 #
-subdirs	= include c-api glutil attr_driver datum_driver driver gltpd examples
+subdirs	= include c-api glutil driver gltpd examples
 
 #
 # Default target to build everything in all sub-directories

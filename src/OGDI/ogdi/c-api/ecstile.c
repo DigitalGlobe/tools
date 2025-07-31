@@ -16,8 +16,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: ecstile.c,v $
- * Revision 1.5  2007/02/12 15:52:57  cbalint
+ * $Log$
+ * Revision 1.5  2007-02-12 15:52:57  cbalint
  *
  *    Preliminary cleanup.
  *    Get rif of unitialized variables, and unused ones.
@@ -33,7 +33,7 @@
 
 #include "ecs.h"
 
-ECS_CVSID("$Id: ecstile.c,v 1.5 2007/02/12 15:52:57 cbalint Exp $");
+ECS_CVSID("$Id$");
 
 /*
    *******************************************************************
@@ -304,13 +304,8 @@ int ecs_TileGetLine(s,t,start,end)
   /* scan the first line of the buffer for uninitialized pixels. */
   for (count=0; count< t->linelength; count++) {
     if (t->linebuffer->linebuffer[count]==t->uninitializedValue) {
-      if (s->rasterconversion.isProjEqual) {
 	i=y;
 	j=count;
-      } else {
-	i = ECSGETI(s,((double) y),((double) count));
-	j = ECSGETJ(s,((double) y),((double) count));
-      }
       
       if (t->tileDimCallback!=NULL) {
 	coord.x=s->currentRegion.west+(j+0.5)*s->currentRegion.ew_res;    
@@ -489,18 +484,9 @@ int ecs_TileFill(ecs_Server *s, ecs_TileStructure *t, int index, ecs_TileID *cur
 
   for (count=tbuf->last+1; count< t->linelength; count++) {
     if (tbuf->linebuffer[count]==t->uninitializedValue) {
-      
-      if (s->rasterconversion.isProjEqual) {
-	
+
 	j = count;
 	i = bufptr;
-	
-      } else { /* if s->rasterconversion */
-	
-	i = ECSGETI(s,((double) bufptr),((double) count));
-	j = ECSGETJ(s,((double) bufptr),((double) count));
-	
-      }
 
       if (t->tileDimCallback!=NULL) {
 	coord.x=s->currentRegion.west+j*s->currentRegion.ew_res;    

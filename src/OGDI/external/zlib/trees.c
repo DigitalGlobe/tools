@@ -29,7 +29,7 @@
  *          Addison-Wesley, 1983. ISBN 0-201-06672-6.
  */
 
-/* @(#) $Id: trees.c,v 1.3 2002/03/28 16:05:34 warmerda Exp $ */
+/* @(#) $Id$ */
 
 /* #define GEN_TREES_H */
 

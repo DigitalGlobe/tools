@@ -32,7 +32,7 @@
  * From: @(#)rpc_parse.c 1.8 89/02/22 (C) 1987 SMI
  */
 char parse_rcsid[] = 
-  "$Id: rpc_parse.c,v 1.1.1.1 2000/10/29 20:55:04 warmerda Exp $";
+  "$Id$";
 
 /*
  * rpc_parse.c, Parser for the RPC protocol compiler 

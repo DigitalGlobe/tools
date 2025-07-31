@@ -1,8 +1,77 @@
-	OGDI 3.x Core News
-	==================
+	OGDI Core News
+	==============
 
-View the ChangeLog file for detailed, file by file notes on changes.  The
-NEWS file is just used to sumarize major changes, and new features. 
+The NEWS file is just used to sumarize major changes, and new features. 
+
+4.1.1
+=====
+
+ o  Fix various compiler warnings, in particular for gcc 14 (fixes #23)
+ o  Remove ogdi/attr_driver subdirectory (ODBC stuff) (fixes #23)
+ o  Support GNU Hurd
+ o  Support hardening buildflags set in the environment
+ o  contrib/gdal: Fix C99 compatibility issue
+ o  Add link libraries accordingly: $(EXPAT_LINKLIB), etc. (PR #16)
+
+4.1.0
+=====
+
+ o  Remove DTED driver that used the ecsrregex.c functionality removed in the
+    below bullet.
+ o  Remove ogdi/c-api/ecshash.c and ogdi/c-api/ecsregex.c, which were considered
+    incompatible of DFSG & OSD (https://github.com/libogdi/ogdi/issues/13)
+
+4.0.0
+=====
+
+ o  Remove PROJ.4 dependency, functionality and related API
+
+    With PROJ 6 being released and removing completely projects.h old API,
+    a major upgrade would have been needed. I'd rater choose to completely
+    cut off PROJ related functionality from OGDI.
+    For the VRF case, projection support can be done through the GDAL/OGR
+    OGDI driver.
+
+    The dtusa and dtcanada drivers are removed.
+
+    The following functions are removed from ecs_util.h:
+    cln_SetServerProjection
+    cln_SetClientProjection
+    cln_ProjInit
+    cln_CompareProjections
+    cln_ConvRegion
+    cln_ConvTtoS
+    cln_ConvStoT
+    cln_ChangeProjection
+    cln_ChangeProjectionArea
+    cln_ChangeProjectionLine
+    cln_ChangeProjectionPoint
+    cln_ChangeProjectionMatrix
+    cln_ChangeProjectionImage
+    cln_ChangeProjectionText
+    ecs_distance_meters
+
+ o  Update server version to 4.0 to reflect removal of SetServerProjection
+    capability
+
+ o  Build: add -fPIC when required
+
+ o  Rename aclocal.m4 to acinclude.m4 and apply stricter quoting
+
+ o  Respect LDFLAGS provided to ./configure
+
+ o  Fall back to libtirpc if libc does not provide rpc/rpc.h
+
+ o  Don't hardcode compiler to fix cross compilation.
+
+3.2.1
+=====
+
+ o  MSVC 2015 related fixes
+
+ o  Win64 target
+
+ o  VRF: fixes for some linear features in DNC products
 
 3.2.0
 =====

@@ -18,8 +18,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: ecs_util.h,v $
- * Revision 1.30  2016/07/11 09:13:29  erouault
+ * $Log$
+ * Revision 1.30  2016-07-11 09:13:29  erouault
  * Really fix Windows compilation issue due to int32/uint32
  *
  * Revision 1.29  2016/07/08 10:22:55  erouault
@@ -108,8 +108,8 @@
 #ifndef ECS_UTIL
 #define ECS_UTIL 1
 
-#define OGDI_VERSION     320
-#define OGDI_RELEASEDATE 20160705
+#define OGDI_VERSION     411
+#define OGDI_RELEASEDATE 20240201
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -128,13 +128,6 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-
-#include "projects.h"
-
-/* Ensure we are compatible with PROJ.4.4.x and PROJ.4.3.x */
-#ifndef USE_PROJUV
-#  define projUV UV
-#endif
 
 #include "ecs.h"
 
@@ -403,7 +396,6 @@ typedef struct {
      dynfunc *getserverprojection: Pointer to the function dyn_GetServerProjection
      dynfunc *getglobalbound: Pointer to the function dyn_GetGlobalBound
      dynfunc *setserverlanguage: Pointer to the function dyn_SetServerLanguage
-     dynfunc *setserverprojection: Pointer to the function dyn_SetServerProjection
      dynfunc *setrasterconversion: Pointer to the function dyn_SetRasterConversion
   END_ATTRIBUTES
 
@@ -479,7 +471,6 @@ typedef struct {
   dynfunc *getserverprojection;
   dynfunc *getglobalbound;
   dynfunc *setserverlanguage;
-  dynfunc *setserverprojection;
   dynfunc *setrasterconversion;
   dynfunc *setcompression;
 
@@ -506,7 +497,6 @@ ecs_Result *svr_GetServerProjection _ANSI_ARGS_((ecs_Server *s));
 ecs_Result *svr_GetGlobalBound _ANSI_ARGS_((ecs_Server *s));
 ecs_Result *svr_SetServerLanguage _ANSI_ARGS_((ecs_Server *s, u_int language));
 ecs_Result *svr_SetCompression _ANSI_ARGS_((ecs_Server *s, ecs_Compression *compression));
-ecs_Result *svr_SetServerProjection _ANSI_ARGS_((ecs_Server *s, char *projection));
 ecs_Result *svr_SetRasterConversion _ANSI_ARGS_((ecs_Server *s,
 						 ecs_RasterConversion *rc));
 
@@ -540,26 +530,6 @@ int ecs_ExtractRequestInformation _ANSI_ARGS_((char *request,char **ExtractReque
 void *ecs_OpenDynamicLib _ANSI_ARGS_((char *libname));
 void *ecs_GetDynamicLibFunction _ANSI_ARGS_((void *handle,char *functionname));
 void ecs_CloseDynamicLib _ANSI_ARGS_((void *handle));
-
-/***********************************************************************/
-
-/* ecsregex.c declarations */
-
-#define NSUBEXP  50
-typedef struct ecs_regexp {
-	char *startp[NSUBEXP];
-	char *endp[NSUBEXP];
-	char regstart;		/* Internal use only. */
-	char reganch;		/* Internal use only. */
-	char *regmust;		/* Internal use only. */
-	int regmlen;		/* Internal use only. */
-	char program[1];	/* Unwarranted chumminess with compiler. */
-} ecs_regexp;
-
-ecs_regexp *EcsRegComp _ANSI_ARGS_((char *exp));
-int EcsRegExec _ANSI_ARGS_((ecs_regexp *prog, char *string, char *start));
-void EcsRegError _ANSI_ARGS_((char *msg));
-char *EcsGetRegError _ANSI_ARGS_((void));
 
 /***********************************************************************/
 
@@ -897,8 +867,7 @@ void ecs_FreeObject _ANSI_ARGS_((ecs_Object *obj));
 /* ecs_split.c declarations */
 
 void ecs_freeSplitURL _ANSI_ARGS_((char **type,char **machine,char **path));
-int ecs_GetRegex _ANSI_ARGS_((ecs_regexp *reg,int index,char **chaine));
-int ecs_SplitURL _ANSI_ARGS_((char *url,char **machine,char **server,char **path));
+int ecs_SplitURL _ANSI_ARGS_((const char *url,char **machine,char **server,char **path));
 
 
 /***********************************************************************/
@@ -906,8 +875,8 @@ int ecs_SplitURL _ANSI_ARGS_((char *url,char **machine,char **server,char **path
 /* ecs_list.c declarations */
 
 char ecs_Backslash _ANSI_ARGS_((char *src, int *readPtr));
-int ecs_FindElement _ANSI_ARGS_((register char *list,char **elementPtr, char **nextPtr, int *sizePtr, int *bracePtr));
-void ecs_CopyAndCollapse _ANSI_ARGS_((int count,register char *src,register char *dst));
+int ecs_FindElement _ANSI_ARGS_((char *list,char **elementPtr, char **nextPtr, int *sizePtr, int *bracePtr));
+void ecs_CopyAndCollapse _ANSI_ARGS_((int count,char *src,char *dst));
 int ecs_SplitList _ANSI_ARGS_((char *list,int *argcPtr,char ***argvPtr));
 
 /***********************************************************************/
@@ -929,7 +898,6 @@ ecs_Result *dyn_UpdateDictionary _ANSI_ARGS_((ecs_Server *s, char *info));
 ecs_Result *dyn_GetServerProjection _ANSI_ARGS_((ecs_Server *s));
 ecs_Result *dyn_GetGlobalBound _ANSI_ARGS_((ecs_Server *s));
 ecs_Result *dyn_SetServerLanguage _ANSI_ARGS_((ecs_Server *s, u_int language));
-ecs_Result *dyn_SetServerProjection _ANSI_ARGS_((ecs_Server *s, char *projection));
 ecs_Result *dyn_SetRasterConversion _ANSI_ARGS_((ecs_Server *s,
 						 ecs_RasterConversion *rc));
 ecs_Result *dyn_SetCompression _ANSI_ARGS_((ecs_Server *s, ecs_Compression *compression));
@@ -944,15 +912,6 @@ int dyn_GetColumnsInfo _ANSI_ARGS_((ecs_Server *s, ecs_Layer *l, int *columns_qt
 int dyn_SelectAttributes _ANSI_ARGS_((ecs_Server *s, ecs_Layer *l, int attribute_qty, char **attribute_list, char **error));
 int dyn_IsSelected _ANSI_ARGS_((ecs_Server *s, ecs_Layer *l, short *isSelected, char **error));
 int dyn_GetSelectedAttributes _ANSI_ARGS_((ecs_Server *s, ecs_Layer *l, char **attributes, char **error));
-
-/***********************************************************************/
-
-/* dynamic library attribute driver declarations */
-
-int dyn_nad_init _ANSI_ARGS_((void **privtableinfo, char *table));
-int dyn_nad_close _ANSI_ARGS_((void *privtableinfo));
-int dyn_nad_forward _ANSI_ARGS_((void *privtableinfo, double *x, double *y));
-int dyn_nad_reverse _ANSI_ARGS_((void *privtableinfo, double *x, double *y));
 
 /***********************************************************************/
 
@@ -1092,21 +1051,10 @@ typedef struct {
      ecs_Region currentRegion: mbr of current region
      ecs_Family currentSelectionFamily: Current layer selection type
      char *tclprocname: attribute callback procedure for tcl
-     char *target_proj: Projection descriptor
-     PJ *target: target (c interface) projection descriptors
-     PJ *source: source (driver) projection descriptors
      ecs_Datum targetdatum: target datum information
      ecs_Datum sourcedatum: source datum information
-     void *dthandle: Handle to the datum driver
      void *privdatuminfo: The private datum information pointer. Used to specify the object.
-     dtfunc *nad_init: Pointer to the nad_init function in the datum driver
-     dtfunc *nad_forward: Pointer to the nad_forward function in the datum driver
-     dtfunc *nad_reverse: Pointer to the nad_reverse function in the datum driver
-     dtfunc *nad_close: Pointer to the nad_close function in the datum driver
      char datumtable[10]: Datum table name
-     int isSourceLL: Indicate if the source is a longlat projection
-     int isTargetLL: Indicate if the target is a longlat projection
-     int isProjEqual: Indicate if the projections are the same
      int isCurrentRegionSet: Indicate if the current region is set
      double target_azimuth: The azimuth angle to apply to the target projection
      double sinazimuth: The azimuth sinus
@@ -1130,12 +1078,6 @@ typedef struct {
   ecs_Region currentRegion; /* mbr of current region */
   ecs_Family currentSelectionFamily; /* Current layer selection type */
   char *tclprocname;      /* attribute callback procedure for tcl */
-  char *target_proj;
-  PJ *target;             /* source and target projection descriptors */
-  PJ *source;
-  int isSourceLL;         /* flags to avoid unnecessary computation */
-  int isTargetLL;
-  int isProjEqual;
   int isCurrentRegionSet;
   double target_azimuth;
   double sinazimuth;
@@ -1144,11 +1086,6 @@ typedef struct {
   ecs_Datum sourcedatum;
   char datumtable[10];
   void *privdatuminfo;
-  void *dthandle;
-  dtfunc *nad_init;
-  dtfunc *nad_forward;
-  dtfunc *nad_reverse;
-  dtfunc *nad_close;
 
   ecs_Server s;
 
@@ -1196,27 +1133,13 @@ ecs_Result *cln_GetGlobalBound       _ANSI_ARGS_((int ClientID));
 ecs_Result *cln_SetServerLanguage    _ANSI_ARGS_((int ClientID, u_int language));
 ecs_Result *cln_SetCompression       _ANSI_ARGS_((int ClientID, ecs_Compression *compression));
 ecs_Result *cln_GetServerProjection  _ANSI_ARGS_((int ClientID));
-ecs_Result *cln_SetServerProjection  _ANSI_ARGS_((int ClientID, char *projection));
-ecs_Result *cln_SetClientProjection  _ANSI_ARGS_((int ClientID, char *projection));
 void cln_SetTclProc                  _ANSI_ARGS_((int ClientID, char *tclproc));
 char *cln_GetTclProc                 _ANSI_ARGS_((int ClientID));
 
 
 /* Projection conversion functions */
 
-PJ *cln_ProjInit                     _ANSI_ARGS_((char *d));
-int cln_CompareProjections           _ANSI_ARGS_((int ClientID));
 int cln_UpdateMaxRegion              _ANSI_ARGS_((int ClientID, double x, double y, ecs_Region *gr, int sens, int first));
-int cln_ConvRegion                   _ANSI_ARGS_((int ClientID, ecs_Region *gr, int sens));
-int cln_ConvTtoS                     _ANSI_ARGS_((int ClientID, double *X, double *Y));
-int cln_ConvStoT                     _ANSI_ARGS_((int ClientID, double *X, double *Y));
-int cln_ChangeProjection             _ANSI_ARGS_((int ClientID, ecs_Object *obj));
-int cln_ChangeProjectionArea         _ANSI_ARGS_((int ClientID, ecs_Area *obj));
-int cln_ChangeProjectionLine         _ANSI_ARGS_((int ClientID, ecs_Line *obj));
-int cln_ChangeProjectionPoint        _ANSI_ARGS_((int ClientID, ecs_Point *obj));
-int cln_ChangeProjectionMatrix       _ANSI_ARGS_((int ClientID, ecs_Matrix *obj));
-int cln_ChangeProjectionImage        _ANSI_ARGS_((int ClientID, ecs_Image *obj));
-int cln_ChangeProjectionText         _ANSI_ARGS_((int ClientID, ecs_Text *obj));
 int cln_PointValid                   _ANSI_ARGS_((int ClientID, double x, double y));
 ecs_Datum cln_GetDatumInfo           _ANSI_ARGS_((char *projection));
 
@@ -1285,124 +1208,7 @@ double ecs_Qbar _ANSI_ARGS_((double x));
 double ecs_planimetric_polygon_area _ANSI_ARGS_((int n,ecs_Coordinate *coord));
 double ecs_ellipsoid_polygon_area _ANSI_ARGS_((int n,ecs_Coordinate *coord));
 double ecs_geodesic_distance _ANSI_ARGS_((double lon1, double lat1, double lon2, double lat2));
-double ecs_distance_meters _ANSI_ARGS_((char *projection, double X1, double Y1, double X2, double Y2));
 int ecs_CalculateCentroid _ANSI_ARGS_((int nb_segment, ecs_Coordinate *coord,ecs_Coordinate *centroid));
-
-
-/***********************************************************************/
-
-/*
- * Structure definition for an entry in a hash table.  No-one outside
- * ecs should access any of these fields directly;  use the macros
- * defined below.
- */
-
-typedef struct ecs_HashEntry {
-    struct ecs_HashEntry *nextPtr;	/* Pointer to next entry in this
-					 * hash bucket, or NULL for end of
-					 * chain. */
-    struct ecs_HashTable *tablePtr;	/* Pointer to table containing entry. */
-    struct ecs_HashEntry **bucketPtr;	/* Pointer to bucket that points to
-					 * first entry in this entry's chain:
-					 * used for deleting the entry. */
-    int clientData;  		        /* Application stores something here
-					 * with ecs_SetHashValue. */
-    union {				/* Key has one of these forms: */
-	char *oneWordValue;		/* One-word value for key. */
-	int words[1];			/* Multiple integer words for key.
-					 * The actual size will be as large
-					 * as necessary for this table's
-					 * keys. */
-	char string[4];			/* String for key.  The actual size
-					 * will be as large as needed to hold
-					 * the key. */
-    } key;				/* MUST BE LAST FIELD IN RECORD!! */
-} ecs_HashEntry;
-
-/*
- * Structure definition for a hash table.  Must be in ecs.h so clients
- * can allocate space for these structures, but clients should never
- * access any fields in this structure.
- */
-
-#define ECS_SMALL_HASH_TABLE 4
-typedef struct ecs_HashTable {
-    ecs_HashEntry **buckets;		/* Pointer to bucket array.  Each
-					 * element points to first entry in
-					 * bucket's hash chain, or NULL. */
-    ecs_HashEntry *staticBuckets[ECS_SMALL_HASH_TABLE];
-					/* Bucket array used for small tables
-					 * (to avoid mallocs and frees). */
-    int numBuckets;			/* Total number of buckets allocated
-					 * at **bucketPtr. */
-    int numEntries;			/* Total number of entries present
-					 * in table. */
-    int rebuildSize;			/* Enlarge table when numEntries gets
-					 * to be this large. */
-    int downShift;			/* Shift count used in hashing
-					 * function.  Designed to use high-
-					 * order bits of randomized keys. */
-    int mask;				/* Mask value used in hashing
-					 * function. */
-    int keyType;			/* Type of keys used in this table. 
-					 * It's either ECS_STRING_KEYS,
-					 * ECS_ONE_WORD_KEYS, or an integer
-					 * giving the number of ints in a
-					 */
-    ecs_HashEntry *(*findProc) _ANSI_ARGS_((struct ecs_HashTable *tablePtr,
-	    char *key));
-    ecs_HashEntry *(*createProc) _ANSI_ARGS_((struct ecs_HashTable *tablePtr,
-	    char *key, int *newPtr));
-} ecs_HashTable;
-
-/*
- * Structure definition for information used to keep track of searches
- * through hash tables:
- */
-
-typedef struct ecs_HashSearch {
-    ecs_HashTable *tablePtr;		/* Table being searched. */
-    int nextIndex;			/* Index of next bucket to be
-					 * enumerated after present one. */
-    ecs_HashEntry *nextEntryPtr;	/* Next entry to be enumerated in the
-					 * the current bucket. */
-} ecs_HashSearch;
-
-/*
- * Acceptable key types for hash tables:
- */
-
-#define ECS_STRING_KEYS		0
-#define ECS_ONE_WORD_KEYS	1
-
-/*
- * Macros for clients to use to access fields of hash entries:
- */
-
-#define ecs_GetHashValue(h) ((h)->clientData)
-#define ecs_SetHashValue(h, value) ((h)->clientData = (ClientData) (value))
-#define ecs_GetHashKey(tablePtr, h) \
-    ((char *) (((tablePtr)->keyType == ECS_ONE_WORD_KEYS) ? (h)->key.oneWordValue \
-						: (h)->key.string))
-
-/*
- * Macros to use for clients to use to invoke find and create procedures
- * for hash tables:
- */
-
-#define ecs_FindHashEntry(tablePtr, key) \
-	(*((tablePtr)->findProc))(tablePtr, key)
-#define ecs_CreateHashEntry(tablePtr, key, newPtr) \
-	(*((tablePtr)->createProc))(tablePtr, key, newPtr)
-
-void ecs_InitHashTable _ANSI_ARGS_((ecs_HashTable *tablePtr, int keyType));
-void ecs_DeleteHashEntry _ANSI_ARGS_((ecs_HashEntry *entryPtr));
-void ecs_DeleteHashTable _ANSI_ARGS_((ecs_HashTable *tablePtr));
-ecs_HashEntry * ecs_FirstHashEntry _ANSI_ARGS_((ecs_HashTable *tablePtr,
-						ecs_HashSearch *searchPtr));
-ecs_HashEntry * ecs_NextHashEntry _ANSI_ARGS_((ecs_HashSearch *searchPtr));
-char *ecs_HashStats _ANSI_ARGS_((ecs_HashTable *tablePtr));
-
 
 /***********************************************************************/
 

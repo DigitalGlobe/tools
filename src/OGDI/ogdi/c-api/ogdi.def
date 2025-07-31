@@ -17,8 +17,6 @@ EXPORTS
 	cln_GetGlobalBound
 	cln_SetServerLanguage
 	cln_GetServerProjection
-	cln_SetServerProjection
-	cln_SetClientProjection
 	cln_SetTclProc
 	cln_GetTclProc
 	cln_GetClientIdFromURL
@@ -27,10 +25,6 @@ EXPORTS
 	cln_LoadCache
 	cln_ReleaseCache
 	cln_SetCompression
-	EcsRegComp
-	EcsRegExec
-	EcsRegError
-	EcsGetRegError
 	ecs_DistanceObject
 	ecs_DistanceObjectWithTolerance
 	ecs_SetTolerance
@@ -62,7 +56,6 @@ EXPORTS
 	ecs_ResultInit
 	ecs_CalcObjectMBR
 	ecs_freeSplitURL
-	ecs_GetRegex
 	ecs_SplitURL
 	ecs_Backslash
 	ecs_FindElement
@@ -83,7 +76,6 @@ EXPORTS
 	svr_GetServerProjection
 	svr_GetGlobalBound
 	svr_SetServerLanguage
-	svr_SetServerProjection
 	svr_SetRasterConversion
 	svr_CloseLayer
 	svr_BroadCloseLayers
@@ -125,23 +117,10 @@ EXPORTS
 	ecs_planimetric_polygon_area
 	ecs_ellipsoid_polygon_area
 	ecs_geodesic_distance
-	ecs_distance_meters
 	ecs_CalculateCentroid
 	ecs_CopyObject
 	ecs_CopyResult
 	ecs_FreeObject
-	pj_free
-	pj_init
-	pj_inv
-	pj_fwd
-        rtodms
-	ecs_InitHashTable
-	ecs_DeleteHashEntry
-	ecs_DeleteHashTable
-	ecs_FirstHashEntry
-	ecs_NextHashEntry
-	ecs_HashStats
-        set_rtodms
 	ecs_TileInitialize
 	ecs_TileGetLine
 	ecs_TileClearBuffer
@@ -156,3 +135,4 @@ EXPORTS
 	ecs_SetReportErrorFunction
 	ecs_ShouldStopOnError
 	ecs_SetErrorShouldStop
+    ecs_TileDeleteAllLines

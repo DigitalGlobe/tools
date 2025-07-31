@@ -19,6 +19,5 @@ EXPORTS
 	dyn_GetObject
 	dyn_GetObjectIdFromCoord
 	dyn_SetServerLanguage
-	dyn_SetServerProjection
 	dyn_SetRasterConversion
 	dyn_SetCompression

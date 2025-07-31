@@ -17,8 +17,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: swq.c,v $
- * Revision 1.3  2001/06/26 00:57:34  warmerda
+ * $Log$
+ * Revision 1.3  2001-06-26 00:57:34  warmerda
  * fixed strcasecmp on WIN32
  *
  * Revision 1.2  2001/06/21 20:30:15  warmerda
@@ -36,7 +36,7 @@
 #include "swq.h"
 #include "ecs.h"
 
-ECS_CVSID("$Id: swq.c,v 1.3 2001/06/26 00:57:34 warmerda Exp $");
+ECS_CVSID("$Id$");
 
 #ifndef SWQ_MALLOC
 #define SWQ_MALLOC(x) malloc(x)

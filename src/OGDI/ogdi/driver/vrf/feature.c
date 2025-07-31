@@ -16,8 +16,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: feature.c,v $
- * Revision 1.20  2016/07/06 09:00:14  erouault
+ * $Log$
+ * Revision 1.20  2016-07-06 09:00:14  erouault
  * add heuristics in vrf_get_ring_coords() to detect cycling topology of edges that lead to endless looping and eventually crashes. Be robust to memory allocation failures in various places, and properly cleanup allocated structures when returning
  *
  * Revision 1.19  2016/06/28 14:32:45  erouault
@@ -118,7 +118,7 @@
 #include "vrf.h"
 #include <assert.h>
 
-ECS_CVSID("$Id: feature.c,v 1.20 2016/07/06 09:00:14 erouault Exp $");
+ECS_CVSID("$Id$");
 
 vpf_projection_type NOPROJ = {DDS, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0,
                               NULL, NULL, "Decimal Degrees     "};
@@ -239,11 +239,13 @@ static int vrf_merge_line_prim( int *vertCount, double * vertX, double *vertY,
   
   ********************************************************************/
 
-int vrf_get_merged_line_feature (s, layer, primCount, primList)
+int vrf_get_merged_line_feature (s, layer, primCount, primList, tileList, dryRun)
      ecs_Server *s;
      ecs_Layer *layer;
      int primCount;
      int32 *primList;
+     short *tileList;
+     int dryRun;
 {
     int		iPrim;
     ecs_Result	*primResults;
@@ -258,7 +260,9 @@ int vrf_get_merged_line_feature (s, layer, primCount, primList)
     
     if( primCount == 1 )
     {
-        return vrf_get_line_feature( s, layer, primList[0],
+        if( dryRun )
+            return TRUE;
+        return vrf_get_line_feature( s, layer, primList[0], tileList[0],
                                      &(s->result) );
     }
 
@@ -270,14 +274,15 @@ int vrf_get_merged_line_feature (s, layer, primCount, primList)
     
     for( iPrim = 0; iPrim < primCount; iPrim++ )
     {
-        if( !vrf_get_line_feature( s, layer, primList[iPrim],
+        if( !vrf_get_line_feature( s, layer, primList[iPrim], tileList[iPrim],
                                    primResults+iPrim ) )
         {
             for( ; iPrim >=0; iPrim-- )
                 ecs_CleanUp( primResults + iPrim );
 
             free( primResults );
-            ecs_SetError(&(s->result), 1,"Error in vrf_get_merged_line_feature");
+            if( !dryRun )
+                ecs_SetError(&(s->result), 1,"Error in vrf_get_merged_line_feature");
             return FALSE;
         }
 
@@ -328,17 +333,51 @@ int vrf_get_merged_line_feature (s, layer, primCount, primList)
         }
     }
 
-    /*
-      Build returned line structure.
-      */
-    if (!ecs_SetGeomLine(&(s->result), vertCount))
-        return FALSE; 
-    
-    for( i = 0; i < vertCount; i++ )
+#ifdef DEBUG
+    if( primsRemaining )
     {
-        ECS_SETGEOMLINECOORD((&(s->result)), i, vertX[i], vertY[i]);
+        fprintf(stderr, "primCount = %d, primsRemaining = %d\n",
+                primCount, primsRemaining);
+        for( iPrim = 0; iPrim < primCount; iPrim++ )
+        {
+            line = &(ECSGEOM((primResults+iPrim)).line);
+
+            if( iPrim == 0 || primConsumed[iPrim] )
+                fprintf(stderr,"consumed line\n");
+            else
+                fprintf(stderr,"remaining line\n");
+            fprintf(stderr, "tile: %d\n", tileList[iPrim]);
+            for( i = 0; i < line->c.c_len; i++ )
+            {
+                fprintf(stderr, "%f %f\n", line->c.c_val[i].x, line->c.c_val[i].y);
+            }
+        }
+        {
+            fprintf(stderr, "merged line\n");
+            for( i = 0; i < vertCount; i++ )
+            {
+                fprintf(stderr, "%f %f\n", vertX[i], vertY[i]);
+            }
+        }
     }
-    
+#endif
+
+    if( !dryRun )
+    {
+        assert( primsRemaining == 0 );
+
+        /*
+        Build returned line structure.
+        */
+        if (!ecs_SetGeomLine(&(s->result), vertCount))
+            return FALSE; 
+
+        for( i = 0; i < vertCount; i++ )
+        {
+            ECS_SETGEOMLINECOORD((&(s->result)), i, vertX[i], vertY[i]);
+        }
+    }
+
     /*
       Cleanup datastructures.
       */
@@ -352,7 +391,7 @@ int vrf_get_merged_line_feature (s, layer, primCount, primList)
 
     free( primResults );
 
-    return TRUE;
+    return primsRemaining == 0;
 }
 
 /*********************************************************************
@@ -372,10 +411,11 @@ int vrf_get_merged_line_feature (s, layer, primCount, primList)
   
   ********************************************************************/
 
-int vrf_get_line_feature (s, layer, prim_id, result)
+int vrf_get_line_feature (s, layer, prim_id, tile_id, result)
      ecs_Server *s;
      ecs_Layer *layer;
      int prim_id;
+     short tile_id;
      ecs_Result *result;
 {
   int32 pos, count;
@@ -396,6 +436,10 @@ int vrf_get_line_feature (s, layer, prim_id, result)
      */  
 
   if (!vrf_checkLayerTables(s,layer)) {
+    return FALSE;
+  }
+
+  if( !_selectTileLineWithRet(s, layer, tile_id) ) {
     return FALSE;
   }
 
@@ -619,15 +663,21 @@ static int vrf_get_mbr (table, prim_id, xmin, ymin, xmax, ymax)
   
   ********************************************************************/
 
-int vrf_get_line_mbr (layer, prim_id, xmin, ymin, xmax, ymax)
+int vrf_get_line_mbr (s, layer, prim_id, tile_id, xmin, ymin, xmax, ymax)
+     ecs_Server *s;
      ecs_Layer *layer;
      int32 prim_id;
+     short tile_id;
      double *xmin;
      double *ymin;
      double *xmax;
      double *ymax;
 {
   LayerPrivateData *lpriv = (LayerPrivateData *) layer->priv;
+
+  if( !_selectTileLineWithRet(s, layer, tile_id) )
+      return FALSE;
+
   return vrf_get_mbr(lpriv->l.line.mbrTable, prim_id, xmin, ymin, xmax, ymax);
 }
 
@@ -648,10 +698,12 @@ int vrf_get_line_mbr (layer, prim_id, xmin, ymin, xmax, ymax)
   
   ********************************************************************/
 
-int vrf_get_lines_mbr (layer, primCount, primList, xmin, ymin, xmax, ymax)
+int vrf_get_lines_mbr (s, layer, primCount, primList, tileList, xmin, ymin, xmax, ymax)
+     ecs_Server* s;
      ecs_Layer *layer;
      int32 primCount;
      int32 *primList;
+     short *tileList;
      double *xmin;
      double *ymin;
      double *xmax;
@@ -659,14 +711,14 @@ int vrf_get_lines_mbr (layer, primCount, primList, xmin, ymin, xmax, ymax)
 {
     int		i;
 
-    if( !vrf_get_line_mbr( layer, primList[0], xmin, ymin, xmax, ymax ) )
+    if( !vrf_get_line_mbr( s, layer, primList[0], tileList[0], xmin, ymin, xmax, ymax ) )
         return FALSE;
 
     for( i = 1; i < primCount; i++ )
     {
         double	x2min, x2max, y2min, y2max;
 
-        if( !vrf_get_line_mbr( layer, primList[i],
+        if( !vrf_get_line_mbr( s, layer, primList[i], tileList[i],
                                &x2min, &y2min, &x2max, &y2max ) )
             return FALSE;
 

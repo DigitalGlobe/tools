@@ -16,15 +16,15 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: ecs_sif.c,v $
- * Revision 1.3  2001/04/09 15:04:35  warmerda
+ * $Log$
+ * Revision 1.3  2001-04-09 15:04:35  warmerda
  * applied new source headers
  *
  */
 
 #include "ecs.h"
 
-ECS_CVSID("$Id: ecs_sif.c,v 1.3 2001/04/09 15:04:35 warmerda Exp $");
+ECS_CVSID("$Id$");
 
 ecs_Server *svr_handle;
 
@@ -193,15 +193,6 @@ ecs_Result *setserverlanguage_1_svc(args,rqstp)
     (void) rqstp;
 
     return svr_SetServerLanguage(svr_handle, *args);
-}
-
-ecs_Result * setserverprojection_1_svc(args,rqstp)
-     char **args;
-     struct svc_req *rqstp;
-{
-    (void) rqstp;
-
-    return svr_SetServerProjection(svr_handle, *args);
 }
 
 ecs_Result * setrasterconversion_1_svc(args,rqstp)

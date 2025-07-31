@@ -1,3 +1,14 @@
+2018-03-01  Even Rouault <even.rouault@spatialys.com>
+
+    * various changes to support Win64 and MSVC 2015
+
+2018-03-01  Even Rouault <even.rouault@spatialys.com>
+
+    * ogdi/driver/vrf/feature.c, object.c, vrf.h: make sure to take into
+    account tile id when merging feature segments, and deal with situations
+    where consecutive segments of same feature in edge table are not
+    mergeable. Needed on some DNC products.
+
 2016-07-19  Even Rouault <even.rouault@spatialys.com>
 
         * New 3.2.0 release

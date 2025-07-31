@@ -16,8 +16,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: ecs_tcl.c,v $
- * Revision 1.6  2007/02/12 16:04:21  cbalint
+ * $Log$
+ * Revision 1.6  2007-02-12 16:04:21  cbalint
  *    More warrning fixes in tcl and odbc plugins.
  *
  * Revision 1.5  2001/04/09 15:04:35  warmerda
@@ -82,8 +82,6 @@ int ecs_GetObjectIdFromCoordCmd        _ANSI_ARGS_((ClientData clientData, Tcl_I
 int ecs_UpdateDictionaryCmd            _ANSI_ARGS_((ClientData clientData, Tcl_Interp *interp, int argc, const char **argv));
 int ecs_GetServerProjectionCmd         _ANSI_ARGS_((ClientData clientData, Tcl_Interp *interp, int argc, const char **argv));
 int ecs_GetGlobalBoundCmd              _ANSI_ARGS_((ClientData clientData, Tcl_Interp *interp, int argc, const char **argv));
-int ecs_SetClientProjectionCmd         _ANSI_ARGS_((ClientData clientData, Tcl_Interp *interp, int argc, const char **argv));
-int ecs_SetServerProjectionCmd         _ANSI_ARGS_((ClientData clientData, Tcl_Interp *interp, int argc, const char **argv));
 int ecs_GetURLListCmd                  _ANSI_ARGS_((ClientData clientData, Tcl_Interp *interp, int argc, const char **argv));
 int ecs_AssignTclFunctionCmd           _ANSI_ARGS_((ClientData clientData, Tcl_Interp *interp, int argc, const char **argv));
 int ecs_SetCacheCmd                    _ANSI_ARGS_((ClientData clientData, Tcl_Interp *interp, int argc, const char **argv));
@@ -136,10 +134,6 @@ Tcl_Interp *interp;		/* Interpreter to add extra commands */
 		    ecs_GetObjectCmd, (ClientData) 0, NULL);
   Tcl_CreateCommand(interp, "ecs_GetObjectIdFromCoord", 
 		    ecs_GetObjectIdFromCoordCmd, (ClientData) 0, NULL);
-  Tcl_CreateCommand(interp, "ecs_SetClientProjection", 
-		    ecs_SetClientProjectionCmd, (ClientData) 0, NULL);
-  Tcl_CreateCommand(interp, "ecs_SetServerProjection", 
-		    ecs_SetServerProjectionCmd, (ClientData) 0, NULL);
   Tcl_CreateCommand(interp, "ecs_UpdateDictionary", 
 		    ecs_UpdateDictionaryCmd, (ClientData) 0, NULL);
   Tcl_CreateCommand(interp, "ecs_GetServerProjection", 
@@ -1011,92 +1005,6 @@ const char **argv;
 
   return _interpEcsResult(interp,cln_GetGlobalBound(ClientID),NULL);
   return TCL_OK;
-}
-
-/********************/
-
-/*
-   ecs_SetClientProjectionCmd
-   arg 1: URL
-   arg 2-fin: Projection
-
-   Met a jour la projection geographique du client.
-   */
-
-int ecs_SetClientProjectionCmd(clientData,interp,argc,argv)
-ClientData clientData;
-Tcl_Interp *interp;
-int argc;
-const char **argv;
-{
-  int ClientID;
-  ecs_Result *result;
-
-  if (argc != 3) {
-    Tcl_AppendResult(interp, ecstcl_message[0],"\"",
-		     argv[0], " ",ecstcl_message[1], " ", 
-		     ecstcl_message[11],"\"", (char *) NULL);    
-/*    Tcl_AppendResult(interp, "wrong # args: should be \"",
-                     argv[0], " URLdescriptor Projection\"", 0); */
-    return(TCL_ERROR);
-  }
-
-  if ((ClientID = cln_GetClientIdFromURL((char *)argv[1])) < 0) {
-    /* url unknown */
-    Tcl_AppendResult(interp,ecstcl_message[2], " ", argv[1], (char *) NULL);
-    return TCL_ERROR;
-  }
-
-  result = cln_SetClientProjection(ClientID,(char *)argv[2]);
-  _interpEcsResult(interp,result,NULL);    
-  if(result->error > 0) {
-    return TCL_ERROR;
-  }
-
-  return TCL_OK;
-
-}
-
-/********************/
-
-/*
-   ecs_SetServerProjectionCmd
-   arg 1: URL
-   arg 2-fin: Projection
-
-   Met a jour la projection geographique du client.
-   */
-
-int ecs_SetServerProjectionCmd(clientData,interp,argc,argv)
-ClientData clientData;
-Tcl_Interp *interp;
-int argc;
-const char **argv;
-{
-  int ClientID;
-
-  if (argc != 3) {
-    Tcl_AppendResult(interp, ecstcl_message[0],"\"",
-		     argv[0], " ",ecstcl_message[1], " ", 
-		     ecstcl_message[11],"\"", (char *) NULL);    
-/*    Tcl_AppendResult(interp, "wrong # args: should be \"",
-                     argv[0], " URLdescriptor Projection\"", 0); */
-    return(TCL_ERROR);
-  }
-
-  if ((ClientID = cln_GetClientIdFromURL((char *)argv[1])) < 0) {
-    /* url unknown */
-    Tcl_AppendResult(interp,ecstcl_message[2], " ", argv[1], (char *) NULL);
-    return TCL_ERROR;
-  }
-
-  return _interpEcsResult(interp, cln_SetServerProjection(ClientID,(char *)argv[2]),NULL);
-
-  /*
-  Tcl_AppendResult(interp, "projection ",argv[2]," is selected for ", argv[1], (
-char *) NULL);
-  */
-
 }
 
 /********************/

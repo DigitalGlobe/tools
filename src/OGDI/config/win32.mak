@@ -87,6 +87,10 @@ WINCPP_RELEASE	= /GX /Gi- /Gy /Od /DNDEBUG $(CPP_RELEASE)
 LINK_DEBUG	= /DEBUG /INCREMENTAL:no /FIXED:NO
 LINK_RELEASE	= /INCREMENTAL:no /OPT:REF
 
+#WINCPP_DEBUG   = /EHsc /D_DEBUG /Zi $(CPP_DEBUG)
+#WINCPP_RELEASE = /EHsc /Gy /Od /DNDEBUG $(CPP_RELEASE)
+
+
 #flags
 
 # These flags are appropriate for a compiling with Visual C++ 4.0
@@ -147,6 +151,8 @@ COMMON_CFLAGS = /D_WINDOWS /DWIN32 /D_MBCS \
 	/DMISSING_DLFCN_H \
 	$(OPTIMIZATION) \
 	/W3 /YX /MD /c /Fpheaders.pch
+
+#	/W3 /MD /c /Fpheaders.pch
 
 # Disabled since it causes issue on 64bit build, and no longer needed
 # FLAGS_X86DEF = /D_X86_

@@ -99,7 +99,6 @@ ecsprog_1(struct svc_req *rqstp, register SVCXPRT *transp)
 		ecs_Coordinate getobjectidfromcoord_1_arg;
 		char *updatedictionary_1_arg;
 		u_int setserverlanguage_1_arg;
-		char *setserverprojection_1_arg;
 		ecs_RasterConversion setrasterconversion_1_arg;
 		ecs_ProxyCreateServer createproxyserver_1_arg;
 		ecs_Compression setcompression_1_arg;
@@ -203,12 +202,6 @@ ecsprog_1(struct svc_req *rqstp, register SVCXPRT *transp)
 		xdr_argument = (xdrproc_t) xdr_u_int;
 		xdr_result = (xdrproc_t) xdr_ecs_Result;
 		local = (char *(*)(char *, struct svc_req *)) setserverlanguage_1_svc;
-		break;
-
-	case SETSERVERPROJECTION:
-		xdr_argument = (xdrproc_t) xdr_wrapstring;
-		xdr_result = (xdrproc_t) xdr_ecs_Result;
-		local = (char *(*)(char *, struct svc_req *)) setserverprojection_1_svc;
 		break;
 
 	case SETRASTERCONVERSION:

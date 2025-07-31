@@ -85,12 +85,12 @@ $TOPDIR/bin/$TARGET is in the LD_LIBRARY_PATH on Unix.
 
 To use in local mode try a command like:
 
- ogdi_info -u gltp:/dted/d:/toronto/dted -f Matrix -l 'DTED(DISK)' -dl
+ ogdi_info -u gltp:/vrf//home/even/data/vm2alv2_texash/texashd:/toronto/dted
 
 To use via the server, run gltpd.exe first in the background.  On windows, run 
 portmap.exe before running gltpd.exe.  Then use a command like:
 
- ogdi_info -u gltp://localhost/dted/d:/toronto/dted -f Matrix -l 'DTED(DISK)' -dl
+ ogdi_info -u gltp://localhost/vrf//home/even/data/vm2alv2_texash/texashd:/toronto/dted
 
 
 

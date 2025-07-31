@@ -16,8 +16,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: rpf.h,v $
- * Revision 1.7  2007/02/12 21:01:48  cbalint
+ * $Log$
+ * Revision 1.7  2007-02-12 21:01:48  cbalint
  *      Fix win32 target. It build and works now. (tested with VC6)
  *
  * Revision 1.6  2007/02/12 16:09:06  cbalint

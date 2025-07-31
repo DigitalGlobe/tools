@@ -16,8 +16,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: ecsinfo.c,v $
- * Revision 1.4  2007/02/12 21:01:48  cbalint
+ * $Log$
+ * Revision 1.4  2007-02-12 21:01:48  cbalint
  *      Fix win32 target. It build and works now. (tested with VC6)
  *
  * Revision 1.3  2007/02/12 16:09:06  cbalint
@@ -45,13 +45,11 @@
 #include "ecs.h"
 #include <ogdi_macro.h>
 
-#pragma comment(lib, "Ws2_32.lib")
-
-ECS_CVSID("$Id: ecsinfo.c,v 1.4 2007/02/12 21:01:48 cbalint Exp $");
+ECS_CVSID("$Id$");
 
 #ifdef _WINDOWS
-#define strcasecmp(a,b) _stricmp(a,b)
-#define strncasecmp(a,b,c) _strnicmp(a,b,c)
+#define strcasecmp(a,b) stricmp(a,b)
+#define strncasecmp(a,b,c) strnicmp(a,b,c)
 #endif
 int ecs_DefReadIndex(char *directory, char *url, char* urlfile, char *key, char** result);
 int ecs_DefReadFile(char* directory, char *filename, char *key, char **result);

@@ -8,17 +8,17 @@
 #endif
  
 typedef struct {                        /* Total of 40 bytes */
-  int32      nbytes ,                /* 40 + directory length */
-                nbins ,                 /* Directory size */
-                table_nrows ;           /* Num rows in original table */
-  char          index_type ,            /* T = thematic, G = gazetteer */
-                column_type ;           /* T, I, R, S, F, K */
-  int32      type_count ;            /* usually 1, but more for T */
-  char          id_data_type ,          /* I if > 32767, else S */
-		vpf_table_name[13] ,
-		vpf_column_name[25] ,   /* 16 bytes + 9 for TILE_ID */
-		sort ,                  /* 'S' if directory sorted */
-		padding[3] ;            /* To make it a nice 60 bytes */
+  int32      nbytes;                    /* 40 + directory length */
+  int32      nbins;                     /* Directory size */
+  int32      table_nrows;               /* Num rows in original table */
+  char       index_type;                /* T = thematic, G = gazetteer */
+  char       column_type;               /* T, I, R, S, F, K */
+  int32      type_count;                /* usually 1, but more for T */
+  char       id_data_type;              /* I if > 32767, else S */
+  char       vpf_table_name[13];
+  char       vpf_column_name[25];       /* 16 bytes + 9 for TILE_ID */
+  char       sort;                      /* 'S' if directory sorted */
+  char       padding[3];                /* To make it a nice 60 bytes */
 } ThematicIndexHeader ;
   
 #define         THEMATIC_INDEX_HEADER_SIZE    60

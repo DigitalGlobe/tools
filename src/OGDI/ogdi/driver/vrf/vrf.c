@@ -16,8 +16,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: vrf.c,v $
- * Revision 1.21  2016/07/06 09:01:30  erouault
+ * $Log$
+ * Revision 1.21  2016-07-06 09:01:30  erouault
  * VRF: fix memory leaks in error code paths of dyn_SelectLayer()
  *
  * Revision 1.20  2007/05/09 21:29:50  cbalint
@@ -109,7 +109,7 @@
 #include "vrf.h"
 #include "datadict.h"
 
-ECS_CVSID("$Id: vrf.c,v 1.21 2016/07/06 09:01:30 erouault Exp $");
+ECS_CVSID("$Id$");
 
 /* layer oriented functions are keeped in data structure to simplify code */
 
@@ -139,7 +139,7 @@ ecs_Result *dyn_CreateServer(s,Request)
      ecs_Server *s;
      char *Request;
 {
-  char buffer[256];
+  char buffer[768];
   char *ptr;
   int i;
   register ServerPrivateData *spriv; 
@@ -202,9 +202,9 @@ ecs_Result *dyn_CreateServer(s,Request)
 
   /* open schema files */
 
-  sprintf(buffer,"%s/lat",spriv->database);
+  snprintf(buffer, sizeof(buffer),"%s/lat",spriv->database);
   if (muse_access(buffer,0) != 0) {
-    sprintf(buffer,"%s/LAT",spriv->database);
+    snprintf(buffer, sizeof(buffer),"%s/LAT",spriv->database);
   }
 #ifdef TESTOPENTABLE
   printf("open spriv->latTable:%s\n",buffer);
@@ -367,7 +367,7 @@ ecs_Result *dyn_SelectLayer(s,sel)
      ecs_Server *s;
      ecs_LayerSelection *sel;
 {
-  char buffer[256];
+  char buffer[768];
   int layer,i, index_size;
   register ServerPrivateData *spriv = s->priv;
   register LayerPrivateData *lpriv;
@@ -406,7 +406,7 @@ ecs_Result *dyn_SelectLayer(s,sel)
   /* Open the current join table */
 
   if (lpriv->joinTableName != NULL) {
-    sprintf(buffer,"%s/%s/%s",spriv->library,lpriv->coverage,lpriv->joinTableName);
+    snprintf(buffer, sizeof(buffer),"%s/%s/%s",spriv->library,lpriv->coverage,lpriv->joinTableName);
     if (muse_access(buffer,0) == 0 ) {
 #ifdef TESTOPENTABLE
 	printf("open lpriv->joinTable:%s\n",buffer);
@@ -487,7 +487,7 @@ ecs_Result *dyn_SelectLayer(s,sel)
 
   /* open layer */
 
-  sprintf(buffer,"%s/%s/%s",spriv->library,lpriv->coverage,lpriv->featureTableName);
+  snprintf(buffer, sizeof(buffer),"%s/%s/%s",spriv->library,lpriv->coverage,lpriv->featureTableName);
   if (muse_access(buffer,0) == 0 ) {
 #ifdef TESTOPENTABLE
     printf("open spriv->featureTable:%s\n",buffer);
@@ -502,7 +502,7 @@ ecs_Result *dyn_SelectLayer(s,sel)
     }
 
     if (lpriv->joinTableName != NULL) {
-      sprintf(buffer,"%s/%s/%s",spriv->library,lpriv->coverage,lpriv->joinTableName);
+      snprintf(buffer, sizeof(buffer),"%s/%s/%s",spriv->library,lpriv->coverage,lpriv->joinTableName);
       if (muse_access(buffer,0) == 0 ) {
 #ifdef TESTOPENTABLE
 	printf("open lpriv->joinTable:%s\n",buffer);
@@ -612,7 +612,7 @@ ecs_Result *dyn_ReleaseLayer(s,sel)
   /* first, try to find an existing layer with same request and family */
 
   if ((layer = ecs_GetLayer(s,sel)) == -1) {
-    sprintf(buffer,"Invalid layer %s",sel->Select);
+    snprintf(buffer, sizeof(buffer),"Invalid layer %s",sel->Select);
     ecs_SetError(&(s->result),1,buffer);
     return &(s->result);
   }
@@ -701,8 +701,10 @@ ecs_Result *dyn_SelectRegion(s,gr)
   
   s->currentRegion.north = gr->north;
   s->currentRegion.south = gr->south;
-  s->currentRegion.east = gr->east;			
-  s->currentRegion.west = gr->west;
+  /* GDAL < 2.5 passed swapped values of east/west. This used to work */
+  /* because of the reprojection code that has now ben removed */
+  s->currentRegion.east = gr->east >= gr->west ? gr->east : gr->west;			
+  s->currentRegion.west = gr->west <= gr->east ? gr->west : gr->east;
   s->currentRegion.ns_res = gr->ns_res;
   s->currentRegion.ew_res = gr->ew_res;
   

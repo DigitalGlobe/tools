@@ -1,5 +1,5 @@
 /**********************************************************************
- * $Id: gdal_serv.h,v 1.1 2001/05/04 03:13:35 warmerda Exp $
+ * $Id$
  *
  * Project:  GDAL OGDI Server
  * Purpose:  Declarations.
@@ -27,8 +27,8 @@
  * DEALINGS IN THE SOFTWARE.
  **********************************************************************
  * 
- * $Log: gdal_serv.h,v $
- * Revision 1.1  2001/05/04 03:13:35  warmerda
+ * $Log$
+ * Revision 1.1  2001-05-04 03:13:35  warmerda
  * New
  *
  * Revision 1.2  2000/08/28 20:21:47  warmerda

@@ -13,10 +13,8 @@
 # It is provided "as is" without express or implied warranty.
 #
 
-TARGETDIR=ogdi.sourceforge.net:ftp-ogdi/.
-
 if [ $# -lt 1 ] ; then
-  echo "Usage: mkogdidist version [-install]"
+  echo "Usage: mkogdidist version"
   echo
   echo "Example: mkogdidist 3.1alpha"
   exit
@@ -25,26 +23,20 @@ fi
 OGDI_VERSION=$1
 DIST_NAME=ogdi-$OGDI_VERSION
 
-
 rm -rf dist_wrk  
 mkdir dist_wrk
 cd dist_wrk
 
-export CVSROOT=:pserver:anonymous@ogdi.cvs.sourceforge.net:/cvsroot/ogdi
-
-echo "Please hit enter when prompted for a password."
-cvs login
-
-cvs checkout -P devdir
+git clone https://github.com/libogdi/ogdi devdir
 
 if [ \! -d devdir ] ; then
-  echo "cvs checkout reported an error ... abandoning mkogdidist"
+  echo "git clone reported an error ... abandoning mkogdidist"
   exit
 fi
 
 # remove junks
-find devdir -name CVS -exec rm -rf {} \;
-find devdir -name ".cvsignore" -exec rm -rf '{}' \;
+find devdir -name .git -exec rm -rf {} \;
+
 # fix wrongly encoded files from tarball
 set +x
 for f in `find . -type f` ; do
@@ -74,8 +66,3 @@ zip -r ../${DIST_NAME}.zip ${DIST_NAME}
 
 cd ..
 rm -rf dist_wrk
-
-if test "$2" = "-install" ; then
-  scp ${DIST_NAME}.tar.gz $TARGETDIR
-  scp ${DIST_NAME}.zip $TARGETDIR
-fi

@@ -903,11 +903,11 @@ int SHPWriteObject(SHPHandle psSHP, int nShapeId, SHPObject * psObject )
         || psSHP->nShapeType == SHPT_ARCM
         || psSHP->nShapeType == SHPT_MULTIPATCH )
     {
-	int32		nPoints, nParts;
+	int32		nPoints;
 	int    		i;
 
 	nPoints = psObject->nVertices;
-	nParts = psObject->nParts;
+	unsigned int nParts = psObject->nParts;
 
 	_SHPSetBounds( pabyRec + 12, psObject );
 
@@ -936,7 +936,7 @@ int SHPWriteObject(SHPHandle psSHP, int nShapeId, SHPObject * psObject )
         if( psSHP->nShapeType == SHPT_MULTIPATCH )
         {
             memcpy( pabyRec + nRecordSize, psObject->panPartType,
-                    4*psObject->nParts );
+                    4*nParts );
             for( i = 0; i < psObject->nParts; i++ )
             {
                 if( bBigEndian ) SwapWord( 4, pabyRec + nRecordSize );

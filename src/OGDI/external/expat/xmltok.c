@@ -4,7 +4,7 @@ See the file COPYING for copying permission.
 */
 
 static char RCSId[]
-  = "$Header: /cvsroot/ogdi/devdir/external/expat/xmltok.c,v 1.1 2001/04/12 05:25:37 warmerda Exp $";
+  = "$Header$";
 
 #ifdef COMPILED_FROM_DSP
 #  include "winconfig.h"

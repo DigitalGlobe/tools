@@ -171,7 +171,7 @@ void _getNextObjectArea(s,l)
     objects.
     */
 
-  sprintf(buffer,"%d",l->index);
+  snprintf(buffer, sizeof(buffer),"%d",l->index);
   ecs_SetObjectId(&(s->result),buffer);
 
   /*
@@ -230,7 +230,7 @@ _getObjectArea(s,l,id)
 { 
   int index;
   int i;
-  char buffer[3];
+  char buffer[32];
 
   index = atoi(id);
 
@@ -289,7 +289,7 @@ _getObjectArea(s,l,id)
     objects.
     */
 
-  sprintf(buffer,"%d",index);
+  snprintf(buffer, sizeof(buffer),"%d",index);
   ecs_SetObjectId(&(s->result),buffer);
 
   /*
@@ -395,7 +395,7 @@ void _getObjectIdArea(s,l,coord)
   if (position < 0) {
     ecs_SetError(&(s->result),2,"No polygons found");
   } else {
-    sprintf(buffer,"%d",position);
+    snprintf(buffer, sizeof(buffer),"%d",position);
     if(ecs_SetText(&(s->result),buffer)) {
       ecs_SetSuccess(&(s->result));
     }
@@ -525,7 +525,7 @@ void _getNextObjectLine(s,l)
     objects.
     */
 
-  sprintf(buffer,"%d",l->index);
+  snprintf(buffer, sizeof(buffer),"%d",l->index);
   ecs_SetObjectId(&(s->result),buffer);
 
   /*
@@ -584,7 +584,7 @@ _getObjectLine(s,l,id)
 {
   int index;
   int i;
-  char buffer[3];
+  char buffer[32];
 
   index = atoi(id);
 
@@ -605,7 +605,7 @@ _getObjectLine(s,l,id)
 			 dbline[index].linelist[i].y);
   }
 
-  sprintf(buffer,"%d",index);
+  snprintf(buffer, sizeof(buffer),"%d",index);
   ecs_SetObjectId(&(s->result),buffer);
 
   ECS_SETGEOMBOUNDINGBOX((&(s->result)),
@@ -700,7 +700,7 @@ _getObjectIdLine(s,l,coord)
   if (position < 0) {
     ecs_SetError(&(s->result),2,"No line found");
   } else {
-    sprintf(buffer,"%d",position);
+    snprintf(buffer, sizeof(buffer),"%d",position);
     if(ecs_SetText(&(s->result),buffer)) {
       ecs_SetSuccess(&(s->result));
     }
@@ -806,7 +806,7 @@ _getNextObjectPoint(s,l)
 
   ecs_SetGeomPoint(&(s->result),dbpoint[l->index].geopoint.x,dbpoint[l->index].geopoint.y);
    
-  sprintf(buffer,"%d",l->index);
+  snprintf(buffer, sizeof(buffer),"%d",l->index);
   ecs_SetObjectId(&(s->result),buffer);
 
   ECS_SETGEOMBOUNDINGBOX((&(s->result)),
@@ -856,7 +856,7 @@ _getObjectPoint(s,l,id)
      char *id;
 {
   int index;
-  char buffer[3];
+  char buffer[32];
 
   index = atoi(id);
 
@@ -867,7 +867,7 @@ _getObjectPoint(s,l,id)
 
   ecs_SetGeomPoint(&(s->result),dbpoint[index].geopoint.x,dbpoint[index].geopoint.y);
    
-  sprintf(buffer,"%d",index);
+  snprintf(buffer, sizeof(buffer),"%d",index);
   ecs_SetObjectId(&(s->result),buffer);
 
   ECS_SETGEOMBOUNDINGBOX((&(s->result)),
@@ -950,7 +950,7 @@ _getObjectIdPoint(s,l,coord)
   if (position < 0) {
     ecs_SetError(&(s->result),2,"No point found");
   } else {
-    sprintf(buffer,"%d",position);
+    snprintf(buffer, sizeof(buffer),"%d",position);
     if(ecs_SetText(&(s->result),buffer)) {
       ecs_SetSuccess(&(s->result));
     }
@@ -1021,7 +1021,7 @@ _getNextObjectText(s,l)
      ecs_Server *s;
      ecs_Layer *l;
 {
-  char buffer[3];
+  char buffer[32];
 
   /*
     Go to the next valid index position.
@@ -1054,7 +1054,7 @@ _getNextObjectText(s,l)
     a valid polygon.
     */
 
-  sprintf(buffer,"%d",l->index);
+  snprintf(buffer, sizeof(buffer),"%d",l->index);
 
   ecs_SetGeomText(&(s->result),dbtext[l->index].geopoint.x,dbtext[l->index].geopoint.y,buffer);
    
@@ -1105,7 +1105,7 @@ _getObjectText(s,l,id)
      char *id;
 {
   int index;
-  char buffer[3];
+  char buffer[32];
 
   index = atoi(id);
 
@@ -1114,7 +1114,7 @@ _getObjectText(s,l,id)
     return;
   }
 
-  sprintf(buffer,"%d",index);
+  snprintf(buffer, sizeof(buffer),"%d",index);
 
   ecs_SetGeomText(&(s->result),dbtext[index].geopoint.x,dbtext[index].geopoint.y,buffer);
 
@@ -1198,7 +1198,7 @@ _getObjectIdText(s,l,coord)
   if (position < 0) {
     ecs_SetError(&(s->result),2,"No text found");
   } else {
-    sprintf(buffer,"%d",position);
+    snprintf(buffer, sizeof(buffer),"%d",position);
     if(ecs_SetText(&(s->result),buffer)) {
       ecs_SetSuccess(&(s->result));
     }
@@ -1293,7 +1293,7 @@ _getNextObjectMatrix(s,l)
      ecs_Server *s;
      ecs_Layer *l;
 {
-  int i,i2,j2;
+  int i;
   char buffer[128];
   register LayerPrivateData *lpriv = (LayerPrivateData *) l->priv;
   int totalcol,totalrow;
@@ -1313,22 +1313,12 @@ _getNextObjectMatrix(s,l)
 
   ecs_SetGeomMatrix(&(s->result),totalcol);
 
-  if (s->rasterconversion.isProjEqual) {
     for (i=0; i<totalcol; i++) {
       value = _calcPosValue(s,l,i,l->index);
       ECS_SETGEOMMATRIXVALUE((&(s->result)),i,value);
     }
-  } else {
-    for (i=0; i<totalcol; i++) {
-      i2 = ECSGETI(s,((double) l->index),((double)i));
-      j2 = ECSGETJ(s,((double) l->index),((double)i));
-      value = _calcPosValue(s,l,j2,i2);
-      
-      ECS_SETGEOMMATRIXVALUE((&(s->result)),i,value);
-    }
-  }
   
-  sprintf(buffer,"%d",l->index);
+  snprintf(buffer, sizeof(buffer),"%d",l->index);
   if (!ecs_SetObjectId(&(s->result),buffer)) {
     return;
   }
@@ -1376,7 +1366,7 @@ _getObjectMatrix(s,l,id)
      char *id;
 {
   int index;
-  int i,i2,j2;
+  int i;
   char buffer[128];
   register LayerPrivateData *lpriv = (LayerPrivateData *) l->priv;
   int totalcol,totalrow;
@@ -1398,22 +1388,12 @@ _getObjectMatrix(s,l,id)
 
   ecs_SetGeomMatrix(&(s->result),totalcol);
 
-  if (s->rasterconversion.isProjEqual) {
     for (i=0; i<totalcol; i++) {
       value = _calcPosValue(s,l,i,index);
       ECS_SETGEOMMATRIXVALUE((&(s->result)),i,value);
     }
-  } else {
-    for (i=0; i<totalcol; i++) {
-      i2 = ECSGETI(s,((double) index),((double)i));
-      j2 = ECSGETJ(s,((double) index),((double)i));
-      value = _calcPosValue(s,l,j2,i2);
-      
-      ECS_SETGEOMMATRIXVALUE((&(s->result)),i,value);
-    }
-  }
   
-  sprintf(buffer,"%d",index);
+  snprintf(buffer, sizeof(buffer),"%d",index);
   if (!ecs_SetObjectId(&(s->result),buffer)) {
     return;
   }
@@ -1472,7 +1452,7 @@ _getObjectIdMatrix(s,l,coord)
     value = _getValueFromCoord(s,l,pix_c,pix_r);
   }
     
-  sprintf(buffer,"%d",value);
+  snprintf(buffer, sizeof(buffer),"%d",value);
   if(ecs_SetText(&(s->result),buffer)) {
     ecs_SetSuccess(&(s->result));
   }    

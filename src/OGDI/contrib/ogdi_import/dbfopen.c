@@ -570,7 +570,7 @@ int	DBFAddField(DBFHandle psDBF, const char * pszFieldName,
         pszFInfo[i] = '\0';
 
     if( (int) strlen(pszFieldName) < 10 )
-        strncpy( pszFInfo, pszFieldName, strlen(pszFieldName));
+        memcpy( pszFInfo, pszFieldName, strlen(pszFieldName));
     else
         strncpy( pszFInfo, pszFieldName, 10);
 
@@ -897,7 +897,7 @@ static int DBFWriteAttribute(DBFHandle psDBF, int hEntity, int iField,
 	    if( (int)strlen(szSField) > psDBF->panFieldSize[iField] )
 	        szSField[psDBF->panFieldSize[iField]] = '\0';
 
-	    strncpy((char *) (pabyRec+psDBF->panFieldOffset[iField]),
+	    memcpy((char *) (pabyRec+psDBF->panFieldOffset[iField]),
 		    szSField, strlen(szSField) );
 	}
 	else
@@ -912,7 +912,7 @@ static int DBFWriteAttribute(DBFHandle psDBF, int hEntity, int iField,
 	    sprintf(szSField, szFormat, *((double *) pValue) );
 	    if( (int) strlen(szSField) > psDBF->panFieldSize[iField] )
 	        szSField[psDBF->panFieldSize[iField]] = '\0';
-	    strncpy((char *) (pabyRec+psDBF->panFieldOffset[iField]),
+	    memcpy((char *) (pabyRec+psDBF->panFieldOffset[iField]),
 		    szSField, strlen(szSField) );
 	}
 	break;

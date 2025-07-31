@@ -109,7 +109,6 @@ enum ecs_Transformation {
 
 struct ecs_RasterConversion {
   double coef<>;
-  int isProjEqual;
   ecs_Resampling r_method;
   ecs_Transformation t_method;
 };
@@ -396,7 +395,6 @@ program ECSPROG {
 		ecs_Result GETSERVERPROJECTION(void) = 13;
 		ecs_Result GETGLOBALBOUND(void) = 14;
 		ecs_Result SETSERVERLANGUAGE(unsigned int) = 15;
-		ecs_Result SETSERVERPROJECTION(string) = 16;
 		ecs_Result SETRASTERCONVERSION(ecs_RasterConversion) = 17;
 		ecs_Result CREATEPROXYSERVER(ecs_ProxyCreateServer) = 100;
 		ecs_Result SETCOMPRESSION(ecs_Compression) = 101;
@@ -423,7 +421,6 @@ program ECSPROXYPROG {
 		ecs_Result PROXY_GETSERVERPROJECTION(void) = 13;
 		ecs_Result PROXY_GETGLOBALBOUND(void) = 14;
 		ecs_Result PROXY_SETSERVERLANGUAGE(unsigned int) = 15;
-		ecs_Result PROXY_SETSERVERPROJECTION(string) = 16;
 		ecs_Result PROXY_SETRASTERCONVERSION(ecs_RasterConversion) = 17;
 		ecs_Result PROXY_CREATESERVER(ecs_ProxyCreateServer) = 100;
 		ecs_Result PROXY_SETCOMPRESSION(ecs_Compression) = 101;

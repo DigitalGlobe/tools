@@ -16,8 +16,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: ecs_capabilities.c,v $
- * Revision 1.3  2001/06/13 17:17:40  warmerda
+ * $Log$
+ * Revision 1.3  2001-06-13 17:17:40  warmerda
  * fixed capabilities to match 6.2 spec
  *
  * Revision 1.2  2001/04/12 18:14:16  warmerda
@@ -35,7 +35,7 @@
 
 #include "expat.h"
 
-ECS_CVSID("$Id: ecs_capabilities.c,v 1.3 2001/06/13 17:17:40 warmerda Exp $");
+ECS_CVSID("$Id$");
 
 #define STACK_MAX   100
 
@@ -87,7 +87,7 @@ static void recordError( capParseInfo *pi, const char *fmt, ... )
     vsprintf( buffer, fmt, args );
     va_end(args);
 
-    pi->error = _strdup(buffer);
+    pi->error = strdup(buffer);
 #ifdef DEBUG
     fprintf( stderr, "ecs_capabilities.c recordError():\n%s\n", pi->error );
 #endif    
@@ -123,7 +123,7 @@ static void startElementHandler( void *cbData, const char *element,
     }
     else
     {
-        pi->element_stack[pi->element_depth] = _strdup(element);
+        pi->element_stack[pi->element_depth] = strdup(element);
         pi->element_depth++;
     }
 
@@ -135,7 +135,7 @@ static void startElementHandler( void *cbData, const char *element,
         for( i = 0; attr != NULL && attr[i] != NULL; i += 2 )
         {
             if( strcmp(attr[i],"version") == 0 )
-                pi->version = _strdup(attr[i+1]);
+                pi->version = strdup(attr[i+1]);
         }
     }
 
@@ -174,11 +174,11 @@ static void startElementHandler( void *cbData, const char *element,
         for( i = 0; attr != NULL && attr[i] != NULL; i += 2 )
         {
             if( strcmp(attr[i],"qe_prefix") == 0 )
-                pi->cur_layer->qe_prefix = _strdup(attr[i+1]);
+                pi->cur_layer->qe_prefix = strdup(attr[i+1]);
             else if( strcmp(attr[i],"qe_suffix") == 0 )
-                pi->cur_layer->qe_suffix = _strdup(attr[i+1]);
+                pi->cur_layer->qe_suffix = strdup(attr[i+1]);
             else if( strcmp(attr[i],"qe_format") == 0 )
-                pi->cur_layer->qe_format = _strdup(attr[i+1]);
+                pi->cur_layer->qe_format = strdup(attr[i+1]);
         }
     }
 
@@ -323,7 +323,7 @@ static void endElementHandler( void *cbData, const char *element )
 /* -------------------------------------------------------------------- */
     else if( strcmp(element,"Name") == 0 && pi->cur_layer != NULL )
     {
-        pi->cur_layer->name = _strdup(pi->cdata);
+        pi->cur_layer->name = strdup(pi->cdata);
     }
 
 /* -------------------------------------------------------------------- */
@@ -332,7 +332,7 @@ static void endElementHandler( void *cbData, const char *element )
 /* -------------------------------------------------------------------- */
     else if( strcmp(element,"Title") == 0 && pi->cur_layer != NULL )
     {
-        pi->cur_layer->title = _strdup(pi->cdata);
+        pi->cur_layer->title = strdup(pi->cdata);
     }
 
 /* -------------------------------------------------------------------- */
@@ -342,9 +342,9 @@ static void endElementHandler( void *cbData, const char *element )
     else if( strcmp(element,"SRS") == 0 && pi->cur_layer != NULL )
     {
         if( strncmp(pi->cdata,"PROJ4:",6) == 0 )
-            pi->cur_layer->srs = _strdup(pi->cdata+6);
+            pi->cur_layer->srs = strdup(pi->cdata+6);
         else
-            pi->cur_layer->srs = _strdup(pi->cdata);
+            pi->cur_layer->srs = strdup(pi->cdata);
     }
 
 /* -------------------------------------------------------------------- */
@@ -354,7 +354,7 @@ static void endElementHandler( void *cbData, const char *element )
     else if( strcmp(element,"QueryExpression") == 0
              && pi->cur_layer != NULL && strlen(pi->cdata) > 0 )
     {
-        pi->cur_layer->qe_description = _strdup(pi->cdata);
+        pi->cur_layer->qe_description = strdup(pi->cdata);
     }
 
 /* -------------------------------------------------------------------- */
@@ -415,7 +415,7 @@ static void endElementHandler( void *cbData, const char *element )
         else
             *list = (char **) realloc(*list,(count+2) * sizeof(char*));
 
-        (*list)[count++] = _strdup( pi->cdata );
+        (*list)[count++] = strdup( pi->cdata );
         (*list)[count] = NULL;
     }
 
@@ -517,7 +517,7 @@ void ecs_ParseCapabilities( ecs_Client *cln, const char *cap_doc,
         if( pi.version != NULL )
             strcpy( cln->server_version_str, pi.version );
         else
-            strcpy( cln->server_version_str, "3.0" );
+            strcpy( cln->server_version_str, "4.0" );
 
         cln->server_version = (int) (atof(cln->server_version_str)*1000 + 0.5);
 

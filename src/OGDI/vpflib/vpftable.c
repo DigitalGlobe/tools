@@ -824,7 +824,7 @@ vpf_table_type vpf_open_table (char *tablename, storage_type storage,
       }
       i--;
     }
-  strncpy(table.name,&(tablepath[j+1]),12);
+  snprintf(table.name,sizeof(table.name), "%s", &(tablepath[j+1]));
   table.path = (char*)xvt_zmalloc (strlen (tablepath) + 5);
   strcpy(table.path, tablepath);
 

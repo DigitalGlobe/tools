@@ -20,7 +20,7 @@ include $(TOPDIR)/config/common.mak
 # Sub-directories that need to be built
 #
 # MOD START
-subdirs	= adrg dted network rpf vrf skeleton
+subdirs	= adrg network rpf vrf skeleton
 # MOD END
 
 #

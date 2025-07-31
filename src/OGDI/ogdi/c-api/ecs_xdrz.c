@@ -16,8 +16,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: ecs_xdrz.c,v $
- * Revision 1.4  2007/02/12 15:52:57  cbalint
+ * $Log$
+ * Revision 1.4  2007-02-12 15:52:57  cbalint
  *
  *    Preliminary cleanup.
  *    Get rif of unitialized variables, and unused ones.
@@ -33,7 +33,7 @@
 #include "ecs.h"
 #include "zlib.h"
 
-ECS_CVSID("$Id: ecs_xdrz.c,v 1.4 2007/02/12 15:52:57 cbalint Exp $");
+ECS_CVSID("$Id$");
 
 /* Variables used for compression/decompression routines */
 static void *obuf = NULL;

@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: ogdi_info.c,v 1.14 2004/10/26 19:45:53 warmerda Exp $
+ * $Id$
  *
  * Project:  OGDI Contributed Clients
  * Purpose:  Simple console query program for testing OGDI.
@@ -19,8 +19,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: ogdi_info.c,v $
- * Revision 1.14  2004/10/26 19:45:53  warmerda
+ * $Log$
+ * Revision 1.14  2004-10-26 19:45:53  warmerda
  * Fixed last fix.
  *
  * Revision 1.13  2004/10/26 19:37:52  warmerda
@@ -63,7 +63,6 @@
  */
 
 #include "ecs.h"
-#include "projects.h"
 
 static int	ClientID = -1;
 static int      bNoDict = FALSE;
@@ -214,12 +213,11 @@ const char * DecToDMS( double dfAngle )
 /*                          DumpGlobalRegion()                          */
 /************************************************************************/
 
-static int DumpGlobalRegion( ecs_Region * region, PJ * proj_defn )
+static int DumpGlobalRegion( ecs_Region * region )
 
 {
     ecs_Result	*result;
     ecs_Region  tmpRegion;
-    projUV     proj_pnt;
 
     if( region == NULL )
         region = &tmpRegion;
@@ -241,48 +239,6 @@ static int DumpGlobalRegion( ecs_Region * region, PJ * proj_defn )
 
     *region = ECSREGION(result);
 
-/* -------------------------------------------------------------------- */
-/*	Print the corner coordinates in lat/long.			*/
-/* -------------------------------------------------------------------- */
-#ifndef _WINDOWS    
-    if( proj_defn != NULL )
-    {
-        printf( "Lat/Long Corners\n" );
-        
-        proj_pnt.v = region->north;
-        proj_pnt.u = region->west;
-        proj_pnt = pj_inv(proj_pnt, proj_defn);
-        printf( "Upper Left:  (%s,%s) (%g,%g)\n",
-                DecToDMS(proj_pnt.u/DEG_TO_RAD),
-                DecToDMS(proj_pnt.v/DEG_TO_RAD),
-                proj_pnt.u/DEG_TO_RAD, proj_pnt.v/DEG_TO_RAD );
-        
-        proj_pnt.v = region->north;
-        proj_pnt.u = region->east;
-        proj_pnt = pj_inv(proj_pnt, proj_defn);
-        printf( "Upper Right: (%s,%s) (%g,%g)\n",
-                DecToDMS(proj_pnt.u/DEG_TO_RAD),
-                DecToDMS(proj_pnt.v/DEG_TO_RAD),
-                proj_pnt.u/DEG_TO_RAD, proj_pnt.v/DEG_TO_RAD );
-        
-        proj_pnt.v = region->south;
-        proj_pnt.u = region->west;
-        proj_pnt = pj_inv(proj_pnt, proj_defn);
-        printf( "Lower Left:  (%s,%s) (%g,%g)\n",
-                DecToDMS(proj_pnt.u/DEG_TO_RAD),
-                DecToDMS(proj_pnt.v/DEG_TO_RAD),
-                proj_pnt.u/DEG_TO_RAD, proj_pnt.v/DEG_TO_RAD );
-        
-        proj_pnt.v = region->south;
-        proj_pnt.u = region->east;
-        proj_pnt = pj_inv(proj_pnt, proj_defn);
-        printf( "Lower Right: (%s,%s) (%g,%g)\n",
-                DecToDMS(proj_pnt.u/DEG_TO_RAD),
-                DecToDMS(proj_pnt.v/DEG_TO_RAD),
-                proj_pnt.u/DEG_TO_RAD, proj_pnt.v/DEG_TO_RAD );
-    }
-#endif
-    
     return TRUE;
 }
 
@@ -398,7 +354,6 @@ static int AccessURL( char * url, ecs_Region * region )
 
 {
     ecs_Result *result;
-    PJ	       *proj_defn = NULL;
 
 /* -------------------------------------------------------------------- */
 /*      Close old client if there is one active.                        */
@@ -426,17 +381,10 @@ static int AccessURL( char * url, ecs_Region * region )
 
     printf( "Projection = `%s'\n", ECSTEXT(result) );
 
-#ifndef _WINDOWS    
-    if( !bNoProj 
-        && strstr(ECSTEXT(result),"latlong") == NULL
-        && strstr(ECSTEXT(result),"longlat") == NULL )
-        proj_defn = cln_ProjInit( ECSTEXT(result) );
-#endif
-
 /* -------------------------------------------------------------------- */
 /*      Dump the global region.                                         */
 /* -------------------------------------------------------------------- */
-    DumpGlobalRegion( region, proj_defn );
+    DumpGlobalRegion( region );
 
 /* -------------------------------------------------------------------- */
 /*      Print the Dictionary (update).                                  */
@@ -580,7 +528,7 @@ static void DumpLayer( const char * options, ecs_Region * region,
     if( CheckError( result ) )
         return;
 
-    DumpGlobalRegion( NULL, NULL );
+    DumpGlobalRegion( NULL );
 
 /* -------------------------------------------------------------------- */
 /*      Dump the attribute definitions.                                 */
@@ -760,7 +708,7 @@ int main( int argc, char ** argv )
             DumpLayer( "", region, layer, featureType );
         }
         else if( strcmp(argv[i],"-dr") == 0 ) {
-            DumpGlobalRegion( NULL, NULL );
+            DumpGlobalRegion( NULL );
         }
         else if( strcmp(argv[i], "-no-proj") == 0 ) {
             bNoProj = TRUE;

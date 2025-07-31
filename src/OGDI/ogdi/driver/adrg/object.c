@@ -16,8 +16,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: object.c,v $
- * Revision 1.7  2016/06/28 14:32:45  erouault
+ * $Log$
+ * Revision 1.7  2016-06-28 14:32:45  erouault
  * Fix all warnings about unused variables raised by GCC 4.8
  *
  * Revision 1.6  2007/02/12 16:09:06  cbalint
@@ -45,7 +45,7 @@
 #include "ecs.h"
 #include "adrg.h"
 
-ECS_CVSID("$Id: object.c,v 1.7 2016/06/28 14:32:45 erouault Exp $");
+ECS_CVSID("$Id$");
 
 /*
  *  --------------------------------------------------------------------------
@@ -114,10 +114,6 @@ void _LoadADRGTiles(s,l,UseOverview)
 	  return;
 	}
 	
-	if (s->rasterconversion.isProjEqual == FALSE) {
-	  return;
-	}
-	
 	spriv->overview.firsttile = i1;
 	spriv->overview.buffertile = malloc((i2-i1+1)*sizeof(tile_mem));
 	
@@ -150,12 +146,6 @@ void _LoadADRGTiles(s,l,UseOverview)
     }
 
     *UseOverview = FALSE;
-
-    if (s->rasterconversion.isProjEqual == FALSE) {
-      if ((i2-i1) > MAXADRGTILES)
-	*UseOverview = TRUE;
-      return;
-    }
 
     if ((lpriv->zonenumber == 9) ||
 	(lpriv->zonenumber == 18)) {
@@ -198,7 +188,7 @@ void _getNextObjectRaster(s,l)
      ecs_Server *s;
      ecs_Layer *l;
 {
-  int i,i2,j2;
+  int i;
   char buffer[128];
   static int UseOverview;
 
@@ -218,20 +208,10 @@ void _getNextObjectRaster(s,l)
   /*totalrow = (int) ((s->currentRegion.north - s->currentRegion.south)/s->currentRegion.ns_res);*/
   ecs_SetGeomMatrix(&(s->result),totalcol);
 
-  if (s->rasterconversion.isProjEqual) {
     for (i=0; i<totalcol; i++) {
       value = _calcPosValue(s,l,i,l->index,UseOverview);
       ECS_SETGEOMMATRIXVALUE((&(s->result)),i,value);
     }
-  } else {
-    for (i=0; i<totalcol; i++) {
-      i2 = ECSGETI(s,((double) l->index),((double)i));
-      j2 = ECSGETJ(s,((double) l->index),((double)i));
-      value = _calcPosValue(s,l,j2,i2,UseOverview);
-      
-      ECS_SETGEOMMATRIXVALUE((&(s->result)),i,value);
-    }
-  }
   
 
   sprintf(buffer,"%d",l->index);
@@ -255,7 +235,7 @@ _getObjectRaster(s,l,id)
      ecs_Layer *l;
      char *id;
 {
-  int i,i2,j2;
+  int i;
   char buffer[128];
   int totalcol;
   /*int totalrow;*/
@@ -274,19 +254,10 @@ _getObjectRaster(s,l,id)
   /*totalrow = (int) ((s->currentRegion.north - s->currentRegion.south)/s->currentRegion.ns_res);*/
   ecs_SetGeomMatrix(&(s->result),totalcol);
 
-  if (s->rasterconversion.isProjEqual) {
     for (i=0; i<totalcol; i++) {
       value = _calcPosValue(s,l,i,index,FALSE);
       ECS_SETGEOMMATRIXVALUE((&(s->result)),i,value);
     }
-  } else {
-    for (i=0; i<totalcol; i++) {
-      i2 = ECSGETI(s,((double) index),((double)i));
-      j2 = ECSGETJ(s,((double) index),((double)i));
-      value = _calcPosValue(s,l,j2,i2,FALSE);
-      ECS_SETGEOMMATRIXVALUE((&(s->result)),i,value);
-    }
-  }
 
   sprintf(buffer,"%d",index);
   if (!ecs_SetObjectId(&(s->result),buffer)) {
@@ -486,7 +457,7 @@ void _getNextObjectImage(s,l)
      ecs_Server *s;
      ecs_Layer *l;
 {
-  int i,i2,j2;
+  int i;
   char buffer[128];
   static int UseOverview;
 
@@ -506,21 +477,10 @@ void _getNextObjectImage(s,l)
   /*totalrow = (int) ((s->currentRegion.north - s->currentRegion.south)/s->currentRegion.ns_res);*/
   ecs_SetGeomImage(&(s->result),totalcol);
 
-  if (s->rasterconversion.isProjEqual) {
     for (i=0; i<totalcol; i++) {
       value = _calcImagePosValue(s,l,i,l->index,UseOverview);
       ECS_SETGEOMIMAGEVALUE(&(s->result),i,value);
     }
-  } else {
-    for (i=0; i<totalcol; i++) {
-      i2 = ECSGETI(s,((double) l->index),((double)i));
-      j2 = ECSGETJ(s,((double) l->index),((double)i));
-      value = _calcImagePosValue(s,l,j2,i2,UseOverview);
-      
-      ECS_SETGEOMIMAGEVALUE((&(s->result)),i,value);
-    }
-  }
-  
 
   sprintf(buffer,"%d",l->index);
   if (!ecs_SetObjectId(&(s->result),buffer)) {
@@ -543,7 +503,7 @@ _getObjectImage(s,l,id)
      ecs_Layer *l;
      char *id;
 {
-  int i,i2,j2;
+  int i;
   char buffer[128];
   int totalcol;
   /*int totalrow;*/
@@ -562,19 +522,10 @@ _getObjectImage(s,l,id)
   /*totalrow = (int) ((s->currentRegion.north - s->currentRegion.south)/s->currentRegion.ns_res);*/
   ecs_SetGeomImage(&(s->result),totalcol);
 
-  if (s->rasterconversion.isProjEqual) {
     for (i=0; i<totalcol; i++) {
       value = _calcImagePosValue(s,l,i,index,FALSE);
       ECS_SETGEOMMATRIXVALUE((&(s->result)),i,value);
     }
-  } else {
-    for (i=0; i<totalcol; i++) {
-      i2 = ECSGETI(s,((double) index),((double)i));
-      j2 = ECSGETJ(s,((double) index),((double)i));
-      value = _calcImagePosValue(s,l,j2,i2,FALSE);
-      ECS_SETGEOMIMAGEVALUE((&(s->result)),i,value);
-    }
-  }
 
   sprintf(buffer,"%d",index);
   if (!ecs_SetObjectId(&(s->result),buffer)) {

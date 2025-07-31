@@ -32,7 +32,7 @@
  * From: @(#)rpc_tblout.c 1.4 89/02/22 (C) 1988 SMI
  */
 char tblout_rcsid[] = 
-  "$Id: rpc_tblout.c,v 1.1.1.1 2000/10/29 20:55:06 warmerda Exp $";
+  "$Id$";
 
 /*
  * rpc_tblout.c, Dispatch table outputter for the RPC protocol compiler

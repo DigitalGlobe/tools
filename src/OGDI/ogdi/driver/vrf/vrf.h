@@ -16,8 +16,8 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: vrf.h,v $
- * Revision 1.10  2004/04/04 04:33:01  warmerda
+ * $Log$
+ * Revision 1.10  2004-04-04 04:33:01  warmerda
  * added vrf_free_ObjAttributeBuffer
  *
  * Revision 1.9  2004/02/18 21:33:18  warmerda
@@ -382,14 +382,15 @@ int vrf_build_capabilities( ecs_Server *s, const char *request );
 int  vrf_get_xy _ANSI_ARGS_((vpf_table_type table, row_type row,int32 pos, double *x,double *y));
 int  vrf_get_point_feature _ANSI_ARGS_((ecs_Server *s,ecs_Layer *layer, int prim_id));
 int  vrf_get_line_feature _ANSI_ARGS_((ecs_Server *s,ecs_Layer *layer,
-                                       int prim_id, ecs_Result *result ));
+                                       int prim_id, short tile_id, ecs_Result *result ));
 int  vrf_get_merged_line_feature _ANSI_ARGS_((ecs_Server *s,ecs_Layer *layer,
-                                              int primCount, int32 *primList));
+                                              int primCount, int32 *primList, short *tileList, int dryRun));
 int  vrf_get_text_feature _ANSI_ARGS_((ecs_Server *s,ecs_Layer *layer, int prim_id));
 int  vrf_get_area_feature _ANSI_ARGS_((ecs_Server *s,ecs_Layer *layer, int prim_id));
-int  vrf_get_line_mbr _ANSI_ARGS_((ecs_Layer *layer,int32 prim_id,double *xmin,double *ymin,double *xmax,double *ymax));
-int  vrf_get_lines_mbr _ANSI_ARGS_((ecs_Layer *layer,
+int  vrf_get_line_mbr _ANSI_ARGS_((ecs_Server* s, ecs_Layer *layer,int32 prim_id,short tile_id,double *xmin,double *ymin,double *xmax,double *ymax));
+int  vrf_get_lines_mbr _ANSI_ARGS_((ecs_Server* s, ecs_Layer *layer,
                                     int32 primCount, int32 *primList,
+                                    short* tileList,
                                     double *xmin,double *ymin,
                                     double *xmax,double *ymax));
 int  vrf_get_area_mbr _ANSI_ARGS_((ecs_Layer *layer,int32 prim_id,double *xmin,double *ymin,double *xmax,double *ymax));
@@ -431,8 +432,9 @@ void            _getTileAndPrimId _ANSI_ARGS_((ecs_Server *s,ecs_Layer *l,
 					       short *tile_id,int32 *prim_id));
 void            _getPrimList _ANSI_ARGS_((ecs_Server *s,ecs_Layer *l,
                                           int32 object_id,
-                                          int32 *feature_id, short *tile_id,
+                                          int32 *feature_id,
                                           int32 *primCount, int32 **primList,
+                                          short** tileList,
                                           int32 *next_object_id));
 
 void		_getNextObjectLine _ANSI_ARGS_((ecs_Server *s,ecs_Layer *layer));
@@ -450,6 +452,7 @@ void		_getObjectIdArea _ANSI_ARGS_((ecs_Server *s,ecs_Layer *layer, ecs_Coordina
 void		_getObjectIdPoint _ANSI_ARGS_((ecs_Server *s,ecs_Layer *layer, ecs_Coordinate *coord));
 void		_getObjectIdText _ANSI_ARGS_((ecs_Server *s,ecs_Layer *layer, ecs_Coordinate *coord));
 
+int		_selectTileLineWithRet _ANSI_ARGS_((ecs_Server *s,ecs_Layer *layer, int tile_id));
 void		_selectTileLine _ANSI_ARGS_((ecs_Server *s,ecs_Layer *layer, int tile_id));
 void		_selectTileArea _ANSI_ARGS_((ecs_Server *s,ecs_Layer *layer, int tile_id));
 void		_selectTilePoint _ANSI_ARGS_((ecs_Server *s,ecs_Layer *layer, int tile_id));

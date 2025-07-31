@@ -16,15 +16,15 @@
  * It is provided "as is" without express or implied warranty.
  ******************************************************************************
  *
- * $Log: ecsgeo.c,v $
- * Revision 1.3  2001/04/09 15:04:34  warmerda
+ * $Log$
+ * Revision 1.3  2001-04-09 15:04:34  warmerda
  * applied new source headers
  *
  */
 
 #include "ecs.h"
 
-ECS_CVSID("$Id: ecsgeo.c,v 1.3 2001/04/09 15:04:34 warmerda Exp $");
+ECS_CVSID("$Id$");
 
 static double ecs_QA, ecs_QB, ecs_QC;
 static double ecs_QbarA, ecs_QbarB, ecs_QbarC, ecs_QbarD;
@@ -126,6 +126,12 @@ double ecs_planimetric_polygon_area(n,coord)
   
   return area;
 }
+
+
+#define RAD_TO_DEG      57.295779513082321
+#define DEG_TO_RAD      .017453292519943296
+
+
 
 /**************************************************************************/
 
@@ -292,82 +298,3 @@ ecs_geodesic_distance (lon1, lat1, lon2, lat2)
 
   return result;
 }
-
-/* 
-   ------------------------------------------------------------
-   
-   ecs_distance_meters --
-   
-   Cette fonction calcule la distance en metres de deux
-   points dans la projection actuelle de l'affichage.
-   Retourne un negatif si c'est un cas d'erreur.
-   
-   ------------------------------------------------------------
-   */
-
-double
-ecs_distance_meters (projection,X1, Y1, X2, Y2)
-     char *projection;
-     double X1,Y1,X2,Y2;
-{
-  PJ *proj;
-  char **argv;
-  int argc;
-  double lon1,lat1,lon2,lat2;
-  double result;
-  projUV data;
-  
-  if (ecs_SplitList(projection,&argc,&argv)==FALSE) {
-    return -1;
-  }
-  
-  if (strncmp(argv[0],PROJ_UNKNOWN,7) == 0) {
-    free(argv);
-    return -1;
-  }
-
-  if (strncmp(argv[0],PROJ_LONGLAT,13) != 0) {
-    if ((proj = pj_init(argc,argv)) == NULL) {
-      free(argv);
-      return -1;
-    }
-    
-    data.u = X1;
-    data.v = Y1;
-    data = pj_inv(data,proj);
-    if ((data.u == HUGE_VAL) || (data.v == HUGE_VAL)) {
-      pj_free(proj);
-      free(argv);
-      return -1;
-    }
-    lon1 = data.u*RAD_TO_DEG;
-    lat1 = data.v*RAD_TO_DEG;
-    
-    data.u = X2;
-    data.v = Y2;
-    data = pj_inv(data,proj);
-    if ((data.u == HUGE_VAL) || (data.v == HUGE_VAL)) {
-      pj_free(proj);
-      free(argv);
-      return -1;
-    }
-    lon2 = data.u*RAD_TO_DEG;
-    lat2 = data.v*RAD_TO_DEG;
-    
-    pj_free(proj);
-  } else {
-    lon1 = X1;
-    lon2 = X2;
-    lat1 = Y1;
-    lat2 = Y2;
-  }
-  
-  free(argv);
-  
-  result = ecs_geodesic_distance(lon1,lat1,lon2,lat2);
-
-  return result;
-}
-
-
-
