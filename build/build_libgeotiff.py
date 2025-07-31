@@ -30,23 +30,23 @@ class Program:
 
     # ----------------------------------------------------------------------
     # the name of the path that will contain intermediary build files
-    _PATH_NAME_BUILD = "proj"
+    _PATH_NAME_BUILD = "libgeotiff"
     # ----------------------------------------------------------------------
     # the name of the path that contains the source code
-    _PATH_NAME_SOURCE = "..\\src\\proj"
+    _PATH_NAME_SOURCE = "..\\src\\libgeotiff"
     # ----------------------------------------------------------------------
 
     _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
-    _LIBNAME = "proj"
+    _LIBNAME = "libgeotiff"
     _DEBUG_SUFFIX = "_d"
 
     # the name of the path for all include files
     _PATH_NAME_INCLUDE = "."
     # ----------------------------------------------------------------------
     # the name of the distribution path for all include files
-    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\proj"
+    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\libgeotiff"
     # ----------------------------------------------------------------------
     # the name of the path that contains the cmake files
     _PATH_NAME_CMAKE_SOURCE = "."
@@ -149,14 +149,15 @@ class Program:
         )
 
         externalLibs = {
-            "CURL_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase)),
-            "CURL_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libcurl{libSuffix}")),
-            "SQLite3_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "sqlite3")),
-            "SQLite3_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"sqlite3{libSuffix}")),
-            "EXE_SQLITE3": pathFinder.slasher(pathFinder.path(sdkOutDir, f"sqlite3.exe")),
+            "JPEG_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "jpeg")),
+            "JPEG_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libjpeg{libSuffix}")),
+            "PROJ_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, f"proj")),
+            "PROJ_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"proj{libSuffix}")),
             "TIFF_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libtiff")),
             "TIFF_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libtiff{libSuffix}")),
-        }
+            "ZLIB_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "zlib")),
+            "ZLIB_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"zlib{libSuffix}")),
+ }
 
         externalLibStr = ""
         for [key, val] in externalLibs.items():
@@ -168,9 +169,11 @@ class Program:
             f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
             + f"-A {platform} "
             + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
-            + f"-DBUILD_SHARED_LIBS=ON "
-            + f"-DBUILD_TESTING=OFF "
-            + f"{"" if (buildSettings.ReleaseSpecified()) else "-DEXPORT_PDB=ON "}"
+            + f"-DBUILD_MAN=OFF "
+            + f"-DBUILD_DOC=OFF "
+            + f"-DWITH_UTILITIES=OFF "
+            + f"-DWITH_ZLIB=ON "
+            + f"-DWITH_JPEG=ON "
             + f"-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} "
             + f"{externalLibStr} "
             + f"{buildSourceName}"
@@ -233,28 +236,20 @@ class Program:
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
         )
-        systemManager.distributeFiles(
-            pathFinder.path(cmakeInstallPath, "share", "proj"),
-            pathFinder.path(sdkOutDir, "..", "proj"),
-            "*",
+
+        origlibname = "geotiff"
+        systemManager.copyFile(
+            pathFinder.path(
+                libdir,
+                f"{origlibname}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}_i.lib",
+            ),
+            pathFinder.path(sdkOutDir, libName),
         )
-        for f in glob.glob(pathFinder.path(libdir, "*.lib")):
-            fname = f[len(libdir) + 1 :]
-            fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME) :]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib"
 
-            systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
-
-        for f in glob.glob(pathFinder.path(bindir, "*.dll")):
-            fname = f[len(bindir) + 1 :]
-            fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME)]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.dll"
-            systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
+        systemManager.copyFile(pathFinder.path(bindir, f"{origlibname}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.dll"), pathFinder.path(sdkOutDir, dllName))
 
         if not buildSettings.ReleaseSpecified():
-            for f in glob.glob(pathFinder.path(libdir, "*.pdb")):
-                fname = f[len(libdir) + 1 :]
-                fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME)]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.pdb"
-                systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
-
+            systemManager.copyFile(pathFinder.path(bindir, f"{origlibname}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.pdb"), pathFinder.path(sdkOutDir, pdbName))
 
 
 # ------------------------------------------------------------------------------
