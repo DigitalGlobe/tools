@@ -45,7 +45,7 @@ build/bison/*
 build/Boost/*
 build/brotli/*
 build/cppunit/*
-build/crypto/*
+build/cryptopp/*
 build/cryptowrapper/*
 build/curl/*
 build/expat/*

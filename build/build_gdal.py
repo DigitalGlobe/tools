@@ -145,19 +145,18 @@ class Program :
             "BISON_EXECUTABLE": pathFinder.slasher(pathFinder.path(sdkOutDir, "..", "bin", f"bison{exeSuffix}")),
             "CURL_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase)),
             "CURL_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libcurl{libSuffix}")),
-            "CRYPTOPP_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "crypto")),
-            "CRYPTOPP_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"crypto{libSuffix}")),
+            "CRYPTOPP_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "cryptopp")),
+            "CRYPTOPP_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"cryptopp{libSuffix}")),
             "CRYPTOPP_TEST_KNOWNBUG": "TRUE",
             "EXPAT_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "expat")),
             "EXPAT_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libexpat{libSuffix}")),
             "GEOS_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "geos")),
-            "GEOS_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"geos_c{libSuffix}")),
+            "GEOS_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"geos{libSuffix}")),
             "GEOTIFF_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libgeotiff")),
             "GEOTIFF_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libgeotiff{libSuffix}")),
-            "GEOTIFF_LIBRARY_DEBUG": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libgeotiff_d.lib")),
-            "GEOTIFF_LIBRARY_RELEASE": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libgeotiff.lib")),
-            "HDF5_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "hdf5")),
-            "HDF5_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"hdf5{libSuffix}")),
+            "HDF5_ROOT": pathFinder.slasher(pathFinder.path(buildPathName, "..", "HDF5", "build", "install")),
+            # "HDF5_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "hdf5")),
+            # "HDF5_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libhdf5{libSuffix}")),
             "Iconv_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libiconv")),
             "Iconv_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libiconv{libSuffix}")),
             "Iconv_CHARSET_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"charset{libSuffix}")),
@@ -171,7 +170,7 @@ class Program :
             "LIBXML2_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libxml{libSuffix}")),
             "MUPARSER_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "muparser")),
             "MUPARSER_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"muparser{libSuffix}")),
-            "OPENSSL_ROOT_DIR": pathFinder.path(buildPathName, "..", "openssl"),
+            "OPENSSL_ROOT_DIR": pathFinder.path(buildPathName, "..", "openssl", "install"),
             "PNG_PNG_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libpng")),
             "PNG_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libpng{libSuffix}")),
             "PODOFO_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "podofo")),
@@ -199,13 +198,10 @@ class Program :
         # -DCMAKE_POLICY_VERSION_MINIMUM is to avoid min compatability errors in CMake
         cmakeCommandLine = (
             f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
-            # + f'--debug-output '
             + f"-A {platform} "
             + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
             + f"-DBUILD_PYTHON_BINDINGS=OFF "
             + f"-DBUILD_TESTING=OFF "
-            # + f"{"" if (buildSettings.ReleaseSpecified()) else "-DEXPORT_PDB=ON "}"
-            + f"-DCMAKE_BUILD_TYPE={conf} "
             + f"-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} "
             + f"{externalLibStr} "
             + f"{buildSourceName}"
