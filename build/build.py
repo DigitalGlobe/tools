@@ -50,6 +50,9 @@ class Program :
     # the name of the build file to build Expat
     _FILE_NAME_BUILD_EXPAT = "build_expat.py"
     # ----------------------------------------------------------------------
+    # the name of the build file to build FileGDB API
+    _FILE_NAME_BUILD_FILEGDB = "build_filegdb.py"
+    # ----------------------------------------------------------------------
     # the name of the build file to build firebird
     _FILE_NAME_BUILD_FIREBIRD = "build_firebird.py"
     # ----------------------------------------------------------------------
@@ -242,6 +245,7 @@ class Program :
                 # self._build(Program._FILE_NAME_BUILD_CPPUNIT)
                 # self._build(Program._FILE_NAME_BUILD_CRYPTO)
                 # self._build(Program._FILE_NAME_BUILD_EXPAT)
+                # self._build(Program._FILE_NAME_BUILD_FILEGDB)
                 # self._build(Program._FILE_NAME_BUILD_GALIB)
                 # self._build(Program._FILE_NAME_BUILD_GEOS)
                 # self._build(Program._FILE_NAME_BUILD_GLEW)
@@ -261,7 +265,7 @@ class Program :
                 # self._build(Program._FILE_NAME_BUILD_OPENDIS)
                 # self._build(Program._FILE_NAME_BUILD_OPENTHREADS)
                 # self._build(Program._FILE_NAME_BUILD_PTHREADS)
-                #self._build(Program._FILE_NAME_BUILD_SQLITE3)
+                # self._build(Program._FILE_NAME_BUILD_SQLITE3)
                 # self._build(Program._FILE_NAME_BUILD_SZIP)
                 # self._build(Program._FILE_NAME_BUILD_TBB)
                 # self._build(Program._FILE_NAME_BUILD_URIPARSER)
