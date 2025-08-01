@@ -152,8 +152,10 @@ class Program :
             "EXPAT_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libexpat{libSuffix}")),
             "GEOS_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "geos")),
             "GEOS_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"geos_c{libSuffix}")),
-            "GEOTIFF_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "geotiff")),
-            "GEOTIFF_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"geotiff{libSuffix}")),
+            "GEOTIFF_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libgeotiff")),
+            "GEOTIFF_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libgeotiff{libSuffix}")),
+            "GEOTIFF_LIBRARY_DEBUG": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libgeotiff_d.lib")),
+            "GEOTIFF_LIBRARY_RELEASE": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libgeotiff.lib")),
             "HDF5_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "hdf5")),
             "HDF5_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"hdf5{libSuffix}")),
             "Iconv_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libiconv")),
@@ -161,20 +163,14 @@ class Program :
             "Iconv_CHARSET_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"charset{libSuffix}")),
             "JPEG_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libjpeg")),
             "JPEG_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libjpeg{libSuffix}")),
-            "LIBKML_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libkml")),
+            "LIBKML_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase)),
             "LIBKML_BASE_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"kmlbase{libSuffix}")),
             "LIBKML_DOM_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"kmldom{libSuffix}")),
             "LIBKML_ENGINE_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"kmlengine{libSuffix}")),
             "LIBXML2_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libxml")),
             "LIBXML2_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libxml{libSuffix}")),
-            "XercesC_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "xerces")),
-            "XercesC_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"xerces{libSuffix}")),
-            "XercesC_VERSION": "3.3.0",
-            "SQLite3_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "sqlite3")),
-            "SQLite3_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"sqlite3{libSuffix}")),
             "MUPARSER_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "muparser")),
             "MUPARSER_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"muparser{libSuffix}")),
-            # "EXE_SQLITE3": pathFinder.slasher(pathFinder.path(sdkOutDir, f"sqlite3.exe")),
             "OPENSSL_ROOT_DIR": pathFinder.path(buildPathName, "..", "openssl"),
             "PNG_PNG_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libpng")),
             "PNG_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libpng{libSuffix}")),
@@ -182,6 +178,11 @@ class Program :
             "PODOFO_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"podofo{libSuffix}")),
             "PROJ_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "proj")),
             "PROJ_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"proj{libSuffix}")),
+            "XercesC_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "xerces")),
+            "XercesC_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"xerces{libSuffix}")),
+            "XercesC_VERSION": "3.3.0",
+            "SQLite3_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "sqlite3")),
+            "SQLite3_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"sqlite3{libSuffix}")),
             "TIFF_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libtiff")),
             "TIFF_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libtiff{libSuffix}")),
             "ZLIB_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "zlib")),
@@ -198,11 +199,13 @@ class Program :
         # -DCMAKE_POLICY_VERSION_MINIMUM is to avoid min compatability errors in CMake
         cmakeCommandLine = (
             f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
+            # + f'--debug-output '
             + f"-A {platform} "
             + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
             + f"-DBUILD_PYTHON_BINDINGS=OFF "
             + f"-DBUILD_TESTING=OFF "
             # + f"{"" if (buildSettings.ReleaseSpecified()) else "-DEXPORT_PDB=ON "}"
+            + f"-DCMAKE_BUILD_TYPE={conf} "
             + f"-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} "
             + f"{externalLibStr} "
             + f"{buildSourceName}"

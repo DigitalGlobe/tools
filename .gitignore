@@ -53,7 +53,7 @@ build/FileGDB/*
 build/firebird/*
 build/freetype/*
 build/galib/*
-build/GDAL-1.11.5/*
+build/gdal/*
 build/GEOS/*
 build/glew/*
 build/glut/*
@@ -85,12 +85,13 @@ build/OpenDIS/*
 build/OpenSSL/*
 build/OpenThreads/*
 build/PoDoFo/*
-build/PROJ.4/*
+build/PROJ/*
 build/pthread/*
 build/Qt/*
 build/QuaZip/*
 build/QWT/*
 build/qxrunner/*
+build/SQLite3/*
 build/SZip/*
 build/tbb/*
 build/UriParser/*
