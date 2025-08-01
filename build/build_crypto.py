@@ -26,33 +26,30 @@ class Program:
 
     # ----------------------------------------------------------------------
     # a description of what the script does
-    DESCRIPTION = "Builds the crypto library."
+    DESCRIPTION = "Builds the cryptopp library."
     # ----------------------------------------------------------------------
     # the name of the dynamic solution file
-    _FILE_NAME_SOLUTION = "cryptlib.vcxproj"
+    _FILE_NAME_SOLUTION = "cryptdll.vcxproj"
 
     # ----------------------------------------------------------------------
     # the name of the path that will contain intermediary build files
-    _PATH_NAME_BUILD = "crypto"
+    _PATH_NAME_BUILD = "cryptopp"
     # ----------------------------------------------------------------------
     # the name of the path that contains the source code
-    _PATH_NAME_SOURCE = "..\\src\\crypto"
+    _PATH_NAME_SOURCE = "..\\src\\cryptopp"
     # ----------------------------------------------------------------------
 
     _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
-    _LIBNAME = "cryptlib"
+    _LIBNAME = "cryptopp"
     _DEBUG_SUFFIX = "_d"
-
-    _QT_DIR_X86 = "..\\..\\QT\\5.7\\x86\\lib\cmake\\qt5"
-    _QT_DIR_X64 = "..\\..\\QT\\5.7\\x64\\lib\cmake\\qt5"
 
     # the name of the path for all include files
     _PATH_NAME_INCLUDE = "."
     # ----------------------------------------------------------------------
     # the name of the distribution path for all include files
-    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\crypto"
+    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\cryptopp"
     # ----------------------------------------------------------------------
     _PATH_NAME_BUILD_PATH = "build"
 
@@ -90,12 +87,6 @@ class Program:
         # initialize environment variables
         systemManager.initializeIncludeEnvironmentVariable(buildSettings.X64Specified())
         systemManager.initializeLibraryEnvironmentVariable(buildSettings.X64Specified())
-
-        systemManager.appendToPathEnvironmentVariable(
-            Program._QT_DIR_X64
-            if buildSettings.X64Specified()
-            else Program._QT_DIR_X86 + "\\bin"
-        )
 
         # MSBuild is under "Program Files (x86)"
         systemManager.appendToPathEnvironmentVariable(
@@ -138,16 +129,16 @@ class Program:
 
 
         # modify the vcxproj to work with our version of vscode
-        sedCommandLine = (
-            f"{pathFinder.path(pathFinder.PATH_GNU_TOOLS, "sed.exe")} "
-            + f"-i.bak s/^<\/RuntimeLibrary^>/DLL^<\/RuntimeLibrary^>/g "
-            + f"{Program._FILE_NAME_SOLUTION}"
-        )
+        # sedCommandLine = (
+        #     f"{pathFinder.path(pathFinder.PATH_GNU_TOOLS, "sed.exe")} "
+        #     + f"-i.bak s/^<\/RuntimeLibrary^>/DLL^<\/RuntimeLibrary^>/g "
+        #     + f"{Program._FILE_NAME_SOLUTION}"
+        # )
 
-        print("cmd: " + sedCommandLine)
-        sedResult = systemManager.execute(sedCommandLine)
-        if sedResult != 0:
-            sys.exit(-1)
+        # print("cmd: " + sedCommandLine)
+        # sedResult = systemManager.execute(sedCommandLine)
+        # if sedResult != 0:
+        #     sys.exit(-1)
 
         systemManager.makeDirectory(nmakeBuildPath)
         systemManager.changeDirectory(nmakeBuildPath)
@@ -170,12 +161,13 @@ class Program:
         propfile   = pathFinder.path( buildPathName, 'linker.props' )
 
         msBuildCommandLine += f' /p:OutDir="{buildOutDir}"'
-        msBuildCommandLine += f' /p:TargetExtension=dll'
+        # msBuildCommandLine += f' /p:TargetExtension=dll'
         msBuildCommandLine += f' /p:SolutionDir="{buildPathName}"'
-        msBuildCommandLine += f' /p:TargetName={Program._LIBNAME}{"" if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX}'
+        # msBuildCommandLine += f' /p:TargetName={Program._LIBNAME}{"" if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX}'
         msBuildCommandLine += f' /p:Configuration={conf}'
 
-        linkerprops = {'OutputFile':pathFinder.path( buildOutDir, libName )}
+        linkerprops = {}
+        # linkerprops = {'OutputFile':pathFinder.path( buildOutDir, libName )}
         if buildSettings.ReleaseSpecified():
             linkerprops['DebugSymbols'] = 'false'
         else:
@@ -186,7 +178,7 @@ class Program:
         if buildSettings.ReleaseSpecified():
             compprops = {'DebugInformationFormat':'None'}
         else:
-            compprops = {'DebugInformationFormat':'ProgramDatabase', 'ProgramDataBaseFileName':pathFinder.path( buildOutDir, pdbName )}
+            compprops = {'DebugInformationFormat':'ProgramDatabase'} # , 'ProgramDataBaseFileName':pathFinder.path( buildOutDir, pdbName )}
 
         xmlUtils.buildLib(conf, platform, compprops, linkerprops, propfile)
 
@@ -209,18 +201,18 @@ class Program:
         dllName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".dll"
 
         systemManager.copyFile(
-            pathFinder.path(buildOutDir, libName),
+            pathFinder.path(buildOutDir, f"{Program._LIBNAME}.lib"),
             pathFinder.path(sdkOutDir, libName),
         )
 
-        # systemManager.copyFile(
-        #     pathFinder.path(buildOutDir, dllName),
-        #     pathFinder.path(sdkOutDir, dllName),
-        # )
+        systemManager.copyFile(
+            pathFinder.path(buildOutDir, f"{Program._LIBNAME}.dll"),
+            pathFinder.path(sdkOutDir, dllName),
+        )
 
         if not buildSettings.ReleaseSpecified():
             systemManager.copyFile(
-                pathFinder.path(buildOutDir, pdbName),
+                pathFinder.path(buildOutDir, f"{Program._LIBNAME}.pdb"),
                 pathFinder.path(sdkOutDir, pdbName),
             )
 
