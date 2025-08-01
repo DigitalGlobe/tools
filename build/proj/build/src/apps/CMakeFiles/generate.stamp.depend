@@ -1,9 +1,0 @@
-# CMake generation dependency list for this directory.
-D:/Users/tim.tisler/tools/build/proj/src/apps/CMakeLists.txt
-D:/Users/tim.tisler/tools/build/proj/src/apps/bin_cct.cmake
-D:/Users/tim.tisler/tools/build/proj/src/apps/bin_cs2cs.cmake
-D:/Users/tim.tisler/tools/build/proj/src/apps/bin_geod.cmake
-D:/Users/tim.tisler/tools/build/proj/src/apps/bin_gie.cmake
-D:/Users/tim.tisler/tools/build/proj/src/apps/bin_proj.cmake
-D:/Users/tim.tisler/tools/build/proj/src/apps/bin_projinfo.cmake
-D:/Users/tim.tisler/tools/build/proj/src/apps/bin_projsync.cmake

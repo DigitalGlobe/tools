@@ -1,1 +1,0 @@
-d:\users\tim.tisler\tools\build\proj\build\install/share/bash-completion/completions/projinfo
