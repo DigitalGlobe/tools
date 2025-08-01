@@ -22,9 +22,12 @@
 #     target_link_libararies.
 #
 
+message("CRYPTOPP_INCLUDE_DIR (start)=${CRYPTOPP_INCLUDE_DIR}")
 find_path(CRYPTOPP_INCLUDE_DIR NAMES cryptopp/aes.h HINTS ${CRYPTOPP_HINTPATH}/include)
+message("CRYPTOPP_INCLUDE_DIR (end)=${CRYPTOPP_INCLUDE_DIR}")
 
 if(CRYPTOPP_INCLUDE_DIR)
+    message("BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}")
     if(BUILD_SHARED_LIBS)
         find_library(CRYPTOPP_LIBRARY_RELEASE NAMES cryptolib cryptopp NAMES_PER_DIR HINTS ${CRYPTOPP_HINTPATH}/lib)
         find_library(CRYPTOPP_LIBRARY_DEBUG NAMES cryptolibd cryptoppd NAMES_PER_DIR HINTS ${CRYPTOPP_HINTPATH}/debug)
@@ -32,6 +35,8 @@ if(CRYPTOPP_INCLUDE_DIR)
         find_library(CRYPTOPP_LIBRARY_RELEASE NAMES cryptopp NAMES_PER_DIR HINTS ${CRYPTOPP_HINTPATH}/lib)
         find_library(CRYPTOPP_LIBRARY_DEBUG NAMES cryptoppd NAMES_PER_DIR HINTS ${CRYPTOPP_HINTPATH}/debug)
     endif()
+    message("CRYPTOPP_LIBRARY_RELEASE=${CRYPTOPP_LIBRARY_RELEASE}")
+    message("CRYPTOPP_LIBRARY_DEBUG=${CRYPTOPP_LIBRARY_DEBUG}")
     mark_as_advanced(CRYPTOPP_LIBRARY_RELEASE CRYPTOPP_LIBRARY_DEBUG)
     include(SelectLibraryConfigurations)
     select_library_configurations(CRYPTOPP)
