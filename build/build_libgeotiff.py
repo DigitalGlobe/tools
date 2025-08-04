@@ -236,6 +236,11 @@ class Program:
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
         )
+        systemManager.distributeFiles(
+            incdir,
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            "*.inc",
+        )
 
         origlibname = "geotiff"
         systemManager.copyFile(
