@@ -46,7 +46,7 @@ class Program:
     _PATH_NAME_INCLUDE = "."
     # ----------------------------------------------------------------------
     # the name of the distribution path for all include files
-    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\xerces"
+    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\xercesc"
     # ----------------------------------------------------------------------
     # the name of the path that contains the cmake files
     _PATH_NAME_CMAKE_SOURCE = "."
@@ -216,7 +216,7 @@ class Program:
         systemManager.distributeFiles(
             incdir,
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
-            "*.h*",
+            "*",
         )
 
         for f in glob.glob(pathFinder.path(libdir, "*.lib")):
