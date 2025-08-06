@@ -29,7 +29,7 @@ class Program:
     DESCRIPTION = "Builds the cryptopp library."
     # ----------------------------------------------------------------------
     # the name of the dynamic solution file
-    _FILE_NAME_SOLUTION = "cryptdll.vcxproj"
+    _FILE_NAME_SOLUTION = "cryptlib.vcxproj"
 
     # ----------------------------------------------------------------------
     # the name of the path that will contain intermediary build files
@@ -129,16 +129,16 @@ class Program:
 
 
         # modify the vcxproj to work with our version of vscode
-        # sedCommandLine = (
-        #     f"{pathFinder.path(pathFinder.PATH_GNU_TOOLS, "sed.exe")} "
-        #     + f"-i.bak s/^<\/RuntimeLibrary^>/DLL^<\/RuntimeLibrary^>/g "
-        #     + f"{Program._FILE_NAME_SOLUTION}"
-        # )
+        sedCommandLine = (
+            f"{pathFinder.path(pathFinder.PATH_GNU_TOOLS, "sed.exe")} "
+            + f"-i.bak s/^<\/RuntimeLibrary^>/DLL^<\/RuntimeLibrary^>/g "
+            + f"{Program._FILE_NAME_SOLUTION}"
+        )
 
-        # print("cmd: " + sedCommandLine)
-        # sedResult = systemManager.execute(sedCommandLine)
-        # if sedResult != 0:
-        #     sys.exit(-1)
+        print("cmd: " + sedCommandLine)
+        sedResult = systemManager.execute(sedCommandLine)
+        if sedResult != 0:
+            sys.exit(-1)
 
         systemManager.makeDirectory(nmakeBuildPath)
         systemManager.changeDirectory(nmakeBuildPath)
@@ -201,18 +201,18 @@ class Program:
         dllName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".dll"
 
         systemManager.copyFile(
-            pathFinder.path(buildOutDir, f"{Program._LIBNAME}.lib"),
+            pathFinder.path(buildOutDir, "cryptlib.lib"), # + f"{Program._LIBNAME}.lib"),
             pathFinder.path(sdkOutDir, libName),
         )
 
-        systemManager.copyFile(
-            pathFinder.path(buildOutDir, f"{Program._LIBNAME}.dll"),
-            pathFinder.path(sdkOutDir, dllName),
-        )
+        # systemManager.copyFile(
+        #     pathFinder.path(buildOutDir, "cryptlib.dll"), # f"{Program._LIBNAME}.dll"),
+        #     pathFinder.path(sdkOutDir, dllName),
+        # )
 
         if not buildSettings.ReleaseSpecified():
             systemManager.copyFile(
-                pathFinder.path(buildOutDir, f"{Program._LIBNAME}.pdb"),
+                pathFinder.path(buildOutDir, "cryptlib.pdb"), # f"{Program._LIBNAME}.pdb"),
                 pathFinder.path(sdkOutDir, pdbName),
             )
 
