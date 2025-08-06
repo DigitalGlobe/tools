@@ -124,7 +124,6 @@ class Program :
         # start building
         systemManager.changeDirectory(buildPathName)
 
-        systemManager.removeDirectory(cmakeBuildPath)
         systemManager.makeDirectory(cmakeBuildPath)
         systemManager.changeDirectory(cmakeBuildPath)
 
@@ -146,49 +145,55 @@ class Program :
             "CURL_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase)),
             "CURL_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libcurl{libSuffix}")),
             "CRYPTOPP_HINTPATH": pathFinder.slasher(pathFinder.path(includeBase, "..")),
-            # "CRYPTOPP_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase)),
-            "CRYPTOPP_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"cryptopp{libSuffix}")),
-            "CRYPTOPP_LIBRARY_DEBUG": pathFinder.slasher(pathFinder.path(sdkOutDir, f"cryptopp.lib")),
-            "CRYPTOPP_LIBRARY_RELEASE": pathFinder.slasher(pathFinder.path(sdkOutDir, f"cryptopp_d.lib")),
+            f"CRYPTOPP_LIBRARY_{"RELEASE" if buildSettings.ReleaseSpecified() else "DEBUG"}": pathFinder.slasher(pathFinder.path(sdkOutDir, f"cryptopp{libSuffix}")),
             "CRYPTOPP_TEST_KNOWNBUG": "TRUE",
             "EXPAT_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "expat")),
             "EXPAT_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libexpat{libSuffix}")),
+            "EXPAT_USE_STATIC_LIB": "OFF",
+            "FileGDB_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "filegdb")),
+            "FileGDB_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"filegdbapi{libSuffix}")),
+            "FileGDB_LIBRARY_DEBUG": pathFinder.slasher(pathFinder.path(sdkOutDir, f"filegdbapi{Program._DEBUG_SUFFIX}.lib")),
+            "FileGDB_LIBRARY_RELEASE": pathFinder.slasher(pathFinder.path(sdkOutDir, f"filegdbapi.lib")),
             "GEOS_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "geos")),
-            "GEOS_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"geos{libSuffix}")),
+            "GEOS_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"geos_c{libSuffix}")),
             "GEOTIFF_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libgeotiff")),
             "GEOTIFF_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libgeotiff{libSuffix}")),
             "HDF5_ROOT": pathFinder.slasher(pathFinder.path(buildPathName, "..", "HDF5", "build", "install")),
-            # "HDF5_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "hdf5")),
-            # "HDF5_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libhdf5{libSuffix}")),
             "Iconv_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libiconv")),
             "Iconv_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libiconv{libSuffix}")),
             "Iconv_CHARSET_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"charset{libSuffix}")),
             "JPEG_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libjpeg")),
             "JPEG_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libjpeg{libSuffix}")),
             "LIBKML_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase)),
+            "LIBKML_MINIZIP_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"minizip{libSuffix}")),
+            "LIBKML_URIPARSER_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"uriparser{libSuffix}")),
             "LIBKML_BASE_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"kmlbase{libSuffix}")),
             "LIBKML_DOM_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"kmldom{libSuffix}")),
             "LIBKML_ENGINE_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"kmlengine{libSuffix}")),
-            "LIBXML2_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libxml")),
-            "LIBXML2_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libxml{libSuffix}")),
+            "LIBXML2_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase)),
+            "LIBXML2_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libxml2{libSuffix}")),
             "MUPARSER_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "muparser")),
             "MUPARSER_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"muparser{libSuffix}")),
             "OPENSSL_ROOT_DIR": pathFinder.path(buildPathName, "..", "openssl", "install"),
             "PNG_PNG_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libpng")),
-            "PNG_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libpng{libSuffix}")),
-            "PODOFO_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "podofo")),
-            "PODOFO_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"podofo{libSuffix}")),
+            "PNG_LIBRARY_DEBUG": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libpng{Program._DEBUG_SUFFIX}.lib")),
+            "PNG_LIBRARY_RELEASE": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libpng.lib")),
+            # "PODOFO_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "podofo")),
+            # "PODOFO_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"podofo{libSuffix}")),
             "PROJ_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "proj")),
-            "PROJ_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"proj{libSuffix}")),
-            "XercesC_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "xerces")),
-            "XercesC_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"xerces{libSuffix}")),
-            "XercesC_VERSION": "3.3.0",
+            "PROJ_LIBRARY_DEBUG": pathFinder.slasher(pathFinder.path(sdkOutDir, f"proj{Program._DEBUG_SUFFIX}.lib")),
+            "PROJ_LIBRARY_RELEASE": pathFinder.slasher(pathFinder.path(sdkOutDir, f"proj.lib")),
             "SQLite3_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "sqlite3")),
             "SQLite3_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"sqlite3{libSuffix}")),
             "TIFF_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libtiff")),
-            "TIFF_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libtiff{libSuffix}")),
+            "TIFF_LIBRARY_DEBUG": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libtiff{Program._DEBUG_SUFFIX}.lib")),
+            "TIFF_LIBRARY_RELEASE": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libtiff.lib")),
+            "XercesC_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase)),
+            "XercesC_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"xerces{libSuffix}")),
+            "XercesC_VERSION": "3.3.0",
             "ZLIB_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "zlib")),
-            "ZLIB_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"zlib{libSuffix}")),
+            "ZLIB_LIBRARY_DEBUG": pathFinder.slasher(pathFinder.path(sdkOutDir, f"zlib{Program._DEBUG_SUFFIX}.lib")),
+            "ZLIB_LIBRARY_RELEASE": pathFinder.slasher(pathFinder.path(sdkOutDir, f"zlib.lib")),
             "ZSTD_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "zstd")),
             "ZSTD_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"zstd{libSuffix}")),
         }
@@ -201,13 +206,17 @@ class Program :
         # -DCMAKE_POLICY_VERSION_MINIMUM is to avoid min compatability errors in CMake
         cmakeCommandLine = (
             f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
-            + f"-A {platform} "
-            + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
-            + f"-DBUILD_PYTHON_BINDINGS=OFF "
-            + f"-DBUILD_TESTING=OFF "
-            + f"-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} "
-            + f"{externalLibStr} "
-            + f"{buildSourceName}"
+            + f'-A {platform} '
+            + f'-DCMAKE_POLICY_VERSION_MINIMUM=3.10 '
+            + f'-DBUILD_PYTHON_BINDINGS=OFF '
+            + f'-DBUILD_TESTING=OFF '
+            + f'-DCMAKE_INCLUDE_PATH={pathFinder.slasher(pathFinder.path(includeBase))} '
+            + f'-DCMAKE_LIBRARY_PATH={pathFinder.slasher(pathFinder.path(sdkOutDir))} '
+            + f'-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} '
+            # + f'-DCMAKE_C_FLAGS="/FS /DWIN32 /D_WINDOWS /W3 /GR /EHsc" '
+            # + f'-DCMAKE_CXX_FLAGS="/FS /DWIN32 /D_WINDOWS /W3 /GR /EHsc" '
+            + f'{externalLibStr} '
+            + f'{buildSourceName}'
         )
 
         print("cmake: " + cmakeCommandLine)
@@ -219,7 +228,7 @@ class Program :
             f"{pathFinder.getCMakeFileName()} "
             + f"--build "
             + f". "
-            + f"-j 1 "
+            + f"-j 6 "
             + f"--config {conf} "
         )
 
@@ -242,22 +251,6 @@ class Program :
         if cmakeResult != 0:
             sys.exit(-1)
 
-        dllName = (
-            f"{Program._LIBNAME}"
-            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
-            + f".dll"
-        )
-        libName = (
-            f"{Program._LIBNAME}"
-            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
-            + f".lib"
-        )
-        pdbName = (
-            f"{Program._LIBNAME}"
-            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
-            + f".pdb"
-        )
-
         incdir = pathFinder.path(cmakeInstallPath, "include")
         bindir = pathFinder.path(cmakeInstallPath, "bin")
         libdir = pathFinder.path(cmakeInstallPath, "lib")
@@ -268,26 +261,35 @@ class Program :
             "*.h*",
         )
         systemManager.distributeFiles(
-            pathFinder.path(cmakeInstallPath, "share", "proj"),
-            pathFinder.path(sdkOutDir, "..", "proj"),
+            pathFinder.path(cmakeInstallPath, "share", "gdal"),
+            pathFinder.path(sdkOutDir, "..", "gdal"),
             "*",
         )
         for f in glob.glob(pathFinder.path(libdir, "*.lib")):
             fname = f[len(libdir) + 1 :]
-            fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME) :]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib"
+            fname = f"{fname[:fname.find(f"{"" if (buildSettings.ReleaseSpecified()) else "d"}.lib")]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib"
 
             systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
 
         for f in glob.glob(pathFinder.path(bindir, "*.dll")):
-            fname = f[len(bindir) + 1 :]
-            fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME)]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.dll"
+            fname = f[len(libdir) + 1 :]
+            fname = f"{fname[:fname.find(f"{"" if (buildSettings.ReleaseSpecified()) else "d"}.dll")]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.dll"
             systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
 
         if not buildSettings.ReleaseSpecified():
-            for f in glob.glob(pathFinder.path(libdir, "*.pdb")):
-                fname = f[len(libdir) + 1 :]
-                fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME)]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.pdb"
+            pdfdir = pathFinder.path(cmakeBuildPath, conf)
+            for f in glob.glob(pathFinder.path(pdfdir, "*.pdb")):
+                fname = f[len(pdfdir) + 1 :]
+                fname = f"{fname[:fname.find(f"{"" if (buildSettings.ReleaseSpecified()) else "d"}.pdb")]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.pdb"
                 systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
+
+        systemManager.distributeFiles(
+            bindir,
+            sdkOutDir,
+            "*.exe",
+            suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX
+        )
+
 
 
 # ------------------------------------------------------------------------------
