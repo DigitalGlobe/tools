@@ -1,10 +1,10 @@
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 #
 # build_liblas.py
 #
 # Summary : Builds the libLAS library.
 #
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 
 import glob
@@ -12,257 +12,251 @@ import os
 import sys
 
 from BuildSettingSet import *
-from PathFinder      import *
-from SystemManager   import *
+from PathFinder import *
+from SystemManager import *
 from FileDistributor import *
 from XmlUtils import *
 
-#------------------------------------------------------------------------------
-# The Program class represents the main class of the script.
-class Program :
 
-    #--------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+# The Program class represents the main class of the script.
+class Program:
+
+    # --------------------------------------------------------------------------
     # constants
 
-        #----------------------------------------------------------------------
-        # a description of what the script does
-        DESCRIPTION = "Builds the libLAS library."
+    # ----------------------------------------------------------------------
+    # a description of what the script does
+    DESCRIPTION = "Builds the libLAS library."
 
-        #----------------------------------------------------------------------
-        # the name of the dynamic solution file
-        _FILE_NAME_SOLUTION = "src/liblas.vcxproj"
+    # ----------------------------------------------------------------------
+    # the name of the path that will contain intermediary build files
+    _PATH_NAME_BUILD = "liblas"
+    # ----------------------------------------------------------------------
+    # the name of the path that contains the source code
+    _PATH_NAME_SOURCE = "..\\src\\liblas"
+    # ----------------------------------------------------------------------
 
-        #----------------------------------------------------------------------
-        # the name of the path that will contain intermediary build files
-        _PATH_NAME_BUILD = "libLAS"
-        #----------------------------------------------------------------------
-        # the name of the path that contains the source code
-        _PATH_NAME_SOURCE = "..\\src\\libLAS"
-        #----------------------------------------------------------------------
+    _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
+    _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
-        # the name of the path that contains the cmake files
-        _PATH_NAME_CMAKE_SOURCE = "."
+    _LIBNAME = "liblas"
+    _DEBUG_SUFFIX = "_d"
 
-        _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
-        _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
+    _BOOST_DEBUG_SUFFIX = "-gd-"
+    # the name of the path for all include files
+    _PATH_NAME_INCLUDE = "include\\liblas"
+    # ----------------------------------------------------------------------
+    # the name of the distribution path for all include files
+    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\liblas"
+    # ----------------------------------------------------------------------
+    # ----------------------------------------------------------------------
+    # the name of the path that contains the cmake files
+    _PATH_NAME_CMAKE_SOURCE = "."
+    _PATH_NAME_CMAKE_BUILD = "build"
+    _PATH_NAME_CMAKE_INSTALL = "install"
 
-        _LIBNAME = 'liblas'
-        _DEBUG_SUFFIX = '_d'
-
-        _QT_DIR_X86 = '..\\..\\QT\\5.7\\x86\\lib\cmake\\qt5'
-        _QT_DIR_X64 = '..\\..\\QT\\5.7\\x64\\lib\cmake\\qt5'
-
-        _BOOST_DIR = '..\\..\\src\\boost'
-
-        _BOOST_LIB_DEBUG = '-vc140-mt-gd-1_61.lib'
-        _BOOST_LIB_RELEASE = '-vc140-mt-1_61.lib'
-
-        _BOOST_FILESYSTEM = 'boost_filesystem'
-        _BOOST_IOSTREAMS = 'boost_iostreams'
-        _BOOST_PGM_OPTIONS = 'boost_program_options'
-        _BOOST_SYSTEM = 'boost_system'
-        _BOOST_THREAD = 'boost_thread'
-
-        _GDAL_INCLUDE = '..\\..\\include\\gdal'
-        _GDAL_LIB = 'gdal'
-
-        _GEOTIFF_INCLUDE = '..\\..\\include\\libgeotiff'
-        _GEOTIFF_LIB = 'libgeotiff'
-
-        # the name of the path for all include files
-        _PATH_NAME_INCLUDE = 'include'
-
-        #----------------------------------------------------------------------
-        # the name of the distribution path for all include files
-        _PATH_NAME_DISTRIBUTION_INCLUDE = '..\\..\\include\\liblas'
-        #----------------------------------------------------------------------
-
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
     # constructors
 
-        #----------------------------------------------------------------------
-        # Constructs this program.
-        #
-        # Parameters :
-        #     self : this program
-        def __init__(self) :
+    # ----------------------------------------------------------------------
+    # Constructs this program.
+    #
+    # Parameters :
+    #     self : this program
+    def __init__(self):
+        pass
 
-            pass
-        #----------------------------------------------------------------------
+    # ----------------------------------------------------------------------
 
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
     # public methods
 
-        #----------------------------------------------------------------------
-        # The main method of the program.
-        #
-        # Parameters :
-        #     self : this program
-        def main(self) :
+    # ----------------------------------------------------------------------
+    # The main method of the program.
+    #
+    # Parameters :
+    #     self : this program
+    def main(self):
 
-            systemManager = SystemManager()
-            pathFinder    = PathFinder()
-            xmlUtils = XmlUtils()
+        systemManager = SystemManager()
+        pathFinder = PathFinder()
 
-            # process command-line arguments
-            buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
+        # process command-line arguments
+        buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
 
-            # initialize environment variables
-            systemManager.initializeIncludeEnvironmentVariable( buildSettings.X64Specified() )
-            systemManager.initializeLibraryEnvironmentVariable( buildSettings.X64Specified() )
+        # initialize environment variables
+        systemManager.initializeIncludeEnvironmentVariable(buildSettings.X64Specified())
+        systemManager.initializeLibraryEnvironmentVariable(buildSettings.X64Specified())
 
-            systemManager.appendToPathEnvironmentVariable( pathFinder.getVisualStudioBinPathName( buildSettings.X64Specified() ) )
-            systemManager.appendToPathEnvironmentVariable( Program._QT_DIR_X64 if buildSettings.X64Specified() else Program._QT_DIR_X86  + '\\bin')
+        # MSBuild is under "Program Files (x86)"
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getMSBuildFileName(buildSettings.X64Specified())
+        )
 
-            # MSBuild is under "Program Files (x86)"
-            systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
-                                                                             "MSBuild\\14.0\\Bin") )
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getNmakePathName(buildSettings.X64Specified())
+        )
 
-            compileOutDir = ""
-            if ( buildSettings.X64Specified() ) :
-                # append path for 64-bit rc.exe
-                systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
-                                                                             "Windows Kits\\10\\bin\\x64"                 ) )
-            else:
-                # append path for 32-bit rc.exe
-                systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
-                                                                             "Windows Kits\\10\\bin\\x86"                 ) )
+        compileOutDir = ""
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getWindowsSdkBinPathName(buildSettings.X64Specified())
+        )
 
-            # get the paths
-            buildPathName  = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD)
-            sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
-            sdkOutDir = buildPathName + "\\..\\" + (Program._PATH_NAME_DISTRIBUTION_X64 if buildSettings.X64Specified() else Program._PATH_NAME_DISTRIBUTION_X86)
+        # get the paths
+        buildPathName = systemManager.getCurrentRelativePathName(
+            Program._PATH_NAME_BUILD
+        )
+        sourcePathName = systemManager.getCurrentRelativePathName(
+            Program._PATH_NAME_SOURCE
+        )
 
-            # remove build dir
-            systemManager.changeDirectory(sourcePathName)
-            systemManager.removeDirectory(buildPathName)
+        buildSourceName = pathFinder.path(
+            buildPathName, Program._PATH_NAME_CMAKE_SOURCE
+        )
+        cmakeBuildPath = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
+        cmakeInstallPath = pathFinder.path(
+            cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
+        )
 
-            #copy UriParser to the Build area
-            systemManager.copyDirectory( sourcePathName, buildPathName)
+        systemManager.removeDirectory(cmakeBuildPath)
 
-            # start building
-            systemManager.changeDirectory(buildPathName)
+        sdkOutDir = pathFinder.path(
+            buildPathName,
+            "..",
+            (
+                Program._PATH_NAME_DISTRIBUTION_X64
+                if buildSettings.X64Specified()
+                else Program._PATH_NAME_DISTRIBUTION_X86
+            ),
+        )
 
-            buildSourceName  = pathFinder.path( buildPathName , Program._PATH_NAME_CMAKE_SOURCE)
+        # remove build dir
+        systemManager.changeDirectory(sourcePathName)
+        # systemManager.removeDirectory(buildPathName)
+
+        # copy source to the Build area
+        systemManager.copyDirectory(sourcePathName, buildPathName)
+
+        # start building
+        systemManager.changeDirectory(buildPathName)
+
+        systemManager.makeDirectory(cmakeBuildPath)
+        systemManager.changeDirectory(cmakeBuildPath)
+
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        includeBase = pathFinder.path(
+            buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, ".."
+        )
+        libSuffix = (
+            f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
+        )
+        externalLibs = {
+            "BOOST_INCLUDEDIR": pathFinder.path(includeBase),
+            "BOOST_LIBRARYDIR": sdkOutDir,
+            "Boost_FILESYSTEM_LIBRARY": self._findBoostLibrary("boost_filesystem", pathFinder, sdkOutDir, buildSettings.ReleaseSpecified()),
+            "Boost_IOSTREAMS_LIBRARY": self._findBoostLibrary("boost_iostreams", pathFinder, sdkOutDir, buildSettings.ReleaseSpecified()),
+            "Boost_PROGRAM_OPTIONS_LIBRARY": self._findBoostLibrary("boost_program_options", pathFinder, sdkOutDir, buildSettings.ReleaseSpecified()),
+            "Boost_THREAD_LIBRARY": self._findBoostLibrary("boost_thread", pathFinder, sdkOutDir, buildSettings.ReleaseSpecified()),
+            "GDAL_INCLUDE_DIR": pathFinder.path(includeBase, "gdal"),
+            "GDAL_LIBRARY": pathFinder.path(sdkOutDir, f"gdal{libSuffix}"),
+            "GEOTIFF_INCLUDE_DIR": pathFinder.path(includeBase, "libgeotiff"),
+            "GEOTIFF_LIBRARY": pathFinder.path(sdkOutDir, f"geotiff{libSuffix}"),
+            "JPEG_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libjpeg")),
+            "JPEG_LIBRRY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libjpeg{libSuffix}")),
+            "TIFF_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libtiff")),
+            "TIFF_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libtiff{libSuffix}")),
+            "ZLIB_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "zlib")),
+            "ZLIB_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"zlib{libSuffix}")),
+        }
+
+        externalLibStr = ""
+        for [key, val] in externalLibs.items():
+            externalLibStr += f'-D{key}="{val}" '
+
+        cmakeCommandLine = (
+            f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
+            + f"-A {platform} "
+            + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
+            + f"-DWITH_UTILITIES=OFF "
+            + f"-DWITH_TESTS=OFF "
+            + f"-DCMAKE_BUILD_TYPE={conf} "
+            + f"-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} "
+            + f"{externalLibStr} "
+            + f"{buildSourceName}"
+        )
+
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
+
+        cmakeCommandLine = (
+            f"{pathFinder.getCMakeFileName()} "
+            + f"--build "
+            + f". "
+            + f"-j 1 "
+            + f"--config {conf} "
+        )
+
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
+
+        cmakeCommandLine = (
+            f"{pathFinder.getCMakeFileName()} "
+            + f"--install "
+            + f". "
+            + f"--config {conf} "
+            + f"--prefix "
+            + f"{pathFinder.path(cmakeBuildPath, "install")}"
+        )
+
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
+
+        incdir = pathFinder.path(cmakeInstallPath, "include", "liblas")
+        libdir = pathFinder.path(cmakeInstallPath, "lib")
+        bindir = pathFinder.path(cmakeInstallPath, "bin")
+
+        systemManager.distributeFiles(
+            incdir,
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            "*.h*",
+        )
+
+        for f in glob.glob(pathFinder.path(libdir, "*.lib")):
+            fname = f[len(libdir) + 1 :]
+            fname = f"{fname[:fname.find(f"{"" if (buildSettings.ReleaseSpecified()) else "d"}.lib")]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib"
+
+            systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
+
+        for f in glob.glob(pathFinder.path(bindir, "*.dll")):
+            fname = f[len(libdir) + 1 :]
+            fname = f"{fname[:fname.find(f"{"" if (buildSettings.ReleaseSpecified()) else "d"}.dll")]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.dll"
+            systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
+
+        if not buildSettings.ReleaseSpecified():
+            pdfdir = pathFinder.path(cmakeBuildPath, conf)
+            for f in glob.glob(pathFinder.path(pdfdir, "*.pdb")):
+                fname = f[len(pdfdir) + 1 :]
+                fname = f"{fname[:fname.find(f"{"" if (buildSettings.ReleaseSpecified()) else "d"}.pdb")]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.pdb"
+                systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
 
 
-            # determine file names
-            if buildSettings.ReleaseSpecified():
-                 boostFilesystem = pathFinder.path(sdkOutDir, Program._BOOST_FILESYSTEM + Program._BOOST_LIB_RELEASE)
-                 boostIOStreams = pathFinder.path(sdkOutDir, Program._BOOST_IOSTREAMS + Program._BOOST_LIB_RELEASE)
-                 boostPgmOpts = pathFinder.path(sdkOutDir, Program._BOOST_PGM_OPTIONS + Program._BOOST_LIB_RELEASE)
-                 boostSystem = pathFinder.path(sdkOutDir, Program._BOOST_SYSTEM + Program._BOOST_LIB_RELEASE)
-                 boostThread = pathFinder.path(sdkOutDir, Program._BOOST_THREAD + Program._BOOST_LIB_RELEASE)
-            else :
-                 boostFilesystem = pathFinder.path(sdkOutDir, Program._BOOST_FILESYSTEM + Program._BOOST_LIB_DEBUG)
-                 boostIOStreams = pathFinder.path(sdkOutDir, Program._BOOST_IOSTREAMS + Program._BOOST_LIB_DEBUG)
-                 boostPgmOpts = pathFinder.path(sdkOutDir, Program._BOOST_PGM_OPTIONS + Program._BOOST_LIB_DEBUG)
-                 boostSystem = pathFinder.path(sdkOutDir, Program._BOOST_SYSTEM + Program._BOOST_LIB_DEBUG)
-                 boostThread = pathFinder.path(sdkOutDir, Program._BOOST_THREAD + Program._BOOST_LIB_DEBUG)
-
-            gdalLib = pathFinder.path(sdkOutDir, Program._GDAL_LIB + \
-                ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".lib")
-            geotiffLib = pathFinder.path(sdkOutDir, Program._GEOTIFF_LIB + \
-                ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".lib")
-
-            boostInclude = pathFinder.path(buildPathName, Program._BOOST_DIR)
-            gdalInclude = pathFinder.path(buildPathName, Program._GDAL_INCLUDE)
-            geotiffInclude = pathFinder.path(buildPathName, Program._GEOTIFF_INCLUDE)
-
-            cmakeCommandLine = PathFinder.FILE_NAME_CMAKE
-            cmakeCommandLine += ' ' + buildSourceName
-
-            # run CMake
-            if ( buildSettings.X64Specified() ) :
-                cmakeCommandLine += ' -G"Visual Studio 14 2015 Win64"'
-            else :
-                cmakeCommandLine += ' -G"Visual Studio 14 2015"'
-
-            cmakeCommandLine += ' -DBoost_INCLUDE_DIR="' + boostInclude + '"'
-            cmakeCommandLine += ' -DBoost_FILESYSTEM_LIBRARY_DEBUG="' + boostFilesystem + '"'
-            cmakeCommandLine += ' -DBoost_FILESYSTEM_LIBRARY_RELEASE="' + boostFilesystem + '"'
-            cmakeCommandLine += ' -DBoost_IOSTREAMS_LIBRARY_DEBUG="' + boostIOStreams + '"'
-            cmakeCommandLine += ' -DBoost_IOSTREAMS_LIBRARY_RELEASE="' + boostIOStreams + '"'
-            cmakeCommandLine += ' -DBoost_PROGRAM_OPTIONS_LIBRARY_DEBUG="' + boostPgmOpts + '"'
-            cmakeCommandLine += ' -DBoost_PROGRAM_OPTIONS_LIBRARY_RELEASE="' + boostPgmOpts + '"'
-            cmakeCommandLine += ' -DBoost_SYSTEM_LIBRARY_DEBUG="' + boostSystem + '"'
-            cmakeCommandLine += ' -DBoost_SYSTEM_LIBRARY_RELEASE="' + boostSystem + '"'
-            cmakeCommandLine += ' -DBoost_THREAD_LIBRARY_DEBUG="' + boostThread + '"'
-            cmakeCommandLine += ' -DBoost_THREAD_LIBRARY_RELEASE="' + boostThread + '"'
-            cmakeCommandLine += ' -DGDAL_INCLUDE_DIR="' + gdalInclude + '"'
-            cmakeCommandLine += ' -DGDAL_LIBRARY="' + gdalLib + '"'
-            cmakeCommandLine += ' -DGEOTIFF_INCLUDE_DIR="' + geotiffInclude + '"'
-            cmakeCommandLine += ' -DGEOTIFF_LIBRARY="' + geotiffLib + '"'
-            cmakeCommandLine += ' -DCMAKE_CXX_FLAGS="/DWIN32 /D_WINDOWS /W3 /GR /EHsc /DBOOST_ALL_NO_LIB"'
-
-            print('cmake: ' + cmakeCommandLine)
-
-            cmakeResult = systemManager.execute(cmakeCommandLine)
-            if (cmakeResult != 0) :
-                sys.exit(-1)
-
-            conf = "Release" if ( buildSettings.ReleaseSpecified() ) else "Debug"
-            platform  = 'x64' if buildSettings.X64Specified() else 'Win32'
-
-
-            # build the solution
-            solutionFileName   = pathFinder.path( buildPathName               , \
-                                               Program._FILE_NAME_SOLUTION )
-            msBuildCommandLine = ( "\"%s\" "                  + \
-                                     "/p:platform=%s " + \
-                                     "\"%s\""                   ) % \
-                                   ( pathFinder.getMSBuildFileName( buildSettings.X64Specified()), platform, solutionFileName )
-
-            dllName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".dll"
-            libName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".lib"
-            pdbName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".pdb"
-
-            buildOutDir   = pathFinder.path( buildPathName, 'build' )
-            propfile   = pathFinder.path( buildPathName, 'linker.props' )
-
-            msBuildCommandLine += ' /p:OutDir=' + buildOutDir
-            msBuildCommandLine += ' /p:TargetExtension=dll'
-            msBuildCommandLine += ' /p:SolutionDir=' + buildPathName + '\\'
-            msBuildCommandLine += ' /p:TargetName=' + Program._LIBNAME + ('' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX)
-            msBuildCommandLine += ' /p:Configuration=' + conf
-            msBuildCommandLine += ' /p:BuildProjectReferences=false'
-
-
-            linkerprops = {'OutputFile':pathFinder.path( buildOutDir, dllName )}
-            linkerprops['ImportLibrary'] = pathFinder.path( buildOutDir, libName )
-            if buildSettings.ReleaseSpecified():
-                linkerprops['DebugSymbols'] = 'false'
-            else:
-                linkerprops['DebugSymbols'] = 'true'
-                linkerprops['DebugType'] = 'full'
-                linkerprops['ProgramDatabaseFile'] = '$(OutDir)\\' + pdbName
-
-            xmlUtils.buildDll(conf, platform, {}, linkerprops, propfile)
-
-            msBuildCommandLine +=  ' /p:ForceImportBeforeCppTargets="' + propfile + '"'
-
-
-            print('cmd: ' + msBuildCommandLine)
-
-            msbuildResult = systemManager.execute(msBuildCommandLine)
-            if (msbuildResult != 0) :
-                sys.exit(-1)
-
-
-            systemManager.removeDirectory(pathFinder.path( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE))
-            systemManager.distributeFiles(pathFinder.path( buildPathName, Program._PATH_NAME_INCLUDE),              \
-                              pathFinder.path( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE), \
-                              '*.h',                                                                 \
-                              True, False)
-
-            systemManager.copyFile( pathFinder.path( buildOutDir, libName ) , \
-                                    pathFinder.path( sdkOutDir , libName) )
-            systemManager.copyFile( pathFinder.path( buildOutDir, dllName ) , \
-                                    pathFinder.path( sdkOutDir , dllName) )
-            if not buildSettings.ReleaseSpecified():
-                systemManager.copyFile( pathFinder.path( buildOutDir, pdbName ) , \
-                                        pathFinder.path( sdkOutDir , pdbName) )
-
-#------------------------------------------------------------------------------
+    def _findBoostLibrary(self, libName,  pathFinder, sdkOutDir, release):
+        for f in glob.glob(pathFinder.path(sdkOutDir, f"{libName}*.lib")):
+            if release:
+                if f.find(Program._BOOST_DEBUG_SUFFIX) == -1:
+                    return pathFinder.slasher(f)
+            elif f.find(Program._BOOST_DEBUG_SUFFIX) != -1:
+                return pathFinder.slasher(f)
+        return ""
+# ------------------------------------------------------------------------------
 Program().main()
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
