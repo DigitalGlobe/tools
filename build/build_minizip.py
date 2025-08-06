@@ -163,6 +163,9 @@ class Program:
             f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
             + f"-A {platform} "
             + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
+            + f"-DUSE_AES=OFF "
+            + f"-DBUILD_TEST=OFF "
+            + f"-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} "
             + f"{externalLibStr} "
             + f"{buildSourceName}"
         )
@@ -199,37 +202,33 @@ class Program:
         if cmakeResult != 0:
             sys.exit(-1)
 
-        pdbName = (
-            f"{Program._LIBNAME}"
-            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
-            + f".pdb"
-        )
-
-        srcIncludePath = pathFinder.path(cmakeInstallPath, "include", f"minizip")
-        srcLibPath = pathFinder.path(cmakeInstallPath, "lib")
+        incdir = pathFinder.path(cmakeInstallPath, "include", "minizip")
+        libdir = pathFinder.path(cmakeInstallPath, "lib")
+        bindir = pathFinder.path(cmakeInstallPath, "bin")
 
         systemManager.distributeFiles(
-            srcIncludePath,
+            incdir,
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
         )
 
-        systemManager.distributeFiles(
-            srcLibPath,
-            sdkOutDir,
-            "*.lib",
-            suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX,
-        )
+        for f in glob.glob(pathFinder.path(libdir, "*.lib")):
+            fname = f[len(libdir) + 1 :]
+            fname = f"{fname[:fname.find(f"{"" if (buildSettings.ReleaseSpecified()) else "d"}.lib")]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib"
+
+            systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
+
+        for f in glob.glob(pathFinder.path(bindir, "*.dll")):
+            fname = f[len(libdir) + 1 :]
+            fname = f"{fname[:fname.find(f"{"" if (buildSettings.ReleaseSpecified()) else "d"}.dll")]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.dll"
+            systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
 
         if not buildSettings.ReleaseSpecified():
-            systemManager.copyFile(
-                pathFinder.path(
-                    cmakeBuildPath,
-                    conf,
-                    f"{Program._LIBNAME}.pdb",
-                ),
-                pathFinder.path(sdkOutDir, pdbName),
-            )
+            pdfdir = pathFinder.path(cmakeBuildPath, conf)
+            for f in glob.glob(pathFinder.path(pdfdir, "*.pdb")):
+                fname = f[len(pdfdir) + 1 :]
+                fname = f"{fname[:fname.find(f"{"" if (buildSettings.ReleaseSpecified()) else "d"}.pdb")]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.pdb"
+                systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
 
 
 # --------------------------------------------------------------------------
