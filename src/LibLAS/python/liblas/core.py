@@ -48,7 +48,8 @@ import sys
 import ctypes
 from ctypes.util import find_library
 
-from ctypes import PyDLL
+if not 'pypy' in sys.executable:
+    from ctypes import PyDLL
 
 
 class LASException(Exception):
@@ -108,7 +109,7 @@ def check_value_free(result, func, cargs):
         raise LASException(msg)
 
     retval = ctypes.string_at(result)[:]
-    
+
     return retval
 
 
@@ -152,8 +153,8 @@ elif os.name == 'posix':
         lib_name = 'liblas_c.dylib'
         free = ctypes.CDLL(find_library('libc')).free
     else:
-        lib_name = 'liblas_c.so'
-        free = ctypes.CDLL(find_library('libc.so.6')).free
+        lib_name = 'liblas_c.so.3'
+        free = ctypes.CDLL(find_library('c')).free
     las = ctypes.CDLL(lib_name)
 else:
     raise LASException('Unsupported OS "%s"' % os.name)
@@ -798,7 +799,7 @@ las.LASHeader_SetCompressed.errcheck = check_return
 las.LASHeader_SetCompressed.restype = ctypes.c_int
 
 las.LASSchema_Create.argtypes = [ctypes.c_uint32]
-                                        
+
 las.LASSchema_Create.errcheck = check_void
 las.LASSchema_Create.restype = ctypes.c_void_p
 
