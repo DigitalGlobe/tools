@@ -1,10 +1,10 @@
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 #
 # build_osg.py
 #
 # Summary : Builds OpenSceneGraph
 #
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 import glob
 import os
@@ -14,195 +14,223 @@ from BuildSettingSet import *
 from PathFinder import *
 from SystemManager import *
 
-class Program :
-        DESCRIPTION = "Builds OpenSceneGraph."
-        _PATH_NAME_BINARY_X86 = "..\\sdk\\x86\\bin"
-        _PATH_NAME_BINARY_X64 = "..\\sdk\\x64\\bin"
-        _PATH_NAME_BUILD = "OpenSceneGraph"
-        _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
-        _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
-        _PATH_NAME_SOURCE = "..\\src\\OpenSceneGraph"
 
-        # the name of the path for all include files
-        _PATH_NAME_INCLUDE = 'include'
-        #----------------------------------------------------------------------
-        # the name of the distribution path for all include files
-        _PATH_NAME_DISTRIBUTION_INCLUDE = '..\\..\\include\\osg'
-        #----------------------------------------------------------------------
+class Program:
+    DESCRIPTION = "Builds OpenSceneGraph."
+    # ----------------------------------------------------------------------
+    # the name of the path that will contain intermediary build files
+    _PATH_NAME_BUILD = "osg"
+    # ----------------------------------------------------------------------
+    # the name of the path that contains the source code
+    _PATH_NAME_SOURCE = "..\\src\\openscenegraph"
+    # ----------------------------------------------------------------------
 
-        def __init__(self) :
+    _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
+    _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
-            pass
-        #----------------------------------------------------------------------
+    _LIBNAME = "osg"
+    _DEBUG_SUFFIX = "_d"
+
+    # the name of the path for all include files
+    _PATH_NAME_INCLUDE = "include\\osg"
+    # ----------------------------------------------------------------------
+    # the name of the distribution path for all include files
+    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\osg"
+    # ----------------------------------------------------------------------
+    # ----------------------------------------------------------------------
+    # the name of the path that contains the cmake files
+    _PATH_NAME_CMAKE_SOURCE = "."
+    _PATH_NAME_CMAKE_BUILD = "build"
+    _PATH_NAME_CMAKE_INSTALL = "install"
+
+    # --------------------------------------------------------------------------
+    # constructors
+
+    # ----------------------------------------------------------------------
+    # Constructs this program.
+    #
+    # Parameters :
+    #     self : this program
+    def __init__(self):
+        pass
+
+    # ----------------------------------------------------------------------
+
+    # --------------------------------------------------------------------------
+    # public methods
+
+    # ----------------------------------------------------------------------
+    # The main method of the program.
+    #
+    # Parameters :
+    #     self : this program
+    def main(self):
+
+        systemManager = SystemManager()
+        pathFinder = PathFinder()
+
+        # process command-line arguments
+        buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
+
+        # initialize environment variables
+        systemManager.initializeIncludeEnvironmentVariable(buildSettings.X64Specified())
+        systemManager.initializeLibraryEnvironmentVariable(buildSettings.X64Specified())
+
+        # MSBuild is under "Program Files (x86)"
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getMSBuildFileName(buildSettings.X64Specified())
+        )
+
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getNmakePathName(buildSettings.X64Specified())
+        )
+
+        compileOutDir = ""
+        systemManager.appendToPathEnvironmentVariable(
+            pathFinder.getWindowsSdkBinPathName(buildSettings.X64Specified())
+        )
+
+        # get the paths
+        buildPathName = systemManager.getCurrentRelativePathName(
+            Program._PATH_NAME_BUILD
+        )
+        sourcePathName = systemManager.getCurrentRelativePathName(
+            Program._PATH_NAME_SOURCE
+        )
+
+        buildSourceName = pathFinder.path(
+            buildPathName, Program._PATH_NAME_CMAKE_SOURCE
+        )
+        cmakeBuildPath = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
+        cmakeInstallPath = pathFinder.path(
+            cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
+        )
+
+        sdkOutDir = pathFinder.path(
+            buildPathName,
+            "..",
+            (
+                Program._PATH_NAME_DISTRIBUTION_X64
+                if buildSettings.X64Specified()
+                else Program._PATH_NAME_DISTRIBUTION_X86
+            ),
+        )
+
+        # remove build dir
+        systemManager.changeDirectory(sourcePathName)
+        systemManager.removeDirectory(buildPathName)
+
+        # copy source to the Build area
+        systemManager.copyDirectory(sourcePathName, buildPathName)
+
+        # start building
+        systemManager.changeDirectory(buildPathName)
+
+        systemManager.makeDirectory(cmakeBuildPath)
+        systemManager.changeDirectory(cmakeBuildPath)
+
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        includeBase = pathFinder.path(
+            buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, ".."
+        )
+        libSuffix = (
+            f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
+        )
+        externalLibs = {
+            "CURL_INCLUDE_DIR": pathFinder.path(includeBase),
+            "CURL_LIBRARY": pathFinder.path(sdkOutDir, f"libcurl{libSuffix}"),
+            "FREETYPE_INCLUDE_DIR": pathFinder.path(includeBase, "freetype"),
+            "FREETYPE_LIBRARY": pathFinder.path(sdkOutDir, f"freetype{libSuffix}"),
+            "GDAL_INCLUDE_DIR": pathFinder.path(includeBase, "gdal"),
+            "GDAL_LIBRARY": pathFinder.path(sdkOutDir, f"gdal{libSuffix}"),
+            "JPEG_INCLUDE_DIR": pathFinder.slasher( pathFinder.path(includeBase, "libjpeg") ),
+            "JPEG_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libjpeg{libSuffix}")),
+            "LIBXML2_INCLUDE_DIR": pathFinder.path(includeBase),
+            "LIBXML2_LIBRARY": pathFinder.path(sdkOutDir, f"libxml2{libSuffix}"),
+            "PNG_PNG_INCLUDE_DIR": pathFinder.path(includeBase, "libpng"),
+            "PNG_LIBRARY": pathFinder.path(sdkOutDir, f"libpng{libSuffix}"),
+            "TIFF_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libtiff")),
+            "TIFF_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libtiff{libSuffix}")),
+            "ZLIB_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "zlib")),
+            "ZLIB_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"zlib{libSuffix}")),
+        }
+
+        externalLibStr = ""
+        for [key, val] in externalLibs.items():
+            externalLibStr += f'-D{key}="{val}" '
+
+        cmakeCommandLine = (
+            f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
+            + f"-A {platform} "
+            + f"-DOSG_MSVC_VERSIONED_DLL=OFF "
+            + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
+            + f"-DCMAKE_BUILD_TYPE={conf} "
+            + f"-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} "
+            + f"{externalLibStr} "
+            + f"{buildSourceName}"
+        )
+
+        # print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
+
+        cmakeCommandLine = (
+            f"{pathFinder.getCMakeFileName()} "
+            + f"--build "
+            + f". "
+            + f"--config {conf} "
+        )
+
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
+
+        cmakeCommandLine = (
+            f"{pathFinder.getCMakeFileName()} "
+            + f"--install "
+            + f". "
+            + f"--config {conf} "
+            + f"--prefix "
+            + f"{pathFinder.path(cmakeBuildPath, "install")}"
+        )
+
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
+
+        incdir = pathFinder.path(cmakeInstallPath, "include", "osg")
+        libdir = pathFinder.path(cmakeInstallPath, "lib")
+        bindir = pathFinder.path(cmakeInstallPath, "bin")
+
+        systemManager.distributeFiles(
+            incdir,
+            pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+            "*.h*",
+        )
+
+        for f in glob.glob(pathFinder.path(libdir, "*.lib")):
+            fname = f[len(libdir) + 1 :]
+            fname = f"{fname[:fname.find(f"{"" if (buildSettings.ReleaseSpecified()) else "d"}.lib")]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib"
+
+            systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
+
+        for f in glob.glob(pathFinder.path(bindir, "*.dll")):
+            fname = f[len(bindir) + 1 :]
+            fname = f"{fname[:fname.find(f"{"" if (buildSettings.ReleaseSpecified()) else "d"}.dll")]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.dll"
+            systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
+
+        if not buildSettings.ReleaseSpecified():
+            for f in glob.glob(pathFinder.path(bindir, "*.pdb")):
+                fname = f[len(bind) + 1 :]
+                fname = f"{fname[:fname.find(f"{"" if (buildSettings.ReleaseSpecified()) else "d"}.pdb")]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.pdb"
+                systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
 
 
-        def main(self) :
-
-            systemManager = SystemManager()
-            pathFinder    = PathFinder()
-
-            # process command-line arguments
-            buildSettings = BuildSettingSet.fromCommandLine(Program.DESCRIPTION)
-
-            # initialize environment variables
-            systemManager.initializeIncludeEnvironmentVariable( buildSettings.X64Specified() )
-            systemManager.initializeLibraryEnvironmentVariable( buildSettings.X64Specified() )
-            systemManager.appendToPathEnvironmentVariable( pathFinder.getVisualStudioBinPathName( buildSettings.X64Specified() ) )
-
-            # MSBuild is under "Program Files (x86)"
-            systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
-                                                                             "MSBuild\\14.0\\Bin") )
-
-            compileOutDir = ""
-            if ( buildSettings.X64Specified() ) :
-                print("64bit Build")
-
-                # append path for 64-bit rc.exe
-                systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
-                                                                             "Windows Kits\\10\\bin\\x64"                 ) )
-            else:
-                print("32bit Build")
-
-                # append path for 32-bit rc.exe
-                systemManager.appendToPathEnvironmentVariable( pathFinder.path( systemManager.getProgramFilesPathName(False) , \
-                                                                             "Windows Kits\\10\\bin\\x86"                 ) )
-
-            # determine path names
-            print("Getting Paths")
-            buildPathName  = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD)
-            sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
-            print("build path: " + buildPathName)
-            print("source path: " + sourcePathName)
-
-            # initialize directories
-            print("removing previous build dir")
-            systemManager.changeDirectory(sourcePathName)
-            systemManager.removeDirectory(buildPathName)
-
-            print("copying source to build dir")
-            systemManager.copyDirectory( sourcePathName, buildPathName)
-
-            # start building
-            systemManager.changeDirectory(buildPathName)
-
-
-            # Call CMAKE to generate the correct VS solution files
-            if ( buildSettings.X64Specified() ) :
-                cmakeCommand = "cmake -G \"Visual Studio 14 2015 Win64\""
-                target="x64"
-            else:
-                cmakeCommand = "cmake -G \"Visual Studio 14 2015\""
-                target="x86"
-
-            cmakeCommand = cmakeCommand + ' -DCMAKE_SOURCE_DIR="' + buildPathName + '"'
-
-            if buildSettings.ReleaseSpecified():
-                cmakeCommand = cmakeCommand +  " -DCMAKE_BUILD_TYPE=\"Release\" "
-                libSuffix = ""
-            else:
-                cmakeCommand = cmakeCommand +  " -DCMAKE_BUILD_TYPE=\"Debug\" "
-                libSuffix = "_d"
-
-            #Add CMAKE Vars for 3rd party libs
-            #GDAL
-            cmakeCommand = cmakeCommand + ' -DGDAL_INCLUDE_DIRS="' + buildPathName + '../../include/gdal/include" '
-            cmakeCommand = cmakeCommand + ' -DGDAL_LIBRARY="' + buildPathName + '../../sdk/' + target + 'gdal' + libSuffix + '.lib'
-            #FreeType
-            cmakeCommand = cmakeCommand + " -DFREETYPE_INCLUDE_DIRS=\"../FreeType/include/freetype/\" "
-            cmakeCommand = cmakeCommand + " -DFREETYPE_LIBRARY=\"../../sdk/" + target + "/lib/freetype" + libSuffix + ".lib\" "
-            #JPEG
-            cmakeCommand = cmakeCommand + " -DJPEG_INCLUDE_DIR=\"../libjpeg/\" "
-            cmakeCommand = cmakeCommand + " -DJPEG_LIBRARY=\"../../sdk/" + target + "/lib/libjpeg" + libSuffix + ".lib\" "
-            #Tiff
-            cmakeCommand = cmakeCommand + ' -DTIFF_INCLUDE_DIRS="' + buildPathName + '../../include/libtiff/include" '
-            cmakeCommand = cmakeCommand + ' -DTIFF_LIBRARY="' + buildPathName + '../../sdk/' + target + 'libtiff' + libSuffix + '.lib'
-
-
-            print( "cmake command: " + cmakeCommand)
-
-            # Run CMAKE
-            res = systemManager.execute(cmakeCommand)
-
-            # MSBUILD
-            cmd = "msbuild OpenSceneGraph.sln "
-
-            # extend command line based on options
-            if ( buildSettings.X64Specified() ) :
-                cmd = cmd + "/p:platform=x64 "
-                distribPath = Program._PATH_NAME_DISTRIBUTION_X64
-            else :
-                cmd = cmd + "/p:platform=Win32 "
-                distribPath = Program._PATH_NAME_DISTRIBUTION_X86
-
-
-            if buildSettings.ReleaseSpecified():
-                cmd = cmd + "/p:configuration=Release "
-
-            else:
-                cmd = cmd + "/p:configuration=Debug "
-
-            libOutDir = buildPathName + "\\lib"  # libs
-            exeOutDir = buildPathName + "\\bin"  # exes and dlls
-            #also need plugin dir
-
-            print("lib output dir: " + libOutDir)
-            print("exe output dir: " + exeOutDir)
-
-            sdkOutDir = buildPathName + "\\..\\" + distribPath
-
-            cmdClean = cmd + "/t:clean"
-
-            print("command is: " + cmd)
-            print("clean command is: " + cmdClean)
-
-
-            # execute clean
-            print("executing clean")
-            systemManager.changeDirectory(buildPathName)
-            res = systemManager.execute(cmdClean)
-
-            # build
-            print("executing compile")
-            res = systemManager.execute(cmd)
-
-            systemManager.removeDirectory(pathFinder.path( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE))
-            systemManager.distributeFiles(pathFinder.path( buildPathName, Program._PATH_NAME_INCLUDE),              \
-                                          pathFinder.path( buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE), \
-                                          '*',                                                                 \
-                                          True, False, True)
-
-
-            # copy output to appropriate bin dir
-            print("Copy files into SDK dir")
-
-            #libs
-            for file in glob.glob(libOutDir + "\\*.lib"):
-                print( "copying " + file + " -> " + sdkOutDir)
-                shutil.copy(file, sdkOutDir)
-            for file in glob.glob(libOutDir + "\\*.exp"):
-                print( "copying " + file + " -> " + sdkOutDir)
-                shutil.copy(file, sdkOutDir)
-
-            #lib plugins
-            for file in glob.glob(libOutDir + "\\osgPlugins-3.4.0\\*.lib"):
-                print( "copying " + file + " -> " + sdkOutDir)
-                shutil.copy(file, sdkOutDir)
-            for file in glob.glob(libOutDir + "\\osgPlugins-3.4.0\\*.exp"):
-                print( "copying " + file + " -> " + sdkOutDir)
-                shutil.copy(file, sdkOutDir)
-
-            #DLL's
-            for file in glob.glob(exeOutDir + "\\*.dll"):
-                print( "copying " + file + " -> " + sdkOutDir)
-                shutil.copy(file, sdkOutDir)
-
-            #DLL Plugins
-            for file in glob.glob(exeOutDir + "\\osgPlugins-3.4.0\\*.dll"):
-                print( "copying " + file + " -> " + sdkOutDir)
-                shutil.copy(file, sdkOutDir)
-
-
-
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 Program().main()
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
