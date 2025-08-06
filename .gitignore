@@ -83,6 +83,7 @@ build/OGDI/*
 build/OpenCV/*
 build/OpenDIS/*
 build/OpenSSL/*
+build/osg/*
 build/OpenThreads/*
 build/PoDoFo/*
 build/PROJ/*

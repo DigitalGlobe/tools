@@ -118,7 +118,7 @@ class Program:
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
-        systemManager.removeDirectory(buildPathName)
+        # systemManager.removeDirectory(buildPathName)
 
         # copy source to the Build area
         systemManager.copyDirectory(sourcePathName, buildPathName)
@@ -126,6 +126,7 @@ class Program:
         # start building
         systemManager.changeDirectory(buildPathName)
 
+        systemManager.removeDirectory(cmakeBuildPath)
         systemManager.makeDirectory(cmakeBuildPath)
         systemManager.changeDirectory(cmakeBuildPath)
 
@@ -172,7 +173,7 @@ class Program:
             + f"{buildSourceName}"
         )
 
-        # print("cmake: " + cmakeCommandLine)
+        print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
         if cmakeResult != 0:
             sys.exit(-1)
@@ -226,7 +227,7 @@ class Program:
 
         if not buildSettings.ReleaseSpecified():
             for f in glob.glob(pathFinder.path(bindir, "*.pdb")):
-                fname = f[len(bind) + 1 :]
+                fname = f[len(bindir) + 1 :]
                 fname = f"{fname[:fname.find(f"{"" if (buildSettings.ReleaseSpecified()) else "d"}.pdb")]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.pdb"
                 systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
 
