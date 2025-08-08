@@ -22,7 +22,7 @@ class Program:
     _PATH_NAME_BINARY_X64 = "..\\sdk\\x64\\bin"
 
     _PATH_NAME_BUILD = "Qt"
-    _QT_VERSION = "5.15"
+    _QT_VERSION = "6.8"
 
     _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
@@ -32,7 +32,7 @@ class Program:
     _FIREBIRD_BASE = "..\\..\\firebird"
     _FIREBIRD_INCLUDE = "include"
     _FIREBIRD_LIB_PATH = "lib"
-    _FIREBIRD_LIB = "fbclient"
+    _FIREBIRD_LIB = "fbclient_ms"
 
     def __init__(self):
         pass
@@ -91,11 +91,16 @@ class Program:
         )
         systemManager.appendToPathEnvironmentVariable(qtBaseBin)
 
+        # remove build dir
+        systemManager.removeDirectory(buildPathName)
+        systemManager.makeDirectory(buildPathName)
+        systemManager.changeDirectory(buildPathName)
+
         # determine path names
         print("Getting Paths")
         buildPathName = systemManager.getCurrentRelativePathName( Program._PATH_NAME_BUILD)
         sourcePathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_SOURCE)
-        binPathName = systemManager.getCurrentRelativePathName(pathFinder.path("..","Qt",Program._QT_VERSION))
+        binPathName = systemManager.getCurrentRelativePathName(pathFinder.path("..", "..","Qt",Program._QT_VERSION))
 
         # QT out-of-source builds need to be in a parallel directory
         buildPathQTSrcName = pathFinder.path(buildPathName, "Qt")
@@ -105,18 +110,14 @@ class Program:
         print("source path: " + sourcePathName)
         print("install path: " + binPathName)
 
-        # remove build dir
-        # systemManager.removeDirectory(buildPathName)
-        # systemManager.makeDirectory(buildPathName)
+        # link the source to the build directory w/o copying
+        cmd = f'mklink /j {buildPathQTSrcName} {sourcePathName}'
+        print("cmd: " + cmd)
+        result = systemManager.execute(cmd)
+        if result != 0:
+            sys.exit(-1)
 
-        # # link the source to the build directory w/o copying
-        # cmd = f'mklink /j {buildPathQTSrcName} {sourcePathName}'
-        # print("cmd: " + cmd)
-        # result = systemManager.execute(cmd)
-        # if result != 0:
-        #     sys.exit(-1)
-
-        # systemManager.makeDirectory(buildPathQTBuildName)
+        systemManager.makeDirectory(buildPathQTBuildName)
         systemManager.changeDirectory(buildPathQTBuildName)
 
         binDir = binPathName
@@ -136,55 +137,73 @@ class Program:
         )
 
         # firebirdBase = pathFinder.path(pathFinder.path(buildPathName, Program._FIREBIRD_BASE), 'x86')
-        firebirdInclude = pathFinder.path(firebirdBase, Program._FIREBIRD_INCLUDE)
-        firebirdLib = pathFinder.path(firebirdBase, Program._FIREBIRD_LIB_PATH)
+        # firebirdInclude = pathFinder.slasher(pathFinder.path(firebirdBase, Program._FIREBIRD_INCLUDE))
+        # firebirdLib = pathFinder.slasher(pathFinder.path(firebirdBase, Program._FIREBIRD_LIB_PATH))
 
-        os.environ["QMAKE_INCDIR_IBASE"] = firebirdInclude
-        os.environ["QMAKE_LIBDIR_IBASE"] = firebirdLib
-        os.environ["QMAKE_LIBS_IBASE"] = Program._FIREBIRD_LIB
+        os.environ["Interbase_ROOT"] = pathFinder.slasher(firebirdBase)
 
         cmdConfigure = (
-            f"{pathFinder.path(sourcePathName, "configure")} "
+            f'{pathFinder.path(sourcePathName, "configure")} '
             + f'-prefix "{binDir}" '
-            + f"{buildType} "
-            + f"-mp "
+            + f'{buildType} '
+            # + f"-mp "
             # + f"-developer-build "
-            + f"-platform win32-msvc "
-            + f"-opensource "
-            + f"-confirm-license "
-            + f"-shared "
-            + f"-opengl dynamic "
-            + f"-qt-libpng "
-            + f"-qt-libjpeg "
-            + f"-qt-zlib "
-            + f"-no-compile-examples "
-            + f"-nomake examples "
-            + f"-nomake tests "
-            + f"-no-icu "
-            + f"-skip 3d "
-            + f"-skip datavis3d "
-            + f"-skip webengine "
-            + f'-plugin-sql-ibase -I "{firebirdInclude}" '
-            + f"-L {firebirdLib} "
+            + f'-platform win32-msvc '
+            + f'-opensource '
+            + f'-confirm-license '
+            + f'-shared '
+            + f'-opengl dynamic '
+            + f'-qt-libpng '
+            + f'-qt-libjpeg '
+            + f'-qt-zlib '
+            # + f"-no-compile-examples "
+            + f'-nomake examples '
+            + f'-nomake tests '
+            + f'-no-icu '
+            + f'-skip qtbluetooth '
+            + f'-skip qtcharts '
+            + f'-skip qtconnectivity '
+            + f'-skip qtdatavis3d '
+            + f'-skip qtdoc '
+            + f'-skip qtfeedback '
+            + f'-skip qtgraphs '
+            + f'-skip qtlocation '
+            + f'-skip qtpim '
+            + f'-skip qtpositioning '
+            + f'-skip qtmultimedia '
+            + f'-skip qt3d '
+            + f'-skip qtquick3d '
+            + f'-skip qtquick3dphysics '
+            + f'-skip qtquickeffectmaker '
+            + f'-skip qtsensors '
+            + f'-skip qtserialbus '
+            + f'-skip qtserialport '
+            + f'-skip qtspeech '
+            + f'-skip qtvirtualkeyboard '
+            + f'-skip qtwayland '
+            + f'-skip qtwebchannel '
+            + f'-skip qtwebengine '
+            + f'-skip qtwebview '
+            + f'-sql-ibase '
         )
 
         print(f"cwd: {os.getcwd()}")
         cmd = f'"{vcVars}" && {cmdConfigure}'
         print("cmd: " + cmd)
 
-        # result = systemManager.execute(cmd)
-        # if result != 0:
-        #     sys.exit(-1)
+        result = systemManager.execute(cmd)
+        if result != 0:
+            sys.exit(-1)
 
         # nmake --------------------------------------------------------------------------------
-        cmd = f'"{vcVars}" && nmake'
+        cmd = f'"{vcVars}" && ninja'
         print("command: " + cmd)
         result = systemManager.execute(cmd)
         if result != 0:
             sys.exit(-1)
 
         # install -------------------------------------------------------------------------------
-        cmdInstall = "nmake install"
+        cmdInstall = "ninja install"
         print("command: " + cmdInstall)
         result = systemManager.execute(cmdInstall)
         if result != 0:
