@@ -260,7 +260,7 @@ class Program:
         systemManager.makeDirectory(cmakeBuildPath)
         systemManager.changeDirectory(cmakeBuildPath)
 
-        includeBase = pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..")
+        includeBase = pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_APR_INCLUDE, "..")
         libSuffix = f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
         externalLibs = {
             "APR_INCLUDE_DIR": pathFinder.path(incdir, "apr"),

@@ -136,7 +136,7 @@ class Program:
             "LIBPSL_LIBRARY": pathFinder.path(sdkOutDir, f"psl{libSuffix}"),
             "LIBSSH2_INCLUDE_DIR": pathFinder.path(includeBase, "libssh2"),
             "LIBSSH2_LIBRARY": pathFinder.path(sdkOutDir, f"libssh2{libSuffix}"),
-            "NGHTTP2_INCLUDE_DIR": pathFinder.path(includeBase, "nghttp2"),
+            "NGHTTP2_INCLUDE_DIR": pathFinder.path(includeBase),
             "NGHTTP2_LIBRARY": pathFinder.path(sdkOutDir, f"nghttp2{libSuffix}"),
             "ZLIB_INCLUDE_DIR": pathFinder.path(includeBase, "zlib"),
             "ZLIB_LIBRARY": pathFinder.path(sdkOutDir, f"zlib{libSuffix}"),
@@ -153,6 +153,7 @@ class Program:
             + f"-A {platform} "
             + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
             + f"-DBUILD_SHARED_LIBS=ON "
+            + f"-DBUILD_EXAMPLES=OFF "
             + f"-DBUILD_CURL_EXE=OFF "
             + f"-DBUILD_TESTING=OFF "
             + f"-DBUILD_LIBCURL_DOCS=OFF "
