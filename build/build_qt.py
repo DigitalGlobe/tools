@@ -170,7 +170,6 @@ class Program:
             + f'-skip qtlocation '
             + f'-skip qtpim '
             + f'-skip qtpositioning '
-            + f'-skip qtmultimedia '
             + f'-skip qt3d '
             + f'-skip qtquick3d '
             + f'-skip qtquick3dphysics '
