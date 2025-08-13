@@ -1,0 +1,1825 @@
+'\" t
+.\"     Title: libpsl
+.\"    Author: [FIXME: author] [see http://www.docbook.org/tdg5/en/html/author]
+.\" Generator: DocBook XSL Stylesheets vsnapshot <http://docbook.sf.net/>
+.\"      Date: 01/13/2024
+.\"    Manual: LIBPSL Library
+.\"    Source: LIBPSL Library
+.\"  Language: English
+.\"
+.TH "LIBPSL" "3" "01/13/2024" "LIBPSL Library" "LIBPSL Library"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+libpsl \- Public Suffix List library functions
+.SH "STABILITY LEVEL"
+Stable, unless otherwise indicated
+.SH "FUNCTIONS"
+.TS
+expand tab(:);
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l.
+T{
+psl_ctx_t\ \&*
+T}:T{
+psl_load_file\ \&()
+T}
+T{
+psl_ctx_t\ \&*
+T}:T{
+psl_load_fp\ \&()
+T}
+T{
+psl_ctx_t\ \&*
+T}:T{
+psl_latest\ \&()
+T}
+T{
+const psl_ctx_t\ \&*
+T}:T{
+psl_builtin\ \&()
+T}
+T{
+void
+T}:T{
+psl_free\ \&()
+T}
+T{
+int
+T}:T{
+psl_is_public_suffix\ \&()
+T}
+T{
+int
+T}:T{
+psl_is_public_suffix2\ \&()
+T}
+T{
+const char\ \&*
+T}:T{
+psl_unregistrable_domain\ \&()
+T}
+T{
+const char\ \&*
+T}:T{
+psl_registrable_domain\ \&()
+T}
+T{
+int
+T}:T{
+psl_suffix_count\ \&()
+T}
+T{
+int
+T}:T{
+psl_suffix_exception_count\ \&()
+T}
+T{
+int
+T}:T{
+psl_suffix_wildcard_count\ \&()
+T}
+T{
+time_t
+T}:T{
+psl_builtin_file_time\ \&()
+T}
+T{
+const char\ \&*
+T}:T{
+psl_builtin_sha1sum\ \&()
+T}
+T{
+const char\ \&*
+T}:T{
+psl_builtin_filename\ \&()
+T}
+T{
+int
+T}:T{
+psl_builtin_outdated\ \&()
+T}
+T{
+int
+T}:T{
+psl_is_cookie_domain_acceptable\ \&()
+T}
+T{
+const char\ \&*
+T}:T{
+psl_dist_filename\ \&()
+T}
+T{
+const char\ \&*
+T}:T{
+psl_get_version\ \&()
+T}
+T{
+int
+T}:T{
+psl_check_version_number\ \&()
+T}
+T{
+psl_error_t
+T}:T{
+psl_str_to_utf8lower\ \&()
+T}
+T{
+void
+T}:T{
+psl_free_string\ \&()
+T}
+.TE
+.sp 1
+.SH "TYPES AND VALUES"
+.TS
+expand tab(:);
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l
+l l.
+T{
+#define
+T}:T{
+PSL_API
+T}
+T{
+#define
+T}:T{
+PSL_VERSION
+T}
+T{
+#define
+T}:T{
+PSL_VERSION_MAJOR
+T}
+T{
+#define
+T}:T{
+PSL_VERSION_MINOR
+T}
+T{
+#define
+T}:T{
+PSL_VERSION_NUMBER
+T}
+T{
+#define
+T}:T{
+PSL_VERSION_PATCH
+T}
+T{
+#define
+T}:T{
+PSL_TYPE_ICANN
+T}
+T{
+#define
+T}:T{
+PSL_TYPE_PRIVATE
+T}
+T{
+#define
+T}:T{
+PSL_TYPE_NO_STAR_RULE
+T}
+T{
+#define
+T}:T{
+PSL_TYPE_ANY
+T}
+T{
+enum
+T}:T{
+psl_error_t
+T}
+T{
+typedef
+T}:T{
+psl_ctx_t
+T}
+.TE
+.sp 1
+.SH "INCLUDES"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#include <libpsl\&.h>
+.fi
+.if n \{\
+.RE
+.\}
+.SH "DESCRIPTION"
+.PP
+\m[blue]\fBPublic Suffix List\fR\m[]\&\s-2\u[1]\d\s+2
+library functions\&.
+.SH "FUNCTIONS"
+.SS "psl_load_file\ \&()"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+psl_ctx_t\ \&*
+psl_load_file (\fIconst \fR\fI\fBchar\fR\fR\fI *fname\fR);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This function loads the public suffixes file named
+\fIfname\fR
+\&. To free the allocated resources, call
+\fBpsl_free()\fR\&.
+.PP
+The suffixes are expected to be UTF\-8 encoded (lowercase + NFKC) if they are international\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBParameters\fR
+.RS 4
+.TS
+expand tab(:);
+l l l.
+T{
+.PP
+fname
+T}:T{
+.PP
+Name of PSL file
+T}:T{
+\ \&
+T}
+.TE
+.sp 1
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBReturns\fR
+.RS 4
+.PP
+Pointer to a PSL context or
+NULL
+on failure\&.
+.RE
+.PP
+Since:
+0\&.1
+.SS "psl_load_fp\ \&()"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+psl_ctx_t\ \&*
+psl_load_fp (\fI\fBFILE\fR\fR\fI *fp\fR);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This function loads the public suffixes from a
+FILE
+pointer\&. To free the allocated resources, call
+\fBpsl_free()\fR\&.
+.PP
+The suffixes are expected to be UTF\-8 encoded (lowercase + NFKC) if they are international\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBParameters\fR
+.RS 4
+.TS
+expand tab(:);
+l l l.
+T{
+.PP
+fp
+T}:T{
+.PP
+FILE
+pointer
+T}:T{
+\ \&
+T}
+.TE
+.sp 1
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBReturns\fR
+.RS 4
+.PP
+Pointer to a PSL context or
+NULL
+on failure\&.
+.RE
+.PP
+Since:
+0\&.1
+.SS "psl_latest\ \&()"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+psl_ctx_t\ \&*
+psl_latest (\fIconst \fR\fI\fBchar\fR\fR\fI *fname\fR);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This function loads the the latest available PSL data from either
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIfname\fR
+(application specific filename, may be
+NULL)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+location specified during built\-time (filename from \&./configure \-\-with\-psl\-distfile)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+built\-in PSL data (generated from \&./configure \-\-with\-psl\-file)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+location of built\-in data (filename from \&./configure \-\-with\-psl\-file)
+.RE
+.PP
+If none of the above is available, the function returns
+NULL\&.
+.PP
+To free the allocated resources, call
+\fBpsl_free()\fR\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBParameters\fR
+.RS 4
+.TS
+expand tab(:);
+l l l.
+T{
+.PP
+fname
+T}:T{
+.PP
+Name of PSL file or
+NULL
+T}:T{
+\ \&
+T}
+.TE
+.sp 1
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBReturns\fR
+.RS 4
+.PP
+Pointer to a PSL context or
+NULL
+on failure\&.
+.RE
+.PP
+Since:
+0\&.16
+.SS "psl_builtin\ \&()"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+const psl_ctx_t\ \&*
+psl_builtin (\fI\fBvoid\fR\fR);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This function returns the PSL context that has been generated and built in at compile\-time\&. You don\*(Aqt have to free the returned context explicitly\&.
+.PP
+The builtin data also contains punycode entries, one for each international domain name\&.
+.PP
+If the generation of built\-in data has been disabled during compilation,
+NULL
+will be returned\&. When using the builtin psl context, you can provide UTF\-8 (lowercase + NFKC) or ASCII/ACE (punycode) representations of domains to functions like
+\fBpsl_is_public_suffix()\fR\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBReturns\fR
+.RS 4
+.PP
+Pointer to the built in PSL data or
+NULL
+if this data is not available\&.
+.RE
+.PP
+Since:
+0\&.1
+.SS "psl_free\ \&()"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+void
+psl_free (\fI\fBpsl_ctx_t\fR\fR\fI *psl\fR);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This function frees the the PSL context that has been retrieved via
+\fBpsl_load_fp()\fR
+or
+\fBpsl_load_file()\fR\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBParameters\fR
+.RS 4
+.TS
+expand tab(:);
+l l l.
+T{
+.PP
+psl
+T}:T{
+.PP
+PSL context pointer
+T}:T{
+\ \&
+T}
+.TE
+.sp 1
+.RE
+.PP
+Since:
+0\&.1
+.SS "psl_is_public_suffix\ \&()"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+int
+psl_is_public_suffix (\fIconst \fR\fI\fBpsl_ctx_t\fR\fR\fI *psl\fR,
+                      \fIconst \fR\fI\fBchar\fR\fR\fI *domain\fR);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This function checks if
+\fIdomain\fR
+is a public suffix by the means of the
+\m[blue]\fBMozilla Public Suffix List\fR\m[]\&\s-2\u[2]\d\s+2\&.
+.PP
+For cookie domain checking see
+\fBpsl_is_cookie_domain_acceptable()\fR\&.
+.PP
+International
+\fIdomain\fR
+names have to be either in UTF\-8 (lowercase + NFKC) or in ASCII/ACE format (punycode)\&. Other encodings likely result in incorrect return values\&. Use helper function
+\fBpsl_str_to_utf8lower()\fR
+for normalization
+\fIdomain\fR
+\&.
+.PP
+\fIpsl\fR
+is a context returned by either
+\fBpsl_load_file()\fR,
+\fBpsl_load_fp()\fR
+or
+\fBpsl_builtin()\fR\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBParameters\fR
+.RS 4
+.TS
+expand tab(:);
+l l l
+l l l.
+T{
+.PP
+psl
+T}:T{
+.PP
+PSL context
+T}:T{
+\ \&
+T}
+T{
+.PP
+domain
+T}:T{
+.PP
+Domain string
+T}:T{
+\ \&
+T}
+.TE
+.sp 1
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBReturns\fR
+.RS 4
+.PP
+1 if domain is a public suffix, 0 if not\&.
+.RE
+.PP
+Since:
+0\&.1
+.SS "psl_is_public_suffix2\ \&()"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+int
+psl_is_public_suffix2 (\fIconst \fR\fI\fBpsl_ctx_t\fR\fR\fI *psl\fR,
+                       \fIconst \fR\fI\fBchar\fR\fR\fI *domain\fR,
+                       \fI\fBint\fR\fR\fI type\fR);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This function checks if
+\fIdomain\fR
+is a public suffix by the means of the
+\m[blue]\fBMozilla Public Suffix List\fR\m[]\&\s-2\u[2]\d\s+2\&.
+.PP
+\fItype\fR
+specifies the PSL section where to perform the lookup\&. Valid values are
+PSL_TYPE_PRIVATE,
+PSL_TYPE_ICANN,
+PSL_TYPE_NO_STAR_RULE, and
+PSL_TYPE_ANY\&.
+.PP
+PSL_TYPE_NO_STAR_RULE
+switches of the \*(Aqprevailing star rule\*(Aq (see
+\m[blue]\fBList\fR\m[]\&\s-2\u[3]\d\s+2
+under \*(AqAlgorithm\*(Aq 2\&.)\&. Applying the flag means that TLDs not explicitly listed in the PSL are *not* treated as public suffixes\&.
+.PP
+International
+\fIdomain\fR
+names have to be either in UTF\-8 (lowercase + NFKC) or in ASCII/ACE format (punycode)\&. Other encodings likely result in incorrect return values\&. Use helper function
+\fBpsl_str_to_utf8lower()\fR
+for normalization
+\fIdomain\fR
+\&.
+.PP
+\fIpsl\fR
+is a context returned by either
+\fBpsl_load_file()\fR,
+\fBpsl_load_fp()\fR
+or
+\fBpsl_builtin()\fR\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBParameters\fR
+.RS 4
+.TS
+expand tab(:);
+l l l
+l l l
+l l l.
+T{
+.PP
+psl
+T}:T{
+.PP
+PSL context
+T}:T{
+\ \&
+T}
+T{
+.PP
+domain
+T}:T{
+.PP
+Domain string
+T}:T{
+\ \&
+T}
+T{
+.PP
+type
+T}:T{
+.PP
+Domain type
+T}:T{
+\ \&
+T}
+.TE
+.sp 1
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBReturns\fR
+.RS 4
+.PP
+1 if domain is a public suffix, 0 if not\&.
+.RE
+.PP
+Since:
+0\&.1
+.SS "psl_unregistrable_domain\ \&()"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+const char\ \&*
+psl_unregistrable_domain (\fIconst \fR\fI\fBpsl_ctx_t\fR\fR\fI *psl\fR,
+                          \fIconst \fR\fI\fBchar\fR\fR\fI *domain\fR);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This function finds the longest public suffix part of
+\fIdomain\fR
+by the means of the
+\m[blue]\fBMozilla Public Suffix List\fR\m[]\&\s-2\u[2]\d\s+2\&.
+.PP
+International
+\fIdomain\fR
+names have to be either in UTF\-8 (lowercase + NFKC) or in ASCII/ACE format (punycode)\&. Other encodings likely result in incorrect return values\&. Use helper function
+\fBpsl_str_to_utf8lower()\fR
+for normalization
+\fIdomain\fR
+\&.
+.PP
+\fIpsl\fR
+is a context returned by either
+\fBpsl_load_file()\fR,
+\fBpsl_load_fp()\fR
+or
+\fBpsl_builtin()\fR\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBParameters\fR
+.RS 4
+.TS
+expand tab(:);
+l l l
+l l l.
+T{
+.PP
+psl
+T}:T{
+.PP
+PSL context
+T}:T{
+\ \&
+T}
+T{
+.PP
+domain
+T}:T{
+.PP
+Domain string
+T}:T{
+\ \&
+T}
+.TE
+.sp 1
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBReturns\fR
+.RS 4
+.PP
+Pointer to longest public suffix part of
+\fIdomain\fR
+or
+NULL
+if
+\fIdomain\fR
+does not contain a public suffix (or if
+\fIpsl\fR
+is
+NULL)\&.
+.RE
+.PP
+Since:
+0\&.1
+.SS "psl_registrable_domain\ \&()"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+const char\ \&*
+psl_registrable_domain (\fIconst \fR\fI\fBpsl_ctx_t\fR\fR\fI *psl\fR,
+                        \fIconst \fR\fI\fBchar\fR\fR\fI *domain\fR);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This function finds the shortest private suffix part of
+\fIdomain\fR
+by the means of the
+\m[blue]\fBMozilla Public Suffix List\fR\m[]\&\s-2\u[2]\d\s+2\&.
+.PP
+International
+\fIdomain\fR
+names have to be either in UTF\-8 (lowercase + NFKC) or in ASCII/ACE format (punycode)\&. Other encodings likely result in incorrect return values\&. Use helper function
+\fBpsl_str_to_utf8lower()\fR
+for normalization
+\fIdomain\fR
+\&.
+.PP
+\fIpsl\fR
+is a context returned by either
+\fBpsl_load_file()\fR,
+\fBpsl_load_fp()\fR
+or
+\fBpsl_builtin()\fR\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBParameters\fR
+.RS 4
+.TS
+expand tab(:);
+l l l
+l l l.
+T{
+.PP
+psl
+T}:T{
+.PP
+PSL context
+T}:T{
+\ \&
+T}
+T{
+.PP
+domain
+T}:T{
+.PP
+Domain string
+T}:T{
+\ \&
+T}
+.TE
+.sp 1
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBReturns\fR
+.RS 4
+.PP
+Pointer to shortest private suffix part of
+\fIdomain\fR
+or
+NULL
+if
+\fIdomain\fR
+does not contain a private suffix (or if
+\fIpsl\fR
+is
+NULL)\&.
+.RE
+.PP
+Since:
+0\&.1
+.SS "psl_suffix_count\ \&()"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+int
+psl_suffix_count (\fIconst \fR\fI\fBpsl_ctx_t\fR\fR\fI *psl\fR);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This function returns number of public suffixes maintained by
+\fIpsl\fR
+\&. The number of exceptions within the Public Suffix List are not included\&.
+.PP
+If the information is not available, the return value is \-1 (since 0\&.19)\&. This is the case with DAFSA blobs or if
+\fIpsl\fR
+is
+NULL\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBParameters\fR
+.RS 4
+.TS
+expand tab(:);
+l l l.
+T{
+.PP
+psl
+T}:T{
+.PP
+PSL context pointer
+T}:T{
+\ \&
+T}
+.TE
+.sp 1
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBReturns\fR
+.RS 4
+.PP
+Number of public suffixes entries in PSL context or \-1 if this information is not available\&.
+.RE
+.PP
+Since:
+0\&.1
+.SS "psl_suffix_exception_count\ \&()"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+int
+psl_suffix_exception_count (\fIconst \fR\fI\fBpsl_ctx_t\fR\fR\fI *psl\fR);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This function returns number of public suffix exceptions maintained by
+\fIpsl\fR
+\&.
+.PP
+If the information is not available, the return value is \-1 (since 0\&.19)\&. This is the case with DAFSA blobs or if
+\fIpsl\fR
+is
+NULL\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBParameters\fR
+.RS 4
+.TS
+expand tab(:);
+l l l.
+T{
+.PP
+psl
+T}:T{
+.PP
+PSL context pointer
+T}:T{
+\ \&
+T}
+.TE
+.sp 1
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBReturns\fR
+.RS 4
+.PP
+Number of public suffix exceptions in PSL context or \-1 if this information is not available\&.
+.RE
+.PP
+Since:
+0\&.1
+.SS "psl_suffix_wildcard_count\ \&()"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+int
+psl_suffix_wildcard_count (\fIconst \fR\fI\fBpsl_ctx_t\fR\fR\fI *psl\fR);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This function returns number of public suffix wildcards maintained by
+\fIpsl\fR
+\&.
+.PP
+If the information is not available, the return value is \-1 (since 0\&.19)\&. This is the case with DAFSA blobs or if
+\fIpsl\fR
+is
+NULL\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBParameters\fR
+.RS 4
+.TS
+expand tab(:);
+l l l.
+T{
+.PP
+psl
+T}:T{
+.PP
+PSL context pointer
+T}:T{
+\ \&
+T}
+.TE
+.sp 1
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBReturns\fR
+.RS 4
+.PP
+Number of public suffix wildcards in PSL context or \-1 if this information is not available\&.
+.RE
+.PP
+Since:
+0\&.10\&.0
+.SS "psl_builtin_file_time\ \&()"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+time_t
+psl_builtin_file_time (\fI\fBvoid\fR\fR);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This function returns the mtime of the Public Suffix List file that has been built in\&.
+.PP
+If the generation of built\-in data has been disabled during compilation, 0 will be returned\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBReturns\fR
+.RS 4
+.PP
+time_t value or 0\&.
+.RE
+.PP
+Since:
+0\&.1
+.SS "psl_builtin_sha1sum\ \&()"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+const char\ \&*
+psl_builtin_sha1sum (\fI\fBvoid\fR\fR);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This function returns the SHA1 checksum of the Public Suffix List file that has been built in\&. The returned string is in lowercase hex encoding, e\&.g\&. "2af1e9e3044eda0678bb05949d7cca2f769901d8"\&.
+.PP
+If the generation of built\-in data has been disabled during compilation, an empty string will be returned\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBReturns\fR
+.RS 4
+.PP
+String containing SHA1 checksum or an empty string\&.
+.RE
+.PP
+Since:
+0\&.1
+.SS "psl_builtin_filename\ \&()"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+const char\ \&*
+psl_builtin_filename (\fI\fBvoid\fR\fR);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This function returns the file name of the Public Suffix List file that has been built in\&.
+.PP
+If the generation of built\-in data has been disabled during compilation, an empty string will be returned\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBReturns\fR
+.RS 4
+.PP
+String containing the PSL file name or an empty string\&.
+.RE
+.PP
+Since:
+0\&.1
+.SS "psl_builtin_outdated\ \&()"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+int
+psl_builtin_outdated (\fI\fBvoid\fR\fR);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This function checks if the built\-in data is older than the file it has been created from\&. If it is, it might be a good idea for the application to reload the PSL\&. The mtime is taken as reference\&.
+.PP
+If the PSL file does not exist, it is assumed that the built\-in data is not outdated\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBReturns\fR
+.RS 4
+.PP
+1 if the built\-in is outdated, 0 otherwise\&.
+.RE
+.PP
+Since:
+0\&.10\&.0
+.SS "psl_is_cookie_domain_acceptable\ \&()"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+int
+psl_is_cookie_domain_acceptable (\fIconst \fR\fI\fBpsl_ctx_t\fR\fR\fI *psl\fR,
+                                 \fIconst \fR\fI\fBchar\fR\fR\fI *hostname\fR,
+                                 \fIconst \fR\fI\fBchar\fR\fR\fI *cookie_domain\fR);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This helper function checks whether
+\fIcookie_domain\fR
+is an acceptable cookie domain value for the request
+\fIhostname\fR
+\&.
+.PP
+For international domain names both,
+\fIhostname\fR
+and
+\fIcookie_domain\fR
+, have to be either in UTF\-8 (lowercase + NFKC) or in ASCII/ACE (punycode) format\&. Other encodings or mixing UTF\-8 and punycode likely result in incorrect return values\&.
+.PP
+Use helper function
+\fBpsl_str_to_utf8lower()\fR
+for normalization of
+\fIhostname\fR
+and
+\fIcookie_domain\fR
+\&.
+.PP
+Hint for Windows users: Please make sure the calling application has called
+\fBWSAStartup()\fR
+before calling
+\fBpsl_is_cookie_domain_acceptable()\fR\&.
+.PP
+Examples:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  1." 4.2
+.\}
+Cookie domain \*(Aqexample\&.com\*(Aq would be acceptable for hostname \*(Aqwww\&.example\&.com\*(Aq, but \*(Aq\&.com\*(Aq or \*(Aqcom\*(Aq would NOT be acceptable since \*(Aqcom\*(Aq is a public suffix\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.sp -1
+.IP "  2." 4.2
+.\}
+Cookie domain \*(Aqhis\&.name\*(Aq would be acceptable for hostname \*(Aqremember\&.his\&.name\*(Aq, but NOT for \*(Aqforgot\&.his\&.name\*(Aq since \*(Aqforgot\&.his\&.name\*(Aq is a public suffix\&.
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBParameters\fR
+.RS 4
+.TS
+expand tab(:);
+l l l
+l l l
+l l l.
+T{
+.PP
+psl
+T}:T{
+.PP
+PSL context pointer
+T}:T{
+\ \&
+T}
+T{
+.PP
+hostname
+T}:T{
+.PP
+The request hostname\&.
+T}:T{
+\ \&
+T}
+T{
+.PP
+cookie_domain
+T}:T{
+.PP
+The domain value from a cookie
+T}:T{
+\ \&
+T}
+.TE
+.sp 1
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBReturns\fR
+.RS 4
+.PP
+1 if acceptable, 0 if not acceptable\&.
+.RE
+.PP
+Since:
+0\&.1
+.SS "psl_dist_filename\ \&()"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+const char\ \&*
+psl_dist_filename (\fI\fBvoid\fR\fR);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This function returns the file name of the distribution/system PSL data file\&. This file will be considered by
+\fBpsl_latest()\fR\&.
+.PP
+Return the filename that is set by \&./configure \-\-with\-psl\-distfile, or an empty string\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBReturns\fR
+.RS 4
+.PP
+String containing a PSL file name or an empty string\&.
+.RE
+.PP
+Since:
+0\&.16
+.SS "psl_get_version\ \&()"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+const char\ \&*
+psl_get_version (\fI\fBvoid\fR\fR);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Get libpsl version\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBReturns\fR
+.RS 4
+.PP
+String containing version of libpsl\&.
+.RE
+.PP
+Since:
+0\&.2\&.5
+.SS "psl_check_version_number\ \&()"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+int
+psl_check_version_number (\fI\fBint\fR\fR\fI version\fR);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Check the given version number is at minimum the current library version number\&. The version number must be a hexadecimal number like 0x000a01 (V0\&.10\&.1)\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBParameters\fR
+.RS 4
+.TS
+expand tab(:);
+l l l.
+T{
+.PP
+version
+T}:T{
+.PP
+Version number (hex) to check against\&.
+T}:T{
+\ \&
+T}
+.TE
+.sp 1
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBReturns\fR
+.RS 4
+.PP
+Returns the library version number if the given version number is at least the version of the library, else return 0; If the argument is 0, the function returns the library version number without performing a check\&.
+.RE
+.PP
+Since:
+0\&.11\&.0
+.SS "psl_str_to_utf8lower\ \&()"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+psl_error_t
+psl_str_to_utf8lower (\fIconst \fR\fI\fBchar\fR\fR\fI *str\fR,
+                      \fIconst \fR\fI\fBchar\fR\fR\fI *encoding\fR,
+                      \fIconst \fR\fI\fBchar\fR\fR\fI *locale\fR,
+                      \fI\fBchar\fR\fR\fI **lower\fR);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This helper function converts a string to UTF\-8 lowercase + NFKC representation\&. Lowercase + NFKC UTF\-8 is needed as input to the domain checking functions\&.
+.PP
+\fIlower\fR
+stays unchanged on error\&.
+.PP
+When returning PSL_SUCCESS, the return value \*(Aqlower\*(Aq must be freed after usage\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBParameters\fR
+.RS 4
+.TS
+expand tab(:);
+l l l
+l l l
+l l l
+l l l.
+T{
+.PP
+str
+T}:T{
+.PP
+string to convert
+T}:T{
+\ \&
+T}
+T{
+.PP
+encoding
+T}:T{
+.PP
+charset encoding of
+\fIstr\fR
+, e\&.g\&. \*(Aqiso\-8859\-1\*(Aq or
+NULL
+T}:T{
+\ \&
+T}
+T{
+.PP
+locale
+T}:T{
+.PP
+locale of
+\fIstr\fR
+for to lowercase conversion, e\&.g\&. \*(Aqde\*(Aq or
+NULL
+T}:T{
+\ \&
+T}
+T{
+.PP
+lower
+T}:T{
+.PP
+return value containing the converted string
+T}:T{
+\ \&
+T}
+.TE
+.sp 1
+.RE
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBReturns\fR
+.RS 4
+.PP
+psl_error_t value\&. PSL_SUCCESS: Success PSL_ERR_INVALID_ARG:
+\fIstr\fR
+is a
+NULL
+value\&. PSL_ERR_CONVERTER: Failed to open the unicode converter with name
+\fIencoding\fR
+PSL_ERR_TO_UTF16: Failed to convert
+\fIstr\fR
+to unicode PSL_ERR_TO_LOWER: Failed to convert unicode to lowercase PSL_ERR_TO_UTF8: Failed to convert unicode to UTF\-8 PSL_ERR_NO_MEM: Failed to allocate memory
+.RE
+.PP
+Since:
+0\&.4
+.SS "psl_free_string\ \&()"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+void
+psl_free_string (\fI\fBchar\fR\fR\fI *str\fR);
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+This function
+\fBfree()\fR\*(Aqs the memory allocated by
+\fBpsl_str_to_utf8lower()\fR
+when returning a lowercase string
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBParameters\fR
+.RS 4
+.TS
+expand tab(:);
+l l l.
+T{
+.PP
+str
+T}:T{
+.PP
+pointer to lowercase string returned by
+\fBpsl_str_to_utf8lower()\fR
+T}:T{
+\ \&
+T}
+.TE
+.sp 1
+.RE
+.PP
+Since:
+0\&.19
+.SH "TYPES AND VALUES"
+.SS "PSL_API"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#  define PSL_API __attribute__ ((__visibility__("default")))
+.fi
+.if n \{\
+.RE
+.\}
+.SS "PSL_VERSION"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#define PSL_VERSION "0\&.21\&.5"
+.fi
+.if n \{\
+.RE
+.\}
+.SS "PSL_VERSION_MAJOR"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#define PSL_VERSION_MAJOR 0
+.fi
+.if n \{\
+.RE
+.\}
+.SS "PSL_VERSION_MINOR"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#define PSL_VERSION_MINOR 21
+.fi
+.if n \{\
+.RE
+.\}
+.SS "PSL_VERSION_NUMBER"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#define PSL_VERSION_NUMBER 0x001505
+.fi
+.if n \{\
+.RE
+.\}
+.SS "PSL_VERSION_PATCH"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#define PSL_VERSION_PATCH 5
+.fi
+.if n \{\
+.RE
+.\}
+.SS "PSL_TYPE_ICANN"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#define PSL_TYPE_ICANN        (1<<0)
+.fi
+.if n \{\
+.RE
+.\}
+.SS "PSL_TYPE_PRIVATE"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#define PSL_TYPE_PRIVATE      (1<<1)
+.fi
+.if n \{\
+.RE
+.\}
+.SS "PSL_TYPE_NO_STAR_RULE"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#define PSL_TYPE_NO_STAR_RULE (1<<2)
+.fi
+.if n \{\
+.RE
+.\}
+.SS "PSL_TYPE_ANY"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+#define PSL_TYPE_ANY          (PSL_TYPE_ICANN | PSL_TYPE_PRIVATE)
+.fi
+.if n \{\
+.RE
+.\}
+.SS "enum psl_error_t"
+.PP
+Return codes for PSL functions\&. Negative return codes mean failure\&. Positive values are reserved for non\-error return codes\&.
+.sp
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBMembers\fR
+.RS 4
+.TS
+expand tab(:);
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l
+l l l.
+T{
+.PP
+PSL_SUCCESS
+T}:T{
+.PP
+Successful return\&.
+T}:T{
+\ \&
+T}
+T{
+.PP
+PSL_ERR_INVALID_ARG
+T}:T{
+.PP
+Invalid argument\&.
+T}:T{
+\ \&
+T}
+T{
+.PP
+PSL_ERR_CONVERTER
+T}:T{
+.PP
+Failed to open libicu utf\-16 converter\&.
+T}:T{
+\ \&
+T}
+T{
+.PP
+PSL_ERR_TO_UTF16
+T}:T{
+.PP
+Failed to convert to utf\-16\&.
+T}:T{
+\ \&
+T}
+T{
+.PP
+PSL_ERR_TO_LOWER
+T}:T{
+.PP
+Failed to convert utf\-16 to lowercase\&.
+T}:T{
+\ \&
+T}
+T{
+.PP
+PSL_ERR_TO_UTF8
+T}:T{
+.PP
+Failed to convert utf\-16 to utf\-8\&.
+T}:T{
+\ \&
+T}
+T{
+.PP
+PSL_ERR_NO_MEM
+T}:T{
+.PP
+Failed to allocate memory\&.
+T}:T{
+\ \&
+T}
+.TE
+.sp 1
+.RE
+.SS "psl_ctx_t"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+typedef struct psl_ctx_st psl_ctx_t;
+.fi
+.if n \{\
+.RE
+.\}
+.SH "NOTES"
+.IP " 1." 4
+Public Suffix List
+.RS 4
+\%https://publicsuffix.org/
+.RE
+.IP " 2." 4
+Mozilla Public Suffix List
+.RS 4
+\%https://publicsuffix.org
+.RE
+.IP " 3." 4
+List
+.RS 4
+\%https://publicsuffix.org/list
+.RE
