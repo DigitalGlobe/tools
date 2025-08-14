@@ -39,7 +39,7 @@ class Program:
     _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
-    _LIBNAME = "xerces"
+    _LIBNAME = "xerces-c"
     _DEBUG_SUFFIX = "_d"
 
     # the name of the path for all include files

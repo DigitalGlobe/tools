@@ -49,7 +49,7 @@ class Program:
     _PATH_NAME_INCLUDE = "."
     # ----------------------------------------------------------------------
     # the name of the distribution path for all include files
-    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\cryptopp"
+    _PATH_NAME_DISTRIBUTION_INCLUDE = "..\\..\\include\\crypto"
     # ----------------------------------------------------------------------
     _PATH_NAME_BUILD_PATH = "build"
 

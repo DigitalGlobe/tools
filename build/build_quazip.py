@@ -221,7 +221,7 @@ class Program :
             + f".pdb"
         )
 
-        incdir = pathFinder.path(cmakeInstallPath, "include", "QuaZip-Qt5-1.5", Program._LIBNAME)
+        incdir = pathFinder.path(cmakeInstallPath, "include", "QuaZip-Qt6-1.5", Program._LIBNAME)
         libdir = pathFinder.path(cmakeInstallPath, "lib")
         bindir = pathFinder.path(cmakeInstallPath, "bin")
 
