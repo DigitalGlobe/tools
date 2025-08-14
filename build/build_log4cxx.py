@@ -235,7 +235,7 @@ class Program:
             + f".pdb"
         )
 
-        srcIncludePath = pathFinder.path(cmakeInstallPath, "include")
+        srcIncludePath = pathFinder.path(cmakeInstallPath, "include", "log4cxx")
         srcBinPath = pathFinder.path(cmakeInstallPath, "bin")
         srcLibPath = pathFinder.path(cmakeInstallPath, "lib")
 
