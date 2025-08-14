@@ -60,7 +60,7 @@ class PathFinder:
     _PATH_NAME_WINDOWS_SDK_VERSION = "10.0.26100.0"
     # ----------------------------------------------------------------------
 
-    _PATH_NAME_QT = "D:\\Users\\tim.tisler\\tools\Qt\\5.15"
+    _PATH_NAME_QT = "D:\\Users\\tim.tisler\\tools\Qt\\6.8"
     _FILE_NAME_QMAKE = "qmake.exe"
     # ----------------------------------------------------------------------
 
