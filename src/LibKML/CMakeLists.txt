@@ -110,18 +110,22 @@ else()
   list(APPEND MINIZIP_DEPENDS ZLIB)
 endif()
 
-find_package(MiniZip)
+find_package(MINIZIP)
 if(MINIZIP_FOUND)
+  message("Found minizip: ${MINIZIP_LIBRARIES}")
   include_directories(${MINIZIP_INCLUDE_DIR})
 else()
+  message("Fetching minizip")
   include(External_minizip)
   list(APPEND KMLBASE_DEPENDS MINIZIP)
 endif()
 
-find_package(UriParser)
+find_package(URIPARSER)
 if(URIPARSER_FOUND)
+  message("Found uriparser: ${URIPARSER_LIBRARIES}")
   include_directories(${URIPARSER_INCLUDE_DIR})
 else()
+  message("Fetching uriparser")
   include(External_uriparser)
   list(APPEND KMLBASE_DEPENDS URIPARSER)
 endif()
@@ -189,7 +193,7 @@ endforeach()
 
 export(TARGETS ${LIBKML_TARGETS}
   FILE "${CMAKE_BINARY_DIR}/LibKMLTargets.cmake")
-  
+
 # Create the LibKMLConfig.cmake and LibKMLConfigVersion files
 file(RELATIVE_PATH REL_INCLUDE_DIR "${CMAKE_INSTALL_DIR}"
   "${INCLUDE_INSTALL_DIR}")
@@ -207,12 +211,12 @@ configure_file(cmake/LibKMLConfig.cmake.in
 # ... for both
 configure_file(cmake/LibKMLConfigVersion.cmake.in
   "${CMAKE_BINARY_DIR}/LibKMLConfigVersion.cmake" @ONLY)
- 
+
 # Install the LibKMLConfig.cmake and LibKMLConfigVersion.cmake
 install(FILES
   "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/LibKMLConfig.cmake"
   "${CMAKE_BINARY_DIR}/LibKMLConfigVersion.cmake"
   DESTINATION "${CMAKE_INSTALL_DIR}" )
- 
+
 # Install the export set for use with the install-tree
 install(EXPORT LibKMLTargets DESTINATION "${CMAKE_INSTALL_DIR}")

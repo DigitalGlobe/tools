@@ -9,6 +9,8 @@
 #ifndef _IOMEM_SIMPLE_H
 #define _IOMEM_SIMPLE_H
 
+#include <stdint.h>
+
 
 #define ZLIB_FILEFUNC_SEEK_CUR (1)
 #define ZLIB_FILEFUNC_SEEK_END (2)
@@ -35,13 +37,13 @@
 extern "C" {
 #endif
 
-typedef voidpf (ZCALLBACK *open_file_func) OF((voidpf opaque, const char* filename, int mode));
-typedef uLong  (ZCALLBACK *read_file_func) OF((voidpf opaque, voidpf stream, void* buf, uLong size));
-typedef uLong  (ZCALLBACK *write_file_func) OF((voidpf opaque, voidpf stream, const void* buf, uLong size));
-typedef long   (ZCALLBACK *tell_file_func) OF((voidpf opaque, voidpf stream));
-typedef long   (ZCALLBACK *seek_file_func) OF((voidpf opaque, voidpf stream, uLong offset, int origin));
-typedef int    (ZCALLBACK *close_file_func) OF((voidpf opaque, voidpf stream));
-typedef int    (ZCALLBACK *testerror_file_func) OF((voidpf opaque, voidpf stream));
+typedef voidpf   (ZCALLBACK *open_file_func) OF((voidpf opaque, const char* filename, int mode));
+typedef uint32_t (ZCALLBACK *read_file_func) OF((voidpf opaque, voidpf stream, void* buf, uint32_t size));
+typedef uint32_t (ZCALLBACK *write_file_func) OF((voidpf opaque, voidpf stream, const void* buf, uint32_t size));
+typedef long     (ZCALLBACK *tell_file_func) OF((voidpf opaque, voidpf stream));
+typedef long     (ZCALLBACK *seek_file_func) OF((voidpf opaque, voidpf stream, uint32_t offset, int origin));
+typedef int      (ZCALLBACK *close_file_func) OF((voidpf opaque, voidpf stream));
+typedef int      (ZCALLBACK *testerror_file_func) OF((voidpf opaque, voidpf stream));
 /** KMR already defined in minizip/ioapi.h
 typedef struct zlib_filefunc_def_s
 {

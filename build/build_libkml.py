@@ -159,8 +159,6 @@ class Program:
             + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
             + f"-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} "
             + f"-DCMAKE_BUILD_TYPE={conf} "
-            # + f'-DCMAKE_C_FLAGS="/FS /DWIN32 /D_WINDOWS /W3 /GR /EHsc" '
-            # + f'-DCMAKE_CXX_FLAGS="/FS /DWIN32 /D_WINDOWS /W3 /GR /EHsc" '
             + f"{externalLibStr} "
             + f"{buildSourceName}"
         )

@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "unzip.h"
 #include "iomem_simple.h"
@@ -84,17 +85,17 @@ static voidpf ZCALLBACK mem_open OF((
    const char* filename,
    int mode));
 
-static uLong ZCALLBACK mem_read OF((
+static uint32_t ZCALLBACK mem_read OF((
    voidpf opaque,
    voidpf stream,
    void* buf,
-   uLong size));
+   uint32_t size));
 
-static uLong ZCALLBACK mem_write OF((
+static uint32_t ZCALLBACK mem_write OF((
    voidpf opaque,
    voidpf stream,
    const void* buf,
-   uLong size));
+   uint32_t size));
 
 static ZPOS_T ZCALLBACK mem_tell OF((
    voidpf opaque,
@@ -121,11 +122,11 @@ typedef struct _MEMFILE
   ZPOS_T position; /* Current offset in the area */
 } MEMFILE;
 
-static uLong ZCALLBACK mem_read (opaque, stream, buf, size)
+static uint32_t ZCALLBACK mem_read (opaque, stream, buf, size)
    voidpf opaque;
    voidpf stream;
    void* buf;
-   uLong size;
+   uint32_t size;
 {
    MEMFILE* handle = (MEMFILE*) stream;
 
@@ -136,7 +137,7 @@ static uLong ZCALLBACK mem_read (opaque, stream, buf, size)
      return 0;
    }
 
-   if ( (handle->position + size) > (uLong)handle->length)
+   if ( (handle->position + size) > (uint32_t)handle->length)
    {
       /* There is a bug in this original code. It's possible for the position
        * to exceed the size, which results in memcpy being handed a negative
@@ -145,7 +146,7 @@ static uLong ZCALLBACK mem_read (opaque, stream, buf, size)
        * size = handle->length - handle->position;
       */
       int size_ = handle->length - handle->position;
-      size = (size_ < 0) ? 0 : (uLong)size_;
+      size = (size_ < 0) ? 0 : (uint32_t)size_;
    }
 
    memcpy(buf, ((char*)handle->buffer) + handle->position, size);
@@ -154,15 +155,15 @@ static uLong ZCALLBACK mem_read (opaque, stream, buf, size)
    return size;
 }
 
-static uLong ZCALLBACK mem_write (opaque, stream, buf, size)
+static uint32_t ZCALLBACK mem_write (opaque, stream, buf, size)
    voidpf opaque;
    voidpf stream;
    const void* buf;
-   uLong size;
+   uint32_t size;
 {
    MEMFILE* handle = (MEMFILE*) stream;
 
-   if ((handle->position + size) > (uLong)handle->length)
+   if ((handle->position + size) > (uint32_t)handle->length)
    {
       handle->length = handle->position + size;
       handle->buffer = realloc(handle->buffer, handle->length);
