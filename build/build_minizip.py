@@ -163,7 +163,7 @@ class Program:
             f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
             + f"-A {platform} "
             + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
-            + f"-DUSE_AES=OFF "
+            + f"-DUSE_AES=ON "
             + f"-DBUILD_TEST=OFF "
             + f"-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} "
             + f"{externalLibStr} "
