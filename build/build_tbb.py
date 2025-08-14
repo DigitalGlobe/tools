@@ -175,7 +175,7 @@ class Program:
         if cmakeResult != 0:
             sys.exit(-1)
 
-        srcIncludePath = pathFinder.path(cmakeInstallPath, "include", "tbb")
+        srcIncludePath = pathFinder.path(cmakeInstallPath, "include")
         srcLibPath = pathFinder.path(cmakeInstallPath, "lib")
         srcBinPath = pathFinder.path(cmakeInstallPath, "bin")
 
