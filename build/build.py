@@ -238,46 +238,46 @@ class Program :
         else:
             # build libraries that do not depend on other libraries
             #     (order does not matter)
-            self._build(Program._FILE_NAME_BUILD_BISON)
-            self._build(Program._FILE_NAME_BUILD_BOOST)
-            self._build(Program._FILE_NAME_BUILD_BROTLI)
-            self._build(Program._FILE_NAME_BUILD_CPPUNIT)
-            self._build(Program._FILE_NAME_BUILD_CRYPTO)
-            self._build(Program._FILE_NAME_BUILD_EXPAT)
-            self._build(Program._FILE_NAME_BUILD_FILEGDB)
-            self._build(Program._FILE_NAME_BUILD_GALIB)
-            self._build(Program._FILE_NAME_BUILD_GEOS)
-            self._build(Program._FILE_NAME_BUILD_GLEW)
-            self._build(Program._FILE_NAME_BUILD_GLUT)
-            self._build(Program._FILE_NAME_BUILD_GOOGLETEST)
-            # self._build(Program._FILE_NAME_BUILD_GSOAP)
-            self._build(Program._FILE_NAME_BUILD_KDIS)
-            self._build(Program._FILE_NAME_BUILD_LASZIP)
-            self._build(Program._FILE_NAME_BUILD_LIBGIST)
-            self._build(Program._FILE_NAME_BUILD_LIBICONV)
-            self._build(Program._FILE_NAME_BUILD_LIBJPEG)
-            self._build(Program._FILE_NAME_BUILD_LIBPSL)
-            self._build(Program._FILE_NAME_BUILD_MUPARSER)
-            self._build(Program._FILE_NAME_BUILD_NEWMAT)
-            self._build(Program._FILE_NAME_BUILD_NGHTTP2)
-            self._build(Program._FILE_NAME_BUILD_OPENCV)
-            self._build(Program._FILE_NAME_BUILD_OPENDIS)
-            # self._build(Program._FILE_NAME_BUILD_OPENTHREADS)
-            self._build(Program._FILE_NAME_BUILD_PTHREADS)
-            self._build(Program._FILE_NAME_BUILD_SQLITE3)
-            self._build(Program._FILE_NAME_BUILD_SZIP)
-            self._build(Program._FILE_NAME_BUILD_TBB)
-            self._build(Program._FILE_NAME_BUILD_URIPARSER)
-            self._build(Program._FILE_NAME_BUILD_VLD)
-            self._build(Program._FILE_NAME_BUILD_ZLIB)
-            self._build(Program._FILE_NAME_BUILD_ZSTD)
+            # self._build(Program._FILE_NAME_BUILD_BISON)
+            # self._build(Program._FILE_NAME_BUILD_BOOST)
+            # self._build(Program._FILE_NAME_BUILD_BROTLI)
+            # self._build(Program._FILE_NAME_BUILD_CPPUNIT)
+            # self._build(Program._FILE_NAME_BUILD_CRYPTO)
+            # self._build(Program._FILE_NAME_BUILD_EXPAT)
+            # self._build(Program._FILE_NAME_BUILD_FILEGDB)
+            # self._build(Program._FILE_NAME_BUILD_GALIB)
+            # self._build(Program._FILE_NAME_BUILD_GEOS)
+            # self._build(Program._FILE_NAME_BUILD_GLEW)
+            # self._build(Program._FILE_NAME_BUILD_GLUT)
+            # self._build(Program._FILE_NAME_BUILD_GOOGLETEST)
+            # # self._build(Program._FILE_NAME_BUILD_GSOAP)
+            # self._build(Program._FILE_NAME_BUILD_KDIS)
+            # self._build(Program._FILE_NAME_BUILD_LASZIP)
+            # self._build(Program._FILE_NAME_BUILD_LIBGIST)
+            # self._build(Program._FILE_NAME_BUILD_LIBICONV)
+            # self._build(Program._FILE_NAME_BUILD_LIBJPEG)
+            # self._build(Program._FILE_NAME_BUILD_LIBPSL)
+            # self._build(Program._FILE_NAME_BUILD_MUPARSER)
+            # self._build(Program._FILE_NAME_BUILD_NEWMAT)
+            # self._build(Program._FILE_NAME_BUILD_NGHTTP2)
+            # self._build(Program._FILE_NAME_BUILD_OPENCV)
+            # self._build(Program._FILE_NAME_BUILD_OPENDIS)
+            # # self._build(Program._FILE_NAME_BUILD_OPENTHREADS)
+            # self._build(Program._FILE_NAME_BUILD_PTHREADS)
+            # self._build(Program._FILE_NAME_BUILD_SQLITE3)
+            # self._build(Program._FILE_NAME_BUILD_SZIP)
+            # self._build(Program._FILE_NAME_BUILD_TBB)
+            # self._build(Program._FILE_NAME_BUILD_URIPARSER)
+            # self._build(Program._FILE_NAME_BUILD_VLD)
+            # self._build(Program._FILE_NAME_BUILD_ZLIB)
+            # self._build(Program._FILE_NAME_BUILD_ZSTD)
 
-            # build libraries that depend on other libraries
-            #     (order matters!)
-            self._build(Program._FILE_NAME_BUILD_OPENSSL)
-            self._build(Program._FILE_NAME_BUILD_APR)
-            self._build(Program._FILE_NAME_BUILD_LIBSSH2)
-            self._build(Program._FILE_NAME_BUILD_CURL)
+            # # build libraries that depend on other libraries
+            # #     (order matters!)
+            # self._build(Program._FILE_NAME_BUILD_OPENSSL)
+            # self._build(Program._FILE_NAME_BUILD_APR)
+            # self._build(Program._FILE_NAME_BUILD_LIBSSH2)
+            # self._build(Program._FILE_NAME_BUILD_CURL)
             self._build(Program._FILE_NAME_BUILD_FIREBIRD)
             self._build(Program._FILE_NAME_BUILD_HDF5)
             self._build(Program._FILE_NAME_BUILD_HAWKNL)
@@ -345,18 +345,18 @@ class Program :
         #     sys.exit(-1)
 
         # build 64-bit debug
-        if "firebird" in buildFileName:
-            print("Skipping Firebird 64-bit debug build")
-        else:
-            ret = os.system( ( "%s \"%s\" \"%s\" \"%s\"" % \
-                           ( Program._FILE_NAME_PYTHON                            , \
-                             pathFinder.path( systemManager.getCurrentPathName() , \
-                                           buildFileName                      )   , \
-                             BuildSettingSet.ARGUMENT_VALUE_BITNESS_X64           ,
-                             BuildSettingSet.ARGUMENT_VALUE_CONFIGURATION_DEBUG   ) ) )
-            if ret != 0:
-                print("Error building 64-bit debug")
-                sys.exit(-1)
+        # if "firebird" in buildFileName:
+        #     print("Skipping Firebird 64-bit debug build")
+        # else:
+        #     ret = os.system( ( "%s \"%s\" \"%s\" \"%s\"" % \
+        #                    ( Program._FILE_NAME_PYTHON                            , \
+        #                      pathFinder.path( systemManager.getCurrentPathName() , \
+        #                                    buildFileName                      )   , \
+        #                      BuildSettingSet.ARGUMENT_VALUE_BITNESS_X64           ,
+        #                      BuildSettingSet.ARGUMENT_VALUE_CONFIGURATION_DEBUG   ) ) )
+        #     if ret != 0:
+        #         print("Error building 64-bit debug")
+        #         sys.exit(-1)
 
         # build 64-bit release
         ret = os.system( ( "%s \"%s\" \"%s\" \"%s\"" % \
