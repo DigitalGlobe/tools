@@ -104,7 +104,7 @@ class Program:
 
         srcInstallDir = pathFinder.path(
             buildPathName,
-            f'output_{"x64" if buildSettings.X64Specified() else "Win32"}{"" if buildSettings.ReleaseSpecified() else "_debug"}'
+            f'output_{"x64" if buildSettings.X64Specified() else "Win32"}{"_release" if buildSettings.ReleaseSpecified() else "_debug"}'
         )
         installDir = pathFinder.path(
             buildPathName,
