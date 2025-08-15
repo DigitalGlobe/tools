@@ -42,6 +42,8 @@ class Program :
     _PATH_NAME_CMAKE_BUILD = "build"
     _PATH_NAME_CMAKE_INSTALL = "install"
 
+    _FILE_NAME_FINDLIBKML_CMAKE = "cmake/modules/packages/FindLibKML.cmake"
+    _FILE_NAME_OGR_KML_CMAKE = "ogr/ogrsf_frmts/libkml/CMakeLists.txt"
     # --------------------------------------------------------------------------
     # constructors
 
@@ -116,13 +118,47 @@ class Program :
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
-        # systemManager.removeDirectory(buildPathName)
+        systemManager.removeDirectory(buildPathName)
 
         # copy APR source to the Build area
         systemManager.copyDirectory(sourcePathName, buildPathName)
 
         # start building
         systemManager.changeDirectory(buildPathName)
+
+        # modify the vcxproj to work with our version of vscode
+        sedCommandLine = (
+            f"{pathFinder.path(pathFinder.PATH_GNU_TOOLS, "sed.exe")} "
+            + f'-i.bak "s/MINIZIP/MINIZIP MINIZIP_AES/g" '
+            + f"{Program._FILE_NAME_FINDLIBKML_CMAKE}"
+        )
+
+        print("cmd: " + sedCommandLine)
+        sedResult = systemManager.execute(sedCommandLine)
+        if sedResult != 0:
+            sys.exit(-1)
+
+        sedCommandLine = (
+            f"{pathFinder.path(pathFinder.PATH_GNU_TOOLS, "sed.exe")} "
+            + f'-i.bak "s/TARGET LIBKML::MINIZIP/TARGET LIBKML::MINIZIP AND TARGET LIBKML::MINIZIP_AES/g" '
+            + f"{Program._FILE_NAME_OGR_KML_CMAKE}"
+        )
+
+        print("cmd: " + sedCommandLine)
+        sedResult = systemManager.execute(sedCommandLine)
+        if sedResult != 0:
+            sys.exit(-1)
+
+        sedCommandLine = (
+            f"{pathFinder.path(pathFinder.PATH_GNU_TOOLS, "sed.exe")} "
+            + f'-i.bak "s/PRIVATE LIBKML::MINIZIP/PRIVATE LIBKML::MINIZIP LIBKML::MINIZIP_AES/g" '
+            + f"{Program._FILE_NAME_OGR_KML_CMAKE}"
+        )
+
+        print("cmd: " + sedCommandLine)
+        sedResult = systemManager.execute(sedCommandLine)
+        if sedResult != 0:
+            sys.exit(-1)
 
         systemManager.makeDirectory(cmakeBuildPath)
         systemManager.changeDirectory(cmakeBuildPath)
@@ -166,6 +202,7 @@ class Program :
             "JPEG_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libjpeg{libSuffix}")),
             "LIBKML_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase)),
             "LIBKML_MINIZIP_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"minizip{libSuffix}")),
+            "LIBKML_MINIZIP_AES_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"aes{libSuffix}")),
             "LIBKML_URIPARSER_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"uriparser{libSuffix}")),
             "LIBKML_BASE_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"kmlbase{libSuffix}")),
             "LIBKML_DOM_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"kmldom{libSuffix}")),
@@ -289,7 +326,6 @@ class Program :
             "*.exe",
             suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX
         )
-
 
 
 # ------------------------------------------------------------------------------
