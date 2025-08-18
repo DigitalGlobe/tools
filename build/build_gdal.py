@@ -181,7 +181,8 @@ class Program :
             "CURL_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase)),
             "CURL_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libcurl{libSuffix}")),
             "CRYPTOPP_HINTPATH": pathFinder.slasher(pathFinder.path(includeBase, "..")),
-            f"CRYPTOPP_LIBRARY_{"RELEASE" if buildSettings.ReleaseSpecified() else "DEBUG"}": pathFinder.slasher(pathFinder.path(sdkOutDir, f"cryptopp{libSuffix}")),
+            f"CRYPTOPP_LIBRARY_RELEASE": pathFinder.slasher(pathFinder.path(sdkOutDir, f"cryptopp.lib")),
+            f"CRYPTOPP_LIBRARY_DEBUG": pathFinder.slasher(pathFinder.path(sdkOutDir, f"cryptopp{Program._DEBUG_SUFFIX}.lib")),
             "CRYPTOPP_TEST_KNOWNBUG": "TRUE",
             "EXPAT_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "expat")),
             "EXPAT_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libexpat{libSuffix}")),
@@ -225,9 +226,9 @@ class Program :
             "TIFF_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libtiff")),
             "TIFF_LIBRARY_DEBUG": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libtiff{Program._DEBUG_SUFFIX}.lib")),
             "TIFF_LIBRARY_RELEASE": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libtiff.lib")),
-            "XercesC_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase)),
-            "XercesC_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"xerces{libSuffix}")),
-            "XercesC_VERSION": "3.3.0",
+            # "XercesC_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase)),
+            # "XercesC_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"xerces{libSuffix}")),
+            # "XercesC_VERSION": "3.3.0",
             "ZLIB_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "zlib")),
             "ZLIB_LIBRARY_DEBUG": pathFinder.slasher(pathFinder.path(sdkOutDir, f"zlib{Program._DEBUG_SUFFIX}.lib")),
             "ZLIB_LIBRARY_RELEASE": pathFinder.slasher(pathFinder.path(sdkOutDir, f"zlib.lib")),
@@ -250,6 +251,7 @@ class Program :
             + f'-DCMAKE_INCLUDE_PATH={pathFinder.slasher(pathFinder.path(includeBase))} '
             + f'-DCMAKE_LIBRARY_PATH={pathFinder.slasher(pathFinder.path(sdkOutDir))} '
             + f'-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} '
+            + f'-DCMAKE_BUILD_TYPE={conf} '
             # + f'-DCMAKE_C_FLAGS="/FS /DWIN32 /D_WINDOWS /W3 /GR /EHsc" '
             # + f'-DCMAKE_CXX_FLAGS="/FS /DWIN32 /D_WINDOWS /W3 /GR /EHsc" '
             + f'{externalLibStr} '
