@@ -7,27 +7,29 @@ This is a **Third-Party Libraries Build System** for the **[Signature Analyst](h
 
 ### Key Features
 
-- **Multi-Architecture Support**: Builds both 32-bit (x86) and 64-bit (x64) versions of all libraries
-- **Multi-Configuration**: Supports both debug and release builds for each architecture
+- **64-bit Focus**: Primarily builds 64-bit (x64) versions of libraries (32-bit builds deprecated)
+- **Multi-Configuration**: Supports both debug and release builds
 - **Dependency Management**: Automatically handles build order based on library dependencies
-- **Comprehensive Library Collection**: Includes 40+ essential C/C++ libraries for geospatial, graphics, networking, and data processing
+- **Streamlined Collection**: Focuses on essential libraries currently needed by Signature Analyst
 
-### Supported Libraries
+### Currently Supported Libraries
 
-The build system compiles an extensive collection of libraries including:
+The build system currently focuses on a core set of essential libraries:
 
-**Core Libraries:**
-- Boost, APR, CURL, OpenCV, Qt
-- Crypto++, OpenSSL, ZLib
-- GDAL, GEOS, PROJ.4 (geospatial libraries)
-- HDF5, LibTIFF, LibPNG, LibJPEG (data formats)
+**Independent Libraries:**
+- **GALib** - Genetic Algorithm Library
+- **HawkNL** - Network Library
+- **KDIS** - Kumo DIS (Distributed Interactive Simulation) Library
+- **LibGIST** - Generalized Search Tree Library
+- **Newmat** - Matrix Library
+- **OpenDIS** - Open Distributed Interactive Simulation Library
 
-**Specialized Libraries:**
-- OpenSceneGraph (3D graphics)
-- Log4cxx (logging)
-- GoogleTest (testing)
-- Firebird (database)
-- And many more...
+**Dependent Libraries:**
+- **Firebird** - Database engine
+- **CryptoWrapper** - Cryptographic wrapper library
+
+**Legacy Libraries:**
+Many previously supported libraries (Boost, APR, CURL, OpenCV, Qt, GDAL, etc.) have been moved to the `deprecated` folder and are no longer actively built by the main build system.
 
 ### Build System Architecture
 
@@ -54,58 +56,89 @@ This repository contains the third-party libraries ("tools") that the [Signature
  - *Microsoft Visual Studio 2015* or greater
  - *Python 3.5.2* or greater
 
+## Setup
+
+**Important**: Before running any build scripts, you must configure the paths in `build/PathFinder.py` to match your system:
+
+1. **Update PATH_SIGNATURE_ANALYST**: Change this path to point to your Signature Analyst project directory:
+   ```python
+   PATH_SIGNATURE_ANALYST="d:\\Users\\your_username\\projects\\sa"
+   ```
+
+2. **Update _PATH_NAME_CMAKE**: Set this to your CMake installation directory:
+   ```python
+   _PATH_NAME_CMAKE = "D:\\Users\\your_username\\Apps\\CMake"
+   ```
+
+3. **Update PATH_GNU_TOOLS**: Configure this path to point to your GNU tools installation (if using GNU tools):
+   ```python
+   PATH_GNU_TOOLS="d:\\Users\\your_username\\tools\\gnu"
+   ```
+
+4. **Verify Visual Studio paths**: The PathFinder automatically detects Visual Studio installations, but you may need to adjust version-specific paths if you have a non-standard installation.
+
+5. **Check Windows SDK paths**: Ensure the Windows SDK detection works for your system configuration.
+
+These path configurations are essential for the build system to locate dependencies, build tools, and output directories correctly.
+
 ## Usage
 
 ### Build Individual Library
 To build a specific library, use its corresponding build script with architecture and configuration parameters:
 
 ```bash
-# Examples for building CURL library
-python build_curl.py x86 debug    # 32-bit Debug
-python build_curl.py x86 release  # 32-bit Release
-python build_curl.py x64 debug    # 64-bit Debug
-python build_curl.py x64 release  # 64-bit Release
+# Examples for building currently supported libraries
+python build_galib.py x64 debug      # 64-bit Debug
+python build_galib.py x64 release    # 64-bit Release
+python build_firebird.py x64 release # 64-bit Release (debug skipped for Firebird)
+python build_cryptowrapper.py x64 debug    # 64-bit Debug
+python build_cryptowrapper.py x64 release  # 64-bit Release
 ```
 
+**Note**: The current build system focuses on 64-bit builds only. Most legacy libraries have been moved to the `deprecated` folder.
+
 ### Build All Libraries
-To build all libraries in all configurations:
+To build all currently supported libraries:
 
 ```bash
 python build.py
 ```
 
-This will automatically build all libraries in the correct dependency order, creating all four configurations (x86/x64 × debug/release) for each library. The build system is now much more efficient with:
+This will build the following libraries in dependency order:
+- **Independent Libraries** (no dependencies): GALib, HawkNL, KDIS, LibGIST, Newmat, OpenDIS
+- **Dependent Libraries**: Firebird, CryptoWrapper
 
-- **Streamlined Build Process**: Simplified logic with consistent patterns across all build scripts
-- **Automatic Dependency Resolution**: Libraries are built in the correct order based on their dependencies
-- **Parallel Architecture Support**: Each architecture and configuration combination is handled independently
+The build system now focuses on:
+- **64-bit Architecture**: Primarily builds x64 versions (32-bit builds have been deprecated)
+- **Streamlined Process**: Only essential libraries are built by default
+- **Dependency Management**: Libraries are built in the correct order to satisfy dependencies
 
 ## Directory Structure
 
 This repository contains the following directories.
 
 ####build
-The **build** directory contains Python scripts to build each of the third-party libraries.  Each build script requires two command-line arguments:
+The **build** directory contains Python scripts to build the currently supported third-party libraries. Each build script requires two command-line arguments:
 
- - *Bitness*: either <code>x86</code>, to build a 32-bit version of the library, or <code>x64</code>, to build a 64-bit version of the library
- - *Configuration*: either <code>debug</code>, to build a debug version of the library, or <code>release</code>, to build a release version of the library
+ - *Architecture*: <code>x64</code> to build a 64-bit version of the library (32-bit builds are deprecated)
+ - *Configuration*: either <code>debug</code> to build a debug version, or <code>release</code> to build a release version
 
-For example, to build the CURL library, there is a <code>build_curl.py</code> Python script.  The following commands show how to run this script to build all four bitness and configuration combinations of this library:
+For example, to build the GALib library, use the <code>build_galib.py</code> Python script:
 
- - *32-bit Debug*: <code>python.exe build_curl.py x86 debug </code>
- - *32-bit Release*: <code>python.exe build_curl.py x86 release </code>
- - *64-bit Debug*: <code>python.exe build_curl.py x64 debug </code>
- - *64-bit Release*: <code>python.exe build_curl.py x64 release</code>
+ - *64-bit Debug*: <code>python.exe build_galib.py x64 debug</code>
+ - *64-bit Release*: <code>python.exe build_galib.py x64 release</code>
 
-Moreover, there is a "master" build file that calls each of the build scripts to build all four configurations of every third-party library:
+**Note**: Most legacy build scripts have been moved to the <code>deprecated</code> folder. The current build system focuses on the essential libraries needed by Signature Analyst.
+
+Moreover, there is a "master" build file that builds all currently supported libraries:
 
 &nbsp;&nbsp;&nbsp;&nbsp;<code>python.exe build.py</code>
 
-The Python build scripts have been significantly improved with:
-- **Consistent formatting and structure** across all build files
-- **Simplified library reference logic** without debug suffix conditionals
-- **Centralized SDK path management** through the PathFinder module
+The current build system has been streamlined to focus on essential libraries only. The Python build scripts feature:
+- **64-bit focus** with deprecated 32-bit support
+- **Simplified dependency chain** with only 8 core libraries
 - **Clean separation** of debug and release outputs into separate directories
+- **Efficient build process** that skips unnecessary legacy libraries
 
 The build scripts copy their outputs into the **sdk** directory, which the next section describes.
 
