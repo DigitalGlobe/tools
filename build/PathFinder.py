@@ -60,7 +60,7 @@ class PathFinder:
     _PATH_NAME_WINDOWS_SDK_VERSION = "10.0.26100.0"
     # ----------------------------------------------------------------------
 
-    _PATH_NAME_QT = "D:\\Users\\tim.tisler\\tools\Qt\\6.8"
+    _PATH_NAME_QT = "D:\\Users\\tim.tisler\\tools\\Qt\\6.8"
     _FILE_NAME_QMAKE = "qmake.exe"
     # ----------------------------------------------------------------------
 
@@ -93,6 +93,8 @@ class PathFinder:
 
     # The path to the sed.exe executable
     PATH_GNU_TOOLS = "D:\\Users\\tim.tisler\\Apps\\GnuWin32\\bin"
+
+    PATH_SIGNATURE_ANALYST="d:\\Users\\tim.tisler\\projects\\sa"
     # ----------------------------------------------------------------------
     # the relative 64-bit path
     PATH_NAME_X64 = "x64"
@@ -100,6 +102,8 @@ class PathFinder:
     # the relative 32-bit path
     PATH_NAME_X86 = "x86"
     # ----------------------------------------------------------------------
+    PATH_NAME_DEBUG = "Debug"
+    PATH_NAME_RELEASE = "Release"
 
     # --------------------------------------------------------------------------
     # constructors
@@ -139,6 +143,83 @@ class PathFinder:
                 return output_buf.value
             else:
                 output_buf_size = needed
+
+    def getSDKPath(self, currentPathName, platform_or_x64, conf_or_release):
+        cp = currentPathName
+
+        while not os.path.exists(os.path.join(cp, "sdk")):
+            cp = os.path.join(cp, "..")
+
+        # Support both old signature (boolean params) and new signature (string params)
+        # Old signature: getSDKLibPath(currentPathName, x64Specified, releaseSpecified)
+        # New signature: getSDKLibPath(currentPathName, platform, conf)
+        if isinstance(platform_or_x64, bool):
+            platform = (PathFinder.PATH_NAME_X64 if (platform_or_x64) else PathFinder.PATH_NAME_X86)
+        else:
+            platform = platform_or_x64
+
+        if isinstance(conf_or_release, bool):
+            conf = (PathFinder.PATH_NAME_RELEASE if (conf_or_release) else PathFinder.PATH_NAME_DEBUG)
+        else:
+            conf = conf_or_release
+
+        return os.path.abspath(os.path.join(
+            cp,
+            "sdk",
+            platform,
+            conf,
+        ))
+
+    def getSDKLibPath(self, currentPathName, platform_or_x64, conf_or_release):
+
+        path = os.path.join(
+            self.getSDKPath(currentPathName, platform_or_x64, conf_or_release), "lib")
+
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return path
+
+    def getSDKBinPath(self, currentPathName, platform_or_x64, conf_or_release):
+        path = os.path.join(
+            self.getSDKPath(currentPathName, platform_or_x64, conf_or_release), "bin"
+        )
+
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+        return path
+
+    def getVCPKGPath(self, isReleaseMode):
+        if "VCPKG_TARGET_TRIPLET" in os.environ:
+            triplet = os.environ["VCPKG_TARGET_TRIPLET"]
+        else:
+            raise Exception(f"'VCPKG_TARGET_TRIPLET environment variable not set'")
+
+        path = os.path.join(PathFinder.PATH_SIGNATURE_ANALYST, "vcpkg_installed",  triplet)
+        if not isReleaseMode:
+            path = os.path.join(path, "debug")
+
+        if not os.path.exists(path):
+            raise Exception(f"Can't find vcpkg directory in {path}")
+        return path
+
+    def getVCPKGLibPath(self, isReleaseMode):
+        path = os.path.join(self.getVCPKGPath(isReleaseMode), "lib")
+        if not os.path.exists(path):
+            raise Exception(f"Can't find vcpkg lib directory in {path}")
+        return path
+
+    def getVCPKGIncludePath(self):
+        path = os.path.join(self.getVCPKGPath(True), "include")  # no separate include dir, so just force it to true
+        if not os.path.exists(path):
+            raise Exception(f"Can't find vcpkg include directory in {path}")
+        return path
+
+    def getVCPKGBinPath(self, isReleaseMode):
+        path = os.path.join(self.getVCPKGPath(isReleaseMode), "bin")
+        if not os.path.exists(path):
+            raise Exception(f"Can't find vcpkg bin directory in {path}")
+        return path
 
     # ----------------------------------------------------------------------
     # Gets the path of the MSBuild executable file.

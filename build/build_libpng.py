@@ -16,7 +16,6 @@ from SystemManager import *
 from FileDistributor import *
 from XmlUtils import *
 
-
 # ------------------------------------------------------------------------------
 # The Program class represents the main class of the script.
 class Program:
@@ -64,7 +63,7 @@ class Program:
     def __init__(self):
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
     def main(self):
         systemManager = SystemManager()
@@ -94,32 +93,27 @@ class Program:
         # get the paths
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
+            )
 
         buildSourceName = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
         cmakeBuildPath = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
         cmakeInstallPath = pathFinder.path(
             cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
-        )
+            )
 
         systemManager.removeDirectory(cmakeBuildPath)
 
-        sdkOutDir = pathFinder.path(
-            buildPathName,
-            "..",
-            (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            ),
-        )
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKLibPath(buildPathName, platform, conf)
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
-        # systemManager.removeDirectory(buildPathName)
+        systemManager.removeDirectory(buildPathName)
 
         # copy Boost source to the Build area
         systemManager.copyDirectory(sourcePathName, buildPathName)
@@ -127,17 +121,18 @@ class Program:
         # start building
         systemManager.changeDirectory(buildPathName)
 
+        cmd = f"echo set_target_properties(png_shared PROPERTIES OUTPUT_NAME libpng) >> CMakeLists.txt"
+        cmdResult = systemManager.execute(cmd)
+        if cmdResult != 0:
+            sys.exit(-1)
+
         systemManager.makeDirectory(cmakeBuildPath)
         systemManager.changeDirectory(cmakeBuildPath)
 
-        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
-        platform = "x64" if buildSettings.X64Specified() else "Win32"
-
         includeBase = pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..")
-        libSuffix = f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
         externalLibs = {
             "ZLIB_INCLUDE_DIR": pathFinder.path(includeBase, "zlib"),
-            "ZLIB_LIBRARY": pathFinder.path(sdkOutDir, f"zlib{libSuffix}"),
+            "ZLIB_LIBRARY": pathFinder.path(sdkOutDir, "zlib.lib"),
         }
 
         externalLibStr = ""
@@ -153,9 +148,10 @@ class Program:
             + f"-DPNG_TESTS=OFF "
             + f"-DPNG_TOOLS=OFF "
             + f"-DPNG_DEBUG_POSTFIX={"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX} "
+            + f"-DPNG_SHARED_OUTPUT_NAME=libpng "
             + f"{externalLibStr} "
             + f"{buildSourceName}"
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -166,9 +162,8 @@ class Program:
             f"{pathFinder.getCMakeFileName()} "
             + f"--build "
             + f". "
-            + f"-j 1 "
             + f"--config {conf} "
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -182,7 +177,7 @@ class Program:
             + f"--config {conf} "
             + f"--prefix "
             + f"{pathFinder.path(cmakeBuildPath, "install")}"
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -192,51 +187,44 @@ class Program:
         incdir = pathFinder.path(cmakeInstallPath, "include")
         for f in glob.glob(pathFinder.path(incdir, "*.h")):
             fname = f[len(incdir) + 1 :]
-            systemManager.copyFile(f, pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, fname))
+        systemManager.copyFile(f, pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, fname))
 
         dllName = (
             Program._LIBNAME
             + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".dll"
+        + ".dll"
         )
         libName = (
             Program._LIBNAME
             + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".lib"
+        + ".lib"
         )
         pdbName = (
             Program._LIBNAME
             + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".pdb"
-        )
-
-        baseName = (
-            Program._LIBNAME
-            + f"16"
-            + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
+        + ".pdb"
         )
 
         systemManager.copyFile(
-            pathFinder.path(cmakeInstallPath, "bin", f"{baseName}.dll"),
+            pathFinder.path(cmakeInstallPath, "bin", dllName),
             pathFinder.path(sdkOutDir, dllName),
-        )
+            )
 
         systemManager.copyFile(
-            pathFinder.path(cmakeInstallPath, "lib", f"{baseName}.lib"),
+            pathFinder.path(cmakeInstallPath, "lib", libName),
             pathFinder.path(sdkOutDir, libName),
-        )
+            )
 
         if not buildSettings.ReleaseSpecified():
             systemManager.copyFile(
                 pathFinder.path(
-                    cmakeBuildPath,
-                    conf,
-                    f"{baseName}.pdb",
+                cmakeBuildPath,
+                conf,
+                pdbName,
                 ),
                 pathFinder.path(sdkOutDir, pdbName),
-            )
+                )
 
-
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

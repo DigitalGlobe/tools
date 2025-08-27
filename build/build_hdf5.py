@@ -16,7 +16,6 @@ from SystemManager import *
 from FileDistributor import *
 from XmlUtils import *
 
-
 # ------------------------------------------------------------------------------
 # The Program class represents the main class of the script.
 class Program:
@@ -43,8 +42,6 @@ class Program:
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
     _LIBNAME = "hdf5"
-    _DEBUG_SUFFIX = "_d"
-
     # the name of the path for all include files
     _PATH_NAME_INCLUDE = "src"
     # ----------------------------------------------------------------------
@@ -63,21 +60,21 @@ class Program:
     # Constructs this program.
     #
     # Parameters :
-    #     self : this program
+    # self : this program
     def __init__(self):
 
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    # public methods
+        # --------------------------------------------------------------------------
+        # public methods
 
-    # ----------------------------------------------------------------------
-    # The main method of the program.
-    #
-    # Parameters :
-    #     self : this program
+        # ----------------------------------------------------------------------
+        # The main method of the program.
+        #
+        # Parameters :
+        # self : this program
     def main(self):
 
         systemManager = SystemManager()
@@ -107,28 +104,23 @@ class Program:
         # get the paths
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
+            )
 
         buildSourceName = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
         cmakeBuildPath = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
         cmakeInstallPath = pathFinder.path(
             cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
-        )
+            )
 
         systemManager.removeDirectory(cmakeBuildPath)
 
-        sdkOutDir = pathFinder.path(
-            buildPathName,
-            "..",
-            (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            ),
-        )
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKLibPath(buildPathName, platform, conf)
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
@@ -143,18 +135,15 @@ class Program:
         systemManager.makeDirectory(cmakeBuildPath)
         systemManager.changeDirectory(cmakeBuildPath)
 
-        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
-        platform = "x64" if buildSettings.X64Specified() else "Win32"
-
         includeBase = pathFinder.path(
             buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, ".."
-        )
+            )
         libSuffix = (
             f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
-        )
+            )
         externalLibs = {
             "ZLIB_INCLUDE_DIR": pathFinder.path(includeBase, "zlib"),
-            "ZLIB_LIBRARY": pathFinder.path(sdkOutDir, f"zlib{libSuffix}"),
+            "ZLIB_LIBRARY": pathFinder.path(sdkOutDir, "zlib.lib"),
         }
 
         externalLibStr = ""
@@ -168,11 +157,10 @@ class Program:
             + f"-DHDF5_BUILD_EXAMPLES=OFF "
             + f"-DHDF5_BUILD_TOOLS=OFF "
             + f"-DLIBAEC_USE_LOCALCONTENT=ON "
-            + f"-DHDF5_ENABLE_SZIP_SUPPORT=OFF "
-            + f"-A {platform} "
+            + f"-DHDF5_ENABLE_SZIP_SUPPORT=OFF " + f"-A {platform} "
             + f"{externalLibStr} "
             + f"{buildSourceName}"
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -185,7 +173,7 @@ class Program:
             + f". "
             + f"-j 1 "
             + f"--config {conf} "
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -199,7 +187,7 @@ class Program:
             + f"--config {conf} "
             + f"--prefix "
             + f"{pathFinder.path(cmakeBuildPath, "install")}"
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -211,46 +199,46 @@ class Program:
         dllName = (
             Program._LIBNAME
             + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".dll"
+        + ".dll"
         )
         libName = (
             Program._LIBNAME
             + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".lib"
+        + ".lib"
         )
         pdbName = (
             Program._LIBNAME
             + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".pdb"
+        + ".pdb"
         )
 
         systemManager.distributeFiles(
             srcIncludePath,
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
-        )
+            )
 
         systemManager.distributeFiles(
             pathFinder.path(cmakeInstallPath, "lib"),
             pathFinder.path(sdkOutDir),
             "hdf5*.lib"
-        )
+            )
 
         systemManager.distributeFiles(
             pathFinder.path(cmakeInstallPath, "bin"),
             pathFinder.path(sdkOutDir),
             "hdf5*.dll"
-        )
+            )
 
         if not buildSettings.ReleaseSpecified():
             systemManager.distributeFiles(
-            pathFinder.path(cmakeInstallPath, "bin"),
+                pathFinder.path(cmakeInstallPath, "bin"),
                 pathFinder.path(sdkOutDir),
                 "hdf5*.pdb",
-            )
+                )
         # ---------------------------------------------------------------------
-# --------------------------------------------------------------------------
+        # --------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

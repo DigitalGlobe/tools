@@ -2,7 +2,7 @@
 #
 # build_galib.py
 #
-# Summary : Builds the GALib  / Genetic Algorithm Components
+# Summary : Builds the GALib / Genetic Algorithm Components
 #
 # ------------------------------------------------------------------------------
 
@@ -13,7 +13,6 @@ import sys
 from BuildSettingSet import *
 from PathFinder import *
 from SystemManager import *
-
 
 # ------------------------------------------------------------------------------
 # The Program class represents the main class of the script.
@@ -28,8 +27,6 @@ class Program:
     # ----------------------------------------------------------------------
 
     _LIBNAME = "ga"
-    _DEBUG_SUFFIX = "_d"
-
     # ----------------------------------------------------------------------
     # the name of the path that will contain intermediary build files
     _PATH_NAME_BUILD = "galib"
@@ -69,21 +66,21 @@ class Program:
     # Constructs this program.
     #
     # Parameters :
-    #     self : this program
+    # self : this program
     def __init__(self):
 
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    # public methods
+        # --------------------------------------------------------------------------
+        # public methods
 
-    # ----------------------------------------------------------------------
-    # The main method of the program.
-    #
-    # Parameters :
-    #     self : this program
+        # ----------------------------------------------------------------------
+        # The main method of the program.
+        #
+        # Parameters :
+        # self : this program
     def main(self):
         systemManager = SystemManager()
         pathFinder = PathFinder()
@@ -112,22 +109,15 @@ class Program:
         # get the paths
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
+            )
 
-        nmakeInstallPath = pathFinder.path(buildPathName, Program._PATH_NAME_NMAKE_INSTALL)
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
 
-        sdkOutDir = pathFinder.path(
-            buildPathName,
-            "..",
-            (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            ),
-        )
+        sdkOutDir = pathFinder.getSDKLibPath(buildPathName, platform, conf)
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
@@ -139,29 +129,29 @@ class Program:
         # start building
         systemManager.changeDirectory(buildPathName)
 
+        # sedResult = systemManager.replaceInFile(
+        #     pathFinder.path(buildPathName, "makevars.vcpp"),
+        #     "LIB_NAME\\s*=\\s*ga",
+        #     f"LIB_NAME = {Program._LIBNAME}",
+        #     )
+        # if sedResult != 0:
+        #     sys.exit(-1)
+
         libName = (
             Program._LIBNAME
-            + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
             + ".lib"
         )
         pdbName = (
             Program._LIBNAME
-            + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
             + ".pdb"
         )
 
         # run Nmake
-        nmakeCommandLine = f"nmake -f makefile.vcpp"
-        if buildSettings.X64Specified():
-            nmakeCommandLine += " WIN64=yes"
-        else:
-            pass
-
-        if buildSettings.ReleaseSpecified():
-            nmakeCommandLine += " RELEASE_BUILD=YES"
-        else:
-            pass
-        nmakeCommandLine += " SHARED_BUILD=YES LIBRARY_BUILD=YES lib"
+        nmakeCommandLine = (f"nmake -f makefile.vcpp "
+            + f"{"WIN64=yes" if buildSettings.X64Specified() else ""} "
+            + f"{"RELEASE_BUILD=YES" if buildSettings.ReleaseSpecified() else ""} "
+            + f" SHARED_BUILD=YES LIBRARY_BUILD=YES lib "
+            )
 
         cmd = f'"{vcVars}" && {nmakeCommandLine}'
 
@@ -178,24 +168,23 @@ class Program:
             pathFinder.path(buildPathName, Program._PATH_NAME_INCLUDE),
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h",
-        )
+            )
         systemManager.distributeFiles(
             pathFinder.path(buildPathName, Program._PATH_NAME_INCLUDE),
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.C",
-        )
+            )
 
         systemManager.copyFile(
-            pathFinder.path(buildPathName, "ga", "ga.lib"), pathFinder.path(sdkOutDir, libName)
+            pathFinder.path(buildPathName, "ga", libName), pathFinder.path(sdkOutDir, libName)
         )
         if not buildSettings.ReleaseSpecified():
             systemManager.copyFile(
                 pathFinder.path(buildPathName, "ga", "vc140.pdb"), pathFinder.path(sdkOutDir, pdbName)
             )
 
+        # --------------------------------------------------------------------------
 
-# --------------------------------------------------------------------------
-
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

@@ -14,7 +14,6 @@ from BuildSettingSet import *
 from PathFinder import *
 from SystemManager import *
 
-
 # ------------------------------------------------------------------------------
 # The Program class represents the main class of the script.
 class Program:
@@ -31,8 +30,6 @@ class Program:
     # ----------------------------------------------------------------------
 
     _LIBNAME = "sqlite3"
-    _DEBUG_SUFFIX = "_d"
-
     # ----------------------------------------------------------------------
     # the name of the path that will contain intermediary build files
     _PATH_NAME_BUILD = "sqlite3"
@@ -72,21 +69,21 @@ class Program:
     # Constructs this program.
     #
     # Parameters :
-    #     self : this program
+    # self : this program
     def __init__(self):
 
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    # public methods
+        # --------------------------------------------------------------------------
+        # public methods
 
-    # ----------------------------------------------------------------------
-    # The main method of the program.
-    #
-    # Parameters :
-    #     self : this program
+        # ----------------------------------------------------------------------
+        # The main method of the program.
+        #
+        # Parameters :
+        # self : this program
     def main(self):
 
         systemManager = SystemManager()
@@ -114,25 +111,20 @@ class Program:
         # determine path names
         binaryPathName = (
             systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X64)
-            if (buildSettings.X64Specified())
-            else systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X86)
+        if (buildSettings.X64Specified())
+        else systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X86)
         )
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
-
-        sdkOutDir = (
-            buildPathName
-            + "\\..\\"
-            + (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
             )
-        )
+
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKLibPath(buildPathName, platform, conf)
 
         # remove build dir
         systemManager.removeDirectory(buildPathName)
@@ -142,18 +134,18 @@ class Program:
         nmakeBuildPath = pathFinder.path(buildPathName, Program._PATH_NAME_NMAKE_INSTALL)
 
         opts = (
-                f"-DSQLITE_ENABLE_FTS3=1 "
-                + f"-DSQLITE_ENABLE_FTS4=1 "
-                + f"-DSQLITE_ENABLE_FTS5=1 "
-                + f"-DSQLITE_ENABLE_RTREE=1 "
-                + f"-DSQLITE_ENABLE_JSON1=1 "
-                + f"-DSQLITE_ENABLE_GEOPOLY=1 "
-                + f"-DSQLITE_ENABLE_SESSION=1 "
-                + f"-DSQLITE_ENABLE_PREUPDATE_HOOK=1 "
-                + f"-DSQLITE_ENABLE_SERIALIZE=1 "
-                + f"-DSQLITE_ENABLE_MATH_FUNCTIONS=1"
+            f"-DSQLITE_ENABLE_FTS3=1 "
+            + f"-DSQLITE_ENABLE_FTS4=1 "
+            + f"-DSQLITE_ENABLE_FTS5=1 "
+            + f"-DSQLITE_ENABLE_RTREE=1 "
+            + f"-DSQLITE_ENABLE_JSON1=1 "
+            + f"-DSQLITE_ENABLE_GEOPOLY=1 "
+            + f"-DSQLITE_ENABLE_SESSION=1 "
+            + f"-DSQLITE_ENABLE_PREUPDATE_HOOK=1 "
+            + f"-DSQLITE_ENABLE_SERIALIZE=1 "
+            + f"-DSQLITE_ENABLE_MATH_FUNCTIONS=1"
 
-                )
+        )
 
         nmakeCommandLine = (
             f'nmake /f "{pathFinder.path(buildPathName, Program._FILE_NAME_MAKEFILE)}" '
@@ -166,7 +158,7 @@ class Program:
             + f'OPTFLAGS="{"/MD /Op" if (buildSettings.ReleaseSpecified()) else "/MDd /Z7"}" '
             + f'INSTALLDIR={nmakeBuildPath} '
             + f'{"nodebug=1" if (buildSettings.ReleaseSpecified()) else ""} '
-        )
+            )
 
         cmd = f'"{vcVars}" && {nmakeCommandLine}'
 
@@ -182,53 +174,52 @@ class Program:
         hName = (
             Program._LIBNAME
             + ".h"
-        )
+            )
         dllName = (
             Program._LIBNAME
             + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".dll"
+        + ".dll"
         )
         libName = (
             Program._LIBNAME
             + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".lib"
+        + ".lib"
         )
         exeName = (
             Program._LIBNAME
             + ".exe"
-        )
+            )
         pdbName = (
             Program._LIBNAME
             + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".pdb"
+        + ".pdb"
         )
 
         systemManager.copyFile(
             pathFinder.path(buildPathName, Program._LIBNAME + ".h"),
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, hName),
-        )
+            )
         systemManager.copyFile(
             pathFinder.path(buildPathName, Program._LIBNAME + ".dll"),
             pathFinder.path(sdkOutDir, dllName),
-        )
+            )
         systemManager.copyFile(
             pathFinder.path(buildPathName, Program._LIBNAME + ".lib"),
             pathFinder.path(sdkOutDir, libName),
-        )
+            )
         systemManager.copyFile(
             pathFinder.path(buildPathName, exeName),
             pathFinder.path(sdkOutDir, exeName),
-        )
+            )
 
         if not buildSettings.ReleaseSpecified():
             systemManager.copyFile(
                 pathFinder.path(buildPathName, Program._LIBNAME + ".pdb"),
                 pathFinder.path(sdkOutDir, pdbName),
-            )
+                )
 
+        # --------------------------------------------------------------------------
 
-# --------------------------------------------------------------------------
-
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

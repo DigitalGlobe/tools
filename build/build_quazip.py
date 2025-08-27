@@ -11,8 +11,8 @@ import os
 import sys
 
 from BuildSettingSet import *
-from PathFinder      import *
-from SystemManager   import *
+from PathFinder import *
+from SystemManager import *
 from FileDistributor import *
 from XmlUtils import *
 
@@ -39,8 +39,6 @@ class Program :
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
     _LIBNAME = "quazip"
-    _DEBUG_SUFFIX = "_d"
-
     # the name of the path for all include files
     _PATH_NAME_INCLUDE = "."
     # ----------------------------------------------------------------------
@@ -59,21 +57,21 @@ class Program :
     # Constructs this program.
     #
     # Parameters :
-    #     self : this program
+    # self : this program
     def __init__(self):
 
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    # public methods
+        # --------------------------------------------------------------------------
+        # public methods
 
-    # ----------------------------------------------------------------------
-    # The main method of the program.
-    #
-    # Parameters :
-    #     self : this program
+        # ----------------------------------------------------------------------
+        # The main method of the program.
+        #
+        # Parameters :
+        # self : this program
     def main(self):
 
         systemManager = SystemManager()
@@ -99,30 +97,26 @@ class Program :
         # get the paths
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
+            )
 
         buildSourceName = pathFinder.path(
             buildPathName, Program._PATH_NAME_CMAKE_SOURCE
-        )
+            )
         cmakeBuildPath = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
         cmakeInstallPath = pathFinder.path(
             cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
-        )
+            )
 
         systemManager.removeDirectory(cmakeBuildPath)
 
-        sdkOutDir = pathFinder.path(
-            buildPathName,
-            "..",
-            (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            ),
-        )
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKLibPath(buildPathName, platform, conf)
 
         os.environ["QTDIR"] = pathFinder.getQtPathName(buildSettings.X64Specified())
 
@@ -139,19 +133,16 @@ class Program :
         systemManager.makeDirectory(cmakeBuildPath)
         systemManager.changeDirectory(cmakeBuildPath)
 
-        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
-        platform = "x64" if buildSettings.X64Specified() else "Win32"
-
         includeBase = pathFinder.path(
             buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, ".."
-        )
+            )
         libSuffix = (
             f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
-        )
+            )
 
         externalLibs = {
             "ZLIB_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "zlib")),
-            "ZLIB_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"zlib{libSuffix}")),
+            "ZLIB_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, "zlib.lib")),
         }
 
         externalLibStr = ""
@@ -171,7 +162,7 @@ class Program :
             + f'-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} '
             + f'{externalLibStr} '
             + f'{buildSourceName}'
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -184,7 +175,7 @@ class Program :
             + f". "
             + f"-j 1 "
             + f"--config {conf} "
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -198,7 +189,7 @@ class Program :
             + f"--config {conf} "
             + f"--prefix "
             + f"{cmakeInstallPath}"
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -209,17 +200,17 @@ class Program :
             f"{Program._LIBNAME}"
             + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
             + f".dll"
-        )
+            )
         libName = (
             f"{Program._LIBNAME}"
             + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
             + f".lib"
-        )
+            )
         pdbName = (
             f"{Program._LIBNAME}"
             + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
             + f".pdb"
-        )
+            )
 
         incdir = pathFinder.path(cmakeInstallPath, "include", "QuaZip-Qt6-1.5", Program._LIBNAME)
         libdir = pathFinder.path(cmakeInstallPath, "lib")
@@ -229,13 +220,13 @@ class Program :
             incdir,
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
-        )
+            )
 
         for f in glob.glob(pathFinder.path(libdir, "*.lib")):
             fname = f[len(libdir) + 1 :]
-            fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME) :]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib"
+        fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME) :]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib"
 
-            systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
+        systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
 
         for f in glob.glob(pathFinder.path(bindir, "*.dll")):
             fname = f[len(bindir) + 1 :]
@@ -249,7 +240,6 @@ class Program :
                 fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME)]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.pdb"
                 systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
 
-
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

@@ -168,6 +168,16 @@ class SystemManager:
 
         os.chdir(pathName)
 
+    def replaceInFile(self, fileName, search, replace):
+        sedCommandLine = (
+            f"{self._pf.path(self._pf.PATH_GNU_TOOLS, "sed.exe")} -r "
+            + f'-i.bak "s/{search}/{replace}/g" '
+            + f"{fileName}"
+        )
+
+        print("cmd: " + sedCommandLine)
+        return self.execute(sedCommandLine)
+
     # ----------------------------------------------------------------------
     # Copies a specified directory.
     #

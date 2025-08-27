@@ -16,7 +16,6 @@ from SystemManager import *
 from FileDistributor import *
 from XmlUtils import *
 
-
 # ------------------------------------------------------------------------------
 # The Program class represents the main class of the script.
 class Program:
@@ -40,8 +39,6 @@ class Program:
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
     _LIBNAME = "libgeotiff"
-    _DEBUG_SUFFIX = "_d"
-
     # the name of the path for all include files
     _PATH_NAME_INCLUDE = "."
     # ----------------------------------------------------------------------
@@ -60,21 +57,21 @@ class Program:
     # Constructs this program.
     #
     # Parameters :
-    #     self : this program
+    # self : this program
     def __init__(self):
 
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    # public methods
+        # --------------------------------------------------------------------------
+        # public methods
 
-    # ----------------------------------------------------------------------
-    # The main method of the program.
-    #
-    # Parameters :
-    #     self : this program
+        # ----------------------------------------------------------------------
+        # The main method of the program.
+        #
+        # Parameters :
+        # self : this program
     def main(self):
 
         systemManager = SystemManager()
@@ -100,34 +97,30 @@ class Program:
         # get the paths
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
+            )
 
         buildSourceName = pathFinder.path(
             buildPathName, Program._PATH_NAME_CMAKE_SOURCE
-        )
+            )
         cmakeBuildPath = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
         cmakeInstallPath = pathFinder.path(
             cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
-        )
+            )
 
         systemManager.removeDirectory(cmakeBuildPath)
 
-        sdkOutDir = pathFinder.path(
-            buildPathName,
-            "..",
-            (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            ),
-        )
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKLibPath(buildPathName, platform, conf)
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
-        # systemManager.removeDirectory(buildPathName)
+        systemManager.removeDirectory(buildPathName)
 
         # copy APR source to the Build area
         systemManager.copyDirectory(sourcePathName, buildPathName)
@@ -135,29 +128,36 @@ class Program:
         # start building
         systemManager.changeDirectory(buildPathName)
 
+        # modify the library name
+        sedResult = systemManager.replaceInFile(
+            pathFinder.path(buildSourceName, "CMakeLists.txt"),
+            "GEOTIFF_LIB_NAME\\s*geotiff",
+            "GEOTIFF_LIB_NAME libgeotiff",
+            )
+
+        if sedResult != 0:
+            sys.exit(-1)
+
         systemManager.makeDirectory(cmakeBuildPath)
         systemManager.changeDirectory(cmakeBuildPath)
 
-        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
-        platform = "x64" if buildSettings.X64Specified() else "Win32"
-
         includeBase = pathFinder.path(
             buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, ".."
-        )
+            )
         libSuffix = (
             f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
-        )
+            )
 
         externalLibs = {
             "JPEG_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "jpeg")),
-            "JPEG_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libjpeg{libSuffix}")),
+            "JPEG_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, "libjpeg.lib")),
             "PROJ_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, f"proj")),
-            "PROJ_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"proj{libSuffix}")),
+            "PROJ_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, "proj.lib")),
             "TIFF_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libtiff")),
-            "TIFF_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libtiff{libSuffix}")),
+            "TIFF_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, "libtiff.lib")),
             "ZLIB_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "zlib")),
-            "ZLIB_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"zlib{libSuffix}")),
- }
+            "ZLIB_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, "zlib.lib")),
+        }
 
         externalLibStr = ""
         for [key, val] in externalLibs.items():
@@ -174,10 +174,10 @@ class Program:
             + f"-DWITH_UTILITIES=OFF "
             + f"-DWITH_ZLIB=ON "
             + f"-DWITH_JPEG=ON "
-            + f"-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} "
+            + f'-DINTERFACE_LIB_PREFIX="" ' + f"-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} "
             + f"{externalLibStr} "
             + f"{buildSourceName}"
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -190,7 +190,7 @@ class Program:
             + f". "
             + f"-j 1 "
             + f"--config {conf} "
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -204,7 +204,7 @@ class Program:
             + f"--config {conf} "
             + f"--prefix "
             + f"{cmakeInstallPath}"
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -215,17 +215,17 @@ class Program:
             f"{Program._LIBNAME}"
             + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
             + f".dll"
-        )
+            )
         libName = (
             f"{Program._LIBNAME}"
             + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
             + f".lib"
-        )
+            )
         pdbName = (
             f"{Program._LIBNAME}"
             + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
             + f".pdb"
-        )
+            )
 
         incdir = pathFinder.path(cmakeInstallPath, "include")
         bindir = pathFinder.path(cmakeInstallPath, "bin")
@@ -235,28 +235,29 @@ class Program:
             incdir,
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
-        )
+            )
         systemManager.distributeFiles(
             incdir,
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.inc",
-        )
+            )
 
-        origlibname = "geotiff"
         systemManager.copyFile(
-            pathFinder.path(
-                libdir,
-                f"{origlibname}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}_i.lib",
-            ),
+            pathFinder.path(libdir, libName),
             pathFinder.path(sdkOutDir, libName),
-        )
+            )
 
-        systemManager.copyFile(pathFinder.path(bindir, f"{origlibname}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.dll"), pathFinder.path(sdkOutDir, dllName))
+        systemManager.copyFile(
+            pathFinder.path(bindir, dllName),
+            pathFinder.path(sdkOutDir, dllName)
+        )
 
         if not buildSettings.ReleaseSpecified():
-            systemManager.copyFile(pathFinder.path(bindir, f"{origlibname}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.pdb"), pathFinder.path(sdkOutDir, pdbName))
+            systemManager.copyFile(
+                pathFinder.path(bindir, pdbName),
+                pathFinder.path(sdkOutDir, pdbName)
+            )
 
-
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

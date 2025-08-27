@@ -64,20 +64,20 @@ class Program :
     # Constructs this program.
     #
     # Parameters :
-    #     self : this program
+    # self : this program
     def __init__(self) :
 
         pass
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    # public methods
+        # --------------------------------------------------------------------------
+        # public methods
 
-    # ----------------------------------------------------------------------
-    # The main method of the program.
-    #
-    # Parameters :
-    #     self : this program
+        # ----------------------------------------------------------------------
+        # The main method of the program.
+        #
+        # Parameters :
+        # self : this program
     def main(self) :
         systemManager = SystemManager()
         pathFinder = PathFinder()
@@ -98,10 +98,9 @@ class Program :
             pathFinder.getNmakePathName(buildSettings.X64Specified())
         )
 
-        compileOutDir = ""
         systemManager.appendToPathEnvironmentVariable(
-                pathFinder.getWindowsSdkBinPathName(buildSettings.X64Specified())
-            )
+            pathFinder.getWindowsSdkBinPathName(buildSettings.X64Specified())
+        )
 
         # get the paths
         buildPathName = systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD)
@@ -113,15 +112,10 @@ class Program :
 
         systemManager.removeDirectory(cmakeBuildPath)
 
-        sdkOutDir = pathFinder.path(
-            buildPathName,
-            "..",
-            (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            ),
-        )
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKLibPath(buildPathName, platform, conf)
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
@@ -136,15 +130,12 @@ class Program :
         systemManager.makeDirectory(cmakeBuildPath)
         systemManager.changeDirectory(cmakeBuildPath)
 
-        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
-        platform = "x64" if buildSettings.X64Specified() else "Win32"
-
         cmakeCommandLine = (
             f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
             + f'-DBUILD_SHARED_LIBS=ON '
             + f'-A {platform} '
             + f"{buildSourceName}"
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -157,7 +148,7 @@ class Program :
             + f". "
             + f"-j 1 "
             + f"--config {conf} "
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -171,7 +162,7 @@ class Program :
             + f"--config {conf} "
             + f"--prefix "
             + f"{pathFinder.path(cmakeBuildPath, "install")}"
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -189,29 +180,29 @@ class Program :
             srcIncludePath,
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*"
-        )
+            )
 
         systemManager.distributeFiles(
             pathFinder.path(cmakeInstallPath, "lib"),
             sdkOutDir,
             "*.lib",
-        )
+            )
         systemManager.distributeFiles(
             pathFinder.path(cmakeInstallPath, "bin"),
             sdkOutDir,
             "*.dll",
-        )
-        if not buildSettings.ReleaseSpecified():
-            systemManager.distributeFiles(
-                pathFinder.path(cmakeInstallPath, "bin"),
-                sdkOutDir, "lib",
-                "*.pdb",
             )
+        if not buildSettings.ReleaseSpecified():
+          systemManager.distributeFiles(
+              pathFinder.path(cmakeInstallPath, "bin"),
+              sdkOutDir, "lib",
+              "*.pdb",
+              )
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
-# --------------------------------------------------------------------------
+        # --------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

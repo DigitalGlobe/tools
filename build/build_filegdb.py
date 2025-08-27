@@ -14,7 +14,6 @@ from BuildSettingSet import *
 from PathFinder import *
 from SystemManager import *
 
-
 # ------------------------------------------------------------------------------
 # The Program class represents the main class of the script.
 class Program:
@@ -28,8 +27,6 @@ class Program:
     # ----------------------------------------------------------------------
 
     _LIBNAME = "FileGDBAPI"
-    _DEBUG_SUFFIX = "_d"
-
     # ----------------------------------------------------------------------
     # the name of the path that will contain intermediary build files
     _PATH_NAME_BUILD = "FileGDB"
@@ -62,21 +59,21 @@ class Program:
     # Constructs this program.
     #
     # Parameters :
-    #     self : this program
+    # self : this program
     def __init__(self):
 
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    # public methods
+        # --------------------------------------------------------------------------
+        # public methods
 
-    # ----------------------------------------------------------------------
-    # The main method of the program.
-    #
-    # Parameters :
-    #     self : this program
+        # ----------------------------------------------------------------------
+        # The main method of the program.
+        #
+        # Parameters :
+        # self : this program
     def main(self):
 
         systemManager = SystemManager()
@@ -91,17 +88,13 @@ class Program:
 
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
-
-        sdkOutDir = (
-            sourcePathName
-            + "\\..\\"
-            + (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
             )
-        )
+
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKLibPath(buildPathName, platform, conf)
+
         incdir = pathFinder.path(sourcePathName, "include")
         bindir = pathFinder.path(sourcePathName, "bin64")
         libdir = pathFinder.path(sourcePathName, "lib64")
@@ -114,28 +107,27 @@ class Program:
             incdir,
             pathFinder.path(sourcePathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
-        )
+            )
 
         for f in glob.glob(pathFinder.path(libdir, f"*{"" if (buildSettings.ReleaseSpecified()) else "d"}.lib")):
             fname = f[len(libdir) + 1 :]
-            fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME) :]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib"
+        fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME) :]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib"
 
-            systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
+        systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
 
         for f in glob.glob(pathFinder.path(bindir, f"*{"" if (buildSettings.ReleaseSpecified()) else "d"}.dll")):
             fname = f[len(bindir) + 1 :]
-            fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME)]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.dll"
-            systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
+        fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME)]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.dll"
+        systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
 
         if not buildSettings.ReleaseSpecified():
             for f in glob.glob(pathFinder.path(bindir, f"*.pdb")):
                 fname = f[len(bindir) + 1 :]
-                fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME)]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.pdb"
-                systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
+            fname = f"{fname[:fname.find(Program._LIBNAME) + len(Program._LIBNAME)]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.pdb"
+            systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
 
+        # --------------------------------------------------------------------------
 
-# --------------------------------------------------------------------------
-
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

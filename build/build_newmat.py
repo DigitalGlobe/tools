@@ -14,7 +14,6 @@ from BuildSettingSet import *
 from PathFinder import *
 from SystemManager import *
 
-
 # ------------------------------------------------------------------------------
 # The Program class represents the main class of the script.
 class Program:
@@ -32,8 +31,6 @@ class Program:
     # ----------------------------------------------------------------------
 
     _LIBNAME = "newmat"
-    _DEBUG_SUFFIX = "_d"
-
     # ----------------------------------------------------------------------
     # the name of the path that will contain intermediary build files
     _PATH_NAME_BUILD = "newmat"
@@ -72,21 +69,21 @@ class Program:
     # Constructs this program.
     #
     # Parameters :
-    #     self : this program
+    # self : this program
     def __init__(self):
 
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    # public methods
+        # --------------------------------------------------------------------------
+        # public methods
 
-    # ----------------------------------------------------------------------
-    # The main method of the program.
-    #
-    # Parameters :
-    #     self : this program
+        # ----------------------------------------------------------------------
+        # The main method of the program.
+        #
+        # Parameters :
+        # self : this program
     def main(self):
 
         systemManager = SystemManager()
@@ -114,55 +111,46 @@ class Program:
         # determine path names
         binaryPathName = (
             systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X64)
-            if (buildSettings.X64Specified())
-            else systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X86)
+        if (buildSettings.X64Specified())
+        else systemManager.getCurrentRelativePathName(Program._PATH_NAME_BINARY_X86)
         )
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
-
-        sdkOutDir = (
-            buildPathName
-            + "\\..\\"
-            + (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
             )
-        )
+
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKLibPath(buildPathName, platform, conf)
 
         # remove build dir
         systemManager.removeDirectory(buildPathName)
-
         systemManager.copyDirectory(sourcePathName, buildPathName)
 
         systemManager.changeDirectory(buildPathName)
 
         dllName = (
             Program._LIBNAME
-            + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
             + ".dll"
         )
         libName = (
             Program._LIBNAME
-            + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
             + ".lib"
         )
         pdbName = (
             Program._LIBNAME
-            + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
             + ".pdb"
         )
 
         nmakeCommandLine = (f'nmake /f "{Program._FILE_NAME_MAKEFILE}" '
-                            + f'_MSC_VER=1900 '
-                            + f' LIB_NAME="{libName}"'
-                            + f' OPTFLAGS="{"/MD /Op" if (buildSettings.ReleaseSpecified()) else "/MDd /Z7"}" '
-                            + f' {"nodebug=1" if (buildSettings.ReleaseSpecified()) else ""} '
-        )
+            + f'_MSC_VER=1900 '
+            + f' LIB_NAME="{libName}"'
+            + f' OPTFLAGS="{"/MD /Op" if (buildSettings.ReleaseSpecified()) else "/MDd /Z7"}" '
+            + f' {"nodebug=1" if (buildSettings.ReleaseSpecified()) else ""} '
+            )
 
         cmd = f'"{vcVars}" && {nmakeCommandLine}'
 
@@ -178,15 +166,14 @@ class Program:
             pathFinder.path(buildPathName, Program._PATH_NAME_INCLUDE),
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h"
-        )
+            )
 
         systemManager.copyFile(
             pathFinder.path(buildPathName, libName), pathFinder.path(sdkOutDir, libName)
         )
 
+        # --------------------------------------------------------------------------
 
-# --------------------------------------------------------------------------
-
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

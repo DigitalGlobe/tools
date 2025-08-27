@@ -47,7 +47,7 @@ class Program :
     def __init__(self) :
 
         pass
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
     def main(self) :
         systemManager = SystemManager()
@@ -61,34 +61,28 @@ class Program :
         systemManager.initializeIncludeEnvironmentVariable(buildSettings.X64Specified())
         systemManager.initializeLibraryEnvironmentVariable(buildSettings.X64Specified())
 
-
         # MSBuild is under "Program Files (x86)"
         systemManager.appendToPathEnvironmentVariable(
-                pathFinder.getMSBuildFileName(buildSettings.X64Specified())
-            )
+            pathFinder.getMSBuildFileName(buildSettings.X64Specified())
+        )
 
         compileOutDir = ""
         systemManager.appendToPathEnvironmentVariable(
-                pathFinder.getWindowsSdkBinPathName(buildSettings.X64Specified())
-            )
+            pathFinder.getWindowsSdkBinPathName(buildSettings.X64Specified())
+        )
 
         # get the paths
         buildPathName = systemManager.getCurrentRelativePathName(
-                Program._PATH_NAME_BUILD
+            Program._PATH_NAME_BUILD
             )
         sourcePathName = systemManager.getCurrentRelativePathName(
-                Program._PATH_NAME_SOURCE
+            Program._PATH_NAME_SOURCE
             )
 
-        sdkOutDir = pathFinder.path(
-            buildPathName,
-            "..",
-            (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            ),
-        )
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKBinPath( buildPathName, platform, conf)
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
@@ -98,44 +92,41 @@ class Program :
         systemManager.copyDirectory(sourcePathName, buildPathName)
 
         # start building
-        buildPathName   = pathFinder.path( buildPathName, 'bison' )
+        buildPathName = pathFinder.path( buildPathName, 'bison' )
         systemManager.changeDirectory(buildPathName)
 
-        conf = "Release" if ( buildSettings.ReleaseSpecified() ) else "Debug"
-        platform  = 'x64' if buildSettings.X64Specified() else 'Win32'
-
         # build the solution
-        solutionFileName   = pathFinder.path( buildPathName               , \
-                                               Program._FILE_NAME_SOLUTION )
-        msBuildCommandLine = ( "\"%s\" "                  + \
-                                     "/p:platform=%s " + \
-                                     "\"%s\""                   ) % \
-                                   ( pathFinder.getMSBuildFileName( buildSettings.X64Specified()), platform, solutionFileName )
+        solutionFileName = pathFinder.path( buildPathName , \
+            Program._FILE_NAME_SOLUTION )
+        msBuildCommandLine = ( "\"%s\" " + \
+            "/p:platform=%s " + \
+            "\"%s\"" ) % \
+            ( pathFinder.getMSBuildFileName( buildSettings.X64Specified()), platform, solutionFileName )
 
-        appName = Program._APPNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".exe"
+        appName = Program._APPNAME + ( '' if ( buildSettings.ReleaseSpecified() ) else Program._DEBUG_SUFFIX) + ".exe"
 
-        buildOutDir   = pathFinder.path( buildPathName, 'build' )
-        propfile   = pathFinder.path( buildPathName, 'linker.props' )
+        buildOutDir = pathFinder.path( buildPathName, 'build' )
+        propfile = pathFinder.path( buildPathName, 'linker.props' )
 
         msBuildCommandLine += ' /p:OutDir=' + buildOutDir
         # msBuildCommandLine += ' /p:TargetExtension=dll'
         msBuildCommandLine += ' /p:SolutionDir=' + buildPathName + '\\'
-        msBuildCommandLine += ' /p:TargetName=' + Program._APPNAME + ('' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX)
+        msBuildCommandLine += ' /p:TargetName=' + Program._APPNAME + ('' if ( buildSettings.ReleaseSpecified() ) else Program._DEBUG_SUFFIX)
         msBuildCommandLine += ' /p:Configuration=' + conf
         # msBuildCommandLine += ' /p:BuildProjectReferences=false'
 
         # linkerprops = {'OutputFile':pathFinder.path( buildOutDir, dllName )}
         # linkerprops['ImportLibrary'] = pathFinder.path( buildOutDir, libName )
         # if buildSettings.ReleaseSpecified():
-        #    linkerprops['DebugSymbols'] = 'false'
+        # linkerprops['DebugSymbols'] = 'false'
         # else:
-        #    linkerprops['DebugSymbols'] = 'true'
-        #    linkerprops['DebugType'] = 'full'
-        #    linkerprops['ProgramDatabaseFile'] = '$(OutDir)\\' + pdbName
+        # linkerprops['DebugSymbols'] = 'true'
+        # linkerprops['DebugType'] = 'full'
+        # linkerprops['ProgramDatabaseFile'] = '$(OutDir)\\' + pdbName
         #
         # xmlUtils.buildDll(conf, platform, {}, linkerprops, propfile)
 
-        # msBuildCommandLine +=  ' /p:ForceImportBeforeCppTargets="' + propfile + '"'
+        # msBuildCommandLine += ' /p:ForceImportBeforeCppTargets="' + propfile + '"'
 
         print('cmd: ' + msBuildCommandLine)
 
@@ -144,15 +135,15 @@ class Program :
             sys.exit(-1)
 
         # systemManager.distributeFiles(
-        #     pathFinder.path(buildPathName, Program._PATH_NAME_INCLUDE),
-        #     pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
-        #     "*.h",
+        # pathFinder.path(buildPathName, Program._PATH_NAME_INCLUDE),
+        # pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
+        # "*.h",
         # )
 
         systemManager.copyFile(
             pathFinder.path(buildOutDir, appName), pathFinder.path(sdkOutDir, appName)
         )
 
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

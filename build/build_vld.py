@@ -15,7 +15,6 @@ from PathFinder import *
 from SystemManager import *
 from XmlUtils import *
 
-
 class Program:
     DESCRIPTION = "Builds VLD."
 
@@ -28,8 +27,6 @@ class Program:
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
     _LIBNAME = "vld"
-    _DEBUG_SUFFIX = "_d"
-
     _PATH_NAME_SOURCE = "..\\src\\vld"
 
     # the name of the path for all include files
@@ -43,7 +40,7 @@ class Program:
 
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
     def main(self):
         systemManager = SystemManager()
@@ -56,7 +53,7 @@ class Program:
         systemManager.initializeIncludeEnvironmentVariable(buildSettings.X64Specified())
         systemManager.initializeLibraryEnvironmentVariable(buildSettings.X64Specified())
         # systemManager.appendToPathEnvironmentVariable(
-        #     pathFinder.getVisualStudioBinPathName(buildSettings.X64Specified())
+        # pathFinder.getVisualStudioBinPathName(buildSettings.X64Specified())
         # )
 
         # MSBuild is under "Program Files (x86)"
@@ -66,20 +63,15 @@ class Program:
         # get the paths
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
-
-        sdkOutDir = (
-            buildPathName
-            + "\\..\\"
-            + (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
             )
-        )
+
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKLibPath(buildPathName, platform, conf)
 
         print("build path: " + buildPathName)
         print("source path: " + sourcePathName)
@@ -103,26 +95,26 @@ class Program:
         dllName = (
             Program._LIBNAME
             + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".dll"
+        + ".dll"
         )
         libName = (
             Program._LIBNAME
             + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".lib"
+        + ".lib"
         )
         pdbName = (
             Program._LIBNAME
             + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".pdb"
+        + ".pdb"
         )
 
         # buildOutDir = (
-        #     buildPathName
-        #     + "\\src\\bin\\"
-        #     + buildOutPlat
-        #     + "\\"
-        #     + buildOutConfig
-        #     + "-v140"
+        # buildPathName
+        # + "\\src\\bin\\"
+        # + buildOutPlat
+        # + "\\"
+        # + buildOutConfig
+        # + "-v140"
         # )
         buildOutDir = pathFinder.path(buildPathName, "build")
 
@@ -130,17 +122,14 @@ class Program:
 
         solutionFileName = pathFinder.path(buildPathName, Program._FILE_NAME_SOLUTION)
 
-        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
-        platform = "x64" if buildSettings.X64Specified() else "Win32"
-
         msBuildCommandLine = (
             '"%s" ' + '/p:Configuration="%s" ' + "/p:platform=%s " + '"%s"'
-        ) % (
+            ) % (
             pathFinder.getMSBuildFileName(buildSettings.X64Specified()),
             conf,
             platform,
             solutionFileName,
-        )
+            )
 
         buildOutDir = pathFinder.path(buildPathName, "build")
         propfile = pathFinder.path(buildPathName, "linker.props")
@@ -152,7 +141,7 @@ class Program:
 
         msBuildCommandLine += " /p:OutDir=" + buildOutDir
         # msBuildCommandLine += ' /p:TargetPath=' + buildOutDir + '\\'
-        # msBuildCommandLine += ' /p:TargetName=' + Program._LIBNAME + ('' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX)
+        # msBuildCommandLine += ' /p:TargetName=' + Program._LIBNAME + ('' if ( buildSettings.ReleaseSpecified() ) else Program._DEBUG_SUFFIX)
         msBuildCommandLine += " /p:TargetExtension=dll"
         msBuildCommandLine += " /p:SolutionDir=" + buildPathName + "\\"
 
@@ -179,20 +168,12 @@ class Program:
             pathFinder.path(buildPathName, Program._PATH_NAME_INCLUDE),
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "vld.h"
-        )
+            )
 
         # copy output to appropriate bin dir
         print("Copy files into SDK dir")
 
-        sdkOutDir = pathFinder.path(
-            buildPathName,
-            "..",
-            (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            ),
-        )
+        sdkOutDir = pathFinder.getSDKLibPath(buildPathName, platform, conf)
 
         systemManager.copyFile(
             pathFinder.path(buildOutDir, f"vld_{"x64" if buildSettings.X64Specified() else "x86"}.lib"), pathFinder.path(sdkOutDir, libName)
@@ -203,13 +184,12 @@ class Program:
         if not buildSettings.ReleaseSpecified():
             systemManager.copyFile(
                 pathFinder.path(
-                    buildOutDir,
-                    pdbName
+                buildOutDir,
+                pdbName,
                 ),
                 pathFinder.path(sdkOutDir, pdbName),
-            )
+                )
 
-
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

@@ -14,7 +14,6 @@ from BuildSettingSet import *
 from PathFinder import *
 from SystemManager import *
 
-
 # ------------------------------------------------------------------------------
 # The Program class represents the main class of the script.
 class Program:
@@ -28,8 +27,6 @@ class Program:
     # ----------------------------------------------------------------------
 
     _LIBNAME = "openssl"
-    _DEBUG_SUFFIX = "_d"
-
     # ----------------------------------------------------------------------
     # the name of the path that will contain intermediary build files
     _PATH_NAME_BUILD = "openssl"
@@ -69,21 +66,21 @@ class Program:
     # Constructs this program.
     #
     # Parameters :
-    #     self : this program
+    # self : this program
     def __init__(self):
 
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    # public methods
+        # --------------------------------------------------------------------------
+        # public methods
 
-    # ----------------------------------------------------------------------
-    # The main method of the program.
-    #
-    # Parameters :
-    #     self : this program
+        # ----------------------------------------------------------------------
+        # The main method of the program.
+        #
+        # Parameters :
+        # self : this program
     def main(self):
 
         systemManager = SystemManager()
@@ -110,20 +107,15 @@ class Program:
         # determine path names
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
-
-        sdkOutDir = (
-            buildPathName
-            + "\\..\\"
-            + (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
             )
-        )
+
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKLibPath(buildPathName, platform, conf)
 
         # remove build dir
         systemManager.removeDirectory(buildPathName)
@@ -148,7 +140,7 @@ class Program:
             + f'no-makedepend '
             + f'no-apps '
             + f'CFLAGS="/FS /Z7" CXXFLAGS="/FS /Z7" CPPFLAGS="/FS /Z7" '
-        )
+            )
 
         cmd = f'"{vcVars}" && {perlCommandLine}'
 
@@ -183,7 +175,7 @@ class Program:
             pathFinder.path(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "include", "openssl"),
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h"
-        )
+            )
 
         libdir = pathFinder.path(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "lib")
         bindir = pathFinder.path(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "bin")
@@ -193,39 +185,38 @@ class Program:
             sdkOutDir,
             "*.lib",
             suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX,
-        )
+            )
 
         systemManager.copyDirectory(
             pathFinder.path(buildPathName, Program._PATH_NAME_NMAKE_INSTALL, "ssl"),
             sdkOutDir,
-        )
+            )
 
         for f in glob.glob(pathFinder.path(bindir, "*.dll")):
             fname = f[len(bindir) + 1 :]
-            dst = pathFinder.path(
-                    sdkOutDir,
-                    fname.replace(
-                        f"-3-{pathFinder.PATH_NAME_X64 if buildSettings.X64Specified() else pathFinder._PATH_NAME_X86}.dll",
-                        f"{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.dll",
-                    )
-                )
-            systemManager.copyFile(f,dst)
+        dst = pathFinder.path(
+            sdkOutDir,
+            fname.replace(
+            f"-3-{pathFinder.PATH_NAME_X64 if buildSettings.X64Specified() else pathFinder._PATH_NAME_X86}.dll",
+            f".dll",
+            )
+        )
+        systemManager.copyFile(f,dst)
 
         for f in glob.glob(pathFinder.path(libdir, "**/*.dll"), recursive=True):
             fname = f[len(bindir) + 1 :]
-            systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname.replace(f".dll", f"{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.dll")))
+            systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname.replace(f".dll", f".dll")))
 
         if not buildSettings.ReleaseSpecified():
             for f in glob.glob(pathFinder.path(bindir, "**/*.pdb"), recursive=True):
                 fname = f[len(bindir) + 1 :]
-                systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname.replace(f"-3-{pathFinder.PATH_NAME_X64 if buildSettings.X64Specified() else pathFinder._PATH_NAME_X86}.pdb", f"{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.pdb")))
+                systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname.replace(f"-3-{pathFinder.PATH_NAME_X64 if buildSettings.X64Specified() else pathFinder._PATH_NAME_X86}.pdb", f".pdb")))
             for f in glob.glob(pathFinder.path(libdir, "**/*.pdb"), recursive=True):
                 fname = f[len(bindir) + 1 :]
-                systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname.replace(f".pdb", f"{"" if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX}.pdb")))
+                systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname.replace(f".pdb", f".pdb")))
 
+        # --------------------------------------------------------------------------
 
-# --------------------------------------------------------------------------
-
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

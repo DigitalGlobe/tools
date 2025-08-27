@@ -6,7 +6,6 @@
 #
 # ------------------------------------------------------------------------------
 
-
 import glob
 import os
 import sys
@@ -16,7 +15,6 @@ from PathFinder import *
 from SystemManager import *
 from FileDistributor import *
 from XmlUtils import *
-
 
 # ------------------------------------------------------------------------------
 # The Program class represents the main class of the script.
@@ -41,8 +39,6 @@ class Program:
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
     _LIBNAME = "liblas"
-    _DEBUG_SUFFIX = "_d"
-
     _BOOST_DEBUG_SUFFIX = "-gd-"
     # the name of the path for all include files
     _PATH_NAME_INCLUDE = "include\\liblas"
@@ -63,20 +59,20 @@ class Program:
     # Constructs this program.
     #
     # Parameters :
-    #     self : this program
+    # self : this program
     def __init__(self):
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    # public methods
+        # --------------------------------------------------------------------------
+        # public methods
 
-    # ----------------------------------------------------------------------
-    # The main method of the program.
-    #
-    # Parameters :
-    #     self : this program
+        # ----------------------------------------------------------------------
+        # The main method of the program.
+        #
+        # Parameters :
+        # self : this program
     def main(self):
 
         systemManager = SystemManager()
@@ -106,34 +102,29 @@ class Program:
         # get the paths
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
+            )
 
         buildSourceName = pathFinder.path(
             buildPathName, Program._PATH_NAME_CMAKE_SOURCE
-        )
+            )
         cmakeBuildPath = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
         cmakeInstallPath = pathFinder.path(
             cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
-        )
+            )
 
         systemManager.removeDirectory(cmakeBuildPath)
 
-        sdkOutDir = pathFinder.path(
-            buildPathName,
-            "..",
-            (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            ),
-        )
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKLibPath(buildPathName, platform, conf)
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
-        # systemManager.removeDirectory(buildPathName)
+        systemManager.removeDirectory(buildPathName)
 
         # copy source to the Build area
         systemManager.copyDirectory(sourcePathName, buildPathName)
@@ -144,15 +135,12 @@ class Program:
         systemManager.makeDirectory(cmakeBuildPath)
         systemManager.changeDirectory(cmakeBuildPath)
 
-        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
-        platform = "x64" if buildSettings.X64Specified() else "Win32"
-
         includeBase = pathFinder.path(
             buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, ".."
-        )
+            )
         libSuffix = (
             f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
-        )
+            )
         externalLibs = {
             "BOOST_INCLUDEDIR": pathFinder.path(includeBase),
             "BOOST_LIBRARYDIR": sdkOutDir,
@@ -160,16 +148,16 @@ class Program:
             "Boost_IOSTREAMS_LIBRARY": self._findBoostLibrary("boost_iostreams", pathFinder, sdkOutDir, buildSettings.ReleaseSpecified()),
             "Boost_PROGRAM_OPTIONS_LIBRARY": self._findBoostLibrary("boost_program_options", pathFinder, sdkOutDir, buildSettings.ReleaseSpecified()),
             "Boost_THREAD_LIBRARY": self._findBoostLibrary("boost_thread", pathFinder, sdkOutDir, buildSettings.ReleaseSpecified()),
-            "GDAL_INCLUDE_DIR": pathFinder.path(includeBase, "gdal"),
-            "GDAL_LIBRARY": pathFinder.path(sdkOutDir, f"gdal{libSuffix}"),
+            # "GDAL_INCLUDE_DIR": pathFinder.path(includeBase, "gdal"),
+            "GDAL_LIBRARY": pathFinder.path(sdkOutDir, "gdal.lib"),
             "GEOTIFF_INCLUDE_DIR": pathFinder.path(includeBase, "libgeotiff"),
-            "GEOTIFF_LIBRARY": pathFinder.path(sdkOutDir, f"geotiff{libSuffix}"),
+            "GEOTIFF_LIBRARY": pathFinder.path(sdkOutDir, "geotiff.lib"),
             "JPEG_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libjpeg")),
-            "JPEG_LIBRRY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libjpeg{libSuffix}")),
+            # "JPEG_LIBRRY": pathFinder.slasher(pathFinder.path(sdkOutDir, "libjpeg.lib")),
             "TIFF_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "libtiff")),
-            "TIFF_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libtiff{libSuffix}")),
+            "TIFF_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, "libtiff.lib")),
             "ZLIB_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "zlib")),
-            "ZLIB_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"zlib{libSuffix}")),
+            "ZLIB_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, "zlib.lib")),
         }
 
         externalLibStr = ""
@@ -182,11 +170,10 @@ class Program:
             + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
             + f"-DWITH_UTILITIES=OFF "
             + f"-DWITH_TESTS=OFF "
-            + f"-DCMAKE_BUILD_TYPE={conf} "
-            + f"-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} "
+            + f"-DCMAKE_BUILD_TYPE={conf} " + f"-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} "
             + f"{externalLibStr} "
             + f"{buildSourceName}"
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -197,9 +184,8 @@ class Program:
             f"{pathFinder.getCMakeFileName()} "
             + f"--build "
             + f". "
-            + f"-j 1 "
             + f"--config {conf} "
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -213,7 +199,7 @@ class Program:
             + f"--config {conf} "
             + f"--prefix "
             + f"{pathFinder.path(cmakeBuildPath, "install")}"
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -228,13 +214,13 @@ class Program:
             incdir,
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
-        )
+            )
 
         for f in glob.glob(pathFinder.path(libdir, "*.lib")):
             fname = f[len(libdir) + 1 :]
-            fname = f"{fname[:fname.find(f"{"" if (buildSettings.ReleaseSpecified()) else "d"}.lib")]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib"
+        fname = f"{fname[:fname.find(f"{"" if (buildSettings.ReleaseSpecified()) else "d"}.lib")]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib"
 
-            systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
+        systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
 
         for f in glob.glob(pathFinder.path(bindir, "*.dll")):
             fname = f[len(libdir) + 1 :]
@@ -248,15 +234,14 @@ class Program:
                 fname = f"{fname[:fname.find(f"{"" if (buildSettings.ReleaseSpecified()) else "d"}.pdb")]}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.pdb"
                 systemManager.copyFile(f, pathFinder.path(sdkOutDir, fname))
 
-
-    def _findBoostLibrary(self, libName,  pathFinder, sdkOutDir, release):
+    def _findBoostLibrary(self, libName, pathFinder, sdkOutDir, release):
         for f in glob.glob(pathFinder.path(sdkOutDir, f"{libName}*.lib")):
             if release:
                 if f.find(Program._BOOST_DEBUG_SUFFIX) == -1:
                     return pathFinder.slasher(f)
-            elif f.find(Program._BOOST_DEBUG_SUFFIX) != -1:
-                return pathFinder.slasher(f)
-        return ""
-# ------------------------------------------------------------------------------
+                elif f.find(Program._BOOST_DEBUG_SUFFIX) != -1:
+                    return pathFinder.slasher(f)
+                return ""
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

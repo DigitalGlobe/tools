@@ -2,7 +2,7 @@
 #
 # build_galib.py
 #
-# Summary : Builds the GALib  / Genetic Algorithm Components
+# Summary : Builds the GALib / Genetic Algorithm Components
 #
 # ------------------------------------------------------------------------------
 
@@ -13,7 +13,6 @@ import sys
 from BuildSettingSet import *
 from PathFinder import *
 from SystemManager import *
-
 
 # ------------------------------------------------------------------------------
 # The Program class represents the main class of the script.
@@ -28,8 +27,6 @@ class Program:
     # ----------------------------------------------------------------------
 
     _LIBNAME = "psl"
-    _DEBUG_SUFFIX = "_d"
-
     # ----------------------------------------------------------------------
     # the name of the path that will contain intermediary build files
     _PATH_NAME_BUILD = "libpsl"
@@ -66,21 +63,21 @@ class Program:
     # Constructs this program.
     #
     # Parameters :
-    #     self : this program
+    # self : this program
     def __init__(self):
 
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    # public methods
+        # --------------------------------------------------------------------------
+        # public methods
 
-    # ----------------------------------------------------------------------
-    # The main method of the program.
-    #
-    # Parameters :
-    #     self : this program
+        # ----------------------------------------------------------------------
+        # The main method of the program.
+        #
+        # Parameters :
+        # self : this program
     def main(self):
         systemManager = SystemManager()
         pathFinder = PathFinder()
@@ -109,22 +106,17 @@ class Program:
         # get the paths
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
+            )
 
         nmakeInstallPath = pathFinder.path(buildPathName, Program._PATH_NAME_NMAKE_INSTALL)
 
-        sdkOutDir = pathFinder.path(
-            buildPathName,
-            "..",
-            (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            ),
-        )
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKLibPath(buildPathName, platform, conf)
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
@@ -132,6 +124,25 @@ class Program:
 
         # copy UriParser to the Build area
         systemManager.copyDirectory(sourcePathName, buildPathName)
+
+        # modify the project name
+        nmake = pathFinder.path(buildPathName, "msvc", "install-msvc.mak")
+        sedResult = systemManager.replaceInFile(
+            nmake,
+            f"{Program._LIBNAME}",
+            f"\\*",
+            )
+        if sedResult != 0:
+            sys.exit(-1)
+
+        nmake = pathFinder.path(buildPathName, "msvc", "install-msvc.mak")
+        sedResult = systemManager.replaceInFile(
+            nmake,
+            f"lib\\*",
+            f"lib{Program._LIBNAME}",
+            )
+        if sedResult != 0:
+            sys.exit(-1)
 
         nmakeInstallPath = pathFinder.path(buildPathName, nmakeInstallPath)
         systemManager.makeDirectory(nmakeInstallPath)
@@ -142,28 +153,30 @@ class Program:
         libName = (
             Program._LIBNAME
             + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".lib"
+        + ".lib"
         )
         dllName = (
             Program._LIBNAME
             + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".dll"
+        + ".dll"
         )
         pdbName = (
             Program._LIBNAME
             + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".pdb"
+        + ".pdb"
         )
 
         # run Nmake
         nmakeCommandLine = (
             f"nmake -f Makefile.vc "
             + f"CFG={"release" if (buildSettings.ReleaseSpecified()) else "debug"} "
+            + f"PSL_DLL_SUFFIX={"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX} "
+            + f"PSL_LIB=vs$(VSVER)\$(CFG)\$(PLAT)\psl{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib "
             + f"DISABLE_RUNTIME=1 "
             + f"DISABLE_BUILTIN=1 "
             + f'PREFIX="{pathFinder.path(buildPathName, nmakeInstallPath)}" '
             + f" install "
-        )
+            )
 
         cmd = f'"{vcVars}" && {nmakeCommandLine}'
 
@@ -180,24 +193,23 @@ class Program:
             pathFinder.path(nmakeInstallPath, "include"),
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h",
-        )
-
-        systemManager.copyFile(
-            pathFinder.path(nmakeInstallPath, "lib", Program._LIBNAME + ".lib"), pathFinder.path(sdkOutDir, libName)
-        )
-        systemManager.copyFile(
-            pathFinder.path(nmakeInstallPath, "bin", Program._LIBNAME + ".dll"),
-            pathFinder.path(sdkOutDir, dllName),
-        )
-        if not buildSettings.ReleaseSpecified():
-            systemManager.copyFile(
-                pathFinder.path(nmakeInstallPath, "bin", Program._LIBNAME + ".pdb"),
-                pathFinder.path(sdkOutDir, pdbName),
             )
 
+        systemManager.copyFile(
+            pathFinder.path(nmakeInstallPath, "lib", libName), pathFinder.path(sdkOutDir, libName)
+        )
+        systemManager.copyFile(
+            pathFinder.path(nmakeInstallPath, "bin", dllName),
+            pathFinder.path(sdkOutDir, dllName),
+            )
+        if not buildSettings.ReleaseSpecified():
+            systemManager.copyFile(
+                pathFinder.path(nmakeInstallPath, "bin", pdbName),
+                pathFinder.path(sdkOutDir, pdbName),
+                )
 
-# --------------------------------------------------------------------------
+        # --------------------------------------------------------------------------
 
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

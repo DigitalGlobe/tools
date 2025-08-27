@@ -15,7 +15,6 @@ from PathFinder import *
 from SystemManager import *
 from XmlUtils import *
 
-
 class Program:
     # ----------------------------------------------------------------------
     # a description of what the script does
@@ -36,8 +35,6 @@ class Program:
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
     _LIBNAME = "cppunit"
-    _DEBUG_SUFFIX = "_d"
-
     # the name of the path for all include files
     _PATH_NAME_INCLUDE = "include\\cppunit"
     # ----------------------------------------------------------------------
@@ -49,7 +46,22 @@ class Program:
 
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
+
+    def replace_auto_ptr(self, directory):
+        for root, dirs, files in os.walk(directory):
+            for file in [f for f in files if f.endswith((".cpp", ".h"))]:
+                file_path = os.path.join(root, file)
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        content = f.read()
+                    modified = content.replace("std::auto_ptr", "std::unique_ptr")
+                    if modified != content:
+                        with open(file_path, "w", encoding="utf-8") as f:
+                            f.write(modified)
+                        print(f"Modified: {file_path}")
+                except Exception as e:
+                    print(f"Error processing {file_path}: {e}")
 
     def main(self):
         systemManager = SystemManager()
@@ -70,20 +82,15 @@ class Program:
         # get the paths
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
+            )
 
-        sdkOutDir = pathFinder.path(
-            buildPathName,
-            "..",
-            (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            ),
-        )
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKLibPath(buildPathName, platform, conf)
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
@@ -95,30 +102,31 @@ class Program:
         # start building
         systemManager.changeDirectory(buildPathName)
 
-        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
-        platform = "x64" if buildSettings.X64Specified() else "Win32"
+        # replace all the auto_ptr uses in the source
+        self.replace_auto_ptr(buildPathName)
+
         # build the solution
         solutionFileName = pathFinder.path(buildPathName, Program._FILE_NAME_SOLUTION)
         msBuildCommandLine = ('"%s" ' + "/p:platform=%s " + '"%s"') % (
             pathFinder.getMSBuildFileName(buildSettings.X64Specified()),
             platform,
             solutionFileName,
-        )
+            )
 
         dllName = (
             Program._LIBNAME
             + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".dll"
+        + ".dll"
         )
         libName = (
             Program._LIBNAME
             + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".lib"
+        + ".lib"
         )
         pdbName = (
             Program._LIBNAME
             + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".pdb"
+        + ".pdb"
         )
 
         buildOutDir = pathFinder.path(buildPathName, "build")
@@ -141,8 +149,8 @@ class Program:
             linkerprops["DebugSymbols"] = "false"
         else:
             linkerprops["DebugSymbols"] = "true"
-            linkerprops["DebugType"] = "full"
-            linkerprops["ProgramDatabaseFile"] = "$(OutDir)\\" + pdbName
+        linkerprops["DebugType"] = "full"
+        linkerprops["ProgramDatabaseFile"] = "$(OutDir)\\" + pdbName
 
         xmlUtils.buildDll(conf, platform, {}, linkerprops, propfile)
 
@@ -170,7 +178,6 @@ class Program:
                 pathFinder.path(buildOutDir, pdbName), pathFinder.path(sdkOutDir, pdbName)
             )
 
-
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

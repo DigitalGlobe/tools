@@ -6,7 +6,6 @@
 #
 # ------------------------------------------------------------------------------
 
-
 import glob
 import os
 import sys
@@ -15,7 +14,6 @@ from BuildSettingSet import *
 from PathFinder import *
 from SystemManager import *
 from XmlUtils import *
-
 
 class Program:
     # ----------------------------------------------------------------------
@@ -35,8 +33,6 @@ class Program:
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
     _LIBNAME = "opendis"
-    _DEBUG_SUFFIX = "_d"
-
     # the name of the path for all include files
     _PATH_NAME_INCLUDE = "."
     _PATH_NAME_INCLUDE_2 = "include"
@@ -56,21 +52,21 @@ class Program:
     # Constructs this program.
     #
     # Parameters :
-    #     self : this program
+    # self : this program
     def __init__(self):
 
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    # public methods
+        # --------------------------------------------------------------------------
+        # public methods
 
-    # ----------------------------------------------------------------------
-    # The main method of the program.
-    #
-    # Parameters :
-    #     self : this program
+        # ----------------------------------------------------------------------
+        # The main method of the program.
+        #
+        # Parameters :
+        # self : this program
     def main(self):
 
         systemManager = SystemManager()
@@ -96,28 +92,23 @@ class Program:
         # get the paths
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
+            )
 
         buildSourceName = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
         cmakeBuildPath = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
         cmakeInstallPath = pathFinder.path(
             cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
-        )
+            )
 
         systemManager.removeDirectory(cmakeBuildPath)
 
-        sdkOutDir = pathFinder.path(
-            buildPathName,
-            "..",
-            (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            ),
-        )
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKLibPath(buildPathName, platform, conf)
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
@@ -132,9 +123,6 @@ class Program:
         systemManager.makeDirectory(cmakeBuildPath)
         systemManager.changeDirectory(cmakeBuildPath)
 
-        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
-        platform = "x64" if buildSettings.X64Specified() else "Win32"
-
         # run CMake
         # -DCMAKE_POLICY_VERSION_MINIMUM is to avoid min compatability errors in CMake
         cmakeCommandLine = (
@@ -145,7 +133,7 @@ class Program:
             + f"-DBUILD_EXAMPLES=OFF "
             + f"-DBUILD_TESTS=OFF "
             + f"{buildSourceName}"
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -156,9 +144,8 @@ class Program:
             f"{pathFinder.getCMakeFileName()} "
             + f"--build "
             + f". "
-            + f"-j 1 "
             + f"--config {conf} "
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -172,7 +159,7 @@ class Program:
             + f"--config {conf} "
             + f"--prefix "
             + f"{cmakeInstallPath}"
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -187,31 +174,27 @@ class Program:
             srcIncludePath,
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
-        )
+            )
 
         systemManager.distributeFiles(
             srcLibPath,
             sdkOutDir,
             "*.lib",
-            suffix = None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX
-        )
+            )
 
         systemManager.distributeFiles(
             srcBinPath,
             sdkOutDir,
             "*.dll",
-            suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX,
-        )
+            )
 
         if not buildSettings.ReleaseSpecified():
             systemManager.distributeFiles(
                 pathFinder.path(cmakeBuildPath, conf),
                 sdkOutDir,
                 "*.pdb",
-                suffix = None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX
-        )
+                )
 
-
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

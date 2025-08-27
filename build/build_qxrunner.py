@@ -6,7 +6,6 @@
 #
 # ------------------------------------------------------------------------------
 
-
 import glob
 import os
 import sys
@@ -15,7 +14,6 @@ from BuildSettingSet import *
 from PathFinder import *
 from SystemManager import *
 from XmlUtils import *
-
 
 class Program:
     # ----------------------------------------------------------------------
@@ -35,8 +33,6 @@ class Program:
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
     _LIBNAME = "qxrunner"
-    _DEBUG_SUFFIX = "_d"
-
     # the name of the path for all include files
     _PATH_NAME_INCLUDE = "include"
     # ----------------------------------------------------------------------
@@ -50,7 +46,7 @@ class Program:
 
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
     def main(self):
         systemManager = SystemManager()
@@ -81,19 +77,19 @@ class Program:
         # determine path names
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
+            )
 
         sdkOutDir = (
             buildPathName
             + "\\..\\"
             + (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            )
+            Program._PATH_NAME_DISTRIBUTION_X64
+            if buildSettings.X64Specified()
+        else Program._PATH_NAME_DISTRIBUTION_X86
+        )
         )
 
         os.environ["QTDIR"] = pathFinder.getQtPathName(buildSettings.X64Specified())
@@ -107,8 +103,8 @@ class Program:
 
         qmakeCommandLine = (
             f'qmake -r '
-            + f'CONFIG+={"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll '
-        )
+            + f'CONFIG+={"release" if buildSettings.ReleaseSpecified() else "debug"}_dll '
+            )
 
         cmd = f'"{vcVars}" && {qmakeCommandLine}'
         print("cmd: " + cmd)
@@ -118,7 +114,7 @@ class Program:
 
         nmakeCommandLine = (
             f'nmake '
-        )
+            )
 
         cmd = f'"{vcVars}" && {nmakeCommandLine}'
 
@@ -132,25 +128,25 @@ class Program:
             pathFinder.path( buildPathName, "include"),
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
-        )
+            )
 
         systemManager.distributeFiles(
-            pathFinder.path(buildPathName, Program._PATH_NAME_QXRUNNER, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
+            pathFinder.path(buildPathName, Program._PATH_NAME_QXRUNNER, f"{"release" if buildSettings.ReleaseSpecified() else "debug"}_dll"),
             pathFinder.path(sdkOutDir),
             "*.lib",
-        )
+            )
         systemManager.distributeFiles(
-            pathFinder.path(buildPathName, Program._PATH_NAME_QXRUNNER, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
+            pathFinder.path(buildPathName, Program._PATH_NAME_QXRUNNER, f"{"release" if buildSettings.ReleaseSpecified() else "debug"}_dll"),
             pathFinder.path(sdkOutDir),
             "*.dll",
-        )
+            )
 
         if not buildSettings.ReleaseSpecified():
             systemManager.distributeFiles(
-            pathFinder.path(buildPathName, Program._PATH_NAME_QXRUNNER, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
-            pathFinder.path(sdkOutDir),
-            "*.pdb",
-            )
+                pathFinder.path(buildPathName, Program._PATH_NAME_QXRUNNER, f"{"release" if buildSettings.ReleaseSpecified() else "debug"}_dll"),
+                pathFinder.path(sdkOutDir),
+                "*.pdb",
+                )
 
         systemManager.changeDirectory(
             pathFinder.path(buildPathName, Program._PATH_NAME_QXCPPUNIT)
@@ -158,12 +154,12 @@ class Program:
 
         qmakeCommandLine = (
             f"qmake -r "
-            + f'CONFIG+={"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll '
+            + f'CONFIG+={"release" if buildSettings.ReleaseSpecified() else "debug"}_dll '
             + f"INCLUDEPATH+={pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..")} "
-            # + f"CPPUNIT={pathFinder.path(sdkOutDir, "..")} "
-            + f"LIBS+={pathFinder.path(sdkOutDir, 'qxrunner' + ('' if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX) + '.lib')} "
+        # + f"CPPUNIT={pathFinder.path(sdkOutDir, "..")} "
+        + f"LIBS+={pathFinder.path(sdkOutDir, 'qxrunner' + ('' if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX) + '.lib')} "
             + f"LIBS+={pathFinder.path(sdkOutDir, 'cppunit' + ('' if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX) + '.lib')} "
-        )
+            )
 
         cmd = f'"{vcVars}" && {qmakeCommandLine}'
         print("cmd: " + cmd)
@@ -179,23 +175,23 @@ class Program:
             sys.exit(-1)
 
         systemManager.distributeFiles(
-            pathFinder.path(buildPathName, Program._PATH_NAME_QXCPPUNIT, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
+            pathFinder.path(buildPathName, Program._PATH_NAME_QXCPPUNIT, f"{"release" if buildSettings.ReleaseSpecified() else "debug"}_dll"),
             pathFinder.path(sdkOutDir),
             "*.lib",
-        )
+            )
         systemManager.distributeFiles(
-            pathFinder.path(buildPathName, Program._PATH_NAME_QXCPPUNIT, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
+            pathFinder.path(buildPathName, Program._PATH_NAME_QXCPPUNIT, f"{"release" if buildSettings.ReleaseSpecified() else "debug"}_dll"),
             pathFinder.path(sdkOutDir),
             "*.dll",
-        )
+            )
 
         if not buildSettings.ReleaseSpecified():
             systemManager.distributeFiles(
-            pathFinder.path(buildPathName, Program._PATH_NAME_QXCPPUNIT, f"{"release" if  buildSettings.ReleaseSpecified() else "debug"}_dll"),
-            pathFinder.path(sdkOutDir),
-            "*.pdb",
-            )
+                pathFinder.path(buildPathName, Program._PATH_NAME_QXCPPUNIT, f"{"release" if buildSettings.ReleaseSpecified() else "debug"}_dll"),
+                pathFinder.path(sdkOutDir),
+                "*.pdb",
+                )
 
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

@@ -16,7 +16,6 @@ from SystemManager import *
 from FileDistributor import *
 from XmlUtils import *
 
-
 # ------------------------------------------------------------------------------
 # The Program class represents the main class of the script.
 class Program:
@@ -29,8 +28,6 @@ class Program:
     DESCRIPTION = "Builds the freetype library."
 
     _LIBNAME = "freetype"
-    _DEBUG_SUFFIX = "_d"
-
     # ----------------------------------------------------------------------
     # the name of the path that will contain built 32-bit binary files
     _PATH_NAME_BINARY_X86 = "..\\sdk\\x86\\bin"
@@ -64,7 +61,7 @@ class Program:
     def __init__(self):
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
     def main(self):
         systemManager = SystemManager()
@@ -93,28 +90,23 @@ class Program:
         # get the paths
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
+            )
 
         buildSourceName = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
         cmakeBuildPath = pathFinder.path(buildSourceName, Program._PATH_NAME_CMAKE_BUILD)
         cmakeInstallPath = pathFinder.path(
             cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
-        )
+            )
 
         systemManager.removeDirectory(cmakeBuildPath)
 
-        sdkOutDir = pathFinder.path(
-            buildPathName,
-            "..",
-            (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            ),
-        )
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKLibPath( buildPathName, platform, conf)
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
@@ -129,22 +121,19 @@ class Program:
         systemManager.makeDirectory(cmakeBuildPath)
         systemManager.changeDirectory(cmakeBuildPath)
 
-        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
-        platform = "x64" if buildSettings.X64Specified() else "Win32"
-
         includeBase = pathFinder.path(
             buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, ".."
-        )
+            )
         libSuffix = (
             f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
-        )
+            )
         externalLibs = {
             "BROTLIDEC_INCLUDE_DIRS": pathFinder.path(includeBase),
-            "BROTLIDEC_LIBRARIES": pathFinder.path(sdkOutDir, f"brotlidec{libSuffix}"),
+            "BROTLIDEC_LIBRARIES": pathFinder.path(sdkOutDir, "brotlidec.lib"),
             "PNG_PNG_INCLUDE_DIR": pathFinder.path(includeBase, "libpng"),
-            "PNG_LIBRARY": pathFinder.path(sdkOutDir, f"libpng{libSuffix}"),
+            "PNG_LIBRARY": pathFinder.path(sdkOutDir, "libpng.lib"),
             "ZLIB_INCLUDE_DIR": pathFinder.path(includeBase, "zlib"),
-            "ZLIB_LIBRARY": pathFinder.path(sdkOutDir, f"zlib{libSuffix}"),
+            "ZLIB_LIBRARY": pathFinder.path(sdkOutDir, "zlib.lib"),
         }
 
         externalLibStr = ""
@@ -164,7 +153,7 @@ class Program:
             + f"-DFT_REQUIRE_BROTLI=TRUE "
             + f"{externalLibStr} "
             + f"{buildSourceName}"
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -177,7 +166,7 @@ class Program:
             + f". "
             + f"-j 1 "
             + f"--config {conf} "
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -191,7 +180,7 @@ class Program:
             + f"--config {conf} "
             + f"--prefix "
             + f"{pathFinder.path(cmakeBuildPath, "install")}"
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -202,21 +191,21 @@ class Program:
             pathFinder.path(cmakeInstallPath, "include", "freetype2"),
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
-        )
+            )
 
         systemManager.distributeFiles(
             pathFinder.path(cmakeInstallPath, "lib"),
             pathFinder.path(sdkOutDir),
             "*.lib",
             suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX,
-        )
+            )
 
         systemManager.distributeFiles(
             pathFinder.path(cmakeInstallPath, "bin"),
             pathFinder.path(sdkOutDir),
             "*.dll",
             suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX,
-        )
+            )
 
         if not buildSettings.ReleaseSpecified():
             systemManager.distributeFiles(
@@ -224,11 +213,10 @@ class Program:
                 pathFinder.path(sdkOutDir),
                 "*.pdb",
                 suffix=(
-                    None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX
+                None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX
                 ),
-            )
+                )
 
-
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

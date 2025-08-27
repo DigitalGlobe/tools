@@ -15,7 +15,6 @@ from PathFinder import *
 from SystemManager import *
 from XmlUtils import *
 
-
 class Program:
     # ----------------------------------------------------------------------
     # a description of what the script does
@@ -37,8 +36,6 @@ class Program:
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
     _LIBNAME = "glut32"
-    _DEBUG_SUFFIX = "_d"
-
     # the name of the path for all include files
     _PATH_NAME_INCLUDE = "include"
     # ----------------------------------------------------------------------
@@ -50,7 +47,7 @@ class Program:
 
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
     def main(self):
         systemManager = SystemManager()
@@ -71,25 +68,20 @@ class Program:
 
         systemManager.appendToPathEnvironmentVariable(
             pathFinder.PATH_GNU_TOOLS
-        )
+            )
 
         # get the paths
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
+            )
 
-        sdkOutDir = pathFinder.path(
-            buildPathName,
-            "..",
-            (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            ),
-        )
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKLibPath(buildPathName, platform, conf)
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
@@ -106,15 +98,12 @@ class Program:
             f"{pathFinder.path(pathFinder.PATH_GNU_TOOLS, "sed.exe")} "
             + f"-i.bak s/^<PlatformToolset^>v110/^<PlatformToolset^>{pathFinder.VISUAL_STUDIO_VERSION_NUM}/g "
             + f"{Program._FILE_NAME_SOLUTION}"
-        )
+            )
 
         print("cmd: " + sedCommandLine)
         sedResult = systemManager.execute(sedCommandLine)
         if sedResult != 0:
             sys.exit(-1)
-
-        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
-        platform = "x64" if buildSettings.X64Specified() else "Win32"
 
         # build the solution
         solutionFileName = pathFinder.path(buildPathName, Program._FILE_NAME_SOLUTION)
@@ -122,17 +111,17 @@ class Program:
             pathFinder.getMSBuildFileName(buildSettings.X64Specified()),
             platform,
             solutionFileName,
-        )
+            )
 
         libName = (
             Program._LIBNAME
             + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".lib"
+        + ".lib"
         )
         pdbName = (
             Program._LIBNAME
             + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
-            + ".pdb"
+        + ".pdb"
         )
 
         buildOutDir = pathFinder.path(buildPathName, "build")
@@ -173,7 +162,7 @@ class Program:
             pathFinder.path(buildPathName, Program._PATH_NAME_INCLUDE),
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h",
-        )
+            )
 
         systemManager.copyFile(
             pathFinder.path(buildOutDir, libName), pathFinder.path(sdkOutDir, libName)
@@ -183,7 +172,6 @@ class Program:
                 pathFinder.path(buildOutDir, pdbName), pathFinder.path(sdkOutDir, pdbName)
             )
 
-
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

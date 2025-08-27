@@ -6,7 +6,6 @@
 #
 # ------------------------------------------------------------------------------
 
-
 import glob
 import os
 import sys
@@ -16,7 +15,6 @@ from PathFinder import *
 from SystemManager import *
 from FileDistributor import *
 from XmlUtils import *
-
 
 # ------------------------------------------------------------------------------
 # The Program class represents the main class of the script.
@@ -49,21 +47,21 @@ class Program:
     # Constructs this program.
     #
     # Parameters :
-    #     self : this program
+    # self : this program
     def __init__(self):
 
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    # public methods
+        # --------------------------------------------------------------------------
+        # public methods
 
-    # ----------------------------------------------------------------------
-    # The main method of the program.
-    #
-    # Parameters :
-    #     self : this program
+        # ----------------------------------------------------------------------
+        # The main method of the program.
+        #
+        # Parameters :
+        # self : this program
     def main(self):
 
         systemManager = SystemManager()
@@ -85,7 +83,7 @@ class Program:
 
         systemManager.appendToPathEnvironmentVariable(
             pathFinder.PATH_GNU_TOOLS
-        )
+            )
 
         vcVars = pathFinder.getVCVARSFileName(buildSettings.X64Specified())
 
@@ -97,22 +95,22 @@ class Program:
         # get the paths
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
+            )
 
         srcInstallDir = pathFinder.path(
             buildPathName,
             f'output_{"x64" if buildSettings.X64Specified() else "Win32"}{"_release" if buildSettings.ReleaseSpecified() else "_debug"}'
-        )
+            )
         installDir = pathFinder.path(
             buildPathName,
             (
-                Program._PATH_NAME_INSTALLATION_DIR_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_INSTALLATION_DIR_X86
-            ),
+            Program._PATH_NAME_INSTALLATION_DIR_X64
+            if buildSettings.X64Specified()
+        else Program._PATH_NAME_INSTALLATION_DIR_X86
+        ),
         )
 
         # need to remove the install dir first, it interferes with the build
@@ -132,14 +130,14 @@ class Program:
 
         os.environ["FB_PROCESSOR_ARCHITECTURE"] = (
             "AMD64" if buildSettings.X64Specified() else "Win32"
-        )
+            )
 
-        # cmd = 'run_all.bat clean ' + ( '' if ( buildSettings.ReleaseSpecified() )  else 'debug')
+        # cmd = 'run_all.bat clean ' + ( '' if ( buildSettings.ReleaseSpecified() ) else 'debug')
         # print('cmd: ' + cmd)
         #
         # result = systemManager.execute(cmd)
         # if (result != 0) :
-        #    sys.exit(-1)
+        # sys.exit(-1)
 
         result = 0
         cmd = f'"{vcVars}" && clean_all.bat clean {"release" if (buildSettings.ReleaseSpecified()) else "debug"}'
@@ -173,7 +171,7 @@ class Program:
         systemManager.copyFile(
             pathFinder.path(installDir, "lib//fbclient_ms.lib"),
             pathFinder.path(installDir, "lib//gds32_ms.lib"),
-        )
+            )
 
         # To use the embedded server, we need to remove fbclient.dll and rename the fbembed.dll to fbclient.dll
         # newer versions of firebird don't habe fbembed.dll anymore
@@ -182,12 +180,11 @@ class Program:
             systemManager.copyFile(
                 pathFinder.path(installDir, "bin//fbembed.dll"),
                 pathFinder.path(installDir, "bin//fbclient.dll"),
-            )
+                )
             systemManager.removeFile(pathFinder.path(installDir, "bin//fbembed.dll"))
 
+        # --------------------------------------------------------------------------
 
-# --------------------------------------------------------------------------
-
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

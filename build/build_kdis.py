@@ -15,7 +15,6 @@ from SystemManager import *
 from FileDistributor import *
 from XmlUtils import *
 
-
 # ------------------------------------------------------------------------------
 # The Program class represents the main class of the script.
 class Program:
@@ -40,8 +39,6 @@ class Program:
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
     _LIBNAME = "kdis"
-    _DEBUG_SUFFIX = "_d"
-
     # the name of the path for all include files
     _PATH_NAME_INCLUDE = "include\\kdis"
     # ----------------------------------------------------------------------
@@ -61,20 +58,20 @@ class Program:
     # Constructs this program.
     #
     # Parameters :
-    #     self : this program
+    # self : this program
     def __init__(self):
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    # public methods
+        # --------------------------------------------------------------------------
+        # public methods
 
-    # ----------------------------------------------------------------------
-    # The main method of the program.
-    #
-    # Parameters :
-    #     self : this program
+        # ----------------------------------------------------------------------
+        # The main method of the program.
+        #
+        # Parameters :
+        # self : this program
     def main(self):
 
         systemManager = SystemManager()
@@ -104,28 +101,23 @@ class Program:
         # get the paths
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
+            )
 
         buildSourceName = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
         cmakeBuildPath = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
         cmakeInstallPath = pathFinder.path(
             cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
-        )
+            )
 
         systemManager.removeDirectory(cmakeBuildPath)
 
-        sdkOutDir = pathFinder.path(
-            buildPathName,
-            "..",
-            (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            ),
-        )
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKLibPath(buildPathName, platform, conf)
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
@@ -140,17 +132,14 @@ class Program:
         systemManager.makeDirectory(cmakeBuildPath)
         systemManager.changeDirectory(cmakeBuildPath)
 
-        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
-        platform = "x64" if buildSettings.X64Specified() else "Win32"
-
         cmakeCommandLine = (
             f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
             + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
             + f"-DBUILD_EXAMPLES=OFF "
-            + f"-DBUILD_TESTS=OFF "
-            + f"-A {platform} "
+            + f"-DBUILD_TESTS=OFF " + f"-A {platform} "
+            + f'-DCMAKE_DEBUG_POSTFIX="" '
             + f"{buildSourceName}"
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -161,9 +150,8 @@ class Program:
             f"{pathFinder.getCMakeFileName()} "
             + f"--build "
             + f". "
-            + f"-j 1 "
             + f"--config {conf} "
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -177,83 +165,78 @@ class Program:
             + f"--config {conf} "
             + f"--prefix "
             + f"{pathFinder.path(cmakeBuildPath, "install")}"
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
         if cmakeResult != 0:
             sys.exit(-1)
 
-
         dllName = (
             f'{Program._LIBNAME}'
-            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
             + f'.dll'
-        )
+            )
         libName = (
             f"{Program._LIBNAME}"
-            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
             + f".lib"
-        )
+            )
         pdbName = (
             f"{Program._LIBNAME}"
-            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
             + f".pdb"
-        )
+            )
 
         srcIncludePath = pathFinder.path(
             cmakeInstallPath,
             "include",
             "KDIS"
-        )
+            )
 
         systemManager.distributeFiles(
             srcIncludePath,
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
-        )
+            )
 
         # for some reason, the lib, dll, & pdb dsn't get installed during "cmake --install"
         systemManager.copyFile(
             pathFinder.path(
-                cmakeBuildPath,
-                "Examples",
-                "Building",
-                "KDIS_DLL",
-                conf,
-                f'{Program._LIBNAME}{"" if (buildSettings.ReleaseSpecified()) else "d"}.lib',
+            cmakeBuildPath,
+            "Examples",
+            "Building",
+            "KDIS_DLL",
+            conf,
+            libName,
             ),
             pathFinder.path(sdkOutDir, libName),
-        )
+            )
 
         systemManager.copyFile(
             pathFinder.path(
-                cmakeBuildPath,
-                "Examples",
-                "Building",
-                "KDIS_DLL",
-                conf,
-                f'{Program._LIBNAME}{"" if (buildSettings.ReleaseSpecified()) else "d"}.dll',
+            cmakeBuildPath,
+            "Examples",
+            "Building",
+            "KDIS_DLL",
+            conf,
+            dllName,
             ),
             pathFinder.path(sdkOutDir, dllName),
-        )
+            )
 
         if not buildSettings.ReleaseSpecified():
             systemManager.copyFile(
                 pathFinder.path(
-                    cmakeBuildPath,
-                    "Examples",
-                    "Building",
-                    "KDIS_DLL",
-                    conf,
-                    f'{Program._LIBNAME}{"" if (buildSettings.ReleaseSpecified()) else "d"}.pdb',
+                cmakeBuildPath,
+                "Examples",
+                "Building",
+                "KDIS_DLL",
+                conf,
+                pdbName,
                 ),
                 pathFinder.path(sdkOutDir, pdbName),
-            )
+                )
 
+        # --------------------------------------------------------------------------
 
-# --------------------------------------------------------------------------
-
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

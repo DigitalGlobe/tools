@@ -28,8 +28,6 @@ class Program:
     DESCRIPTION = "Builds the HawkNL library."
 
     _LIBNAME = "hawknl"
-    _DEBUG_SUFFIX = "_d"
-
     # ----------------------------------------------------------------------
     # the name of the path that will contain built 32-bit binary files
     _PATH_NAME_BINARY_X86 = "..\\sdk\\x86\\bin"
@@ -63,7 +61,7 @@ class Program:
     def __init__(self):
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
     def main(self):
         systemManager = SystemManager()
@@ -92,28 +90,23 @@ class Program:
         # get the paths
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
+            )
 
         buildSourceName = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
         cmakeBuildPath = pathFinder.path(buildSourceName, Program._PATH_NAME_CMAKE_BUILD)
         cmakeInstallPath = pathFinder.path(
             cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
-        )
+            )
 
         systemManager.removeDirectory(cmakeBuildPath)
 
-        sdkOutDir = pathFinder.path(
-            buildPathName,
-            "..",
-            (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            ),
-        )
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKLibPath( buildPathName, platform, conf)
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
@@ -125,11 +118,24 @@ class Program:
         # start building
         systemManager.changeDirectory(buildPathName)
 
+        if not buildSettings.ReleaseSpecified():
+            cmd = f'echo set_target_properties(NL PROPERTIES OUTPUT_NAME "hawknl") >> CMakeLists.txt'
+            cmdResult = systemManager.execute(cmd)
+            if cmdResult != 0:
+                sys.exit(-1)
+
         systemManager.makeDirectory(cmakeBuildPath)
         systemManager.changeDirectory(cmakeBuildPath)
 
-        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
-        platform = "x64" if buildSettings.X64Specified() else "Win32"
+        extIncludePath = pathFinder.getVCPKGIncludePath()
+        externalLibs = {
+            # "PROJ_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(extIncludePath, "proj")),
+            # "PROJ_LIBRARY_RELEASE": pathFinder.slasher(pathFinder.path(pathFinder.getVCPKGLibPath(buildSettings.ReleaseSpecified()), f"proj.lib")),
+        }
+
+        externalLibStr = ""
+        for [key, val] in externalLibs.items():
+            externalLibStr += f'-D{key}="{val}" '
 
         includepath = pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, '..')
         cmakeCommandLine = (
@@ -138,6 +144,7 @@ class Program:
             + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
             + f"-DBUILD_SHARED_LIBS=ON "
             + f"-DCMAKE_REQUIRED_INCLUDES={includepath} "
+            + f"{externalLibStr} "
             + f"{buildSourceName}"
         )
 
@@ -150,9 +157,8 @@ class Program:
             f"{pathFinder.getCMakeFileName()} "
             + f"--build "
             + f". "
-            + f"-j 1 "
             + f"--config {conf} "
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -166,42 +172,41 @@ class Program:
             + f"--config {conf} "
             + f"--prefix "
             + f"{pathFinder.path(cmakeBuildPath, "install")}"
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
         if cmakeResult != 0:
             sys.exit(-1)
 
-        dllName = f'{Program._LIBNAME}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.dll'
-        libName = f'{Program._LIBNAME}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
-        pdbName = f'{Program._LIBNAME}{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.pdb'
+        libName = f'{Program._LIBNAME}.lib'
+        dllName = f'{Program._LIBNAME}.dll'
+        pdbName = f'{Program._LIBNAME}.pdb'
 
         systemManager.distributeFiles(
             pathFinder.path(cmakeInstallPath, "include"),
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
-        )
+            )
 
         systemManager.copyFile(
-            pathFinder.path(cmakeInstallPath, "lib", "NL.lib"),
+            pathFinder.path(cmakeInstallPath, "lib", libName),
             pathFinder.path(sdkOutDir, libName)
         )
 
         systemManager.copyFile(
-            pathFinder.path(cmakeInstallPath, "lib", "NL.dll"),
+            pathFinder.path(cmakeInstallPath, "lib", dllName),
             pathFinder.path(sdkOutDir, dllName),
-        )
+            )
 
         if not buildSettings.ReleaseSpecified():
             systemManager.copyFile(
-                pathFinder.path(cmakeBuildPath, "Debug", "NL.pdb"),
+                pathFinder.path(cmakeBuildPath, "Debug", pdbName),
                 pathFinder.path(sdkOutDir, pdbName),
-            )
+                )
 
+        # --------------------------------------------------------------------------
 
-# --------------------------------------------------------------------------
-
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

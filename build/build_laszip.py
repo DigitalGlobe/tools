@@ -11,7 +11,6 @@ import os
 import shutil
 import sys
 
-
 from BuildSettingSet import *
 from PathFinder import *
 from SystemManager import *
@@ -35,7 +34,7 @@ class Program :
     _PATH_NAME_DISTRIBUTION_X86 = "..\\sdk\\x86\\lib"
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
-    _LIBNAME = 'laszip'
+    _LIBNAME = 'laszip3'
     _DEBUG_SUFFIX = '_d'
 
     # the name of the path for all include files
@@ -53,7 +52,7 @@ class Program :
 
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
     def main(self):
         systemManager = SystemManager()
@@ -82,27 +81,22 @@ class Program :
         # get the paths
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
+            )
 
         buildSourceName = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
         cmakeBuildPath = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
         cmakeInstallPath = pathFinder.path(
             cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
-        )
+            )
         systemManager.removeDirectory(cmakeBuildPath)
 
-        sdkOutDir = pathFinder.path(
-            buildPathName,
-            "..",
-            (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            ),
-        )
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKLibPath(buildPathName, platform, conf)
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
@@ -117,14 +111,10 @@ class Program :
         systemManager.makeDirectory(cmakeBuildPath)
         systemManager.changeDirectory(cmakeBuildPath)
 
-        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
-        platform = "x64" if buildSettings.X64Specified() else "Win32"
-
         cmakeCommandLine = (
             f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
-            + f"-A {platform} "
-            + f"{buildSourceName}"
-        )
+            + f"-A {platform} " + f"{buildSourceName}"
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -137,110 +127,50 @@ class Program :
             + f". "
             + f"-j 1 "
             + f"--config {conf} "
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
         if cmakeResult != 0:
             sys.exit(-1)
 
-        # cmakeCommandLine = (
-        #     f"{pathFinder.getCMakeFileName()} "
-        #     + f"--install "
-        #     + f". "
-        #     + f"--config {conf} "
-        #     + f"--prefix "
-        #     + f"{pathFinder.path(cmakeBuildPath, "install")}"
-        # )
+        cmakeCommandLine = (
+            f"{pathFinder.getCMakeFileName()} "
+            + f"--install "
+            + f". "
+            + f"--config {conf} "
+            + f"--prefix "
+            + f"{pathFinder.path(cmakeBuildPath, "install")}"
+            )
 
-        # print("cmake: " + cmakeCommandLine)
-        # cmakeResult = systemManager.execute(cmakeCommandLine)
-        # if cmakeResult != 0:
-        #     sys.exit(-1)
-
-        srcIncludePath = pathFinder.path(
-            cmakeBuildPath,
-            "include",
-            "laszip"
-        )
+        print("cmake: " + cmakeCommandLine)
+        cmakeResult = systemManager.execute(cmakeCommandLine)
+        if cmakeResult != 0:
+            sys.exit(-1)
 
         systemManager.distributeFiles(
-            srcIncludePath,
+            pathFinder.path(cmakeInstallPath, "lib"),
+            sdkOutDir,
+            "*.lib",
+            )
+        systemManager.distributeFiles(
+            pathFinder.path(cmakeInstallPath, "bin"),
+            sdkOutDir,
+            "*.dll",
+            )
+        systemManager.distributeFiles(
+            pathFinder.path(cmakeInstallPath, "include"),
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h",
-        )
-
-        dllName = (
-            f"{Program._LIBNAME}"
-            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
-            + f".dll"
-        )
-        dllName2 = (
-            f"{Program._LIBNAME}_api"
-            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
-            + f".dll"
-        )
-        libName = (
-            f"{Program._LIBNAME}"
-            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
-            + f".lib"
-        )
-        pdbName = (
-            f"{Program._LIBNAME}"
-            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
-            + f".pdb"
-        )
-        pdbName2 = (
-            f"{Program._LIBNAME}_api"
-            + f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}'
-            + f".pdb"
-        )
-
-        systemManager.copyFile(
-            pathFinder.path(
-                cmakeBuildPath,
-                "lib",
-                f'{Program._LIBNAME}3.lib',
-            ),
-            pathFinder.path(sdkOutDir, libName),
-        )
-
-        systemManager.copyFile(
-            pathFinder.path(
-                cmakeBuildPath,
-                "bin",
-                f'{Program._LIBNAME}3.dll',
-            ),
-            pathFinder.path(sdkOutDir, dllName),
-        )
-        systemManager.copyFile(
-            pathFinder.path(
-                cmakeBuildPath,
-                "bin",
-                f'{Program._LIBNAME}_api3.dll',
-            ),
-            pathFinder.path(sdkOutDir, dllName2),
-        )
+            )
 
         if not buildSettings.ReleaseSpecified():
-            systemManager.copyFile(
-                pathFinder.path(
-                    cmakeBuildPath,
-                    "bin",
-                    f"{Program._LIBNAME}3.pdb",
-                ),
-                pathFinder.path(sdkOutDir, pdbName),
-            )
-            systemManager.copyFile(
-                pathFinder.path(
-                    cmakeBuildPath,
-                    "bin",
-                    f"{Program._LIBNAME}_api3.pdb",
-                ),
-                pathFinder.path(sdkOutDir, pdbName2),
-            )
+            systemManager.distributeFiles(
+                pathFinder.path(cmakeBuildPath, "bin"),
+                sdkOutDir,
+                "*.pdb",
+                )
 
-
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

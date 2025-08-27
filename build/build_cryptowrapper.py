@@ -15,7 +15,6 @@ from PathFinder import *
 from SystemManager import *
 from XmlUtils import *
 
-
 class Program:
     # ----------------------------------------------------------------------
     # a description of what the script does
@@ -36,8 +35,6 @@ class Program:
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
     _LIBNAME = "cryptowrapper"
-    _DEBUG_SUFFIX = "_d"
-
     # the name of the path for all include files
     _PATH_NAME_INCLUDE = "include"
     # ----------------------------------------------------------------------
@@ -49,7 +46,11 @@ class Program:
 
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
+    def sedify(self, str):
+        str = str.replace("\\", "^\\\\")
+        str = str.replace(".", "^.")
+        return str
 
     def main(self):
         systemManager = SystemManager()
@@ -73,20 +74,15 @@ class Program:
         # get the paths
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
+            )
 
-        sdkOutDir = pathFinder.path(
-            buildPathName,
-            "..",
-            (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            ),
-        )
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKLibPath(buildPathName, platform, conf)
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
@@ -103,6 +99,22 @@ class Program:
             f"{pathFinder.path(pathFinder.PATH_GNU_TOOLS, "sed.exe")} "
             + f"-i.bak s/^<PlatformToolset^>v140/^<PlatformToolset^>{pathFinder.VISUAL_STUDIO_VERSION_NUM}/g "
             + f"{Program._FILE_NAME_SOLUTION}"
+            )
+
+        print("cmd: " + sedCommandLine)
+        sedResult = systemManager.execute(sedCommandLine)
+        if sedResult != 0:
+            sys.exit(-1)
+
+        cryptoinc = self.sedify(pathFinder.path(pathFinder.getVCPKGIncludePath(), "cryptopp"))
+        cryptolib = self.sedify(pathFinder.path(
+            pathFinder.getVCPKGLibPath(buildSettings.ReleaseSpecified()),
+            f"cryptopp.lib"))
+
+        sedCommandLine = (
+            f"{pathFinder.path(pathFinder.PATH_GNU_TOOLS, "sed.exe")} "
+            + f"-i.bak s/^<AdditionalIncludeDirectories^>.*;/^<AdditionalIncludeDirectories^>{cryptoinc};/g "
+            + f"{Program._FILE_NAME_SOLUTION}"
         )
 
         print("cmd: " + sedCommandLine)
@@ -110,8 +122,16 @@ class Program:
         if sedResult != 0:
             sys.exit(-1)
 
-        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
-        platform = "x64" if buildSettings.X64Specified() else "Win32"
+        sedCommandLine = (
+            f"{pathFinder.path(pathFinder.PATH_GNU_TOOLS, "sed.exe")} "
+            + f"-i.bak s/^<AdditionalDependencies^>.*;/^<AdditionalDependencies^>{cryptolib};/g "
+            + f"{Program._FILE_NAME_SOLUTION}"
+        )
+
+        print("cmd: " + sedCommandLine)
+        sedResult = systemManager.execute(sedCommandLine)
+        if sedResult != 0:
+            sys.exit(-1)
 
         # build the solution
         solutionFileName = pathFinder.path(buildPathName, Program._FILE_NAME_SOLUTION)
@@ -119,22 +139,19 @@ class Program:
             pathFinder.getMSBuildFileName(buildSettings.X64Specified()),
             platform,
             solutionFileName,
-        )
+            )
 
         dllName = (
             Program._LIBNAME
-            + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
             + ".dll"
         )
 
         libName = (
             Program._LIBNAME
-            + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
             + ".lib"
         )
         pdbName = (
             Program._LIBNAME
-            + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
             + ".pdb"
         )
 
@@ -147,7 +164,6 @@ class Program:
         msBuildCommandLine += (
             " /p:TargetName="
             + Program._LIBNAME
-            + ("" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX)
         )
         msBuildCommandLine += " /p:Configuration=" + conf
         msBuildCommandLine += " /p:BuildProjectReferences=false"
@@ -157,15 +173,14 @@ class Program:
         linkerprops["ImportLibrary"] = pathFinder.path(buildOutDir, libName)
         if buildSettings.ReleaseSpecified():
             linkerprops["DebugSymbols"] = "false"
-            compprops = {"DebugInformationFormat": "None"}
         else:
             linkerprops["DebugSymbols"] = "true"
             linkerprops["DebugType"] = "full"
             linkerprops["ProgramDatabaseFile"] = "$(OutDir)\\" + pdbName
-            compprops = {
-                "DebugInformationFormat": "ProgramDatabase",
-                "ProgramDataBaseFileName": pathFinder.path(buildOutDir, pdbName),
-            }
+        compprops = {
+            "DebugInformationFormat": "ProgramDatabase",
+            "ProgramDataBaseFileName": pathFinder.path(buildOutDir, pdbName),
+        }
 
         xmlUtils.buildDll(conf, platform, compprops, linkerprops, propfile)
 
@@ -188,9 +203,8 @@ class Program:
             systemManager.copyFile(
                 pathFinder.path(buildOutDir, pdbName),
                 pathFinder.path(sdkOutDir, pdbName),
-            )
+                )
 
-
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

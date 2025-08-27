@@ -16,7 +16,6 @@ from SystemManager import *
 from FileDistributor import *
 from XmlUtils import *
 
-
 # ------------------------------------------------------------------------------
 # The Program class represents the main class of the script.
 class Program:
@@ -43,8 +42,6 @@ class Program:
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
     _LIBNAME = "cryptopp"
-    _DEBUG_SUFFIX = "_d"
-
     # the name of the path for all include files
     _PATH_NAME_INCLUDE = "."
     # ----------------------------------------------------------------------
@@ -60,21 +57,21 @@ class Program:
     # Constructs this program.
     #
     # Parameters :
-    #     self : this program
+    # self : this program
     def __init__(self):
 
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    # public methods
+        # --------------------------------------------------------------------------
+        # public methods
 
-    # ----------------------------------------------------------------------
-    # The main method of the program.
-    #
-    # Parameters :
-    #     self : this program
+        # ----------------------------------------------------------------------
+        # The main method of the program.
+        #
+        # Parameters :
+        # self : this program
     def main(self):
 
         systemManager = SystemManager()
@@ -107,16 +104,10 @@ class Program:
 
         systemManager.removeDirectory(nmakeBuildPath)
 
-        sdkOutDir = pathFinder.path(
-            buildPathName,
-            "..",
-            (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            )
-        )
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
 
+        sdkOutDir = pathFinder.getSDKLibPath(buildPathName, platform, conf)
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
         systemManager.removeDirectory(buildPathName)
@@ -127,13 +118,12 @@ class Program:
         # start building
         systemManager.changeDirectory(buildPathName)
 
-
         # modify the vcxproj to work with our version of vscode
         sedCommandLine = (
             f"{pathFinder.path(pathFinder.PATH_GNU_TOOLS, "sed.exe")} "
             + f"-i.bak s/^<\/RuntimeLibrary^>/DLL^<\/RuntimeLibrary^>/g "
             + f"{Program._FILE_NAME_SOLUTION}"
-        )
+            )
 
         print("cmd: " + sedCommandLine)
         sedResult = systemManager.execute(sedCommandLine)
@@ -143,31 +133,27 @@ class Program:
         systemManager.makeDirectory(nmakeBuildPath)
         systemManager.changeDirectory(nmakeBuildPath)
 
-        conf = f'{"Release" if (buildSettings.ReleaseSpecified()) else "Debug"}'
-        platform = "x64" if buildSettings.X64Specified() else "Win32"
-
         # build the solution
         solutionFileName = pathFinder.path(buildPathName, Program._FILE_NAME_SOLUTION)
 
         msBuildCommandLine = ( f'"{pathFinder.getMSBuildFileName(buildSettings.X64Specified())}" '
-                              + f'/p:platform={platform} '
-                              + f'"{solutionFileName}"'
-        )
+            + f'/p:platform={platform} '
+            + f'"{solutionFileName}"'
+            )
 
-        libName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".lib"
-        pdbName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".pdb"
+        libName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() ) else Program._DEBUG_SUFFIX) + ".lib"
+        pdbName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() ) else Program._DEBUG_SUFFIX) + ".pdb"
 
-        buildOutDir   = pathFinder.path( buildPathName, 'build' )
-        propfile   = pathFinder.path( buildPathName, 'linker.props' )
+        buildOutDir = pathFinder.path( buildPathName, 'build' )
+        propfile = pathFinder.path( buildPathName, 'linker.props' )
 
         msBuildCommandLine += f' /p:OutDir="{buildOutDir}"'
         # msBuildCommandLine += f' /p:TargetExtension=dll'
         msBuildCommandLine += f' /p:SolutionDir="{buildPathName}"'
-        # msBuildCommandLine += f' /p:TargetName={Program._LIBNAME}{"" if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX}'
+        # msBuildCommandLine += f' /p:TargetName={Program._LIBNAME}{"" if ( buildSettings.ReleaseSpecified() ) else Program._DEBUG_SUFFIX}'
         msBuildCommandLine += f' /p:Configuration={conf}'
 
         linkerprops = {}
-        # linkerprops = {'OutputFile':pathFinder.path( buildOutDir, libName )}
         if buildSettings.ReleaseSpecified():
             linkerprops['DebugSymbols'] = 'false'
         else:
@@ -182,7 +168,7 @@ class Program:
 
         xmlUtils.buildLib(conf, platform, compprops, linkerprops, propfile)
 
-        msBuildCommandLine +=  f' /p:ForceImportBeforeCppTargets="{propfile}"'
+        msBuildCommandLine += f' /p:ForceImportBeforeCppTargets="{propfile}"'
 
         print('cmd: ' + msBuildCommandLine)
 
@@ -194,33 +180,32 @@ class Program:
             buildPathName,
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h",
-        )
+            )
 
-        libName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".lib"
-        pdbName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".pdb"
-        dllName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() )  else Program._DEBUG_SUFFIX) + ".dll"
+        libName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() ) else Program._DEBUG_SUFFIX) + ".lib"
+        pdbName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() ) else Program._DEBUG_SUFFIX) + ".pdb"
+        dllName = Program._LIBNAME + ( '' if ( buildSettings.ReleaseSpecified() ) else Program._DEBUG_SUFFIX) + ".dll"
 
         systemManager.copyFile(
             pathFinder.path(buildOutDir, "cryptlib.lib"), # + f"{Program._LIBNAME}.lib"),
             pathFinder.path(sdkOutDir, libName),
-        )
+            )
 
         # systemManager.copyFile(
-        #     pathFinder.path(buildOutDir, "cryptlib.dll"), # f"{Program._LIBNAME}.dll"),
-        #     pathFinder.path(sdkOutDir, dllName),
+        # pathFinder.path(buildOutDir, "cryptlib.dll"), # f"{Program._LIBNAME}.dll"),
+        # pathFinder.path(sdkOutDir, dllName),
         # )
 
         if not buildSettings.ReleaseSpecified():
             systemManager.copyFile(
                 pathFinder.path(buildOutDir, "cryptlib.pdb"), # f"{Program._LIBNAME}.pdb"),
                 pathFinder.path(sdkOutDir, pdbName),
-            )
+                )
 
         # ----------------------------------------------------------------------
 
+        # --------------------------------------------------------------------------
 
-# --------------------------------------------------------------------------
-
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

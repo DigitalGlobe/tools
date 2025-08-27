@@ -15,7 +15,6 @@ from PathFinder import *
 from SystemManager import *
 from XmlUtils import *
 
-
 class Program:
     # ----------------------------------------------------------------------
     # a description of what the script does
@@ -33,8 +32,6 @@ class Program:
 
     _LIBNAME = "libkml"
     _LIBNAME_STATIC = "libkml-static"
-    _DEBUG_SUFFIX = "_d"
-
     # the name of the path for all include files
     _PATH_NAME_INCLUDE = "."
     _PATH_NAME_INCLUDE_2 = "include"
@@ -54,21 +51,21 @@ class Program:
     # Constructs this program.
     #
     # Parameters :
-    #     self : this program
+    # self : this program
     def __init__(self):
 
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    # public methods
+        # --------------------------------------------------------------------------
+        # public methods
 
-    # ----------------------------------------------------------------------
-    # The main method of the program.
-    #
-    # Parameters :
-    #     self : this program
+        # ----------------------------------------------------------------------
+        # The main method of the program.
+        #
+        # Parameters :
+        # self : this program
     def main(self):
 
         systemManager = SystemManager()
@@ -94,28 +91,23 @@ class Program:
         # get the paths
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
+            )
 
         buildSourceName = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
         cmakeBuildPath = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
         cmakeInstallPath = pathFinder.path(
             cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
-        )
+            )
 
         systemManager.removeDirectory(cmakeBuildPath)
 
-        sdkOutDir = pathFinder.path(
-            buildPathName,
-            "..",
-            (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            ),
-        )
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKLibPath(buildPathName, platform, conf)
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
@@ -130,21 +122,17 @@ class Program:
         systemManager.makeDirectory(cmakeBuildPath)
         systemManager.changeDirectory(cmakeBuildPath)
 
-        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
-        platform = "x64" if buildSettings.X64Specified() else "Win32"
-
         includeBase = pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE, "..")
-        libSuffix = f'{"" if (buildSettings.ReleaseSpecified()) else Program._DEBUG_SUFFIX}.lib'
         externalLibs = {
             "Boost_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase)),
             "EXPAT_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "expat")),
-            "EXPAT_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"libexpat{libSuffix}")),
+            "EXPAT_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, "libexpat.lib")),
             "MINIZIP_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase)),
-            "MINIZIP_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"minizip{libSuffix}")),
+            "MINIZIP_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, "minizip.lib")),
             "URIPARSER_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "uriparser")),
-            "URIPARSER_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"uriparser{libSuffix}")),
+            "URIPARSER_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, "uriparser.lib")),
             "ZLIB_INCLUDE_DIR": pathFinder.slasher(pathFinder.path(includeBase, "zlib")),
-            "ZLIB_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, f"zlib{libSuffix}")),
+            "ZLIB_LIBRARY": pathFinder.slasher(pathFinder.path(sdkOutDir, "zlib.lib")),
         }
 
         externalLibStr = ""
@@ -156,12 +144,11 @@ class Program:
         cmakeCommandLine = (
             f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
             + f"-A {platform} "
-            + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 "
-            + f"-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} "
+            + f"-DCMAKE_POLICY_VERSION_MINIMUM=3.10 " + f"-DCMAKE_INSTALL_PREFIX={cmakeInstallPath} "
             + f"-DCMAKE_BUILD_TYPE={conf} "
             + f"{externalLibStr} "
             + f"{buildSourceName}"
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -173,7 +160,7 @@ class Program:
             + f"--build "
             + f". "
             + f"--config {conf} "
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -187,7 +174,7 @@ class Program:
             + f"--config {conf} "
             + f"--prefix "
             + f"{cmakeInstallPath}"
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -201,23 +188,20 @@ class Program:
             srcIncludePath,
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
-        )
+            )
         systemManager.distributeFiles(
             srcLibPath,
             pathFinder.path(sdkOutDir),
             "*.lib",
-            suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX,
-        )
+            )
 
         if not buildSettings.ReleaseSpecified():
             systemManager.distributeFiles(
                 pathFinder.path(cmakeBuildPath, "lib", conf),
                 pathFinder.path(sdkOutDir),
                 "*.pdb",
-                suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX,
-            )
+                )
 
-
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

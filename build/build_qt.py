@@ -14,7 +14,6 @@ from BuildSettingSet import *
 from PathFinder import *
 from SystemManager import *
 
-
 class Program:
     DESCRIPTION = "Builds Qt."
 
@@ -37,7 +36,7 @@ class Program:
     def __init__(self):
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
     def main(self):
 
@@ -67,10 +66,10 @@ class Program:
         # get the paths
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
+            )
 
         vcVars = pathFinder.getVCVARSFileName(buildSettings.X64Specified())
 
@@ -80,15 +79,15 @@ class Program:
             systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD),
             "gnuwin32",
             "bin"
-        )
+            )
         systemManager.appendToPathEnvironmentVariable(gnuToolsPath)
 
-        # Append  qtbase/bin to the path
+        # Append qtbase/bin to the path
         qtBaseBin = pathFinder.path(
             systemManager.getCurrentRelativePathName(Program._PATH_NAME_BUILD),
             "qtbase",
             "bin"
-        )
+            )
         systemManager.appendToPathEnvironmentVariable(qtBaseBin)
 
         # remove build dir
@@ -134,7 +133,7 @@ class Program:
         firebirdBase = pathFinder.path(
             pathFinder.path(buildPathName, Program._FIREBIRD_BASE),
             ("x64" if buildSettings.X64Specified() else "x86"),
-        )
+            )
 
         # firebirdBase = pathFinder.path(pathFinder.path(buildPathName, Program._FIREBIRD_BASE), 'x86')
         # firebirdInclude = pathFinder.slasher(pathFinder.path(firebirdBase, Program._FIREBIRD_INCLUDE))
@@ -146,44 +145,44 @@ class Program:
             f'{pathFinder.path(sourcePathName, "configure")} '
             + f'-prefix "{binDir}" '
             + f'{buildType} '
-            # + f"-mp "
-            # + f"-developer-build "
-            + f'-platform win32-msvc '
-            + f'-opensource '
-            + f'-confirm-license '
-            + f'-shared '
-            + f'-opengl dynamic '
-            + f'-qt-libpng '
-            + f'-qt-libjpeg '
-            + f'-qt-zlib '
-            # + f"-no-compile-examples "
-            + f'-nomake examples '
-            + f'-nomake tests '
-            + f'-no-icu '
-            + f'-skip qtbluetooth '
-            + f'-skip qtcharts '
-            + f'-skip qtconnectivity '
-            + f'-skip qtdatavis3d '
-            + f'-skip qtdoc '
-            + f'-skip qtfeedback '
-            + f'-skip qtgraphs '
-            + f'-skip qtlocation '
-            + f'-skip qtpim '
-            + f'-skip qtpositioning '
-            + f'-skip qt3d '
-            + f'-skip qtquick3d '
-            + f'-skip qtquick3dphysics '
-            + f'-skip qtquickeffectmaker '
-            + f'-skip qtsensors '
-            + f'-skip qtserialbus '
-            + f'-skip qtserialport '
-            + f'-skip qtspeech '
-            + f'-skip qtvirtualkeyboard '
-            + f'-skip qtwayland '
-            + f'-skip qtwebchannel '
-            + f'-skip qtwebengine '
-            + f'-skip qtwebview '
-            + f'-sql-ibase '
+        # + f"-mp "
+        # + f"-developer-build "
+        + f'-platform win32-msvc '
+        + f'-opensource '
+        + f'-confirm-license '
+        + f'-shared '
+        + f'-opengl dynamic '
+        + f'-qt-libpng '
+        + f'-qt-libjpeg '
+        + f'-qt-zlib '
+        # + f"-no-compile-examples "
+        + f'-nomake examples '
+        + f'-nomake tests '
+        + f'-no-icu '
+        + f'-skip qtbluetooth '
+        + f'-skip qtcharts '
+        + f'-skip qtconnectivity '
+        + f'-skip qtdatavis3d '
+        + f'-skip qtdoc '
+        + f'-skip qtfeedback '
+        + f'-skip qtgraphs '
+        + f'-skip qtlocation '
+        + f'-skip qtpim '
+        + f'-skip qtpositioning '
+        + f'-skip qt3d '
+        + f'-skip qtquick3d '
+        + f'-skip qtquick3dphysics '
+        + f'-skip qtquickeffectmaker '
+        + f'-skip qtsensors '
+        + f'-skip qtserialbus '
+        + f'-skip qtserialport '
+        + f'-skip qtspeech '
+        + f'-skip qtvirtualkeyboard '
+        + f'-skip qtwayland '
+        + f'-skip qtwebchannel '
+        + f'-skip qtwebengine '
+        + f'-skip qtwebview '
+        + f'-sql-ibase '
         )
 
         print(f"cwd: {os.getcwd()}")
@@ -208,6 +207,6 @@ class Program:
         if result != 0:
             sys.exit(-1)
 
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

@@ -15,7 +15,6 @@ from BuildSettingSet import *
 from PathFinder import *
 from SystemManager import *
 
-
 class Program:
     DESCRIPTION = "Builds QWT libs and exes."
     # ----------------------------------------------------------------------
@@ -30,8 +29,6 @@ class Program:
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
     _LIBNAME = "qwt"
-    _DEBUG_SUFFIX = "_d"
-
     # the name of the path for all include files
     _PATH_NAME_INCLUDE = "include"
     # ----------------------------------------------------------------------
@@ -44,7 +41,7 @@ class Program:
 
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
     def main(self):
         systemManager = SystemManager()
@@ -75,19 +72,19 @@ class Program:
         # determine path names
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
+            )
 
         sdkOutDir = (
             buildPathName
             + "\\..\\"
             + (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            )
+            Program._PATH_NAME_DISTRIBUTION_X64
+            if buildSettings.X64Specified()
+        else Program._PATH_NAME_DISTRIBUTION_X86
+        )
         )
 
         os.environ["QTDIR"] = pathFinder.getQtPathName(buildSettings.X64Specified())
@@ -100,8 +97,8 @@ class Program:
 
         qmakeCommandLine = (
             f"qmake "
-            + f'"CONFIG+={"release" if  buildSettings.ReleaseSpecified() else "debug"}" '
-        )
+            + f'"CONFIG+={"release" if buildSettings.ReleaseSpecified() else "debug"}" '
+            )
 
         cmd = f'"{vcVars}" && {qmakeCommandLine}'
         print("cmd: " + cmd)
@@ -126,35 +123,35 @@ class Program:
             pathFinder.path(buildPathName, "src"),
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
-        )
+            )
 
         if buildSettings.ReleaseSpecified():
             systemManager.distributeFiles(
                 pathFinder.path(
-                    buildPathName,
-                    "lib"
+                buildPathName,
+                "lib"
                 ),
                 pathFinder.path(sdkOutDir),
                 "*.lib",
-            )
+                )
             systemManager.distributeFiles(
                 pathFinder.path(buildPathName, "lib"),
                 pathFinder.path(sdkOutDir),
                 "*.dll",
-            )
+                )
         else:
             libdir = pathFinder.path(buildPathName, "lib")
 
-            # we need to rename the debug libs to have a _d suffix (they have a 'd' suffix now)
-            for f in glob.glob(pathFinder.path(libdir, "*d.lib")):
-                systemManager.copyFile(f, pathFinder.path(sdkOutDir, f.replace("d.lib", "_d.lib")))
+        # we need to rename the debug libs to have a _d suffix (they have a 'd' suffix now)
+        for f in glob.glob(pathFinder.path(libdir, "*d.lib")):
+            systemManager.copyFile(f, pathFinder.path(sdkOutDir, f.replace("d.lib", "_d.lib")))
 
-            for f in glob.glob(pathFinder.path(libdir, "*d.dll")):
-                systemManager.copyFile(f, pathFinder.path(sdkOutDir, f.replace("d.dll", "_d.dll")))
+        for f in glob.glob(pathFinder.path(libdir, "*d.dll")):
+            systemManager.copyFile(f, pathFinder.path(sdkOutDir, f.replace("d.dll", "_d.dll")))
 
-            for f in glob.glob(pathFinder.path(libdir, "*d.pdb")):
-                systemManager.copyFile(f, pathFinder.path(sdkOutDir, f.replace("d.pdb", "_d.pdb")))
+        for f in glob.glob(pathFinder.path(libdir, "*d.pdb")):
+            systemManager.copyFile(f, pathFinder.path(sdkOutDir, f.replace("d.pdb", "_d.pdb")))
 
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------

@@ -16,7 +16,6 @@ from SystemManager import *
 from FileDistributor import *
 from XmlUtils import *
 
-
 # ------------------------------------------------------------------------------
 # The Program class represents the main class of the script.
 class Program:
@@ -40,8 +39,6 @@ class Program:
     _PATH_NAME_DISTRIBUTION_X64 = "..\\sdk\\x64\\lib"
 
     _LIBNAME = "gtest"
-    _DEBUG_SUFFIX = "_d"
-
     # the name of the path for all include files
     _PATH_NAME_INCLUDE = "include\\gtest"
     # ----------------------------------------------------------------------
@@ -61,21 +58,21 @@ class Program:
     # Constructs this program.
     #
     # Parameters :
-    #     self : this program
+    # self : this program
     def __init__(self):
 
         pass
 
-    # ----------------------------------------------------------------------
+        # ----------------------------------------------------------------------
 
-    # --------------------------------------------------------------------------
-    # public methods
+        # --------------------------------------------------------------------------
+        # public methods
 
-    # ----------------------------------------------------------------------
-    # The main method of the program.
-    #
-    # Parameters :
-    #     self : this program
+        # ----------------------------------------------------------------------
+        # The main method of the program.
+        #
+        # Parameters :
+        # self : this program
     def main(self):
 
         systemManager = SystemManager()
@@ -105,32 +102,27 @@ class Program:
         # get the paths
         buildPathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_BUILD
-        )
+            )
         sourcePathName = systemManager.getCurrentRelativePathName(
             Program._PATH_NAME_SOURCE
-        )
+            )
 
         buildSourceName = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_SOURCE)
         cmakeBuildPath = pathFinder.path(buildPathName, Program._PATH_NAME_CMAKE_BUILD)
         cmakeInstallPath = pathFinder.path(
             cmakeBuildPath, Program._PATH_NAME_CMAKE_INSTALL
-        )
+            )
 
         systemManager.removeDirectory(cmakeBuildPath)
 
-        sdkOutDir = pathFinder.path(
-            buildPathName,
-            "..",
-            (
-                Program._PATH_NAME_DISTRIBUTION_X64
-                if buildSettings.X64Specified()
-                else Program._PATH_NAME_DISTRIBUTION_X86
-            ),
-        )
+        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
+        platform = "x64" if buildSettings.X64Specified() else "Win32"
+
+        sdkOutDir = pathFinder.getSDKLibPath( buildPathName, platform, conf)
 
         # remove build dir
         systemManager.changeDirectory(sourcePathName)
-        # systemManager.removeDirectory(buildPathName)
+        systemManager.removeDirectory(buildPathName)
 
         # copy Boost source to the Build area
         systemManager.copyDirectory(sourcePathName, buildPathName)
@@ -138,18 +130,28 @@ class Program:
         # start building
         systemManager.changeDirectory(buildPathName)
 
+        # if not buildSettings.ReleaseSpecified():
+        # # cmd = f'echo set(CMAKE_DEBUG_POSTFIX "{Program._DEBUG_SUFFIX}") >> CMakeLists.txt'
+        # # cmdResult = systemManager.execute(cmd)
+        # # if cmdResult != 0:
+        # # sys.exit(-1)
+
+        # # sedResult = systemManager.replaceInFile(
+        # # pathFinder.path(buildSourceName, "CMakeLists.txt"),
+        # # "CMAKE_DEBUG_POSTFIX\\s*d",
+        # # f"CMAKE_DEBUG_POSTFIX {Program._DEBUG_SUFFIX}",
+        # # )
+        # # if sedResult != 0:
+        # # sys.exit(-1)
+
         systemManager.makeDirectory(cmakeBuildPath)
         systemManager.changeDirectory(cmakeBuildPath)
 
-        conf = "Release" if (buildSettings.ReleaseSpecified()) else "Debug"
-        platform = "x64" if buildSettings.X64Specified() else "Win32"
-
         cmakeCommandLine = (
             f'{pathFinder.getCMakeFileName()} -G "{pathFinder.VISUAL_STUDIO_VERSION}" '
-            + f"-DBUILD_SHARED_LIBS=ON "
-            + f"-A {platform} "
+            + f"-DBUILD_SHARED_LIBS=ON " + f"-A {platform} "
             + f"{buildSourceName}"
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -162,7 +164,7 @@ class Program:
             + f". "
             + f"-j 1 "
             + f"--config {conf} "
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -176,7 +178,7 @@ class Program:
             + f"--config {conf} "
             + f"--prefix "
             + f"{pathFinder.path(cmakeBuildPath, "install")}"
-        )
+            )
 
         print("cmake: " + cmakeCommandLine)
         cmakeResult = systemManager.execute(cmakeCommandLine)
@@ -186,35 +188,32 @@ class Program:
         srcIncludePath = pathFinder.path(
             cmakeInstallPath,
             "include"
-        )
+            )
 
         systemManager.distributeFiles(
             srcIncludePath,
             pathFinder.path(buildPathName, Program._PATH_NAME_DISTRIBUTION_INCLUDE),
             "*.h*",
-        )
+            )
 
         systemManager.distributeFiles(
             pathFinder.path(cmakeInstallPath, "lib"),
             sdkOutDir,
             "*.lib",
-            suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX
-        )
+            )
         systemManager.distributeFiles(
             pathFinder.path(cmakeInstallPath, "bin"),
             sdkOutDir,
             "*.dll",
-            suffix=None if buildSettings.ReleaseSpecified() else Program._DEBUG_SUFFIX,
-        )
+            )
         if not buildSettings.ReleaseSpecified():
             systemManager.distributeFiles(
                 pathFinder.path(cmakeInstallPath, "bin"),
                 sdkOutDir,
                 "lib",
                 "*.pdb",
-            )
+                )
 
-
-# ------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------
 Program().main()
 # ------------------------------------------------------------------------------
