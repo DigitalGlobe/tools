@@ -144,7 +144,7 @@ class Program:
 
         systemManager.removeDirectory(cmakeBuildPath)
         systemManager.makeDirectory(cmakeBuildPath)
-        systemManager.changeDirectory(cmakeBuildPath)
+        systemManager.changeDirectory(cmake
 
         cmake = pathFinder.path(cmakeBuildPath, "..", "CMakeLists.txt")
         # modify the project name
