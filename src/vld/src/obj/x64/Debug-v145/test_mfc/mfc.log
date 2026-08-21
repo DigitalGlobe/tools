@@ -1,0 +1,9 @@
+﻿  Copying over Visual Leak Detector Dependencies
+  C:\sa\tools\src\vld\src\tests\\..\..\vld.ini
+  1 File(s) copied
+  The system cannot find the path specified.
+  The system cannot find the path specified.
+  The system cannot find the path specified.
+  The system cannot find the path specified.
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(156,5): error MSB3073: The command "call ..\copydlls.bat x64\Debug-v143 x64 "C:\sa\tools\src\vld\src\bin\x64\Debug-v145\"
+C:\Program Files\Microsoft Visual Studio\18\Community\MSBuild\Microsoft\VC\v180\Microsoft.CppCommon.targets(156,5): error MSB3073: :VCEnd" exited with code 1.

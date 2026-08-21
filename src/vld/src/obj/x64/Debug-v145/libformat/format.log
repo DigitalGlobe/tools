@@ -1,0 +1,1632 @@
+﻿  format.cc
+C:\sa\tools\src\vld\lib\cppformat\format.h(293,1): warning C4996: 'stdext::checked_array_iterator<T*>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(487,3): warning C4996: 'stdext::checked_array_iterator<T*>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+      C:\sa\tools\src\vld\lib\cppformat\format.h(487,3):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.h(484,7):
+          while compiling class template 'fmt::internal::BasicCharTraits'
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(487,3): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(487,3): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(487,3): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(487,3): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(487,3): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+      C:\sa\tools\src\vld\lib\cppformat\format.h(487,3):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.h(497,33):
+          see reference to class template instantiation 'fmt::internal::BasicCharTraits<char>' being compiled
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(487,3): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(487,3): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(487,3): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(487,3): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(487,3): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+      C:\sa\tools\src\vld\lib\cppformat\format.h(487,3):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.h(512,36):
+          see reference to class template instantiation 'fmt::internal::BasicCharTraits<wchar_t>' being compiled
+  
+C:\sa\tools\src\vld\lib\cppformat\format.cc(869,15): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +=': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.cc(869,15): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.cc(869,15): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.cc(869,15): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.cc(869,15): warning C4996:         ]
+      C:\sa\tools\src\vld\lib\cppformat\format.cc(869,15):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(1132,53):
+          see reference to class template instantiation 'fmt::internal::PrintfFormatter<Char>' being compiled
+          with
+          [
+              Char=char
+          ]
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(753,26):
+          while compiling class template member function 'void fmt::internal::PrintfFormatter<Char>::format(fmt::BasicWriter<Char> &,fmt::BasicStringRef<Char>,const fmt::ArgList &)'
+          with
+          [
+              Char=char
+          ]
+              C:\sa\tools\src\vld\lib\cppformat\format.h(2374,43):
+              see the first reference to 'fmt::internal::PrintfFormatter<Char>::format' in 'fmt::printf'
+          with
+          [
+              Char=char
+          ]
+  
+C:\sa\tools\src\vld\lib\cppformat\format.cc(871,27): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.cc(871,27): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.cc(871,27): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.cc(871,27): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.cc(871,27): warning C4996:         ]
+C:\sa\tools\src\vld\lib\cppformat\format.cc(876,7): warning C4996: 'stdext::checked_array_iterator<Char *>::operator *': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.cc(876,7): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.cc(876,7): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.cc(876,7): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.cc(876,7): warning C4996:         ]
+C:\sa\tools\src\vld\lib\cppformat\format.cc(869,15): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +=': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.cc(869,15): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.cc(869,15): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.cc(869,15): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.cc(869,15): warning C4996:         ]
+      C:\sa\tools\src\vld\lib\cppformat\format.cc(869,15):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(1153,56):
+          see reference to class template instantiation 'fmt::internal::PrintfFormatter<Char>' being compiled
+          with
+          [
+              Char=wchar_t
+          ]
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(753,26):
+          while compiling class template member function 'void fmt::internal::PrintfFormatter<Char>::format(fmt::BasicWriter<Char> &,fmt::BasicStringRef<Char>,const fmt::ArgList &)'
+          with
+          [
+              Char=wchar_t
+          ]
+  
+C:\sa\tools\src\vld\lib\cppformat\format.cc(871,27): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.cc(871,27): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.cc(871,27): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.cc(871,27): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.cc(871,27): warning C4996:         ]
+C:\sa\tools\src\vld\lib\cppformat\format.cc(876,7): warning C4996: 'stdext::checked_array_iterator<Char *>::operator *': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.cc(876,7): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.cc(876,7): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.cc(876,7): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.cc(876,7): warning C4996:         ]
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,18): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,18): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,18): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,18): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,18): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+      C:\sa\tools\src\vld\lib\cppformat\format.h(294,18):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.h(656,45):
+          see reference to class template instantiation 'fmt::internal::MemoryBuffer<wchar_t,500,std::allocator<wchar_t>>' being compiled
+          C:\sa\tools\src\vld\lib\cppformat\format.h(421,63):
+          while compiling class template member function 'void fmt::internal::MemoryBuffer<wchar_t,500,std::allocator<wchar_t>>::grow(size_t)'
+          C:\sa\tools\src\vld\lib\cppformat\format.h(427,39):
+          see reference to function template instantiation 'stdext::checked_array_iterator<Char *> fmt::internal::make_ptr<T>(T *,size_t)' being compiled
+          with
+          [
+              Char=wchar_t,
+              T=wchar_t
+          ]
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,44): warning C4996: 'stdext::checked_array_iterator<Char *>::checked_array_iterator': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,44): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,44): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,44): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,44): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.h(426,8):
+          see reference to function template instantiation '_OutIt std::copy<T*,stdext::checked_array_iterator<Char *>>(_InIt,_InIt,_OutIt)' being compiled
+          with
+          [
+              _OutIt=stdext::checked_array_iterator<wchar_t *>,
+              T=wchar_t,
+              Char=wchar_t,
+              _InIt=wchar_t *
+          ]
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(4975,31):
+          see reference to function template instantiation 'decltype(auto) std::_Get_unwrapped_n<stdext::checked_array_iterator<Char *>,__int64>(_Iter &&,const _Diff)' being compiled
+          with
+          [
+              Char=wchar_t,
+              _Iter=stdext::checked_array_iterator<wchar_t *>,
+              _Diff=__int64
+          ]
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1512,26):
+          see reference to variable template 'const bool _Unwrappable_for_offset_v<stdext::checked_array_iterator<wchar_t *> >' being compiled
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1506,44):
+          see reference to variable template 'const bool _Unwrappable_v<stdext::checked_array_iterator<wchar_t *>,void>' being compiled
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1435,5):
+          see reference to variable template 'const bool _Allow_inheriting_unwrap_v<stdext::checked_array_iterator<wchar_t *>,void>' being compiled
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,22): warning C4996: 'stdext::checked_array_iterator<Char *>::_Prevent_inheriting_unwrap': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,22): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,22): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,22): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,22): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40):
+      the template instantiation context (the oldest one first) is
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1502,93):
+          see reference to alias template instantiation 'std::_Iter_diff_t<_Iter>' being compiled
+          with
+          [
+              _Iter=stdext::checked_array_iterator<wchar_t *>
+          ]
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1311,55):
+          see reference to class template instantiation 'std::iterator_traits<_Iter>' being compiled
+          with
+          [
+              _Iter=stdext::checked_array_iterator<wchar_t *>
+          ]
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(496,26):
+          see reference to class template instantiation 'std::_Iterator_traits_base<_Iter,void>' being compiled
+          with
+          [
+              _Iter=stdext::checked_array_iterator<wchar_t *>
+          ]
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,31): warning C4996: 'stdext::checked_array_iterator<Char *>::iterator_category': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,31): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,31): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,40): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,40): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,40): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,40): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,40): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,31): warning C4996: 'stdext::checked_array_iterator<Char *>::value_type': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,31): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,31): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,40): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,40): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,40): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,40): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,40): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,31): warning C4996: 'stdext::checked_array_iterator<Char *>::difference_type': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,31): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,31): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,40): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,40): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,40): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,40): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,40): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,31): warning C4996: 'stdext::checked_array_iterator<Char *>::pointer': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,31): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,31): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,40): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,40): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,40): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,40): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,40): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,31): warning C4996: 'stdext::checked_array_iterator<Char *>::reference': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,31): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,31): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1523,13): warning C4996: 'stdext::checked_array_iterator<Char *>::_Verify_offset': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1523,13): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1523,13): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1523,13): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1523,13): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1524,42): warning C4996: 'stdext::checked_array_iterator<Char *>::_Unwrapped': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1524,42): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1524,42): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1524,42): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1524,42): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,18): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,18): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,18): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,18): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,18): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+      C:\sa\tools\src\vld\lib\cppformat\format.h(294,18):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.h(670,42):
+          see reference to class template instantiation 'fmt::internal::MemoryBuffer<char,500,std::allocator<char>>' being compiled
+          C:\sa\tools\src\vld\lib\cppformat\format.h(421,63):
+          while compiling class template member function 'void fmt::internal::MemoryBuffer<char,500,std::allocator<char>>::grow(size_t)'
+          C:\sa\tools\src\vld\lib\cppformat\format.h(427,39):
+          see reference to function template instantiation 'stdext::checked_array_iterator<Char *> fmt::internal::make_ptr<T>(T *,size_t)' being compiled
+          with
+          [
+              Char=char,
+              T=char
+          ]
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,44): warning C4996: 'stdext::checked_array_iterator<Char *>::checked_array_iterator': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,44): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,44): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,44): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,44): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.h(426,8):
+          see reference to function template instantiation '_OutIt std::copy<T*,stdext::checked_array_iterator<Char *>>(_InIt,_InIt,_OutIt)' being compiled
+          with
+          [
+              _OutIt=stdext::checked_array_iterator<char *>,
+              T=char,
+              Char=char,
+              _InIt=char *
+          ]
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(4975,31):
+          see reference to function template instantiation 'decltype(auto) std::_Get_unwrapped_n<stdext::checked_array_iterator<Char *>,__int64>(_Iter &&,const _Diff)' being compiled
+          with
+          [
+              Char=char,
+              _Iter=stdext::checked_array_iterator<char *>,
+              _Diff=__int64
+          ]
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1512,26):
+          see reference to variable template 'const bool _Unwrappable_for_offset_v<stdext::checked_array_iterator<char *> >' being compiled
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1506,44):
+          see reference to variable template 'const bool _Unwrappable_v<stdext::checked_array_iterator<char *>,void>' being compiled
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1435,5):
+          see reference to variable template 'const bool _Allow_inheriting_unwrap_v<stdext::checked_array_iterator<char *>,void>' being compiled
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,22): warning C4996: 'stdext::checked_array_iterator<Char *>::_Prevent_inheriting_unwrap': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,22): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,22): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,22): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,22): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40):
+      the template instantiation context (the oldest one first) is
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1502,93):
+          see reference to alias template instantiation 'std::_Iter_diff_t<_Iter>' being compiled
+          with
+          [
+              _Iter=stdext::checked_array_iterator<char *>
+          ]
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1311,55):
+          see reference to class template instantiation 'std::iterator_traits<_Iter>' being compiled
+          with
+          [
+              _Iter=stdext::checked_array_iterator<char *>
+          ]
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(496,26):
+          see reference to class template instantiation 'std::_Iterator_traits_base<_Iter,void>' being compiled
+          with
+          [
+              _Iter=stdext::checked_array_iterator<char *>
+          ]
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,31): warning C4996: 'stdext::checked_array_iterator<Char *>::iterator_category': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,31): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,31): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,40): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,40): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,40): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,40): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,40): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,31): warning C4996: 'stdext::checked_array_iterator<Char *>::value_type': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,31): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,31): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,40): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,40): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,40): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,40): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,40): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,31): warning C4996: 'stdext::checked_array_iterator<Char *>::difference_type': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,31): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,31): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,40): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,40): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,40): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,40): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,40): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,31): warning C4996: 'stdext::checked_array_iterator<Char *>::pointer': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,31): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,31): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,40): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,40): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,40): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,40): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,40): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,31): warning C4996: 'stdext::checked_array_iterator<Char *>::reference': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,31): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,31): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1523,13): warning C4996: 'stdext::checked_array_iterator<Char *>::_Verify_offset': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1523,13): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1523,13): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1523,13): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1523,13): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1524,42): warning C4996: 'stdext::checked_array_iterator<Char *>::_Unwrapped': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1524,42): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1524,42): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1524,42): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1524,42): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1909,50): warning C4996: 'stdext::checked_array_iterator<Char *>::operator -': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1909,50): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1909,50): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1909,50): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(1909,50): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\sa\tools\src\vld\lib\cppformat\format.h(1909,50):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(753,26):
+          while compiling class template member function 'void fmt::internal::PrintfFormatter<Char>::format(fmt::BasicWriter<Char> &,fmt::BasicStringRef<Char>,const fmt::ArgList &)'
+          with
+          [
+              Char=char
+          ]
+              C:\sa\tools\src\vld\lib\cppformat\format.h(2374,43):
+              see the first reference to 'fmt::internal::PrintfFormatter<Char>::format' in 'fmt::printf'
+          with
+          [
+              Char=char
+          ]
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(848,14):
+          see reference to function template instantiation 'void fmt::BasicWriter<char>::write_int<int,fmt::FormatSpec>(T,Spec)' being compiled
+          with
+          [
+              T=int,
+              Spec=fmt::FormatSpec
+          ]
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(2020,7): warning C4996: 'stdext::checked_array_iterator<Char *>::operator *': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(2020,7): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(2020,7): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(2020,7): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(2020,7): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\sa\tools\src\vld\lib\cppformat\format.h(2020,7):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(880,14):
+          see reference to function template instantiation 'void fmt::BasicWriter<char>::write_double<double>(T,const fmt::FormatSpec &)' being compiled
+          with
+          [
+              T=double
+          ]
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(2035,7): warning C4996: 'stdext::checked_array_iterator<Char *>::operator *': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(2035,7): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(2035,7): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(2035,7): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(2035,7): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(2104,24): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(2104,24): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(2104,24): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(2104,24): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(2104,24): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1909,50): warning C4996: 'stdext::checked_array_iterator<Char *>::operator -': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1909,50): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1909,50): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1909,50): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(1909,50): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\sa\tools\src\vld\lib\cppformat\format.h(1909,50):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(753,26):
+          while compiling class template member function 'void fmt::internal::PrintfFormatter<Char>::format(fmt::BasicWriter<Char> &,fmt::BasicStringRef<Char>,const fmt::ArgList &)'
+          with
+          [
+              Char=wchar_t
+          ]
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(848,14):
+          see reference to function template instantiation 'void fmt::BasicWriter<wchar_t>::write_int<int,fmt::FormatSpec>(T,Spec)' being compiled
+          with
+          [
+              T=int,
+              Spec=fmt::FormatSpec
+          ]
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(2020,7): warning C4996: 'stdext::checked_array_iterator<Char *>::operator *': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(2020,7): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(2020,7): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(2020,7): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(2020,7): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\sa\tools\src\vld\lib\cppformat\format.h(2020,7):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(880,14):
+          see reference to function template instantiation 'void fmt::BasicWriter<wchar_t>::write_double<double>(T,const fmt::FormatSpec &)' being compiled
+          with
+          [
+              T=double
+          ]
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(2035,7): warning C4996: 'stdext::checked_array_iterator<Char *>::operator *': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(2035,7): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(2035,7): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(2035,7): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(2035,7): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(2104,24): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(2104,24): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(2104,24): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(2104,24): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(2104,24): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(359,51): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(359,51): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(359,51): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(359,51): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(359,51): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\sa\tools\src\vld\lib\cppformat\format.h(359,51):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.h(366,48):
+          see reference to class template instantiation 'fmt::internal::Buffer<T>' being compiled
+          with
+          [
+              T=char
+          ]
+          C:\sa\tools\src\vld\lib\cppformat\format.h(351,12):
+          while compiling class template member function 'const T &fmt::internal::Buffer<T>::operator [](size_t) const'
+          with
+          [
+              T=char
+          ]
+              C:\sa\tools\src\vld\lib\cppformat\format.h(675,32):
+              see the first reference to 'fmt::internal::Buffer<T>::operator []' in 'fmt::internal::UTF16ToUTF8::operator fmt::StringRef'
+          with
+          [
+              T=char
+          ]
+          C:\sa\tools\src\vld\lib\cppformat\format.h(355,54):
+          while compiling class template member function 'void fmt::internal::Buffer<T>::append(const T *,const T *)'
+          with
+          [
+              T=char
+          ]
+              C:\sa\tools\src\vld\lib\cppformat\format.h(1767,19):
+              see the first reference to 'fmt::internal::Buffer<T>::append' in 'fmt::BasicWriter<char>::operator <<'
+          with
+          [
+              T=char
+          ]
+              C:\sa\tools\src\vld\lib\cppformat\format.cc(182,20):
+              see the first reference to 'fmt::BasicWriter<char>::operator <<' in '`anonymous-namespace'::format_error_code'
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1545,13): warning C4996: 'stdext::checked_array_iterator<Char *>::_Seek_to': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1545,13): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1545,13): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1545,13): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1545,13): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1545,13):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.h(426,8):
+          see reference to function template instantiation '_OutIt std::copy<T*,stdext::checked_array_iterator<Char *>>(_InIt,_InIt,_OutIt)' being compiled
+          with
+          [
+              _OutIt=stdext::checked_array_iterator<wchar_t *>,
+              T=wchar_t,
+              Char=wchar_t,
+              _InIt=wchar_t *
+          ]
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(4976,10):
+          see reference to function template instantiation 'void std::_Seek_wrapped<_OutIt,wchar_t*>(_Iter &,_UIter &&)' being compiled
+          with
+          [
+              _OutIt=stdext::checked_array_iterator<wchar_t *>,
+              _Iter=stdext::checked_array_iterator<wchar_t *>,
+              _UIter=wchar_t *
+          ]
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1849,22): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1849,22): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1849,22): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1849,22): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(1849,22): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\sa\tools\src\vld\lib\cppformat\format.h(1849,22):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(848,14):
+          see reference to function template instantiation 'void fmt::BasicWriter<char>::write_int<int,fmt::FormatSpec>(T,Spec)' being compiled
+          with
+          [
+              T=int,
+              Spec=fmt::FormatSpec
+          ]
+          C:\sa\tools\src\vld\lib\cppformat\format.h(1908,17):
+          see reference to function template instantiation 'stdext::checked_array_iterator<Char *> fmt::BasicWriter<Char>::prepare_int_buffer<Spec>(unsigned int,const Spec &,const char *,unsigned int)' being compiled
+          with
+          [
+              Char=char,
+              Spec=fmt::FormatSpec
+          ]
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1855,22): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1855,22): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1855,22): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1855,22): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(1855,22): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1863,21): warning C4996: 'stdext::checked_array_iterator<Char *>::operator -': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1863,21): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1863,21): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1863,21): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(1863,21): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1866,19): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1866,19): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1866,19): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1866,19): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(1866,19): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1869,7): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +=': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1869,7): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1869,7): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1869,7): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(1869,7): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1874,7): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +=': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1874,7): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1874,7): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1874,7): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(1874,7): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1882,51): warning C4996: 'stdext::checked_array_iterator<Char *>::operator -': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1882,51): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1882,51): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1882,51): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(1882,51): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1884,22): warning C4996: 'stdext::checked_array_iterator<Char *>::operator -': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1884,22): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1884,22): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1884,22): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(1884,22): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1887,12): warning C4996: 'stdext::checked_array_iterator<Char *>::operator -': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1887,12): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1887,12): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1887,12): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(1887,12): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1545,13): warning C4996: 'stdext::checked_array_iterator<Char *>::_Seek_to': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1545,13): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1545,13): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1545,13): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1545,13): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1545,13):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(868,16):
+          see reference to function template instantiation '_OutIt std::fill_n<fmt::internal::PrintfFormatter<Char>::format::CharPtr,unsigned int,Char>(_OutIt,const _Diff,const _Ty &)' being compiled
+          with
+          [
+              _OutIt=fmt::internal::PrintfFormatter<char>::format::CharPtr,
+              Char=char,
+              _Diff=unsigned int,
+              _Ty=char
+          ]
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(5468,18):
+          see reference to function template instantiation 'void std::_Seek_wrapped<_OutIt,_Ptr&>(_Iter &,_UIter)' being compiled
+          with
+          [
+              _OutIt=fmt::internal::PrintfFormatter<char>::format::CharPtr,
+              _Ptr=char *,
+              _Iter=fmt::internal::PrintfFormatter<char>::format::CharPtr,
+              _UIter=char *&
+          ]
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1799,11): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +=': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1799,11): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1799,11): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1799,11): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(1799,11): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\sa\tools\src\vld\lib\cppformat\format.h(1799,11):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(880,14):
+          see reference to function template instantiation 'void fmt::BasicWriter<char>::write_double<double>(T,const fmt::FormatSpec &)' being compiled
+          with
+          [
+              T=double
+          ]
+          C:\sa\tools\src\vld\lib\cppformat\format.h(2018,19):
+          see reference to function template instantiation 'stdext::checked_array_iterator<Char *> fmt::BasicWriter<Char>::write_str<char>(const StrChar *,size_t,const fmt::AlignSpec &)' being compiled
+          with
+          [
+              Char=char,
+              StrChar=char
+          ]
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1803,23): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1803,23): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1803,23): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1803,23): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(1803,23): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1450,42): warning C4996: 'stdext::checked_array_iterator<Char *>::_Unwrapped': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1450,42): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1450,42): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1450,42): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1450,42): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1450,42):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.h(2104,14):
+          see reference to function template instantiation '_OutIt std::copy<stdext::checked_array_iterator<Char *>,stdext::checked_array_iterator<Char *>>(_InIt,_InIt,_OutIt)' being compiled
+          with
+          [
+              _OutIt=stdext::checked_array_iterator<char *>,
+              Char=char,
+              _InIt=stdext::checked_array_iterator<char *>
+          ]
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(4973,31):
+          see reference to function template instantiation '_Ptr std::_Get_unwrapped<_InIt&>(_Iter) noexcept' being compiled
+          with
+          [
+              _Ptr=char *,
+              _InIt=stdext::checked_array_iterator<char *>,
+              _Iter=stdext::checked_array_iterator<char *> &
+          ]
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1450,52): warning C4996: 'stdext::checked_array_iterator<Char *>::_Unwrapped': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1450,52): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1450,52): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1450,52): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1450,52): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(4973,45):
+      while evaluating constexpr function 'std::_Get_unwrapped'
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1849,22): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1849,22): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1849,22): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1849,22): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(1849,22): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\sa\tools\src\vld\lib\cppformat\format.h(1849,22):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(848,14):
+          see reference to function template instantiation 'void fmt::BasicWriter<wchar_t>::write_int<int,fmt::FormatSpec>(T,Spec)' being compiled
+          with
+          [
+              T=int,
+              Spec=fmt::FormatSpec
+          ]
+          C:\sa\tools\src\vld\lib\cppformat\format.h(1908,17):
+          see reference to function template instantiation 'stdext::checked_array_iterator<Char *> fmt::BasicWriter<Char>::prepare_int_buffer<Spec>(unsigned int,const Spec &,const char *,unsigned int)' being compiled
+          with
+          [
+              Char=wchar_t,
+              Spec=fmt::FormatSpec
+          ]
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1855,22): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1855,22): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1855,22): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1855,22): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(1855,22): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1863,21): warning C4996: 'stdext::checked_array_iterator<Char *>::operator -': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1863,21): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1863,21): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1863,21): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(1863,21): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1866,19): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1866,19): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1866,19): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1866,19): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(1866,19): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1869,7): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +=': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1869,7): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1869,7): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1869,7): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(1869,7): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1874,7): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +=': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1874,7): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1874,7): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1874,7): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(1874,7): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1882,51): warning C4996: 'stdext::checked_array_iterator<Char *>::operator -': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1882,51): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1882,51): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1882,51): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(1882,51): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1884,22): warning C4996: 'stdext::checked_array_iterator<Char *>::operator -': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1884,22): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1884,22): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1884,22): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(1884,22): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1887,12): warning C4996: 'stdext::checked_array_iterator<Char *>::operator -': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1887,12): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1887,12): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1887,12): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(1887,12): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1799,11): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +=': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1799,11): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1799,11): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1799,11): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(1799,11): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\sa\tools\src\vld\lib\cppformat\format.h(1799,11):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(880,14):
+          see reference to function template instantiation 'void fmt::BasicWriter<wchar_t>::write_double<double>(T,const fmt::FormatSpec &)' being compiled
+          with
+          [
+              T=double
+          ]
+          C:\sa\tools\src\vld\lib\cppformat\format.h(2018,19):
+          see reference to function template instantiation 'stdext::checked_array_iterator<Char *> fmt::BasicWriter<Char>::write_str<char>(const StrChar *,size_t,const fmt::AlignSpec &)' being compiled
+          with
+          [
+              Char=wchar_t,
+              StrChar=char
+          ]
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1803,23): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1803,23): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1803,23): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1803,23): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(1803,23): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1450,42): warning C4996: 'stdext::checked_array_iterator<Char *>::_Unwrapped': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1450,42): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1450,42): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1450,42): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1450,42): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1450,42):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.h(2104,14):
+          see reference to function template instantiation '_OutIt std::copy<stdext::checked_array_iterator<Char *>,stdext::checked_array_iterator<Char *>>(_InIt,_InIt,_OutIt)' being compiled
+          with
+          [
+              _OutIt=stdext::checked_array_iterator<wchar_t *>,
+              Char=wchar_t,
+              _InIt=stdext::checked_array_iterator<wchar_t *>
+          ]
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(4973,31):
+          see reference to function template instantiation '_Ptr std::_Get_unwrapped<_InIt&>(_Iter) noexcept' being compiled
+          with
+          [
+              _Ptr=wchar_t *,
+              _InIt=stdext::checked_array_iterator<wchar_t *>,
+              _Iter=stdext::checked_array_iterator<wchar_t *> &
+          ]
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1450,52): warning C4996: 'stdext::checked_array_iterator<Char *>::_Unwrapped': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1450,52): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1450,52): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1450,52): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1450,52): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(4973,45):
+      while evaluating constexpr function 'std::_Get_unwrapped'
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1821,10): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +=': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1821,10): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1821,10): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1821,10): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(1821,10): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\sa\tools\src\vld\lib\cppformat\format.h(1821,10):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(761,7):
+          see reference to function template instantiation 'void fmt::internal::FormatterBase::write<char>(fmt::BasicWriter<char> &,const Char *,const Char *)' being compiled
+          with
+          [
+              Char=char
+          ]
+          C:\sa\tools\src\vld\lib\cppformat\format.h(1816,45):
+          while compiling class template member function 'stdext::checked_array_iterator<Char *> fmt::BasicWriter<Char>::fill_padding(stdext::checked_array_iterator<Char *>,unsigned int,size_t,wchar_t)'
+          with
+          [
+              Char=char
+          ]
+              C:\sa\tools\src\vld\lib\cppformat\format.h(2105,21):
+              see the first reference to 'fmt::BasicWriter<char>::fill_padding' in 'fmt::BasicWriter<char>::write_double'
+              C:\sa\tools\src\vld\lib\cppformat\format.cc(880,26):
+              see the first reference to 'fmt::BasicWriter<char>::write_double' in 'fmt::internal::PrintfFormatter<Char>::format'
+          with
+          [
+              Char=char
+          ]
+              C:\sa\tools\src\vld\lib\cppformat\format.h(2374,43):
+              see the first reference to 'fmt::internal::PrintfFormatter<Char>::format' in 'fmt::printf'
+          with
+          [
+              Char=char
+          ]
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1823,22): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1823,22): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1823,22): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1823,22): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(1823,22): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1821,10): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +=': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1821,10): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1821,10): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1821,10): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(1821,10): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\sa\tools\src\vld\lib\cppformat\format.h(1821,10):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(761,7):
+          see reference to function template instantiation 'void fmt::internal::FormatterBase::write<wchar_t>(fmt::BasicWriter<wchar_t> &,const Char *,const Char *)' being compiled
+          with
+          [
+              Char=wchar_t
+          ]
+          C:\sa\tools\src\vld\lib\cppformat\format.h(1816,45):
+          while compiling class template member function 'stdext::checked_array_iterator<Char *> fmt::BasicWriter<Char>::fill_padding(stdext::checked_array_iterator<Char *>,unsigned int,size_t,wchar_t)'
+          with
+          [
+              Char=wchar_t
+          ]
+              C:\sa\tools\src\vld\lib\cppformat\format.h(2105,21):
+              see the first reference to 'fmt::BasicWriter<wchar_t>::fill_padding' in 'fmt::BasicWriter<wchar_t>::write_double'
+              C:\sa\tools\src\vld\lib\cppformat\format.cc(880,26):
+              see the first reference to 'fmt::BasicWriter<wchar_t>::write_double' in 'fmt::internal::PrintfFormatter<Char>::format'
+          with
+          [
+              Char=wchar_t
+          ]
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(1823,22): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1823,22): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1823,22): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1823,22): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(1823,22): warning C4996:         ]
+  (compiling source file 'format.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.cc(582,13): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +=': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.cc(582,13): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.cc(582,13): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.cc(582,13): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.cc(582,13): warning C4996:         ]
+      C:\sa\tools\src\vld\lib\cppformat\format.cc(582,13):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(1147,55):
+          see reference to class template instantiation 'fmt::BasicFormatter<wchar_t>' being compiled
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(919,46):
+          while compiling class template member function 'const Char *fmt::BasicFormatter<Char>::format(const Char *&,const fmt::internal::Arg &)'
+          with
+          [
+              Char=wchar_t
+          ]
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(1051,31):
+          see reference to class template instantiation 'fmt::internal::ArgFormatter<Char>' being compiled
+          with
+          [
+              Char=wchar_t
+          ]
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(563,8):
+          while compiling class template member function 'void fmt::internal::ArgFormatter<Char>::visit_char(int)'
+          with
+          [
+              Char=wchar_t
+          ]
+              C:\sa\tools\src\vld\lib\cppformat\format.h(985,7):
+              see the first reference to 'fmt::internal::ArgFormatter<Char>::visit_char' in 'fmt::internal::ArgVisitor<fmt::internal::ArgFormatter<Char>,void>::visit'
+          with
+          [
+              Char=wchar_t
+          ]
+              C:\sa\tools\src\vld\lib\cppformat\format.cc(1051,57):
+              see the first reference to 'fmt::internal::ArgVisitor<fmt::internal::ArgFormatter<Char>,void>::visit' in 'fmt::BasicFormatter<wchar_t>::format'
+          with
+          [
+              Char=wchar_t
+          ]
+  
+C:\sa\tools\src\vld\lib\cppformat\format.cc(586,25): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.cc(586,25): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.cc(586,25): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.cc(586,25): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.cc(586,25): warning C4996:         ]
+C:\sa\tools\src\vld\lib\cppformat\format.cc(591,5): warning C4996: 'stdext::checked_array_iterator<Char *>::operator *': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.cc(591,5): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.cc(591,5): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.cc(591,5): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.cc(591,5): warning C4996:         ]
+C:\sa\tools\src\vld\lib\cppformat\format.cc(582,13): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +=': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.cc(582,13): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.cc(582,13): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.cc(582,13): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.cc(582,13): warning C4996:         ]
+      C:\sa\tools\src\vld\lib\cppformat\format.cc(582,13):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(1126,49):
+          see reference to class template instantiation 'fmt::BasicFormatter<char>' being compiled
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(919,46):
+          while compiling class template member function 'const Char *fmt::BasicFormatter<Char>::format(const Char *&,const fmt::internal::Arg &)'
+          with
+          [
+              Char=char
+          ]
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(1051,31):
+          see reference to class template instantiation 'fmt::internal::ArgFormatter<Char>' being compiled
+          with
+          [
+              Char=char
+          ]
+          C:\sa\tools\src\vld\lib\cppformat\format.cc(563,8):
+          while compiling class template member function 'void fmt::internal::ArgFormatter<Char>::visit_char(int)'
+          with
+          [
+              Char=char
+          ]
+              C:\sa\tools\src\vld\lib\cppformat\format.h(985,7):
+              see the first reference to 'fmt::internal::ArgFormatter<Char>::visit_char' in 'fmt::internal::ArgVisitor<fmt::internal::ArgFormatter<Char>,void>::visit'
+          with
+          [
+              Char=char
+          ]
+              C:\sa\tools\src\vld\lib\cppformat\format.cc(1051,57):
+              see the first reference to 'fmt::internal::ArgVisitor<fmt::internal::ArgFormatter<Char>,void>::visit' in 'fmt::BasicFormatter<char>::format'
+          with
+          [
+              Char=char
+          ]
+  
+C:\sa\tools\src\vld\lib\cppformat\format.cc(586,25): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.cc(586,25): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.cc(586,25): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.cc(586,25): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.cc(586,25): warning C4996:         ]
+C:\sa\tools\src\vld\lib\cppformat\format.cc(591,5): warning C4996: 'stdext::checked_array_iterator<Char *>::operator *': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.cc(591,5): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.cc(591,5): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.cc(591,5): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.cc(591,5): warning C4996:         ]
+C:\sa\tools\src\vld\lib\cppformat\format.h(1572,42): warning C4996: 'stdext::checked_array_iterator<Char *>::base': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(1572,42): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(1572,42): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(1572,42): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(1572,42): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\sa\tools\src\vld\lib\cppformat\format.h(1572,42):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.h(2334,17):
+          see reference to class template instantiation 'fmt::BasicMemoryWriter<wchar_t,std::allocator<wchar_t>>' being compiled
+          C:\sa\tools\src\vld\lib\cppformat\format.h(2158,34):
+          see reference to class template instantiation 'fmt::BasicWriter<wchar_t>' being compiled
+          C:\sa\tools\src\vld\lib\cppformat\format.h(1572,16):
+          while compiling class template member function 'Char *fmt::BasicWriter<Char>::get(stdext::checked_array_iterator<Char *>)'
+          with
+          [
+              Char=wchar_t
+          ]
+              C:\sa\tools\src\vld\lib\cppformat\format.h(1910,29):
+              see the first reference to 'fmt::BasicWriter<wchar_t>::get' in 'fmt::BasicWriter<wchar_t>::write_int'
+              C:\sa\tools\src\vld\lib\cppformat\format.cc(848,23):
+              see the first reference to 'fmt::BasicWriter<wchar_t>::write_int' in 'fmt::internal::PrintfFormatter<Char>::format'
+          with
+          [
+              Char=wchar_t
+          ]
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(359,51): warning C4996: 'stdext::checked_array_iterator<Char *>::operator +': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(359,51): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(359,51): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(359,51): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(359,51): warning C4996:         ]
+  (compiling source file 'format.cc')
+      C:\sa\tools\src\vld\lib\cppformat\format.h(359,51):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.h(355,54):
+          while compiling class template member function 'void fmt::internal::Buffer<T>::append(const T *,const T *)'
+          with
+          [
+              T=wchar_t
+          ]
+              C:\sa\tools\src\vld\lib\cppformat\format.h(1767,19):
+              see the first reference to 'fmt::internal::Buffer<T>::append' in 'fmt::BasicWriter<wchar_t>::operator <<'
+          with
+          [
+              T=wchar_t
+          ]
+              C:\sa\tools\src\vld\lib\cppformat\format.h(1079,9):
+              see the first reference to 'fmt::BasicWriter<wchar_t>::operator <<' in 'fmt::internal::FormatterBase::write'
+              C:\sa\tools\src\vld\lib\cppformat\format.cc(761,7):
+              see the first reference to 'fmt::internal::FormatterBase::write' in 'fmt::internal::PrintfFormatter<Char>::format'
+          with
+          [
+              Char=wchar_t
+          ]
+  
+  posix.cc
+C:\sa\tools\src\vld\lib\cppformat\format.h(293,1): warning C4996: 'stdext::checked_array_iterator<T*>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+  (compiling source file 'posix.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(487,3): warning C4996: 'stdext::checked_array_iterator<T*>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+  (compiling source file 'posix.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+      C:\sa\tools\src\vld\lib\cppformat\format.h(487,3):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.h(484,7):
+          while compiling class template 'fmt::internal::BasicCharTraits'
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(487,3): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(487,3): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(487,3): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(487,3): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(487,3): warning C4996:         ]
+  (compiling source file 'posix.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+      C:\sa\tools\src\vld\lib\cppformat\format.h(487,3):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.h(497,33):
+          see reference to class template instantiation 'fmt::internal::BasicCharTraits<char>' being compiled
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(487,3): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(487,3): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(487,3): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(487,3): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(487,3): warning C4996:         ]
+  (compiling source file 'posix.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+      C:\sa\tools\src\vld\lib\cppformat\format.h(487,3):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.h(512,36):
+          see reference to class template instantiation 'fmt::internal::BasicCharTraits<wchar_t>' being compiled
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,18): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,18): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,18): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,18): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,18): warning C4996:         ]
+  (compiling source file 'posix.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+      C:\sa\tools\src\vld\lib\cppformat\format.h(294,18):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.h(656,45):
+          see reference to class template instantiation 'fmt::internal::MemoryBuffer<wchar_t,500,std::allocator<wchar_t>>' being compiled
+          C:\sa\tools\src\vld\lib\cppformat\format.h(421,63):
+          while compiling class template member function 'void fmt::internal::MemoryBuffer<wchar_t,500,std::allocator<wchar_t>>::grow(size_t)'
+          C:\sa\tools\src\vld\lib\cppformat\format.h(427,39):
+          see reference to function template instantiation 'stdext::checked_array_iterator<Char *> fmt::internal::make_ptr<T>(T *,size_t)' being compiled
+          with
+          [
+              Char=wchar_t,
+              T=wchar_t
+          ]
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,44): warning C4996: 'stdext::checked_array_iterator<Char *>::checked_array_iterator': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,44): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,44): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,44): warning C4996:             Char=wchar_t
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,44): warning C4996:         ]
+  (compiling source file 'posix.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31): warning C4996:         ]
+  (compiling source file 'posix.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.h(426,8):
+          see reference to function template instantiation '_OutIt std::copy<T*,stdext::checked_array_iterator<Char *>>(_InIt,_InIt,_OutIt)' being compiled
+          with
+          [
+              _OutIt=stdext::checked_array_iterator<wchar_t *>,
+              T=wchar_t,
+              Char=wchar_t,
+              _InIt=wchar_t *
+          ]
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(4975,31):
+          see reference to function template instantiation 'decltype(auto) std::_Get_unwrapped_n<stdext::checked_array_iterator<Char *>,__int64>(_Iter &&,const _Diff)' being compiled
+          with
+          [
+              Char=wchar_t,
+              _Iter=stdext::checked_array_iterator<wchar_t *>,
+              _Diff=__int64
+          ]
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1512,26):
+          see reference to variable template 'const bool _Unwrappable_for_offset_v<stdext::checked_array_iterator<wchar_t *> >' being compiled
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1506,44):
+          see reference to variable template 'const bool _Unwrappable_v<stdext::checked_array_iterator<wchar_t *>,void>' being compiled
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1435,5):
+          see reference to variable template 'const bool _Allow_inheriting_unwrap_v<stdext::checked_array_iterator<wchar_t *>,void>' being compiled
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,22): warning C4996: 'stdext::checked_array_iterator<Char *>::_Prevent_inheriting_unwrap': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,22): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,22): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,22): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,22): warning C4996:         ]
+  (compiling source file 'posix.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40): warning C4996:         ]
+  (compiling source file 'posix.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40):
+      the template instantiation context (the oldest one first) is
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1502,93):
+          see reference to alias template instantiation 'std::_Iter_diff_t<_Iter>' being compiled
+          with
+          [
+              _Iter=stdext::checked_array_iterator<wchar_t *>
+          ]
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1311,55):
+          see reference to class template instantiation 'std::iterator_traits<_Iter>' being compiled
+          with
+          [
+              _Iter=stdext::checked_array_iterator<wchar_t *>
+          ]
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(496,26):
+          see reference to class template instantiation 'std::_Iterator_traits_base<_Iter,void>' being compiled
+          with
+          [
+              _Iter=stdext::checked_array_iterator<wchar_t *>
+          ]
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,31): warning C4996: 'stdext::checked_array_iterator<Char *>::iterator_category': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,31): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,31): warning C4996:         ]
+  (compiling source file 'posix.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,40): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,40): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,40): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,40): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,40): warning C4996:         ]
+  (compiling source file 'posix.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,31): warning C4996: 'stdext::checked_array_iterator<Char *>::value_type': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,31): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,31): warning C4996:         ]
+  (compiling source file 'posix.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,40): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,40): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,40): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,40): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,40): warning C4996:         ]
+  (compiling source file 'posix.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,31): warning C4996: 'stdext::checked_array_iterator<Char *>::difference_type': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,31): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,31): warning C4996:         ]
+  (compiling source file 'posix.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,40): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,40): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,40): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,40): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,40): warning C4996:         ]
+  (compiling source file 'posix.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,31): warning C4996: 'stdext::checked_array_iterator<Char *>::pointer': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,31): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,31): warning C4996:         ]
+  (compiling source file 'posix.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,40): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,40): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,40): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,40): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,40): warning C4996:         ]
+  (compiling source file 'posix.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,31): warning C4996: 'stdext::checked_array_iterator<Char *>::reference': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,31): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,31): warning C4996:         ]
+  (compiling source file 'posix.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1523,13): warning C4996: 'stdext::checked_array_iterator<Char *>::_Verify_offset': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1523,13): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1523,13): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1523,13): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1523,13): warning C4996:         ]
+  (compiling source file 'posix.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1524,42): warning C4996: 'stdext::checked_array_iterator<Char *>::_Unwrapped': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1524,42): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1524,42): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1524,42): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1524,42): warning C4996:         ]
+  (compiling source file 'posix.cc')
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,18): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,18): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,18): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,18): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,18): warning C4996:         ]
+  (compiling source file 'posix.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+      C:\sa\tools\src\vld\lib\cppformat\format.h(294,18):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.h(670,42):
+          see reference to class template instantiation 'fmt::internal::MemoryBuffer<char,500,std::allocator<char>>' being compiled
+          C:\sa\tools\src\vld\lib\cppformat\format.h(421,63):
+          while compiling class template member function 'void fmt::internal::MemoryBuffer<char,500,std::allocator<char>>::grow(size_t)'
+          C:\sa\tools\src\vld\lib\cppformat\format.h(427,39):
+          see reference to function template instantiation 'stdext::checked_array_iterator<Char *> fmt::internal::make_ptr<T>(T *,size_t)' being compiled
+          with
+          [
+              Char=char,
+              T=char
+          ]
+  
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,44): warning C4996: 'stdext::checked_array_iterator<Char *>::checked_array_iterator': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,44): warning C4996:         with
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,44): warning C4996:         [
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,44): warning C4996:             Char=char
+C:\sa\tools\src\vld\lib\cppformat\format.h(294,44): warning C4996:         ]
+  (compiling source file 'posix.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31): warning C4996:         ]
+  (compiling source file 'posix.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,31):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.h(426,8):
+          see reference to function template instantiation '_OutIt std::copy<T*,stdext::checked_array_iterator<Char *>>(_InIt,_InIt,_OutIt)' being compiled
+          with
+          [
+              _OutIt=stdext::checked_array_iterator<char *>,
+              T=char,
+              Char=char,
+              _InIt=char *
+          ]
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(4975,31):
+          see reference to function template instantiation 'decltype(auto) std::_Get_unwrapped_n<stdext::checked_array_iterator<Char *>,__int64>(_Iter &&,const _Diff)' being compiled
+          with
+          [
+              Char=char,
+              _Iter=stdext::checked_array_iterator<char *>,
+              _Diff=__int64
+          ]
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1512,26):
+          see reference to variable template 'const bool _Unwrappable_for_offset_v<stdext::checked_array_iterator<char *> >' being compiled
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1506,44):
+          see reference to variable template 'const bool _Unwrappable_v<stdext::checked_array_iterator<char *>,void>' being compiled
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1435,5):
+          see reference to variable template 'const bool _Allow_inheriting_unwrap_v<stdext::checked_array_iterator<char *>,void>' being compiled
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,22): warning C4996: 'stdext::checked_array_iterator<Char *>::_Prevent_inheriting_unwrap': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,22): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,22): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,22): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1407,22): warning C4996:         ]
+  (compiling source file 'posix.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40): warning C4996:         ]
+  (compiling source file 'posix.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,40):
+      the template instantiation context (the oldest one first) is
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1502,93):
+          see reference to alias template instantiation 'std::_Iter_diff_t<_Iter>' being compiled
+          with
+          [
+              _Iter=stdext::checked_array_iterator<char *>
+          ]
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1311,55):
+          see reference to class template instantiation 'std::iterator_traits<_Iter>' being compiled
+          with
+          [
+              _Iter=stdext::checked_array_iterator<char *>
+          ]
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(496,26):
+          see reference to class template instantiation 'std::_Iterator_traits_base<_Iter,void>' being compiled
+          with
+          [
+              _Iter=stdext::checked_array_iterator<char *>
+          ]
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,31): warning C4996: 'stdext::checked_array_iterator<Char *>::iterator_category': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,31): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(476,31): warning C4996:         ]
+  (compiling source file 'posix.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,40): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,40): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,40): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,40): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,40): warning C4996:         ]
+  (compiling source file 'posix.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,31): warning C4996: 'stdext::checked_array_iterator<Char *>::value_type': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,31): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(477,31): warning C4996:         ]
+  (compiling source file 'posix.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,40): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,40): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,40): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,40): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,40): warning C4996:         ]
+  (compiling source file 'posix.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,31): warning C4996: 'stdext::checked_array_iterator<Char *>::difference_type': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,31): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(478,31): warning C4996:         ]
+  (compiling source file 'posix.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,40): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,40): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,40): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,40): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,40): warning C4996:         ]
+  (compiling source file 'posix.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,31): warning C4996: 'stdext::checked_array_iterator<Char *>::pointer': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,31): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(479,31): warning C4996:         ]
+  (compiling source file 'posix.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,40): warning C4996: 'stdext::checked_array_iterator<Char *>': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,40): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,40): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,40): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,40): warning C4996:         ]
+  (compiling source file 'posix.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\iterator(1501,35):
+      see declaration of 'stdext::checked_array_iterator'
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,31): warning C4996: 'stdext::checked_array_iterator<Char *>::reference': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,31): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,31): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,31): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\__msvc_iter_core.hpp(480,31): warning C4996:         ]
+  (compiling source file 'posix.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1523,13): warning C4996: 'stdext::checked_array_iterator<Char *>::_Verify_offset': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1523,13): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1523,13): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1523,13): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1523,13): warning C4996:         ]
+  (compiling source file 'posix.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1524,42): warning C4996: 'stdext::checked_array_iterator<Char *>::_Unwrapped': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1524,42): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1524,42): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1524,42): warning C4996:             Char=char
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1524,42): warning C4996:         ]
+  (compiling source file 'posix.cc')
+  
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1545,13): warning C4996: 'stdext::checked_array_iterator<Char *>::_Seek_to': warning STL4043: stdext::checked_array_iterator, stdext::unchecked_array_iterator, and related factory functions are non-Standard extensions and will be removed in the future. std::span (since C++20) and gsl::span can be used instead. You can define _SILENCE_STDEXT_ARR_ITERS_DEPRECATION_WARNING or _SILENCE_ALL_MS_EXT_DEPRECATION_WARNINGS to suppress this warning.
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1545,13): warning C4996:         with
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1545,13): warning C4996:         [
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1545,13): warning C4996:             Char=wchar_t
+C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1545,13): warning C4996:         ]
+  (compiling source file 'posix.cc')
+      C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(1545,13):
+      the template instantiation context (the oldest one first) is
+          C:\sa\tools\src\vld\lib\cppformat\format.h(426,8):
+          see reference to function template instantiation '_OutIt std::copy<T*,stdext::checked_array_iterator<Char *>>(_InIt,_InIt,_OutIt)' being compiled
+          with
+          [
+              _OutIt=stdext::checked_array_iterator<wchar_t *>,
+              T=wchar_t,
+              Char=wchar_t,
+              _InIt=wchar_t *
+          ]
+          C:\Program Files\Microsoft Visual Studio\18\Community\VC\Tools\MSVC\14.50.35717\include\xutility(4976,10):
+          see reference to function template instantiation 'void std::_Seek_wrapped<_OutIt,wchar_t*>(_Iter &,_UIter &&)' being compiled
+          with
+          [
+              _OutIt=stdext::checked_array_iterator<wchar_t *>,
+              _Iter=stdext::checked_array_iterator<wchar_t *>,
+              _UIter=wchar_t *
+          ]
+  
+  Generating Code...
+  format.vcxproj -> C:\sa\tools\src\vld\src\bin\x64\Debug-v145\libformat.lib
